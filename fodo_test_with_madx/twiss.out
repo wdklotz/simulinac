@@ -1,0 +1,57 @@
+@ NAME             %05s "TWISS"
+@ TYPE             %05s "TWISS"
+@ SEQUENCE         %03s "TOP"
+@ PARTICLE         %06s "PROTON"
+@ MASS             %le         0.938272046
+@ CHARGE           %le                   1
+@ ENERGY           %le                   1
+@ PC               %le        0.3458982042
+@ GAMMA            %le         1.065788973
+@ KBUNCH           %le                   1
+@ BCURRENT         %le                   0
+@ SIGE             %le                   0
+@ SIGT             %le                   0
+@ NPART            %le                   0
+@ EX               %le                   1
+@ EY               %le                   1
+@ ET               %le                   1
+@ LENGTH           %le         4.509681909
+@ ALFA             %le        0.1601198537
+@ ORBIT5           %le                  -0
+@ GAMMATR          %le         2.499064169
+@ Q1               %le        0.1562803664
+@ Q2               %le        0.1937663209
+@ DQ1              %le       -0.3712047948
+@ DQ2              %le       -0.5028577991
+@ DXMAX            %le         7.036670841
+@ DYMAX            %le                  -0
+@ XCOMAX           %le                   0
+@ YCOMAX           %le                   0
+@ BETXMAX          %le         7.653560986
+@ BETYMAX          %le          6.21245569
+@ XCORMS           %le                   0
+@ YCORMS           %le                   0
+@ DXRMS            %le         6.158270078
+@ DYRMS            %le                   0
+@ DELTAP           %le                   0
+@ SYNCH_1          %le                   0
+@ SYNCH_2          %le                   0
+@ SYNCH_3          %le                   0
+@ SYNCH_4          %le                   0
+@ SYNCH_5          %le                   0
+@ TITLE            %08s "no-title"
+@ ORIGIN           %18s "5.02.04 Windows 64"
+@ DATE             %08s "02/04/15"
+@ TIME             %08s "23.12.15"
+* NAME                                S               BETX               BETY 
+$ %s                                %le                %le                %le 
+ "TOP$START"                          0        7.653560986          2.3813816
+ "QF"                               0.2        7.128393514        2.643428488
+ "DR"                              0.75        5.006232988         4.00299391
+ "DR"                               1.3        3.359578805        5.830972358
+ "QD"                               1.7        3.020042131         6.21245569
+ "DR"                              2.25        3.550711382        5.227061459
+ "BD"                       3.759681909        6.095706076        2.912327367
+ "DR"                       4.309681909        7.467930187        2.389003348
+ "QF"                       4.509681909        7.653560986          2.3813816
+ "TOP$END"                  4.509681909        7.653560986          2.3813816
