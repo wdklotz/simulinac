@@ -178,6 +178,28 @@ class Lattice(object):
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
         return beta_fun
+        
+    def dispersion(self,steps=10,closed=True):
+        traj=[]
+        v_0=np.array([[0.],[0.],[0.],[0.],[1.]])
+        if closed == True:
+            m_cell = self.full_cell
+            m11=m_cell.matrix[0,0]
+            m15=m_cell.matrix[0,4]
+            d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
+            v_0=np.array([[d0],[0.],[0.],[0.],[1.]])
+        s=0.0
+        for ipos in self.seq:
+            element,s0,s1 = ipos
+            for i_element in element.step_through(steps):
+                m_beta = i_element.matrix
+                v_0 = m_beta.dot(v_0)
+                s += i_element.length
+                d  = v_0[0,0]
+                dp = v_0[1,0]
+                viseo = i_element.viseo
+                traj.append((s,d,dp))
+        return traj
 ###################################################
 def test1():
     lattice=SETUP.make_lattice()
@@ -211,17 +233,20 @@ def test2():
     mcell,betax,betay=lattice.cell()
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     ## lattice function as f(s)
-    beta_fun = lattice.beta_functions(100)    
+    beta_fun = lattice.beta_functions(steps=100)   
+    disp = lattice.dispersion(steps=100,closed=True)
     ## plots
-    s  = [x[0] for x in beta_fun]
-    xs = [x[1] for x in beta_fun]
-    ys = [x[2] for x in beta_fun]
-    vs = [x[3]-1. for x in beta_fun]
-    zero=[-1. for x in beta_fun]
+    s  = [x[0] for x in beta_fun]    # s
+    xs = [x[1] for x in beta_fun]    # betax
+    ys = [x[2] for x in beta_fun]    # betay
+    ds = [x[1] for x in disp]        # dispersion
+    vs = [x[3]-1. for x in beta_fun] # viseo
+    zero=[-1. for x in beta_fun]     # viseo
 ##    for i in range(len(s)):
 ##        print('s, betax(s) betay(s)',s[i],xs[i],ys[i])
     plot(s,xs,label='bx/bx0')
     plot(s,ys,label='by/by0')
+    plot(s,ds,label='dp/p')
     plot(s,vs,label='element',color='black')
     plot(s,zero,color='black')
     legend(loc='upper left')

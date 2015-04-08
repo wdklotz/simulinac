@@ -4,9 +4,9 @@ import numpy as np
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf
 
 class Matrix(object):
-    _dim = 4
+    _dim = 5   # 5x5 matrices
     def __init__(self):
-        self.matrix=np.eye(Matrix._dim)    ## 4x4 unit matrix
+        self.matrix=np.eye(Matrix._dim)    ## 5x5 unit matrix
         self.label='I'
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
@@ -25,7 +25,7 @@ class Matrix(object):
     #-----------------------
     def reverse(self):
         res=Matrix()
-        for i in range(4):
+        for i in range(Matrix._dim):
             for k in range(Matrix._dim):
                 res.matrix[i][k] = self.matrix[i][k]
         res.matrix[0][0] = self.matrix[1][1]
@@ -103,10 +103,11 @@ class I(Matrix):           ## unity Matrix (an alias to Matrix class)
         
 class Test(Matrix):
     def __init__(self,a,b,c,d,label='test'):
-        self.matrix=np.array([[a,b,0.,0.],
-                              [c,d,0.,0.],
-                              [0.,0.,1.,2.],
-                              [0.,0.,-1.,1.]])
+        self.matrix=np.array([[a,b,0.,0.,0.],
+                              [c,d,0.,0.,0.],
+                              [0.,0.,1.,2.,0.],
+                              [0.,0.,-1.,1.,1.],
+                              [0.,0.,0.,0.,1.]])
         self.label=label
 
 class D(Matrix):     ## drift space
@@ -142,9 +143,9 @@ class QF(D):    ## focusing quad
         sdp =cd
         ## 4x4 matrix
         if (isinstance(self,QF) and (isinstance(self,QD)==False)):
-            mq=np.array([[cf,sf,0.,0.],[cfp,sfp,0.,0.],[0.,0.,cd,sd],[0.,0.,cdp,sdp]])  ## QF
+            mq=np.array([[cf,sf,0.,0.,0.],[cfp,sfp,0.,0.,0.],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])  ## QF
         elif isinstance(self,QD) :
-            mq=np.array([[cd,sd,0.,0.],[cdp,sdp,0.,0.],[0.,0.,cf,sf],[0.,0.,cfp,sfp]])  ## QD
+            mq=np.array([[cd,sd,0.,0.,0.],[cdp,sdp,0.,0.,0.],[0.,0.,cf,sf,0.],[0.,0.,cfp,sfp,0.],[0.,0.,0.,0.,1.]])  ## QD
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return mq
@@ -165,21 +166,45 @@ class SD(D):   ## sector bending dipole in x-plane
     def shorten(self,l=0.):
         return SD(radius=self.radius,length=l,label=self.label)
     def _mx(self):
-        kwurz=1./self.radius
-        phi=self.length*kwurz
+        phi=self.length/self.radius
         ## x-plane
         cf  = cos(phi)
-        sf  = sin(phi)/kwurz
-        cfp =-kwurz*sin(phi)
+        sf  = sin(phi)*self.radius
+        cfp =-sin(phi)/self.radius
         sfp = cf
         ## y-plane
         cd  = 1.
-        sd  = phi/kwurz
+        sd  = phi*self.radius
         cdp = 0.0
         sdp = cd
-        ## 4x4 matrix
-        ms=np.array([[cf,sf,0.,0.],[cfp,sfp,0.,0.],[0.,0.,cd,sd],[0.,0.,cdp,sdp]])   ## sector
+        dis=self.radius*(1.-cos(phi))
+        disp=sin(phi)
+        ## 5x5 matrix
+        ms=np.array([[cf,sf,0.,0.,dis],[cfp,sfp,0.,0.,disp],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])   ## sector
         return ms
+
+class RD(SD):   ## rectangular bending dipole in x-plane
+    def __init__(self, radius=0., length=0., label='RB'):
+        super(RD,self).__init__(radius=radius,length=length,label=label)
+        self.matrix=self._mx()
+    def shorten(self,l=0.):
+        return RD(radius=self.radius,length=l,label=self.label)
+    def _mx(self):
+        phi=self.length/self.radius
+        one_over_fy=tan(0.5*phi)/self.radius
+        cx=1.
+        sx=self.radius*sin(phi)
+        cxp=0.
+        sxp=cx
+        cy=1.-self.length*one_over_fy
+        sy=self.length
+        cyp=(-2.+self.length*one_over_fy)*one_over_fy
+        syp=cy
+        dis=self.radius*(1.-cos(phi))
+        disp=sin(phi)
+        ## 5x5 matrix
+        mr=np.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
+        return mr
 
 class WD(D):   ## wedge of rectangular bending dipole in x-plane
     def __init__(self,length=0.,radius=0.,label='WD'):
@@ -188,8 +213,8 @@ class WD(D):   ## wedge of rectangular bending dipole in x-plane
         kwurz=1./self.radius
         psi=0.5*length*kwurz        ## Kantenwinkel
         ckp=kwurz*tan(psi)
-        ## 4x4 matrix
-        mw=np.array([[1.,0.,0.,0.],[ckp,1.,0.,0.], [0.,0.,1.,0.],[0.,0.,-ckp,1.]])   ## wedge
+        ## 5x5 matrix
+        mw=np.array([[1.,0.,0.,0.,0.],[ckp,1.,0.,0.,0.], [0.,0.,1.,0.,0.],[0.,0.,-ckp,1.,0.],[0.,0.,0.,0.,1.]])   ## wedge
         self.matrix=mw
 #####################################################################
 def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
@@ -344,6 +369,8 @@ def test7():
     mr=mw*mb*mw
     mw.out()
     mb.out()
+    mr.out()
+    mr=RD(radius=rhob,length=lb,label='R')
     mr.out()
 ##################################################################
 if __name__ == '__main__':
