@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import setup
-import numpy as np
-from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf
+import setup as IN
+import numpy as NP
+from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
 class Matrix(object):
     _dim = 5   # 5x5 matrices
     def __init__(self):
-        self.matrix=np.eye(Matrix._dim)    ## 5x5 unit matrix
+        self.matrix=NP.eye(Matrix._dim)    ## 5x5 unit matrix
         self.label='I'
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
@@ -17,7 +17,7 @@ class Matrix(object):
         print(self.matrix)
     #-----------------------
     def __mul__(self,other):
-        product=np.einsum('ij,jk',self.matrix,other.matrix)
+        product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=Matrix()
         res.label=self.label+'*'+other.label
         res.matrix=product
@@ -87,7 +87,7 @@ class Matrix(object):
         m21 =self.matrix[1,0];  m22 =self.matrix[1,1]
         n11 =self.matrix[2,2];  n12 =self.matrix[2,3]
         n21 =self.matrix[3,2];  n22 =self.matrix[3,3]
-        m_beta = np.array([
+        m_beta = NP.array([
             [ m11*m11, -2.*m11*m12,           m12*m12,   0., 0., 0.],
             [-m11*m21,     m11*m22+m12*m21,  -m22*m12,   0., 0., 0.],
             [ m21*m21, -2.*m22*m21,           m22*m22,   0., 0., 0.],
@@ -103,7 +103,7 @@ class I(Matrix):           ## unity Matrix (an alias to Matrix class)
         
 class Test(Matrix):
     def __init__(self,a,b,c,d,label='test'):
-        self.matrix=np.array([[a,b,0.,0.,0.],
+        self.matrix=NP.array([[a,b,0.,0.,0.],
                               [c,d,0.,0.,0.],
                               [0.,0.,1.,2.,0.],
                               [0.,0.,-1.,1.,1.],
@@ -143,9 +143,9 @@ class QF(D):    ## focusing quad
         sdp =cd
         ## 4x4 matrix
         if (isinstance(self,QF) and (isinstance(self,QD)==False)):
-            mq=np.array([[cf,sf,0.,0.,0.],[cfp,sfp,0.,0.,0.],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])  ## QF
+            mq=NP.array([[cf,sf,0.,0.,0.],[cfp,sfp,0.,0.,0.],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])  ## QF
         elif isinstance(self,QD) :
-            mq=np.array([[cd,sd,0.,0.,0.],[cdp,sdp,0.,0.,0.],[0.,0.,cf,sf,0.],[0.,0.,cfp,sfp,0.],[0.,0.,0.,0.,1.]])  ## QD
+            mq=NP.array([[cd,sd,0.,0.,0.],[cdp,sdp,0.,0.,0.],[0.,0.,cf,sf,0.],[0.,0.,cfp,sfp,0.],[0.,0.,0.,0.,1.]])  ## QD
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return mq
@@ -180,7 +180,7 @@ class SD(D):   ## sector bending dipole in x-plane
         dis=self.radius*(1.-cos(phi))
         disp=sin(phi)
         ## 5x5 matrix
-        ms=np.array([[cf,sf,0.,0.,dis],[cfp,sfp,0.,0.,disp],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])   ## sector
+        ms=NP.array([[cf,sf,0.,0.,dis],[cfp,sfp,0.,0.,disp],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])   ## sector
         return ms
 
 class RD(SD):   ## rectangular bending dipole in x-plane
@@ -203,7 +203,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         dis=self.radius*(1.-cos(phi))
         disp=sin(phi)
         ## 5x5 matrix
-        mr=np.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
+        mr=NP.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
         return mr
 
 class WD(D):   ## wedge of rectangular bending dipole in x-plane
@@ -214,8 +214,31 @@ class WD(D):   ## wedge of rectangular bending dipole in x-plane
         psi=0.5*length*kwurz        ## Kantenwinkel
         ckp=kwurz*tan(psi)
         ## 5x5 matrix
-        mw=np.array([[1.,0.,0.,0.,0.],[ckp,1.,0.,0.,0.], [0.,0.,1.,0.,0.],[0.,0.,-ckp,1.,0.],[0.,0.,0.,0.,1.]])   ## wedge
+        mw=NP.array([[1.,0.,0.,0.,0.],[ckp,1.,0.,0.,0.], [0.,0.,1.,0.,0.],[0.,0.,-ckp,1.,0.],[0.,0.,0.,0.,1.]])   ## wedge
         self.matrix=mw
+
+class CAV(D):   ## cavity nach Dr.Tiede pp.33
+    def __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
+        super(CAV,self).__init__(label=label)
+        self.u0 = U0         # MV
+        self.tr = TrTF
+        self.phis = PhiSoll  # radians
+        self.tkin = Tkin     # MeV
+        self.freq = fRF      # MHz
+        self.lamb = 1.e-6*IN.physics['lichtgeschwindigkeit']/self.freq
+        self.matrix = self._mx()
+        self.viseo = 0.25
+    def _mx(self):
+        p  = IN.Proton(self.tkin)
+        g  = p.gamma
+        b  = p.beta
+        e0 = p.e0
+        cx = sxp = cy = syp = 1.0
+        sx = sy = 0.
+        cxp = pi * self.u0 * self.tr * sin(self.phis)
+        cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)
+        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])
+        return mc
 #####################################################################
 def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     """
@@ -299,13 +322,13 @@ def test4():
 
 def test5():
     print("K.Wille's Beispiel auf pp. 112-113")
-    kqf=  setup.ex_wille()['k_quad_f']
-    lqf=  setup.ex_wille()['length_quad_f']
-    kqd=  setup.ex_wille()['k_quad_d']
-    lqd=  setup.ex_wille()['length_quad_d']
-    rhob= setup.ex_wille()['beding_radius']
-    lb=   setup.ex_wille()['dipole_length']
-    ld=   setup.ex_wille()['drift_length']
+    kqf=  IN.ex_wille()['k_quad_f']
+    lqf=  IN.ex_wille()['length_quad_f']
+    kqd=  IN.ex_wille()['k_quad_d']
+    lqd=  IN.ex_wille()['length_quad_d']
+    rhob= IN.ex_wille()['beding_radius']
+    lb=   IN.ex_wille()['dipole_length']
+    ld=   IN.ex_wille()['drift_length']
     ## elements
     mqf=QF(kqf,lqf,'QF')
     mqd=QD(kqd,lqd,'QD')
@@ -331,13 +354,13 @@ def test5():
 
 def test6():
     print('test step_through elements ...')
-    kqf=  setup.ex_wille()['k_quad_f']
-    lqf=  setup.ex_wille()['length_quad_f']
-    kqd=  setup.ex_wille()['k_quad_d']
-    lqd=  setup.ex_wille()['length_quad_d']
-    rhob= setup.ex_wille()['beding_radius']
-    lb=   setup.ex_wille()['dipole_length']
-    ld=   setup.ex_wille()['drift_length']
+    kqf=  IN.ex_wille()['k_quad_f']
+    lqf=  IN.ex_wille()['length_quad_f']
+    kqd=  IN.ex_wille()['k_quad_d']
+    lqd=  IN.ex_wille()['length_quad_d']
+    rhob= IN.ex_wille()['beding_radius']
+    lb=   IN.ex_wille()['dipole_length']
+    ld=   IN.ex_wille()['drift_length']
 
     ## elements
     mqf=QF(kqf,lqf,'QF')
@@ -362,8 +385,8 @@ def test6():
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
-    rhob= setup.ex_wille()['beding_radius'] 
-    lb=   setup.ex_wille()['dipole_length']
+    rhob= IN.ex_wille()['beding_radius'] 
+    lb=   IN.ex_wille()['dipole_length']
     mb=SD(radius=rhob,length=lb,label='B')
     mw=WD(length=lb,radius=rhob,label='W')
     mr=mw*mb*mw
@@ -372,13 +395,18 @@ def test7():
     mr.out()
     mr=RD(radius=rhob,length=lb,label='R')
     mr.out()
+    
+def test8():
+    cav=CAV()
+    cav.out()
 ##################################################################
 if __name__ == '__main__':
-    test0()
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
-    test6()
-    test7()
+    # test0()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test7()
+    test8()

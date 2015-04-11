@@ -46,20 +46,19 @@ class Lattice(object):
 
             # Stabilität ?
             stab = fabs(mcell.tracex())
+            print('stability x ',stab)
             if stab >= 2.0:
                 raise RuntimeError('unstable Lattice in x-plane')
-            else:
-                print('stability x ',stab)
+
             stab = fabs(mcell.tracey())
+            print('stability y ',stab)
             if stab >= 2.0:
                 raise RuntimeError('unstable Lattice in y-plane')
-            else:
-                print('stability y ',stab)
 
             # Determinate M-I == 0 ?
             beta_matrix = mcell.BetaMatrix()
             det = LA.det(beta_matrix)
-            # print('det {:.5f}\n'.format(det))
+            print('det {:.5f}\n'.format(det))
             for i in range(5):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
@@ -200,6 +199,32 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
+    def cossin(self,steps=10):
+        cos_like =[]
+        sin_like =[]
+        c_0=np.array([[1.],[0.],[1.],[0.],[0.]])   # cos-like traj.
+        s_0=np.array([[0.],[1.],[0.],[1.],[0.]])   # sin-like traj.
+        s=0.0
+        for ipos in self.seq:
+            element,s0,s1 = ipos
+            for i_element in element.step_through(steps):
+                element_matrix = i_element.matrix
+                c_0 = element_matrix.dot(c_0)
+                s_0 = element_matrix.dot(s_0)
+                s += i_element.length
+                cx  = c_0[0,0]
+                cxp = c_0[1,0]
+                cy  = c_0[2,0]
+                cyp = c_0[3,0]
+                
+                sx  = s_0[0,0]
+                sxp = s_0[1,0]
+                sy  = s_0[2,0]
+                syp = s_0[3,0]
+                viseo = i_element.viseo
+                cos_like.append((cx,cxp,cy,cyp))
+                sin_like.append((sx,sxp,sy,syp))
+        return (cos_like,sin_like)
 ###################################################
 def test1():
     lattice=SETUP.make_lattice()
@@ -211,11 +236,9 @@ def test1():
     print('vectors\n',vectors)
     print('Mit numpy.linalg berechneter Eigenwert: \n',eigen[0].real)
     bx=vectors[0][0].real; ax=vectors[1][0].real; gx=vectors[2][0].real
-    print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f}'.
-          format(bx,ax,gx))
+    print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f}'.format(bx,ax,gx))
     probe=beta_matrix.dot(vectors[:,0])
-    print('Probe: \n {:.6f} {:.6f} {:.6f}'.
-          format(probe[0].real,probe[1].real,probe[2].real))
+    print('Probe: \n {:.6f} {:.6f} {:.6f}'.format(probe[0].real,probe[1].real,probe[2].real))
     print(
 '''Ergebnis scheint trivial zu sein!
 Eigenvvektor ist auf 1 normiert.
