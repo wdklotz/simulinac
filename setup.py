@@ -12,14 +12,11 @@ physics = {
     'soll_phase': -60.0,     # deg
     'frequenz': 800.0,       # MHz
     'kinetic_energy': 50.,   #MeV
-    'quad_gradient': 2.2,    # T/m
+    'quad_gradient': 1.0,    # T/m
+    'quad_gradient': 1.0,    # T/m
     'radians': pi/180.,      # rad/deg
     'degrees': 180./pi,      # deg/rad
      }
-# _lmbda = physics['lichtgeschwindigkeit']/physics['frequenz']*1.e-6
-# physics['wellenlänge'] = _lmbda
-
-    ############################################
 def ex_wille():
     return {
         'k_quad_f':1.2,
@@ -30,7 +27,6 @@ def ex_wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-    #########################################
 class Proton():
     def __init__(self,tkin=0.):
         self.e0   = physics['proton_mass']   #  proton rest mass [MeV/c**2]
@@ -43,7 +39,6 @@ class Proton():
     def out(self):
         print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
             .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))
-    #####################################################
 def k0p(gradient=0.,tkin=0.):
     """
     quad strength as function of kin. energy and gradient
@@ -56,11 +51,21 @@ def k0p(gradient=0.,tkin=0.):
         beta=prot.beta
         e0=prot.e0
         gamma=prot.gamma
-        factor=1.e-6*physics['lichtgeschwindigkeit']/e0
-        return factor*gradient/(beta*gamma)             
+        factor=1.e-6*physics['lichtgeschwindigkeit']
+        return factor*gradient/(beta*gamma*e0)             
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
-    #########################################################
+def bgrad(k0=0.,tkin=0.):
+    if (tkin >= 0.):
+        prot=Proton(tkin)
+        beta=prot.beta
+        e0=prot.e0
+        gamma=prot.gamma
+        factor=1.e-6*physics['lichtgeschwindigkeit']
+        return k0*(beta*gamma*e0)/factor           
+    else:
+        raise RuntimeError('setup.k0(): negative kinetic energy?')
+    
 def make_lattice():
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  ex_wille()['k_quad_f']
@@ -113,7 +118,6 @@ def make_lattice():
      # top.append(top)
      # top.append(top)
      return top
-     ###############################################
 def test0():
     lat = make_lattice()
     lat.out()
@@ -142,7 +146,6 @@ def test2():
     print('dB/dz[T/m]\t{:.3f}'.format(Bgrad))
     print('len[m]\t\t{:.3f}'.format(len))
     print('focal len[m]\t{:.3f}'.format(focal))
-####################################################################################
 if __name__ == '__main__':
     test0()
     test1()

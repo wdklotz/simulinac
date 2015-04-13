@@ -7,22 +7,20 @@ class Matrix(object):
     _dim = 5   # 5x5 matrices
     def __init__(self):
         self.matrix=NP.eye(Matrix._dim)    ## 5x5 unit matrix
-        self.label='I'
+        self.label=''
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
         self.viseo = 0.
-    #-----------------------
     def out(self):
         print(self.label)
         print(self.matrix)
-    #-----------------------
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=Matrix()
         res.label=self.label+'*'+other.label
+        res.length=self.length+other.length
         res.matrix=product
         return res
-    #-----------------------
     def reverse(self):
         res=Matrix()
         for i in range(Matrix._dim):
@@ -34,7 +32,6 @@ class Matrix(object):
         res.matrix[3][3] = self.matrix[2][2]
         res.label = '('+self.label+')r'
         return res
-    #-----------------------
     def trace(self):
         return self.tracex()+self.tracey
     def tracex(self):
@@ -47,41 +44,37 @@ class Matrix(object):
         for i in range(2,4):
             res += self.matrix[i,i]
         return res
-    #-----------------------
     def shorten(self,length=0.):
         return Matrix()
-    #-----------------------
     def step_through(self,anz=10):
         """
         Step through an element(The central nontrivial function).
         Default is 10 steps/element.
         Minimal step size is self.slice_min.
         """
-        if self.length == 0.0:   ## zero length element (like wedge)
-            yield self
-        else:                    ## adjust step size and nboff steps
-            step = self.length/anz
-            if step < self.slice_min:
-                step = self.slice_min
+        step = self.length/anz
+        if step < self.slice_min:
+            step  = self.slice_min
+        if self.length == 0.:           ## zero length element (like WD or CAV)
+            anz = 0; fanz= 0.; rest= 0.
+            mr=self
+        else:
 #            fanz = self.length/step
 #            anz  = floor(fanz)
 #            rest = self.length - anz*step
             (rest,fanz) = modf(self.length/step)
             anz = int(fanz)
             rest = self.length * rest
-#            print('fanz anz, step, rest',fanz,anz,step,rest)
             mx = self.shorten(step)
-            if fabs(rest) > 1.e-12:
+            if fabs(rest) > 1.e-9:
                 mr = self.shorten(rest)
-            for i in range(anz+1):
-                if i == anz:
-                    if fabs(rest) < 1.e-12:
-                        break
-                    else:
-                        yield mr
-                else:
-                    yield mx
-    #-----------------------
+            else:
+                mr=I(label=self.label,viseo=self.viseo)
+        # print('label={} fanz={} anz={} step={} rest={}'.format(self.label,fanz,anz,step,rest)) 
+        for i in range(anz+1):
+            if i == anz:
+                mx=mr
+            yield mx
     def BetaMatrix(self):
         m11 =self.matrix[0,0];  m12 =self.matrix[0,1]
         m21 =self.matrix[1,0];  m22 =self.matrix[1,1]
@@ -96,11 +89,11 @@ class Matrix(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-
 class I(Matrix):           ## unity Matrix (an alias to Matrix class)
-    def __init__(self):
+    def __init__(self,label='I',viseo=0):
         super(I,self).__init__()
-        
+        self.label=label
+        self.viseo=viseo
 class Test(Matrix):
     def __init__(self,a,b,c,d,label='test'):
         self.matrix=NP.array([[a,b,0.,0.,0.],
@@ -109,7 +102,6 @@ class Test(Matrix):
                               [0.,0.,-1.,1.,1.],
                               [0.,0.,0.,0.,1.]])
         self.label=label
-
 class D(Matrix):     ## drift space
     def __init__(self,length=0.,label='D'):    
         super(D,self).__init__()
@@ -118,8 +110,6 @@ class D(Matrix):     ## drift space
         self.matrix[0][1]=self.matrix[2][3]=self.length
     def shorten(self,l=0.):
         return D(length=l,label=self.label)
-        
-
 class QF(D):    ## focusing quad
     def __init__(self,k0=0.,length=0.,label='QF'):    
         super(QF,self).__init__(length=length,label=label)
@@ -149,14 +139,12 @@ class QF(D):    ## focusing quad
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return mq
-
 class QD(QF):                 ## defocusing quad
     def __init__(self,k0=0.,length=0.,label='QD'):
         super(QD,self).__init__(k0,length,label)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0,length=l,label=self.label)
-
 class SD(D):   ## sector bending dipole in x-plane
     def __init__(self,radius=0.,length=0.,label='SB'):
         super(SD,self).__init__(length=length,label=label)
@@ -182,7 +170,6 @@ class SD(D):   ## sector bending dipole in x-plane
         ## 5x5 matrix
         ms=NP.array([[cf,sf,0.,0.,dis],[cfp,sfp,0.,0.,disp],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])   ## sector
         return ms
-
 class RD(SD):   ## rectangular bending dipole in x-plane
     def __init__(self, radius=0., length=0., label='RB'):
         super(RD,self).__init__(radius=radius,length=length,label=label)
@@ -205,7 +192,6 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         ## 5x5 matrix
         mr=NP.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
         return mr
-
 class WD(D):   ## wedge of rectangular bending dipole in x-plane
     def __init__(self,length=0.,radius=0.,label='WD'):
         super(WD,self).__init__(label=label)
@@ -216,7 +202,8 @@ class WD(D):   ## wedge of rectangular bending dipole in x-plane
         ## 5x5 matrix
         mw=NP.array([[1.,0.,0.,0.,0.],[ckp,1.,0.,0.,0.], [0.,0.,1.,0.,0.],[0.,0.,-ckp,1.,0.],[0.,0.,0.,0.,1.]])   ## wedge
         self.matrix=mw
-
+    def shorten(self,l=0.):
+        return WD(radius=self.radius,length=l,label=self.label)
 class CAV(D):   ## cavity nach Dr.Tiede pp.33
     def __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         super(CAV,self).__init__(label=label)
@@ -239,7 +226,8 @@ class CAV(D):   ## cavity nach Dr.Tiede pp.33
         cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)
         mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])
         return mc
-#####################################################################
+    def shorten(self,l=0.):
+        return self
 def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     """
         quad strength as function of energy and gradient
@@ -251,7 +239,6 @@ def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)             
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
-
 def test0():
     print('trivial test 0 ...')
     a=Test(1,2,3,4,'a')
@@ -260,14 +247,12 @@ def test0():
     b.out()
     (a*b).out()
     (b*a).out()
-    
 def test1():
     print('trivial test 1 ...')
     i1=Matrix()
     i2=i1*i1
     i1.out()
     i2.out()
-    
 def test2():
     print('trivial test 2 ...')
     i1=Matrix()
@@ -279,7 +264,6 @@ def test2():
     d2=D(90,'D2')
     d2.out()
     (d1*d2).out()
-
 def test3():
     print('test product of Matrix class ...')
     gradient =1.
@@ -293,7 +277,6 @@ def test3():
     qd=QD(k0=k,length=1.)
     qd.out()
     (qf*qd).out()
-
 def test4():
     print('test shortening of elements ...')
     gradient =1.
@@ -319,7 +302,6 @@ def test4():
     sd05=sd.shorten(0.4)
     (sd05*sd05*sd05*sd05*sd05).out()
     sd.out()
-
 def test5():
     print("K.Wille's Beispiel auf pp. 112-113")
     kqf=  IN.ex_wille()['k_quad_f']
@@ -351,7 +333,6 @@ def test5():
     mz=mz *md
     mz=mz *mqf
     mz.out()
-
 def test6():
     print('test step_through elements ...')
     kqf=  IN.ex_wille()['k_quad_f']
@@ -381,7 +362,6 @@ def test6():
             m_end=m_end*mi
         m_end.out()
         m_anfang.out()
-
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
@@ -395,11 +375,9 @@ def test7():
     mr.out()
     mr=RD(radius=rhob,length=lb,label='R')
     mr.out()
-    
 def test8():
     cav=CAV()
     cav.out()
-##################################################################
 if __name__ == '__main__':
     # test0()
     # test1()
