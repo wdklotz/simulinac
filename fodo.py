@@ -132,7 +132,7 @@ def loesung1():
     s_bgrad=IN.bgrad(kqf,tk)
     s_u0=cavity.u0
     s_accel=s_gaps*s_u0/lattice_length
-    s_l200= 200.* lattice_length/s_accel
+    s_l200= 200./s_accel
     summary={
     'particle rest mass[MeV/c**2]':s_e0,
     'particle energy        [Mev]':tk,
