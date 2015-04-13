@@ -94,7 +94,6 @@ def loesung1():
 
     # basis zelle
     cnt2=0   # sec/cell
-    cnt3=1   # cells/lattice
     cell=Lattice()
     cell.add_element(mqf)
     cell.add_element(md)
@@ -109,29 +108,35 @@ def loesung1():
     # cell.out()
     
     # mehrere zellen (several cells)
-    cell.append(cell);cnt3+=1
-    lattice_length=cell.length
+    cnt3=0   # cells/super_cell
+    super_cell=Lattice()
+    super_cell.append(cell);cnt3+=1
+    super_cell.append(cell);cnt3+=1
+    super_cell.append(cell);cnt3+=1
+    super_cell.append(cell);cnt3+=1
+    lattice_length=super_cell.length
     print('lattice length [m]={}'.format(lattice_length))
-    print()
-    # cell.out()
+    super_cell.out()
     
     # anfangswerte
-    mcell,betax,betay=cell.cell()
+    mcell,betax,betay=super_cell.cell()
     print()
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     
     # lösungen als f(s)
-    beta_func = cell.beta_functions(20)   
-    cossin_like = cell.cossin(20)
+    beta_func = super_cell.beta_functions(20)   
+    cossin_like = super_cell.cossin(20)
     
     # Zusammenfassung
     s_p=IN.Proton(tk)
     s_name = s_p.name
     s_e0 = s_p.e0
+    print(cnt1,cnt2,cnt3)
     s_gaps=cnt1*cnt2*cnt3
     s_bgrad=IN.bgrad(kqf,tk)
     s_u0=cavity.u0
-    s_accel=s_gaps*s_u0/lattice_length
+    s_utot=s_u0*s_gaps
+    s_accel=s_utot/lattice_length
     s_l200= 200./s_accel
     summary={
     'particle rest mass[MeV/c**2]':s_e0,
@@ -141,6 +146,7 @@ def loesung1():
     'qudrupole gradient     [T/m]':s_bgrad,
     'av. voltage_per_gap     [MV]':s_u0,
     'lattice_length           [m]':lattice_length,
+    'tot.acceleration       [MeV]':s_utot,
     'av.acceleration      [MeV/m]':s_accel,
     'accl. length for 200 Mev [m]':s_l200,
     }
