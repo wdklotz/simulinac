@@ -116,7 +116,7 @@ def loesung1():
     super_cell.append(cell);cnt3+=1
     lattice_length=super_cell.length
     print('lattice length [m]={}'.format(lattice_length))
-    super_cell.out()
+    # super_cell.out()
     
     # anfangswerte
     mcell,betax,betay=super_cell.cell()
@@ -131,7 +131,6 @@ def loesung1():
     s_p=IN.Proton(tk)
     s_name = s_p.name
     s_e0 = s_p.e0
-    print(cnt1,cnt2,cnt3)
     s_gaps=cnt1*cnt2*cnt3
     s_bgrad=IN.bgrad(kqf,tk)
     s_u0=cavity.u0
@@ -139,6 +138,7 @@ def loesung1():
     s_accel=s_utot/lattice_length
     s_l200= 200./s_accel
     summary={
+    'quadrupole size          [m]':lqd,
     'particle rest mass[MeV/c**2]':s_e0,
     'particle energy        [Mev]':tk,
     'qudrupole strength  [1/m**2]':kqf,
@@ -152,7 +152,7 @@ def loesung1():
     }
     print('\nSummary('+s_name+')')
     for s in summary.items():
-        print('{}=  {:.3f}'.format(s[0].rjust(40),s[1]))
+        print('{}=  {:.3f}'.format(s[0].rjust(44),s[1]))
     
     # grafik
     plotter(beta_func,cossin_like[0],cossin_like[1])
