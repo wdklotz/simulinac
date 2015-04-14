@@ -40,7 +40,7 @@ def loesung1():
     Bgrad = IN.physics['quad_gradient']
     k0    = IN.k0_p(gradient=Bgrad,tkin=tk)  # quad strength
     print('k0[1/m**2]= ',k0)
-    kq= k0*8.
+    kq= k0*8.8
     
     # längen
     lqd=  0.4       # QD len
@@ -61,7 +61,6 @@ def loesung1():
     # __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         # U0=IN.physics['spalt_spannung'],
         U0=3.0,
-        TrTF=IN.physics['transit_time'],
         PhiSoll=IN.physics['soll_phase']*IN.physics['radians'],
         Tkin=IN.physics['kinetic_energy'],
         fRF=IN.physics['frequenz'],
@@ -150,8 +149,8 @@ def loesung1():
     'accl. length for 200 Mev [m]':s_l200,
     }
     print('\n======== Summary('+s_name+') =========')
-    for s,v in summary.items():
-        print(s.rjust(30),':',v)
+    for k,v in summary.items():
+        print(k.rjust(30),':',v)
     print('========= CAVITY =================')
     for k,v in cavity.__dict__.items():
         print(k.rjust(30),':',v)

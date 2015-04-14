@@ -89,7 +89,7 @@ class Matrix(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-class I(Matrix):           ## unity Matrix (an alias to Matrix class)
+class I(Matrix):## unity Matrix (an alias to Matrix class)
     def __init__(self,label='I',viseo=0.):
         super(I,self).__init__()
         self.label=label
@@ -103,7 +103,7 @@ class Test(Matrix):
                               [0.,0.,-1.,1.,1.],
                               [0.,0.,0.,0.,1.]])
         self.label=label
-class D(Matrix):     ## drift space
+class D(Matrix):## drift space
     def __init__(self,length=0.,label='D'):    
         super(D,self).__init__()
         self.label=label
@@ -140,13 +140,13 @@ class QF(D):    ## focusing quad
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return mq
-class QD(QF):                 ## defocusing quad
+class QD(QF):   ## defocusing quad
     def __init__(self,k0=0.,length=0.,label='QD'):
         super(QD,self).__init__(k0,length,label)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0,length=l,label=self.label)
-class SD(D):   ## sector bending dipole in x-plane
+class SD(D):    ## sector bending dipole in x-plane
     def __init__(self,radius=0.,length=0.,label='SB'):
         super(SD,self).__init__(length=length,label=label)
         self.radius = radius
@@ -193,7 +193,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         ## 5x5 matrix
         mr=NP.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
         return mr
-class WD(D):   ## wedge of rectangular bending dipole in x-plane
+class WD(D):    ## wedge of rectangular bending dipole in x-plane
     def __init__(self,length=0.,radius=0.,label='WD'):
         super(WD,self).__init__(label=label)
         self.radius = radius
@@ -205,18 +205,25 @@ class WD(D):   ## wedge of rectangular bending dipole in x-plane
         self.matrix=mw
     def shorten(self,l=0.):
         return WD(radius=self.radius,length=l,label=self.label)
-class CAV(D):   ## cavity nach Dr.Tiede pp.33
-    def __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
+class CAV(D):   ## thin lens cavity
+    def __init__(self, U0=10., PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         super(CAV,self).__init__(label=label)
-        self.u0 = U0         # MV
-        self.tr = TrTF
-        self.phis = PhiSoll  # radians
-        self.tkin = Tkin     # MeV
-        self.freq = fRF      # MHz
-        self.lamb = 1.e-6*IN.physics['lichtgeschwindigkeit']/self.freq
-        self.matrix = self._mx()
+        self.u0   = U0       # [MV] gap Voltage
+        self.phis = PhiSoll  # [radians] soll phase
+        self.tkin = Tkin     # [MeV] kinetic energy
+        self.freq = fRF      # [MHz]  RF frequenz
+        self.lamb = 1.e-6*IN.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.tr   = self._TrTF()  # time-transition factor
+        self.matrix = self._mx()  # transport matrix
         self.viseo = 0.25
-    def _mx(self):
+    def _TrTF(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+        gap_len = IN.physics['spalt_laenge']
+        teta = 2.*pi*1.e6*self.freq*gap_len / (IN.Proton(self.tkin).beta*IN.physics['lichtgeschwindigkeit'])
+        teta = 0.5 * teta
+        print(teta)
+        ttf = sin(teta)/teta
+        return ttf
+    def _mx(self):   # cavity nach Dr.Tiede pp.33
         p  = IN.Proton(self.tkin)
         g  = p.gamma
         b  = p.beta
@@ -377,8 +384,11 @@ def test7():
     mr=RD(radius=rhob,length=lb,label='R')
     mr.out()
 def test8():
+    print('test cavity...')
     cav=CAV()
-    cav.out()
+    for k,v in cav.__dict__.items():
+        print(k.rjust(30),':',v)
+
 if __name__ == '__main__':
     test0()
     test1()

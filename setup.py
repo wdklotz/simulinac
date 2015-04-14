@@ -8,6 +8,7 @@ physics = {
     'elementarladung': 1.602176565e-19,  # coulomb
     'proton_mass': 938.272,  # MeV/c**2
     'spalt_spannung': 5.0,   # MV
+    'spalt_laenge':0.04,     # m
     'transit_time': 0.5,
     'soll_phase': -60.0,     # deg
     'frequenz': 800.0,       # MHz
@@ -71,7 +72,7 @@ def QDscaled(quad0,tkin0=0.,tkin1=0.):
     len  =quad0.length
     label=quad0.label
     k1=k0scaled(k0,tkin0,tkin1)
-    if isinstance(quad0,ELM.QF)and (isinstance(quad0,ELM.QD)==False):
+    if isinstance(quad0,ELM.QF) and (isinstance(quad0,ELM.QD)==False):
         quad1=ELM.QF(k0=k1,length=len,label=label)
     elif isinstance(quad0,ELM.QD):
         quad1=ELM.QD(k0=k1,length=len,label=label)
@@ -84,7 +85,7 @@ def CAVscaled(cavity,tkin=0.):
     PhiSoll=cavity.phis
     fRF=cavity.freq
     label=cavity.label
-    cav = ELM.CAV(U0=u0, TrTF=TrTF, PhiSoll=PhiSoll, Tkin=tkin, fRF=fRF, label=label)
+    cav = ELM.CAV(U0=u0, PhiSoll=PhiSoll, Tkin=tkin, fRF=fRF, label=label)
     return cav
 def dBdz_p(k0=0.,tkin=0.):
     """
@@ -189,7 +190,7 @@ def test2():
     cavity=ELM.CAV(
         # U0=physics['spalt_spannung'],
         U0=3.0,
-        TrTF=physics['transit_time'],
+        # TrTF=physics['transit_time'],
         PhiSoll=physics['soll_phase']*physics['radians'],
         Tkin=physics['kinetic_energy'],
         fRF=physics['frequenz'],

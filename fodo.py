@@ -40,7 +40,7 @@ def loesung1():
     Bgrad = IN.physics['quad_gradient']
     k0    = IN.k0_p(gradient=Bgrad,tkin=tk)  # quad strength
     print('k0[1/m**2]= ',k0)
-    kqf= k0*8.
+    kqf= k0*8.8
     kqd= kqf 
     
     # längen
@@ -63,7 +63,6 @@ def loesung1():
     # __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         # U0=IN.physics['spalt_spannung'],
         U0=3.0,
-        TrTF=IN.physics['transit_time'],
         PhiSoll=IN.physics['soll_phase']*IN.physics['radians'],
         Tkin=IN.physics['kinetic_energy'],
         fRF=IN.physics['frequenz'],

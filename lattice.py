@@ -2,7 +2,7 @@
 import setup as IN
 import elements as ELM
 from math import sqrt, fabs, acos 
-import numpy as np
+import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot, show, legend
@@ -132,7 +132,7 @@ class Lattice(object):
             self.gammy0 = gmy
                         
             # Probe: twiss-functions durch ganze Zelle    
-            v_beta=np.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
+            v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
             m_cell=self.full_cell.BetaMatrix()
             v_beta_end = m_cell.dot(v_beta)
             print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
@@ -140,7 +140,7 @@ class Lattice(object):
             print('Ende  : ',v_beta_end.T,'\n')
         
         return self.full_cell,self.betax0,self.betay0
-    def reverse(self):  ## return a reversed Lattice
+    def reverse(self):  ## return a reversed Lattice (probably bogus!)
         res=Lattice()
         seq=copy(self.seq)
         seq.reverse()
@@ -162,7 +162,7 @@ class Lattice(object):
         by = self.betay0
         ay = self.alfay0
         gy = self.gammy0
-        v_beta0=np.array([[bx],[ax],[gx],[by],[ay],[gy]])
+        v_beta0=NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         # print(v_beta0)
         s=0.0
         for ipos in self.seq:
@@ -180,13 +180,13 @@ class Lattice(object):
         return beta_fun
     def dispersion(self,steps=10,closed=True):
         traj=[]
-        v_0=np.array([[0.],[0.],[0.],[0.],[1.]])
+        v_0=NP.array([[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
             m_cell = self.full_cell
             m11=m_cell.matrix[0,0]
             m15=m_cell.matrix[0,4]
             d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            v_0=np.array([[d0],[0.],[0.],[0.],[1.]])
+            v_0=NP.array([[d0],[0.],[0.],[0.],[1.]])
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -202,8 +202,8 @@ class Lattice(object):
     def cossin(self,steps=10):
         cos_like =[]
         sin_like =[]
-        c_0=np.array([[1.],[0.],[1.],[0.],[0.]])   # cos-like traj.
-        s_0=np.array([[0.],[1.],[0.],[1.],[0.]])   # sin-like traj.
+        c_0=NP.array([[1.],[0.],[1.],[0.],[0.]])   # cos-like traj.
+        s_0=NP.array([[0.],[1.],[0.],[1.],[0.]])   # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
