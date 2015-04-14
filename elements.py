@@ -90,12 +90,13 @@ class Matrix(object):
             ])
         return m_beta
 class I(Matrix):           ## unity Matrix (an alias to Matrix class)
-    def __init__(self,label='I',viseo=0):
+    def __init__(self,label='I',viseo=0.):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
 class Test(Matrix):
     def __init__(self,a,b,c,d,label='test'):
+        super(Test,self).__init__()
         self.matrix=NP.array([[a,b,0.,0.,0.],
                               [c,d,0.,0.,0.],
                               [0.,0.,1.,2.,0.],
@@ -132,7 +133,7 @@ class QF(D):    ## focusing quad
         cdp =kwurz*sinh(phi)
         sdp =cd
         ## 4x4 matrix
-        if (isinstance(self,QF) and (isinstance(self,QD)==False)):
+        if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
             mq=NP.array([[cf,sf,0.,0.,0.],[cfp,sfp,0.,0.,0.],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])  ## QF
         elif isinstance(self,QD) :
             mq=NP.array([[cd,sd,0.,0.,0.],[cdp,sdp,0.,0.,0.],[0.,0.,cf,sf,0.],[0.,0.,cfp,sfp,0.],[0.,0.,0.,0.,1.]])  ## QD
@@ -379,12 +380,12 @@ def test8():
     cav=CAV()
     cav.out()
 if __name__ == '__main__':
-    # test0()
-    # test1()
-    # test2()
-    # test3()
-    # test4()
-    # test5()
-    # test6()
-    # test7()
+    test0()
+    test1()
+    test2()
+    test3()
+    test4()
+    test5()
+    test6()
+    test7()
     test8()

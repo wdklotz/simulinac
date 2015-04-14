@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import setup as IN
 import elements as ELM
-
 from math import sqrt, fabs, acos 
 import numpy as np
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot, show, legend
-
 
 class Lattice(object):
     def __init__(self):

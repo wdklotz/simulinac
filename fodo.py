@@ -38,7 +38,7 @@ def loesung1():
     # physik werte
     tk    = IN.physics['kinetic_energy']
     Bgrad = IN.physics['quad_gradient']
-    k0    = IN.k0p(gradient=Bgrad,tkin=tk)  # quad strength
+    k0    = IN.k0_p(gradient=Bgrad,tkin=tk)  # quad strength
     print('k0[1/m**2]= ',k0)
     kqf= k0*8.
     kqd= kqf 
@@ -132,7 +132,7 @@ def loesung1():
     s_name = s_p.name
     s_e0 = s_p.e0
     s_gaps=cnt1*cnt2*cnt3
-    s_bgrad=IN.bgrad(kqf,tk)
+    s_bgrad=IN.dBdz_p(kqf,tk)
     s_u0=cavity.u0
     s_utot=s_u0*s_gaps
     s_accel=s_utot/lattice_length
