@@ -235,7 +235,7 @@ class CAV(D):   ## thin lens cavity
         sx = sy = 0.
         cxp = pi * self.u0 * self.tr * sin(self.phis)
         cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
-        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,dW,1.]])
+        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])
         return mc
     def shorten(self,l=0.):
         return self
