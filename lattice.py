@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import setup as IN
+import setup as UTIL
 import elements as ELM
 from math import sqrt, fabs, acos 
 import numpy as NP
@@ -45,14 +45,14 @@ class Lattice(object):
             if stab >= 2.0:
                 raise RuntimeError('unstable Lattice in x-plane')
             cos_mux = 0.5 * stab
-            mux = acos(cos_mux)*IN.physics['degrees']
+            mux = acos(cos_mux)*UTIL.physics['degrees']
 
             stab = fabs(mcell.tracey())
             print('stability Y? ',stab)
             if stab >= 2.0:
                 raise RuntimeError('unstable Lattice in y-plane')
             cos_muy = 0.5 * stab
-            muy = acos(cos_muy)*IN.physics['degrees']
+            muy = acos(cos_muy)*UTIL.physics['degrees']
             print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
             # Determinate M-I == 0 ?
@@ -226,7 +226,7 @@ class Lattice(object):
                 sin_like.append((sx,sxp,sy,syp))
         return (cos_like,sin_like)
 def test1():
-    lattice=IN.make_lattice()
+    lattice=UTIL.make_lattice()
     mcell,betax,betay=lattice.cell()
     beta_matrix = mcell.BetaMatrix()
     
@@ -248,7 +248,7 @@ def test1():
     # print('==================================================')
     return
 def test2():
-    lattice=IN.make_lattice()
+    lattice=UTIL.make_lattice()
     ## cell boundaries
     mcell,betax,betay=lattice.cell()
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))

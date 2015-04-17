@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import setup as IN
+import setup as UTIL
 import numpy as NP
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
@@ -208,31 +208,34 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane
 class CAV(D):   ## thin lens cavity
     def __init__(self, U0=10., PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         super(CAV,self).__init__(label=label)
-        self.u0   = U0       # [MV] gap Voltage
-        self.phis = PhiSoll  # [radians] soll phase
-        self.tkin = Tkin     # [MeV] kinetic energy
-        self.freq = fRF      # [MHz]  RF frequenz
-        self.lamb = 1.e-6*IN.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr   = self._TrTF()  # time-transition factor
+        self.u0     = U0       # [MV] gap Voltage
+        self.phis   = PhiSoll  # [radians] soll phase
+        self.tkin   = Tkin     # [MeV] kinetic energy
+        self.prot   = UTIL.Proton(self.tkin)
+        self.freq   = fRF      # [MHz]  RF frequenz
+        self.tr     = self._TrTF() # time-transition factor
+        self.lamb   = 1.e-6*UTIL.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.Ks     = 2.*pi/(self.lamb*self.prot.gamma*self.prot.beta)  # T.Wrangler pp.196
+        self.deltaW  = self.u0*self.tr*cos(self.phis) # T.Wrangler pp.221
         self.matrix = self._mx()  # transport matrix
-        self.viseo = 0.25
+        self.viseo  = 0.25
     def _TrTF(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        gap_len = IN.physics['spalt_laenge']
-        teta = 2.*pi*1.e6*self.freq*gap_len / (IN.Proton(self.tkin).beta*IN.physics['lichtgeschwindigkeit'])
+        gap_len = UTIL.physics['spalt_laenge']
+        teta = 2.*pi*1.e6*self.freq*gap_len / (self.prot.beta*UTIL.physics['lichtgeschwindigkeit'])
         teta = 0.5 * teta
-        print(teta)
         ttf = sin(teta)/teta
         return ttf
     def _mx(self):   # cavity nach Dr.Tiede pp.33
-        p  = IN.Proton(self.tkin)
+        p  = UTIL.Proton(self.tkin)
         g  = p.gamma
         b  = p.beta
         e0 = p.e0
+        dW = self.deltaW
         cx = sxp = cy = syp = 1.0
         sx = sy = 0.
         cxp = pi * self.u0 * self.tr * sin(self.phis)
-        cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)
-        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])
+        cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
+        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,dW,1.]])
         return mc
     def shorten(self,l=0.):
         return self
@@ -312,13 +315,13 @@ def test4():
     sd.out()
 def test5():
     print("K.Wille's Beispiel auf pp. 112-113")
-    kqf=  IN.ex_wille()['k_quad_f']
-    lqf=  IN.ex_wille()['length_quad_f']
-    kqd=  IN.ex_wille()['k_quad_d']
-    lqd=  IN.ex_wille()['length_quad_d']
-    rhob= IN.ex_wille()['beding_radius']
-    lb=   IN.ex_wille()['dipole_length']
-    ld=   IN.ex_wille()['drift_length']
+    kqf=  UTIL.ex_wille()['k_quad_f']
+    lqf=  UTIL.ex_wille()['length_quad_f']
+    kqd=  UTIL.ex_wille()['k_quad_d']
+    lqd=  UTIL.ex_wille()['length_quad_d']
+    rhob= UTIL.ex_wille()['beding_radius']
+    lb=   UTIL.ex_wille()['dipole_length']
+    ld=   UTIL.ex_wille()['drift_length']
     ## elements
     mqf=QF(kqf,lqf,'QF')
     mqd=QD(kqd,lqd,'QD')
@@ -343,13 +346,13 @@ def test5():
     mz.out()
 def test6():
     print('test step_through elements ...')
-    kqf=  IN.ex_wille()['k_quad_f']
-    lqf=  IN.ex_wille()['length_quad_f']
-    kqd=  IN.ex_wille()['k_quad_d']
-    lqd=  IN.ex_wille()['length_quad_d']
-    rhob= IN.ex_wille()['beding_radius']
-    lb=   IN.ex_wille()['dipole_length']
-    ld=   IN.ex_wille()['drift_length']
+    kqf=  UTIL.ex_wille()['k_quad_f']
+    lqf=  UTIL.ex_wille()['length_quad_f']
+    kqd=  UTIL.ex_wille()['k_quad_d']
+    lqd=  UTIL.ex_wille()['length_quad_d']
+    rhob= UTIL.ex_wille()['beding_radius']
+    lb=   UTIL.ex_wille()['dipole_length']
+    ld=   UTIL.ex_wille()['drift_length']
 
     ## elements
     mqf=QF(kqf,lqf,'QF')
@@ -373,8 +376,8 @@ def test6():
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
-    rhob= IN.ex_wille()['beding_radius'] 
-    lb=   IN.ex_wille()['dipole_length']
+    rhob= UTIL.ex_wille()['beding_radius'] 
+    lb=   UTIL.ex_wille()['dipole_length']
     mb=SD(radius=rhob,length=lb,label='B')
     mw=WD(length=lb,radius=rhob,label='W')
     mr=mw*mb*mw
@@ -388,7 +391,6 @@ def test8():
     cav=CAV()
     for k,v in cav.__dict__.items():
         print(k.rjust(30),':',v)
-
 if __name__ == '__main__':
     test0()
     test1()

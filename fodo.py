@@ -60,7 +60,7 @@ def loesung1():
     mqd=QD(kqd,lqd,'QD')
     mcl = mcr = D(length=0.5*lcav,label='cav')
     cavity=CAV(
-    # __init__(self, U0=10., TrTF=0.5, PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
+    # __init__(self, U0=10., PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
         # U0=IN.physics['spalt_spannung'],
         U0=3.0,
         PhiSoll=IN.physics['soll_phase']*IN.physics['radians'],

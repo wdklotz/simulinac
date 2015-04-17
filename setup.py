@@ -7,10 +7,10 @@ physics = {
     'lichtgeschwindigkeit': 299792458.,    #  m/s
     'elementarladung': 1.602176565e-19,  # coulomb
     'proton_mass': 938.272,  # MeV/c**2
-    'spalt_spannung': 5.0,   # MV
+    'spalt_spannung': 3.0,   # MV
     'spalt_laenge':0.04,     # m
     'transit_time': 0.5,
-    'soll_phase': -60.0,     # deg
+    'soll_phase': -50.0,     # deg
     'frequenz': 800.0,       # MHz
     'kinetic_energy': 50.,   #MeV
     'quad_gradient': 1.0,    # T/m
@@ -39,7 +39,7 @@ class Proton():
     def out(self):
         print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
             .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))
-def k0_p(gradient=0.,tkin=0.):
+def k0(gradient=0.,tkin=0.):
     """
     quad strength as function of kin. energy and gradient
     gradient: in [Tesla/m]
@@ -81,11 +81,10 @@ def QDscaled(quad0,tkin0=0.,tkin1=0.):
     return quad1
 def CAVscaled(cavity,tkin=0.):
     u0=cavity.u0
-    TrTF=cavity.tr
-    PhiSoll=cavity.phis
+    phiSoll=cavity.phis
     fRF=cavity.freq
     label=cavity.label
-    cav = ELM.CAV(U0=u0, PhiSoll=PhiSoll, Tkin=tkin, fRF=fRF, label=label)
+    cav = ELM.CAV(U0=u0,PhiSoll=phiSoll,Tkin=tkin,fRF=fRF,label=label)
     return cav
 def dBdz_p(k0=0.,tkin=0.):
     """
@@ -172,7 +171,7 @@ def test2():
     print('\ntest: quad k-faktor')
     Bgrad=physics['quad_gradient']   # [T/m] gradient
     tk=physics['kinetic_energy']      # [MeV]  kin. energy
-    kq=k0_p(gradient=Bgrad,tkin=tk)   # quad strength [1/m**2]
+    kq=k0(gradient=Bgrad,tkin=tk)   # quad strength [1/m**2]
     len=0.4   # quad len [m]
     focal = kq*len
     focal=1./focal  # focal len [m]
