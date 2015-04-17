@@ -4,7 +4,7 @@ from elements import I,D,QF,QD,SD,WD,CAV
 from lattice import Lattice
 from pylab import plot, show, legend
 from math import sqrt
-#Werte={'lqd':lqd,'lqf':lqf,'lq':lq,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF,'tkin':tk,'dBdz':Bgrad}
+#Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0}
 Werte ={} # Eigabewerte fuer eine basis zelle
 def plotter(beta_fun,cos_like,sin_like):
     s   = [ x[0] for x in beta_fun]    # bahnkoordinate s
@@ -40,12 +40,12 @@ def make_half_cell(upstream=True,verbose=False):
     w = Werte
     #-----------------------------------------
     # elemente
-    tkin = Werte['tkin']                          # update kinetic energy
-    kq=UTIL.k0(gradient=w['dBdz'],tkin=tkin)      # update quad strength
-    mqf=QF(kq,w['lqf'],'QF')                      # update F quad
-    mqd=QD(kq,w['lqd'],'QD')                      # update D quad
-    mcl = mcr = D(length=0.5*w['lcav'],label='cav') # drifts
+    tkin = w['tkin']                                # updated kinetic energy
+    kq=UTIL.k0(gradient=w['dBdz'],tkin=tkin)        # update quad strength
+    mqf=QF(kq,w['lqf'],'QF')                        # update F quad
+    mqd=QD(kq,w['lqd'],'QD')                        # update D quad
     cavity = CAV(U0=w['U0'],PhiSoll=w['phi0'],Tkin=tkin,fRF=w['fRF'],label='gap')  # update cavity
+    mcl = mcr = D(length=0.5*w['lcav'],label='cav') # drifts do not change
     if verbose:
         print('========= CAVITY =================')
         for k,v in cavity.__dict__.items():
@@ -115,21 +115,21 @@ def loesung1():
     phi0   = UTIL.physics['soll_phase']*UTIL.physics['radians']
     fRF0   = UTIL.physics['frequenz']
     tk0    = UTIL.physics['kinetic_energy']
-    Bgrad0 = UTIL.physics['quad_gradient']*8.5
+    dBdz0  = UTIL.physics['quad_gradient']*8.5
     #-----------------------------------------
     super_cell=Lattice()
     nboff_super_cells = 16
     nboff_gaps=0
-    Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':Bgrad0}
+    Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0}
     for icell in range(nboff_super_cells):
         # basis zelle
-        cell = Lattice()   # update cell
+        cell = Lattice()   # updated cell
         (half_cell,cnt,deltaW)   = make_half_cell(upstream=True); nboff_gaps+=cnt
         cell.append(half_cell)
-        Werte['tkin'] += deltaW
+        Werte['tkin'] += deltaW  # energy update here!
         (half_cell,cnt,deltaW) = make_half_cell(upstream=False); nboff_gaps+=cnt
         cell.append(half_cell)
-        Werte['tkin'] += deltaW
+        Werte['tkin'] += deltaW  # energy update here!
         # cell.out()
         super_cell.append(cell)  # add to super cell
     # super_cell.out()
@@ -140,9 +140,6 @@ def loesung1():
     mcell,betax,betay=super_cell.cell()
     print()
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
-    # lösungen als f(s)
-    beta_func   = super_cell.beta_functions(20)   
-    cossin_like = super_cell.cossin(20)
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
@@ -152,7 +149,7 @@ def loesung1():
     s_name  =s_p.name
     s_e0    =s_p.e0
     s_gaps  =nboff_gaps
-    s_bgrad =Bgrad0
+    s_bgrad =dBdz0
     s_kq_i  =UTIL.k0(gradient=s_bgrad,tkin=s_tk_i)
     s_kq_f  =UTIL.k0(gradient=s_bgrad,tkin=s_tk_f)
     s_u0    =u0
@@ -177,7 +174,9 @@ def loesung1():
     for k,v in summary.items():
         print(k.rjust(30),':',v)
     #-----------------------------------------
-    # Grafik
+    # Grafik: lösungen als f(s)
+    beta_func   = super_cell.beta_functions(20)   
+    cossin_like = super_cell.cossin(20)
     plotter(beta_func,cossin_like[0],cossin_like[1])
 if __name__ == '__main__':
     loesung1()

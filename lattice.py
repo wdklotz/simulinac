@@ -140,7 +140,7 @@ class Lattice(object):
             print('Ende  : ',v_beta_end.T,'\n')
         
         return self.full_cell,self.betax0,self.betay0
-    def reverse(self):  ## return a reversed Lattice (probably bogus!)
+    def reverse(self):  ## return a reversed Lattice (not used! probably bogus!)
         res=Lattice()
         seq=copy(self.seq)
         seq.reverse()
