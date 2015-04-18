@@ -58,21 +58,24 @@ class Lattice(object):
             else:
                 cos_muy = 0.5 * stab
                 muy = acos(cos_muy)*UTIL.physics['degrees']
+            if not unstable:
                 print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
+            self.full_cell = mcell    # the full cell
+            print('Lattice.cell: ganze Zellenmatrix:')
+            self.full_cell.out()
+            det = LA.det(self.full_cell.matrix)
+            print('det|full-cell|={:.5f}\n'.format(det))
             # Determinate M-I == 0 ?
             beta_matrix = mcell.BetaMatrix()
-            det = LA.det(beta_matrix)
-            print('det|full-cell|={:.5f}\n'.format(det))
             for i in range(5):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
             print('det|Mbeta - I|={:.5f}\n'.format(det))
-            if unstable:
-                raise RuntimeError('stop execution')
             
-            self.full_cell = mcell    # the full cell
-
+            # if unstable:
+                # raise RuntimeError('stop execution')
+            
             # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
             # beta_matrix = mcell.BetaMatrix()  
             # eigen, vectors = LA.eig(beta_matrix)
@@ -108,29 +111,32 @@ class Lattice(object):
             # aly = vector[4].real
             # gmy = vector[5].real
 
-            ## Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
-            print('Lattice.cell: ganze Zellenmatrix:')
-            self.full_cell.out()
-            cell_matrix = self.full_cell.matrix
-            m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
-            m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
-            n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
-            n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
-            bax=2.0-m11*m11-2.*m12*m21-m22*m22
-            bax=sqrt(bax)
-            bax=2.0*m12/bax
-            if(bax < 0.):
-                bax= -bax
-            alx=(m11-m22)/(2.*m12)*bax
-            gmx=(1.+alx*alx)/bax
-            bay=2.0-n11*n11-2.*n12*n21-n22*n22
-            bay=sqrt(bay)
-            bay=2.0*n12/bay
-            if(bay < 0.):
-                bay = -bay
-            aly=(n11-n22)/(2.*n12)*bay
-            gmy=(1.+aly*aly)/bay
-
+            # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
+            if not unstable:
+                cell_matrix = self.full_cell.matrix
+                m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
+                m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
+                n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
+                n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
+                bax=2.0-m11*m11-2.*m12*m21-m22*m22
+                bax=sqrt(bax)
+                bax=2.0*m12/bax
+                if(bax < 0.):
+                    bax= -bax
+                alx=(m11-m22)/(2.*m12)*bax
+                gmx=(1.+alx*alx)/bax
+                bay=2.0-n11*n11-2.*n12*n21-n22*n22
+                bay=sqrt(bay)
+                bay=2.0*n12/bay
+                if(bay < 0.):
+                    bay = -bay
+                aly=(n11-n22)/(2.*n12)*bay
+                gmy=(1.+aly*aly)/bay
+            
+            # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
+            alx=aly=-1.
+            bax=bay=gmx=gmy=1.+alx*alx
+            
             self.betax0 = bax
             self.alfax0 = alx
             self.gammx0 = gmx
@@ -138,7 +144,7 @@ class Lattice(object):
             self.alfay0 = aly
             self.gammy0 = gmy
                         
-            # Probe: twiss-functions durch ganze Zelle    
+            # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
             v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
             m_cell=self.full_cell.BetaMatrix()
             v_beta_end = m_cell.dot(v_beta)

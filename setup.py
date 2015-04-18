@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lattice as LAT
 import elements as ELM
-from math import pi, sqrt
+from math import pi,sqrt
 
 physics = {
     'lichtgeschwindigkeit': 299792458.,    #  m/s
