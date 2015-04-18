@@ -29,11 +29,11 @@ def ex_wille():
     }
 class Proton():
     def __init__(self,tkin=0.):
-        self.e0   = physics['proton_mass']   #  proton rest mass [MeV/c**2]
-        self.tkin = tkin                     # proton kinetic energy
-        self.e    = self.e0+self.tkin        # proton total energy
+        self.e0   = physics['proton_mass']   # proton rest mass [MeV/c**2]
+        self.tkin = tkin                     # proton kinetic energy [MeV]
+        self.e    = self.e0+self.tkin        # proton total energy [MeV]
         self.gamma= self.e/self.e0
-        self.beta = sqrt(1.-1./(self.gamma))
+        self.beta = sqrt(1.-1./(self.gamma*self.gamma))
         self.v    = self.beta*physics['lichtgeschwindigkeit']
         self.name = 'proton'
     def out(self):

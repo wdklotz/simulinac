@@ -211,10 +211,10 @@ class CAV(D):   ## thin lens cavity
         self.u0     = U0       # [MV] gap Voltage
         self.phis   = PhiSoll  # [radians] soll phase
         self.tkin   = Tkin     # [MeV] kinetic energy
-        self.prot   = UTIL.Proton(self.tkin)
         self.freq   = fRF      # [MHz]  RF frequenz
-        self.tr     = self._TrTF() # time-transition factor
         self.lamb   = 1.e-6*UTIL.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.prot   = UTIL.Proton(self.tkin)
+        self.tr     = self._TrTF() # time-transition factor
         self.Ks     = 2.*pi/(self.lamb*self.prot.gamma*self.prot.beta)  # T.Wrangler pp.196
         self.deltaW  = self.u0*self.tr*cos(self.phis) # T.Wrangler pp.221
         self.matrix = self._mx()  # transport matrix
@@ -230,12 +230,13 @@ class CAV(D):   ## thin lens cavity
         g  = p.gamma
         b  = p.beta
         e0 = p.e0
-        dW = self.deltaW
         cx = sxp = cy = syp = 1.0
         sx = sy = 0.
         cxp = pi * self.u0 * self.tr * sin(self.phis)
         cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
-        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])
+        # print(u"CAV: \u0394x'/x= ",cxp)
+        # print("CAV: dx'/x= ",cxp)
+        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0. ,1.]])
         return mc
     def shorten(self,l=0.):
         return self

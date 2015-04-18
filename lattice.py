@@ -40,20 +40,25 @@ class Lattice(object):
                 mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
             # Stabilität ?
+            unstable=False
             stab = fabs(mcell.tracex())
             print('stability X? ',stab)
             if stab >= 2.0:
-                raise RuntimeError('unstable Lattice in x-plane')
-            cos_mux = 0.5 * stab
-            mux = acos(cos_mux)*UTIL.physics['degrees']
+                print('unstable Lattice in x-plane\n')
+                unstable=True
+            else:
+                cos_mux = 0.5 * stab
+                mux = acos(cos_mux)*UTIL.physics['degrees']
 
             stab = fabs(mcell.tracey())
             print('stability Y? ',stab)
             if stab >= 2.0:
-                raise RuntimeError('unstable Lattice in y-plane')
-            cos_muy = 0.5 * stab
-            muy = acos(cos_muy)*UTIL.physics['degrees']
-            print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+                print('unstable Lattice in y-plane\n')
+                unstable=True
+            else:
+                cos_muy = 0.5 * stab
+                muy = acos(cos_muy)*UTIL.physics['degrees']
+                print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
             # Determinate M-I == 0 ?
             beta_matrix = mcell.BetaMatrix()
@@ -63,6 +68,8 @@ class Lattice(object):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
             print('det|Mbeta - I|={:.5f}\n'.format(det))
+            if unstable:
+                raise RuntimeError('stop execution')
             
             self.full_cell = mcell    # the full cell
 
