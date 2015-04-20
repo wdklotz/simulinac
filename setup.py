@@ -27,7 +27,7 @@ def ex_wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-class Proton():
+class Beam():
     def __init__(self,tkin=0.):
         self.e0   = physics['proton_mass']   # proton rest mass [MeV/c**2]
         self.tkin = tkin                     # proton kinetic energy [MeV]
@@ -46,12 +46,14 @@ def k0(gradient=0.,tkin=0.):
     tkin: kinetic energy in [MeV]
     """
     if (tkin >= 0.):
-        prot=Proton(tkin)
+        prot=Beam(tkin)
         beta=prot.beta
         e0=prot.e0
         gamma=prot.gamma
         factor=1.e-6*physics['lichtgeschwindigkeit']
-        return factor*gradient/(beta*gamma*e0)             
+        kres = factor*gradient/(beta*gamma*e0) 
+        print('k0= ',kres)
+        return kres
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
 def k0scaled(k0=0.,tkin0=0.,tkin1=0.):
@@ -59,8 +61,8 @@ def k0scaled(k0=0.,tkin0=0.,tkin1=0.):
     scale k0 for increase of kin. energy from
     tkin0 to tkin1
     """
-    prot0  =Proton(tkin0)
-    prot1  =Proton(tkin1)
+    prot0  =Beam(tkin0)
+    prot1  =Beam(tkin1)
     beta0  =prot0.beta
     gamma0 =prot0.gamma
     beta1  =prot1.beta
@@ -92,7 +94,7 @@ def dBdz_p(k0=0.,tkin=0.):
     and given kin. energy tkin
     """
     if (tkin >= 0.):
-        prot=Proton(tkin)
+        prot=Beam(tkin)
         beta=prot.beta
         e0=prot.e0
         gamma=prot.gamma
@@ -157,16 +159,16 @@ def test0():
     lat.out()
     print(lat)
 def test1():
-    print('\ntest: Proton class')
+    print('\ntest: Beam class')
     for key,value in physics.items():
         print('{}=  {:.4f}'.format(key.rjust(20),value))
-    # Proton class
+    # Beam class
     print()
-    Proton(0.).out()
-    Proton(50.).out()
-    Proton(200.).out()
-    Proton(1.e6).out()
-    Proton(1.e9).out()
+    Beam(0.).out()
+    Beam(50.).out()
+    Beam(200.).out()
+    Beam(1.e6).out()
+    Beam(1.e9).out()
 def test2():
     print('\ntest: quad k-faktor')
     Bgrad=physics['quad_gradient']   # [T/m] gradient
@@ -176,7 +178,7 @@ def test2():
     focal = kq*len
     focal=1./focal  # focal len [m]
 
-    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Proton(tk).beta))
+    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Beam(tk).beta))
     print('k [1/m**2]\t{:3f}'.format(kq))
     print('dB/dz[T/m]\t{:.3f}'.format(Bgrad))
     print('len[m]\t\t{:.3f}'.format(len))
@@ -203,5 +205,5 @@ def test2():
         CAVscaled(cavity,tks).out()
 if __name__ == '__main__':
     test0()
-    test1()
+    test1() 
     test2()

@@ -157,7 +157,7 @@ def loesung1():
     s_tk_i  =tk0
     s_tk_f  =Werte['tkin']
     s_lqd   =lqd
-    s_p     =UTIL.Proton(s_tk_f)
+    s_p     =UTIL.Beam(s_tk_f)
     s_name  =s_p.name
     s_e0    =s_p.e0
     s_gaps  =nboff_gaps

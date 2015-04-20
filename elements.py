@@ -4,7 +4,7 @@ import numpy as NP
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
 class Matrix(object):
-    _dim = 5   # 5x5 matrices
+    _dim = 6   # 5x5 matrices
     def __init__(self):
         self.matrix=NP.eye(Matrix._dim)    ## 5x5 unit matrix
         self.label=''
@@ -97,29 +97,34 @@ class I(Matrix):## unity Matrix (an alias to Matrix class)
 class Test(Matrix):
     def __init__(self,a,b,c,d,label='test'):
         super(Test,self).__init__()
-        self.matrix=NP.array([[a,b,0.,0.,0.],
-                              [c,d,0.,0.,0.],
-                              [0.,0.,1.,2.,0.],
-                              [0.,0.,-1.,1.,1.],
-                              [0.,0.,0.,0.,1.]])
+        self.matrix=NP.array([[a,b,0.,0.,0.,0.],
+                              [c,d,0.,0.,0.,0.],
+                              [0.,0.,1.,2.,0.,0.],
+                              [0.,0.,-1.,1.,1.,0.],
+                              [0.,0.,0.,0.,1.,0.]])
         self.label=label
 class D(Matrix):## drift space
-    def __init__(self,length=0.,label='D'):    
+    def __init__(self,length=0.,label='D',beam=UTIL.Beam()):    
         super(D,self).__init__()
         self.label=label
+        self.beam=beam
         self.length=length     ## hard edge length [m]
         self.matrix[0][1]=self.matrix[2][3]=self.length
+        g=self.beam.gamma
+        self.matrix[4][5]=self.length/(g*g)
     def shorten(self,l=0.):
         return D(length=l,label=self.label)
 class QF(D):    ## focusing quad
-    def __init__(self,k0=0.,length=0.,label='QF'):    
-        super(QF,self).__init__(length=length,label=label)
+    def __init__(self,k0=0.,length=0.,label='QF',beam=UTIL.Beam()):    
+        super(QF,self).__init__(length=length,label=label,beam=beam)
         self.k0=k0         ## energy independant Quad strength [m**-2]
         self.matrix=self._mx()
         self.viseo = +0.5
     def shorten(self,l=0.):
-        return QF(k0=self.k0,length=l,label=self.label)
+        return QF(k0=self.k0,length=l,label=self.label,beam=self.beam)
     def _mx(self):
+        g=self.beam.gamma
+        rzz12=self.length/(g*g)
         kwurz=sqrt(self.k0)
         phi=self.length*kwurz
         ## focusing
@@ -134,21 +139,21 @@ class QF(D):    ## focusing quad
         sdp =cd
         ## 4x4 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
-            mq=NP.array([[cf,sf,0.,0.,0.],[cfp,sfp,0.,0.,0.],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])  ## QF
+            mq=NP.array([[cf,sf,0.,0.,0.,0.],[cfp,sfp,0.,0.,0.,0.],[0.,0.,cd,sd,0.,0.],[0.,0.,cdp,sdp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.])  ## QF
         elif isinstance(self,QD) :
-            mq=NP.array([[cd,sd,0.,0.,0.],[cdp,sdp,0.,0.,0.],[0.,0.,cf,sf,0.],[0.,0.,cfp,sfp,0.],[0.,0.,0.,0.,1.]])  ## QD
+            mq=NP.array([[cd,sd,0.,0.,0.,0.],[cdp,sdp,0.,0.,0.,0.],[0.,0.,cf,sf,0.,0.],[0.,0.,cfp,sfp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QD
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return mq
 class QD(QF):   ## defocusing quad
-    def __init__(self,k0=0.,length=0.,label='QD'):
-        super(QD,self).__init__(k0,length,label)
+    def __init__(self,k0=0.,length=0.,label='QD',beam=TUIL.Beam()):
+        super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0,length=l,label=self.label)
 class SD(D):    ## sector bending dipole in x-plane
-    def __init__(self,radius=0.,length=0.,label='SB'):
-        super(SD,self).__init__(length=length,label=label)
+    def __init__(self,radius=0.,length=0.,label='SB',beam=UTIL.Beam()):
+        super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
         self.matrix=self._mx()
         self.viseo = 0.25
@@ -213,7 +218,7 @@ class CAV(D):   ## thin lens cavity
         self.tkin   = Tkin     # [MeV] kinetic energy
         self.freq   = fRF      # [MHz]  RF frequenz
         self.lamb   = 1.e-6*UTIL.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.prot   = UTIL.Proton(self.tkin)
+        self.prot   = UTIL.Beam(self.tkin)
         self.tr     = self._TrTF() # time-transition factor
         self.Ks     = 2.*pi/(self.lamb*self.prot.gamma*self.prot.beta)  # T.Wrangler pp.196
         self.deltaW  = self.u0*self.tr*cos(self.phis) # T.Wrangler pp.221
@@ -226,7 +231,7 @@ class CAV(D):   ## thin lens cavity
         ttf = sin(teta)/teta
         return ttf
     def _mx(self):   # cavity nach Dr.Tiede pp.33
-        p  = UTIL.Proton(self.tkin)
+        p  = UTIL.Beam(self.tkin)
         g  = p.gamma
         b  = p.beta
         e0 = p.e0
