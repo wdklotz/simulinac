@@ -30,8 +30,8 @@ def plotter(beta_fun,cos_like,sin_like):
     
     plot(s,cx,label='Cx(s)',color='blue')
     plot(s,sx,label='Sx(s)',color='brown') 
-    plot(s,cy,label='Cy(s)',color='green')
-    plot(s,sy,label='Sy(s)',color='red')
+    # plot(s,cy,label='Cy(s)',color='green')
+    # plot(s,sy,label='Sy(s)',color='red')
     
     plot(s,viseo,label='',color='black')
     plot(s,zero,color='black')
@@ -122,7 +122,7 @@ def loesung1():
     fRF0   = Phys['frequenz']
     tk0    = Phys['kinetic_energy']*1.       # KNOB: injection energy
     dBdz0  = Phys['quad_gradient']*8.05      # KNOB: quad gradient
-    # dBdz0  = Phys['quad_gradient']*9.        # KNOB: quad gradient
+    dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
     gr     = 1.0                             # KNOB: QD != QF
     Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0,'BxBy':gr}
     #-----------------------------------------
@@ -130,7 +130,7 @@ def loesung1():
     nboff_gaps=0
     # nboff_super_cells = 15*5   # KNOB:  final energy
     nboff_super_cells = 15*8   # KNOB:  final energy
-    nboff_super_cells = 15*1   # KNOB:  final energy
+    # nboff_super_cells = 15*1   # KNOB:  final energy
     gaps_per_half_cell= 3      # KNOB:  gaps/cell
     for icell in range(nboff_super_cells):
         #------
