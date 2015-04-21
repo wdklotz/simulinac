@@ -23,8 +23,8 @@ def plotter(beta_fun,cos_like,sin_like):
     viseo = [x[3] for x in beta_fun]
     zero=[0. for x in beta_fun]
     
-    # plot(s,bx ,label='betax',color='green')
-    # plot(s,by ,label='betay',color='red')
+    plot(s,bx ,label='betax',color='green')
+    plot(s,by ,label='betay',color='red')
     # plot(s,bxn,label='',     color='green')
     # plot(s,byn,label='',     color='red')
     
@@ -120,20 +120,21 @@ def loesung1():
     fRF0   = UTIL.physics['frequenz']
     tk0    = UTIL.physics['kinetic_energy']*1.       # knob: inj. energy
     dBdz0  = UTIL.physics['quad_gradient']*8.05      # knob: quad gradient
-    dBdz0  = UTIL.physics['quad_gradient']*9.        # knob: quad gradient
+    # dBdz0  = UTIL.physics['quad_gradient']*9.        # knob: quad gradient
     gr     = 1.0                                     # knob: QD != QF
     Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0,'BxBy':gr}
     #-----------------------------------------
     super_cell=Lattice()
     nboff_gaps=0
     nboff_super_cells = 15*5   # knob:  final energy
-    nboff_super_cells = 15*1   # knob:  final energy
+    nboff_super_cells = 15*8   # knob:  final energy
     gaps_per_half_cell=3       # knob:  gaps/cell
     for icell in range(nboff_super_cells):
         # kann man die struktur bei höheren energien ändern?
         if Werte['tkin'] >= 150.:              # knob: energy at which...
             gaps_per_half_cell=3              # knob: change gaps/cell
             Werte['dBdz'] = dBdz0 * 0.7988       # knob: change quad strength
+            Werte['dBdz'] = dBdz0 * 1.0000      # knob: change quad strength
         
         cell = Lattice()  # basis zelle
         (half_cell,cnt,deltaW) = make_half_cell(upstream=True,gaps=gaps_per_half_cell); nboff_gaps+=cnt

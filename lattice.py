@@ -134,8 +134,8 @@ class Lattice(object):
                 gmy=(1.+aly*aly)/bay
             
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-            alx=aly=-1.
-            bax=bay=gmx=gmy=1.+alx*alx
+            # alx=aly=-1.
+            # bax=bay=gmx=gmy=1.+alx*alx
             
             self.betax0 = bax
             self.alfax0 = alx
