@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import setup as UTIL
 import elements as ELM
 from math import sqrt, fabs, acos 
 import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot, show, legend
+from setup import wille, Phys
 
 class Lattice(object):
     def __init__(self):
@@ -32,7 +32,7 @@ class Lattice(object):
             element,s0,s1 = ipos
             print('{:s} length {:.3f} from {:.3f} to {:.3f}'.
                   format(element.label,element.length,s0,s1))
-    def cell(self):  ## full cell
+    def cell(self,closed=True):  ## full cell
         if self.full_cell == 0.0:
             mcell=ELM.I()
             for count, ipos in enumerate(self.seq):
@@ -48,7 +48,7 @@ class Lattice(object):
                 unstable=True
             else:
                 cos_mux = 0.5 * stab
-                mux = acos(cos_mux)*UTIL.physics['degrees']
+                mux = acos(cos_mux)*Phys['degrees']
 
             stab = fabs(mcell.tracey())
             print('stability Y? ',stab)
@@ -57,7 +57,7 @@ class Lattice(object):
                 unstable=True
             else:
                 cos_muy = 0.5 * stab
-                muy = acos(cos_muy)*UTIL.physics['degrees']
+                muy = acos(cos_muy)*Phys['degrees']
             if not unstable:
                 print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
@@ -112,38 +112,42 @@ class Lattice(object):
             # gmy = vector[5].real
 
             # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
-            if not unstable:
-                cell_matrix = self.full_cell.matrix
-                m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
-                m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
-                n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
-                n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
-                bax=2.0-m11*m11-2.*m12*m21-m22*m22
-                bax=sqrt(bax)
-                bax=2.0*m12/bax
-                if(bax < 0.):
-                    bax= -bax
-                alx=(m11-m22)/(2.*m12)*bax
-                gmx=(1.+alx*alx)/bax
-                bay=2.0-n11*n11-2.*n12*n21-n22*n22
-                bay=sqrt(bay)
-                bay=2.0*n12/bay
-                if(bay < 0.):
-                    bay = -bay
-                aly=(n11-n22)/(2.*n12)*bay
-                gmy=(1.+aly*aly)/bay
+            if closed:
+                if not unstable:
+                    cell_matrix = self.full_cell.matrix
+                    m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
+                    m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
+                    n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
+                    n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
+                    bax=2.0-m11*m11-2.*m12*m21-m22*m22
+                    bax=sqrt(bax)
+                    bax=2.0*m12/bax
+                    if(bax < 0.):
+                        bax= -bax
+                    alx=(m11-m22)/(2.*m12)*bax
+                    gmx=(1.+alx*alx)/bax
+                    bay=2.0-n11*n11-2.*n12*n21-n22*n22
+                    bay=sqrt(bay)
+                    bay=2.0*n12/bay
+                    if(bay < 0.):
+                        bay = -bay
+                    aly=(n11-n22)/(2.*n12)*bay
+                    gmy=(1.+aly*aly)/bay
+                else:
+                    raise RuntimeError('stop execution')
+            else:
+                # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
+                alx=aly=-1.
+                bax=bay=gmx=gmy=1.+alx*alx
             
-            # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-            alx=aly=-1.
-            bax=bay=gmx=gmy=1.+alx*alx
+        self.betax0 = bax
+        self.alfax0 = alx
+        self.gammx0 = gmx
+        self.betay0 = bay
+        self.alfay0 = aly
+        self.gammy0 = gmy
             
-            self.betax0 = bax
-            self.alfax0 = alx
-            self.gammx0 = gmx
-            self.betay0 = bay
-            self.alfay0 = aly
-            self.gammy0 = gmy
-                        
+        if closed:
             # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
             v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
             m_cell=self.full_cell.BetaMatrix()
@@ -152,7 +156,7 @@ class Lattice(object):
             print('Anfang: ',v_beta.T)
             print('Ende  : ',v_beta_end.T,'\n')
         
-        return self.full_cell,self.betax0,self.betay0
+        return (self.full_cell,self.betax0,self.betay0)
     def reverse(self):  ## return a reversed Lattice (not used! probably bogus!)
         res=Lattice()
         seq=copy(self.seq)
@@ -193,13 +197,13 @@ class Lattice(object):
         return beta_fun
     def dispersion(self,steps=10,closed=True):
         traj=[]
-        v_0=NP.array([[0.],[0.],[0.],[0.],[1.]])
+        v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
             m_cell = self.full_cell
             m11=m_cell.matrix[0,0]
-            m15=m_cell.matrix[0,4]
+            m15=m_cell.matrix[0,5]
             d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            v_0=NP.array([[d0],[0.],[0.],[0.],[1.]])
+            v_0=NP.array([[d0],[0.],[0.],[0.],[0.],[1.]])
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -215,8 +219,8 @@ class Lattice(object):
     def cossin(self,steps=10):
         cos_like =[]
         sin_like =[]
-        c_0=NP.array([[1.],[0.],[1.],[0.],[0.]])   # cos-like traj.
-        s_0=NP.array([[0.],[1.],[0.],[1.],[0.]])   # sin-like traj.
+        c_0=NP.array([[1.],[0.],[1.],[0.],[0.],[0.]])   # cos-like traj.
+        s_0=NP.array([[0.],[1.],[0.],[1.],[0.],[0.]])   # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -238,8 +242,64 @@ class Lattice(object):
                 cos_like.append((cx,cxp,cy,cyp))
                 sin_like.append((sx,sxp,sy,syp))
         return (cos_like,sin_like)
+def make_lattice():
+     print("K.Wille's Beispiel auf pp. 112-113")
+     kqf=  wille()['k_quad_f']
+     lqf=  wille()['length_quad_f']
+     kqd=  wille()['k_quad_d']
+     lqd=  wille()['length_quad_d']
+     rhob= wille()['beding_radius'] 
+     lb=   wille()['dipole_length']
+     ld=   wille()['drift_length']
+     ## elements
+     mqf=ELM.QF(kqf,lqf,'QF')
+     mqd=ELM.QD(kqd,lqd,'QD')
+     mb=ELM.SD(rhob,lb,'B')
+     mb1=ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
+     mw=ELM.WD(mb)
+     mw1=ELM.WD(mb1)
+     mbr=ELM.RD(rhob,lb)
+     md=ELM.D(ld)    
+     ## lattice
+     lattice=Lattice()
+     lattice.add_element(mqf)
+     lattice.add_element(md)
+     # lattice.add_element(mw)
+     # lattice.add_element(mb)
+     # lattice.add_element(mw)
+     lattice.add_element(mbr)
+     # lattice.add_element(mw1)
+     # lattice.add_element(mb1)
+     # lattice.add_element(mw1)
+     lattice.add_element(md)
+     lattice.add_element(mqd)
+     lattice.add_element(md)
+     # lattice.add_element(mw)
+     # lattice.add_element(mb)
+     # lattice.add_element(mw)
+     lattice.add_element(mbr)
+     lattice.add_element(md)
+     lattice.add_element(mqf)
+     # lattice.out()
+     top=Lattice()
+     top.append(lattice)
+     top.append(lattice)
+     top.append(lattice)
+     top.append(lattice)
+     top.append(lattice)
+     top.append(top)
+     # top.append(top)
+     # top.append(top)
+     # top.append(top)
+     # top.append(top)
+     # top.append(top)
+     return top
+def test0():
+    lat = make_lattice()
+    lat.out()
+    print(lat)
 def test1():
-    lattice=UTIL.make_lattice()
+    lattice=make_lattice()
     mcell,betax,betay=lattice.cell()
     beta_matrix = mcell.BetaMatrix()
     
@@ -261,9 +321,9 @@ def test1():
     # print('==================================================')
     return
 def test2():
-    lattice=UTIL.make_lattice()
+    lattice=make_lattice()
     ## cell boundaries
-    mcell,betax,betay=lattice.cell()
+    mcell,betax,betay=lattice.cell(closed=True )
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     ## lattice function as f(s)
     beta_fun = lattice.beta_functions(steps=100)   
@@ -285,5 +345,6 @@ def test2():
     legend(loc='upper left')
     show()
 if __name__ == '__main__':
-    test1()
+    # test0()
+    # test1()
     test2()

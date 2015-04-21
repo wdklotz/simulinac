@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import setup as UTIL
-import numpy as NP
+from setup import wille, Beam, Phys
+import numpy as NP 
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
 class Matrix(object):
-    _dim = 6   # 5x5 matrices
+    _dim = 6   # 6x6 matrices
     def __init__(self):
-        self.matrix=NP.eye(Matrix._dim)    ## 5x5 unit matrix
+        self.matrix=NP.eye(Matrix._dim)    ## 6x6 unit matrix
         self.label=''
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
@@ -95,16 +95,17 @@ class I(Matrix):## unity Matrix (an alias to Matrix class)
         self.label=label
         self.viseo=viseo
 class Test(Matrix):
-    def __init__(self,a,b,c,d,label='test'):
+    def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
         self.matrix=NP.array([[a,b,0.,0.,0.,0.],
                               [c,d,0.,0.,0.,0.],
-                              [0.,0.,1.,2.,0.,0.],
-                              [0.,0.,-1.,1.,1.,0.],
-                              [0.,0.,0.,0.,1.,0.]])
+                              [0.,0.,a,b,0.,0.],
+                              [0.,0.,d,e,0.,0.],
+                              [0.,0.,0.,0.,a,b],
+                              [0.,0.,0.,0.,e,f]])
         self.label=label
-class D(Matrix):## drift space
-    def __init__(self,length=0.,label='D',beam=UTIL.Beam()):    
+class D(Matrix):## drift space nach Trace3D
+    def __init__(self,length=0.,label='D',beam=Beam(Phys['kinetic_energy'])):    
         super(D,self).__init__()
         self.label=label
         self.beam=beam
@@ -113,16 +114,17 @@ class D(Matrix):## drift space
         g=self.beam.gamma
         self.matrix[4][5]=self.length/(g*g)
     def shorten(self,l=0.):
-        return D(length=l,label=self.label)
-class QF(D):    ## focusing quad
-    def __init__(self,k0=0.,length=0.,label='QF',beam=UTIL.Beam()):    
+        return D(length=l,label=self.label,beam=self.beam)
+class QF(D):    ## focusing quad nach Trace3D
+    def __init__(self,k0=0.,length=0.,label='QF',beam=Beam(Phys['kinetic_energy'])):    
         super(QF,self).__init__(length=length,label=label,beam=beam)
-        self.k0=k0         ## energy independant Quad strength [m**-2]
+        self.k0=k0         ## energy independent Quad strength [m**-2]
         self.matrix=self._mx()
         self.viseo = +0.5
     def shorten(self,l=0.):
         return QF(k0=self.k0,length=l,label=self.label,beam=self.beam)
     def _mx(self):
+        m=self.matrix
         g=self.beam.gamma
         rzz12=self.length/(g*g)
         kwurz=sqrt(self.k0)
@@ -137,115 +139,188 @@ class QF(D):    ## focusing quad
         sd  =sinh(phi)/kwurz
         cdp =kwurz*sinh(phi)
         sdp =cd
-        ## 4x4 matrix
+        ## 6x6 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
-            mq=NP.array([[cf,sf,0.,0.,0.,0.],[cfp,sfp,0.,0.,0.,0.],[0.,0.,cd,sd,0.,0.],[0.,0.,cdp,sdp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.])  ## QF
+            # mq=NP.array([[cf,sf,0.,0.,0.,0.],[cfp,sfp,0.,0.,0.,0.],[0.,0.,cd,sd,0.,0.],[0.,0.,cdp,sdp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QF
+            m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
         elif isinstance(self,QD) :
-            mq=NP.array([[cd,sd,0.,0.,0.,0.],[cdp,sdp,0.,0.,0.,0.],[0.,0.,cf,sf,0.,0.],[0.,0.,cfp,sfp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QD
+            # mq=NP.array([[cd,sd,0.,0.,0.,0.],[cdp,sdp,0.,0.,0.,0.],[0.,0.,cf,sf,0.,0.],[0.,0.,cfp,sfp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QD
+            m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
-        return mq
-class QD(QF):   ## defocusing quad
-    def __init__(self,k0=0.,length=0.,label='QD',beam=TUIL.Beam()):
+        return m
+    def scale(self,deltaTk=0.):
+        # for k,v in self.__dict__.items():
+            # print(k.rjust(30),':',v)
+        # for k,v in self.beam.__dict__.items():
+            # print(k.rjust(30),':',v)
+        k0   =self.k0
+        len  =self.length
+        label=self.label
+        tki = self.beam.tkin
+        tkf = tki+deltaTk
+        kf=scalek0(k0,tki,tkf)
+        # print('kf',kf)
+        quad_scaled=QF(k0=kf,length=len,label=label,beam=self.beam)
+        return quad_scaled
+class QD(QF):   ## defocusing quad nach Trace3D
+    def __init__(self,k0=0.,length=0.,label='QD',beam=Beam(Phys['kinetic_energy'])):
         super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
         self.viseo = -0.5
     def shorten(self,l=0.):
-        return QD(k0=self.k0,length=l,label=self.label)
-class SD(D):    ## sector bending dipole in x-plane
-    def __init__(self,radius=0.,length=0.,label='SB',beam=UTIL.Beam()):
+        return QD(k0=self.k0,length=l,label=self.label,beam=self.beam)
+    def scale(self,deltaTk=0.):
+        k0   =self.k0
+        len  =self.length
+        label=self.label
+        tki = self.beam.tkin
+        tkf = tki+deltaTk
+        kf=scalek0(k0,tki,tkf)
+        quad_scaled=QD(k0=kf,length=len,label=label,beam=self.beam)
+        return quad_scaled
+class SD(D):    ## sector bending dipole in x-plane nach Trace3D
+    def __init__(self,radius=0.,length=0.,label='SB',beam=Beam(Phys['kinetic_energy'])):
         super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
         self.matrix=self._mx()
         self.viseo = 0.25
     def shorten(self,l=0.):
-        return SD(radius=self.radius,length=l,label=self.label)
-    def _mx(self):
-        phi=self.length/self.radius
+        return SD(radius=self.radius,length=l,label=self.label,beam=self.beam)
+    def _mx(self):  # nach Trace3D
+        m = self.matrix
+        rho=self.radius
+        k=1./rho
+        phi=self.length/rho
+        cx=cos(phi) ; sx=sin(phi)
+        b=self.beam.beta
         ## x-plane
-        cf  = cos(phi)
-        sf  = sin(phi)*self.radius
-        cfp =-sin(phi)/self.radius
-        sfp = cf
+        m[0,0] = cx;     m[0,1] = sx/k;  m[0,5] = rho*(1.-cx)
+        m[1,0] = -sx*k;  m[1,1] = cx;    m[1,5] = sx
         ## y-plane
-        cd  = 1.
-        sd  = phi*self.radius
-        cdp = 0.0
-        sdp = cd
-        dis=self.radius*(1.-cos(phi))
-        disp=sin(phi)
-        ## 5x5 matrix
-        ms=NP.array([[cf,sf,0.,0.,dis],[cfp,sfp,0.,0.,disp],[0.,0.,cd,sd,0.],[0.,0.,cdp,sdp,0.],[0.,0.,0.,0.,1.]])   ## sector
-        return ms
+        m[2,3] = self.length
+        ## z-plane
+        m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
+        return m
 class RD(SD):   ## rectangular bending dipole in x-plane
-    def __init__(self, radius=0., length=0., label='RB'):
-        super(RD,self).__init__(radius=radius,length=length,label=label)
-        self.matrix=self._mx()
+    def __init__(self, radius=0., length=0., label='RB',beam=Beam(Phys['kinetic_energy'])):
+        super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
+        wd = WD(self,label='',beam=self.beam)  # wedge myself...
+        rd = wd * self * wd
+        self.matrix= rd.matrix
     def shorten(self,l=0.):
-        return RD(radius=self.radius,length=l,label=self.label)
-    def _mx(self):
-        phi=self.length/self.radius
-        one_over_fy=tan(0.5*phi)/self.radius
-        cx=1.
-        sx=self.radius*sin(phi)
-        cxp=0.
-        sxp=cx
-        cy=1.-self.length*one_over_fy
-        sy=self.length
-        cyp=(-2.+self.length*one_over_fy)*one_over_fy
-        syp=cy
-        dis=self.radius*(1.-cos(phi))
-        disp=sin(phi)
-        ## 5x5 matrix
-        mr=NP.array([[cx,sx,0.,0.,dis],[cxp,sxp,0.,0.,disp],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0.,1.]])   ## rechteck
-        return mr
+        return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
 class WD(D):    ## wedge of rectangular bending dipole in x-plane
-    def __init__(self,length=0.,radius=0.,label='WD'):
-        super(WD,self).__init__(label=label)
-        self.radius = radius
-        kwurz=1./self.radius
-        psi=0.5*length*kwurz        ## Kantenwinkel
-        ckp=kwurz*tan(psi)
-        ## 5x5 matrix
-        mw=NP.array([[1.,0.,0.,0.,0.],[ckp,1.,0.,0.,0.], [0.,0.,1.,0.,0.],[0.,0.,-ckp,1.,0.],[0.,0.,0.,0.,1.]])   ## wedge
-        self.matrix=mw
+    def __init__(self,sector,label='WD',beam=Beam(Phys['kinetic_energy'])):
+        super(WD,self).__init__(label=label,beam=beam)
+        m=self.matrix
+        self.parent = sector
+        self.radius = sector.radius
+        self.psi = sector.length/self.radius
+        rinv=1./self.radius
+        psi=0.5*self.psi  ## Kantenwinkel
+        ckp=rinv*tan(psi)
+        ## 6x6 matrix
+        m[1,0]=ckp
+        m[3,2]=-ckp
     def shorten(self,l=0.):
-        return WD(radius=self.radius,length=l,label=self.label)
+        wd = WD(self.parent,label=self.label,beam=self.beam)
+        m=wd.matrix
+        wd.psi = l/wd.radius
+        rinv=1./wd.radius
+        psi=0.5*wd.psi  ## Kantenwinkel 
+        ckp=rinv*tan(psi)
+        ## 6x6 matrix
+        m[1,0]=ckp
+        m[3,2]=-ckp
+        return wd
 class CAV(D):   ## thin lens cavity
-    def __init__(self, U0=10., PhiSoll=-0.25*pi, Tkin=50., fRF=800., label='CAV'):
-        super(CAV,self).__init__(label=label)
+    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='CAV', beam=Beam(Phys['kinetic_energy'])):
+        super(CAV,self).__init__(label=label,beam=beam)
         self.u0     = U0       # [MV] gap Voltage
         self.phis   = PhiSoll  # [radians] soll phase
-        self.tkin   = Tkin     # [MeV] kinetic energy
         self.freq   = fRF      # [MHz]  RF frequenz
-        self.lamb   = 1.e-6*UTIL.physics['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.prot   = UTIL.Beam(self.tkin)
+        self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF() # time-transition factor
-        self.Ks     = 2.*pi/(self.lamb*self.prot.gamma*self.prot.beta)  # T.Wrangler pp.196
+        self.Ks     = 2.*pi/(self.lamb*self.beam.gamma*self.beam.beta)  # T.Wrangler pp.196
         self.deltaW  = self.u0*self.tr*cos(self.phis) # T.Wrangler pp.221
         self.matrix = self._mx()  # transport matrix
         self.viseo  = 0.25
     def _TrTF(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        gap_len = UTIL.physics['spalt_laenge']
-        teta = 2.*pi*1.e6*self.freq*gap_len / (self.prot.beta*UTIL.physics['lichtgeschwindigkeit'])
+        gap_len = Phys['spalt_laenge']
+        teta = 2.*pi*1.e6*self.freq*gap_len / (self.beam.beta*Phys['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx(self):   # cavity nach Dr.Tiede pp.33
-        p  = UTIL.Beam(self.tkin)
-        g  = p.gamma
-        b  = p.beta
-        e0 = p.e0
-        cx = sxp = cy = syp = 1.0
-        sx = sy = 0.
+    def _mx(self):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
+        m=self.matrix
+        g  = self.beam.gamma
+        b  = self.beam.beta
+        e0 = self.beam.e0
         cxp = pi * self.u0 * self.tr * sin(self.phis)
         cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
         # print(u"CAV: \u0394x'/x= ",cxp)
         # print("CAV: dx'/x= ",cxp)
-        mc=NP.array([[cx,sx,0.,0.,0.],[cxp,sxp,0.,0.,0.],[0.,0.,cy,sy,0.],[0.,0.,cyp,syp,0.],[0.,0.,0.,0. ,1.]])
-        return mc
+        m[1,0]=cxp
+        m[3,2]=cyp
+        return m
     def shorten(self,l=0.):
         return self
-def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
+    def scale(self,deltaTk=0.):
+        u0=self.u0
+        phiSoll=self.phis
+        fRF=self.freq
+        label=self.label
+        beam=self.beam
+        tki =beam.tkin
+        tkf =tki+deltaTk
+        cav = CAV(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
+        return cav
+def k0(gradient=0.,tkin=0.):
+    """
+    quad strength as function of kin. energy and gradient
+    gradient: in [Tesla/m]
+    tkin: kinetic energy in [MeV]
+    """
+    if (tkin >= 0.):
+        prot=Beam(tkin)
+        beta=prot.beta
+        e0=prot.e0
+        gamma=prot.gamma
+        factor=1.e-6*Phys['lichtgeschwindigkeit']
+        kres = factor*gradient/(beta*gamma*e0) 
+        # print('k0= ',kres)
+        return kres
+    else:
+        raise RuntimeError('setup.k0(): negative kinetic energy?')
+def scalek0(k0=0.,tki=0.,tkf=0.):
+    """
+    scale k0 for increase of kin. energy from
+    tkin0 to tkin1
+    """
+    pi  =Beam(tki)
+    bi  =pi.beta
+    gi  =pi.gamma
+    pf  =Beam(tkf)
+    bf  =pf.beta
+    gf  =pf.gamma
+    kf= k0 * (bi * gi) / (bf * gf)
+    return kf
+def dBdz(k0=0.,tkin=0.):
+    """
+    calculate quad gradient for given quad strength k0
+    and given kin. energy tkin
+    """
+    if (tkin >= 0.):
+        prot=Beam(tkin)
+        beta=prot.beta
+        e0=prot.e0
+        gamma=prot.gamma
+        factor=1.e-6*Phys['lichtgeschwindigkeit']
+        return k0*(beta*gamma*e0)/factor           
+    else:
+        raise RuntimeError('setup.k0(): negative kinetic energy?')
+####################################################################
+def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     """
         quad strength as function of energy and gradient
         gradient in [Tesla/m]
@@ -258,9 +333,9 @@ def k0(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
 def test0():
     print('trivial test 0 ...')
-    a=Test(1,2,3,4,'a')
+    a=Test(1,2,3,4,5,6,label='a')
     a.out()
-    b=Test(1,0,3,4,'b')
+    b=Test(1,1,1,1,1,1,label='b')
     b.out()
     (a*b).out()
     (b*a).out()
@@ -287,7 +362,7 @@ def test3():
     beta     =0.5
     energy   =0.2
     print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient,beta,energy))
-    k=k0(gradient=gradient,energy=energy,beta=beta)
+    k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     qf.out()
     ## test product of Matrix class
@@ -299,7 +374,7 @@ def test4():
     gradient =1.
     beta     =0.5
     energy   =0.2
-    k=k0(gradient=gradient,energy=energy,beta=beta)
+    k=k0test(gradient=gradient,energy=energy,beta=beta)
     ## elements
     d10=D(10.,'d10')
     d10.out()
@@ -321,18 +396,18 @@ def test4():
     sd.out()
 def test5():
     print("K.Wille's Beispiel auf pp. 112-113")
-    kqf=  UTIL.ex_wille()['k_quad_f']
-    lqf=  UTIL.ex_wille()['length_quad_f']
-    kqd=  UTIL.ex_wille()['k_quad_d']
-    lqd=  UTIL.ex_wille()['length_quad_d']
-    rhob= UTIL.ex_wille()['beding_radius']
-    lb=   UTIL.ex_wille()['dipole_length']
-    ld=   UTIL.ex_wille()['drift_length']
+    kqf=  wille()['k_quad_f']
+    lqf=  wille()['length_quad_f']
+    kqd=  wille()['k_quad_d']
+    lqd=  wille()['length_quad_d']
+    rhob= wille()['beding_radius']
+    lb=   wille()['dipole_length']
+    ld=   wille()['drift_length']
     ## elements
     mqf=QF(kqf,lqf,'QF')
     mqd=QD(kqd,lqd,'QD')
     mb=SD(rhob,lb,'B')
-    mw=WD(lb,rhob)
+    mw=WD(mb)
     md=D(ld)
     ## test matrix multiplication
     mz=I()
@@ -352,19 +427,19 @@ def test5():
     mz.out()
 def test6():
     print('test step_through elements ...')
-    kqf=  UTIL.ex_wille()['k_quad_f']
-    lqf=  UTIL.ex_wille()['length_quad_f']
-    kqd=  UTIL.ex_wille()['k_quad_d']
-    lqd=  UTIL.ex_wille()['length_quad_d']
-    rhob= UTIL.ex_wille()['beding_radius']
-    lb=   UTIL.ex_wille()['dipole_length']
-    ld=   UTIL.ex_wille()['drift_length']
+    kqf=  wille()['k_quad_f']
+    lqf=  wille()['length_quad_f']
+    kqd=  wille()['k_quad_d']
+    lqd=  wille()['length_quad_d']
+    rhob= wille()['beding_radius']
+    lb=   wille()['dipole_length']
+    ld=   wille()['drift_length']
 
     ## elements
     mqf=QF(kqf,lqf,'QF')
     mqd=QD(kqd,lqd,'QD')
     mb=SD(rhob,lb,'B')
-    mw=WD(lb,rhob)
+    mw=WD(mb)
     md=D(ld)
     
     ## test step_through elements ...
@@ -382,10 +457,10 @@ def test6():
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
-    rhob= UTIL.ex_wille()['beding_radius'] 
-    lb=   UTIL.ex_wille()['dipole_length']
+    rhob= wille()['beding_radius'] 
+    lb=   wille()['dipole_length']
     mb=SD(radius=rhob,length=lb,label='B')
-    mw=WD(length=lb,radius=rhob,label='W')
+    mw=WD(mb,label='W')
     mr=mw*mb*mw
     mw.out()
     mb.out()
@@ -397,6 +472,40 @@ def test8():
     cav=CAV()
     for k,v in cav.__dict__.items():
         print(k.rjust(30),':',v)
+def test9():
+    print('\ntest: quad k-faktor and quad scaling')
+    grad=Phys['quad_gradient']   # [T/m] gradient
+    tk=Phys['kinetic_energy']    # [MeV]  kin. energy
+    kq=k0(gradient=grad,tkin=tk)    # quad strength [1/m**2]
+    len=0.4                         # quad len [m]
+    focal = kq*len
+    focal=1./focal  # focal len [m]
+
+    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Beam(tk).beta))
+    print('k [1/m**2]\t{:3f}'.format(kq))
+    print('dB/dz[T/m]\t{:.3f}'.format(grad))
+    print('len[m]\t\t{:.3f}'.format(len))
+    print('focal len[m]\t{:.3f}'.format(focal))
+    
+    grad=dBdz(kq,tk) # quad gradient from k and tkinetic
+    print('dB/dz[T/m]\t{:.3f}'.format(grad))
+    
+    mqf=QF(kq,len)
+    mqd=QD(kq,len)
+    cavity=CAV(
+        U0=Phys['spalt_spannung'],
+        PhiSoll=Phys['soll_phase']*Phys['radians'],
+        fRF=Phys['frequenz'],
+        beam=Beam(tk),
+        label='gap')
+    tki=tk
+    for dt in [10.,50.,150.]:
+        tkf=tki+dt
+        k_scaled = scalek0(kq,tki,tkf)
+        print('k[{} MeV] {:.3f} k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
+        mqf.scale(deltaTk=dt).out()
+        mqd.scale(deltaTk=dt).out()
+        cavity.scale(deltaTk=dt).out()
 if __name__ == '__main__':
     test0()
     test1()
@@ -407,3 +516,4 @@ if __name__ == '__main__':
     test6()
     test7()
     test8()
+    test9()
