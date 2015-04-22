@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from setup import Beam, Phys
-from elements import k0,I,D,QF,QD,SD,WD,CAV
+from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG
 from lattice import Lattice
 from pylab import plot, show, legend
 from math import sqrt
 
-#Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0,'BxBy':gr}
+#Werte={'lqd','lqf','ld','lcav','U0','phi0','fRF','dBdz','dWf','verbose'}
 Werte ={} # Eigabewerte fuer eine basis zelle (als gobal definiert! ..bad but efficient.)
 
 def plotter(beta_fun,cos_like,sin_like):
@@ -37,75 +37,83 @@ def plotter(beta_fun,cos_like,sin_like):
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     show()
-def make_half_cell(upstream=True,verbose=False,gaps=3):
-    ''' gaps: nboff gaps per rf section'''
+def make_cavity(tki,l):   # kavität
     global Werte
     w = Werte
-    #-----------------------------------------
-    # elemente
-    tkin = w['tkin']                                 # new updated kinetic energy
-    kq   = k0(gradient=w['dBdz'],tkin=tkin)          # new updated quad strength QF
-    kqp=kq*w['BxBy']                                 # new updated quad strength QD
-    beam = Beam(tkin)                                # new updated beam
-    mqf=QF(k0=kq ,length=w['lqf'],label='QF',beam=beam) # new updated F quad
-    mqd=QD(k0=kqp,length=w['lqd'],label='QD',beam=beam) # new updated D quad
-    cavity = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='gap',beam=beam)  # new updated cavity
-    mcl = mcr = D(length=0.5*w['lcav'],label='cav',beam=beam) # new updated drift (in Trace3d dependant on energy!)
-    if verbose:
-        print('========= CAVITY =================')
-        for k,v in cavity.__dict__.items():
-            if k=='matrix' or k=='prot':
-                continue
-            print(k.rjust(30),':',v)
-        print('========= QUADRUPOLE ==============')
-        for k,v in mqd.__dict__.items():
-            if k=='matrix':
-                continue
-            print(k.rjust(30),':',v)
-    #-----------------------------------------
-    # kavität
-    cav=Lattice()
-    cav.add_element(mcr)
-    cav.add_element(cavity)
-    cav.add_element(mcl)
-    # cav.out()
-    #-----------------------------------------
-    # RF sektion
-    cnt1=0   # cav/section
-    rf_section = Lattice()
-    for igap in range(gaps):
-        rf_section.append(cav); cnt1+=1
-    # rf_section.out()  
-    #-----------------------------------------
-    # abgleich drift strecke
-    lrf_section=rf_section.length
-    ld=w['ld']-lrf_section
-    # print('Abgleich')
-    # print('l-drift = ',ld)
-    # print('l-cav_section  = ',lrf_section)
-    # print()
-    md=D(0.5*ld) # drift zw. cavity u. quad
-    #-----------------------------------------
+    tk = tki
+    beam = Beam(tk)
+    cavity = Lattice()
+    dri = D(length=0.5*l,beam=beam)
+    gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=beam,dWf=w['dWf'])
+    # if w['verbose']':
+        # print('========= GAP =================')
+        # for k,v in gap.__dict__.items():
+            # if k=='matrix':
+                # continue
+            # print(k.rjust(30),':',v)
+    tk += gap.deltaW
+    beam = Beam(tk)
+    drf = D(length=0.5*l,beam=beam)
+    cavity.add_element(dri)
+    cavity.add_element(gap)
+    cavity.add_element(drf)
+    return (cavity,tk)
+def make_rf_section(tki,lcav,gaps=1):   # RF sektion
+    ''' gaps: nboff gaps per rf section'''
+    tk = tki
+    l = 0.
+    section = Lattice()
+    for i in range(gaps):
+        (cav,tkf)=make_cavity(tk,lcav)
+        section.append(cav)
+        l += lcav
+        tk = tkf
+    return (section,tkf)  
+def make_half_cell(tki,upstream=True,gaps=3):
+    global Werte
+    w = Werte
     # basis zelle
     cell=Lattice()
-    cnt2=0
     if upstream : # 1/2 basis zelle upstream
-    # if not upstream : # 1/2 basis zelle upstream
+        tk   = tki
+        kq   = k0(gradient=w['dBdz'],tkin=tk)           # quad strength @ entrance
+        beam = Beam(tk)                                 # beam @ entrance
+        mqf=QF(k0=kq,length=w['lqf'],label='QF',beam=beam) # new updated F quad
+        (rf_section,tkf) = make_rf_section(tk,w['lcav'],gaps)
+        ld = w['ld']-rf_section.length
+        md=D(0.5*ld,beam=beam) # drift zw. cavity u. quad
         cell.add_element(mqf)
         cell.add_element(md)
-        cell.append(rf_section);cnt2+=1
+        cell.append(rf_section)
+        tk   = tkf
+        kq   = k0(gradient=w['dBdz'],tkin=tk)           # quad strength @ entrance
+        beam = Beam(tk)
+        mqd=QD(k0=kq,length=w['lqd'],label='QD',beam=beam) # new updated D quad
+        md=D(0.5*ld,beam=beam) # drift zw. cavity u. quad
         cell.add_element(md)
         cell.add_element(mqd)
         # cell.out()
     else:  #  1/2 basis zelle downstream  
+        tk   = tki
+        kq   = k0(gradient=w['dBdz'],tkin=tk)           # quad strength @ entrance
+        beam = Beam(tk)                                 # beam @ entrance
+        mqd=QD(k0=kq,length=w['lqf'],label='QF',beam=beam) # new updated F quad
+        (rf_section,tkf) = make_rf_section(tk,w['lcav'],gaps)
+        ld = w['ld']-rf_section.length
+        md=D(0.5*ld,beam=beam) # drift zw. cavity u. quad
         cell.add_element(mqd)
         cell.add_element(md)
-        cell.append(rf_section);cnt2+=1
+        cell.append(rf_section)
+        tk   = tkf
+        kq   = k0(gradient=w['dBdz'],tkin=tk)           # quad strength @ entrance
+        beam = Beam(tk)
+        mqf=QF(k0=kq,length=w['lqd'],label='QD',beam=beam) # new updated D quad
+        md=D(0.5*ld,beam=beam) # drift zw. cavity u. quad
         cell.add_element(md)
         cell.add_element(mqf)
-    nboff_gaps = cnt1*cnt2
-    dWf=nboff_gaps*cavity.deltaW
-    return cell,nboff_gaps,dWf
+        # cell.out()
+    deltaTK=tkf-tki
+    return cell,deltaTK
 #############################################################################
 def loesung1():
     global Werte
@@ -123,8 +131,7 @@ def loesung1():
     tk0    = Phys['kinetic_energy']*1.       # KNOB: injection energy
     dBdz0  = Phys['quad_gradient']*8.05      # KNOB: quad gradient
     dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
-    gr     = 1.0                             # KNOB: QD != QF
-    Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'tkin':tk0,'dBdz':dBdz0,'BxBy':gr}
+    Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'dBdz':dBdz0,'dWf':1.,'verbose':False}
     #-----------------------------------------
     super_cell=Lattice()
     nboff_gaps=0
@@ -132,21 +139,20 @@ def loesung1():
     nboff_super_cells = 15*8   # KNOB:  final energy
     # nboff_super_cells = 15*1   # KNOB:  final energy
     gaps_per_half_cell= 3      # KNOB:  gaps/cell
+    tk=tk0
     for icell in range(nboff_super_cells):
         #------
         # kann man die struktur bei höheren energien ändern?
-        if Werte['tkin'] >= 150.:                # KNOB: energy at which...
-            gaps_per_half_cell=3                 # KNOB: change gaps/cell
-            Werte['dBdz'] = dBdz0 * 0.7988       # KNOB: change quad strength above energy threshold
-            Werte['dBdz'] = dBdz0 * 1.0000       # KNOB: change quad strength above energy threshold
+        # if tk >= 150.:                # KNOB: energy at which...
+            # gaps_per_half_cell=3                 # KNOB: change gaps/cell
         #------
         cell = Lattice()  # basis zelle
-        (half_cell,cnt,dWf) = make_half_cell(upstream=True,gaps=gaps_per_half_cell); nboff_gaps+=cnt
+        (half_cell,deltaTK) = make_half_cell(tk,upstream=True,gaps=gaps_per_half_cell); nboff_gaps+=gaps_per_half_cell
         cell.append(half_cell)
-        Werte['tkin'] += dWf  # new energy update here!
-        (half_cell,cnt,dWf) = make_half_cell(upstream=False,gaps=gaps_per_half_cell); nboff_gaps+=cnt
+        tk += deltaTK
+        (half_cell,deltaTK) = make_half_cell(tk,upstream=False,gaps=gaps_per_half_cell); nboff_gaps+=gaps_per_half_cell
         cell.append(half_cell)
-        Werte['tkin'] += dWf  # new energy update here!
+        tk += deltaTK  # new energy update here!
         # cell.out()
         super_cell.append(cell)  # add to super cell
     # super_cell.out()
@@ -160,7 +166,7 @@ def loesung1():
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
-    s_tk_f  =Werte['tkin']
+    s_tk_f  =tk
     s_lqd   =lqd
     s_p     =Beam(s_tk_f)
     s_name  =s_p.name

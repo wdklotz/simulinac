@@ -3,7 +3,7 @@ from setup import wille, Beam, Phys
 import numpy as NP 
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
-class Matrix(object):
+class Matrix(object):  # 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
         self.matrix=NP.eye(Matrix._dim)    ## 6x6 unit matrix
@@ -233,7 +233,7 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane
         m[1,0]=ckp
         m[3,2]=-ckp
         return wd
-class CAV(D):   ## thin lens cavity
+class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='CAV', beam=Beam(Phys['kinetic_energy'])):
         super(CAV,self).__init__(label=label,beam=beam)
         self.u0     = U0       # [MV] gap Voltage
@@ -256,8 +256,7 @@ class CAV(D):   ## thin lens cavity
         g  = self.beam.gamma
         b  = self.beam.beta
         e0 = self.beam.e0
-        cxp = pi * self.u0 * self.tr * sin(self.phis)
-        cyp = cxp = -cxp/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
+        cyp = cxp = -pi*self.u0*self.tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
         # print(u"CAV: \u0394x'/x= ",cxp)
         # print("CAV: dx'/x= ",cxp)
         m[1,0]=cxp
@@ -270,11 +269,58 @@ class CAV(D):   ## thin lens cavity
         phiSoll=self.phis
         fRF=self.freq
         label=self.label
-        beam=self.beam
-        tki =beam.tkin
+        tki =self.beam.tkin
         tkf =tki+deltaTk
         cav = CAV(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
         return cav
+class RFG(D):   ## thin lens RF gap nach Trace3D
+    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']), dWf=1.):
+        super(RFG,self).__init__(label=label,beam=beam)
+        self.u0     = U0       # [MV] gap Voltage
+        self.phis   = PhiSoll  # [radians] soll phase
+        self.freq   = fRF      # [MHz]  RF frequenz
+        self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.tr     = self._TrTF(self.beam.beta)
+        self.deltaW = self.u0*self.tr*cos(self.phis)*dWf # Trace3D
+        beami       = self.beam                      # Beam @ entrance
+        beamf       = Beam(beami.tkin+self.deltaW)   # Beam @ exit
+        dWavg       = (beamf.tkin - beami.tkin)*0.5+beami.tkin  # average energy
+        beam_avg    = Beam(dWavg)       # Beam @ average energy
+        b           = beam_avg.beta     # beta @ average energy
+        g           = beam_avg.gamma    # gamma @ average energy
+        self.matrix = self._mx(self.tr,b,g,beami,beamf)   # transport matrix            
+        self.beam   = beamf             # Beam @ exit
+        self.viseo  = 0.25      
+    def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+        gap_len = Phys['spalt_laenge']
+        teta = 2.*pi*1.e6*self.freq*gap_len / (beta*Phys['lichtgeschwindigkeit'])
+        teta = 0.5 * teta
+        ttf = sin(teta)/teta
+        return ttf
+    def _mx(self,tr,b,g,beami,beamf):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
+        m=self.matrix
+        e0 = self.beam.e0
+        kz = 2.*pi*self.u0*tr*sin(self.phis)/(e0*b*b*self.lamb)  
+        ky = kx = -0.5*kz/(g*g)
+        bgi         = sqrt(beami.gamma*beami.gamma-1.)  # beta*gamma (i)
+        bgf         = sqrt(beamf.gamma*beamf.gamma-1.)  # beta*gamma (f)
+        bgiRbgf = bgi/bgf
+        # 6x6
+        m[1,0]=kx/bgf;    m[1,1]=bgiRbgf
+        m[3,2]=ky/bgf;    m[3,3]=bgiRbgf
+        m[5,4]=kz/bgf;    m[5,5]=bgiRbgf
+        return m
+    def shorten(self,l=0.):
+        return self
+    def scale(self,deltaTk=0.):
+        u0=self.u0
+        phiSoll=self.phis
+        fRF=self.freq
+        label=self.label
+        tki = self.beam.tkin
+        tkf = tki+deltaTk
+        rfg = RFG(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
+        return rfg
 def k0(gradient=0.,tkin=0.):
     """
     quad strength as function of kin. energy and gradient
@@ -295,7 +341,7 @@ def k0(gradient=0.,tkin=0.):
 def scalek0(k0=0.,tki=0.,tkf=0.):
     """
     scale k0 for increase of kin. energy from
-    tkin0 to tkin1
+    tki to tkf
     """
     pi  =Beam(tki)
     bi  =pi.beta
