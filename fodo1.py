@@ -8,7 +8,7 @@ from math import sqrt
 #Werte={'lqd','lqf','ld','lcav','U0','phi0','fRF','dBdz','dWf','verbose'}
 Werte ={} # Eigabewerte fuer eine basis zelle (als gobal definiert! ..bad but efficient.)
 
-def plotter(beta_fun,cos_like,sin_like):
+def plotter(beta_fun,cos_like,sin_like):  ## plotting
     s   = [ x[0] for x in beta_fun]    # bahnkoordinate s
     bx  = [ x[1] for x in beta_fun]    # beta-x
     bxn = [-x[1] for x in beta_fun]    # beta-x (negatif)
@@ -37,7 +37,7 @@ def plotter(beta_fun,cos_like,sin_like):
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     show()
-def make_cavity(l):   # kavität
+def make_cavity(l):   ## kavität
     global Werte
     w = Werte
     tk = Beam.soll.tkin                    # kinetic energy @ entrance
@@ -50,7 +50,7 @@ def make_cavity(l):   # kavität
     cavity.add_element(drf)
     # dictp(Beam.soll,'gap exit',{'matrix'})
     return cavity
-def make_rf_section(lcav,gaps=1):   # RF sektion
+def make_rf_section(lcav,gaps=1):   ## RF sektion
     ''' gaps: nboff gaps per rf section'''
     global Werte
     l = 0.                          # length counter
@@ -105,13 +105,13 @@ def make_half_cell(upstream=True,gaps=3):  # 1/2 cell
     deltaTK=Beam.soll.tkin - tki
     return cell,deltaTK
 #############################################################################
-def dictp(what,text='========',filter={}):
+def dictp(what,text='========',filter={}):  ## helper to print dicts
         print('========= '+text+' =================')
         for k,v in what.__dict__.items():
             if k in filter:
                 continue
             print(k.rjust(30),':',v)
-def loesung1():  # total lattice
+def loesung1():  # total classic FODO lattice
     #-----------------------------------------
     # längen
     lqd  =  0.2     # 1/2 QD len
