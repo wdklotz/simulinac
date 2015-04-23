@@ -1,8 +1,25 @@
 # -*- coding: utf-8 -*-
-from setup import wille, Beam, Phys
+from setup import wille, Phys
 import numpy as NP 
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
+class Beam():   ## relativistic particles
+    def __init__(self,tkin=0.):
+        self._set_self(tkin)
+    def _set_self(self,tkin):
+        self.tkin = tkin                     # proton kinetic energy [MeV]
+        self.e0   = Phys['proton_mass']      # proton rest mass [MeV/c**2]
+        self.e    = self.e0+self.tkin        # proton total energy [MeV]
+        self.gamma= self.e/self.e0
+        self.beta = sqrt(1.-1./(self.gamma*self.gamma))
+        self.v    = self.beta*Phys['lichtgeschwindigkeit']
+        self.name = 'proton'
+    def incTK(self,deltaTK):
+        self._set_self(self.tkin+deltaTK)
+    def out(self):
+        print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
+            .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))        
+Beam.soll = Beam(Phys['kinetic_energy']) # the synchronous reference particle  (class member!)
 class Matrix(object):  # 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
@@ -208,7 +225,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         self.matrix= rd.matrix
     def shorten(self,l=0.):
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
-class WD(D):    ## wedge of rectangular bending dipole in x-plane
+class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,sector,label='WD',beam=Beam(Phys['kinetic_energy'])):
         super(WD,self).__init__(label=label,beam=beam)
         m=self.matrix
@@ -250,6 +267,8 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         self.Ks     = 2.*pi/(self.lamb*g*b)  # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g)  # transport matrix
         self.beam   = beamf             # Beam @ exit
+        sollParticle= beamf
+        Beam.soll.incTK(self.deltaW)
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
@@ -294,6 +313,8 @@ class RFG(D):   ## thin lens RF gap nach Trace3D
         g           = beam_avg.gamma    # gamma @ average energy
         self.matrix = self._mx(self.tr,b,g,beami,beamf)   # transport matrix            
         self.beam   = beamf             # Beam @ exit
+        Beam.soll.incTK(self.deltaW)
+        # dictp(Beam.soll,'soll')
         self.viseo  = 0.25      
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
@@ -325,7 +346,7 @@ class RFG(D):   ## thin lens RF gap nach Trace3D
         tkf = tki+deltaTk
         rfg = RFG(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
         return rfg
-def k0(gradient=0.,tkin=0.):
+def k0(gradient=0.,tkin=0.):       ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
     gradient: in [Tesla/m]
@@ -342,7 +363,7 @@ def k0(gradient=0.,tkin=0.):
         return kres
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
-def scalek0(k0=0.,tki=0.,tkf=0.):
+def scalek0(k0=0.,tki=0.,tkf=0.):  ## scale quad  strength with kin. energy
     """
     scale k0 for increase of kin. energy from
     tki to tkf
@@ -355,7 +376,7 @@ def scalek0(k0=0.,tki=0.,tkf=0.):
     gf  =pf.gamma
     kf= k0 * (bi * gi) / (bf * gf)
     return kf
-def dBdz(k0=0.,tkin=0.):
+def dBdz(k0=0.,tkin=0.):           ## B-field gradient from quad strength & kin. energy
     """
     calculate quad gradient for given quad strength k0
     and given kin. energy tkin
@@ -381,6 +402,12 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)             
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
+def dictp(what,text='========',filter={}):   ## helper
+        print('========= '+text+' =================')
+        for k,v in what.__dict__.items():
+            if k in filter:
+                continue
+            print(k.rjust(30),':',v)
 def test0():
     print('trivial test 0 ...')
     a=Test(1,2,3,4,5,6,label='a')
@@ -519,9 +546,13 @@ def test7():
     mr.out()
 def test8():
     print('test cavity...')
+    dictp(Beam.soll,'soll')
     cav=CAV()
-    for k,v in cav.__dict__.items():
-        print(k.rjust(30),':',v)
+    dictp(cav,'CAV')
+    dictp(Beam.soll,'soll')
+    rfg=RFG()
+    dictp(rfg,'RFG')
+    dictp(Beam.soll,'soll')
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
     grad=Phys['quad_gradient']   # [T/m] gradient
@@ -556,14 +587,31 @@ def test9():
         mqf.scale(deltaTk=dt).out()
         mqd.scale(deltaTk=dt).out()
         cavity.scale(deltaTk=dt).out()
+def test10():
+    print('\ntest: Beam class')
+    for key,value in Phys.items():
+        print('{}=  {:.4g}'.format(key.rjust(20),value))
+    # Beam class
+    print()
+    Beam(0.).out()
+    Beam(50.).out()
+    Beam(200.).out()
+    Beam(1.e6).out()
+    Beam(1.e9).out()
+    
+    beam = sollParticle
+    beam.out()
+    beam.incTK(150.)
+    beam.out()
 if __name__ == '__main__':
-    test0()
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
-    test6()
-    test7()
+    # test0()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test7()
     test8()
-    test9()
+    # test9()
+    # test10()

@@ -18,7 +18,7 @@ class Lattice(object):
         self.alfay0 = 0.
         self.gammy0 = 0.
         self.full_cell = 0.
-    def add_element(self,elment):
+    def add_element(self,elment):  ## add element to lattice
         if len(self.seq) == 0:
             s0=0.
         else:
@@ -32,7 +32,7 @@ class Lattice(object):
             element,s0,s1 = ipos
             print('{:s} length {:.3f} from {:.3f} to {:.3f}'.
                   format(element.label,element.length,s0,s1))
-    def cell(self,closed=True):  ## full cell
+    def cell(self,closed=True):    ## full cell inspection
         if self.full_cell == 0.0:
             mcell=ELM.I()
             for count, ipos in enumerate(self.seq):
@@ -165,12 +165,12 @@ class Lattice(object):
             elm,s,s=ipos
             res.add_element(elm)
         return res
-    def append(self,piece):  ## append a Lattice piece
+    def append(self,piece):  ## concatenate two Lattice pieces
         seq=copy(piece.seq)  
         for ipos in seq:
             elm,s0,s1=ipos
             self.add_element(elm)
-    def beta_functions(self,steps=10):
+    def beta_functions(self,steps=10):  ## beta funtion
         beta_fun=[]
         ms=ELM.I()
         bx = self.betax0
@@ -195,7 +195,7 @@ class Lattice(object):
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
         return beta_fun
-    def dispersion(self,steps=10,closed=True):
+    def dispersion(self,steps=10,closed=True):  ## dispersion
         traj=[]
         v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
@@ -216,7 +216,7 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
-    def cossin(self,steps=10):
+    def cossin(self,steps=10):  ## cosine & sine trajektories 
         cos_like =[]
         sin_like =[]
         c_0=NP.array([[1.],[0.],[1.],[0.],[0.],[0.]])   # cos-like traj.
@@ -242,7 +242,8 @@ class Lattice(object):
                 cos_like.append((cx,cxp,cy,cyp))
                 sin_like.append((sx,sxp,sy,syp))
         return (cos_like,sin_like)
-def make_lattice():
+#######################################################################
+def make_lattice():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  wille()['k_quad_f']
      lqf=  wille()['length_quad_f']
@@ -345,6 +346,6 @@ def test2():
     legend(loc='upper left')
     show()
 if __name__ == '__main__':
-    # test0()
-    # test1()
+    test0()
+    test1()
     test2()

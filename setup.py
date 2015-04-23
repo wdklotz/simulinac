@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 from math import pi,sqrt
 Phys = {
     'lichtgeschwindigkeit': 299792458.,    #  m/s
@@ -24,28 +24,4 @@ def wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-class Beam():
-    def __init__(self,tkin=0.):
-        self.e0   = Phys['proton_mass']   # proton rest mass [MeV/c**2]
-        self.tkin = tkin                     # proton kinetic energy [MeV]
-        self.e    = self.e0+self.tkin        # proton total energy [MeV]
-        self.gamma= self.e/self.e0
-        self.beta = sqrt(1.-1./(self.gamma*self.gamma))
-        self.v    = self.beta*Phys['lichtgeschwindigkeit']
-        self.name = 'proton'
-    def out(self):
-        print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
-            .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))
-def test1():
-    print('\ntest: Beam class')
-    for key,value in Phys.items():
-        print('{}=  {:.4g}'.format(key.rjust(20),value))
-    # Beam class
-    print()
-    Beam(0.).out()
-    Beam(50.).out()
-    Beam(200.).out()
-    Beam(1.e6).out()
-    Beam(1.e9).out()
-if __name__ == '__main__':
-    test1()
+############################################################################
