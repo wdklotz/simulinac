@@ -90,10 +90,11 @@ class Matrix(object):  # 6x6 matrices
             ])
         return m_beta
 class I(Matrix):## unity Matrix (an alias to Matrix class)
-    def __init__(self,label='I',viseo=0.):
+    def __init__(self,label='I',viseo=0.,beam=Beam(Phys['kinetic_energy'])):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
+        self.beam=beam
 class Test(Matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
@@ -110,9 +111,9 @@ class D(Matrix):## drift space nach Trace3D
         self.label=label
         self.beam=beam
         self.length=length     ## hard edge length [m]
-        self.matrix[0][1]=self.matrix[2][3]=self.length
+        self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
-        self.matrix[4][5]=self.length/(g*g)
+        self.matrix[4,5]=self.length/(g*g)
     def shorten(self,l=0.):
         return D(length=l,label=self.label,beam=self.beam)
 class QF(D):    ## focusing quad nach Trace3D
@@ -141,11 +142,9 @@ class QF(D):    ## focusing quad nach Trace3D
         sdp =cd
         ## 6x6 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
-            # mq=NP.array([[cf,sf,0.,0.,0.,0.],[cfp,sfp,0.,0.,0.,0.],[0.,0.,cd,sd,0.,0.],[0.,0.,cdp,sdp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QF
             m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
         elif isinstance(self,QD) :
-            # mq=NP.array([[cd,sd,0.,0.,0.,0.],[cdp,sdp,0.,0.,0.,0.],[0.,0.,cf,sf,0.,0.],[0.,0.,cfp,sfp,0.,0.],[0.,0.,0.,0.,1.,rzz12],[0.,0.,0.,0.,0.,1.]])  ## QD
-            m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
+             m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return m
@@ -204,7 +203,7 @@ class SD(D):    ## sector bending dipole in x-plane nach Trace3D
 class RD(SD):   ## rectangular bending dipole in x-plane
     def __init__(self, radius=0., length=0., label='RB',beam=Beam(Phys['kinetic_energy'])):
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
-        wd = WD(self,label='',beam=self.beam)  # wedge myself...
+        wd = WD(self,label='',beam=beam)  # wedge myself...
         rd = wd * self * wd
         self.matrix= rd.matrix
     def shorten(self,l=0.):
@@ -234,29 +233,34 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane
         m[3,2]=-ckp
         return wd
 class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
-    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='CAV', beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self,U0=10.,PhiSoll=-0.25*pi,fRF=800.,label='CAV',beam=Beam(Phys['kinetic_energy']),dWf=1.):
         super(CAV,self).__init__(label=label,beam=beam)
         self.u0     = U0       # [MV] gap Voltage
         self.phis   = PhiSoll  # [radians] soll phase
         self.freq   = fRF      # [MHz]  RF frequenz
         self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._TrTF() # time-transition factor
-        self.Ks     = 2.*pi/(self.lamb*self.beam.gamma*self.beam.beta)  # T.Wrangler pp.196
-        self.deltaW  = self.u0*self.tr*cos(self.phis) # T.Wrangler pp.221
-        self.matrix = self._mx()  # transport matrix
+        self.tr     = self._TrTF(self.beam.beta) # time-transition factor
+        self.deltaW = self.u0*self.tr*cos(self.phis)*dWf # T.Wrangler pp.221
+        beami       = self.beam                      # Beam @ entrance
+        beamf       = Beam(beami.tkin+self.deltaW)   # Beam @ exit
+        dWavg       = (beamf.tkin - beami.tkin)*0.5+beami.tkin  # average energy
+        beam_avg    = Beam(dWavg)       # Beam @ average energy
+        b           = beam_avg.beta     # beta @ average energy
+        g           = beam_avg.gamma    # gamma @ average energy
+        self.Ks     = 2.*pi/(self.lamb*g*b)  # T.Wrangler pp.196
+        self.matrix = self._mx(self.tr,b,g)  # transport matrix
+        self.beam   = beamf             # Beam @ exit
         self.viseo  = 0.25
-    def _TrTF(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+    def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
-        teta = 2.*pi*1.e6*self.freq*gap_len / (self.beam.beta*Phys['lichtgeschwindigkeit'])
+        teta = 2.*pi*1.e6*self.freq*gap_len / (beta*Phys['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx(self):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
+    def _mx(self,tr,b,g):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
         m=self.matrix
-        g  = self.beam.gamma
-        b  = self.beam.beta
         e0 = self.beam.e0
-        cyp = cxp = -pi*self.u0*self.tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
+        cyp = cxp = -pi*self.u0*tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
         # print(u"CAV: \u0394x'/x= ",cxp)
         # print("CAV: dx'/x= ",cxp)
         m[1,0]=cxp
@@ -274,7 +278,7 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         cav = CAV(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
         return cav
 class RFG(D):   ## thin lens RF gap nach Trace3D
-    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']), dWf=1.):
+    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']),dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
         self.u0     = U0       # [MV] gap Voltage
         self.phis   = PhiSoll  # [radians] soll phase

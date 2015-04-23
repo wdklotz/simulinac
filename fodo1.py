@@ -44,7 +44,8 @@ def make_cavity(tki,l):   # kavität
     beam = Beam(tk)
     cavity = Lattice()
     dri = D(length=0.5*l,beam=beam)   # drift before RFgap
-    gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=beam,dWf=w['dWf'])
+    gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=beam,dWf=w['dWf'])  # Trace3D
+    # gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=beam,dWf=w['dWf'])  # Dr.Tiede, T.Wrangler
     # if w['verbose']':
         # print('========= GAP =================')
         # for k,v in gap.__dict__.items():
