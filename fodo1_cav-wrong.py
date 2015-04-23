@@ -43,8 +43,8 @@ def make_cavity(l):   ## kavität
     tk = Beam.soll.tkin                    # kinetic energy @ entrance
     cavity = Lattice()
     dri = D(length=0.5*l,beam=Beam.soll)   # drift before RFgap
-    # gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
-    gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
+    gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
+    # gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
     drf = D(length=0.5*l,beam=Beam.soll)   # drift after RFgap
     cavity.add_element(dri)
     cavity.add_element(gap)
@@ -131,7 +131,8 @@ def loesung1():  # total classic FODO lattice
 
     dWf=1.0                                  # acceleration                   
     dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
-    # nboff_super_cells = 15*10                # KNOB:  final energy
+    dBdz0  = Phys['quad_gradient']*9.9375      # KNOB: quad gradient
+    nboff_super_cells = 15*10                # KNOB:  final energy
     nboff_super_cells = 15*8                 # KNOB:  final energy
     # nboff_super_cells = 15*5                 # KNOB:  final energy
     # nboff_super_cells = 15*1                 # KNOB:  final energy
