@@ -1,0 +1,8 @@
+ - longitudinale dynamic?
+ - sigma matrizen?
+ - pretty lattice print?
+ - test with electrons/
+ - nboff cavities along path?
+ - quad strength along path
+ - acceptance ellipse?
+ - emmitance ellipse?
