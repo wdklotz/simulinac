@@ -34,7 +34,10 @@ class Matrix(object):  # 6x6 matrices
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=Matrix()
-        res.label=self.label+'*'+other.label
+        if (self.label == ''):
+            res.label=other.label
+        else:
+            res.label=self.label+'*'+other.label
         res.length=self.length+other.length
         res.matrix=product
         return res
@@ -433,6 +436,8 @@ def test2():
     d2=D(90,'D2')
     d2.out()
     (d1*d2).out()
+    d3=D(90.,label='')
+    (d2*d3).out()
 def test3():
     print('test product of Matrix class ...')
     gradient =1.
@@ -606,12 +611,12 @@ def test10():
 if __name__ == '__main__':
     # test0()
     # test1()
-    # test2()
+    test2()
     # test3()
     # test4()
     # test5()
     # test6()
     # test7()
-    test8()
+    # test8()
     # test9()
     # test10()

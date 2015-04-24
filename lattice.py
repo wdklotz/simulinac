@@ -34,7 +34,7 @@ class Lattice(object):
                   format(element.label,element.length,s0,s1))
     def cell(self,closed=True):    ## full cell inspection
         if self.full_cell == 0.0:
-            mcell=ELM.I()
+            mcell=ELM.I(label='')     ##  chain matrices for full cell
             for count, ipos in enumerate(self.seq):
                 element,s0,s1 = ipos
                 mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
