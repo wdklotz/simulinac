@@ -1,9 +1,11 @@
+#!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import wille, Phys
 import numpy as NP 
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
 
 class Beam():   ## relativistic particles
+    soll=None   ## the synchronous reference particle  (class member!)
     def __init__(self,tkin=0.):
         self._set_self(tkin)
     def _set_self(self,tkin):
@@ -35,7 +37,7 @@ class Matrix(object):  # 6x6 matrices
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=Matrix()
         if (self.label == ''):
-            res.label=other.label
+            res.label=other .label
         else:
             res.label=self.label+'*'+other.label
         res.length=self.length+other.length
@@ -65,7 +67,7 @@ class Matrix(object):  # 6x6 matrices
             res += self.matrix[i,i]
         return res
     def shorten(self,length=0.):
-        return Matrix()
+        return self
     def step_through(self,anz=10):
         """
         Step through an element(The central nontrivial function).

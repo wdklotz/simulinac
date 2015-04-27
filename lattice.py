@@ -1,3 +1,4 @@
+#!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 import elements as ELM
 from math import sqrt, fabs, acos 
@@ -34,7 +35,7 @@ class Lattice(object):
                   format(element.label,element.length,s0,s1))
     def cell(self,closed=True):    ## full cell inspection
         if self.full_cell == 0.0:
-            mcell=ELM.I(label='')     ##  chain matrices for full cell
+            mcell=ELM.I(label='<=')     ##  chain matrices for full cell
             for count, ipos in enumerate(self.seq):
                 element,s0,s1 = ipos
                 mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -72,7 +73,11 @@ class Lattice(object):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
             print('det|Mbeta - I|={:.5f}\n'.format(det))
-            
+            # symplectic?
+            print('symplectic (+1,-1,+1,-1,+1,-1)?')
+            s=self.symplecticity()
+            print('[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+                format(s[0],s[1],s[2],s[3],s[4],s[5]))
             # if unstable:
                 # raise RuntimeError('stop execution')
             
@@ -242,6 +247,22 @@ class Lattice(object):
                 cos_like.append((cx,cxp,cy,cyp))
                 sin_like.append((sx,sxp,sy,syp))
         return (cos_like,sin_like)
+    def symplecticity(self):  ## test symplecticity
+        s=NP.array([[0., 1., 0.,0., 0.,0.],
+                    [-1.,0., 0.,0., 0.,0.],
+                    [ 0.,0., 0.,1., 0.,0.],
+                    [ 0.,0.,-1.,0., 0.,0.],
+                    [ 0.,0., 0.,0., 0.,1.],
+                    [ 0.,0., 0.,0.,-1.,0.]])
+        s=NP.dot(self.full_cell.matrix.T,s)
+        s=NP.dot(s,self.full_cell.matrix)
+        dets=LA.det(s)
+        if fabs(dets-1.) > 1.e-12:
+            for i in range(ELM.Matrix._dim):
+                print('[{:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}]\n'.
+                    format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
+        res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
+        return(res)
 #######################################################################
 def make_lattice():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
@@ -326,6 +347,7 @@ def test2():
     ## cell boundaries
     mcell,betax,betay=lattice.cell(closed=True )
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
+    lattice.symplecticity()
     ## lattice function as f(s)
     beta_fun = lattice.beta_functions(steps=100)   
     disp = lattice.dispersion(steps=100,closed=True)
@@ -344,8 +366,9 @@ def test2():
     plot(s,vs,label='element',color='black')
     plot(s,zero,color='black')
     legend(loc='upper left')
-    show()
+    show(block=True)
 if __name__ == '__main__':
-    test0()
-    test1()
+#     test0()
+#     test1()
     test2()
+#     test3()

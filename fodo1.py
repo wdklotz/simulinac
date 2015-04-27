@@ -1,3 +1,4 @@
+#!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import Phys
 from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
@@ -36,14 +37,14 @@ def plotter(beta_fun,cos_like,sin_like):  ## plotting
     plot(s,viseo,label='',color='black')
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    show()
+    show(block=True)
 def make_cavity(l):   ## kavität
     global Werte
     w = Werte
     tk = Beam.soll.tkin                    # kinetic energy @ entrance
     cavity = Lattice()
     dri = D(length=0.5*l,beam=Beam.soll,label='')   # drift before RFgap
-    # gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
+#     gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
     gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
     drf = D(length=0.5*l,beam=Beam.soll,label='')   # drift after RFgap
     cavity.add_element(dri)
@@ -136,6 +137,7 @@ def loesung1():  # total classic FODO lattice
     nboff_super_cells = 15*8                 # KNOB:  final energy
     # nboff_super_cells = 15*5                 # KNOB:  final energy
     nboff_super_cells = 15*1                 # KNOB:  final energy
+    nboff_super_cells = 1                    # KNOB:  final energy
 
     # dWf=0.                                   # no acceleration
     # dBdz0  = Phys['quad_gradient']*9.        # KNOB: quad gradient
