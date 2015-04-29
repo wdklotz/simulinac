@@ -1,7 +1,7 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 import elements as ELM
-from math import sqrt, fabs, acos 
+from math import sqrt, fabs, acos, pi
 import numpy as NP
 from numpy import linalg as LA
 from copy import copy
@@ -142,9 +142,12 @@ class Lattice(object):
                     raise RuntimeError('stop execution')
             else:
                 # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-                alx=aly=-1.
-                bax=bay=gmx=gmy=1.+alx*alx
-            
+                xi=Phys['sigmax(i)']
+                alx=aly=0.
+                emi = Phys['emittance(i)']
+                bax=bay=xi**2/emi
+                gmx=gmy=(1.+alx*alx)/bax
+                
         self.betax0 = bax
         self.alfax0 = alx
         self.gammx0 = gmx
@@ -224,8 +227,12 @@ class Lattice(object):
     def cossin(self,steps=10):  ## cosine & sine trajektories 
         cos_like =[]
         sin_like =[]
-        c_0=NP.array([[1.],[0.],[1.],[0.],[0.],[0.]])   # cos-like traj.
-        s_0=NP.array([[0.],[1.],[0.],[1.],[0.],[0.]])   # sin-like traj.
+        xi=Phys['sigmax(i)']
+        xpi=Phys['emittance(i)']/xi
+        yi=xi
+        ypi=xpi
+        c_0=NP.array([[xi],[0.],[yi],[0.],[0.],[0.]])     # cos-like traj.
+        s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[0.]])   # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos

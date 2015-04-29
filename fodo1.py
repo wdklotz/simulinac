@@ -3,40 +3,56 @@
 from setup import Phys
 from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
 from lattice import Lattice
-from pylab import plot, show, legend
+from pylab import plot, show, legend, figure, subplot, axis
 from math import sqrt
 
 #Werte={'lqd','lqf','ld','lcav','U0','phi0','fRF','dBdz','dWf','verbose'}
 Werte ={} # Eigabewerte fuer eine basis zelle (als gobal definiert! ..bad but efficient.)
 
 def plotter(beta_fun,cos_like,sin_like):  ## plotting
+    emi=Phys['emittance(i)']  # emittance @ entrance
+    #----------*----------*
     s   = [ x[0] for x in beta_fun]    # bahnkoordinate s
-    bx  = [ x[1] for x in beta_fun]    # beta-x
-    bxn = [-x[1] for x in beta_fun]    # beta-x (negatif)
-    by  = [ x[2] for x in beta_fun]    # beta-y
-    byn = [-x[2] for x in beta_fun]    # beta-y (negatif)
-    
+    #----------*----------*
+    bx  = [ sqrt(x[1]*emi) for x in beta_fun]    # envelope (beta-x)
+    by  = [ sqrt(x[2]*emi) for x in beta_fun]    # envelope (beta-y)
+    bxn = [-x for x in bx]    # beta-x (negatif)
+    byn = [-x for x in by]    # beta-y (negatif)
+    #----------*----------*
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
     sx = [x[0] for x in sin_like]   # sin-like-x
     sy = [x[2] for x in sin_like]   # sin-like-x
-    
-    viseo = [x[3] for x in beta_fun]
+    #----------*----------*
+    figure('FODO 1')
+    splot=subplot(211)
+    splot.set_title('transverse x')
+    #----------*----------*
+    plot(s,bx ,label='sigmax[m]',color='green')
+    plot(s,bxn,label='',color='green')
+    plot(s,cx,label='Cx[m]',color='blue',linestyle='-.')
+    plot(s,sx,label='Sx[m]',color='red' ,linestyle='-.') 
+    vscale=axis()[3]*0.1
+    viseo = [x[3]*vscale for x in beta_fun]
     zero=[0. for x in beta_fun]
-    
-    plot(s,bx ,label='betax',color='green')
-    plot(s,by ,label='betay',color='red')
-    # plot(s,bxn,label='',     color='green')
-    # plot(s,byn,label='',     color='red')
-    
-    plot(s,cx,label='Cx(s)',color='blue')
-    plot(s,sx,label='Sx(s)',color='brown') 
-    # plot(s,cy,label='Cy(s)',color='green')
-    # plot(s,sy,label='Sy(s)',color='red')
-    
     plot(s,viseo,label='',color='black')
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
+    #----------*----------*
+    splot=subplot(212)
+    splot.set_title('transverse y')
+    #----------*----------*
+    plot(s,by ,label='sigmay[m]',color='green')
+    plot(s,byn,label='',color='green')
+    plot(s,cy,label='Cy[m]',color='blue',linestyle='-.')
+    plot(s,sy,label='Sy[m]',color='red' ,linestyle='-.')
+    vscale=axis()[3]*0.1
+    viseo = [x[3]*vscale for x in beta_fun]
+    zero=[0. for x in beta_fun]
+    plot(s,viseo,label='',color='black')
+    plot(s,zero,color='black')
+    legend(loc='lower right',fontsize='x-small')
+    #----------*----------*
     show(block=True)
 def make_cavity(l):   ## kavität
     global Werte
@@ -135,9 +151,9 @@ def loesung1():  # total classic FODO lattice
     dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
     # nboff_super_cells = 15*10                # KNOB:  final energy
     nboff_super_cells = 15*8                 # KNOB:  final energy
-    # nboff_super_cells = 15*5                 # KNOB:  final energy
-    nboff_super_cells = 15*1                 # KNOB:  final energy
-    nboff_super_cells = 1                    # KNOB:  final energy
+    nboff_super_cells = 15*5                 # KNOB:  final energy
+    # nboff_super_cells = 15*1                 # KNOB:  final energy
+    # nboff_super_cells = 1                    # KNOB:  final energy
 
     # dWf=0.                                   # no acceleration
     # dBdz0  = Phys['quad_gradient']*9.        # KNOB: quad gradient
@@ -170,9 +186,9 @@ def loesung1():  # total classic FODO lattice
     # print('lattice length [m]={}'.format(lattice_length))
     #-----------------------------------------
     # Anfangswerte
-    mcell,betax,betay=super_cell.cell(closed=True)
+    mcell,betax,betay=super_cell.cell(closed=False)
     print()
-    print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
+    print('BETAx[0] {:.3g} BETAy[0] {:.3g}'.format(betax,betay))
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
@@ -189,6 +205,8 @@ def loesung1():  # total classic FODO lattice
     s_utot  =s_tk_f - s_tk_i
     s_latlen=lattice_length
     s_accel =s_utot/s_latlen
+    s_emi   =Phys['emittance(i)']
+    s_aper  =Phys['sigmax(i)']
     summary={
     'quadrupole size          [m]':s_lqd,
     'particle rest mass[MeV/c**2]':s_e0,
@@ -202,6 +220,8 @@ def loesung1():  # total classic FODO lattice
     'lattice_length           [m]':s_latlen,
     'tot.acceleration       [MeV]':s_utot,
     'av.acceleration      [MeV/m]':s_accel,
+    'emittance (i)        [m*rad]':s_emi,
+    'sigmax,y (i)             [m]':s_aper,
     }
     print('\n======== Summary('+s_name+') =========')
     for k,v in summary.items():

@@ -1,2 +1,5 @@
 *.bak
-
+*.pyc
+.project
+__pycache__
+fodo_test_with_madx

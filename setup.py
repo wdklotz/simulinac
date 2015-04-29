@@ -13,6 +13,8 @@ Phys = {
     'quad_gradient': 1.0,    # T/m
     'radians': pi/180.,      # rad/deg
     'degrees': 180./pi,      # deg/rad
+    'emittance(i)':5.e-6,    # m * rad
+    'sigmax(i)': 5.e-3       # m maximum transverse beam size
      }
 def wille():
     return {
