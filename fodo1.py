@@ -9,7 +9,7 @@ from math import sqrt
 #Werte={'lqd','lqf','ld','lcav','U0','phi0','fRF','dBdz','dWf','verbose'}
 Werte ={} # Eigabewerte fuer eine basis zelle (als gobal definiert! ..bad but efficient.)
 
-def plotter(beta_fun,cos_like,sin_like):  ## plotting
+def display(beta_fun,cos_like,sin_like):  ## plotting
     emi=Phys['emittance(i)']  # emittance @ entrance
     #----------*----------*
     s   = [ x[0] for x in beta_fun]    # bahnkoordinate s
@@ -21,11 +21,16 @@ def plotter(beta_fun,cos_like,sin_like):  ## plotting
     #----------*----------*
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
+    cs = [x[4] for x in cos_like]   # cos-like-s
+    cw = [x[5] for x in cos_like]   # cos-like-w
     sx = [x[0] for x in sin_like]   # sin-like-x
     sy = [x[2] for x in sin_like]   # sin-like-x
+    ss = [x[4] for x in sin_like]   # sin-like-s
+    sw = [x[5] for x in sin_like]   # sin-like-w
     #----------*----------*
-    figure('FODO 1')
-    splot=subplot(211)
+    width=10; height=10
+    figure('FODO 1',figsize=(width,height))
+    splot=subplot(311)
     splot.set_title('transverse x')
     #----------*----------*
     plot(s,bx ,label='sigmax[m]',color='green')
@@ -39,7 +44,7 @@ def plotter(beta_fun,cos_like,sin_like):  ## plotting
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*
-    splot=subplot(212)
+    splot=subplot(312)
     splot.set_title('transverse y')
     #----------*----------*
     plot(s,by ,label='sigmay[m]',color='green')
@@ -53,6 +58,19 @@ def plotter(beta_fun,cos_like,sin_like):  ## plotting
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*
+    splot=subplot(313)
+    splot.set_title('longitudinal z')
+    plot(s,cs ,label='delta-z',color='green')
+    plot(s,cw ,label='(delta-w)/w0',color='green', linestyle='-.')
+    # plot(s,ss ,label='delta-z',color='red')
+    # plot(s,sw ,label='(delta-w)/w0',color='red', linestyle='-.')
+    vscale=axis()[3]*0.1
+    viseo = [x[3]*vscale for x in beta_fun]
+    zero=[0. for x in beta_fun]
+    plot(s,viseo,label='',color='black')
+    plot(s,zero,color='black')
+    legend(loc='lower right',fontsize='x-small')
+    
     show(block=True)
 def make_cavity(l):   ## kavität
     global Werte
@@ -60,14 +78,14 @@ def make_cavity(l):   ## kavität
     tk = Beam.soll.tkin                    # kinetic energy @ entrance
     cavity = Lattice()
     dri = D(length=0.5*l,beam=Beam.soll,label='')   # drift before RFgap
-#     gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
+    # gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
     gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
     drf = D(length=0.5*l,beam=Beam.soll,label='')   # drift after RFgap
     cavity.add_element(dri)
     cavity.add_element(gap)
     cavity.add_element(drf)
     # cavity.out()
-    # dictp(Beam.soll,'gap exit',{'matrix'})
+    # objprnt(Beam.soll,'gap exit',{'matrix'})
     return cavity
 def make_rf_section(lcav,gaps=1):   ## RF sektion
     ''' gaps: nboff gaps per rf section'''
@@ -124,8 +142,8 @@ def make_half_cell(upstream=True,gaps=3):  # 1/2 cell
     deltaTK=Beam.soll.tkin - tki
     return cell,deltaTK
 #############################################################################
-def dictp(what,text='========',filter={}):  ## helper to print dicts
-        print('========= '+text+' =================')
+def objprnt(what,text='========',filter={}):  ## helper to print objects as dictionary
+        print('\n========= '+text+' =================')
         for k,v in what.__dict__.items():
             if k in filter:
                 continue
@@ -147,15 +165,15 @@ def loesung1():  # total classic FODO lattice
     sollParticle = Beam.soll                 # sollParticlle @ injection energy
     gaps_per_half_cell= 3                    # KNOB:  gaps/cell
 
-    dWf=1.0                                  # acceleration                   
     dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
     # nboff_super_cells = 15*10                # KNOB:  final energy
-    nboff_super_cells = 15*8                 # KNOB:  final energy
-    nboff_super_cells = 15*5                 # KNOB:  final energy
-    # nboff_super_cells = 15*1                 # KNOB:  final energy
+    # nboff_super_cells = 15*8                 # KNOB:  final energy
+    # nboff_super_cells = 15*5                 # KNOB:  final energy
+    nboff_super_cells = 15*1                 # KNOB:  final energy
     # nboff_super_cells = 1                    # KNOB:  final energy
 
-    # dWf=0.                                   # no acceleration
+    dWf=1.0                                  # acceleration flag=yes              
+    # dWf=0.                                   # acceleration flag=no
     # dBdz0  = Phys['quad_gradient']*9.        # KNOB: quad gradient
     # nboff_super_cells = 15*1                 # KNOB:  final energy
     # nboff_super_cells = 15*8                 # KNOB:  final energy
@@ -223,13 +241,13 @@ def loesung1():  # total classic FODO lattice
     'emittance (i)        [m*rad]':s_emi,
     'sigmax,y (i)             [m]':s_aper,
     }
-    print('\n======== Summary('+s_name+') =========')
+    print('\n========= Summary ============')
     for k,v in summary.items():
         print(k.rjust(30),':',v)
     #-----------------------------------------
     # Grafik: lösungen als f(s)
-    beta_func   = super_cell.beta_functions(20)   
-    cossin_like = super_cell.cossin(20)
-    plotter(beta_func,cossin_like[0],cossin_like[1])
+    beta_func   = super_cell.beta_functions(30)   
+    cos_sin_like = super_cell.cossin(30)
+    display(beta_func,cos_sin_like[0],cos_sin_like[1])
 if __name__ == '__main__':
     loesung1()

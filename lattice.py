@@ -29,13 +29,16 @@ class Lattice(object):
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
     def out(self):
+        mcell=ELM.I(label='<=Lattice')     ##  chain matrices 
         for ipos in self.seq:
             element,s0,s1 = ipos
             print('{:s} length {:.3f} from {:.3f} to {:.3f}'.
                   format(element.label,element.length,s0,s1))
+            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+        mcell.out()
     def cell(self,closed=True):    ## full cell inspection
         if self.full_cell == 0.0:
-            mcell=ELM.I(label='<=')     ##  chain matrices for full cell
+            mcell=ELM.I(label='<=Full Cell')     ##  chain matrices for full cell
             for count, ipos in enumerate(self.seq):
                 element,s0,s1 = ipos
                 mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -229,10 +232,13 @@ class Lattice(object):
         sin_like =[]
         xi=Phys['sigmax(i)']
         xpi=Phys['emittance(i)']/xi
+        # xi=xpi=0.
         yi=xi
         ypi=xpi
-        c_0=NP.array([[xi],[0.],[yi],[0.],[0.],[0.]])     # cos-like traj.
-        s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[0.]])   # sin-like traj.
+        dz=1.e-2   # longitudinal displacement z-z0 [m]
+        dp=6.e-2   # relative dif dp/p0             [rad]
+        c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
+        s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -245,14 +251,18 @@ class Lattice(object):
                 cxp = c_0[1,0]
                 cy  = c_0[2,0]
                 cyp = c_0[3,0]
+                cz  = c_0[4,0]
+                cdp = c_0[5,0]
                 
                 sx  = s_0[0,0]
                 sxp = s_0[1,0]
                 sy  = s_0[2,0]
                 syp = s_0[3,0]
+                sz  = s_0[4,0]
+                sdp = s_0[5,0]
                 viseo = i_element.viseo
-                cos_like.append((cx,cxp,cy,cyp))
-                sin_like.append((sx,sxp,sy,syp))
+                cos_like.append((cx,cxp,cy,cyp,cz,cdp))
+                sin_like.append((sx,sxp,sy,syp,sz,sdp))
         return (cos_like,sin_like)
     def symplecticity(self):  ## test symplecticity
         s=NP.array([[0., 1., 0.,0., 0.,0.],
@@ -263,11 +273,11 @@ class Lattice(object):
                     [ 0.,0., 0.,0.,-1.,0.]])
         s=NP.dot(self.full_cell.matrix.T,s)
         s=NP.dot(s,self.full_cell.matrix)
-        dets=LA.det(s)
-        if fabs(dets-1.) > 1.e-12:
-            for i in range(ELM.Matrix._dim):
-                print('[{:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}]\n'.
-                    format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
+        # dets=LA.det(s)
+        # if fabs(dets-1.) > 1.e-12:
+            # for i in range(ELM.Matrix._dim):
+                # print('[{:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}]\n'.
+                    # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #######################################################################

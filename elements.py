@@ -319,7 +319,7 @@ class RFG(D):   ## thin lens RF gap nach Trace3D
         self.matrix = self._mx(self.tr,b,g,beami,beamf)   # transport matrix            
         self.beam   = beamf             # Beam @ exit
         Beam.soll.incTK(self.deltaW)
-        # dictp(Beam.soll,'soll')
+        # objprnt(Beam.soll,'soll')
         self.viseo  = 0.25      
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
@@ -407,7 +407,7 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)             
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
-def dictp(what,text='========',filter={}):   ## helper
+def objprnt(what,text='========',filter={}):   ## helper to print objects as dictionary
         print('========= '+text+' =================')
         for k,v in what.__dict__.items():
             if k in filter:
