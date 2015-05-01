@@ -271,9 +271,8 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         g           = beam_avg.gamma    # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)  # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g)  # transport matrix
-        self.beam   = beamf             # Beam @ exit
-        sollParticle= beamf
         Beam.soll.incTK(self.deltaW)
+        self.beam = Beam.soll # Beam @ exit
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
@@ -407,7 +406,7 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)             
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
-def objprnt(what,text='========',filter={}):   ## helper to print objects as dictionary
+def objprnt(what,text='========',filter={}): ## helper to print objects as dictionary
         print('========= '+text+' =================')
         for k,v in what.__dict__.items():
             if k in filter:
@@ -553,13 +552,13 @@ def test7():
     mr.out()
 def test8():
     print('test cavity...')
-    dictp(Beam.soll,'soll')
+    objprnt(Beam.soll,'soll')
     cav=CAV()
-    dictp(cav,'CAV')
-    dictp(Beam.soll,'soll')
+    objprnt(cav,'CAV')
+    objprnt(Beam.soll,'soll')
     rfg=RFG()
-    dictp(rfg,'RFG')
-    dictp(Beam.soll,'soll')
+    objprnt(rfg,'RFG')
+    objprnt(Beam.soll,'soll')
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
     grad=Phys['quad_gradient']   # [T/m] gradient
@@ -606,19 +605,19 @@ def test10():
     Beam(1.e6).out()
     Beam(1.e9).out()
     
-    beam = sollParticle
+    beam = Beam.soll
     beam.out()
     beam.incTK(150.)
     beam.out()
 if __name__ == '__main__':
-    # test0()
-    # test1()
+    test0()
+    test1()
     test2()
-    # test3()
-    # test4()
-    # test5()
-    # test6()
-    # test7()
-    # test8()
-    # test9()
-    # test10()
+    test3()
+    test4()
+    test5()
+    test6()
+    test7()
+    test8()
+    test9()
+    test10()

@@ -205,9 +205,9 @@ class Lattice(object):
                 betay = v_beta[3,0]
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
-        c_like, s_like = self.cosn(steps)
+        c_like, s_like = self.cs_traj(steps)
         return (beta_fun,c_like,s_like)
-    def dispersion(self,steps=10,closed=True):  ## dispersion
+    def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
         traj=[]
         v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
@@ -228,17 +228,16 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
-    def cosn(self,steps=10):  ## cosine & sine trajectories 
+    def cs_traj(self,steps=10):  ## cosine & sine trajectories 
         lamb = 1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
         c_like =[]
         s_like =[]
-        xi=Phys['sigmax(i)']
-        xpi=Phys['emittance(i)']/xi
+        xi=Phys['sigmax(i)']         # eingabe dX
+        xpi=Phys['emittance(i)']/xi  # eingabe dX' aus emittanz gerechnet
         # xi=xpi=0.
-        yi=xi
-        ypi=xpi
-        dz=Phys['z-z0']
-        dp=Phys['(p-p0)/p0']
+        yi=xi; ypi=xpi          # eingabe Y wie X
+        dz=Phys['z-z0']         # eingabe dZ
+        dp=Phys['(p-p0)/p0']    # eingabe dP/P0
         c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
         s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
         s=0.0
@@ -251,13 +250,14 @@ class Lattice(object):
                 c_0 = element_matrix.dot(c_0)
                 s_0 = element_matrix.dot(s_0)
                 s += i_element.length
+                # cos_like
                 cx  = c_0[0,0]
                 cxp = c_0[1,0]
                 cy  = c_0[2,0]
                 cyp = c_0[3,0]
-                cz  = -c_0[4,0]*360./(beam.beta*lamb)
-                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.
-                
+                cz  = -c_0[4,0]*360./(beam.beta*lamb)           # conversion zu dPhi
+                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.  # conversion zu dW/W
+                # sin_like
                 sx  = s_0[0,0]
                 sxp = s_0[1,0]
                 sy  = s_0[2,0]

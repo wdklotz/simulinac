@@ -18,6 +18,7 @@ Phys = {
     'z-z0': 1.8e-2,          # [m] longitudinal displacement z-z0
     '(p-p0)/p0': 6.e-2,      # [rad] relative impulse (p-p0)/p0
      }
+Phys['wellenlänge']=1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
 def wille():
     return {
         'k_quad_f':1.2,

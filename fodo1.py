@@ -187,6 +187,9 @@ def loesung1():  # total classic FODO lattice
 
     global Werte           # store globals
     Werte={'lqd':lqd,'lqf':lqf,'ld':ld,'lcav':lcav,'U0':u0,'phi0':phi0,'fRF':fRF0,'dBdz':dBdz0,'dWf':dWf,'verbose':True}
+    w = Werte
+    #--------------------1st cavity-----------
+    gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
     #-----------------------------------------
     super_cell=Lattice()
     nboff_gaps=0                 # gap counter
@@ -210,12 +213,18 @@ def loesung1():  # total classic FODO lattice
     lattice_length=super_cell.length
     # print('lattice length [m]={}'.format(lattice_length))
     #-----------------------------------------
-    # Anfangswerte
+    # Berechne ganze Zelle und Anfangswerte 
     mcell,betax,betay=super_cell.cell(closed=False)
     print()
     print('BETAx[0] {:.3g} BETAy[0] {:.3g}'.format(betax,betay))
+    #---------------last cavity---------------
+    gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
+    # objprnt(gapi, filter={'matrix'})
+    # objprnt(gapf, filter={'matrix'})    
     #-----------------------------------------
     # Zusammenfassung
+    s_ttf_i =gapi.tr
+    s_ttf_f =gapf.tr
     s_tk_i  =tk0
     s_tk_f  =tk
     s_lqd   =lqd
@@ -232,6 +241,9 @@ def loesung1():  # total classic FODO lattice
     s_accel =s_utot/s_latlen
     s_emi   =Phys['emittance(i)']
     s_aper  =Phys['sigmax(i)']
+    s_phis  =Phys['soll_phase']
+    s_lamb  =Phys['wellenlänge']
+    s_freq  =Phys['frequenz']
     summary={
     'quadrupole size          [m]':s_lqd,
     'particle rest mass[MeV/c**2]':s_e0,
@@ -246,9 +258,13 @@ def loesung1():  # total classic FODO lattice
     'tot.acceleration       [MeV]':s_utot,
     'av.acceleration      [MeV/m]':s_accel,
     'emittance (i)        [m*rad]':s_emi,
-    'sigmax,y (i)             [m]':s_aper,
+    'sigma-x,-y (i)           [m]':s_aper,
+    'sync. phase            [deg]':s_phis,
+    'wave length              [m]':s_lamb,
+    'frequency              [MHz]':s_freq,
+    'time transition factor (i,f)':(s_ttf_i,s_ttf_f)
     }
-    print('\n========= Summary ============')
+    print('\n============= Summary =================')
     for k,v in summary.items():
         print(k.rjust(30),':',v)
     #-----------------------------------------
