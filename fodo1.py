@@ -9,68 +9,75 @@ from math import sqrt
 #Werte={'lqd','lqf','ld','lcav','U0','phi0','fRF','dBdz','dWf','verbose'}
 Werte ={} # Eigabewerte fuer eine basis zelle (als gobal definiert! ..bad but efficient.)
 
-def display(beta_fun,cos_like,sin_like):  ## plotting
+def display(functions):  ## plotting
+    #----------*----------*   # unpack
+    beta_fun = functions[0]
+    cos_like = functions[1]
+    sin_like = functions[2]
     emi=Phys['emittance(i)']  # emittance @ entrance
-    #----------*----------*
-    s   = [ x[0] for x in beta_fun]    # bahnkoordinate s
+    #----------*----------*   # bahnkoordinate z
+    z   = [ x[0] for x in beta_fun]    
     #----------*----------*
     bx  = [ sqrt(x[1]*emi) for x in beta_fun]    # envelope (beta-x)
     by  = [ sqrt(x[2]*emi) for x in beta_fun]    # envelope (beta-y)
     bxn = [-x for x in bx]    # beta-x (negatif)
     byn = [-x for x in by]    # beta-y (negatif)
-    #----------*----------*
+    zero= [0. for x in beta_fun]  # zero line
+    #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
-    cs = [x[4] for x in cos_like]   # cos-like-s
-    cw = [x[5] for x in cos_like]   # cos-like-w
+    cz = [x[4] for x in cos_like]   # cos-like-z
+    cdw= [x[5] for x in cos_like]   # cos-like-dw/w
     sx = [x[0] for x in sin_like]   # sin-like-x
     sy = [x[2] for x in sin_like]   # sin-like-x
-    ss = [x[4] for x in sin_like]   # sin-like-s
-    sw = [x[5] for x in sin_like]   # sin-like-w
-    #----------*----------*
-    width=10; height=10
+    sz = [x[4] for x in sin_like]   # sin-like-z
+    sdw= [x[5] for x in sin_like]   # sin-like-dw/w
+    #----------*----------*   # figure frame
+    width=20; height=12
     figure('FODO 1',figsize=(width,height))
+    #----------*----------*   # transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
-    #----------*----------*
-    plot(s,bx ,label='sigmax[m]',color='green')
-    plot(s,bxn,label='',color='green')
-    plot(s,cx,label='Cx[m]',color='blue',linestyle='-.')
-    plot(s,sx,label='Sx[m]',color='red' ,linestyle='-.') 
+    plot(z,bx ,label=r'$\sigma$ [m]',color='green')
+    plot(z,bxn,label='',color='green')
+    plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
+    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.') 
     vscale=axis()[3]*0.1
     viseo = [x[3]*vscale for x in beta_fun]
-    zero=[0. for x in beta_fun]
-    plot(s,viseo,label='',color='black')
-    plot(s,zero,color='black')
+    plot(z,viseo,label='',color='black')
+    plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*
+    #----------*----------*   # transverse Y
     splot=subplot(312)
     splot.set_title('transverse y')
-    #----------*----------*
-    plot(s,by ,label='sigmay[m]',color='green')
-    plot(s,byn,label='',color='green')
-    plot(s,cy,label='Cy[m]',color='blue',linestyle='-.')
-    plot(s,sy,label='Sy[m]',color='red' ,linestyle='-.')
+    plot(z,by ,label=r'$\sigma$ [m]',color='green')
+    plot(z,byn,label='',color='green')
+    plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
+    plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
     viseo = [x[3]*vscale for x in beta_fun]
-    zero=[0. for x in beta_fun]
-    plot(s,viseo,label='',color='black')
-    plot(s,zero,color='black')
+    plot(z,viseo,label='',color='black')
+    plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*
-    splot=subplot(313)
-    splot.set_title('longitudinal z')
-    plot(s,cs ,label='delta-z',color='green')
-    plot(s,cw ,label='(delta-w)/w0',color='green', linestyle='-.')
-    # plot(s,ss ,label='delta-z',color='red')
-    # plot(s,sw ,label='(delta-w)/w0',color='red', linestyle='-.')
-    vscale=axis()[3]*0.1
+    #----------*----------*   # longitudinal dPhi, dW/W
+    ax_l=subplot(313)
+    ax_l.set_title('longitudinal z')
+    ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
+    ax_l.plot(z,cz  ,label=r"$\Delta\phi$"  ,color='green')
+    ax_l.plot(z,sz  ,label=r"$\Delta\phi$"  ,color='green')
+    vscale=ax_l.axis()[3]*0.1
     viseo = [x[3]*vscale for x in beta_fun]
-    zero=[0. for x in beta_fun]
-    plot(s,viseo,label='',color='black')
-    plot(s,zero,color='black')
-    legend(loc='lower right',fontsize='x-small')
-    
+    ax_l.plot(z,viseo,label='',color='black')
+    ax_l.plot(z,zero,color='black')
+
+    ax_r = ax_l.twinx()
+    ax_r.set_ylabel(r'$\Delta$w/w [%]')
+    ax_r.tick_params(axis='y', colors='red')
+    ax_r.yaxis.label.set_color('red')
+    ax_r.plot(z,cdw ,label=r'$\Delta$w/w',color='red')
+    ax_r.plot(z,sdw ,label=r'$\Delta$w/w',color='red')
+    ax_r.plot(z,zero,color='red', linestyle='--')
+    #----------*----------*
     show(block=True)
 def make_cavity(l):   ## kavität
     global Werte
@@ -167,7 +174,7 @@ def loesung1():  # total classic FODO lattice
 
     dBdz0  = Phys['quad_gradient']*7.85      # KNOB: quad gradient
     # nboff_super_cells = 15*10                # KNOB:  final energy
-    # nboff_super_cells = 15*8                 # KNOB:  final energy
+    nboff_super_cells = 15*8                 # KNOB:  final energy
     # nboff_super_cells = 15*5                 # KNOB:  final energy
     nboff_super_cells = 15*1                 # KNOB:  final energy
     # nboff_super_cells = 1                    # KNOB:  final energy
@@ -246,8 +253,7 @@ def loesung1():  # total classic FODO lattice
         print(k.rjust(30),':',v)
     #-----------------------------------------
     # Grafik: lösungen als f(s)
-    beta_func   = super_cell.beta_functions(30)   
-    cos_sin_like = super_cell.cossin(30)
-    display(beta_func,cos_sin_like[0],cos_sin_like[1])
+    functions = super_cell.functions(30)   
+    display(functions)
 if __name__ == '__main__':
     loesung1()

@@ -181,7 +181,7 @@ class Lattice(object):
         for ipos in seq:
             elm,s0,s1=ipos
             self.add_element(elm)
-    def beta_functions(self,steps=10):  ## beta funtion
+    def functions(self,steps=10):  ## functions of s
         beta_fun=[]
         ms=ELM.I()
         bx = self.betax0
@@ -205,7 +205,8 @@ class Lattice(object):
                 betay = v_beta[3,0]
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
-        return beta_fun
+        c_like, s_like = self.cosn(steps)
+        return (beta_fun,c_like,s_like)
     def dispersion(self,steps=10,closed=True):  ## dispersion
         traj=[]
         v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
@@ -227,21 +228,24 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
-    def cossin(self,steps=10):  ## cosine & sine trajektories 
-        cos_like =[]
-        sin_like =[]
+    def cosn(self,steps=10):  ## cosine & sine trajectories 
+        lamb = 1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
+        c_like =[]
+        s_like =[]
         xi=Phys['sigmax(i)']
         xpi=Phys['emittance(i)']/xi
         # xi=xpi=0.
         yi=xi
         ypi=xpi
-        dz=1.e-2   # longitudinal displacement z-z0 [m]
-        dp=6.e-2   # relative dif dp/p0             [rad]
+        dz=Phys['z-z0']
+        dp=Phys['(p-p0)/p0']
         c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
         s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
+            beam = element.beam
+            # objprnt(beam,text=element.label)
             for i_element in element.step_through(steps):
                 element_matrix = i_element.matrix
                 c_0 = element_matrix.dot(c_0)
@@ -251,19 +255,19 @@ class Lattice(object):
                 cxp = c_0[1,0]
                 cy  = c_0[2,0]
                 cyp = c_0[3,0]
-                cz  = c_0[4,0]
-                cdp = c_0[5,0]
+                cz  = -c_0[4,0]*360./(beam.beta*lamb)
+                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.
                 
                 sx  = s_0[0,0]
                 sxp = s_0[1,0]
                 sy  = s_0[2,0]
                 syp = s_0[3,0]
-                sz  = s_0[4,0]
-                sdp = s_0[5,0]
+                sz  = -s_0[4,0]*360./(beam.beta*lamb)
+                sdw = s_0[5,0]*(beam.gamma+1.)/beam.gamma*100.
                 viseo = i_element.viseo
-                cos_like.append((cx,cxp,cy,cyp,cz,cdp))
-                sin_like.append((sx,sxp,sy,syp,sz,sdp))
-        return (cos_like,sin_like)
+                c_like.append((cx,cxp,cy,cyp,cz,cdw))
+                s_like.append((sx,sxp,sy,syp,sz,sdw))
+        return (c_like,s_like)
     def symplecticity(self):  ## test symplecticity
         s=NP.array([[0., 1., 0.,0., 0.,0.],
                     [-1.,0., 0.,0., 0.,0.],
@@ -281,6 +285,12 @@ class Lattice(object):
         res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #######################################################################
+def objprnt(what,text='========',filter={}):   ## helper to print objects as dictionary
+        print('========= '+text+' =================')
+        for k,v in what.__dict__.items():
+            if k in filter:
+                continue
+            print(k.rjust(30),':',v)
 def make_lattice():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  wille()['k_quad_f']
@@ -366,7 +376,7 @@ def test2():
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     lattice.symplecticity()
     ## lattice function as f(s)
-    beta_fun = lattice.beta_functions(steps=100)   
+    beta_fun,cl,sl = lattice.functions(steps=100)   
     disp = lattice.dispersion(steps=100,closed=True)
     ## plots
     s  = [x[0] for x in beta_fun]    # s
@@ -385,7 +395,6 @@ def test2():
     legend(loc='upper left')
     show(block=True)
 if __name__ == '__main__':
-#     test0()
-#     test1()
+    test0()
+    test1()
     test2()
-#     test3()

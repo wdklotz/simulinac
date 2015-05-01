@@ -317,8 +317,8 @@ class RFG(D):   ## thin lens RF gap nach Trace3D
         b           = beam_avg.beta     # beta @ average energy
         g           = beam_avg.gamma    # gamma @ average energy
         self.matrix = self._mx(self.tr,b,g,beami,beamf)   # transport matrix            
-        self.beam   = beamf             # Beam @ exit
         Beam.soll.incTK(self.deltaW)
+        self.beam = Beam.soll # Beam @ exit
         # objprnt(Beam.soll,'soll')
         self.viseo  = 0.25      
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
