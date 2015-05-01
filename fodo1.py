@@ -63,8 +63,10 @@ def display(functions):  ## plotting
     ax_l=subplot(313)
     ax_l.set_title('longitudinal z')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
-    ax_l.plot(z,cz  ,label=r"$\Delta\phi$"  ,color='green')
-    ax_l.plot(z,sz  ,label=r"$\Delta\phi$"  ,color='green')
+    ax_l.tick_params(axis='y', colors='green')
+    ax_l.yaxis.label.set_color('green')
+    ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
+    ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseo = [x[3]*vscale for x in beta_fun]
     ax_l.plot(z,viseo,label='',color='black')
@@ -74,8 +76,8 @@ def display(functions):  ## plotting
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z,cdw ,label=r'$\Delta$w/w',color='red')
-    ax_r.plot(z,sdw ,label=r'$\Delta$w/w',color='red')
+    ax_r.plot(z,cdw,label=r'$\Delta$w/w',color='red')
+    ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show(block=True)
@@ -176,7 +178,7 @@ def loesung1():  # total classic FODO lattice
     # nboff_super_cells = 15*10                # KNOB:  final energy
     nboff_super_cells = 15*8                 # KNOB:  final energy
     # nboff_super_cells = 15*5                 # KNOB:  final energy
-    nboff_super_cells = 15*1                 # KNOB:  final energy
+    # nboff_super_cells = 15*1                 # KNOB:  final energy
     # nboff_super_cells = 1                    # KNOB:  final energy
 
     dWf=1.0                                  # acceleration flag=yes              
