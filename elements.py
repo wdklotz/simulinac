@@ -22,7 +22,7 @@ class Beam():   ## relativistic particles
         print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
             .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))        
 Beam.soll = Beam(Phys['kinetic_energy']) # the synchronous reference particle  (class member!)
-class Matrix(object):  # 6x6 matrices
+class Matrix(object):  # the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
         self.matrix=NP.eye(Matrix._dim)    ## 6x6 unit matrix
@@ -135,7 +135,7 @@ class D(Matrix):## drift space nach Trace3D
         self.length=length     ## hard edge length [m]
         self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
-        self.matrix[4,5]=self.length/(g*g)
+        self.matrix[4,5]=length/(g*g)
     def shorten(self,l=0.):
         return D(length=l,label=self.label,beam=self.beam)
 class QF(D):    ## focusing quad nach Trace3D
@@ -165,7 +165,7 @@ class QF(D):    ## focusing quad nach Trace3D
         ## 6x6 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
             m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
-        elif isinstance(self,QD) :
+        elif isinstance(self,QD):
              m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
@@ -178,11 +178,12 @@ class QF(D):    ## focusing quad nach Trace3D
         k0   =self.k0
         len  =self.length
         label=self.label
-        tki = self.beam.tkin
-        tkf = tki+deltaTk
-        kf=scalek0(k0,tki,tkf)
+        beam =self.beam
+        tki  =beam.tkin
+        tkf  = tki+deltaTk
+        kf=scalek0(k0,tki,tkf)  # scale quad strength
         # print('kf',kf)
-        quad_scaled=QF(k0=kf,length=len,label=label,beam=self.beam)
+        quad_scaled=QF(k0=kf,length=len,label=label,beam=beam)
         return quad_scaled
 class QD(QF):   ## defocusing quad nach Trace3D
     def __init__(self,k0=0.,length=0.,label='QD',beam=Beam(Phys['kinetic_energy'])):
@@ -194,10 +195,11 @@ class QD(QF):   ## defocusing quad nach Trace3D
         k0   =self.k0
         len  =self.length
         label=self.label
-        tki = self.beam.tkin
-        tkf = tki+deltaTk
+        beam =self.beam
+        tki  =beam.tkin
+        tkf  =tki+deltaTk
         kf=scalek0(k0,tki,tkf)
-        quad_scaled=QD(k0=kf,length=len,label=label,beam=self.beam)
+        quad_scaled=QD(k0=kf,length=len,label=label,beam=beam)
         return quad_scaled
 class SD(D):    ## sector bending dipole in x-plane nach Trace3D
     def __init__(self,radius=0.,length=0.,label='SB',beam=Beam(Phys['kinetic_energy'])):

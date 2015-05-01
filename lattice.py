@@ -229,11 +229,11 @@ class Lattice(object):
                 traj.append((s,d,dp))
         return traj
     def cs_traj(self,steps=10):  ## cosine & sine trajectories 
-        lamb = 1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
+        lamb = Phys['wellenlänge']
         c_like =[]
         s_like =[]
-        xi=Phys['sigmax(i)']         # eingabe dX
-        xpi=Phys['emittance(i)']/xi  # eingabe dX' aus emittanz gerechnet
+        xi =Phys['sigmax(i)']         # eingabe dX
+        xpi=Phys['emittance(i)']/xi   # eingabe dX' aus emittanz gerechnet
         # xi=xpi=0.
         yi=xi; ypi=xpi          # eingabe Y wie X
         dz=Phys['z-z0']         # eingabe dZ
@@ -264,7 +264,6 @@ class Lattice(object):
                 syp = s_0[3,0]
                 sz  = -s_0[4,0]*360./(beam.beta*lamb)
                 sdw = s_0[5,0]*(beam.gamma+1.)/beam.gamma*100.
-                viseo = i_element.viseo
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)

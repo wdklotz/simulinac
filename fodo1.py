@@ -178,7 +178,7 @@ def loesung1():  # total classic FODO lattice
     # nboff_super_cells = 15*10                # KNOB:  final energy
     nboff_super_cells = 15*8                 # KNOB:  final energy
     # nboff_super_cells = 15*5                 # KNOB:  final energy
-    # nboff_super_cells = 15*1                 # KNOB:  final energy
+    nboff_super_cells = 15*1                 # KNOB:  final energy
     # nboff_super_cells = 1                    # KNOB:  final energy
 
     dWf=1.0                                  # acceleration flag=yes              
@@ -217,8 +217,7 @@ def loesung1():  # total classic FODO lattice
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
     mcell,betax,betay=super_cell.cell(closed=False)
-    print()
-    print('BETAx[0] {:.3g} BETAy[0] {:.3g}'.format(betax,betay))
+    print('\nBETAx[0] {:.3g} BETAy[0] {:.3g}'.format(betax,betay))
     #---------------last cavity---------------
     gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
     # objprnt(gapi, filter={'matrix'})
