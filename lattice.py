@@ -66,7 +66,7 @@ class Lattice(object):
                 print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
             self.full_cell = mcell    # the full cell
-            print('Lattice.cell: ganze Zellenmatrix:')
+            print('Lattice.cell: Zellenmatrix (i)->(f)')
             self.full_cell.out()
             det = LA.det(self.full_cell.matrix)
             print('det|full-cell|={:.5f}\n'.format(det))
@@ -145,11 +145,15 @@ class Lattice(object):
                     raise RuntimeError('stop execution')
             else:
                 # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-                xi=Phys['sigmax(i)']
+                xi=Phys['sigx(i)']
+                yi=Phys['sigy(i)']
                 alx=aly=0.
-                emi = Phys['emittance(i)']
-                bax=bay=xi**2/emi
-                gmx=gmy=(1.+alx*alx)/bax
+                emix = Phys['emitx(i)']
+                emiy = Phys['emity(i)']
+                bax=xi**2/emix
+                bay=yi**2/emiy
+                gmx=(1.+alx*alx)/bax
+                gmy=(1.+aly*aly)/bay
                 
         self.betax0 = bax
         self.alfax0 = alx
@@ -168,6 +172,25 @@ class Lattice(object):
             print('Ende  : ',v_beta_end.T,'\n')
         
         return (self.full_cell,self.betax0,self.betay0)
+    def report(self):
+        reprt = ''
+        header = ''
+        row = ''
+        for count, ipos in enumerate(reversed(self.seq)):
+            elm,si,sf = ipos
+            name= elm.label
+            len =elm.length
+            rest = (count+1)%19
+            if rest != 0: 
+                header += '{:6s}'.format(name)
+                row += '{:.3f} '.format(len)
+            else:
+                header += '{:6s}\n'.format(name)
+                row += '{:.3f} \n'.format(len)
+                reprt += header+row
+                header = row = ''
+        reprt += header+' \n'+row+' \n'
+        return reprt
     def reverse(self):  ## return a reversed Lattice (not used! probably bogus!)
         res=Lattice()
         seq=copy(self.seq)
@@ -232,12 +255,12 @@ class Lattice(object):
         lamb = Phys['wellenlänge']
         c_like =[]
         s_like =[]
-        xi =Phys['sigmax(i)']         # eingabe dX
-        xpi=Phys['emittance(i)']/xi   # eingabe dX' aus emittanz gerechnet
-        # xi=xpi=0.
-        yi=xi; ypi=xpi          # eingabe Y wie X
-        dz=Phys['z-z0']         # eingabe dZ
-        dp=Phys['(p-p0)/p0']    # eingabe dP/P0
+        xi =Phys['sigx(i)']         # eingabe dX
+        xpi=Phys['emitx(i)']/xi     # eingabe dX' aus emittanz gerechnet
+        yi =Phys['sigy(i)']         # eingabe dY
+        ypi=Phys['emity(i)']/yi     # eingabe dY' aus emittanz gerechnet
+        dz=Phys['z-z0']             # eingabe dZ
+        dp=Phys['(p-p0)/p0']        # eingabe dP/P0
         c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
         s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
         s=0.0

@@ -302,7 +302,7 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         tkf =tki+deltaTk
         cav = CAV(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
         return cav
-class RFG(D):   ## thin lens RF gap nach Trace3D
+class RFG(D):   ## zero length RF gap nach Trace3D
     def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']),dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
         self.u0     = U0       # [MV] gap Voltage
