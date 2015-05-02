@@ -6,7 +6,6 @@ Phys = {
     'proton_mass': 938.272,  # [MeV/c**2]
     'spalt_spannung': 3.0,   # [MV]
     'spalt_laenge':0.08,     # [m]
-    'transit_time': 0.5,
     'soll_phase': -50.0,     # [deg]
     'frequenz': 800.0,       # [MHz]
     'kinetic_energy': 50.,   # [MeV]
@@ -31,4 +30,3 @@ def wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-############################################################################

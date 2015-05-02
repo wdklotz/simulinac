@@ -6,7 +6,7 @@ from lattice import Lattice
 from pylab import plot, show, legend, figure, subplot, axis
 from math import sqrt
 
-def display(functions,l):  ## plotting
+def display(functions,title):  ## plotting
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
@@ -27,7 +27,7 @@ def display(functions,l):  ## plotting
     sx = [x[0] for x in sin_like]   # sin-like-x
     sy = [x[2] for x in sin_like]   # sin-like-x
     #----------*----------*   # figure frame
-    figure(str(l))
+    figure(str(title))
     #----------*----------*   # transverse X
     splot=subplot(211)
     splot.set_title('transverse x')
@@ -57,10 +57,10 @@ def display(functions,l):  ## plotting
 def make_cavity():   
     # cavity
     lcav   = Phys['spalt_laenge']
-    u0     = Phys['spalt_spannung']*0.
+    u0     = Phys['spalt_spannung']*0.05
     phi0   = Phys['soll_phase']*Phys['radians']
     fRF0   = Phys['frequenz']
-    dWf    = 0.
+    dWf    = 1.
 
     tk = Beam.soll.tkin                    # kinetic energy @ entrance
     l=0.5*lcav
@@ -72,7 +72,7 @@ def make_cavity():
     cavity.add_element(gap)
     cavity.add_element(drf)
     Phys['LCAV']=cavity.length
-    print('cavity_length: ',cavity.length)
+    # print('cavity_length: ',cavity.length)
     # cavity.out()
     # objprnt(Beam.soll,'gap exit',{'matrix'})
     return cavity
@@ -91,17 +91,18 @@ def objprnt(what,text='========',filter={}):  ## helper to print objects as dict
             if k in filter:
                 continue
             print(k.rjust(30),':',v)
-def test0():
+def test0(x):
     # k werte
-    sk=1.0
+    sk=0.6
+    # sk=x
     kf=7.5*sk
     kd=7.0625*sk
     # längen
     lq=0.2
-    ld=1.5
-    ld=2.0
+    ld=0.6
+    # ld=x
     # rf
-    gaps = 2
+    gaps = 6
     # tk0    = Phys['kinetic_energy']*1.       # KNOB: injection energy
 
     mQF1=QF(k0=kf,length=lq   ,label='F1')
@@ -152,18 +153,21 @@ def test0():
     lat.add_element(mD1)     # D
     lat.append(rf_section)   # RF
     
-    # lat.append(lat) # 2 cells
-    # lat.append(lat) # 4 cells
-    # lat.append(lat) # 4 cells
+    lat.append(lat) # 2 cells
+    lat.append(lat) # 4 cells
+    lat.append(lat) # 8 cells
     
     mcell,betax,betay=lat.cell(closed=True)
     # mcell.out()
+    print('energy(f)= {} [MeV]'.format(Beam.soll.tkin))
     
     Phys['sigx(i)']=sqrt(Phys['emitx(i)']*betax)
     Phys['sigy(i)']=sqrt(Phys['emity(i)']*betay)
     functions = lat.functions(40)   
-    display(functions,'ld {}'.format(ld))
+    display(functions,'x {}'.format(x))
     return
 #----------*----------*----------*----------*----------*----------*
 if __name__ == '__main__':
-    test0()
+    # for x in [0.0+n*0.1 for n in range(30)]:
+        # test0(x)
+    test0(0)

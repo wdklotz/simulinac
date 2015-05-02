@@ -305,12 +305,12 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
 class RFG(D):   ## zero length RF gap nach Trace3D
     def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']),dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
-        self.u0     = U0       # [MV] gap Voltage
+        self.u0     = U0*dWf      # [MV] gap Voltage
         self.phis   = PhiSoll  # [radians] soll phase
         self.freq   = fRF      # [MHz]  RF frequenz
         self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF(self.beam.beta)
-        self.deltaW = self.u0*self.tr*cos(self.phis)*dWf # Trace3D
+        self.deltaW = self.u0*self.tr*cos(self.phis) # Trace3D
         beami       = self.beam                      # Beam @ entrance
         beamf       = Beam(beami.tkin+self.deltaW)   # Beam @ exit
         dWavg       = (beamf.tkin - beami.tkin)*0.5+beami.tkin  # average energy
