@@ -91,19 +91,14 @@ def objprnt(what,text='========',filter={}):  ## helper to print objects as dict
             if k in filter:
                 continue
             print(k.rjust(30),':',v)
-def test0(x):
+def test0():
     # k werte
-    sk=0.6
+    sk=1.0
     # sk=x
     kf=7.5*sk
     kd=7.0625*sk
     # längen
     lq=0.2
-    ld=0.6
-    # ld=x
-    # rf
-    gaps = 6
-    # tk0    = Phys['kinetic_energy']*1.       # KNOB: injection energy
 
     mQF1=QF(k0=kf,length=lq   ,label='F1')
     mQD1=QD(k0=kd,length=2.*lq,label='D1')
@@ -120,7 +115,19 @@ def test0(x):
     fy2=-1./mDFD.matrix[3,2]
     print('focals triplet 1: fx= {:.3f}  fy= {:.3f}'.format(fx1,fy1))
     print('focals triplet 2: fx= {:.3f}  fy= {:.3f}'.format(fx2,fy2))
-    print('==============================================================')
+def test1(x):
+    # k werte
+    sk=0.6
+    # sk=x
+    kf=7.5*sk
+    kd=7.0625*sk
+    # längen
+    lq=0.2
+    ld=0.6
+    # ld=x
+    # rf
+    gaps = 6
+    # tk0    = Phys['kinetic_energy']*1.       # KNOB: injection energy
 
     rf_section = make_rf_section(gaps=gaps)
     rf_len = rf_section.length
@@ -168,6 +175,6 @@ def test0(x):
     return
 #----------*----------*----------*----------*----------*----------*
 if __name__ == '__main__':
+    test0()
     # for x in [0.0+n*0.1 for n in range(30)]:
         # test0(x)
-    test0(0)
