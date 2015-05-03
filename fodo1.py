@@ -94,8 +94,7 @@ def make_cavity(w):   ## kavität
     # objprnt(Beam.soll,'gap exit',{'matrix'})
     return cavity
 def make_rf_section(w):   ## RF sektion
-    gaps = w['gaps']
-    lcav = w['lcav']
+    gaps = w['gaps']    # gaps/half-cell
     section = Lattice()
     for i in range(gaps):
         cav = make_cavity(w)
@@ -103,41 +102,36 @@ def make_rf_section(w):   ## RF sektion
     Phys['RFSection']=section.length
     return section  
 def make_half_cell(w,upstream=True):  # 1/2 cell
-    tki = Beam.soll.tkin                            # kinetic energy of particle @ entrance
-    # basis zelle
+    tki  = Beam.soll.tkin  
+    gaps = w['gaps']
+    ld   = w['ld']
+    lcav = w['lcav']
+    ld   = 0.5*(ld-2.*gaps*lcav)
+    lqf  = 0.5*w['lqf']
+    lqd  = 0.5*w['lqd']
+    kq   = k0(gradient=w['dBdz'],tkin=tki)                  # quad strength @ entrance
+    mqf=QF(k0=kq,length=lqf,label='QF',beam=Beam.soll)      # F quad 
+    mqd=QD(k0=kq,length=lqd,label='QD',beam=Beam.soll)      # D quad 
+    md=D(ld,beam=Beam.soll)                                 # drift zw. F quad und cavities
     cell=Lattice()
     if upstream : # 1/2 basis zelle upstream
-        tk = tki                                     
-        kq   = k0(gradient=w['dBdz'],tkin=tk)                        # quad strength @ entrance
-        mqf=QF(k0=kq,length=w['lqf'],label='QF',beam=Beam.soll)      # F quad before cavities
-        rf_section = make_rf_section(w)                              # cavities
-        ld = w['ld']-rf_section.length                               # fit drift glue
-        md=D(0.5*ld,beam=Beam.soll)                                  # drift zw. F quad und cavities
         cell.add_element(mqf)   # QF
         cell.add_element(md)    # D
-        cell.append(rf_section) # rf
-
-        tk = Beam.soll.tkin                                          # new energy
-        kq   = k0(gradient=w['dBdz'],tkin=tk)                        # new quad strength 
-        mqd=QD(k0=kq,length=w['lqd'],label='QD',beam=Beam.soll)      # D quad after cavities
-        md=D(0.5*ld,beam=Beam.soll)                                  # drift zw. cavities und D quad
+        rf_section = make_rf_section(w) # cavities
+        cell.append(rf_section) # RF
+        # -- energy update --
+        mqd = mqd.update()
+        md  = md.update()
         cell.add_element(md)    # D
         cell.add_element(mqd)   # QD
     else:  #  1/2 basis zelle downstream  = reverse of upstream
-        tk = tki               
-        kq   = k0(gradient=w['dBdz'],tkin=tk) 
-        mqd=QD(k0=kq,length=w['lqd'],label='QD',beam=Beam.soll)      
-        rf_section = make_rf_section(w)  
-        ld = w['ld']-rf_section.length
-        md=D(0.5*ld,beam=Beam.soll)                   
         cell.add_element(mqd)   # QD
         cell.add_element(md)    # D
-        cell.append(rf_section) # rf
- 
-        tk = Beam.soll.tkin
-        kq   = k0(gradient=w['dBdz'],tkin=tk)    
-        mqf=QF(k0=kq,length=w['lqf'],label='QF',beam=Beam.soll) 
-        md=D(0.5*ld,beam=Beam.soll)                  
+        rf_section = make_rf_section(w) # cavities
+        cell.append(rf_section) # RF
+        # -- energy update --
+        md  = md.update()
+        mqf = mqf.update()
         cell.add_element(md)    # D
         cell.add_element(mqf)   # QF
     Phys['LQF']=2.*mqf.length
@@ -149,11 +143,11 @@ def make_half_cell(w,upstream=True):  # 1/2 cell
 #------------*--------------*-----------*------------
 def loesung():  # total classic FODO lattice
     # längen
-    lqd  =  0.2     # 1/2 QD len
-    lqf  =  0.2     # 1/2 QF len
+    lqd  =  0.4     # QD len
+    lqf  =  0.4     # QF len
     ld   =  0.4     # drift len                # KNOB effective focus of FODO
     # cavity werte
-    lcav =  Phys['spalt_laenge']         
+    lcav   =  Phys['spalt_laenge']         
     u0     = Phys['spalt_spannung']
     phi0   = Phys['soll_phase']*Phys['radians']
     fRF0   = Phys['frequenz']
@@ -163,13 +157,13 @@ def loesung():  # total classic FODO lattice
     Beam.soll = Beam(Phys['injection_energy'])
     Phys['sigx_i'] = 5.e-3                     # KNOB sigma x (i)
     Phys['sigy_i'] = 2.5e-3                    # KNOB sigma y (i)
-    Phys['dP/P']   = 3.e-2                     # KNOB dp/p (i)
+    Phys['dP/P']   = 2.e-2                     # KNOB dp/p (i)
     tk0 = Beam.soll.tkin                       # KNOB injection energy
     # fokusierung
     # dBdz0  = Phys['quad_gradient']*7.85      # KNOB quad gradient
-    dBdz0  = Phys['quad_gradient']*6.5         # KNOB quad gradient
+    dBdz0  = Phys['quad_gradient']*8.2         # KNOB quad gradient
     # struktur werte
-    transferline = False                       # KNOB ring or transfer ?
+    ring = False                                # KNOB ring or transfer ?
     nboff_super_cells = 16*10                  # KNOB  final energy
     # nboff_super_cells = 16*5                 # KNOB  final energy
     nboff_super_cells = 16*1                   # KNOB  final energy
@@ -203,7 +197,7 @@ def loesung():  # total classic FODO lattice
     # print('lattice length [m]={}'.format(lattice_length))
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
-    mcell,betax,betay=super_cell.cell(closed=transferline)
+    mcell,betax,betay = super_cell.cell(closed=ring)
     print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
     #---------------last cavity---------------
     gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll)  # Trace3D

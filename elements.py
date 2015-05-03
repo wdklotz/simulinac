@@ -174,10 +174,6 @@ class QF(D):    ## focusing quad nach Trace3D
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return m
     def update(self):
-        # for k,v in self.__dict__.items():
-            # print(k.rjust(30),':',v)
-        # for k,v in self.beam.__dict__.items():
-            # print(k.rjust(30),':',v)
         k0   =self.k0
         len  =self.length
         label=self.label
@@ -187,8 +183,8 @@ class QF(D):    ## focusing quad nach Trace3D
         tkf  =soll.tkin
         kf   =scalek0(k0,tki,tkf)  # scale quad strength
         # print('kf',kf)
-        quad_scaled=QF(k0=kf,length=len,label=label,beam=soll)
-        return quad_scaled        
+        scaled=QF(k0=kf,length=len,label=label,beam=soll)
+        return scaled        
 class QD(QF):   ## defocusing quad nach Trace3D
     def __init__(self,k0=0.,length=0.,label='QD',beam=Beam.soll):
         super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
@@ -208,6 +204,7 @@ class QD(QF):   ## defocusing quad nach Trace3D
         return scaled
 class SD(D):    ## sector bending dipole in x-plane nach Trace3D
     def __init__(self,radius=0.,length=0.,label='SB',beam=Beam.soll):
+        raise RuntimeError('SD not ready!')
         super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
         self.matrix=self._mx()
@@ -231,6 +228,7 @@ class SD(D):    ## sector bending dipole in x-plane nach Trace3D
         return m
 class RD(SD):   ## rectangular bending dipole in x-plane
     def __init__(self, radius=0., length=0., label='RB',beam=Beam.soll):
+        raise RuntimeError('RD not ready!')
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
         wd = WD(self,label='',beam=beam)  # wedge myself...
         rd = wd * self * wd
@@ -239,6 +237,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
 class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,sector,label='WD',beam=Beam.soll):
+        raise RuntimeError('WD not ready!')
         super(WD,self).__init__(label=label,beam=beam)
         m=self.matrix
         self.parent = sector

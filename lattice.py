@@ -119,9 +119,9 @@ class Lattice(object):
             # aly = vector[4].real
             # gmy = vector[5].real
 
-            # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
             if closed:
                 if not unstable:
+                    # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
                     cell_matrix = self.full_cell.matrix
                     m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
                     m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
@@ -165,23 +165,13 @@ class Lattice(object):
                 gmx=(1.+alx*alx)/bax
                 gmy=(1.+aly*aly)/bay
                 
-        self.betax0 = bax
-        self.alfax0 = alx
-        self.gammx0 = gmx
-        self.betay0 = bay
-        self.alfay0 = aly
-        self.gammy0 = gmy
+            self.betax0 = bax
+            self.alfax0 = alx
+            self.gammx0 = gmx
+            self.betay0 = bay
+            self.alfay0 = aly
+            self.gammy0 = gmy
             
-        # if closed:
-            # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
-            # v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
-            # m_cell=self.full_cell.BetaMatrix()
-            # v_beta_end = m_cell.dot(v_beta)
-            # print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
-            # print('Anfang: ',v_beta.T)
-            # print('Ende  : ',v_beta_end.T,'\n')
-            # Phys['sigx_i'] = sqrt(self.betax0*Phys['emitx_i'])
-            # Phys['sigy_i'] = sqrt(self.betay0*Phys['emity_i'])
         return (self.full_cell,self.betax0,self.betay0)
     def report(self):
         reprt = ''
