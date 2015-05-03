@@ -141,15 +141,25 @@ class Lattice(object):
                         bay = -bay
                     aly=(n11-n22)/(2.*n12)*bay
                     gmy=(1.+aly*aly)/bay
+                    
+                    # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
+                    v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
+                    m_cell=self.full_cell.BetaMatrix()
+                    v_beta_end = m_cell.dot(v_beta)
+                    print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
+                    print('Anfang: ',v_beta.T)
+                    print('Ende  : ',v_beta_end.T,'\n')
+                    Phys['sigx_i'] = sqrt(bax*Phys['emitx_i'])
+                    Phys['sigy_i'] = sqrt(bay*Phys['emity_i'])
                 else:
                     raise RuntimeError('stop execution')
             else:
                 # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-                xi=Phys['sigx(i)']
-                yi=Phys['sigy(i)']
+                xi=Phys['sigx_i']
+                yi=Phys['sigy_i']
                 alx=aly=0.
-                emix = Phys['emitx(i)']
-                emiy = Phys['emity(i)']
+                emix = Phys['emitx_i']
+                emiy = Phys['emity_i']
                 bax=xi**2/emix
                 bay=yi**2/emiy
                 gmx=(1.+alx*alx)/bax
@@ -162,15 +172,16 @@ class Lattice(object):
         self.alfay0 = aly
         self.gammy0 = gmy
             
-        if closed:
+        # if closed:
             # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
-            v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
-            m_cell=self.full_cell.BetaMatrix()
-            v_beta_end = m_cell.dot(v_beta)
-            print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
-            print('Anfang: ',v_beta.T)
-            print('Ende  : ',v_beta_end.T,'\n')
-        
+            # v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
+            # m_cell=self.full_cell.BetaMatrix()
+            # v_beta_end = m_cell.dot(v_beta)
+            # print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
+            # print('Anfang: ',v_beta.T)
+            # print('Ende  : ',v_beta_end.T,'\n')
+            # Phys['sigx_i'] = sqrt(self.betax0*Phys['emitx_i'])
+            # Phys['sigy_i'] = sqrt(self.betay0*Phys['emity_i'])
         return (self.full_cell,self.betax0,self.betay0)
     def report(self):
         reprt = ''
@@ -228,7 +239,7 @@ class Lattice(object):
                 betay = v_beta[3,0]
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
-        c_like, s_like = self.cs_traj(steps)
+        (c_like,s_like) = self.cs_traj(steps)
         return (beta_fun,c_like,s_like)
     def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
         traj=[]
@@ -255,12 +266,12 @@ class Lattice(object):
         lamb = Phys['wellenlänge']
         c_like =[]
         s_like =[]
-        xi =Phys['sigx(i)']         # eingabe dX
-        xpi=Phys['emitx(i)']/xi     # eingabe dX' aus emittanz gerechnet
-        yi =Phys['sigy(i)']         # eingabe dY
-        ypi=Phys['emity(i)']/yi     # eingabe dY' aus emittanz gerechnet
-        dz=Phys['z-z0']             # eingabe dZ
-        dp=Phys['(p-p0)/p0']        # eingabe dP/P0
+        xi =Phys['sigx_i']         # eingabe dX
+        xpi=Phys['emitx_i']/xi     # eingabe dX' aus emittanz gerechnet
+        yi =Phys['sigy_i']         # eingabe dY
+        ypi=Phys['emity_i']/yi     # eingabe dY' aus emittanz gerechnet
+        dz=Phys['dZ']              # eingabe dZ
+        dp=Phys['dP/P']            # eingabe dP/P0
         c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
         s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
         s=0.0
@@ -278,8 +289,8 @@ class Lattice(object):
                 cxp = c_0[1,0]
                 cy  = c_0[2,0]
                 cyp = c_0[3,0]
-                cz  = -c_0[4,0]*360./(beam.beta*lamb)           # conversion zu dPhi
-                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.  # conversion zu dW/W
+                cz  = -c_0[4,0]*360./(beam.beta*lamb)           # conversion zu dPhi [deg]
+                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.  # conversion zu dW/W [%]
                 # sin_like
                 sx  = s_0[0,0]
                 sxp = s_0[1,0]
@@ -307,12 +318,6 @@ class Lattice(object):
         res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #######################################################################
-def objprnt(what,text='========',filter={}):   ## helper to print objects as dictionary
-        print('========= '+text+' =================')
-        for k,v in what.__dict__.items():
-            if k in filter:
-                continue
-            print(k.rjust(30),':',v)
 def make_lattice():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  wille()['k_quad_f']
@@ -368,7 +373,6 @@ def make_lattice():  # a test lattice
 def test0():
     lat = make_lattice()
     lat.out()
-    print(lat)
 def test1():
     lattice=make_lattice()
     mcell,betax,betay=lattice.cell()

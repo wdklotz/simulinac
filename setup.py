@@ -4,20 +4,20 @@ Phys = {
     'lichtgeschwindigkeit': 299792458.,    # [m/s]
     'elementarladung': 1.602176565e-19,    # [coulomb]
     'proton_mass': 938.272,  # [MeV/c**2]
-    'spalt_spannung': 3.0,   # [MV]
-    'spalt_laenge':0.08,     # [m]
-    'soll_phase': -50.0,     # [deg]
+    'spalt_spannung': 3.5,   # [MV]
+    'spalt_laenge': 0.08,    # [m]
+    'soll_phase': -45.0,     # [deg]
     'frequenz': 800.0,       # [MHz]
-    'kinetic_energy': 50.,   # [MeV]
+    'injection_energy': 50., # [MeV]
     'quad_gradient': 1.0,    # [T/m]
     'radians': pi/180.,      # [rad/deg]
     'degrees': 180./pi,      # [deg/rad]
-    'emitx(i)':5.e-6,        # [m*rad] emttance @ entrance
-    'emity(i)':5.e-6,        # [m*rad] emttance @ entrance
-    'sigx(i)': 5.e-3,        # [m] one sigma transverse beam size
-    'sigy(i)': 5.e-3,        # [m] one sigma transverse beam size
-    'z-z0': 1.8e-2,          # [m] longitudinal displacement z-z0
-    '(p-p0)/p0': 6.e-2,      # [rad] relative impulse (p-p0)/p0
+    'emitx_i':5.e-6,         # [m*rad] emttance @ entrance
+    'emity_i':5.e-6,         # [m*rad] emttance @ entrance
+    'sigx_i': 5.e-3,         # [m] one sigma transverse beam size
+    'sigy_i': 2.5e-3,        # [m] one sigma transverse beam size
+    'dZ': 1.8e-2,            # [m] longitudinal displacement dZ
+    'dP/P': 5.e-2,           # [rad] relative impulse dP/P
      }
 Phys['wellenlänge']=1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
 def wille():
@@ -30,3 +30,15 @@ def wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
+def objprnt(what,text='========',filter={}):  ## helper to print objects as dictionary
+        print('\n========= '+text+' =================')
+        for k,v in what.__dict__.items():
+            if k in filter:
+                continue
+            print(k.rjust(30),':',v)
+def dictprnt(what,text='========',filter={}):  ## helper to print objects as dictionary
+        print('\n========= '+text+' =================')
+        for k,v in what.items():
+            if k in filter:
+                continue
+            print(k.rjust(30),':',v)

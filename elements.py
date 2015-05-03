@@ -1,8 +1,9 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import wille, Phys
+from setup import wille, Phys, dictprnt, objprnt
 import numpy as NP 
 from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
+from copy import copy
 
 class Beam():   ## relativistic particles
     soll=None   ## the synchronous reference particle  (class member!)
@@ -21,7 +22,7 @@ class Beam():   ## relativistic particles
     def out(self):
         print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
             .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))        
-Beam.soll = Beam(Phys['kinetic_energy']) # the synchronous reference particle  (class member!)
+Beam.soll = Beam(Phys['injection_energy']) # the synchronous reference particle  (class member!)
 class Matrix(object):  # the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
@@ -112,7 +113,7 @@ class Matrix(object):  # the mother of all 6x6 matrices
             ])
         return m_beta
 class I(Matrix):## unity Matrix (an alias to Matrix class)
-    def __init__(self,label='I',viseo=0.,beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self,label='I',viseo=0.,beam=Beam.soll):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
@@ -128,18 +129,20 @@ class Test(Matrix):
                               [0.,0.,0.,0.,e,f]])
         self.label=label
 class D(Matrix):## drift space nach Trace3D
-    def __init__(self,length=0.,label='D',beam=Beam(Phys['kinetic_energy'])):    
+    def __init__(self,length=0.,label='D',beam=Beam.soll):    
         super(D,self).__init__()
         self.label=label
-        self.beam=beam
+        self.beam=copy(beam)
         self.length=length     ## hard edge length [m]
         self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
         self.matrix[4,5]=length/(g*g)
     def shorten(self,l=0.):
         return D(length=l,label=self.label,beam=self.beam)
+    def update(self):
+        return D(length=self.length,label=self.label,beam=Beam.soll)
 class QF(D):    ## focusing quad nach Trace3D
-    def __init__(self,k0=0.,length=0.,label='QF',beam=Beam(Phys['kinetic_energy'])):    
+    def __init__(self,k0=0.,length=0.,label='QF',beam=Beam.soll):    
         super(QF,self).__init__(length=length,label=label,beam=beam)
         self.k0=k0         ## energy independent Quad strength [m**-2]
         self.matrix=self._mx()
@@ -170,7 +173,7 @@ class QF(D):    ## focusing quad nach Trace3D
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return m
-    def scale(self,deltaTk=0.):
+    def update(self):
         # for k,v in self.__dict__.items():
             # print(k.rjust(30),':',v)
         # for k,v in self.beam.__dict__.items():
@@ -180,29 +183,31 @@ class QF(D):    ## focusing quad nach Trace3D
         label=self.label
         beam =self.beam
         tki  =beam.tkin
-        tkf  = tki+deltaTk
-        kf=scalek0(k0,tki,tkf)  # scale quad strength
+        soll =Beam.soll
+        tkf  =soll.tkin
+        kf   =scalek0(k0,tki,tkf)  # scale quad strength
         # print('kf',kf)
-        quad_scaled=QF(k0=kf,length=len,label=label,beam=beam)
-        return quad_scaled
+        quad_scaled=QF(k0=kf,length=len,label=label,beam=soll)
+        return quad_scaled        
 class QD(QF):   ## defocusing quad nach Trace3D
-    def __init__(self,k0=0.,length=0.,label='QD',beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self,k0=0.,length=0.,label='QD',beam=Beam.soll):
         super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0,length=l,label=self.label,beam=self.beam)
-    def scale(self,deltaTk=0.):
+    def update(self):
         k0   =self.k0
         len  =self.length
         label=self.label
         beam =self.beam
         tki  =beam.tkin
-        tkf  =tki+deltaTk
-        kf=scalek0(k0,tki,tkf)
-        quad_scaled=QD(k0=kf,length=len,label=label,beam=beam)
-        return quad_scaled
+        soll =Beam.soll
+        tkf  =soll.tkin
+        kf   =scalek0(k0,tki,tkf)
+        scaled=QD(k0=kf,length=len,label=label,beam=soll)
+        return scaled
 class SD(D):    ## sector bending dipole in x-plane nach Trace3D
-    def __init__(self,radius=0.,length=0.,label='SB',beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self,radius=0.,length=0.,label='SB',beam=Beam.soll):
         super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
         self.matrix=self._mx()
@@ -225,7 +230,7 @@ class SD(D):    ## sector bending dipole in x-plane nach Trace3D
         m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
         return m
 class RD(SD):   ## rectangular bending dipole in x-plane
-    def __init__(self, radius=0., length=0., label='RB',beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self, radius=0., length=0., label='RB',beam=Beam.soll):
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
         wd = WD(self,label='',beam=beam)  # wedge myself...
         rd = wd * self * wd
@@ -233,7 +238,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
     def shorten(self,l=0.):
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
 class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
-    def __init__(self,sector,label='WD',beam=Beam(Phys['kinetic_energy'])):
+    def __init__(self,sector,label='WD',beam=Beam.soll):
         super(WD,self).__init__(label=label,beam=beam)
         m=self.matrix
         self.parent = sector
@@ -257,11 +262,12 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
         m[3,2]=-ckp
         return wd
 class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
-    def __init__(self,U0=10.,PhiSoll=-0.25*pi,fRF=800.,label='CAV',beam=Beam(Phys['kinetic_energy']),dWf=1.):
+    def __init__(self,U0=10.,PhiSoll=-2./3.*pi,fRF=800.,label='CAV',beam=Beam.soll,dWf=1.):
         super(CAV,self).__init__(label=label,beam=beam)
-        self.u0     = U0       # [MV] gap Voltage
-        self.phis   = PhiSoll  # [radians] soll phase
-        self.freq   = fRF      # [MHz]  RF frequenz
+        self.u0     = U0                       # [MV] gap Voltage
+        self.phis   = PhiSoll                  # [radians] soll phase
+        self.freq   = fRF                      # [MHz]  RF frequenz
+        self.dWf    = dWf
         self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF(self.beam.beta) # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf # T.Wrangler pp.221
@@ -273,8 +279,7 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         g           = beam_avg.gamma    # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)  # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g)  # transport matrix
-        Beam.soll.incTK(self.deltaW)
-        self.beam = Beam.soll # Beam @ exit
+        Beam.soll.incTK(self.deltaW)   # beam accelerated
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
@@ -293,21 +298,15 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return m
     def shorten(self,l=0.):
         return self
-    def scale(self,deltaTk=0.):
-        u0=self.u0
-        phiSoll=self.phis
-        fRF=self.freq
-        label=self.label
-        tki =self.beam.tkin
-        tkf =tki+deltaTk
-        cav = CAV(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
-        return cav
+    def update(self):
+        return CAV(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
 class RFG(D):   ## zero length RF gap nach Trace3D
-    def __init__(self, U0=10., PhiSoll=-0.25*pi, fRF=800., label='RFG', beam=Beam(Phys['kinetic_energy']),dWf=1.):
+    def __init__(self, U0=10., PhiSoll=-2./3.*pi, fRF=800., label='RFG', beam=Beam.soll,dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
-        self.u0     = U0*dWf      # [MV] gap Voltage
-        self.phis   = PhiSoll  # [radians] soll phase
-        self.freq   = fRF      # [MHz]  RF frequenz
+        self.u0     = U0*dWf                   # [MV] gap Voltage
+        self.phis   = PhiSoll                  # [radians] soll phase
+        self.freq   = fRF                      # [MHz]  RF frequenz
+        self.dWf    = dWf
         self.lamb   = 1.e-6*Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF(self.beam.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis) # Trace3D
@@ -317,9 +316,9 @@ class RFG(D):   ## zero length RF gap nach Trace3D
         beam_avg    = Beam(dWavg)       # Beam @ average energy
         b           = beam_avg.beta     # beta @ average energy
         g           = beam_avg.gamma    # gamma @ average energy
+        self.Ks     = 2.*pi/(self.lamb*g*b)  # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g,beami,beamf)   # transport matrix            
         Beam.soll.incTK(self.deltaW)
-        self.beam = Beam.soll # Beam @ exit
         # objprnt(Beam.soll,'soll')
         self.viseo  = 0.25      
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
@@ -343,15 +342,8 @@ class RFG(D):   ## zero length RF gap nach Trace3D
         return m
     def shorten(self,l=0.):
         return self
-    def scale(self,deltaTk=0.):
-        u0=self.u0
-        phiSoll=self.phis
-        fRF=self.freq
-        label=self.label
-        tki = self.beam.tkin
-        tkf = tki+deltaTk
-        rfg = RFG(U0=u0,PhiSoll=phiSoll,fRF=fRF,beam=Beam(tkf),label=label)
-        return rfg
+    def update(self):
+        return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
 def k0(gradient=0.,tkin=0.):       ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
@@ -408,12 +400,6 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)             
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
-def objprnt(what,text='========',filter={}): ## helper to print objects as dictionary
-        print('========= '+text+' =================')
-        for k,v in what.__dict__.items():
-            if k in filter:
-                continue
-            print(k.rjust(30),':',v)
 def test0():
     print('trivial test 0 ...')
     a=Test(1,2,3,4,5,6,label='a')
@@ -564,7 +550,7 @@ def test8():
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
     grad=Phys['quad_gradient']   # [T/m] gradient
-    tk=Phys['kinetic_energy']    # [MeV]  kin. energy
+    tk=Phys['injection_energy']    # [MeV]  kin. energy
     kq=k0(gradient=grad,tkin=tk)    # quad strength [1/m**2]
     len=0.4                         # quad len [m]
     focal = kq*len
@@ -585,20 +571,38 @@ def test9():
         U0=Phys['spalt_spannung'],
         PhiSoll=Phys['soll_phase']*Phys['radians'],
         fRF=Phys['frequenz'],
-        beam=Beam(tk),
         label='gap')
-    tki=tk
-    for dt in [10.,50.,150.]:
+    print('========================')
+    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    Beam.soll = Beam(tki)
+    for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
-        print('k[{} MeV] {:.3f} k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        mqf.scale(deltaTk=dt).out()
-        mqd.scale(deltaTk=dt).out()
-        cavity.scale(deltaTk=dt).out()
+        print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
+        Beam.soll.incTK(dt)
+        mqf.update().out()
+    print('========================')
+    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    Beam.soll = Beam(tki)
+    for dt in [0.,950.]:
+        tkf=tki+dt
+        k_scaled = scalek0(kq,tki,tkf)
+        print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
+        Beam.soll.incTK(dt)
+        mqd.update().out()
+    print('========================')
+    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    Beam.soll = Beam(tki)
+    for dt in [0.,950.]:
+        tkf=tki+dt
+        k_scaled = scalek0(kq,tki,tkf)
+        print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
+        Beam.soll.incTK(dt)
+        cavity.update().out()
 def test10():
     print('\ntest: Beam class')
-    for key,value in Phys.items():
-        print('{}=  {:.4g}'.format(key.rjust(20),value))
+    dictprnt(Phys,text='setup.Phys')
+
     # Beam class
     print()
     Beam(0.).out()
