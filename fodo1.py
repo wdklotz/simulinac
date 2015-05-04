@@ -1,7 +1,7 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import Phys,k0,dictprnt,Beam
-from elements import D,QF,QD,RFG
+from elements import D,QF,QD,RFG,CAV
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
@@ -166,7 +166,7 @@ def loesung():  # total classic FODO lattice
     ring = False                                # KNOB ring or transfer ?
     nboff_super_cells = 16*10                  # KNOB  final energy
     # nboff_super_cells = 16*5                 # KNOB  final energy
-    nboff_super_cells = 16*1                   # KNOB  final energy
+    # nboff_super_cells = 16*1                   # KNOB  final energy
     # nboff_super_cells = 3                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,

@@ -1,7 +1,7 @@
  # -*- coding: utf-8 -*-
 from math import pi,sqrt
 
-Phys = {
+Phys = {                                      ## physics constants and setup ...
     'lichtgeschwindigkeit': 299792458.,    # [m/s]
     'elementarladung': 1.602176565e-19,    # [coulomb]
     'proton_mass': 938.272,  # [MeV/c**2]
@@ -21,7 +21,7 @@ Phys = {
     'dP/P': 5.e-2,           # [rad] relative impulse dP/P
      }
 Phys['wellenlänge']=1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
-class Beam():   ## relativistic protons
+class Beam():                                 ## relativistic protons
     soll=None   ## the synchronous reference particle  (class member!)
     def __init__(self,tkin=0.):
         self._set_self(tkin)
@@ -38,8 +38,8 @@ class Beam():   ## relativistic protons
     def out(self):
         print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
             .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))        
-Beam.soll = Beam(Phys['injection_energy']) # the synchronous reference particle  (class member!)
-def k0(gradient=0.,tkin=0.):       ## quad strength from B-field gradient & kin. energy
+Beam.soll = Beam(Phys['injection_energy'])    ## the synchronous reference particle  (class member!)
+def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
     gradient: in [Tesla/m]
@@ -56,7 +56,7 @@ def k0(gradient=0.,tkin=0.):       ## quad strength from B-field gradient & kin.
         return kres
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
-def scalek0(k0=0.,tki=0.,tkf=0.):  ## scale quad  strength with kin. energy
+def scalek0(k0=0.,tki=0.,tkf=0.):             ## scale quad  strength with kin. energy
     """
     scale k0 for increase of kin. energy from
     tki to tkf
@@ -69,7 +69,7 @@ def scalek0(k0=0.,tki=0.,tkf=0.):  ## scale quad  strength with kin. energy
     gf  =pf.gamma
     kf= k0 * (bi * gi) / (bf * gf)
     return kf
-def dBdz(k0=0.,tkin=0.):           ## B-field gradient from quad strength & kin. energy
+def dBdz(k0=0.,tkin=0.):                      ## B-field gradient from quad strength & kin. energy
     """
     calculate quad gradient for given quad strength k0
     and given kin. energy tkin
@@ -90,7 +90,7 @@ def objprnt(what,text='========',filter={}):  ## helper to print objects as dict
             continue
         print(k.rjust(30),':',v)
     return
-def dictprnt(what,text='========',filter={}):  ## helper to print objects as dictionary
+def dictprnt(what,text='========',filter={}): ## helper to print objects as dictionary
     print('\n========= '+text+' =================')
     for k,v in what.items():
         if k in filter:

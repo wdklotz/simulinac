@@ -6,3 +6,5 @@
  - quad strength along path
  - acceptance ellipse?
  - emmitance ellipse?
+ - half-segment before step-through?
+ 

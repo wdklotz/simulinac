@@ -5,7 +5,7 @@ import numpy as NP
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi
 from copy import copy
 
-class Matrix(object):  # the mother of all 6x6 matrices
+class Matrix(object):  ## the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
         self.matrix=NP.eye(Matrix._dim)    ## 6x6 unit matrix
@@ -95,13 +95,13 @@ class Matrix(object):  # the mother of all 6x6 matrices
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-class I(Matrix):## unity Matrix (an alias to Matrix class)
+class I(Matrix):       ## unity Matrix (an alias to Matrix class)
     def __init__(self,label='I',viseo=0.,beam=Beam.soll):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
         self.beam=copy(beam)  # make a local copy of the Beam instance (important!)
-class D(I):## drift space nach Trace3D
+class D(I):            ## drift space nach Trace3D
     def __init__(self,length=0.,label='D',beam=Beam.soll):    
         super(D,self).__init__(beam=beam)
         self.label=label
@@ -109,14 +109,14 @@ class D(I):## drift space nach Trace3D
         self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
         self.matrix[4,5]=length/(g*g)
-    def shorten(self,l=0.):
+    def shorten(self,l=0.):    # returns a new instance!
         return D(length=l,label=self.label,beam=self.beam)
-    def update(self):
+    def update(self):          # returns a new instance!
         return D(length=self.length,label=self.label,beam=Beam.soll)
-class QF(D):    ## focusing quad nach Trace3D
+class QF(D):           ## focusing quad nach Trace3D
     def __init__(self,k0=0.,length=0.,label='QF',beam=Beam.soll):    
         super(QF,self).__init__(length=length,label=label,beam=beam)
-        self.k0=k0         ## energy independent Quad strength [m**-2]
+        self.k0=k0         ## Quad strength [m**-2]
         self.matrix=self._mx()
         self.viseo = +0.5
     def shorten(self,l=0.):
@@ -141,7 +141,7 @@ class QF(D):    ## focusing quad nach Trace3D
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
             m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
         elif isinstance(self,QD):
-             m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
+            m[0,0]=cd; m[0,1]=sd; m[1,0]=cdp; m[1,1]=sdp; m[2,2]=cf; m[2,3]=sf; m[3,2]=cfp; m[3,3]=sfp; m[4,5]=rzz12
         else:
             raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
         return m
@@ -157,7 +157,7 @@ class QF(D):    ## focusing quad nach Trace3D
         # print('kf',kf)
         scaled=QF(k0=kf,length=len,label=label,beam=soll)
         return scaled        
-class QD(QF):   ## defocusing quad nach Trace3D
+class QD(QF):          ## defocusing quad nach Trace3D
     def __init__(self,k0=0.,length=0.,label='QD',beam=Beam.soll):
         super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
         self.viseo = -0.5
@@ -174,7 +174,7 @@ class QD(QF):   ## defocusing quad nach Trace3D
         kf   =scalek0(k0,tki,tkf)
         scaled=QD(k0=kf,length=len,label=label,beam=soll)
         return scaled
-class SD(D):    ## sector bending dipole in x-plane nach Trace3D
+class SD(D):           ## sector bending dipole in x-plane nach Trace3D
     def __init__(self,radius=0.,length=0.,label='SB',beam=Beam.soll):
         super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
@@ -199,7 +199,7 @@ class SD(D):    ## sector bending dipole in x-plane nach Trace3D
         return m
     def update(self):
         raise RuntimeWarning('SD.update(): not ready!')    
-class RD(SD):   ## rectangular bending dipole in x-plane
+class RD(SD):          ## rectangular bending dipole in x-plane
     def __init__(self, radius=0., length=0., label='RB',beam=Beam.soll):
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
         wd = WD(self,label='',beam=beam)  # wedge myself...
@@ -209,7 +209,7 @@ class RD(SD):   ## rectangular bending dipole in x-plane
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
     def update(self):
         raise RuntimeWarning('RD.update(): not ready!')    
-class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
+class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,sector,label='WD',beam=Beam.soll):
         super(WD,self).__init__(label=label,beam=beam)
         m=self.matrix
@@ -235,7 +235,7 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
         return wd
     def update(self):
         raise RuntimeWarning('WD.update(): not ready!')    
-class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
+class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def __init__(self,U0=10.,PhiSoll=-2./3.*pi,fRF=800.,label='CAV',beam=Beam.soll,dWf=1.):
         super(CAV,self).__init__(label=label,beam=beam)
         self.u0     = U0                       # [MV] gap Voltage
@@ -274,7 +274,7 @@ class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return self
     def update(self):
         return CAV(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
-class RFG(D):   ## zero length RF gap nach Trace3D
+class RFG(D):          ## zero length RF gap nach Trace3D
     def __init__(self, U0=10., PhiSoll=-2./3.*pi, fRF=800., label='RFG', beam=Beam.soll,dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
         self.u0     = U0*dWf                   # [MV] gap Voltage
