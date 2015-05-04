@@ -1,9 +1,9 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,dictprnt
-from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
+from setup import Phys,k0,dictprnt,Beam
+from elements import D,QF,QD,RFG
 from lattice import Lattice
-from pylab import plot, show, legend, figure, subplot, axis
+from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
 
 def display(functions):  ## plotting
@@ -140,7 +140,7 @@ def make_half_cell(w,upstream=True):  # 1/2 cell
     Phys['CELL']=cell.length
     deltaTK=Beam.soll.tkin - tki
     return cell,deltaTK
-#------------*--------------*-----------*------------
+#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 def loesung():  # total classic FODO lattice
     # längen
     lqd  =  0.4     # QD len

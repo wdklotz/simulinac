@@ -1,12 +1,12 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 import elements as ELM
-from math import sqrt, fabs, acos, pi
+from math import sqrt,fabs,acos,pi
 import numpy as NP
 from numpy import linalg as LA
 from copy import copy
-from pylab import plot, show, legend
-from setup import wille, Phys
+from pylab import plot,show,legend
+from setup import wille,Phys
 
 class Lattice(object):
     def __init__(self):
@@ -307,7 +307,7 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-#######################################################################
+#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 def make_lattice():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  wille()['k_quad_f']

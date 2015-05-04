@@ -1,28 +1,10 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import wille, Phys, dictprnt, objprnt
+from setup import wille,Phys,dictprnt,objprnt,Beam,k0,dBdz,scalek0
 import numpy as NP 
-from math import sqrt, sinh, cosh, sin, cos, fabs, tan, floor, modf, pi
+from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi
 from copy import copy
 
-class Beam():   ## relativistic particles
-    soll=None   ## the synchronous reference particle  (class member!)
-    def __init__(self,tkin=0.):
-        self._set_self(tkin)
-    def _set_self(self,tkin):
-        self.tkin = tkin                     # proton kinetic energy [MeV]
-        self.e0   = Phys['proton_mass']      # proton rest mass [MeV/c**2]
-        self.e    = self.e0+self.tkin        # proton total energy [MeV]
-        self.gamma= self.e/self.e0
-        self.beta = sqrt(1.-1./(self.gamma*self.gamma))
-        self.v    = self.beta*Phys['lichtgeschwindigkeit']
-        self.name = 'proton'
-    def incTK(self,deltaTK):
-        self._set_self(self.tkin+deltaTK)
-    def out(self):
-        print('{:s}:  T-kin[MeV]={:.3f} gamma {:.3f} beta {:.3f} velocity[m/s] {:.6g} E[MeV] {:.3f} '
-            .format(self.name,self.tkin,self.gamma,self.beta,self.v,self.e))        
-Beam.soll = Beam(Phys['injection_energy']) # the synchronous reference particle  (class member!)
 class Matrix(object):  # the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
@@ -45,6 +27,7 @@ class Matrix(object):  # the mother of all 6x6 matrices
         res.matrix=product
         return res
     def reverse(self):
+        raise RuntimeError('Matrix:reverse not ready yet!')
         res=Matrix()
         for i in range(Matrix._dim):
             for k in range(Matrix._dim):
@@ -117,22 +100,11 @@ class I(Matrix):## unity Matrix (an alias to Matrix class)
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
-        self.beam=beam
-class Test(Matrix):
-    def __init__(self,a,b,c,d,e,f,label='test'):
-        super(Test,self).__init__()
-        self.matrix=NP.array([[a,b,0.,0.,0.,0.],
-                              [c,d,0.,0.,0.,0.],
-                              [0.,0.,a,b,0.,0.],
-                              [0.,0.,d,e,0.,0.],
-                              [0.,0.,0.,0.,a,b],
-                              [0.,0.,0.,0.,e,f]])
-        self.label=label
-class D(Matrix):## drift space nach Trace3D
+        self.beam=copy(beam)  # make a local copy of the Beam instance (important!)
+class D(I):## drift space nach Trace3D
     def __init__(self,length=0.,label='D',beam=Beam.soll):    
-        super(D,self).__init__()
+        super(D,self).__init__(beam=beam)
         self.label=label
-        self.beam=copy(beam)
         self.length=length     ## hard edge length [m]
         self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
@@ -204,7 +176,6 @@ class QD(QF):   ## defocusing quad nach Trace3D
         return scaled
 class SD(D):    ## sector bending dipole in x-plane nach Trace3D
     def __init__(self,radius=0.,length=0.,label='SB',beam=Beam.soll):
-        raise RuntimeError('SD not ready!')
         super(SD,self).__init__(length=length,label=label,beam=beam)
         self.radius = radius
         self.matrix=self._mx()
@@ -226,18 +197,20 @@ class SD(D):    ## sector bending dipole in x-plane nach Trace3D
         ## z-plane
         m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
         return m
+    def update(self):
+        raise RuntimeWarning('SD.update(): not ready!')    
 class RD(SD):   ## rectangular bending dipole in x-plane
     def __init__(self, radius=0., length=0., label='RB',beam=Beam.soll):
-        raise RuntimeError('RD not ready!')
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
         wd = WD(self,label='',beam=beam)  # wedge myself...
         rd = wd * self * wd
         self.matrix= rd.matrix
     def shorten(self,l=0.):
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
+    def update(self):
+        raise RuntimeWarning('RD.update(): not ready!')    
 class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,sector,label='WD',beam=Beam.soll):
-        raise RuntimeError('WD not ready!')
         super(WD,self).__init__(label=label,beam=beam)
         m=self.matrix
         self.parent = sector
@@ -260,6 +233,8 @@ class WD(D):    ## wedge of rectangular bending dipole in x-plane nach Trace3D
         m[1,0]=ckp
         m[3,2]=-ckp
         return wd
+    def update(self):
+        raise RuntimeWarning('WD.update(): not ready!')    
 class CAV(D):   ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def __init__(self,U0=10.,PhiSoll=-2./3.*pi,fRF=800.,label='CAV',beam=Beam.soll,dWf=1.):
         super(CAV,self).__init__(label=label,beam=beam)
@@ -343,51 +318,17 @@ class RFG(D):   ## zero length RF gap nach Trace3D
         return self
     def update(self):
         return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
-def k0(gradient=0.,tkin=0.):       ## quad strength from B-field gradient & kin. energy
-    """
-    quad strength as function of kin. energy and gradient
-    gradient: in [Tesla/m]
-    tkin: kinetic energy in [MeV]
-    """
-    if (tkin >= 0.):
-        prot=Beam(tkin)
-        beta=prot.beta
-        e0=prot.e0
-        gamma=prot.gamma
-        factor=1.e-6*Phys['lichtgeschwindigkeit']
-        kres = factor*gradient/(beta*gamma*e0) 
-        # print('k0= ',kres)
-        return kres
-    else:
-        raise RuntimeError('setup.k0(): negative kinetic energy?')
-def scalek0(k0=0.,tki=0.,tkf=0.):  ## scale quad  strength with kin. energy
-    """
-    scale k0 for increase of kin. energy from
-    tki to tkf
-    """
-    pi  =Beam(tki)
-    bi  =pi.beta
-    gi  =pi.gamma
-    pf  =Beam(tkf)
-    bf  =pf.beta
-    gf  =pf.gamma
-    kf= k0 * (bi * gi) / (bf * gf)
-    return kf
-def dBdz(k0=0.,tkin=0.):           ## B-field gradient from quad strength & kin. energy
-    """
-    calculate quad gradient for given quad strength k0
-    and given kin. energy tkin
-    """
-    if (tkin >= 0.):
-        prot=Beam(tkin)
-        beta=prot.beta
-        e0=prot.e0
-        gamma=prot.gamma
-        factor=1.e-6*Phys['lichtgeschwindigkeit']
-        return k0*(beta*gamma*e0)/factor           
-    else:
-        raise RuntimeError('setup.k0(): negative kinetic energy?')
-####################################################################
+#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+class Test(Matrix):
+    def __init__(self,a,b,c,d,e,f,label='test'):
+        super(Test,self).__init__()
+        self.matrix=NP.array([[a,b,0.,0.,0.,0.],
+                              [c,d,0.,0.,0.,0.],
+                              [0.,0.,a,b,0.,0.],
+                              [0.,0.,d,e,0.,0.],
+                              [0.,0.,0.,0.,a,b],
+                              [0.,0.,0.,0.,e,f]])
+        self.label=label
 def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     """
         quad strength as function of energy and gradient
