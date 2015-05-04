@@ -5,10 +5,10 @@ import numpy as NP
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi
 from copy import copy
 
-class Matrix(object):  ## the mother of all 6x6 matrices
+class _matrix(object): ## the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices
     def __init__(self):
-        self.matrix=NP.eye(Matrix._dim)    ## 6x6 unit matrix
+        self.matrix=NP.eye(_matrix._dim)    ## 6x6 unit matrix
         self.label=''
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
@@ -18,7 +18,7 @@ class Matrix(object):  ## the mother of all 6x6 matrices
         print(self.matrix)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
-        res=Matrix()
+        res=_matrix()
         if (self.label == ''):
             res.label=other .label
         else:
@@ -27,10 +27,10 @@ class Matrix(object):  ## the mother of all 6x6 matrices
         res.matrix=product
         return res
     def reverse(self):
-        raise RuntimeError('Matrix:reverse not ready yet!')
-        res=Matrix()
-        for i in range(Matrix._dim):
-            for k in range(Matrix._dim):
+        raise RuntimeError('_matrix:reverse not ready yet!')
+        res=_matrix()
+        for i in range(_matrix._dim):
+            for k in range(_matrix._dim):
                 res.matrix[i][k] = self.matrix[i][k]
         res.matrix[0][0] = self.matrix[1][1]
         res.matrix[1][1] = self.matrix[0][0]
@@ -95,7 +95,7 @@ class Matrix(object):  ## the mother of all 6x6 matrices
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-class I(Matrix):       ## unity Matrix (an alias to Matrix class)
+class I(_matrix):      ## unity matrix (an alias to _matrix class)
     def __init__(self,label='I',viseo=0.,beam=Beam.soll):
         super(I,self).__init__()
         self.label=label
@@ -318,7 +318,26 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         return self
     def update(self):
         return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
-class QFth(Matrix):    ## thin F-quad
+class _thin(_matrix):  ## the mother of all thin elements
+    def __init__(self):
+        pass
+    def step_through(self,anz=10):
+        anz1 = int(anz/2)
+        anz2 = int(anz-anz1*2)
+        anz2 = int(anz1+anz2)
+        for count,typ in enumerate(self.triplet):
+            if count == 0:
+                for i in range(anz1):
+                    mx=typ.shorten(typ.length/anz1)
+                    yield mx
+            elif count == 1:
+                mx=typ
+                yield mx
+            elif count == 2:
+                for i in range(anz2):
+                    mx=typ.shorten(typ.length/anz2)
+                    yield mx
+class QFth(_thin):    ## thin F-quad
     def __init__(self,k0=0.,length=0.,label='QFT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
@@ -327,7 +346,7 @@ class QFth(Matrix):    ## thin F-quad
         self.beam   = copy(beam)
         di = D(length=0.5*length,beam=self.beam,label=self.label)
         df = di
-        kick = Matrix()    ## 6x6 unit matrix
+        kick = _matrix()    ## 6x6 unit matrix
         m = kick.matrix
         if(self.k0l == 0.):
             m[1,0] = m[3,2] = 0.
@@ -337,27 +356,11 @@ class QFth(Matrix):    ## thin F-quad
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
-    def step_through(self,anz=10):
-        anz1 = int(anz/2)
-        anz2 = int(anz-anz1*2)
-        anz2 = int(anz1+anz2)
-        for count,typ in enumerate(self.triplet):
-            if count == 0:
-                for i in range(anz1):
-                    mx=typ.shorten(typ.length/anz1)
-                    yield mx
-            elif count == 1:
-                mx=typ
-                yield mx
-            elif count == 2:
-                for i in range(anz2):
-                    mx=typ.shorten(typ.length/anz2)
-                    yield mx
     def update(self):
         raise RuntimeWarning('QFth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QFth.shorten(): not needed!')    
-class QDth(Matrix):    ## thin D-quad
+class QDth(_thin):    ## thin D-quad
     def __init__(self,k0=0.,length=0.,label='QDT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
@@ -366,7 +369,7 @@ class QDth(Matrix):    ## thin D-quad
         self.beam   = copy(beam)
         di = D(length=0.5*length,beam=self.beam,label=self.label)
         df = di
-        kick = Matrix()    ## 6x6 unit matrix
+        kick = _matrix()    ## 6x6 unit matrix
         m = kick.matrix
         if(self.k0l == 0.):
             m[1,0] = m[3,2] = 0.
@@ -376,27 +379,11 @@ class QDth(Matrix):    ## thin D-quad
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
-    def step_through(self,anz=10):
-        anz1 = int(anz/2)
-        anz2 = int(anz-anz1*2)
-        anz2 = int(anz1+anz2)
-        for count,typ in enumerate(self.triplet):
-            if count == 0:
-                for i in range(anz1):
-                    mx=typ.shorten(typ.length/anz1)
-                    yield mx
-            elif count == 1:
-                mx=typ
-                yield mx
-            elif count == 2:
-                for i in range(anz2):
-                    mx=typ.shorten(typ.length/anz2)
-                    yield mx
     def update(self):
         raise RuntimeWarning('QDth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QDth.shorten(): not needed!')    
-class RFC(Matrix):     ## RF cavity as D*RFG*D
+class RFC(_thin):     ## RF cavity as D*RFG*D
     def __init__(self,length=0.,U0=10.,PhiSoll=-pi/4.,fRF=800.,label='RFC',beam=Beam.soll,dWf=1.):
         self.length = length
         self.label  = label
@@ -407,28 +394,12 @@ class RFC(Matrix):     ## RF cavity as D*RFG*D
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
-    def step_through(self,anz=10):
-        anz1 = int(anz/2)
-        anz2 = int(anz-anz1*2)
-        anz2 = int(anz1+anz2)
-        for count,typ in enumerate(self.triplet):
-            if count == 0:
-                for i in range(anz1):
-                    mx=typ.shorten(typ.length/anz1)
-                    yield mx
-            elif count == 1:
-                mx=typ
-                yield mx
-            elif count == 2:
-                for i in range(anz2):
-                    mx=typ.shorten(typ.length/anz2)
-                    yield mx
     def update(self):
         raise RuntimeWarning('RFC.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('RFC.shorten(): not needed!')    
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-class Test(Matrix):
+class Test(_matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
         self.matrix=NP.array([[a,b,0.,0.,0.,0.],
@@ -459,13 +430,13 @@ def test0():
     (b*a).out()
 def test1():
     print('trivial test 1 ...')
-    i1=Matrix()
+    i1=_matrix()
     i2=i1*i1
     i1.out()
     i2.out()
 def test2():
     print('trivial test 2 ...')
-    i1=Matrix()
+    i1=_matrix()
     d1=D(10.,'D1')
     d1.out()
     (d1*d1).out()
@@ -477,7 +448,7 @@ def test2():
     d3=D(90.,label='')
     (d2*d3).out()
 def test3():
-    print('test product of Matrix class ...')
+    print('test product of _matrix class ...')
     gradient =1.
     beta     =0.5
     energy   =0.2
@@ -485,7 +456,7 @@ def test3():
     k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     qf.out()
-    ## test product of Matrix class
+    ## test product of _matrix class
     qd=QD(k0=k,length=1.)
     qd.out()
     (qf*qd).out()
@@ -690,15 +661,15 @@ def test11():
         elm.out()
     return
 if __name__ == '__main__':
-    # test0()
-    # test1()
-    # test2()
-    # test3()
-    # test4()
-    # test5()
-    # test6()
-    # test7()
-    # test8()
-    # test9()
-    # test10()
+    test0()
+    test1()
+    test2()
+    test3()
+    test4()
+    test5()
+    test6()
+    test7()
+    test8()
+    test9()
+    test10()
     test11()
