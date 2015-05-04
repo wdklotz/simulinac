@@ -153,7 +153,7 @@ def loesung():  # total classic FODO lattice
     ring = False                                # KNOB ring or transfer ?
     nboff_super_cells = 16*10                  # KNOB  final energy
     # nboff_super_cells = 16*5                 # KNOB  final energy
-    # nboff_super_cells = 16*1                   # KNOB  final energy
+    nboff_super_cells = 16*1                   # KNOB  final energy
     # nboff_super_cells = 3                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,

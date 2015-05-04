@@ -318,7 +318,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         return self
     def update(self):
         return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
-class QFth(Matrix):
+class QFth(Matrix):    ## thin F-quad
     def __init__(self,k0=0.,length=0.,label='QFT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
@@ -353,7 +353,11 @@ class QFth(Matrix):
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
-class QDth(Matrix):
+    def update(self):
+        raise RuntimeWarning('QFth.update(): not needed!')    
+    def shorten(self,l=0.):
+        raise RuntimeWarning('QFth.shorten(): not needed!')    
+class QDth(Matrix):    ## thin D-quad
     def __init__(self,k0=0.,length=0.,label='QDT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
@@ -388,7 +392,11 @@ class QDth(Matrix):
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
-class RFC(Matrix):
+    def update(self):
+        raise RuntimeWarning('QDth.update(): not needed!')    
+    def shorten(self,l=0.):
+        raise RuntimeWarning('QDth.shorten(): not needed!')    
+class RFC(Matrix):     ## RF cavity as D*RFG*D
     def __init__(self,length=0.,U0=10.,PhiSoll=-pi/4.,fRF=800.,label='RFC',beam=Beam.soll,dWf=1.):
         self.length = length
         self.label  = label
@@ -415,6 +423,10 @@ class RFC(Matrix):
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
+    def update(self):
+        raise RuntimeWarning('RFC.update(): not needed!')    
+    def shorten(self,l=0.):
+        raise RuntimeWarning('RFC.shorten(): not needed!')    
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 class Test(Matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):
