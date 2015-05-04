@@ -1,7 +1,7 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import Phys,k0,dictprnt,Beam
-from elements import D,QF,QD,RFG,CAV
+from elements import D,QF,QD,RFG,CAV,RFC
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
@@ -80,25 +80,12 @@ def display(functions):  ## plotting
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show(block=True)
-def make_cavity(w):   ## kavität
-    tk = Beam.soll.tkin                    # kinetic energy @ entrance
-    cavity = Lattice()
-    dri = D(length=0.5*w['lcav'],beam=Beam.soll,label='>')   # drift before RFgap
-    # gap = CAV(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='cav',beam=Beam.soll,dWf=w['dWf'])  # T.Wrangler, Dr.Tiede
-    gap = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
-    drf = D(length=0.5*w['lcav'],beam=Beam.soll,label='<')   # drift after RFgap
-    cavity.add_element(dri)
-    cavity.add_element(gap)
-    cavity.add_element(drf)
-    Phys['LCAV']=cavity.length
-    # objprnt(Beam.soll,'gap exit',{'matrix'})
-    return cavity
 def make_rf_section(w):   ## RF sektion
     gaps = w['gaps']    # gaps/half-cell
     section = Lattice()
     for i in range(gaps):
-        cav = make_cavity(w)
-        section.append(cav)
+        cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
+        section.add_element(cav)
     Phys['RFSection']=section.length
     return section  
 def make_half_cell(w,upstream=True):  # 1/2 cell

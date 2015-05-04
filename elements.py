@@ -275,7 +275,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def update(self):
         return CAV(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
 class RFG(D):          ## zero length RF gap nach Trace3D
-    def __init__(self, U0=10., PhiSoll=-2./3.*pi, fRF=800., label='RFG', beam=Beam.soll,dWf=1.):
+    def __init__(self, U0=10., PhiSoll=-pi/4., fRF=800., label='RFG', beam=Beam.soll,dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
         self.u0     = U0*dWf                   # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
@@ -318,6 +318,103 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         return self
     def update(self):
         return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
+class QFth(Matrix):
+    def __init__(self,k0=0.,length=0.,label='QFT',beam=Beam.soll):
+        self.k0     = k0
+        self.length = length
+        self.k0l    = k0*length
+        self.label  = label
+        self.beam   = copy(beam)
+        di = D(length=0.5*length,beam=self.beam,label=self.label)
+        df = di
+        kick = Matrix()    ## 6x6 unit matrix
+        m = kick.matrix
+        if(self.k0l == 0.):
+            m[1,0] = m[3,2] = 0.
+        else:
+            m[1,0] = -1./self.k0l
+            m[3,2] = -m[1,0]
+        lens = (di * kick) * df
+        self.matrix = lens.matrix
+        self.triplet = (di,kick,df)
+    def step_through(self,anz=10):
+        anz1 = int(anz/2)
+        anz2 = int(anz-anz1*2)
+        anz2 = int(anz1+anz2)
+        for count,typ in enumerate(self.triplet):
+            if count == 0:
+                for i in range(anz1):
+                    mx=typ.shorten(typ.length/anz1)
+                    yield mx
+            elif count == 1:
+                mx=typ
+                yield mx
+            elif count == 2:
+                for i in range(anz2):
+                    mx=typ.shorten(typ.length/anz2)
+                    yield mx
+class QDth(Matrix):
+    def __init__(self,k0=0.,length=0.,label='QDT',beam=Beam.soll):
+        self.k0     = k0
+        self.length = length
+        self.k0l    = k0*length
+        self.label  = label
+        self.beam   = copy(beam)
+        di = D(length=0.5*length,beam=self.beam,label=self.label)
+        df = di
+        kick = Matrix()    ## 6x6 unit matrix
+        m = kick.matrix
+        if(self.k0l == 0.):
+            m[1,0] = m[3,2] = 0.
+        else:
+            m[1,0] = 1./self.k0l
+            m[3,2] = -m[1,0]
+        lens = (di * kick) * df
+        self.matrix = lens.matrix
+        self.triplet = (di,kick,df)
+    def step_through(self,anz=10):
+        anz1 = int(anz/2)
+        anz2 = int(anz-anz1*2)
+        anz2 = int(anz1+anz2)
+        for count,typ in enumerate(self.triplet):
+            if count == 0:
+                for i in range(anz1):
+                    mx=typ.shorten(typ.length/anz1)
+                    yield mx
+            elif count == 1:
+                mx=typ
+                yield mx
+            elif count == 2:
+                for i in range(anz2):
+                    mx=typ.shorten(typ.length/anz2)
+                    yield mx
+class RFC(Matrix):
+    def __init__(self,length=0.,U0=10.,PhiSoll=-pi/4.,fRF=800.,label='RFC',beam=Beam.soll,dWf=1.):
+        self.length = length
+        self.label  = label
+        self.beam   = copy(beam)
+        di   = D(length=0.5*length,beam=beam,label='D(i)')
+        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,dWf=dWf)
+        df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')
+        lens = (di * kick) * df
+        self.matrix = lens.matrix
+        self.triplet = (di,kick,df)
+    def step_through(self,anz=10):
+        anz1 = int(anz/2)
+        anz2 = int(anz-anz1*2)
+        anz2 = int(anz1+anz2)
+        for count,typ in enumerate(self.triplet):
+            if count == 0:
+                for i in range(anz1):
+                    mx=typ.shorten(typ.length/anz1)
+                    yield mx
+            elif count == 1:
+                mx=typ
+                yield mx
+            elif count == 2:
+                for i in range(anz2):
+                    mx=typ.shorten(typ.length/anz2)
+                    yield mx
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 class Test(Matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):
@@ -555,15 +652,41 @@ def test10():
     beam.out()
     beam.incTK(150.)
     beam.out()
+def test11():
+    print('\ntest thin lenses:')
+    print('----------------- product matrix ---------')
+    k0=1.
+    length = 2.
+    qf=QFth(k0=k0,length=length)
+    objprnt(qf,'QFthin')
+    qd=QDth(k0=k0,length=length)
+    objprnt(qd,'QDthin')
+    qf.out()
+    qd.out()
+    print('---------------- step through ---------------')
+    for elm in qf.step_through(6):
+        elm.out()
+    for elm in qd.step_through(7):
+        elm.out()
+    print('------ RF cavity test & step through --------')
+    objprnt(Beam.soll,'beam(i)')
+    rf=RFC(length=length)
+    rf.out()
+    objprnt(Beam.soll,'beam(f)')
+    objprnt(rf,'RFC cavity')
+    for elm in rf.step_through():
+        elm.out()
+    return
 if __name__ == '__main__':
-    test0()
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
-    test6()
-    test7()
-    test8()
-    test9()
-    test10()
+    # test0()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test7()
+    # test8()
+    # test9()
+    # test10()
+    test11()
