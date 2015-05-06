@@ -136,14 +136,14 @@ class Lattice(object):
                     m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
                     n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
                     n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
-                    bax=2.0-m11*m11-2.*m12*m21-m22*m22
+                    bax=fabs(2.0-m11*m11-2.*m12*m21-m22*m22)
                     bax=sqrt(bax)
                     bax=2.0*m12/bax
                     if(bax < 0.):
                         bax= -bax
                     alx=(m11-m22)/(2.*m12)*bax
                     gmx=(1.+alx*alx)/bax
-                    bay=2.0-n11*n11-2.*n12*n21-n22*n22
+                    bay=fabs(2.0-n11*n11-2.*n12*n21-n22*n22)
                     bay=sqrt(bay)
                     bay=2.0*n12/bay
                     if(bay < 0.):

@@ -5,7 +5,7 @@ from elements import D,QFth,QDth,QF,QD
 from lattice import Lattice
 from numpy import linalg as LA
 from pylab import plot,show,legend,figure,subplot,axis
-# from math import sqrt
+from math import fabs
 
 def display(functions):
     bthin = functions[0]
@@ -30,9 +30,9 @@ def display(functions):
     viseo = [x*vscale for x in viseo]
     plot(s,viseo,label='element',color='black')
     plot(s,zero,color='black')
-    legend(loc='upper left')
+    legend(loc='lower right',fontsize='x-small')
     show(block=True)
-def make_thin(kf1,kf2,ld,verbose=False):
+def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     kf1 = kf1
     kd1 = kf1
     lf1 = 0.4
@@ -66,16 +66,18 @@ def make_thin(kf1,kf2,ld,verbose=False):
     cell.add_element(DL)
     cell.add_element(QF1)
     cell.add_element(QD1)
-    
-    mcell,betax,betay=cell.cell(verbose=verbose)
+    lat = Lattice()
+    for i in range(anz):
+        lat.append(cell)
+    mcell,betax,betay=lat.cell(verbose=verbose)
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
         print('triplet 1: kf= {:.3f}, kd={:.3f}'.format(kf1,kd1),end=' | ')
         print('triplet 2: kf= {:.3f}, kd={:.3f}'.format(kf2,kd2),end=' | ')
         print('betax= {:.3f}, betay= {:.3f}'.format(betax,betay))
-    return cell,betax,betay
-def make_thick(kf1,kf2,ld,verbose=False):
+    return lat,betax,betay
+def make_thick(kf1,kf2,ld,anz=1,verbose=False):
     kf1 = kf1
     kd1 = kf1
     lf1 = 0.4
@@ -109,28 +111,42 @@ def make_thick(kf1,kf2,ld,verbose=False):
     cell.add_element(DL)
     cell.add_element(QF1)
     cell.add_element(QD1)
-    
-    mcell,betax,betay=cell.cell(verbose=verbose)
+    lat = Lattice()
+    for i in range(anz):
+        lat.append(cell)
+    mcell,betax,betay=lat.cell(verbose=verbose)
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
         print('triplet 1: kf= {:.3f}, kd={:.3f}'.format(kf1,kd1),end=' | ')
         print('triplet 2: kf= {:.3f}, kd={:.3f}'.format(kf2,kd2),end=' | ')
         print('betax= {:.3f}, betay= {:.3f}'.format(betax,betay))
-    return cell,betax,betay
+    return lat,betax,betay
 def search():
-    xmin = 1.e25
-    for kf in [5.0+n*0.5 for n in range(5)]:
-        for kd in [5.0+n*0.5 for n in range(5)]:
+    xmin = ymin = 1.e25
+    xmax = ymax = 0.
+    crit = xmin
+    for kf in [4.0+n*0.5 for n in range(10)]:
+        for kd in [4.0+n*0.5 for n in range(10)]:
             for ld in [1.0+n*0.2 for n in range(10)]:
                 try:
                     m,bx,by = make_thin(kf,kd,ld)
                 except RuntimeError:
                     continue
                 else:
-                    x=bx*by
-                    if x < xmin:
-                        xmin=x
+                    # x=bx*by
+                    if bx < xmin:
+                        xmin=bx
+                    if by < ymin:
+                        ymin = by
+                    if bx > xmax:
+                        xmax = bx
+                    if by > ymax:
+                        ymax = by
+                    x=fabs(xmax-xmin)+fabs(ymax-ymin)
+                    if x < crit and x != 0.:
+                        print(x)
+                        crit = x
                         found=(kf,kd,ld) 
     return found 
 def test0():
@@ -166,21 +182,23 @@ def test2(kf,kd,ld):
     cell.symplecticity()
 def test3(kf,kd,ld):
     print('test3: using kf,kd,ld',kf,kd,ld)
+    anz = 3
     # thin 
-    cell,dummy,dummy = make_thin(kf,kd,ld)
+    cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell(verbose=True)
     beta_matrix = mcell.BetaMatrix()    
     beta_fun_thin,cl,sl = cell.functions(steps=100)   
     # thick
-    cell,dummy,dummy = make_thick(kf,kd,ld)
+    cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell(verbose=True)
     beta_matrix = mcell.BetaMatrix()    
     beta_fun_thick,cl,sl = cell.functions(steps=100)   
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    test0()
+    # test0()
     # test1(5.,5.,1.)
     # test2(5.,5.,1.)
-    test3(5.,5.,1.)     # gesund!
+    # test3(5.,5.,1.)     # gesund!
+    test3(4.,4.,1.2)     # gesünder!
     # test3(7.,7.,2.1)  # extrem!
