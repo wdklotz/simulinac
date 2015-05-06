@@ -20,7 +20,6 @@ def display(functions):                 ## plotting
     by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
     bxn = [-x for x in bx]    # beta-x (negatif)
     byn = [-x for x in by]    # beta-y (negatif)
-    zero= [0. for x in beta_fun]  # zero line
     #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
@@ -31,6 +30,8 @@ def display(functions):                 ## plotting
     sz = [x[4] for x in sin_like]   # sin-like-z
     sdw= [x[5] for x in sin_like]   # sin-like-dw/w
     #----------*----------*   # figure frame
+    viseo = [x[3] for x in beta_fun]
+    zero  = [0.   for x in beta_fun]# zero line
     width=20; height=12
     figure('FODO 1',figsize=(width,height))
     # figure('FODO 1')
@@ -42,7 +43,7 @@ def display(functions):                 ## plotting
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.') 
     vscale=axis()[3]*0.1
-    viseo = [x[3]*vscale for x in beta_fun]
+    viseo = [x*vscale for x in viseo]
     plot(z,viseo,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
@@ -54,7 +55,7 @@ def display(functions):                 ## plotting
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
-    viseo = [x[3]*vscale for x in beta_fun]
+    viseo = [x*vscale for x in viseo]
     plot(z,viseo,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
@@ -67,7 +68,7 @@ def display(functions):                 ## plotting
     ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
     ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
-    viseo = [x[3]*vscale for x in beta_fun]
+    viseo = [x*vscale for x in viseo]
     ax_l.plot(z,viseo,label='',color='black')
     ax_l.plot(z,zero,color='black')
 

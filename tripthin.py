@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import dictprnt,objprnt
+from setup import objprnt
 from elements import D,QFth,QDth,QF,QD
 from lattice import Lattice
 from numpy import linalg as LA
