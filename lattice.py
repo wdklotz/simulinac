@@ -28,7 +28,7 @@ class Lattice(object):
         self.length += l
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
-    def out(self):
+    def out(self):                 ## simple log lattice layout to stdout (could be better!)
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices 
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -36,7 +36,7 @@ class Lattice(object):
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
-    def cell(self,closed=True):    ## full cell inspection
+    def cell(self,closed=True,verbose=True):    ## full cell inspection
         if self.full_cell == 0.0:
             mcell=ELM.I(label='<=Full Cell')     ##  chain matrices for full cell
             for count, ipos in enumerate(self.seq):
@@ -46,40 +46,49 @@ class Lattice(object):
             # Stabilität ?
             unstable=False
             stab = fabs(mcell.tracex())
-            print('stability X? ',stab)
+            if verbose:
+                print('stability X? ',stab)
             if stab >= 2.0:
-                print('unstable Lattice in x-plane\n')
-                unstable=True
+                if verbose:
+                    print('unstable Lattice in x-plane\n')
+                    unstable=True
             else:
                 cos_mux = 0.5 * stab
                 mux = acos(cos_mux)*Phys['degrees']
 
             stab = fabs(mcell.tracey())
-            print('stability Y? ',stab)
+            if verbose:
+                print('stability Y? ',stab)
             if stab >= 2.0:
-                print('unstable Lattice in y-plane\n')
-                unstable=True
+                if verbose:
+                    print('unstable Lattice in y-plane\n')
+                    unstable=True
             else:
                 cos_muy = 0.5 * stab
                 muy = acos(cos_muy)*Phys['degrees']
             if not unstable:
-                print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+                if verbose:
+                    print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
             self.full_cell = mcell    # the full cell
-            print('Lattice.cell: Zellenmatrix (i)->(f)')
-            self.full_cell.out()
+            if verbose:
+                print('Lattice.cell: Zellenmatrix (i)->(f)')
+                self.full_cell.out()
             det = LA.det(self.full_cell.matrix)
-            print('det|full-cell|={:.5f}\n'.format(det))
+            if verbose:
+                print('det|full-cell|={:.5f}\n'.format(det))
             # Determinate M-I == 0 ?
             beta_matrix = mcell.BetaMatrix()
             for i in range(5):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
-            print('det|Mbeta - I|={:.5f}\n'.format(det))
+            if verbose:
+                print('det|Mbeta - I|={:.5f}\n'.format(det))
             # symplectic?
-            print('symplectic (+1,-1,+1,-1,+1,-1)?')
             s=self.symplecticity()
-            print('[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+            if verbose:
+                print('symplectic (+1,-1,+1,-1,+1,-1)?')
+                print('[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
                 format(s[0],s[1],s[2],s[3],s[4],s[5]))
             # if unstable:
                 # raise RuntimeError('stop execution')
@@ -146,9 +155,10 @@ class Lattice(object):
                     v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
                     m_cell=self.full_cell.BetaMatrix()
                     v_beta_end = m_cell.dot(v_beta)
-                    print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
-                    print('Anfang: ',v_beta.T)
-                    print('Ende  : ',v_beta_end.T,'\n')
+                    if verbose:
+                        print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
+                        print('Anfang: ',v_beta.T)
+                        print('Ende  : ',v_beta_end.T,'\n')
                     Phys['sigx_i'] = sqrt(bax*Phys['emitx_i'])
                     Phys['sigy_i'] = sqrt(bay*Phys['emity_i'])
                 else:
@@ -173,7 +183,7 @@ class Lattice(object):
             self.gammy0 = gmy
             
         return (self.full_cell,self.betax0,self.betay0)
-    def report(self):
+    def report(self):              ## lattice layout report (may not work!)
         reprt = ''
         header = ''
         row = ''
@@ -192,7 +202,7 @@ class Lattice(object):
                 header = row = ''
         reprt += header+' \n'+row+' \n'
         return reprt
-    def reverse(self):  ## return a reversed Lattice (not used! probably bogus!)
+    def reverse(self):             ## return a reversed Lattice (not used! probably bogus!)
         res=Lattice()
         seq=copy(self.seq)
         seq.reverse()
@@ -200,14 +210,14 @@ class Lattice(object):
             elm,s,s=ipos
             res.add_element(elm)
         return res
-    def append(self,piece):  ## concatenate two Lattice pieces
+    def append(self,piece):        ## concatenate two Lattice pieces
         seq=copy(piece.seq)  
         for ipos in seq:
             elm,s0,s1=ipos
             self.add_element(elm)
     def functions(self,steps=10):  ## functions of s
         beta_fun=[]
-        ms=ELM.I()
+        # ms=ELM.I()
         bx = self.betax0
         ax = self.alfax0
         gx = self.gammx0
@@ -215,15 +225,18 @@ class Lattice(object):
         ay = self.alfay0
         gy = self.gammy0
         v_beta0=NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
+        v_beta = v_beta0
         # print(v_beta0)
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             for count,i_element in enumerate(element.step_through(steps)):
-                ms = i_element*ms
+                # ms = i_element*ms
                 # print('i_element.label={} viseo={} ms.length={}'.format(i_element.label,i_element.viseo,ms.length))
-                m_beta = ms.BetaMatrix()
-                v_beta = m_beta.dot(v_beta0)
+                # m_beta = ms.BetaMatrix()
+                # v_beta = m_beta.dot(v_beta0)
+                m_beta = i_element.BetaMatrix()
+                v_beta = m_beta.dot(v_beta)
                 s += i_element.length
                 betax = v_beta[0,0]
                 betay = v_beta[3,0]
@@ -252,18 +265,22 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
-    def cs_traj(self,steps=10):  ## cosine & sine trajectories 
+    def cs_traj(self,steps=10):    ## cosine & sine trajectories 
         lamb = Phys['wellenlänge']
         c_like =[]
         s_like =[]
-        xi =Phys['sigx_i']         # eingabe dX
-        xpi=Phys['emitx_i']/xi     # eingabe dX' aus emittanz gerechnet
-        yi =Phys['sigy_i']         # eingabe dY
-        ypi=Phys['emity_i']/yi     # eingabe dY' aus emittanz gerechnet
-        dz=Phys['dZ']              # eingabe dZ
-        dp=Phys['dP/P']            # eingabe dP/P0
-        c_0=NP.array([[xi],[0.],[yi],[0.],[dz],[0.]])     # cos-like traj.
-        s_0=NP.array([[0.],[xpi],[0.],[ypi],[0.],[dp]])   # sin-like traj.
+        x1  = sqrt(Phys['emitx_i']*self.betax0) # x-plane: principal-1 (cos like) with alpha=0
+        x1p = 0.
+        x2  = 0.                                # y-plane: principal-2 (sin like)
+        x2p = sqrt(Phys['emitx_i']/self.betax0)
+        y1  = sqrt(Phys['emity_i']*self.betay0)
+        y1p = 0.
+        y2  = 0.
+        y2p = sqrt(Phys['emity_i']/self.betay0)
+        dz  = Phys['dZ']                        # eingabe dZ
+        dp  = Phys['dP/P']                      # eingabe dP/P0
+        c_0=NP.array([[x1],[x1p],[y1],[y1p],[dz],[0.]])     # cos-like traj.
+        s_0=NP.array([[x2],[x2p],[y2],[y2p],[0.],[dp]])     # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -291,7 +308,7 @@ class Lattice(object):
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)
-    def symplecticity(self):  ## test symplecticity
+    def symplecticity(self):       ## test symplecticity
         s=NP.array([[0., 1., 0.,0., 0.,0.],
                     [-1.,0., 0.,0., 0.,0.],
                     [ 0.,0., 0.,1., 0.,0.],
@@ -388,7 +405,7 @@ def test1():
 def test2():
     lattice=make_lattice()
     ## cell boundaries
-    mcell,betax,betay=lattice.cell(closed=True )
+    mcell,betax,betay=lattice.cell(closed=True,verbose=True)
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     lattice.symplecticity()
     ## lattice function as f(s)

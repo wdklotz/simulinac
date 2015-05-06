@@ -102,17 +102,17 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
         self.viseo=viseo
         self.beam=copy(beam)  # make a local copy of the Beam instance (important!)
 class D(I):            ## drift space nach Trace3D
-    def __init__(self,length=0.,label='D',beam=Beam.soll):    
-        super(D,self).__init__(beam=beam)
+    def __init__(self,length=0.,viseo=0.,label='D',beam=Beam.soll):    
+        super(D,self).__init__(viseo=viseo,beam=beam)
         self.label=label
         self.length=length     ## hard edge length [m]
         self.matrix[0,1]=self.matrix[2,3]=self.length
         g=self.beam.gamma
         self.matrix[4,5]=length/(g*g)
     def shorten(self,l=0.):    # returns a new instance!
-        return D(length=l,label=self.label,beam=self.beam)
+        return D(length=l,label=self.label,beam=self.beam,viseo=self.viseo)
     def update(self):          # returns a new instance!
-        return D(length=self.length,label=self.label,beam=Beam.soll)
+        return D(length=self.length,label=self.label,beam=Beam.soll,viseo=self.viseo)
 class QF(D):           ## focusing quad nach Trace3D
     def __init__(self,k0=0.,length=0.,label='QF',beam=Beam.soll):    
         super(QF,self).__init__(length=length,label=label,beam=beam)
@@ -321,7 +321,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
 class _thin(_matrix):  ## the mother of all thin elements
     def __init__(self):
         pass
-    def step_through(self,anz=10):
+    def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(anz/2)
         anz2 = int(anz-anz1*2)
         anz2 = int(anz1+anz2)
@@ -337,17 +337,17 @@ class _thin(_matrix):  ## the mother of all thin elements
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
-class QFth(_thin):    ## thin F-quad
+class QFth(_thin):     ## thin F-quad
     def __init__(self,k0=0.,length=0.,label='QFT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
         self.beam   = copy(beam)
-        di = D(length=0.5*length,beam=self.beam,label=self.label)
+        di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=+0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
-        m = kick.matrix
+        m = kick.matrix     ## thin lens quad matrix
         if(self.k0l == 0.):
             m[1,0] = m[3,2] = 0.
         else:
@@ -356,21 +356,22 @@ class QFth(_thin):    ## thin F-quad
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
+        self.viseo = +0.5
     def update(self):
         raise RuntimeWarning('QFth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QFth.shorten(): not needed!')    
-class QDth(_thin):    ## thin D-quad
+class QDth(_thin):     ## thin D-quad
     def __init__(self,k0=0.,length=0.,label='QDT',beam=Beam.soll):
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
         self.beam   = copy(beam)
-        di = D(length=0.5*length,beam=self.beam,label=self.label)
+        di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=-0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
-        m = kick.matrix
+        m = kick.matrix     ## thin lens quad matrix
         if(self.k0l == 0.):
             m[1,0] = m[3,2] = 0.
         else:
@@ -379,18 +380,19 @@ class QDth(_thin):    ## thin D-quad
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
+        self.viseo = -0.5
     def update(self):
         raise RuntimeWarning('QDth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QDth.shorten(): not needed!')    
-class RFC(_thin):     ## RF cavity as D*RFG*D
+class RFC(_thin):      ## RF cavity as D*RFG*D
     def __init__(self,length=0.,U0=10.,PhiSoll=-pi/4.,fRF=800.,label='RFC',beam=Beam.soll,dWf=1.):
         self.length = length
         self.label  = label
         self.beam   = copy(beam)
         di   = D(length=0.5*length,beam=beam,label='D(i)')
-        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,dWf=dWf)
-        df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')
+        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,dWf=dWf)  ## Trace3D RF gap
+        df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')   # energy update here
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)

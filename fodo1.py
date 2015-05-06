@@ -1,12 +1,12 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import Phys,k0,dictprnt,Beam
-from elements import D,QF,QD,RFG,CAV,RFC
+from elements import D,QF,QD,RFG,RFC
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
 
-def display(functions):  ## plotting
+def display(functions):                 ## plotting
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
@@ -80,15 +80,15 @@ def display(functions):  ## plotting
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show(block=True)
-def make_rf_section(w):   ## RF sektion
+def make_rf_section(w):                 ## RF sektion
     gaps = w['gaps']    # gaps/half-cell
     section = Lattice()
     for i in range(gaps):
-        cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],label='rfg',beam=Beam.soll,dWf=w['dWf'])  # Trace3D
+        cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=w['dWf'])  # Trace3D
         section.add_element(cav)
     Phys['RFSection']=section.length
     return section  
-def make_half_cell(w,upstream=True):  # 1/2 cell
+def make_half_cell(w,upstream=True):    ## 1/2 cell
     tki  = Beam.soll.tkin  
     gaps = w['gaps']
     ld   = w['ld']
@@ -128,13 +128,13 @@ def make_half_cell(w,upstream=True):  # 1/2 cell
     deltaTK=Beam.soll.tkin - tki
     return cell,deltaTK
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-def loesung():  # total classic FODO lattice
+def loesung():                          ## total classic FODO lattice (1st result, used as reference!)
     # längen
     lqd  =  0.4     # QD len
     lqf  =  0.4     # QF len
     ld   =  0.4     # drift len                # KNOB effective focus of FODO
     # cavity werte
-    lcav   =  Phys['spalt_laenge']         
+    lcav   = Phys['spalt_laenge']         
     u0     = Phys['spalt_spannung']
     phi0   = Phys['soll_phase']*Phys['radians']
     fRF0   = Phys['frequenz']
@@ -154,7 +154,8 @@ def loesung():  # total classic FODO lattice
     nboff_super_cells = 16*10                  # KNOB  final energy
     # nboff_super_cells = 16*5                 # KNOB  final energy
     nboff_super_cells = 16*1                   # KNOB  final energy
-    # nboff_super_cells = 3                    # KNOB  final energy
+    # nboff_super_cells = 8                    # KNOB  final energy
+    # nboff_super_cells = 4                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,
         'ld':ld,
@@ -168,7 +169,6 @@ def loesung():  # total classic FODO lattice
     #--------------------1st cavity-----------
     gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll)  # Trace3D
     s_ttf_i =gapi.tr
-    # objprnt(gapi, filter={'matrix'})
     #-----------------------------------------
     super_cell=Lattice()
     nboff_gaps=0                 # gap counter
@@ -179,7 +179,6 @@ def loesung():  # total classic FODO lattice
         (half_cell,deltaTK) = make_half_cell(w,upstream=False); nboff_gaps+=gaps_per_half_cell
         zelle.append(half_cell)
         super_cell.append(zelle)  # add zelle to super cell
-    # super_cell.out()
     lattice_length=super_cell.length
     # print('lattice length [m]={}'.format(lattice_length))
     #-----------------------------------------
@@ -189,7 +188,6 @@ def loesung():  # total classic FODO lattice
     #---------------last cavity---------------
     gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll)  # Trace3D
     s_ttf_f =gapf.tr
-    # objprnt(gapf, filter={'matrix'})    
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
