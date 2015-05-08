@@ -95,7 +95,9 @@ def make_half_cell(w,upstream=True):    ## 1/2 cell
     gaps = w['gaps']
     ld   = w['ld']
     lcav = w['lcav']
-    ld   = 0.5*(ld-2.*gaps*lcav)
+    ld   = 0.5*(ld-gaps*lcav)
+    if ld < 0.:
+        raise RuntimeWarning('negative drift space!')
     lqf  = 0.5*w['lqf']
     lqd  = 0.5*w['lqd']
     kq   = k0(gradient=w['dBdz'],tkin=tki)                  # quad strength @ entrance
@@ -151,6 +153,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     # fokusierung
     # dBdz0  = Phys['quad_gradient']*7.85      # KNOB quad gradient
     dBdz0  = Phys['quad_gradient']*8.2         # KNOB quad gradient
+    dBdz0  = Phys['quad_gradient']*7.5        # KNOB quad gradient
     # struktur werte
     ring = True                                # KNOB ring or transfer ?
     nboff_super_cells = 16*10                  # KNOB  final energy

@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+ #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import objprnt
 from elements import D,QFth,QDth,QF,QD
@@ -201,4 +201,4 @@ if __name__ == '__main__':
     # test2(5.,5.,1.)
     # test3(5.,5.,1.)     # gesund!
     test3(4.,4.,1.2)     # gesünder!
-    # test3(7.,7.,2.1)  # extrem!
+    # test3(7.,7.,2.1)    # extrem!

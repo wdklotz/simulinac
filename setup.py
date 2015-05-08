@@ -22,7 +22,7 @@ Phys = {                                      ## physics constants and setup ...
     'dP/P': 5.e-2,               # [rad] relative impulse dP/P
      }
 Phys['wellenlänge']=1.e-6*Phys['lichtgeschwindigkeit']/Phys['frequenz']
-class Beam(object):                                 ## relativistic protons
+class Beam(object):                           ## relativistic particle beam
     soll=None   ## the synchronous reference particle  (class member!)
     def __init__(self,tkin=0.,mass=Phys['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
@@ -53,13 +53,13 @@ class Beam(object):                                 ## relativistic protons
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-class Proton(Beam):
+class Proton(Beam):                           ## proton
     def __init__(self,tkin=0.):
         super(Proton,self).__init__(tkin=tkin,mass=Phys['proton_mass'],name='proton')
-class Electron(Beam):
+class Electron(Beam):                         ## electron
     def __init__(self,tkin=0.):
         super(Electron,self).__init__(tkin=tkin,mass=Phys['electron_mass'],name='electron')
-Beam.soll = Beam(Phys['injection_energy'])    ## proton= the default synchronous reference particle  (class member!)
+Beam.soll = Beam(Phys['injection_energy'])    ## proton is the default synchronous reference particle  (class member!)
 def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
@@ -132,7 +132,7 @@ def wille():
 if __name__ == '__main__':
     dictprnt(Phys,'Phys')
     dictprnt(wille(),'wille')
-    print(Beam.soll.out(False))
+    print('\n'+Beam.soll.out(False))
     Proton(tkin=50.).out()
     Electron(tkin=50.).out()
     Beam.soll = Electron(50.)
