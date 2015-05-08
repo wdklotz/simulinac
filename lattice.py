@@ -162,7 +162,7 @@ class Lattice(object):
                     Phys['sigx_i'] = sqrt(bax*Phys['emitx_i'])
                     Phys['sigy_i'] = sqrt(bay*Phys['emity_i'])
                 else:
-                    raise RuntimeError('stop execution')
+                    raise RuntimeError('stop: unstable lattice')
             else:
                 # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
                 xi=Phys['sigx_i']
@@ -366,11 +366,7 @@ def make_lattice():  # a test lattice
      # lattice.out()
      top=Lattice()
      top.append(lattice)
-     top.append(lattice)
-     top.append(lattice)
-     top.append(lattice)
-     top.append(lattice)
-     top.append(top)
+     # top.append(top)
      # top.append(top)
      # top.append(top)
      # top.append(top)
@@ -380,6 +376,7 @@ def make_lattice():  # a test lattice
 def test0():
     lat = make_lattice()
     lat.out()
+    print('--------------- EOF test0 --------------------')
 def test1():
     lattice=make_lattice()
     mcell,betax,betay=lattice.cell()
@@ -400,8 +397,7 @@ def test1():
 # Wo ist der Wert von betax geblieben?
 # Antwort: Da die Emittanz noch nicht bekannt ist kann man den
 # Eigenvektor auf 1 normieren und erhält dasselbe wie mit Wille's Formeln.''')
-    # print('==================================================')
-    return
+    print('--------------- EOF test1 --------------------')
 def test2():
     lattice=make_lattice()
     ## cell boundaries
@@ -427,6 +423,7 @@ def test2():
     plot(s,zero,color='black')
     legend(loc='upper left')
     show(block=True)
+    print('--------------- EOF test2 --------------------')
 if __name__ == '__main__':
     test0()
     test1()

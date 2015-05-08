@@ -392,6 +392,7 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
         self.beam   = copy(beam)
         di   = D(length=0.5*length,beam=beam,label='D(i)')
         kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,dWf=dWf)  ## Trace3D RF gap
+        # objprnt(kick)
         df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')   # energy update here
         lens = (di * kick) * df
         self.matrix = lens.matrix
@@ -430,12 +431,14 @@ def test0():
     b.out()
     (a*b).out()
     (b*a).out()
+    print('--------------- EOF test0 --------------------')
 def test1():
     print('trivial test 1 ...')
     i1=_matrix()
     i2=i1*i1
     i1.out()
     i2.out()
+    print('--------------- EOF test1 --------------------')
 def test2():
     print('trivial test 2 ...')
     i1=_matrix()
@@ -449,6 +452,7 @@ def test2():
     (d1*d2).out()
     d3=D(90.,label='')
     (d2*d3).out()
+    print('--------------- EOF test2 --------------------')
 def test3():
     print('test product of _matrix class ...')
     gradient =1.
@@ -462,6 +466,7 @@ def test3():
     qd=QD(k0=k,length=1.)
     qd.out()
     (qf*qd).out()
+    print('--------------- EOF test3 --------------------')
 def test4():
     print('test shortening of elements ...')
     gradient =1.
@@ -487,6 +492,7 @@ def test4():
     sd05=sd.shorten(0.4)
     (sd05*sd05*sd05*sd05*sd05).out()
     sd.out()
+    print('--------------- EOF test4 --------------------')
 def test5():
     print("K.Wille's Beispiel auf pp. 112-113")
     kqf=  wille()['k_quad_f']
@@ -518,6 +524,7 @@ def test5():
     mz=mz *md
     mz=mz *mqf
     mz.out()
+    print('--------------- EOF test5 --------------------')
 def test6():
     print('test step_through elements ...')
     kqf=  wille()['k_quad_f']
@@ -547,6 +554,7 @@ def test6():
             m_end=m_end*mi
         m_end.out()
         m_anfang.out()
+    print('--------------- EOF test6 --------------------')
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
@@ -560,6 +568,7 @@ def test7():
     mr.out()
     mr=RD(radius=rhob,length=lb,label='R')
     mr.out()
+    print('--------------- EOF test7 --------------------')
 def test8():
     print('test cavity...')
     objprnt(Beam.soll,'soll')
@@ -569,6 +578,7 @@ def test8():
     rfg=RFG()
     objprnt(rfg,'RFG')
     objprnt(Beam.soll,'soll')
+    print('--------------- EOF test8 --------------------')
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
     grad=Phys['quad_gradient']   # [T/m] gradient
@@ -621,6 +631,7 @@ def test9():
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
         Beam.soll.incTK(dt)
         cavity.update().out()
+    print('--------------- EOF test9 --------------------')
 def test10():
     print('\ntest: Beam class')
     dictprnt(Phys,text='setup.Phys')
@@ -637,6 +648,7 @@ def test10():
     beam.out()
     beam.incTK(150.)
     beam.out()
+    print('--------------- EOF test10 --------------------')
 def test11():
     print('\ntest thin lenses:')
     print('----------------- product matrix ---------')
@@ -661,7 +673,7 @@ def test11():
     objprnt(rf,'RFC cavity')
     for elm in rf.step_through():
         elm.out()
-    return
+    print('--------------- EOF test11 --------------------')
 if __name__ == '__main__':
     test0()
     test1()

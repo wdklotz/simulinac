@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,k0,dictprnt,Beam
+from setup import Phys,k0,dictprnt,objprnt,Beam,Proton,Electron
 from elements import D,QF,QD,RFG,RFC
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
@@ -43,8 +43,8 @@ def display(functions):                 ## plotting
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.') 
     vscale=axis()[3]*0.1
-    viseo = [x*vscale for x in viseo]
-    plot(z,viseo,label='',color='black')
+    viseox = [x*vscale for x in viseo]
+    plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*   # transverse Y
@@ -55,8 +55,8 @@ def display(functions):                 ## plotting
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
-    viseo = [x*vscale for x in viseo]
-    plot(z,viseo,label='',color='black')
+    viseoy = [x*vscale for x in viseo]
+    plot(z,viseoy,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*   # longitudinal dPhi, dW/W
@@ -68,8 +68,8 @@ def display(functions):                 ## plotting
     ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
     ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
-    viseo = [x*vscale for x in viseo]
-    ax_l.plot(z,viseo,label='',color='black')
+    viseoz = [x*vscale for x in viseo]
+    ax_l.plot(z,viseoz,label='',color='black')
     ax_l.plot(z,zero,color='black')
 
     ax_r = ax_l.twinx()
@@ -86,6 +86,7 @@ def make_rf_section(w):                 ## RF sektion
     section = Lattice()
     for i in range(gaps):
         cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=w['dWf'])  # Trace3D
+        # objprnt(Beam.soll)
         section.add_element(cav)
     Phys['RFSection']=section.length
     return section  
@@ -142,7 +143,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     gaps_per_half_cell= 3                      # KNOB  gaps/cell
     dWf=1.                                     # acceleration flag
     # beam werte
-    Beam.soll = Beam(Phys['injection_energy'])
+    Beam.soll = Proton(Phys['injection_energy'])
     Phys['sigx_i'] = 5.e-3                     # KNOB sigma x (i)
     Phys['sigy_i'] = 2.5e-3                    # KNOB sigma y (i)
     Phys['dP/P']   = 2.e-2                     # KNOB dp/p (i)
@@ -151,12 +152,13 @@ def loesung():                          ## total classic FODO lattice (1st resul
     # dBdz0  = Phys['quad_gradient']*7.85      # KNOB quad gradient
     dBdz0  = Phys['quad_gradient']*8.2         # KNOB quad gradient
     # struktur werte
-    ring = False                                # KNOB ring or transfer ?
+    ring = True                                # KNOB ring or transfer ?
     nboff_super_cells = 16*10                  # KNOB  final energy
     # nboff_super_cells = 16*5                 # KNOB  final energy
     nboff_super_cells = 16*1                   # KNOB  final energy
     # nboff_super_cells = 8                    # KNOB  final energy
     # nboff_super_cells = 4                    # KNOB  final energy
+    nboff_super_cells = 1                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,
         'ld':ld,
@@ -168,9 +170,11 @@ def loesung():                          ## total classic FODO lattice (1st resul
         'dWf':dWf,
         'gaps':gaps_per_half_cell,}
     #--------------------1st cavity-----------
-    gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll)  # Trace3D
-    s_ttf_i =gapi.tr
+    # gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
+    # s_ttf_i =gapi.tr
+    s_ttf_i = Beam.soll.TrTF()
     #-----------------------------------------
+    print('Injected beam:\n'+Beam.soll.out(False))
     super_cell=Lattice()
     nboff_gaps=0                 # gap counter
     for icell in range(nboff_super_cells):
@@ -187,8 +191,9 @@ def loesung():                          ## total classic FODO lattice (1st resul
     mcell,betax,betay = super_cell.cell(closed=ring)
     print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
     #---------------last cavity---------------
-    gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll)  # Trace3D
-    s_ttf_f =gapf.tr
+    # gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
+    # s_ttf_f =gapf.tr
+    s_ttf_f = Beam.soll.TrTF()
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
