@@ -175,7 +175,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     #--------------------1st cavity-----------
     # gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
     # s_ttf_i =gapi.tr
-    s_ttf_i = Beam.soll.TrTF()
+    s_ttf_i = Beam.soll.TrTf()
     #-----------------------------------------
     print('Injected beam:\n'+Beam.soll.out(False))
     super_cell=Lattice()
@@ -196,7 +196,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     #---------------last cavity---------------
     # gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
     # s_ttf_f =gapf.tr
-    s_ttf_f = Beam.soll.TrTF()
+    s_ttf_f = Beam.soll.TrTf()
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0

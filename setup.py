@@ -46,7 +46,7 @@ class Beam(object):                           ## relativistic particle beam
         if pf:
             print(s)
         return s
-    def TrTF(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+    def TrTf(self):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         gap_len = Phys['spalt_laenge']
         freq =Phys['frequenz']
         teta = 2.*pi*1.e6*freq*gap_len / (self.beta*Phys['lichtgeschwindigkeit'])
@@ -54,10 +54,10 @@ class Beam(object):                           ## relativistic particle beam
         ttf = sin(teta)/teta
         return ttf
 class Proton(Beam):                           ## proton
-    def __init__(self,tkin=0.):
+    def __init__(self,tkin=Phys['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=Phys['proton_mass'],name='proton')
 class Electron(Beam):                         ## electron
-    def __init__(self,tkin=0.):
+    def __init__(self,tkin=Phys['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=Phys['electron_mass'],name='electron')
 Beam.soll = Beam(Phys['injection_energy'])    ## proton is the default synchronous reference particle  (class member!)
 def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field gradient & kin. energy
