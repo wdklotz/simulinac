@@ -3,7 +3,7 @@
 from setup import Phys,Proton
 from pylab import plot,show,legend,figure,subplot,axis
 from math import pi,cos
-
+'''apply directly the difference equations from T.Wrangler'''
 def display(functions):
     for func in functions:
         offp=  [x[0] for x in func]
