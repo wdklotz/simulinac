@@ -14,7 +14,6 @@ def display(werte):
     # plot(q,p,label='w(phi)')
     legend(loc='lower right',fontsize='x-small')
     show()
-
 def step1(p0,q0,s0):
     p1 = p0
     q1 = q0 + 0.5 * h * p1
