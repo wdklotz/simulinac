@@ -1,12 +1,12 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-import elements as ELM
-from math import sqrt,fabs,acos,pi
+from math import sqrt,fabs,acos,pi,degrees
 import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot,show,legend
-from setup import wille,Phys
+from setup import wille,Phys,Beam,objprnt
+import elements as ELM
 
 class Lattice(object):
     def __init__(self):
@@ -54,7 +54,7 @@ class Lattice(object):
                     unstable=True
             else:
                 cos_mux = 0.5 * stab
-                mux = acos(cos_mux)*Phys['degrees']
+                mux = degrees(acos(cos_mux))
 
             stab = fabs(mcell.tracey())
             if verbose:
@@ -65,7 +65,7 @@ class Lattice(object):
                     unstable=True
             else:
                 cos_muy = 0.5 * stab
-                muy = acos(cos_muy)*Phys['degrees']
+                muy = degrees(acos(cos_muy))
             if not unstable:
                 if verbose:
                     print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))

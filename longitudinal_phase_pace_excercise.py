@@ -1,8 +1,9 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,Proton
+from setup import Phys,Proton,objprnt,dictprnt
 import matplotlib.pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
+from elements import RFG
 '''produce the longitudinal phase plots from Dr.Tiede'''
 def display(functions):
     for function in functions:
@@ -21,43 +22,60 @@ def psquared(H_invariant,phi,phis):
     return res
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 phis=-90.           # KNOB: soll phase
-phis=-60.
+phis=-30.
 phis=radians(phis)
 
 dphi=1e-4               # step size phase
-pmax=radians(91.)       # phase upper limit
-pmin=radians(-271.)     # phase lower limit
+# pmax=radians(91.)       # phase upper limit
+# pmin=radians(-271.)     # phase lower limit
+pmax=radians(30.)       # phase upper limit
+pmin=radians(-80.)     # phase lower limit
 anz= int((pmax-pmin)/dphi)  # nboff phase steps
 
 with_physics_dimensions = True
 
 if with_physics_dimensions:   # according to T.Wrangler pp.176
-    ws=Phys['injection_energy']
-    # ws=25.
+    # ws=Phys['injection_energy']
+    ws=25.
     particle = Proton(ws)
+    gapl=0.04
+    u0=1./gapl
+    fRF=1000.e6
+    lamb=Phys['lichtgeschwindigkeit']/fRF
+    rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,beam=particle,dWf=1.)
+    dws=rfg.deltaW
     gammas=particle.gamma
     betas=particle.beta
-    lamb = Phys['wellenlänge']
-    E0=Phys['spalt_spannung']
+    E0=u0*gapl
     mc2=particle.e0
     q=1.
-    T=particle.TrTf()
+    T=particle.TrTf(gapl,fRF)
     A=2.*pi/(gammas*betas)**3/lamb
     B=q*E0*T/mc2
     p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
     
-    print('ws='.rjust(10),ws)
-    print('gamma='.rjust(10),gammas)
-    print('beta='.rjust(10),betas)
-    print('lambda='.rjust(10),lamb)
-    print('E0='.rjust(10),E0)
-    print('mc2='.rjust(10),mc2)
-    print('T='.rjust(10),T)
-    print('A='.rjust(10),A)
-    print('B='.rjust(10),B)
-    print('p2w='.rjust(10),p2w)
+    # objprnt(rfg,text='cavity',filter=['matrix','beam'])
+    # objprnt(particle,text='Particle')
+    summary={
+    '        cavity gap [m]':gapl,
+    ' cavity frequency [Hz]':fRF,
+    '  ref. energy Ws [MeV]':ws,
+    '     delta-W/gap [MeV]':dws,
+    '        particle gamma':gammas,
+    '        particle  beta':betas,
+    '         RF lambda [m]':lamb,
+    '      cavity Ez [MV/m]':E0,
+    '   e-mc**2 {MeV/c**2]}':mc2,
+    'time transition factor':T,
+    '         particle type':particle.name,
+    # '                     A':A,
+    # '                     B':B,
+    # '                   p2w':p2w,
+    }
+    dictprnt(summary,text='physics values')
 
-H_invariant=[-1.2+i*0.2 for i in range(7)]  
+# H_invariant=[-1.2+i*0.2 for i in range(7)]  
+H_invariant=[-0.05+i*0.0025 for i in range(45)]  
     
 functions=[]        # outer: list of functions
 for HTW in H_invariant:

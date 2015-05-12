@@ -4,7 +4,7 @@ from setup import Phys,k0,dictprnt,objprnt,Beam,Proton,Electron
 from elements import D,QF,QD,RFG,RFC
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
-from math import sqrt
+from math import sqrt,radians
 
 def display(functions):                 ## plotting
     #----------*----------*   # unpack
@@ -138,44 +138,45 @@ def loesung():                          ## total classic FODO lattice (1st resul
     lqf  =  0.4     # QF len
     ld   =  0.4     # drift len                # KNOB effective focus of FODO
     # cavity werte
-    lcav   = Phys['spalt_laenge']         
+    lcav   = Phys['cavity_laenge']         
+    gapl   = Phys['spalt_laenge']         
     u0     = Phys['spalt_spannung']
-    phi0   = Phys['soll_phase']*Phys['radians']
-    fRF0   = Phys['frequenz']
+    phi0   = radians(Phys['soll_phase'])
+    fRF    = Phys['frequenz']
     gaps_per_half_cell= 3                      # KNOB  gaps/cell
     dWf=1.                                     # acceleration flag
     # beam werte
-    Beam.soll = Proton(Phys['injection_energy'])
+    tk0 = Beam.soll.tkin                       # KNOB injection energy
+    Beam.soll = Proton(tk0)
     Phys['sigx_i'] = 5.e-3                     # KNOB sigma x (i)
     Phys['sigy_i'] = 2.5e-3                    # KNOB sigma y (i)
     Phys['dP/P']   = 2.e-2                     # KNOB dp/p (i)
-    tk0 = Beam.soll.tkin                       # KNOB injection energy
     # fokusierung
     # dBdz0  = Phys['quad_gradient']*7.85      # KNOB quad gradient
     dBdz0  = Phys['quad_gradient']*8.2         # KNOB quad gradient
     dBdz0  = Phys['quad_gradient']*7.5        # KNOB quad gradient
     # struktur werte
     ring = True                                # KNOB ring or transfer ?
-    nboff_super_cells = 16*10                  # KNOB  final energy
-    # nboff_super_cells = 16*5                 # KNOB  final energy
-    nboff_super_cells = 16*1                   # KNOB  final energy
+    nboff_super_cells = 20*10                  # KNOB  final energy
+    # nboff_super_cells = 22*5                 # KNOB  final energy
+    nboff_super_cells = 22*1                   # KNOB  final energy
     # nboff_super_cells = 8                    # KNOB  final energy
     # nboff_super_cells = 4                    # KNOB  final energy
-    nboff_super_cells = 1                    # KNOB  final energy
+    # nboff_super_cells = 1                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,
         'ld':ld,
         'lcav':lcav,
         'U0':u0,
         'phi0':phi0,
-        'fRF':fRF0,
+        'fRF':fRF,
         'dBdz':dBdz0,
         'dWf':dWf,
         'gaps':gaps_per_half_cell,}
     #--------------------1st cavity-----------
     # gapi = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
     # s_ttf_i =gapi.tr
-    s_ttf_i = Beam.soll.TrTf()
+    # s_ttf_i = Beam.soll.TrTf()
     #-----------------------------------------
     print('Injected beam:\n'+Beam.soll.out(False))
     super_cell=Lattice()
@@ -196,7 +197,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     #---------------last cavity---------------
     # gapf = RFG(U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=0.)  # Trace3D
     # s_ttf_f =gapf.tr
-    s_ttf_f = Beam.soll.TrTf()
+    # s_ttf_f = Beam.soll.TrTf()
     #-----------------------------------------
     # Zusammenfassung
     s_tk_i  =tk0
@@ -235,7 +236,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     'sync. phase            [deg]':s_phis,
     'wave length              [m]':s_lamb,
     'frequency              [MHz]':s_freq,
-    'time transition factor (i,f)':(s_ttf_i,s_ttf_f),
+    # 'time transition factor (i,f)':(s_ttf_i,s_ttf_f),
     'number of cells             ': s_nboff_cells,
     }
     dictprnt(summary,'Summary')
