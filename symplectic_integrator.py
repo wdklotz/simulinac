@@ -1,21 +1,43 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from pylab import plot,show,legend
+from pylab import plot,show,legend,figure
 from math import cos,sin,radians,degrees
 '''try Ruth's symplectic integrator'''
-def display(functions):
+def display(functions,text=''):
     for function in functions:
         t = [x[0] for x in function]
         p = [x[1] for x in function]
         q = [x[2] for x in function]
         vp= [x[3] for x in function]
-        # plot(t,p,label='p')
-        # plot(t,q,label='q')
-        # legend(loc='lower right',fontsize='x-small')
-        plot(q,p,label='w(phi)',color='blue')
-        plot(q,vp,label='vp(phi)',color='red')
+        figure(text)
+        plot(t,p,label='p')
+        plot(t,q,label='q')
+        legend(loc='lower right',fontsize='x-small')
+        # plot(q,p,label='w(phi)',color='blue')
+        # plot(q,vp,label='vp(phi)',color='red')
     show()
-class Order3Map(object):
+class Order2Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
+    def __init__(self,stepsize,dHdP,dHdX):
+        self.h = stepsize
+        self.g  = dHdP     # dH/dp
+        self.f  = dHdX     # dH/dx
+    def map(self,v0):
+        v1 = self.step1(v0)
+        v2 = self.step2(v1)
+        return v2
+    def step1(self,v):
+        x0 = v[0]
+        p0 = v[1]
+        p1 = p0
+        x1 = x0 + 0.5 * self.h * p1
+        return (x1,p1)
+    def step2(self,v):
+        x1 = v[0]
+        p1 = v[1]
+        p2 = p1 + self.h * self.f(x1)
+        x2 = x1 + 0.5 * self.h * p2
+        return (x2,p2)
+class Order3Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
     def __init__(self,stepsize,dHdP,dHdX):
         self.h = stepsize
         self.c1 = 7./24.
@@ -32,43 +54,76 @@ class Order3Map(object):
         v3 = self.step3(v2)
         return v3
     def step1(self,v):
-        p0 = v[0]
-        x0 = v[1]
-        p1 = p0 - self.c1 * self.h * self.f(x0)
+        x0 = v[0]
+        p0 = v[1]
+        p1 = p0 + self.c1 * self.h * self.f(x0)
         x1 = x0 + self.d1 * self.h * self.g(p1)
-        return (p1,x1)
+        return (x1,p1)
     def step2(self,v):
-        p1 = v[0]
-        x1 = v[1]
-        p2 = p1 - self.c2 * self.h * self.f(x1)
+        x1 = v[0]
+        p1 = v[1]
+        p2 = p1 + self.c2 * self.h * self.f(x1)
         x2 = x1 + self.d2 * self.h * self.g(p2)
-        return (p2,x2)
+        return (x2,p2)
     def step3(self,v):
-        p2 = v[0]
-        x2 = v[1]
-        p3 = p2 - self.c3 * self.h * self.f(x2)
+        x2 = v[0]
+        p2 = v[1]
+        p3 = p2 + self.c3 * self.h * self.f(x2)
         x3 = x2 + self.d3 * self.h * self.g(p3)
-        return (p3,x3)
-def dHdP(p):   
-    '''canonical equation dH/dp = dx/dt == p; H = p**2/2+V(x)'''
-    return p
-def dHdX(x):
+        return (x3,p3)
+class RKMap(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochschultaschenbücher Band 106 pp.240)
+    def __init__(self,h,f,g):
+        self.h = h
+        self.f = f
+        self.g = g
+    def map(self,vi):
+        xi = vi[0]
+        yi = vi[1]
+        zi = vi[2]
+        h = self.h
+        f = self.f
+        g = self.g
+        k1 = h* f(xi,yi,zi)
+        l1 = h* g(xi,yi,zi)
+        k2 = h * f(xi + 0.5*h, yi + 0.5*k1, zi + 0.5*l1)
+        l2 = h * g(xi + 0.5*h, yi + 0.5*k1, zi + 0.5*l1)
+        k3 = h * f(xi + 0.5*h, yi + 0.5*k2, zi + 0.5*l2)
+        l3 = h * g(xi + 0.5*h, yi + 0.5*k2, zi + 0.5*l2)
+        k4 = h * f(xi + h, yi + k3, zi +l3)
+        l4 = h * g(xi + h, yi + k3, zi +l3)
+        k = 1./6.*(k1 + 2.*k2 + 2.*k3 +k4)
+        l = 1./6.*(l1 + 2.*l2 + 2.*l3 +l4)
+        x = xi + h
+        y = yi + k
+        z = zi + l
+        return (x,y,z)
+def pendel_f(x,y,z):
+    return z
+def pendel_g(a):
+    c = cos(radians(a))
+    def g(x,y,z):
+        return -sin(y)-c
+    return g
+def dHdP(p):              #  dH/dp
+    '''canonical equation dH/dp = dx/dt = p; H = p**2/2+V(x)'''
+    return +p
+def dHdX(x):              #  dH/dx
     '''canonical equation dH/dx = - dp/dt = - dV/dx for Pendel Hamiltonian V(x)=cos(x)'''
-    return +sin(x)
-def dTWdX(cphis):
+    return -sin(x)
+def dTWdX(cphis):         #  dH/dx
     '''canonical equation dH/dx = - dV/dx; TWrangler's' Hamiltonian V(x)=sin(x)-x*cos(x0))'''
-    return lambda x: +(cos(x)+cphis)   # closure!    
-def Vp(phi,phis):
-    '''pseudo potential in TW's Hamiltonian V(x)=sinc(x)-x*cos(x0)'''
+    return lambda x: -(cos(x)+cphis)   # closure!    
+def Vp(phi,phis):         #  V(x)
+    '''pseudo potential in TW's Hamiltonian V(x)=sin(x)-x*cos(x0)'''
     return +(sin(phi)-phi*cos(phis))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-def test0(): 
+def test0():              # use T.Wrangler
     print(
     '''Shows symplectic integration of:
     Hamiltonian for TWrangler's gap (similar to Lapostolle CERN 87-09)
-    H = p**2/2 +V(x) = p**2/2 + (sin(x) - x * cos(phis))
-    p stands for (scaled) w and V(x) for V(phase phi) w/o dimensional scaling and
-    overlays a plot of V(x)''')
+    H = p**2/2 +V(q) = p**2/2 + (sin(q) - q * cos(phis))
+    p stands for (scaled) w and V(q) for V(phase phi) w/o dimensional scaling and
+    overlays a plot of V(q)''')
     h = 1e-2              # integrator's step size'
     phis = radians(-90)   # parameter cos(phi0)
     cphis = cos(phis)
@@ -89,48 +144,90 @@ def test0():
             function.append((i,v[0],degrees(v[1]),pot))
             v = map.map(v)            # [p(t),q(t)] <---map---- [p(0),q(0)]
         functions.append(function)
-    display(functions)
+    display(functions,text='TW Order3Map')
     print(
     '''
     =============================================================
     I still don't understand the outcome of this excercise???!!!!
     =============================================================''')
-def test1(): 
+def test1():              # use pendulum
     print(
     '''Shows symplectic integration of:
-    Hamiltonian for TWrangler's gap (similar to Lapostolle CERN 87-09)
-    H = p**2/2 +V(x) = p**2/2 + (sin(x) - x * cos(phis))
-    p stands for (scaled) w and V(x) for V(phase phi) w/o dimensional scaling and
-    overlays a plot of V(x)''')
+    Hamiltonian for pendulum
+    H = p**2/2 + V(q) = p**2/2 - cos(q); V(x) = -cos(q)
+    overlays a plot of V(q)''')
+    order = 3
     h = 1e-3                # integrator's step size'
-    # phis = radians(-90)   # parameter cos(phi0)
-    # cphis = cos(phis)
-    map = Order3Map(h,dHdP,dHdX)
+    if order == 3:
+        map = Order3Map(h,dHdP,dHdX)
+        text = 'Order3Map'
+    else:
+        map = Order2Map(h,dHdP,dHdX)
+        text = 'Order2Map'
     q0   = radians(0)   # anfangswert q0
     pmax=2
-    pmin=1e-3
-    anz = 50            # anz trajectories
+    proz = -1e-3          # increment pmax by proz%
+    pmax=pmax*(1.+proz*1.e-2)
+    pmin=pmax*1.e-3
+    anz = 30           # anz trajectories
     dp = (pmax-pmin)/anz
-    pvalues = [pmin+i*dp for i in range(0,anz+1,3)]  # list of anfangswerte p0
+    pvalues = [pmin+i*dp for i in range(anz,anz+1)]  # list of anfangswerte p0
     functions=[]
     for pv in pvalues:  # loop over several p
-        v = (pv,q0)
+        # v = (pv,q0)
+        v = (q0,pv)
         function=[]
-        for i in range(int(28./h)):   # loop over independent variable (time z.B.)
+        for i in range(int(50./h)):   # loop over independent variable (time z.B.)
             pot = -cos(v[1])
-            function.append((i,v[0],degrees(v[1]),pot))
+            function.append((i,v[1]*70.,degrees(v[0]),pot))
             v = map.map(v)            # [p(t),q(t)] <---map---- [p(0),q(0)]
         functions.append(function)
-    display(functions)
+    display(functions,text=text)
     print(
     '''
     =============================================================
-    I still don't understand the outcome of this excercise???!!!!
+    I understand now better the outcome of this excercise???!!!!
     =============================================================''')
+def test2():              # use pendulum
+    print(
+    """"Shows Runge-Kutta integration of:
+    Hamiltonian for pendulum
+    H = p**2/2 + V(q) = p**2/2 - cos(q); V(q) = -cos(q)
+    {p,-q} sind die kanonisch-konjugierten variablen
+    q'' = - sin(q) ist die pendelgleichung; x=t die zeit
+    """)
+    h = 1e-3                # integrator's step size'
+    map = RKMap(h,pendel_f,pendel_g(90))
+    text = 'RKMap'
+    q0   = radians(0)   # anfangswert q0
+    pmax=1.9
+    proz = 5.25      # increment pmax by proz%
+    pmax=pmax*(1.+proz*1.e-2)
+    pmin=pmax*1.e-3
+    anz = 10           # anz trajectories
+    dp = (pmax-pmin)/anz
+    pvalues = [pmin+i*dp for i in range(anz,anz+1)]  # list of anfangswerte z0
+    print(pvalues)
+    functions=[]
+    for pv in pvalues:  # loop over several z
+        v = (0.,q0,pv)
+        function=[]
+        for i in range(50000):   # loop over independent variable (time z.B.)
+            pot = cos(v[2])
+            function.append((i,v[2]*70.,degrees(v[1]),pot))
+            v = map.map(v)            # [p(t),q(t)] <---map---- [p(0),q(0)]
+        functions.append(function)
+    display(functions,text=text)
+    print(
+    '''
+    ===============================================================================
+    I am still not 100% sure of correctness of the outcome of this excercise???!!!!
+    ===============================================================================''')
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    # test0()
+    test0()
     test1()
+    test2()
 
     
     
