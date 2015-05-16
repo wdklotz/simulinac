@@ -78,7 +78,7 @@ class Order3Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol.
         y3 = y2 + self.d3 * self.h * self.g(z3)
         x3 = x2 + self.h
         return (x3,y3,z3)
-class RKMap(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochschultaschenbücher Band 106 pp.240)
+class RKMap11_2(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochschultaschenbücher Band 106 pp.240)
     def __init__(self,h,f,g):
         self.h = h
         self.f = f
@@ -90,8 +90,8 @@ class RKMap(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochs
         h = self.h
         f = self.f
         g = self.g
-        k1 = h* f(xi,yi,zi)
-        l1 = h* g(xi,yi,zi)
+        k1 = h * f(xi,yi,zi)
+        l1 = h * g(xi,yi,zi)
         k2 = h * f(xi + 0.5*h, yi + 0.5*k1, zi + 0.5*l1)
         l2 = h * g(xi + 0.5*h, yi + 0.5*k1, zi + 0.5*l1)
         k3 = h * f(xi + 0.5*h, yi + 0.5*k2, zi + 0.5*l2)
@@ -104,9 +104,28 @@ class RKMap(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochs
         y = yi + k
         z = zi + l
         return (x,y,z)
+class RKMap11_3(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochschultaschenbücher Band 106 pp.240)
+    def __init__(self,h,g):
+        self.h = h
+        self.g = g
+    def map(self,vi):       # coordinate vector: v==(x,y,z)==(t,q,p)
+        h = self.h
+        g = self.g
+        xi = vi[0]
+        yi = vi[1]         
+        zi = vi[2]           # y'  = z
+        y2p= g(xi,yi,zi)     # y'' = z' = g(x,y,z)
+        l1 = h * y2p
+        l2 = h * g(xi + 0.5*h, yi + 0.5*h*zi                , zi + 0.5*l1)
+        l3 = h * g(xi + 0.5*h, yi + 0.5*h*zi + 0.25*h*h*y2p, zi + 0.5*l2)
+        l4 = h * g(xi + h    , yi + h*zi + 0.5*h*l2        , zi + l3)
+        x = xi + h
+        y = yi + h*zi + h/6.*(l1 + l2 + l3)
+        z = zi + 1./6.*(l1 + 2.*(l2 + l3) + l4)
+        return (x,y,z)
 def pendel_f(x,y,z):
     return z
-def pendel_g(a):
+def pendel_g(a=90.):
     c = cos(radians(a))
     def g(x,y,z):
         return -sin(y)-c
@@ -157,20 +176,19 @@ def test0():              # use T.Wrangler
     =============================================================
     I still don't understand the outcome of this excercise???!!!!
     =============================================================''')
-def test1():              # use pendulum
+def test1(order=3):              # use pendulum
     print(
     '''Shows symplectic integration of:
     Hamiltonian for pendulum
     H = p**2/2 + V(q) = p**2/2 - cos(q); V(x) = -cos(q)
     overlays a plot of V(q)''')
-    order = 2
     h = 1e-3                # integrator's step size'
     if order == 3:
         map = Order3Map(h,dHdP,dHdX)
-        text = 'Order3Map'
+        text = u'Order3Map O(h\u00B3)'
     else:
         map = Order2Map(h,dHdP,dHdX)
-        text = 'Order2Map'
+        text = u'Order2Map O(h\u00B2)'
     q0   = radians(0)   # anfangswert q0
     # pmax=2
     pmax=1.9
@@ -197,7 +215,7 @@ def test1():              # use pendulum
     =============================================================
     I understand now better the outcome of this excercise???!!!!
     =============================================================''')
-def test2():              # use pendulum
+def test2(fmap=11.3):              # use pendulum
     print(
     """"Shows Runge-Kutta integration of:
     Hamiltonian for pendulum
@@ -206,8 +224,12 @@ def test2():              # use pendulum
     q'' = - sin(q) ist die pendelgleichung; x=t die zeit
     """)
     h = 1e-3                # integrator's step size'
-    map = RKMap(h,pendel_f,pendel_g(90))
-    text = 'RKMap'
+    if fmap == 11.2:
+        map = RKMap11_2(h,pendel_f,pendel_g())
+        text = 'RKMap11_2 O(h\u2075)'
+    else:
+        map = RKMap11_3(h,pendel_g())
+        text = u'RKMap11_3 O(h\u2075)'
     q0   = radians(0)   # anfangswert q0
     pmax=1.9
     proz = 5.25      # increment pmax by proz%
@@ -235,7 +257,7 @@ def test2():              # use pendulum
     ===============================================================================''')
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    test0()
+    # test0()
     test1()
     test2()
 
