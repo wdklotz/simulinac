@@ -21,22 +21,25 @@ class Order2Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol.
         self.h = stepsize
         self.g  = dHdP     # dH/dp
         self.f  = dHdX     # dH/dx
-    def map(self,v0):
+    def map(self,v0):       # coordinate vector: v==(x,y,z)==(t,p,q)
         v1 = self.step1(v0)
         v2 = self.step2(v1)
         return v2
     def step1(self,v):
         x0 = v[0]
-        p0 = v[1]
-        p1 = p0
-        x1 = x0 + 0.5 * self.h * p1
-        return (x1,p1)
+        y0 = v[1]
+        z0 = v[2]
+        z1 = z0
+        y1 = y0 + 0.5 * self.h * z1
+        return (x0,y1,z1)
     def step2(self,v):
         x1 = v[0]
-        p1 = v[1]
-        p2 = p1 + self.h * self.f(x1)
-        x2 = x1 + 0.5 * self.h * p2
-        return (x2,p2)
+        y1 = v[1]
+        z1 = v[2]
+        z2 = z1 + self.h * self.f(y1)
+        y2 = y1 + 0.5 * self.h * z2
+        x2 = x1 + self.h
+        return (x2,y2,z2)
 class Order3Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
     def __init__(self,stepsize,dHdP,dHdX):
         self.h = stepsize
@@ -48,35 +51,39 @@ class Order3Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol.
         self.d3 = 1.
         self.g  = dHdP     # dH/dp
         self.f  = dHdX     # dH/dx
-    def map(self,v0):
+    def map(self,v0):       # coordinate vector: v==(x,y,z)==(t,p,q)
         v1 = self.step1(v0)
         v2 = self.step2(v1)
         v3 = self.step3(v2)
         return v3
     def step1(self,v):
         x0 = v[0]
-        p0 = v[1]
-        p1 = p0 + self.c1 * self.h * self.f(x0)
-        x1 = x0 + self.d1 * self.h * self.g(p1)
-        return (x1,p1)
+        y0 = v[1]
+        z0 = v[2]
+        z1 = z0 + self.c1 * self.h * self.f(y0)
+        y1 = y0 + self.d1 * self.h * self.g(z1)
+        return (x0,y1,z1)
     def step2(self,v):
         x1 = v[0]
-        p1 = v[1]
-        p2 = p1 + self.c2 * self.h * self.f(x1)
-        x2 = x1 + self.d2 * self.h * self.g(p2)
-        return (x2,p2)
+        y1 = v[1]
+        z1 = v[2]
+        z2 = z1 + self.c2 * self.h * self.f(y1)
+        y2 = y1 + self.d2 * self.h * self.g(z2)
+        return (x1,y2,z2)
     def step3(self,v):
         x2 = v[0]
-        p2 = v[1]
-        p3 = p2 + self.c3 * self.h * self.f(x2)
-        x3 = x2 + self.d3 * self.h * self.g(p3)
-        return (x3,p3)
+        y2 = v[1]
+        z2 = v[2]
+        z3 = z2 + self.c3 * self.h * self.f(y2)
+        y3 = y2 + self.d3 * self.h * self.g(z3)
+        x3 = x2 + self.h
+        return (x3,y3,z3)
 class RKMap(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI Hochschultaschenbücher Band 106 pp.240)
     def __init__(self,h,f,g):
         self.h = h
         self.f = f
         self.g = g
-    def map(self,vi):
+    def map(self,vi):       # coordinate vector: v==(x,y,z)==(t,q,p)
         xi = vi[0]
         yi = vi[1]
         zi = vi[2]
@@ -137,11 +144,11 @@ def test0():              # use T.Wrangler
     pvalues = [pmin+i*dp for i in range(anz+1)]  # list of anfangswerte p0
     functions=[]
     for pv in pvalues:  # loop over several p
-        v = (pv,q0)
+        v = (0.,pv,q0)
         function=[]
         for i in range(int(10./h)):   # loop over independent variable (time z.B.)
-            pot = Vp(v[1],phis)
-            function.append((i,v[0],degrees(v[1]),pot))
+            pot = Vp(v[2],phis)
+            function.append((i,v[1],degrees(v[2]),pot))
             v = map.map(v)            # [p(t),q(t)] <---map---- [p(0),q(0)]
         functions.append(function)
     display(functions,text='TW Order3Map')
@@ -156,7 +163,7 @@ def test1():              # use pendulum
     Hamiltonian for pendulum
     H = p**2/2 + V(q) = p**2/2 - cos(q); V(x) = -cos(q)
     overlays a plot of V(q)''')
-    order = 3
+    order = 2
     h = 1e-3                # integrator's step size'
     if order == 3:
         map = Order3Map(h,dHdP,dHdX)
@@ -165,8 +172,10 @@ def test1():              # use pendulum
         map = Order2Map(h,dHdP,dHdX)
         text = 'Order2Map'
     q0   = radians(0)   # anfangswert q0
-    pmax=2
-    proz = -1e-3          # increment pmax by proz%
+    # pmax=2
+    pmax=1.9
+    # proz = -1e-3          # increment pmax by proz%
+    proz = 5.25          # increment pmax by proz%
     pmax=pmax*(1.+proz*1.e-2)
     pmin=pmax*1.e-3
     anz = 30           # anz trajectories
@@ -175,11 +184,11 @@ def test1():              # use pendulum
     functions=[]
     for pv in pvalues:  # loop over several p
         # v = (pv,q0)
-        v = (q0,pv)
+        v = (0.,q0,pv)
         function=[]
-        for i in range(int(50./h)):   # loop over independent variable (time z.B.)
+        for i in range(50000):   # loop over independent variable (time z.B.)
             pot = -cos(v[1])
-            function.append((i,v[1]*70.,degrees(v[0]),pot))
+            function.append((i,v[2]*70.,degrees(v[1]),pot))
             v = map.map(v)            # [p(t),q(t)] <---map---- [p(0),q(0)]
         functions.append(function)
     display(functions,text=text)
@@ -204,10 +213,11 @@ def test2():              # use pendulum
     proz = 5.25      # increment pmax by proz%
     pmax=pmax*(1.+proz*1.e-2)
     pmin=pmax*1.e-3
-    anz = 10           # anz trajectories
+    # anz = 10           # anz trajectories
+    anz = 30           # anz trajectories
     dp = (pmax-pmin)/anz
     pvalues = [pmin+i*dp for i in range(anz,anz+1)]  # list of anfangswerte z0
-    print(pvalues)
+    # print(pvalues)
     functions=[]
     for pv in pvalues:  # loop over several z
         v = (0.,q0,pv)
