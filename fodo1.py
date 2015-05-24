@@ -157,11 +157,7 @@ def loesung():                          ## total classic FODO lattice (1st resul
     dBdz0  = Phys['quad_gradient']*7.5        # KNOB quad gradient
     # struktur werte
     ring = True                                # KNOB ring or transfer ?
-    nboff_super_cells = 20*10                  # KNOB  final energy
-    # nboff_super_cells = 22*5                 # KNOB  final energy
-    nboff_super_cells = 22*1                   # KNOB  final energy
-    # nboff_super_cells = 8                    # KNOB  final energy
-    # nboff_super_cells = 4                    # KNOB  final energy
+    nboff_super_cells = 246                    # KNOB  final energy
     # nboff_super_cells = 1                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,
