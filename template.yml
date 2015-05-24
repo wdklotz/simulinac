@@ -2,76 +2,78 @@
 ## run configuration
 ##...........................................................................................
 flags:
-    - accON:        true            # accelleration on/off flag
+    - accON:        false           # accelleration on/off flag
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - frequency:    &p01    800e6   # [Hz] frequency
-    - Q-gradient:   &p02    1.5     # [T/m] quadrupole gradient
-    - particle:             proton
-    - TK_i:                 50      # [MeV] energy @ entrance (injection) 
-    - emit_i:               5e-6    # [m*rad] transverse emittance @ entrance
-    - sig_i:                5e-3    # [m] one sigma transverse beam size @ entrance
+    - TK_i:                 50.     # [MeV] energy @ entrance (injection) 
+    - emit_i:               5.E-6   # [m*rad] transverse emittance @ entrance
+    - sig_i:                5.E-3   # [m] one sigma transverse beam size @ entrance
     - dP/P:                 5       # [%] relative impulse dP/P @ entrance
-    - ql:           &p03    0.4     # [m] length 
-    - B-grad:       &p04    1.5     # [T/m] quadrupole gradient
-    - Ez:           &p05    4       # [V/m] electric field
-    - phi-sync:     &p06    -45     # [deg] synchronous phase
+    - dZ:                   1.8E-2  # [m] longitudinal displacement dZ @ entrance
+    - frequency:    &p01    800.E+6 # [Hz] frequency
+    - ql:           &p03    0.2     # [m] half quad-length 
+    - B_grad:       &p04    7.5     # [T/m] quadrupole gradient
+    - Ez:           &p05    4.0     # [V/m] electric field strength
+    - phi_sync:     &p06   -45.0    # [deg] synchronous phase
+    - gap:          &p07    0.04    # [m] (accelerating) gap size
+    - cav_len:      &p08    0.08    # [m] cavity length
 ##...........................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
 elements:
     - D:    &d1
         - label:    d1      # element ID
-        - length:   0.4     # [m] length 
+        - length:   0.08    # [m] length 
     - QF:   &qf1
         - label:    qf1     # ID
         - length:   *p03    # [m] length 
         - B':       *p04    # [T/m] quadrupole gradient
     - QD:   &qd1
-        - Label:    qd1     # ID
+        - label:    qd1     # ID
         - length:   *p03    # [m] length 
         - B':       *p04    # [T/m] quadrupole gradient
-    - RFG:  &p10
+    - RFG:  &rfg
         - label:    rfg     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      0.04
-    - RFC:  &rfg
-        - label:    rfg     # ID
+    - RFC:  &rfc
+        - label:    rfc     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
-        - length:   0.04    # [m] length 
+        - gap:      *p07    # [m] length 
+        - length:   *p08    # [m] length 
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
 segments:
-    - seg1:      &seg1
-        - label:    SEG1        # segment ID
+    - seg1:     
+        - label:    SEG1    # (changeable) label is mandatory. DON't remove or reposition!
         - *qf1
         - *d1
-        - *rfg
-        - *rfg
-        - *rfg
+        - *rfc
+        - *rfc
+        - *rfc
         - *d1
         - *qd1
+        - *qd1
         - *d1
-        - *rfg
-        - *rfg
-        - *rfg
+        - *rfc
+        - *rfc
+        - *rfc
         - *d1
         - *qf1
 ##...........................................................................................
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - label:    LATTICE         # lattice ID
-    - *seg1
-    - *seg1
-    - *seg1
-    - *seg1
-    - *seg1
-    - *seg1
+    - label:    FODO2 24.5.2015    # (changeable) description tag is mandatory. DON't remove or reposition!
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1

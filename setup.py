@@ -1,12 +1,11 @@
  # -*- coding: utf-8 -*-
 from math import pi,sqrt,sin
 
-Phys = {                                      ## physics constants and setup ...
+CONF = {                                      ## CONFIG constants and setup ...
     'lichtgeschwindigkeit': 299792458.,    # [m/s]
     'elementarladung': 1.602176565e-19,    # [coulomb]
     'proton_mass': 938.272,      # [MeV/c**2]
     'electron_mass': 0.5109989,  # [MeV/c**2]
-    # 'Ez_feld': 45.,              # [MV/m]
     'Ez_feld': 4.,               # [MV/m]
     'spalt_laenge': 0.04,        # [m]
     'cavity_laenge': 0.08,       # [m]
@@ -20,10 +19,13 @@ Phys = {                                      ## physics constants and setup ...
     'sigy_i': 2.5e-3,            # [m] one sigma transverse beam size
     'dZ': 1.8e-2,                # [m] longitudinal displacement dZ
     'dP/P': 5.e-2,               # [rad] relative impulse dP/P
+    'dWf': 1.0                   # acceleration on/off flag
      }
+CONF['wellenlänge']   =CONF['lichtgeschwindigkeit']/CONF['frequenz']
+CONF['spalt_spannung']=CONF['Ez_feld']*CONF['spalt_laenge']
 class Beam(object):                           ## relativistic particle beam
     soll=None   ## the synchronous reference particle  (class member!)
-    def __init__(self,tkin=0.,mass=Phys['proton_mass'],name='proton'):
+    def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV] 
@@ -33,8 +35,8 @@ class Beam(object):                           ## relativistic particle beam
         self.beta       = sqrt(1.-1./(self.gamma*self.gamma))
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0                 # impulse [Mev/c]
-        self.v          = self.beta*Phys['lichtgeschwindigkeit']    #   [m/s]
-        self.brho       = 1.e6/Phys['lichtgeschwindigkeit']*self.p  #   [T*m]
+        self.v          = self.beta*CONF['lichtgeschwindigkeit']    #   [m/s]
+        self.brho       = 1.e6/CONF['lichtgeschwindigkeit']*self.p  #   [T*m]
         self.name       = name
     def incTK(self,deltaTK):
         self._set_self(self.tkin+deltaTK,self.e0,self.name)
@@ -46,16 +48,17 @@ class Beam(object):                           ## relativistic particle beam
             print(s)
         return s
     def TrTf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*fRF*gap / (self.beta*Phys['lichtgeschwindigkeit'])
+        teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
 class Proton(Beam):                           ## proton
-    def __init__(self,tkin=Phys['injection_energy']):
-        super(Proton,self).__init__(tkin=tkin,mass=Phys['proton_mass'],name='proton')
+    def __init__(self,tkin=CONF['injection_energy']):
+        super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
+Beam.soll             = Proton(CONF['injection_energy'])
 class Electron(Beam):                         ## electron
-    def __init__(self,tkin=Phys['injection_energy']):
-        super(Electron,self).__init__(tkin=tkin,mass=Phys['electron_mass'],name='electron')
+    def __init__(self,tkin=CONF['injection_energy']):
+        super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
@@ -68,7 +71,7 @@ def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field grad
         beta=prot.beta
         e0=prot.e0
         gamma=prot.gamma
-        kres = 1.e-6*Phys['lichtgeschwindigkeit']*gradient/(beta*gamma*e0) 
+        kres = 1.e-6*CONF['lichtgeschwindigkeit']*gradient/(beta*gamma*e0) 
         # print('k0= ',kres)
         return kres
     else:
@@ -97,7 +100,7 @@ def dBdz(k0=0.,tkin=0.):                      ## B-field gradient from quad stre
         beta=prot.beta
         e0=prot.e0
         gamma=prot.gamma
-        return k0*(beta*gamma*e0)/1.e-6*Phys['lichtgeschwindigkeit']           
+        return k0*(beta*gamma*e0)/1.e-6*CONF['lichtgeschwindigkeit']           
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
 def objprnt (what,text='========',filter=[]): ## helper to print objects as dictionary
@@ -124,13 +127,10 @@ def wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-Phys['wellenlänge']   =Phys['lichtgeschwindigkeit']/Phys['frequenz']
-Phys['spalt_spannung']=Phys['Ez_feld']*Phys['spalt_laenge']
-Beam.soll             = Proton(Phys['injection_energy'])# proton: the default synchronous reference particle  (class member!)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     Beam.soll = Beam()
-    dictprnt(Phys,text='Phys')
+    dictprnt(CONF,text='CONF')
     dictprnt(wille(),text='wille')
     print('\n'+Beam.soll.out(False))
     Proton(tkin=50.).out()

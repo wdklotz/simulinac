@@ -5,7 +5,7 @@ import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot,show,legend
-from setup import wille,Phys,Beam,objprnt
+from setup import wille,CONF,Beam,objprnt
 import elements as ELM
 
 class Lattice(object):
@@ -159,17 +159,17 @@ class Lattice(object):
                         print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
                         print('Anfang: ',v_beta.T)
                         print('Ende  : ',v_beta_end.T,'\n')
-                    Phys['sigx_i'] = sqrt(bax*Phys['emitx_i'])
-                    Phys['sigy_i'] = sqrt(bay*Phys['emity_i'])
+                    CONF['sigx_i'] = sqrt(bax*CONF['emitx_i'])
+                    CONF['sigy_i'] = sqrt(bay*CONF['emity_i'])
                 else:
                     raise RuntimeError('stop: unstable lattice')
             else:
                 # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-                xi=Phys['sigx_i']
-                yi=Phys['sigy_i']
+                xi=CONF['sigx_i']
+                yi=CONF['sigy_i']
                 alx=aly=0.
-                emix = Phys['emitx_i']
-                emiy = Phys['emity_i']
+                emix = CONF['emitx_i']
+                emiy = CONF['emity_i']
                 bax=xi**2/emix
                 bay=yi**2/emiy
                 gmx=(1.+alx*alx)/bax
@@ -266,19 +266,19 @@ class Lattice(object):
                 traj.append((s,d,dp))
         return traj
     def cs_traj(self,steps=10):    ## cosine & sine trajectories 
-        lamb = Phys['wellenlänge']
+        lamb = CONF['wellenlänge']
         c_like =[]
         s_like =[]
-        x1  = sqrt(Phys['emitx_i']*self.betax0) # x-plane: principal-1 (cos like) with alpha=0
+        x1  = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like) with alpha=0
         x1p = 0.
         x2  = 0.                                # y-plane: principal-2 (sin like)
-        x2p = sqrt(Phys['emitx_i']/self.betax0)
-        y1  = sqrt(Phys['emity_i']*self.betay0)
+        x2p = sqrt(CONF['emitx_i']/self.betax0)
+        y1  = sqrt(CONF['emity_i']*self.betay0)
         y1p = 0.
         y2  = 0.
-        y2p = sqrt(Phys['emity_i']/self.betay0)
-        dz  = Phys['dZ']                        # eingabe dZ
-        dp  = Phys['dP/P']                      # eingabe dP/P0
+        y2p = sqrt(CONF['emity_i']/self.betay0)
+        dz  = CONF['dZ']                        # eingabe dZ
+        dp  = CONF['dP/P']                      # eingabe dP/P0
         c_0=NP.array([[x1],[x1p],[y1],[y1p],[dz],[0.]])     # cos-like traj.
         s_0=NP.array([[x2],[x2p],[y2],[y2p],[0.],[dp]])     # sin-like traj.
         s=0.0

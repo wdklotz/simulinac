@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,k0,dictprnt,objprnt,Beam,Proton,Electron
+from setup import CONF,k0,dictprnt,objprnt,Beam,Proton,Electron
 from elements import D,QF,QD,RFG,RFC
 from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
@@ -11,8 +11,8 @@ def display(functions):                 ## plotting
     beta_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
-    emix=Phys['emitx_i']  # emittance @ entrance
-    emiy=Phys['emity_i']  # emittance @ entrance
+    emix=CONF['emitx_i']  # emittance @ entrance
+    emiy=CONF['emity_i']  # emittance @ entrance
     #----------*----------*   # bahnkoordinate z
     z   = [ x[0] for x in beta_fun]    
     #----------*----------*
@@ -88,7 +88,7 @@ def make_rf_section(w):                 ## RF sektion
         cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=w['dWf'])  # Trace3D
         # objprnt(Beam.soll)
         section.add_element(cav)
-    Phys['RFSection']=section.length
+    CONF['RFSection']=section.length
     return section  
 def make_half_cell(w,upstream=True):    ## 1/2 cell
     tki  = Beam.soll.tkin  
@@ -125,10 +125,10 @@ def make_half_cell(w,upstream=True):    ## 1/2 cell
         mqf = mqf.update()
         cell.add_element(md)    # D
         cell.add_element(mqf)   # QF
-    Phys['LQF']=2.*mqf.length
-    Phys['LQD']=2.*mqd.length
-    Phys['LD'] =md.length
-    Phys['CELL']=cell.length
+    CONF['LQF']=2.*mqf.length
+    CONF['LQD']=2.*mqd.length
+    CONF['LD'] =md.length
+    CONF['CELL']=cell.length
     deltaTK=Beam.soll.tkin - tki
     return cell,deltaTK
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
@@ -138,27 +138,27 @@ def loesung():                          ## total classic FODO lattice (1st resul
     lqf  =  0.4     # QF len
     ld   =  0.4     # drift len                # KNOB effective focus of FODO
     # cavity werte
-    lcav   = Phys['cavity_laenge']         
-    gapl   = Phys['spalt_laenge']         
-    u0     = Phys['spalt_spannung']
-    phi0   = radians(Phys['soll_phase'])
-    fRF    = Phys['frequenz']
+    lcav   = CONF['cavity_laenge']         
+    gapl   = CONF['spalt_laenge']         
+    u0     = CONF['spalt_spannung']
+    phi0   = radians(CONF['soll_phase'])
+    fRF    = CONF['frequenz']
     gaps_per_half_cell= 3                      # KNOB  gaps/cell
-    dWf=1.                                     # acceleration flag
+    dWf=0.                                     # acceleration flag
     # beam werte
     tk0 = Beam.soll.tkin                       # KNOB injection energy
     Beam.soll = Proton(tk0)
-    Phys['sigx_i'] = 5.e-3                     # KNOB sigma x (i)
-    Phys['sigy_i'] = 2.5e-3                    # KNOB sigma y (i)
-    Phys['dP/P']   = 2.e-2                     # KNOB dp/p (i)
+    CONF['sigx_i'] = 5.e-3                     # KNOB sigma x (i)
+    CONF['sigy_i'] = 2.5e-3                    # KNOB sigma y (i)
+    CONF['dP/P']   = 2.e-2                     # KNOB dp/p (i)
     # fokusierung
-    # dBdz0  = Phys['quad_gradient']*7.85      # KNOB quad gradient
-    dBdz0  = Phys['quad_gradient']*8.2         # KNOB quad gradient
-    dBdz0  = Phys['quad_gradient']*7.5        # KNOB quad gradient
+    # dBdz0  = CONF['quad_gradient']*7.85      # KNOB quad gradient
+    dBdz0  = CONF['quad_gradient']*8.2         # KNOB quad gradient
+    dBdz0  = CONF['quad_gradient']*7.5        # KNOB quad gradient
     # struktur werte
     ring = True                                # KNOB ring or transfer ?
     nboff_super_cells = 246                    # KNOB  final energy
-    # nboff_super_cells = 1                    # KNOB  final energy
+    nboff_super_cells = 1                    # KNOB  final energy
     w ={'lqd':lqd,
         'lqf':lqf,
         'ld':ld,
@@ -210,11 +210,11 @@ def loesung():                          ## total classic FODO lattice (1st resul
     s_utot  =s_tk_f - s_tk_i
     s_latlen=lattice_length
     s_accel =s_utot/s_latlen
-    s_emi   =(Phys['emitx_i'],Phys['emity_i'])
-    s_aper  =(Phys['sigx_i'],Phys['sigy_i'])
-    s_phis  =Phys['soll_phase']
-    s_lamb  =Phys['wellenlänge']
-    s_freq  =Phys['frequenz']
+    s_emi   =(CONF['emitx_i'],CONF['emity_i'])
+    s_aper  =(CONF['sigx_i'],CONF['sigy_i'])
+    s_phis  =CONF['soll_phase']
+    s_lamb  =CONF['wellenlänge']
+    s_freq  =CONF['frequenz']
     s_nboff_cells =nboff_super_cells
     summary={
     'quadrupole size          [m]':s_lqd,

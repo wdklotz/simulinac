@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import wille,Phys,dictprnt,objprnt,Beam,k0,dBdz,scalek0
+from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0
 import numpy as NP 
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
@@ -263,12 +263,12 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         raise RuntimeWarning('WD.update(): not ready!')    
 class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def __init__(self, 
-    U0         =Phys['spalt_spannung'], 
-    PhiSoll    =radians(Phys['soll_phase']), 
-    fRF        =Phys['frequenz'], 
+    U0         =CONF['spalt_spannung'], 
+    PhiSoll    =radians(CONF['soll_phase']), 
+    fRF        =CONF['frequenz'], 
     label      ='RFG', 
-    beam       =Beam(Phys['injection_energy']),
-    gap        =Phys['spalt_laenge'],
+    beam       =Beam(CONF['injection_energy']),
+    gap        =CONF['spalt_laenge'],
     dWf=1.):
         super(CAV,self).__init__(label=label,beam=beam)
         self.u0     = U0                       # [MV] gap Voltage
@@ -276,7 +276,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         self.freq   = fRF                      # [Hz]  RF frequenz
         self.dWf    = dWf
         self.gap    = gap
-        self.lamb   = Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF(self.beam.beta)              # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf      # T.Wrangler pp.221
         beami       = self.beam                               # Beam @ entrance
@@ -290,7 +290,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         Beam.soll.incTK(self.deltaW)                          # beam accelerated
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*self.freq*self.gap / (beta*Phys['lichtgeschwindigkeit'])
+        teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
@@ -309,12 +309,12 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return CAV(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
 class RFG(D):          ## zero length RF gap nach Trace3D
     def __init__(self, 
-    U0         =Phys['spalt_spannung'], 
-    PhiSoll    =radians(Phys['soll_phase']), 
-    fRF        =Phys['frequenz'], 
+    U0         =CONF['spalt_spannung'], 
+    PhiSoll    =radians(CONF['soll_phase']), 
+    fRF        =CONF['frequenz'], 
     label      ='RFG', 
     beam       =Beam.soll,
-    gap        =Phys['spalt_laenge'],
+    gap        =CONF['spalt_laenge'],
     dWf=1.):
         super(RFG,self).__init__(label=label,beam=beam)
         self.u0     = U0*dWf                                  # [MV] gap Voltage
@@ -322,7 +322,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         self.freq   = fRF                                     # [Hz]  RF frequenz
         self.dWf    = dWf
         self.gap    = gap
-        self.lamb   = Phys['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._TrTF(self.beam.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
         beami       = self.beam                               # Beam @ entrance
@@ -337,7 +337,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         # objprnt(Beam.soll,'soll')
         self.viseo  = 0.25      
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*self.freq*self.gap / (beta*Phys['lichtgeschwindigkeit'])
+        teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
@@ -435,18 +435,19 @@ class QDth(_thin):     ## thin D-quad
         raise RuntimeWarning('QDth.shorten(): not needed!')    
 class RFC(_thin):      ## RF cavity as D*RFG*D
     def __init__(self,
-    length=0.,
-    U0=Phys['spalt_spannung'],
-    PhiSoll=Phys['soll_phase'],
-    fRF=Phys['frequenz'],
+    U0=CONF['spalt_spannung'],
+    PhiSoll=CONF['soll_phase'],
+    fRF=CONF['frequenz'],
     label='RFC',
     beam=Beam.soll,
+    gap=CONF['spalt_laenge'],
+    length=0.,
     dWf=1.):
         self.length = length
         self.label  = label
         self.beam   = copy(beam)
         di   = D(length=0.5*length,beam=beam,label='D(i)')
-        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,dWf=dWf)  ## Trace3D RF gap
+        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,gap=gap,dWf=dWf)  ## Trace3D RF gap
         # objprnt(kick)
         df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')   # energy update here
         lens = (di * kick) * df
@@ -636,8 +637,8 @@ def test8():
     print('--------------- EOF test8 --------------------')
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
-    grad=Phys['quad_gradient']   # [T/m] gradient
-    tk=Phys['injection_energy']    # [MeV]  kin. energy
+    grad=CONF['quad_gradient']   # [T/m] gradient
+    tk=CONF['injection_energy']    # [MeV]  kin. energy
     kq=k0(gradient=grad,tkin=tk)    # quad strength [1/m**2]
     len=0.4                         # quad len [m]
     focal = kq*len
@@ -655,12 +656,12 @@ def test9():
     mqf=QF(kq,len)
     mqd=QD(kq,len)
     cavity=CAV(
-        U0=Phys['spalt_spannung'],
-        PhiSoll=radians(Phys['soll_phase']),
-        fRF=Phys['frequenz'],
+        U0=CONF['spalt_spannung'],
+        PhiSoll=radians(CONF['soll_phase']),
+        fRF=CONF['frequenz'],
         label='gap')
     print('========================')
-    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    tki=CONF['injection_energy']    # [MeV]  kin. energy
     Beam.soll = Beam(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
@@ -669,7 +670,7 @@ def test9():
         Beam.soll.incTK(dt)
         mqf.update().out()
     print('========================')
-    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    tki=CONF['injection_energy']    # [MeV]  kin. energy
     Beam.soll = Beam(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
@@ -678,7 +679,7 @@ def test9():
         Beam.soll.incTK(dt)
         mqd.update().out()
     print('========================')
-    tki=Phys['injection_energy']    # [MeV]  kin. energy
+    tki=CONF['injection_energy']    # [MeV]  kin. energy
     Beam.soll = Beam(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
@@ -689,7 +690,7 @@ def test9():
     print('--------------- EOF test9 --------------------')
 def test10():
     print('\ntest: Beam class')
-    dictprnt(Phys,text='setup.Phys')
+    dictprnt(CONF,text='setup.CONF')
 
     # Beam class
     print()
