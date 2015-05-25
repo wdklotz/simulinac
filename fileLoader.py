@@ -81,10 +81,15 @@ def make_segments(segments_dict,instances_dict):
 def make_lattice(lattice_segment_list,segment_instance_dict):
     lattice = Lattice()
     seg_counter = 0
-    for segment_label in lattice_segment_list:
-        lattice_part = segment_instance_dict[segment_label]
-        lattice.append(lattice_part)
-        seg_counter += 1
+    for inner_list in lattice_segment_list:
+        repeat = inner_list[0]           ## pull nboff repeats off
+        del inner_list[0]
+        # print('{:d} * inner_list\t'.format(repeat),inner_list)
+        for anz in range(repeat):
+            for segment_label in inner_list:
+                lattice_part = segment_instance_dict[segment_label]
+                lattice.append(lattice_part)
+                seg_counter += 1
     SUMMARY['nboff segments']= seg_counter
     return lattice
 def test0():
@@ -173,10 +178,10 @@ def read_yaml_and_parse(filepath):
     # print(segment_instance_dict)
 #...........*...........*...........*...........*...........*...........*...........*
     lattice_segment_list= in_data['lattice']
-    # print('\nlattice=\t',lattice_segment_list)
-    lattice_title = lattice_segment_list[0]['label']
+    # print('segment_list=\t',lattice_segment_list)
+    lattice_title = lattice_segment_list[0]['label']   ## pull {'label:xxx'} off
     del lattice_segment_list[0]
-    # print('\nlattice=\t',lattice_segment_list)
+    # print('segment_list=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
     lattice.energy_trim()          ## energy update here!
     # print(lattice_title)
