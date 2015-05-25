@@ -82,7 +82,7 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
     lattice = Lattice()
     seg_counter = 0
     for inner_list in lattice_segment_list:
-        repeat = inner_list[0]           ## pull nboff repeats off
+        repeat = inner_list[0]           ## pull repeats number off...
         del inner_list[0]
         # print('{:d} * inner_list\t'.format(repeat),inner_list)
         for anz in range(repeat):
@@ -183,10 +183,10 @@ def read_yaml_and_parse(filepath):
     del lattice_segment_list[0]
     # print('segment_list=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
-    lattice.energy_trim()          ## energy update here!
+    lattice.energy_trim()          ## energy update here!  (IMPORTANT)
     # print(lattice_title)
     # lattice.out()
-    SUMMARY['lattice_version']   = lattice_title
+    SUMMARY['lattice_version']    = lattice_title
     SUMMARY['lattice_length [m]'] = lattice.length
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*

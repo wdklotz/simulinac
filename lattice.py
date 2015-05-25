@@ -61,7 +61,7 @@ class Lattice(object):
             updated = element.update()
             # print(updated.label,'\t',Beam.soll.tkin)
             seq_trimmed.append((updated,s0,s1))
-            if isinstance(updated,ELM.QF):
+            if isinstance(updated,ELM.QF) and (not isinstance(updated,ELM.QD)):
                 qf_counter += 1
             if isinstance(updated,ELM.QD):
                 qd_counter += 1
