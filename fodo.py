@@ -81,7 +81,7 @@ def display(functions):          ## plotting
     #----------*----------*
     show(block=True)
 def loesung():                   ## total classic FODO lattice (1st result, used as reference!)
-    super_cell = fileLoader.read_yaml_and_parse()
+    super_cell = fileLoader.read_yaml_and_parse('fodo_template.yml')
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
     ring = CONF['periodic']                                # KNOB periodic lattice or transfer line ?

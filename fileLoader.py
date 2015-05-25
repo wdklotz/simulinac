@@ -101,8 +101,8 @@ def test0():
     for l in lattice:
         for i in l:
             print(i)
-def read_yaml_and_parse():
-    fileobject = open('template.yml','r')
+def read_yaml_and_parse(filepath):
+    fileobject = open(filepath,'r')
     in_data    = yaml.load(fileobject)
 #...........*...........*...........*...........*...........*...........*...........*
     flags_list = in_data['flags']
@@ -159,11 +159,12 @@ def read_yaml_and_parse():
     # print('\nlattice=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
     lattice.trim_energy()
-    # print(lattice_title)
+    print(lattice_title)
     # lattice.out()
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
 #     test0()
-    lattice = read_yaml_and_parse()
+    lattice = read_yaml_and_parse('template.yml')
+    lattice.out()
 
