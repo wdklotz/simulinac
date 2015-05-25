@@ -1,16 +1,20 @@
+# Repeated nodes are initially denoted by an ampersand ( & ) and thereafter referenced with an asterisk ( * ).
 ##...........................................................................................
 ## run configuration
 ##...........................................................................................
 flags:
-    - accON:        false           # accelleration on/off flag
+    - accON:        true            # accelleration on/off flag
+    - periodic:     true            # treat lattice as periodic cell sequence(else as transfer line)
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
     - TK_i:                 50.     # [MeV] energy @ entrance (injection) 
-    - emit_i:               5.E-6   # [m*rad] transverse emittance @ entrance
-    - sig_i:                5.E-3   # [m] one sigma transverse beam size @ entrance
-    - dP/P:                 5       # [%] relative impulse dP/P @ entrance
+    - emitx_i:              5.E-6   # [m*rad] transverse emittance @ entrance x
+    - emity_i:              5.E-6   # [m*rad] transverse emittance @ entrance y
+    - sigx_i:               5.E-3   # [m] one sigma transverse beam size @ entrance x
+    - sigy_i:               2.5E-3  # [m] one sigma transverse beam size @ entrance y
+    - dP/P:                 2       # [%] relative impulse dP/P @ entrance
     - dZ:                   1.8E-2  # [m] longitudinal displacement dZ @ entrance
     - frequency:    &p01    800.E+6 # [Hz] frequency
     - ql:           &p03    0.2     # [m] half quad-length 
@@ -72,8 +76,64 @@ segments:
 ##...........................................................................................
 lattice:
     - label:    FODO2 24.5.2015    # (changeable) description tag is mandatory. DON't remove or reposition!
+    # - [3, SEG1]   todo
     - SEG1
     - SEG1
     - SEG1
     - SEG1
     - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    - SEG1
+    ######

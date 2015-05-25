@@ -10,7 +10,8 @@ import elements as ELM
 
 class Lattice(object):
     def __init__(self):
-        self.seq=[] ## sequence of tuples (element, start-position, end-position)
+    ## the Lattice object is a sequence of tuples: (ELM.<element>, from_position, to_position)
+        self.seq    = [] 
         self.length = 0.
         self.betax0 = 0.
         self.alfax0 = 0.
@@ -32,10 +33,20 @@ class Lattice(object):
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices 
         for ipos in self.seq:
             element,s0,s1 = ipos
-            print('{:s} length {:.3f} from {:.3f} to {:.3f}'.
+            print('{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
+    def trim_energy(self):         ## trim lattice matrices for changing beam energy
+        seq_trimmed = []
+        print('Beam @ entrance:\n'+Beam.soll.out(tee=False))
+        for item in self.seq:
+            element,s0,s1 = item
+            updated = element.update()
+            # print(updated.label,'\t',Beam.soll.tkin)
+            seq_trimmed.append((updated,s0,s1))
+        self.seq = seq_trimmed
+        print('Beam @ exit:\n'+Beam.soll.out(tee=False))
     def cell(self,closed=True,verbose=True):    ## full cell inspection
         if self.full_cell == 0.0:
             mcell=ELM.I(label='<=Full Cell')     ##  chain matrices for full cell

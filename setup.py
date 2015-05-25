@@ -12,14 +12,15 @@ CONF = {                                      ## CONFIG constants and setup ...
     'soll_phase': -45.0,         # [deg]
     'frequenz': 800.e6,          # [Hz]
     'injection_energy': 50.,     # [MeV]
-    'quad_gradient': 1.0,        # [T/m]
+    'quad_gradient': 7.5,        # [T/m]
     'emitx_i':5.e-6,             # [m*rad] emttance @ entrance
     'emity_i':5.e-6,             # [m*rad] emttance @ entrance
     'sigx_i': 5.e-3,             # [m] one sigma transverse beam size
     'sigy_i': 2.5e-3,            # [m] one sigma transverse beam size
     'dZ': 1.8e-2,                # [m] longitudinal displacement dZ
-    'dP/P': 5.e-2,               # [rad] relative impulse dP/P
-    'dWf': 1.0                   # acceleration on/off flag
+    'dP/P': 2.e-2,               # [rad] relative impulse dP/P
+    'dWf': 1.0,                  # acceleration on/off flag
+    'periodic': True,            # periodic lattice?
      }
 CONF['wellenlänge']   =CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['spalt_spannung']=CONF['Ez_feld']*CONF['spalt_laenge']
@@ -42,7 +43,7 @@ class Beam(object):                           ## relativistic particle beam
         self._set_self(self.tkin+deltaTK,self.e0,self.name)
     def out(self,tee=True):
         s=(u'          B*rho[Tm] Tk[MeV/c\u00B2] p[MeV/c]   gamma    beta     gamma*beta  E[MeV/c\u00B2]\n'+\
-              '{:8s}{:8.4f}   {:8.4f}    {:8.4f} {:8.4f} {:8.4f}  {:8.4f}     {:8.4f}\n')\
+              '{:8s}{:8.4f}   {:8.4f}    {:8.4f} {:8.4f} {:8.4f}  {:8.4f}     {:8.4f}')\
             .format(self.name,self.brho,self.tkin,self.p,self.gamma,self.beta,self.gamma_beta,self.e)  
         if tee:
             print(s)

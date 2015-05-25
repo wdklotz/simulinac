@@ -86,8 +86,8 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
     return lattice
 def test0():
     wfl= []
-    file=open('template.yml','r')
-    wfl= yaml.load(file)
+    fileobject=open('template.yml','r')
+    wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
         print(i,' =\t',v)
@@ -102,24 +102,26 @@ def test0():
         for i in l:
             print(i)
 def read_yaml_and_parse():
-    fin= open('template.yml','r')
-    data_in= yaml.load(fin)
+    fileobject = open('template.yml','r')
+    in_data    = yaml.load(fileobject)
 #...........*...........*...........*...........*...........*...........*...........*
-    flags_list= data_in['flags']
-    flags= unpack_list_of_dict(flags_list)
+    flags_list = in_data['flags']
+    flags      = unpack_list_of_dict(flags_list)
     # print('\nflags=\t',flags)
-    if not flags['accON']:
-        CONF['dWf'] = 0.
+    CONF['dWf']              = flags['accON']
+    CONF['periodic']         = flags['periodic']
 #...........*...........*...........*...........*...........*...........*...........*
-    parameter_list= data_in['parameters']
-    parameters = unpack_list_of_dict(parameter_list)
+    parameter_list = in_data['parameters']
+    parameters     = unpack_list_of_dict(parameter_list)
     # print('parameters=\t',parameters)
     CONF['frequenz']         = parameters['frequency']
     CONF['quad_gradient']    = parameters['B_grad']
     CONF['injection_energy'] = parameters['TK_i']
-    CONF['emitx_i']          = parameters['emit_i']
-    CONF['sigx_i']           = parameters['sig_i']
-    CONF['dP/P']             = parameters['dP/P']
+    CONF['emitx_i']          = parameters['emitx_i']
+    CONF['emity_i']          = parameters['emity_i']
+    CONF['sigx_i']           = parameters['sigx_i']
+    CONF['sigy_i']           = parameters['sigy_i']
+    CONF['dP/P']             = parameters['dP/P'] * 1.e-2
     CONF['Ez_feld']          = parameters['Ez']
     CONF['soll_phase']       = parameters['phi_sync']
     CONF['dZ']               = parameters['dZ']
@@ -135,34 +137,33 @@ def read_yaml_and_parse():
     Beam.soll             = Proton(CONF['injection_energy'])
     # objprnt(Beam.soll,text='injected beam')
 #...........*...........*...........*...........*...........*...........*...........*
-    elements_list= data_in['elements']
+    elements_list = in_data['elements']
     elements_dict = unpack_list_of_dict(elements_list)
     # print('\nelements=\t',elements_dict)
     instances_dict = {}
     for item in elements_dict.items():
         (label,instance) = instanciate_element(item)
         instances_dict[label]= instance
-    # for item in instances_dict.items():
-        # objprnt(item[1],text=item[0]) 
     # print(instances_dict.keys())
 #...........*...........*...........*...........*...........*...........*...........*
-    segments_list = data_in['segments']
+    segments_list = in_data['segments']
     segments_dict = unpack_list_of_dict(segments_list)
     # print('\nsegments=\t',segments_dict)
     segment_instance_dict= make_segments(segments_dict,instances_dict)
     # print(segment_instance_dict)
 #...........*...........*...........*...........*...........*...........*...........*
-    lattice_segment_list= data_in['lattice']
+    lattice_segment_list= in_data['lattice']
     # print('\nlattice=\t',lattice_segment_list)
     lattice_title = lattice_segment_list[0]['label']
-    print(lattice_title)
     del lattice_segment_list[0]
     # print('\nlattice=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
+    lattice.trim_energy()
+    # print(lattice_title)
+    # lattice.out()
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
 #     test0()
     lattice = read_yaml_and_parse()
-    lattice.out()
 

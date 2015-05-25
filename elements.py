@@ -103,7 +103,7 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
-        self.beam=copy(beam)  # make a local copy of the Beam instance (important!)
+        self.beam=copy(beam)  # keep a local copy of the Beam instance (important!)
 class D(I):            ## drift space nach Trace3D
     def __init__(self,
     length=0.,
@@ -119,7 +119,8 @@ class D(I):            ## drift space nach Trace3D
     def shorten(self,l=0.):    # returns a new instance!
         return D(length=l,label=self.label,beam=self.beam,viseo=self.viseo)
     def update(self):          # returns a new instance!
-        return D(length=self.length,label=self.label,beam=Beam.soll,viseo=self.viseo)
+        soll = Beam.soll
+        return D(length=self.length,label=self.label,beam=soll,viseo=self.viseo)
 class QF(D):           ## focusing quad nach Trace3D
     def __init__(self,
     k0=0.,
@@ -306,7 +307,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def shorten(self,l=0.):
         return self
     def update(self):
-        return CAV(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
+        return CAV(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
 class RFG(D):          ## zero length RF gap nach Trace3D
     def __init__(self, 
     U0         =CONF['spalt_spannung'], 
@@ -357,10 +358,10 @@ class RFG(D):          ## zero length RF gap nach Trace3D
     def shorten(self,l=0.):
         return self
     def update(self):
-        return RFG(U0=self.u0,PhiSoll=self.phis,label=self.label,dWf=self.dWf,beam=Beam.soll)
+        return RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
 class _thin(_matrix):  ## the mother of all thin elements
-    def __init__(self):
-        pass
+    def __init__(self,beam=Beam.soll):
+        self.beam = copy(beam)      ## keep a local copy of the Beam instance (important!)
     def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(anz/2)
         anz2 = int(anz-anz1*2)
@@ -383,11 +384,11 @@ class QFth(_thin):     ## thin F-quad
     length=0.,
     label='QFT',
     beam=Beam.soll):
+        super(QFth,self).__init__(beam=beam)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
-        self.beam   = copy(beam)
         di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=+0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
@@ -401,21 +402,21 @@ class QFth(_thin):     ## thin F-quad
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = +0.5
-    def update(self):
-        raise RuntimeWarning('QFth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QFth.shorten(): not needed!')    
+    def update(self):
+        raise RuntimeWarning('QFth.update(): not ready!')    
 class QDth(_thin):     ## thin D-quad
     def __init__(self,
     k0=0.,
     length=0.,
     label='QDT',
     beam=Beam.soll):
+        super(QDth,self).__init__(beam=beam)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
-        self.beam   = copy(beam)
         di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=-0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
@@ -429,10 +430,10 @@ class QDth(_thin):     ## thin D-quad
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = -0.5
-    def update(self):
-        raise RuntimeWarning('QDth.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('QDth.shorten(): not needed!')    
+    def update(self):
+        raise RuntimeWarning('QDth.update(): not ready!')    
 class RFC(_thin):      ## RF cavity as D*RFG*D
     def __init__(self,
     U0=CONF['spalt_spannung'],
@@ -443,20 +444,25 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
     gap=CONF['spalt_laenge'],
     length=0.,
     dWf=1.):
-        self.length = length
+        super(RFC,self).__init__(beam=beam)
+        self.u0     = U0*dWf
+        self.phis   = PhiSoll
+        self.freq   = fRF
         self.label  = label
-        self.beam   = copy(beam)
-        di   = D(length=0.5*length,beam=beam,label='D(i)')
-        kick = RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,beam=beam,gap=gap,dWf=dWf)  ## Trace3D RF gap
+        self.gap    = gap
+        self.length = length
+        self.dWf    = dWf
+        di   = D(length=0.5*length,label='D(i)',beam=beam)
+        kick = RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=self.beam,gap=self.gap,dWf=self.dWf)  ## Trace3D RF gap
         # objprnt(kick)
-        df   = D(length=0.5*length,beam=Beam.soll,label='D(f)')   # energy update here
+        df   = D(length=0.5*length,label='D(f)',beam=Beam.soll)   # energy update here
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
-    def update(self):
-        raise RuntimeWarning('RFC.update(): not needed!')    
     def shorten(self,l=0.):
         raise RuntimeWarning('RFC.shorten(): not needed!')    
+    def update(self):
+        return RFC(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,length=self.length,dWf=self.dWf)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 class Test(_matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):

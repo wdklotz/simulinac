@@ -1,13 +1,11 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
 from setup import CONF,k0,dictprnt,objprnt,Beam,Proton,Electron
-from elements import D,QF,QD,RFG,RFC
-from lattice import Lattice
 from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt,radians
 import fileLoader
 
-def display(functions):                 ## plotting
+def display(functions):          ## plotting
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
@@ -82,64 +80,11 @@ def display(functions):                 ## plotting
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show(block=True)
-def make_rf_section(w):                 ## RF sektion
-    gaps = w['gaps']    # gaps/half-cell
-    section = Lattice()
-    for i in range(gaps):
-        cav=RFC(length=w['lcav'],U0=w['U0'],PhiSoll=w['phi0'],fRF=w['fRF'],beam=Beam.soll,dWf=w['dWf'])  # Trace3D
-        # objprnt(Beam.soll)
-        section.add_element(cav)
-    CONF['RFSection']=section.length
-    return section  
-def make_half_cell(w,upstream=True):    ## 1/2 cell
-    tki  = Beam.soll.tkin  
-    gaps = w['gaps']
-    ld   = w['ld']
-    lcav = w['lcav']
-    ld   = 0.5*(ld-gaps*lcav)
-    if ld < 0.:
-        raise RuntimeWarning('negative drift space!')
-    lqf  = 0.5*w['lqf']
-    lqd  = 0.5*w['lqd']
-    kq   = k0(gradient=w['dBdz'],tkin=tki)                  # quad strength @ entrance
-    mqf=QF(k0=kq,length=lqf,label='QF',beam=Beam.soll)      # F quad 
-    mqd=QD(k0=kq,length=lqd,label='QD',beam=Beam.soll)      # D quad 
-    md=D(ld,beam=Beam.soll)                                 # drift zw. F quad und cavities
-    cell=Lattice()
-    if upstream : # 1/2 basis zelle upstream
-        cell.add_element(mqf)   # QF
-        cell.add_element(md)    # D
-        rf_section = make_rf_section(w) # cavities
-        cell.append(rf_section) # RF
-        # -- energy update --
-        mqd = mqd.update()
-        md  = md.update()
-        cell.add_element(md)    # D
-        cell.add_element(mqd)   # QD
-    else:  #  1/2 basis zelle downstream  = reverse of upstream
-        cell.add_element(mqd)   # QD
-        cell.add_element(md)    # D
-        rf_section = make_rf_section(w) # cavities
-        cell.append(rf_section) # RF
-        # -- energy update --
-        md  = md.update()
-        mqf = mqf.update()
-        cell.add_element(md)    # D
-        cell.add_element(mqf)   # QF
-    CONF['LQF']=2.*mqf.length
-    CONF['LQD']=2.*mqd.length
-    CONF['LD'] =md.length
-    CONF['CELL']=cell.length
-    deltaTK=Beam.soll.tkin - tki
-    return cell,deltaTK
-#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-def loesung():                          ## total classic FODO lattice (1st result, used as reference!)
-    ring = True                                # KNOB ring or transfer ?
-    #-----------------------------------------
-    print('Injected beam:\n'+Beam.soll.out(False))
+def loesung():                   ## total classic FODO lattice (1st result, used as reference!)
     super_cell = fileLoader.read_yaml_and_parse()
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
+    ring = CONF['periodic']                                # KNOB periodic lattice or transfer line ?
     mcell,betax,betay = super_cell.cell(closed=ring)
     print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
     #-----------------------------------------
