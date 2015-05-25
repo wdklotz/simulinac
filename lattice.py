@@ -5,7 +5,7 @@ import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot,show,legend
-from setup import wille,CONF,Beam,objprnt
+from setup import wille,CONF,SUMMARY,Beam,objprnt
 import elements as ELM
 
 class Lattice(object):
@@ -37,16 +37,46 @@ class Lattice(object):
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
-    def trim_energy(self):         ## trim lattice matrices for changing beam energy
+    def energy_trim(self):         ## trim lattice matrices for changing beam energy
+        def min(a,b):
+            r = b
+            if a < b:
+                r = a
+            return r
+        def max(a,b):
+            r = b
+            if a > b:
+                r = a
+            return r
+        cav_counter = 0
+        qf_counter  = 0
+        qd_counter  = 0
+        ttfm = +1.e+50
+        ttfx = +1.e-50
         seq_trimmed = []
-        print('Beam @ entrance:\n'+Beam.soll.out(tee=False))
+        # print('Beam @ entrance:\n'+Beam.soll.out(tee=False))
+        tk_i = Beam.soll.tkin
         for item in self.seq:
             element,s0,s1 = item
             updated = element.update()
             # print(updated.label,'\t',Beam.soll.tkin)
             seq_trimmed.append((updated,s0,s1))
-        self.seq = seq_trimmed
-        print('Beam @ exit:\n'+Beam.soll.out(tee=False))
+            if isinstance(updated,ELM.QF):
+                qf_counter += 1
+            if isinstance(updated,ELM.QD):
+                qd_counter += 1
+            if isinstance(updated,ELM.RFG) or isinstance(updated,ELM.RFC):
+                cav_counter += 1
+                ttfm = min(updated.tr,ttfm)
+                ttfx = max(updated.tr,ttfx)
+        # print('Beam @ exit:\n'+Beam.soll.out(tee=False))
+        tk_f = Beam.soll.tkin
+        SUMMARY['nboff F-quads']        = qf_counter
+        SUMMARY['nboff D-quads']        = qd_counter
+        SUMMARY['nboff cavities']       = cav_counter
+        SUMMARY['(ttf_min,ttf_max)']    = (ttfm,ttfx)
+        SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
+        self.seq = seq_trimmed      ## replace myself
     def cell(self,closed=True,verbose=True):    ## full cell inspection
         if self.full_cell == 0.0:
             mcell=ELM.I(label='<=Full Cell')     ##  chain matrices for full cell

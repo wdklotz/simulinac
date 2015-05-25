@@ -454,6 +454,7 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
         self.dWf    = dWf
         di   = D(length=0.5*length,label='D(i)',beam=beam)
         kick = RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=self.beam,gap=self.gap,dWf=self.dWf)  ## Trace3D RF gap
+        self.tr     = kick.tr
         # objprnt(kick)
         df   = D(length=0.5*length,label='D(f)',beam=Beam.soll)   # energy update here
         lens = (di * kick) * df

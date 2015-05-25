@@ -24,6 +24,8 @@ CONF = {                                      ## CONFIG constants and setup ...
      }
 CONF['wellenlänge']   =CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['spalt_spannung']=CONF['Ez_feld']*CONF['spalt_laenge']
+SUMMARY = {
+    }
 class Beam(object):                           ## relativistic particle beam
     soll=None   ## the synchronous reference particle  (class member!)
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
@@ -105,15 +107,15 @@ def dBdz(k0=0.,tkin=0.):                      ## B-field gradient from quad stre
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
 def objprnt (what,text='========',filter=[]): ## helper to print objects as dictionary
-    print('\n========= '+text+' =================')
-    for k,v in what.__dict__.items():
+    print('\n          ================= '+text+' =================')
+    for k,v in sorted(what.__dict__.items()):
         if k in filter:
             continue
         print(k.rjust(30),':',v)
     return
 def dictprnt(what,text='========',filter=[]): ## helper to print objects as dictionary
-    print('\n========= '+text+' =================')
-    for k,v in what.items():
+    print('\n          ================= '+text+' =================')
+    for k,v in sorted(what.items()):
         if k in filter:
             continue
         print(k.rjust(30),':',v)

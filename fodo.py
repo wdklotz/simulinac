@@ -1,9 +1,9 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import CONF,k0,dictprnt,objprnt,Beam,Proton,Electron
+from setup import CONF,SUMMARY,dictprnt
 from pylab import plot,show,legend,figure,subplot,axis
-from math import sqrt,radians
-import fileLoader
+from math import sqrt
+from fileLoader import read_yaml_and_parse
 
 def display(functions):          ## plotting
     #----------*----------*   # unpack
@@ -81,12 +81,13 @@ def display(functions):          ## plotting
     #----------*----------*
     show(block=True)
 def loesung():                   ## total classic FODO lattice (1st result, used as reference!)
-    super_cell = fileLoader.read_yaml_and_parse('fodo_template.yml')
+    super_cell = read_yaml_and_parse('fodo_template.yml')
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
     ring = CONF['periodic']                                # KNOB periodic lattice or transfer line ?
     mcell,betax,betay = super_cell.cell(closed=ring)
     print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
+    dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Grafik: lösungen als f(s)
     functions = super_cell.functions(30)   

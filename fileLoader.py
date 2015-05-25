@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import CONF,Beam,Proton,objprnt
+from setup import CONF,SUMMARY,Beam,Proton,objprnt
 import elements as ELM
 from lattice import Lattice
 import yaml
@@ -80,9 +80,12 @@ def make_segments(segments_dict,instances_dict):
     return segment_instance_dict
 def make_lattice(lattice_segment_list,segment_instance_dict):
     lattice = Lattice()
+    seg_counter = 0
     for segment_label in lattice_segment_list:
-        lattice_part= segment_instance_dict[segment_label]
+        lattice_part = segment_instance_dict[segment_label]
         lattice.append(lattice_part)
+        seg_counter += 1
+    SUMMARY['nboff segments']= seg_counter
     return lattice
 def test0():
     wfl= []
@@ -102,6 +105,7 @@ def test0():
         for i in l:
             print(i)
 def read_yaml_and_parse(filepath):
+    SUMMARY['input_file']= filepath
     fileobject = open(filepath,'r')
     in_data    = yaml.load(fileobject)
 #...........*...........*...........*...........*...........*...........*...........*
@@ -110,6 +114,8 @@ def read_yaml_and_parse(filepath):
     # print('\nflags=\t',flags)
     CONF['dWf']              = flags['accON']
     CONF['periodic']         = flags['periodic']
+    SUMMARY['dWf'] = CONF['dWf']
+    SUMMARY['periodic'] = CONF['periodic']   
 #...........*...........*...........*...........*...........*...........*...........*
     parameter_list = in_data['parameters']
     parameters     = unpack_list_of_dict(parameter_list)
@@ -128,10 +134,24 @@ def read_yaml_and_parse(filepath):
     CONF['spalt_laenge']     = parameters['gap']
     CONF['cavity_laenge']    = parameters['cav_len']
     
-    CONF['emity_i']       = CONF['emitx_i']
-    CONF['sigy_i']        = CONF['sigx_i']
     CONF['wellenlänge']   = CONF['lichtgeschwindigkeit']/CONF['frequenz']
     CONF['spalt_spannung']= CONF['Ez_feld']*CONF['spalt_laenge']
+
+    SUMMARY['frequency [Hz]'] = CONF['frequenz']   
+    SUMMARY['quad_gradient [T/m]'] = CONF['quad_gradient']   
+    SUMMARY['injection_energy [MeV]'] = CONF['injection_energy']   
+    SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']   
+    SUMMARY['emity_i [rad*m]'] = CONF['emity_i']   
+    SUMMARY['sigx_i [m]'] = CONF['sigx_i']   
+    SUMMARY['sigy_i [m]'] = CONF['sigy_i']   
+    SUMMARY['dP/P [%]'] = CONF['dP/P'] * 1.e+2   
+    SUMMARY['synch_phase [deg]'] = CONF['soll_phase']   
+    SUMMARY['dZ [m]'] = CONF['dZ']   
+    SUMMARY['gap_length [m]'] = CONF['spalt_laenge']   
+    SUMMARY['cavity_llength [m]'] = CONF['cavity_laenge']   
+    SUMMARY['wavelength [m]'] = CONF['wellenlänge']   
+    SUMMARY['gap_voltage [MV]'] = CONF['spalt_spannung']   
+    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']   
 #...........*...........*...........*...........*...........*...........*...........*
     # proton: the default synchronous reference particle  (class member!)
     Beam.soll             = Proton(CONF['injection_energy'])
@@ -158,9 +178,11 @@ def read_yaml_and_parse(filepath):
     del lattice_segment_list[0]
     # print('\nlattice=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
-    lattice.trim_energy()
-    print(lattice_title)
+    lattice.energy_trim()          ## energy update here!
+    # print(lattice_title)
     # lattice.out()
+    SUMMARY['lattice_version']   = lattice_title
+    SUMMARY['lattice_length [m]'] = lattice.length
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
