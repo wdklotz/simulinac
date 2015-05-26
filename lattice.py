@@ -79,149 +79,150 @@ class Lattice(object):
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
         self.seq = seq_trimmed      ## replace myself
     def cell(self,closed=True):    ## full cell inspection
-        if self.full_cell == 0.0:
-            mcell=ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
-            for count, ipos in enumerate(self.seq):
-                element,s0,s1 = ipos
-                mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+        # if self.full_cell == 0.0:
+        mcell=ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
+        for count, ipos in enumerate(self.seq):
+            element,s0,s1 = ipos
+            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
-            # Stabilität ?
-            unstable=False
-            stab = fabs(mcell.tracex())
+        # Stabilität ?
+        unstable=False
+        stab = fabs(mcell.tracex())
+        # if verbose:
+        printv(0,'stability X? ',stab)
+        if stab >= 2.0:
             # if verbose:
-            printv(0,'stability X? ',stab)
-            if stab >= 2.0:
-                # if verbose:
-                printv(0,'unstable Lattice in x-plane\n')
-                unstable=True
-            else:
-                cos_mux = 0.5 * stab
-                mux = degrees(acos(cos_mux))
+            printv(0,'unstable Lattice in x-plane\n')
+            unstable=True
+        else:
+            cos_mux = 0.5 * stab
+            mux = degrees(acos(cos_mux))
 
-            stab = fabs(mcell.tracey())
+        stab = fabs(mcell.tracey())
+        # if verbose:
+        printv(0,'stability Y? ',stab)
+        if stab >= 2.0:
             # if verbose:
-            printv(0,'stability Y? ',stab)
-            if stab >= 2.0:
-                # if verbose:
-                printv(0,'unstable Lattice in y-plane\n')
-                unstable=True
-            else:
-                cos_muy = 0.5 * stab
-                muy = degrees(acos(cos_muy))
+            printv(0,'unstable Lattice in y-plane\n')
+            unstable=True
+        else:
+            cos_muy = 0.5 * stab
+            muy = degrees(acos(cos_muy))
+        if not unstable:
+            # if verbose:
+            printv(0,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+
+        self.full_cell = mcell    # the full cell
+        # if verbose:
+        printv(1,'Lattice.cell: Zellenmatrix (i)->(f)')
+        self.full_cell.out()
+        det = LA.det(self.full_cell.matrix)
+        # if verbose:
+        printv(1,'det|full-cell|={:.5f}\n'.format(det))
+        # Determinate M-I == 0 ?
+        beta_matrix = mcell.BetaMatrix()
+        for i in range(5):
+            beta_matrix[i,i] = beta_matrix[i,i]-1.0
+        det = LA.det(beta_matrix)
+        # if verbose:
+        printv(1,'det|Mbeta - I|={:.5f}\n'.format(det))
+        # symplectic?
+        s = self.symplecticity()
+        # if verbose:
+        printv(1,'symplectic (+1,-1,+1,-1,+1,-1)?')
+        printv(1,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+            format(s[0],s[1],s[2],s[3],s[4],s[5]))
+        
+        # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
+        # beta_matrix = mcell.BetaMatrix()  
+        # eigen, vectors = LA.eig(beta_matrix)
+        # print('Eigenwerte\n',eigen)
+        # print('Eigenvektoren\n',vectors)
+        # show them !
+        # for i in (0,3):
+            # print('Mit numpy.linalg berechneter Eigenwert: \n',eigen[i].real)
+            # bx=vectors[0][i].real; ax=vectors[1][i].real; gx=vectors[2][i].real
+            # by=vectors[3][i].real; ay=vectors[4][i].real; gy=vectors[5,i].real
+            # print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}'.
+            # format(bx,ax,gx,by,ay,gy))
+        # probe: M*beta = beta for full cell ?
+        # print(vectors[:,i].T)
+        # probe=beta_matrix.dot(vectors[:,i].T)  
+        # print(probe)  
+        # Linearkombination beider Eigenvektoren zum Eigenwert 1 
+        # vector = vectors[:,0]+vectors[:,3]
+        # bax = vector[0].real
+        # Vorzeichenkorrektur
+        # sign_betax = -1.0 if bax <= 0.0 else +1.0
+        # bay = vector[3].real
+        # sign_betay = -1.0 if bay <= 0.0 else +1.0
+        # neue Linearkombination damit twiss-functions positiv sind
+        # vector = sign_betax*vectors[:,0]+sign_betay*vectors[:,3]
+        # print('Summe beider Eigenvektoren zum reellen Eigenwert\n',vector)
+
+        # das sollten die twiss-functions am Ein- and Ausgang sein...
+        # bax = vector[0].real
+        # alx = vector[1].real
+        # gmx = vector[2].real
+        # bay = vector[3].real
+        # aly = vector[4].real
+        # gmy = vector[5].real
+
+        if closed:
             if not unstable:
-                # if verbose:
-                printv(0,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
-
-            self.full_cell = mcell    # the full cell
-            # if verbose:
-            printv(1,'Lattice.cell: Zellenmatrix (i)->(f)')
-            self.full_cell.out()
-            det = LA.det(self.full_cell.matrix)
-            # if verbose:
-            printv(1,'det|full-cell|={:.5f}\n'.format(det))
-            # Determinate M-I == 0 ?
-            beta_matrix = mcell.BetaMatrix()
-            for i in range(5):
-                beta_matrix[i,i] = beta_matrix[i,i]-1.0
-            det = LA.det(beta_matrix)
-            # if verbose:
-            printv(1,'det|Mbeta - I|={:.5f}\n'.format(det))
-            # symplectic?
-            s = self.symplecticity()
-            # if verbose:
-            printv(1,'symplectic (+1,-1,+1,-1,+1,-1)?')
-            printv(1,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
-                format(s[0],s[1],s[2],s[3],s[4],s[5]))
-            
-            # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
-            # beta_matrix = mcell.BetaMatrix()  
-            # eigen, vectors = LA.eig(beta_matrix)
-            # print('Eigenwerte\n',eigen)
-            # print('Eigenvektoren\n',vectors)
-            # show them !
-            # for i in (0,3):
-                # print('Mit numpy.linalg berechneter Eigenwert: \n',eigen[i].real)
-                # bx=vectors[0][i].real; ax=vectors[1][i].real; gx=vectors[2][i].real
-                # by=vectors[3][i].real; ay=vectors[4][i].real; gy=vectors[5,i].real
-                # print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}'.
-                # format(bx,ax,gx,by,ay,gy))
-            # probe: M*beta = beta for full cell ?
-            # print(vectors[:,i].T)
-            # probe=beta_matrix.dot(vectors[:,i].T)  
-            # print(probe)  
-            # Linearkombination beider Eigenvektoren zum Eigenwert 1 
-            # vector = vectors[:,0]+vectors[:,3]
-            # bax = vector[0].real
-            # Vorzeichenkorrektur
-            # sign_betax = -1.0 if bax <= 0.0 else +1.0
-            # bay = vector[3].real
-            # sign_betay = -1.0 if bay <= 0.0 else +1.0
-            # neue Linearkombination damit twiss-functions positiv sind
-            # vector = sign_betax*vectors[:,0]+sign_betay*vectors[:,3]
-            # print('Summe beider Eigenvektoren zum reellen Eigenwert\n',vector)
-
-            # das sollten die twiss-functions am Ein- and Ausgang sein...
-            # bax = vector[0].real
-            # alx = vector[1].real
-            # gmx = vector[2].real
-            # bay = vector[3].real
-            # aly = vector[4].real
-            # gmy = vector[5].real
-
-            if closed:
-                if not unstable:
-                    # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
-                    cell_matrix = self.full_cell.matrix
-                    m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
-                    m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
-                    n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
-                    n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
-                    bax=fabs(2.0-m11*m11-2.*m12*m21-m22*m22)
-                    bax=sqrt(bax)
-                    bax=2.0*m12/bax
-                    if(bax < 0.):
-                        bax= -bax
-                    alx=(m11-m22)/(2.*m12)*bax
-                    gmx=(1.+alx*alx)/bax
-                    bay=fabs(2.0-n11*n11-2.*n12*n21-n22*n22)
-                    bay=sqrt(bay)
-                    bay=2.0*n12/bay
-                    if(bay < 0.):
-                        bay = -bay
-                    aly=(n11-n22)/(2.*n12)*bay
-                    gmy=(1.+aly*aly)/bay
-                    
-                    # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
-                    v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
-                    m_cell=self.full_cell.BetaMatrix()
-                    v_beta_end = m_cell.dot(v_beta)
-                    # if verbose:
-                    printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
-                    printv(0,'Anfang: ',v_beta.T)
-                    printv(0,'Ende  : ',v_beta_end.T,'\n')
-                    CONF['sigx_i'] = sqrt(bax*CONF['emitx_i'])
-                    CONF['sigy_i'] = sqrt(bay*CONF['emity_i'])
-                else:
-                    raise RuntimeError('stop: unstable lattice')
-            else:
-                # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-                xi=CONF['sigx_i']
-                yi=CONF['sigy_i']
-                alx=aly=0.
-                emix = CONF['emitx_i']
-                emiy = CONF['emity_i']
-                bax=xi**2/emix
-                bay=yi**2/emiy
+                # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
+                cell_matrix = self.full_cell.matrix
+                m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
+                m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
+                n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
+                n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
+                bax=fabs(2.0-m11*m11-2.*m12*m21-m22*m22)
+                bax=sqrt(bax)
+                bax=2.0*m12/bax
+                if(bax < 0.):
+                    bax= -bax
+                alx=(m11-m22)/(2.*m12)*bax
                 gmx=(1.+alx*alx)/bax
+                bay=fabs(2.0-n11*n11-2.*n12*n21-n22*n22)
+                bay=sqrt(bay)
+                bay=2.0*n12/bay
+                if(bay < 0.):
+                    bay = -bay
+                aly=(n11-n22)/(2.*n12)*bay
                 gmy=(1.+aly*aly)/bay
                 
-            self.betax0 = bax
-            self.alfax0 = alx
-            self.gammx0 = gmx
-            self.betay0 = bay
-            self.alfay0 = aly
-            self.gammy0 = gmy
+                # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
+                v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
+                m_cell=self.full_cell.BetaMatrix()
+                v_beta_end = m_cell.dot(v_beta)
+                # if verbose:
+                printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
+                printv(0,'Anfang: ',v_beta.T)
+                printv(0,'Ende  : ',v_beta_end.T,'\n')
+                CONF['sigx_i'] = sqrt(bax*CONF['emitx_i'])
+                CONF['sigy_i'] = sqrt(bay*CONF['emity_i'])
+            else:
+                raise RuntimeError('stop: unstable lattice')
+        else:
+            # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
+            xi=CONF['sigx_i']
+            yi=CONF['sigy_i']
+            alx=aly=0.
+            emix = CONF['emitx_i']
+            emiy = CONF['emity_i']
+            bax=xi**2/emix
+            bay=yi**2/emiy
+            gmx=(1.+alx*alx)/bax
+            gmy=(1.+aly*aly)/bay
             
+        self.betax0 = bax
+        self.alfax0 = alx
+        self.gammx0 = gmx
+        self.betay0 = bay
+        self.alfay0 = aly
+        self.gammy0 = gmy
+        printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
+        printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return (self.full_cell,self.betax0,self.betay0)
     def report(self):              ## lattice layout report (may not work!)
         raise RuntimeWarning('Lattice.report() not ready')

@@ -145,7 +145,6 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
     mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])
-    print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Grafik: lösungen als f(s)
