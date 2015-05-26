@@ -69,7 +69,7 @@ def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     lat = Lattice()
     for i in range(anz):
         lat.append(cell)
-    mcell,betax,betay=lat.cell(verbose=verbose)
+    mcell,betax,betay=lat.cell()
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
@@ -114,7 +114,7 @@ def make_thick(kf1,kf2,ld,anz=1,verbose=False):
     lat = Lattice()
     for i in range(anz):
         lat.append(cell)
-    mcell,betax,betay=lat.cell(verbose=verbose)
+    mcell,betax,betay=lat.cell()
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
@@ -155,7 +155,7 @@ def test0():
 def test1(kf,kd,ld):
     print('test1: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thin(kf,kd,ld)
-    mcell,betax,betay=cell.cell(verbose=True)
+    mcell,betax,betay=cell.cell()
     beta_matrix = mcell.BetaMatrix()    
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
@@ -169,7 +169,7 @@ def test1(kf,kd,ld):
 def test2(kf,kd,ld):
     print('test2: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thick(kf,kd,ld)
-    mcell,betax,betay=cell.cell(verbose=True)
+    mcell,betax,betay=cell.cell()
     beta_matrix = mcell.BetaMatrix()    
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
@@ -185,20 +185,20 @@ def test3(kf,kd,ld):
     anz = 3
     # thin 
     cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
-    mcell,betax,betay=cell.cell(verbose=True)
+    mcell,betax,betay=cell.cell()
     beta_matrix = mcell.BetaMatrix()    
     beta_fun_thin,cl,sl = cell.functions(steps=100)   
     # thick
     cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
-    mcell,betax,betay=cell.cell(verbose=True)
+    mcell,betax,betay=cell.cell()
     beta_matrix = mcell.BetaMatrix()    
     beta_fun_thick,cl,sl = cell.functions(steps=100)   
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    # test0()
-    # test1(5.,5.,1.)
-    # test2(5.,5.,1.)
-    # test3(5.,5.,1.)     # gesund!
-    test3(4.,4.,1.2)     # gesünder!
-    # test3(7.,7.,2.1)    # extrem!
+    test0()
+    test1(5.,5.,1.)
+    test2(5.,5.,1.)
+    test3(5.,5.,1.)     # gesund!
+    test3(4.,4.,1.2)    # gesünder!
+    test3(7.,7.,2.1)    # extrem!

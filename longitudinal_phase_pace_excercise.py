@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,Proton,objprnt,dictprnt
+from setup import CONF,Proton,objprnt,dictprnt
 import matplotlib.pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
@@ -35,13 +35,13 @@ anz= int((pmax-pmin)/dphi)  # nboff phase steps
 with_physics_dimensions = True
 
 if with_physics_dimensions:   # according to T.Wrangler pp.176
-    # ws=Phys['injection_energy']
+    # ws=CONF['injection_energy']
     ws=25.
     particle = Proton(ws)
     gapl=0.04
     u0=1./gapl
     fRF=1000.e6
-    lamb=Phys['lichtgeschwindigkeit']/fRF
+    lamb=CONF['lichtgeschwindigkeit']/fRF
     rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,beam=particle,dWf=1.)
     dws=rfg.deltaW
     gammas=particle.gamma

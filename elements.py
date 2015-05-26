@@ -20,7 +20,7 @@ class _matrix(object): ## the mother of all 6x6 matrices
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix()
         if (self.label == ''):
-            res.label=other .label
+            res.label=other.label
         else:
             res.label=self.label+'*'+other.label
         res.length=self.length+other.length
@@ -103,7 +103,7 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
-        self.beam=copy(beam)  # keep a local copy of the Beam instance (important!)
+        self.beam=copy(beam)  # keep a local copy of the Beam instance (IMPORTANT!)
 class D(I):            ## drift space nach Trace3D
     def __init__(self,
     length=0.,

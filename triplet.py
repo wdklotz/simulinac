@@ -1,18 +1,18 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import Phys,dictprnt,objprnt
+from setup import CONF,dictprnt,objprnt
 from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
 from lattice import Lattice
 from pylab import plot, show, legend, figure, subplot, axis
-from math import sqrt
+from math import sqrt,radians
 
 def display(functions,title):  ## plotting
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
-    emitx=Phys['emitx_i']  # emittance @ entrance
-    emity=Phys['emity_i']  # emittance @ entrance
+    emitx=CONF['emitx_i']  # emittance @ entrance
+    emity=CONF['emity_i']  # emittance @ entrance
     #----------*----------*   # bahnkoordinate z
     z   = [ x[0] for x in beta_fun]    
     #----------*----------*
@@ -56,10 +56,10 @@ def display(functions,title):  ## plotting
     show(block=True)
 def make_cavity(w):            ## one cavity
     # cavity
-    lcav   = Phys['spalt_laenge']
-    u0     = Phys['spalt_spannung']*0.05
-    phi0   = Phys['soll_phase']*Phys['radians']
-    fRF0   = Phys['frequenz']
+    lcav   = CONF['spalt_laenge']
+    u0     = CONF['spalt_spannung']*0.05
+    phi0   = radians(CONF['soll_phase'])
+    fRF0   = CONF['frequenz']
     dWf    = w['dWf']
     cavity = Lattice()
 
@@ -72,7 +72,7 @@ def make_cavity(w):            ## one cavity
     cavity.add_element(dri)
     cavity.add_element(gap)
     cavity.add_element(drf)
-    # Phys['LCAV']=cavity.length
+    # CONF['LCAV']=cavity.length
     # print('cavity_length: ',cavity.length)
     objprnt(soll,'beam @ gap exit',{'matrix'})
     return cavity
@@ -82,11 +82,11 @@ def make_rf_section(w):        ## many cavities
     for i in range(gaps):
         cav = make_cavity(w)
         section.append(cav)
-    # Phys['RFSection']=section.length
+    # CONF['RFSection']=section.length
     print('rf_section_length: ',section.length)
     return section  
 def make_cell(w):              ## cell
-    gradient  = Phys['quad_gradient']
+    gradient  = CONF['quad_gradient']
     cell      = Lattice()
     soll      = w['soll']
     ld        = w['ld']
@@ -161,7 +161,7 @@ def test1(x):
     wert['dWf'] = 0.
     
     # beam
-    tk0       = Phys['injection_energy']*1.       # KNOB: injection energy
+    tk0       = CONF['injection_energy']*1.       # KNOB: injection energy
     Beam.soll = Beam(tk0)
     wert['soll'] = Beam.soll
     
@@ -184,7 +184,7 @@ def test1(x):
 
     # rf
     gaps = 3
-    rf_len = gaps*Phys['spalt_laenge']
+    rf_len = gaps*CONF['spalt_laenge']
     lhalf=0.5*ld
     l1=lhalf-rf_len
     wert['ld']=l1
@@ -194,7 +194,7 @@ def test1(x):
     ncells = 3
     super_cell = Lattice()
 
-    dictprnt(Phys,'Phys')
+    dictprnt(CONF,'Phys')
     dictprnt(wert,'w')    
     
     for ncellsc in range(ncells):
@@ -204,14 +204,14 @@ def test1(x):
     mcell,betax,betay=super_cell.cell(closed=True)
     print('energy(f)= {} [MeV]'.format(Beam.soll.tkin))
     
-    Phys['sigx_i']=sqrt(Phys['emitx_i']*betax)
-    Phys['sigy_i']=sqrt(Phys['emity_i']*betay)
+    CONF['sigx_i']=sqrt(CONF['emitx_i']*betax)
+    CONF['sigy_i']=sqrt(CONF['emity_i']*betay)
     functions = super_cell.functions(40)   
     display(functions,'x {}'.format(x))
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    # test0()
+    test0()
     test1(0)
     # for x in [0.0+n*0.1 for n in range(30)]:
         # test0(x)
