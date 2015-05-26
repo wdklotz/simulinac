@@ -5,7 +5,67 @@ from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from fileLoader import read_yaml_and_parse
 
-def display(functions):          ## plotting
+def display(functions):
+    if CONF['dWf'] == 0:
+        display0(functions)
+    else:
+        display1(functions)
+def display0(functions):          ## plotting w/o longitudinal motion
+    #----------*----------*   # unpack
+    beta_fun = functions[0]
+    cos_like = functions[1]
+    sin_like = functions[2]
+    emix=CONF['emitx_i']  # emittance @ entrance
+    emiy=CONF['emity_i']  # emittance @ entrance
+    #----------*----------*   # bahnkoordinate z
+    z   = [ x[0] for x in beta_fun]    
+    #----------*----------*
+    bx  = [ sqrt(x[1]*emix) for x in beta_fun]    # envelope (beta-x)
+    by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
+    bxn = [-x for x in bx]    # beta-x (negatif)
+    byn = [-x for x in by]    # beta-y (negatif)
+    #----------*----------*   # trajectories
+    cx = [x[0] for x in cos_like]   # cos-like-x
+    cy = [x[2] for x in cos_like]   # cos-like-y
+    cz = [x[4] for x in cos_like]   # cos-like-z
+    cdw= [x[5] for x in cos_like]   # cos-like-dw/w
+    sx = [x[0] for x in sin_like]   # sin-like-x
+    sy = [x[2] for x in sin_like]   # sin-like-x
+    sz = [x[4] for x in sin_like]   # sin-like-z
+    sdw= [x[5] for x in sin_like]   # sin-like-dw/w
+    #----------*----------*   # figure frame
+    viseo = [x[3] for x in beta_fun]
+    zero  = [0.   for x in beta_fun]# zero line
+    width=20; height=12
+    figure(SUMMARY['lattice_version'],figsize=(width,height))
+    # figure(SUMMARY['lattice_version'])
+    #----------*----------*   # transverse X
+    splot=subplot(211)
+    splot.set_title('transverse x')
+    plot(z,bx ,label=r'$\sigma$ [m]',color='green')
+    plot(z,bxn,label='',color='green')
+    plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
+    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.') 
+    vscale=axis()[3]*0.1
+    viseox = [x*vscale for x in viseo]
+    plot(z,viseox,label='',color='black')
+    plot(z,zero,color='black')
+    legend(loc='lower right',fontsize='x-small')
+    #----------*----------*   # transverse Y
+    splot=subplot(212)
+    splot.set_title('transverse y')
+    plot(z,by ,label=r'$\sigma$ [m]',color='green')
+    plot(z,byn,label='',color='green')
+    plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
+    plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
+    vscale=axis()[3]*0.1
+    viseoy = [x*vscale for x in viseo]
+    plot(z,viseoy,label='',color='black')
+    plot(z,zero,color='black')
+    legend(loc='lower right',fontsize='x-small')
+    #----------*----------*
+    show(block=True)
+def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
