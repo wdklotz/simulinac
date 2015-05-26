@@ -33,24 +33,24 @@ parameters:                         ## INPUT parameter definitions
 ## ELEMENT definitions
 ##...........................................................................................
 elements:                           ## ELEMENT definitions
-    - D:    &d1
+    - D:    &d1             # Drift
         - label:    d1      # element ID
         - length:   0.08    # [m] length 
-    - QF:   &qf1
+    - QF:   &qf1            # F Quad
         - label:    qf1     # ID
         - length:   *p03    # [m] length 
         - B':       *p04    # [T/m] quadrupole gradient
-    - QD:   &qd1
+    - QD:   &qd1            # D Quad
         - label:    qd1     # ID
         - length:   *p03    # [m] length 
         - B':       *p04    # [T/m] quadrupole gradient
-    - RFG:  &rfg
+    - RFG:  &rfg            # RF gap
         - label:    rfg     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      0.04
-    - RFC:  &rfc
+    - RFC:  &rfc            # RF cavity
         - label:    rfc     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
