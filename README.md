@@ -4,6 +4,7 @@ python simulator for linac structures.
 I worked on a user friendly version of my code. Here it is!!!
 
 Instructions:
+
 1) you have to clone the code from github like that:
 
 $git clone https://github.com/wdklotz/simulinac
