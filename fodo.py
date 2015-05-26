@@ -144,8 +144,7 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     super_cell = read_yaml_and_parse(filepath)
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
-    ring = CONF['periodic']                                # KNOB periodic lattice or transfer line ?
-    mcell,betax,betay = super_cell.cell(closed=ring)
+    mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])
     print('\nBETAx(i) {:.3g} [m], BETAy(i) {:.3g} [m]'.format(betax,betay))
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
@@ -153,8 +152,9 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     functions = super_cell.functions(30)   
     display(functions)
 if __name__ == '__main__':
-    import sys
-    filepath = 'fodo_template.yml'       ## the default demo input file (YAML syntax)
+    import sys, os
+    directory = os.path.dirname(__file__)
+    filepath = directory+'/fodo_template.yml'       ## the default demo input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
