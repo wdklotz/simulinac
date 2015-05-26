@@ -80,8 +80,8 @@ def display(functions):          ## plotting
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show(block=True)
-def loesung():                   ## total classic FODO lattice (1st result, used as reference!)
-    super_cell = read_yaml_and_parse('fodo_template.yml')
+def loesung(filepath):                   ## total classic FODO lattice (1st result, used as reference!)
+    super_cell = read_yaml_and_parse(filepath)
     #-----------------------------------------
     # Berechne ganze Zelle und Anfangswerte 
     ring = CONF['periodic']                                # KNOB periodic lattice or transfer line ?
@@ -93,4 +93,8 @@ def loesung():                   ## total classic FODO lattice (1st result, used
     functions = super_cell.functions(30)   
     display(functions)
 if __name__ == '__main__':
-    loesung()
+    import sys
+    filepath = 'fodo_template.yml'       ## the default demo input file (YAML syntax)
+    if len(sys.argv) == 2:
+        filepath = sys.argv[1]
+    loesung(filepath)
