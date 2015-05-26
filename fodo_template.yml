@@ -10,7 +10,8 @@
 flags:                              ## run configuration
     - accON:        true            # accelleration on/off flag
     - periodic:     true            # treat lattice as periodic cell sequence(else as transfer line)
-##...........................................................................................
+    - verbose:      0               # print flag
+    ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                         ## INPUT parameter definitions

@@ -21,6 +21,7 @@ CONF = {                                      ## CONFIG constants and setup ...
     'dP/P': 2.e-2,               # [rad] relative impulse dP/P
     'dWf': 1.0,                  # acceleration on/off flag
     'periodic': True,            # periodic lattice?
+    'verbose': 1,                # print flag
      }
 CONF['wellenlänge']   =CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['spalt_spannung']=CONF['Ez_feld']*CONF['spalt_laenge']
@@ -120,6 +121,10 @@ def dictprnt(what,text='========',filter=[]): ## helper to print objects as dict
             continue
         print(k.rjust(30),':',v)
     return
+def printv(level,*args):                      ## multilevel printing using verbose flag
+    verbose = CONF['verbose']
+    if verbose >= level:
+        print(*args)
 def wille():
     return {
         'k_quad_f':1.2,

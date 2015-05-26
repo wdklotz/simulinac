@@ -5,8 +5,9 @@ import numpy as NP
 from numpy import linalg as LA
 from copy import copy
 from pylab import plot,show,legend
-from setup import wille,CONF,SUMMARY,Beam,objprnt
+from setup import wille,CONF,SUMMARY,Beam,objprnt,printv
 import elements as ELM
+import warnings
 
 class Lattice(object):
     def __init__(self):
@@ -33,7 +34,7 @@ class Lattice(object):
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices 
         for ipos in self.seq:
             element,s0,s1 = ipos
-            print('{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
+            printv(1,'{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
@@ -54,7 +55,7 @@ class Lattice(object):
         ttfm = +1.e+50
         ttfx = +1.e-50
         seq_trimmed = []
-        # print('Beam @ entrance:\n'+Beam.soll.out(tee=False))
+        printv(1,'Beam @ entrance:\n'+Beam.soll.out(tee=False))
         tk_i = Beam.soll.tkin
         for item in self.seq:
             element,s0,s1 = item
@@ -69,7 +70,7 @@ class Lattice(object):
                 cav_counter += 1
                 ttfm = min(updated.tr,ttfm)
                 ttfx = max(updated.tr,ttfx)
-        # print('Beam @ exit:\n'+Beam.soll.out(tee=False))
+        printv(1,'Beam @ exit:\n'+Beam.soll.out(tee=False))
         tk_f = Beam.soll.tkin
         SUMMARY['nboff F-quads']        = qf_counter
         SUMMARY['nboff D-quads']        = qd_counter
@@ -77,9 +78,9 @@ class Lattice(object):
         SUMMARY['(ttf_min,ttf_max)']    = (ttfm,ttfx)
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
         self.seq = seq_trimmed      ## replace myself
-    def cell(self,closed=True,verbose=True):    ## full cell inspection
+    def cell(self,closed=True):    ## full cell inspection
         if self.full_cell == 0.0:
-            mcell=ELM.I(label='<=Full Cell')     ##  chain matrices for full cell
+            mcell=ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
             for count, ipos in enumerate(self.seq):
                 element,s0,s1 = ipos
                 mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -87,52 +88,50 @@ class Lattice(object):
             # Stabilität ?
             unstable=False
             stab = fabs(mcell.tracex())
-            if verbose:
-                print('stability X? ',stab)
+            # if verbose:
+            printv(0,'stability X? ',stab)
             if stab >= 2.0:
-                if verbose:
-                    print('unstable Lattice in x-plane\n')
-                    unstable=True
+                # if verbose:
+                printv(0,'unstable Lattice in x-plane\n')
+                unstable=True
             else:
                 cos_mux = 0.5 * stab
                 mux = degrees(acos(cos_mux))
 
             stab = fabs(mcell.tracey())
-            if verbose:
-                print('stability Y? ',stab)
+            # if verbose:
+            printv(0,'stability Y? ',stab)
             if stab >= 2.0:
-                if verbose:
-                    print('unstable Lattice in y-plane\n')
-                    unstable=True
+                # if verbose:
+                printv(0,'unstable Lattice in y-plane\n')
+                unstable=True
             else:
                 cos_muy = 0.5 * stab
                 muy = degrees(acos(cos_muy))
             if not unstable:
-                if verbose:
-                    print('\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+                # if verbose:
+                printv(0,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
             self.full_cell = mcell    # the full cell
-            if verbose:
-                print('Lattice.cell: Zellenmatrix (i)->(f)')
-                self.full_cell.out()
+            # if verbose:
+            printv(1,'Lattice.cell: Zellenmatrix (i)->(f)')
+            self.full_cell.out()
             det = LA.det(self.full_cell.matrix)
-            if verbose:
-                print('det|full-cell|={:.5f}\n'.format(det))
+            # if verbose:
+            printv(1,'det|full-cell|={:.5f}\n'.format(det))
             # Determinate M-I == 0 ?
             beta_matrix = mcell.BetaMatrix()
             for i in range(5):
                 beta_matrix[i,i] = beta_matrix[i,i]-1.0
             det = LA.det(beta_matrix)
-            if verbose:
-                print('det|Mbeta - I|={:.5f}\n'.format(det))
+            # if verbose:
+            printv(1,'det|Mbeta - I|={:.5f}\n'.format(det))
             # symplectic?
-            s=self.symplecticity()
-            if verbose:
-                print('symplectic (+1,-1,+1,-1,+1,-1)?')
-                print('[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+            s = self.symplecticity()
+            # if verbose:
+            printv(1,'symplectic (+1,-1,+1,-1,+1,-1)?')
+            printv(1,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
                 format(s[0],s[1],s[2],s[3],s[4],s[5]))
-            # if unstable:
-                # raise RuntimeError('stop execution')
             
             # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
             # beta_matrix = mcell.BetaMatrix()  
@@ -196,10 +195,10 @@ class Lattice(object):
                     v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
                     m_cell=self.full_cell.BetaMatrix()
                     v_beta_end = m_cell.dot(v_beta)
-                    if verbose:
-                        print('Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
-                        print('Anfang: ',v_beta.T)
-                        print('Ende  : ',v_beta_end.T,'\n')
+                    # if verbose:
+                    printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
+                    printv(0,'Anfang: ',v_beta.T)
+                    printv(0,'Ende  : ',v_beta_end.T,'\n')
                     CONF['sigx_i'] = sqrt(bax*CONF['emitx_i'])
                     CONF['sigy_i'] = sqrt(bay*CONF['emity_i'])
                 else:
@@ -225,6 +224,7 @@ class Lattice(object):
             
         return (self.full_cell,self.betax0,self.betay0)
     def report(self):              ## lattice layout report (may not work!)
+        raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
         header = ''
         row = ''
@@ -244,6 +244,7 @@ class Lattice(object):
         reprt += header+' \n'+row+' \n'
         return reprt
     def reverse(self):             ## return a reversed Lattice (not used! probably bogus!)
+        raise RuntimeWarning('Lattice.reverse() not ready')
         res=Lattice()
         seq=copy(self.seq)
         seq.reverse()
@@ -286,6 +287,7 @@ class Lattice(object):
         (c_like,s_like) = self.cs_traj(steps)
         return (beta_fun,c_like,s_like)
     def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
+        warnings.warn(UserWarning('Lattice.dispersion() not ready'))
         traj=[]
         v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
@@ -442,7 +444,7 @@ def test1():
 def test2():
     lattice=make_lattice()
     ## cell boundaries
-    mcell,betax,betay=lattice.cell(closed=True,verbose=True)
+    mcell,betax,betay=lattice.cell(closed=True)
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     lattice.symplecticity()
     ## lattice function as f(s)

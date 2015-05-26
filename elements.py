@@ -1,6 +1,6 @@
 #!/Users/klotz/pyzo2015a/python
 # -*- coding: utf-8 -*-
-from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0
+from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0,printv
 import numpy as NP 
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
@@ -14,8 +14,8 @@ class _matrix(object): ## the mother of all 6x6 matrices
         self.slice_min = 0.01  ## minimal slice length
         self.viseo = 0.
     def out(self):
-        print(self.label)
-        print(self.matrix)
+        printv(1,self.label)
+        printv(1,self.matrix)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix()

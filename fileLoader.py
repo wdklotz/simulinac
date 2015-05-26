@@ -66,7 +66,7 @@ def make_segments(segments_dict,instances_dict):
         # print(segment_id)
         element_list = item[1]
         # print(element_list)
-        segment_label = element_list[0]['label']
+        segment_label = element_list[0]['label']        ## pull {'label:xxx'} off
         # print(segment_label)
         del element_list[0]
         # print(element_list)
@@ -109,7 +109,7 @@ def test0():
     for l in lattice:
         for i in l:
             print(i)
-def read_yaml_and_parse(filepath):
+def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['input_file']= filepath
     fileobject = open(filepath,'r')
     in_data    = yaml.load(fileobject)
@@ -119,7 +119,8 @@ def read_yaml_and_parse(filepath):
     # print('\nflags=\t',flags)
     CONF['dWf']              = flags['accON']
     CONF['periodic']         = flags['periodic']
-    SUMMARY['dWf'] = CONF['dWf']
+    CONF['verbose']          = flags['verbose']
+    SUMMARY['dWf']      = CONF['dWf']
     SUMMARY['periodic'] = CONF['periodic']   
 #...........*...........*...........*...........*...........*...........*...........*
     parameter_list = in_data['parameters']
