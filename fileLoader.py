@@ -159,10 +159,7 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['gap_voltage [MV]'] = CONF['spalt_spannung']   
     SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']   
 #...........*...........*...........*...........*...........*...........*...........*
-    # proton: the default synchronous reference particle  (class member!)
-    Beam.soll             = Proton(CONF['injection_energy'])
-    # objprnt(Beam.soll,text='injected beam')
-#...........*...........*...........*...........*...........*...........*...........*
+    # Beam.soll             = Proton(CONF['injection_energy'])
     elements_list = in_data['elements']
     elements_dict = unpack_list_of_dict(elements_list)
     # print('\nelements=\t',elements_dict)
@@ -177,6 +174,10 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     # print('\nsegments=\t',segments_dict)
     segment_instance_dict= make_segments(segments_dict,instances_dict)
     # print(segment_instance_dict)
+#...........*...........*...........*...........*...........*...........*...........*
+    # proton: the default synchronous reference particle  (class member!)
+    Beam.soll             = Proton(CONF['injection_energy'])
+    # objprnt(Beam.soll,text='injected beam')
 #...........*...........*...........*...........*...........*...........*...........*
     lattice_segment_list= in_data['lattice']
     # print('segment_list=\t',lattice_segment_list)
