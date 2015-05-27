@@ -109,10 +109,16 @@ def test0():
     for l in lattice:
         for i in l:
             print(i)
+def test1():
+    import sys, os
+    directory = os.path.dirname(__file__)
+    filepath = directory+'/template.yml'       
+    lattice = read_yaml_and_parse(filepath)
+    lattice.out()
 def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['input_file']= filepath
-    fileobject = open(filepath,'r')
-    in_data    = yaml.load(fileobject)
+    with open(filepath,'r') as fileobject:
+        in_data = yaml.load(fileobject)
 #...........*...........*...........*...........*...........*...........*...........*
     flags_list = in_data['flags']
     flags      = unpack_list_of_dict(flags_list)
@@ -194,6 +200,5 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
 #     test0()
-    lattice = read_yaml_and_parse('template.yml')
-    lattice.out()
+    test1()
 
