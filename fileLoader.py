@@ -145,9 +145,8 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     CONF['dZ']               = parameters['dZ']
     CONF['spalt_laenge']     = parameters['gap']
     CONF['cavity_laenge']    = parameters['cav_len']
-    
-    CONF['wellenlänge']   = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-    CONF['spalt_spannung']= CONF['Ez_feld']*CONF['spalt_laenge']
+    CONF['wellenlänge']      = CONF['lichtgeschwindigkeit']/CONF['frequenz']
+    CONF['spalt_spannung']   = CONF['Ez_feld']*CONF['spalt_laenge']
 
     SUMMARY['frequency [Hz]'] = CONF['frequenz']   
     SUMMARY['quad_gradient [T/m]'] = CONF['quad_gradient']   

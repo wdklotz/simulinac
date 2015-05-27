@@ -143,11 +143,11 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):                   ## total classic FODO lattice (1st result, used as reference!)
     super_cell = read_yaml_and_parse(filepath)
     #-----------------------------------------
-    # Berechne ganze Zelle und Anfangswerte 
+    # Rechne: ganze Zelle und Anfangswerte 
     mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
-    # Grafik: lösungen als f(s)
+    # Zeige: Grafik Lösungen als Funktion von (s)
     functions = super_cell.functions(30)   
     display(functions)
 if __name__ == '__main__':
