@@ -15,7 +15,7 @@ $cd simulinac
 
 then run the demo:
 
-$python fodo.py
+$python ./fodo.py
 
 2) you must have python 3 (I tested with 3.4)
 
