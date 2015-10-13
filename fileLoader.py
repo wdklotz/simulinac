@@ -126,6 +126,7 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     CONF['dWf']              = flags['accON']
     CONF['periodic']         = flags['periodic']
     CONF['verbose']          = flags['verbose']
+
     SUMMARY['dWf']      = CONF['dWf']
     SUMMARY['periodic'] = CONF['periodic']   
 #...........*...........*...........*...........*...........*...........*...........*
