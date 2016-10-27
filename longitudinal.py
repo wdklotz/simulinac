@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -27,7 +27,7 @@ def display(functions):
         offw=  [x[1] for x in func]
         plot(offp,offw,label=r'$\Delta$w($\Delta$phi)')
     # legend(loc='lower right',fontsize='x-small')
-    show()
+    show(block=True)
 def phase(factor,ws,w):
     return  (w-ws)*factor
 def energy(factor,ps,p):
@@ -37,7 +37,7 @@ def loop(phis0,ws0,phi0,w0):
     p=phi0
     ws=ws0
     w=w0
-    
+
 ##    deg = CONF['degrees']
     pr=Proton(ws); mc2=pr.e0; g=pr.gamma; b=pr.beta; phase_factor = -2*pi/(mc2*g*g*g*b*b)
     T=pr.TrTf(CONF['spalt_laenge'],CONF['frequenz']); energy_factor=CONF['spalt_spannung']*T
@@ -64,5 +64,5 @@ def test0():
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     test0()
-        
-        
+
+

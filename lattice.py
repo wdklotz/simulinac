@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -29,7 +29,7 @@ import warnings
 class Lattice(object):
     def __init__(self):
     ## the Lattice object is a sequence of tuples: (ELM.<element>, from_position, to_position)
-        self.seq    = [] 
+        self.seq    = []
         self.length = 0.
         self.betax0 = 0.
         self.alfax0 = 0.
@@ -48,7 +48,7 @@ class Lattice(object):
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
     def out(self):                 ## simple log lattice layout to stdout (could be better!)
-        mcell=ELM.I(label='<=Lattice')     ##  chain matrices 
+        mcell=ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(1,'{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
@@ -97,7 +97,7 @@ class Lattice(object):
         self.seq = seq_trimmed      ## replace myself
     def cell(self,closed=True):    ## full cell inspection
         # if self.full_cell == 0.0:
-        mcell=ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
+        mcell = ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
         for count, ipos in enumerate(self.seq):
             element,s0,s1 = ipos
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -137,7 +137,7 @@ class Lattice(object):
         # if verbose:
         printv(1,'det|full-cell|={:.5f}\n'.format(det))
         # Determinate M-I == 0 ?
-        beta_matrix = mcell.BetaMatrix()
+        beta_matrix = mcell.betaMatrix()
         for i in range(5):
             beta_matrix[i,i] = beta_matrix[i,i]-1.0
         det = LA.det(beta_matrix)
@@ -149,9 +149,9 @@ class Lattice(object):
         printv(1,'symplectic (+1,-1,+1,-1,+1,-1)?')
         printv(1,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
-        
+
         # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
-        # beta_matrix = mcell.BetaMatrix()  
+        # beta_matrix = mcell.BetaMatrix()
         # eigen, vectors = LA.eig(beta_matrix)
         # print('Eigenwerte\n',eigen)
         # print('Eigenvektoren\n',vectors)
@@ -164,9 +164,9 @@ class Lattice(object):
             # format(bx,ax,gx,by,ay,gy))
         # probe: M*beta = beta for full cell ?
         # print(vectors[:,i].T)
-        # probe=beta_matrix.dot(vectors[:,i].T)  
-        # print(probe)  
-        # Linearkombination beider Eigenvektoren zum Eigenwert 1 
+        # probe=beta_matrix.dot(vectors[:,i].T)
+        # print(probe)
+        # Linearkombination beider Eigenvektoren zum Eigenwert 1
         # vector = vectors[:,0]+vectors[:,3]
         # bax = vector[0].real
         # Vorzeichenkorrektur
@@ -207,10 +207,10 @@ class Lattice(object):
                     bay = -bay
                 aly=(n11-n22)/(2.*n12)*bay
                 gmy=(1.+aly*aly)/bay
-                
+
                 # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
                 v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
-                m_cell=self.full_cell.BetaMatrix()
+                m_cell=self.full_cell.betaMatrix()
                 v_beta_end = m_cell.dot(v_beta)
                 # if verbose:
                 printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
@@ -231,7 +231,11 @@ class Lattice(object):
             bay=yi**2/emiy
             gmx=(1.+alx*alx)/bax
             gmy=(1.+aly*aly)/bay
-            
+            xip=sqrt(emix*gmx)
+            yip=sqrt(emiy*gmy)
+            CONF["sigx'_i"]=xip
+            CONF["sigy'_i"]=yip
+
         self.betax0 = bax
         self.alfax0 = alx
         self.gammx0 = gmx
@@ -251,7 +255,7 @@ class Lattice(object):
             name= elm.label
             len =elm.length
             rest = (count+1)%19
-            if rest != 0: 
+            if rest != 0:
                 header += '{:6s}'.format(name)
                 row += '{:.3f} '.format(len)
             else:
@@ -271,7 +275,7 @@ class Lattice(object):
             res.add_element(elm)
         return res
     def append(self,piece):        ## concatenate two Lattice pieces
-        seq=copy(piece.seq)  
+        seq=copy(piece.seq)
         for ipos in seq:
             elm,s0,s1=ipos
             self.add_element(elm)
@@ -295,7 +299,7 @@ class Lattice(object):
                 # print('i_element.label={} viseo={} ms.length={}'.format(i_element.label,i_element.viseo,ms.length))
                 # m_beta = ms.BetaMatrix()
                 # v_beta = m_beta.dot(v_beta0)
-                m_beta = i_element.BetaMatrix()
+                m_beta = i_element.betaMatrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
                 betax = v_beta[0,0]
@@ -326,7 +330,7 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
-    def cs_traj(self,steps=10):    ## cosine & sine trajectories 
+    def cs_traj(self,steps=10):    ## cosine & sine trajectories
         lamb = CONF['wellenlänge']
         c_like =[]
         s_like =[]
@@ -392,7 +396,7 @@ def make_lattice():  # a test lattice
      lqf=  wille()['length_quad_f']
      kqd=  wille()['k_quad_d']
      lqd=  wille()['length_quad_d']
-     rhob= wille()['beding_radius'] 
+     rhob= wille()['beding_radius']
      lb=   wille()['dipole_length']
      ld=   wille()['drift_length']
      ## elements
@@ -403,7 +407,7 @@ def make_lattice():  # a test lattice
      mw=ELM.WD(mb)
      mw1=ELM.WD(mb1)
      mbr=ELM.RD(rhob,lb)
-     md=ELM.D(ld)    
+     md=ELM.D(ld)
      ## lattice
      lattice=Lattice()
      lattice.add_element(mqf)
@@ -441,8 +445,8 @@ def test0():
 def test1():
     lattice=make_lattice()
     mcell,betax,betay=lattice.cell()
-    beta_matrix = mcell.BetaMatrix()
-    
+    beta_matrix = mcell.betaMatrix()
+
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
     print('vectors\n',vectors)
@@ -466,7 +470,7 @@ def test2():
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     lattice.symplecticity()
     ## lattice function as f(s)
-    beta_fun,cl,sl = lattice.functions(steps=100)   
+    beta_fun,cl,sl = lattice.functions(steps=100)
     disp = lattice.dispersion(steps=100,closed=True)
     ## plots
     s  = [x[0] for x in beta_fun]    # s

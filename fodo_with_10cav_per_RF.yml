@@ -14,70 +14,72 @@
 # You should have received a copy of the GNU General Public License
 # along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Input file for FODO linac simulator       
-# Input file follows YAML syntax (http:\\http://yaml.org/)  
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
 #
 # Note:
-#   Repeated nodes are initially denoted by an ampersand ( & ) 
+#   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 ##...........................................................................................
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
     - accON:        true            # accelleration on/off flag
-    - periodic:     true            # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      1               # print flag
+    - periodic:     false           # treat lattice as periodic cell sequence(else as transfer line)
+    - verbose:      0               # print flag (0 = minimal print)
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
-parameters:                         ## INPUT parameter definitions
-    - TK_i:                 50.     # [MeV] energy @ entrance (injection) 
-    - emitx_i:              5.E-6   # [m*rad] transverse emittance @ entrance x
-    - emity_i:              5.E-6   # [m*rad] transverse emittance @ entrance y
-    - sigx_i:               5.E-3   # [m] one sigma transverse beam size @ entrance x
-    - sigy_i:               2.5E-3  # [m] one sigma transverse beam size @ entrance y
-    - dP/P:                 2       # [%] relative impulse dP/P @ entrance
-    - dZ:                   1.8E-2  # [m] longitudinal displacement dZ @ entrance
-    - frequency:    &p01    800.E+6 # [Hz] frequency
-    - ql:           &p03    0.2     # [m] half quad-length 
-    - B_grad:       &p04    7.5     # [T/m] quadrupole gradient
-    - Ez:           &p05    4.0     # [V/m] electric field strength
-    - phi_sync:     &p06   -45.0    # [deg] synchronous phase
-    - gap:          &p07    0.04    # [m] (accelerating) gap size
-    - cav_len:      &p08    0.08    # [m] cavity length
+parameters:                           ## INPUT parameter definitions
+    - TK_i:                 50.       # [MeV] energy @ entrance (injection)
+    - emitx_i:              3.14E-6   # [m*rad] transverse emittance @ entrance x
+    - emity_i:              3.14E-6   # [m*rad] transverse emittance @ entrance y
+    - sigx_i:               3.14E-3   # [m] one sigma transverse beam size @ entrance x
+    - sigy_i:               3.14E-3   # [m] one sigma transverse beam size @ entrance y
+    - dP/P:                 2         # [%] relative impulse dP/P @ entrance
+    - dZ:                   1.8E-2    # [m] longitudinal displacement dZ @ entrance
+    - frequency:    &p01    813.E+6   # [Hz] frequency
+    - ql:           &p03    0.2       # [m] half quad-length
+#    - B_grad:       &p04    7.5       # [T/m] quadrupole gradient f and d
+    - B_grad_f:     &p09    7.5       # [T/m] quadrupole gradient focusing
+    - B_grad_d:     &p10    6.5       # [T/m] quadrupole gradient defocusing
+    - Ez:           &p05    0.661     # [MV/m] electric field strength
+    - phi_sync:     &p06   -45.0      # [deg] synchronous phase
+    - gap:          &p07    0.02      # [m] (accelerating) gap size
+    - cav_len:      &p08    0.08      # [m] cavity length
 ##...........................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
 elements:                           ## ELEMENT definitions
-    - D:    &d1
+    - D:    &d1             # Drift
         - label:    d1      # element ID
-        - length:   0.08    # [m] length 
-    - QF:   &qf1
+        - length:   0.08    # [m] length
+    - QF:   &qf1            # F Quad
         - label:    qf1     # ID
-        - length:   *p03    # [m] length 
-        - B':       *p04    # [T/m] quadrupole gradient
-    - QD:   &qd1
+        - length:   *p03    # [m] length
+        - B':       *p09    # [T/m] quadrupole gradient
+    - QD:   &qd1            # D Quad
         - label:    qd1     # ID
-        - length:   *p03    # [m] length 
-        - B':       *p04    # [T/m] quadrupole gradient
-    - RFG:  &rfg
+        - length:   *p03    # [m] length
+        - B':       *p10    # [T/m] quadrupole gradient
+    - RFG:  &rfg            # RF gap
         - label:    rfg     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
-        - gap:      0.04
-    - RFC:  &rfc
+        - gap:      *p07    # [m] accelerating. gap
+    - RFC:  &rfc            # RF cavity
         - label:    rfc     # ID
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
-        - gap:      *p07    # [m] length 
-        - length:   *p08    # [m] length 
+        - gap:      *p07    # [m] length
+        - length:   *p08    # [m] length
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
 segments:                           ## SEGMENT definitions
-    - seg1:     
+    - seg1:
         - label:    SEG1    # (changeable) label is mandatory. DON't remove or reposition!
         - *qf1
         - *d1
@@ -93,7 +95,7 @@ segments:                           ## SEGMENT definitions
         - *rfc
         - *d1
         - *qf1
-    - seg2:     
+    - seg2:
         - label:    SEG2    # (changeable) label is mandatory. DON't remove or reposition!
         - *qf1
         - *d1
@@ -113,5 +115,5 @@ segments:                           ## SEGMENT definitions
 ## LATTICE definition
 ##...........................................................................................
 lattice:                            ## LATTICE definition
-    - label:    FODO2 24.5.2015    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [10, SEG1, SEG2, SEG1, SEG2] 
+    - label:    FODO_with_10CAV_per_RF 24.10.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
+    - [3, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments

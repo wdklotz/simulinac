@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -31,7 +31,7 @@ def display(functions,title):  ## plotting
     emitx=CONF['emitx_i']  # emittance @ entrance
     emity=CONF['emity_i']  # emittance @ entrance
     #----------*----------*   # bahnkoordinate z
-    z   = [ x[0] for x in beta_fun]    
+    z   = [ x[0] for x in beta_fun]
     #----------*----------*
     bx  = [ sqrt(x[1]*emitx) for x in beta_fun]    # envelope (beta-x)
     by  = [ sqrt(x[2]*emity) for x in beta_fun]    # envelope (beta-y)
@@ -51,7 +51,7 @@ def display(functions,title):  ## plotting
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
     plot(z,bxn,label='',color='green')
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
-    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.') 
+    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
     viseo = [x[3]*vscale for x in beta_fun]
     plot(z,viseo,label='',color='black')
@@ -101,7 +101,7 @@ def make_rf_section(w):        ## many cavities
         section.append(cav)
     # CONF['RFSection']=section.length
     print('rf_section_length: ',section.length)
-    return section  
+    return section
 def make_cell(w):              ## cell
     gradient  = CONF['quad_gradient']
     cell      = Lattice()
@@ -111,7 +111,7 @@ def make_cell(w):              ## cell
     lq_long   = w['lq2']
     kf        = w['kf']
     kd        = w['kd']
-    
+
     mQFs = QF(k0=kf,length=lq_short, label='QFs', beam=soll)
     mQFl = QF(k0=kf,length=lq_long,  label='QFl', beam=soll)
     mQDs = QD(k0=kd,length=lq_short, label='QDs', beam=soll)
@@ -120,14 +120,14 @@ def make_cell(w):              ## cell
 
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
-    
+
     # ---- update beam ENERGY --------
     mD   = mD.update()
     mQFs = mQFs.update()
     mQDl = mQDl.update()
     cell.add_element(mD)                  # D
     cell.add_element(mQFs)                # Fs
-    cell.add_element(mQDl)                # Dl    
+    cell.add_element(mQDl)                # Dl
     cell.add_element(mQFs)                # Fs
     cell.add_element(mD)                  # D
 
@@ -135,7 +135,7 @@ def make_cell(w):              ## cell
     cell.append(rf)                       # RF
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
-    
+
     # ---- update beam ENERGY --------
     mD   = mD.update()
     mQFl = mQFl.update()
@@ -145,7 +145,7 @@ def make_cell(w):              ## cell
     cell.add_element(mQFl)                # Fl
     cell.add_element(mQDs)                # Ds
     cell.add_element(mD)                  # D
-    
+
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
     return cell
@@ -176,12 +176,12 @@ def test0():
 def test1(x):
     wert={}
     wert['dWf'] = 0.
-    
+
     # beam
     tk0       = CONF['injection_energy']*1.       # KNOB: injection energy
     Beam.soll = Beam(tk0)
     wert['soll'] = Beam.soll
-    
+
     # k werte
     sk=1.0
     # sk=x
@@ -212,18 +212,18 @@ def test1(x):
     super_cell = Lattice()
 
     dictprnt(CONF,'Phys')
-    dictprnt(wert,'w')    
-    
+    dictprnt(wert,'w')
+
     for ncellsc in range(ncells):
         cell = make_cell(wert)
         super_cell.append(cell)
-    
+
     mcell,betax,betay=super_cell.cell(closed=True)
     print('energy(f)= {} [MeV]'.format(Beam.soll.tkin))
-    
+
     CONF['sigx_i']=sqrt(CONF['emitx_i']*betax)
     CONF['sigy_i']=sqrt(CONF['emity_i']*betay)
-    functions = super_cell.functions(40)   
+    functions = super_cell.functions(40)
     display(functions,'x {}'.format(x))
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*

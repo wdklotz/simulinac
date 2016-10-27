@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -32,7 +32,7 @@ def display(functions,text=''):
         legend(loc='lower right',fontsize='x-small')
         # plot(q,p,label='w(phi)',color='blue')
         # plot(q,vp,label='vp(phi)',color='red')
-    show()
+    show(block=True)
 class Order2Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
     def __init__(self,stepsize,dHdP,dHdX):
         self.h = stepsize
@@ -129,7 +129,7 @@ class RKMap11_3(object):      # Runke-Kutta nach G.Jordan-Englen/F.Reutter (BI H
         h = self.h
         g = self.g
         xi = vi[0]
-        yi = vi[1]         
+        yi = vi[1]
         zi = vi[2]           # y'  = z
         y2p= g(xi,yi,zi)     # y'' = z' = g(x,y,z)
         l1 = h * y2p
@@ -155,7 +155,7 @@ def dHdX(x):              #  dH/dx
     return -sin(x)
 def dTWdX(cphis):         #  dH/dx
     '''canonical equation dH/dx = - dV/dx; TWrangler's' Hamiltonian V(x)=sin(x)-x*cos(x0))'''
-    return lambda x: -(cos(x)+cphis)   # closure!    
+    return lambda x: -(cos(x)+cphis)   # closure!
 def Vp(phi,phis):         #  V(x)
     '''pseudo potential in TW's Hamiltonian V(x)=sin(x)-x*cos(x0)'''
     return +(sin(phi)-phi*cos(phis))
@@ -278,6 +278,6 @@ if __name__ == '__main__':
     test1()
     test2()
 
-    
-    
-    
+
+
+

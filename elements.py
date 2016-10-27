@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0,printv
-import numpy as NP 
+import numpy as NP
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
 
@@ -67,8 +67,8 @@ class _matrix(object): ## the mother of all 6x6 matrices
         for i in range(2,4):
             res += self.matrix[i,i]
         return res
-    def shorten(self,length=0.):
-        return self
+    def shorten(self,length=0.):    # virtual function to be implemented by child classes
+        raise RuntimeError('_matrix.shorten(): virtual member function called!')
     def step_through(self,anz=10):
         """
         Step through an element - the central nontrivial function.
@@ -93,12 +93,12 @@ class _matrix(object): ## the mother of all 6x6 matrices
                 mr = self.shorten(rest)
             else:
                 mr=I(label=self.label,viseo=self.viseo)
-        # print('label={} fanz={} anz={} step={} rest={}'.format(self.label,fanz,anz,step,rest)) 
+        # print('label={} fanz={} anz={} step={} rest={}'.format(self.label,fanz,anz,step,rest))
         for i in range(anz+1):
             if i == anz:
                 mx=mr
             yield mx
-    def BetaMatrix(self):
+    def betaMatrix(self):
         m11 =self.matrix[0,0];  m12 =self.matrix[0,1]
         m21 =self.matrix[1,0];  m22 =self.matrix[1,1]
         n11 =self.matrix[2,2];  n12 =self.matrix[2,3]
@@ -126,7 +126,7 @@ class D(I):            ## drift space nach Trace3D
     length=0.,
     viseo=0.,
     label='D',
-    beam=Beam.soll):    
+    beam=Beam.soll):
         super(D,self).__init__(viseo=viseo,beam=beam)
         self.label=label
         self.length=length     ## hard edge length [m]
@@ -143,7 +143,7 @@ class QF(D):           ## focusing quad nach Trace3D
     k0=0.,
     length=0.,
     label='QF',
-    beam=Beam.soll): 
+    beam=Beam.soll):
         super(QF,self).__init__(length=length,label=label,beam=beam)
         self.k0=k0         ## Quad strength [m**-2]
         self.matrix=self._mx()
@@ -185,7 +185,7 @@ class QF(D):           ## focusing quad nach Trace3D
         kf   =scalek0(k0,tki,tkf)  # scale quad strength
         # print('kf',kf)
         scaled=QF(k0=kf,length=len,label=label,beam=soll)
-        return scaled        
+        return scaled
 class QD(QF):          ## defocusing quad nach Trace3D
     def __init__(self,
     k0=0.,
@@ -235,11 +235,11 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
         return m
     def update(self):
-        raise RuntimeWarning('SD.update(): not ready!')    
+        raise RuntimeWarning('SD.update(): not ready!')
 class RD(SD):          ## rectangular bending dipole in x-plane
-    def __init__(self, 
-    radius=0., 
-    length=0., 
+    def __init__(self,
+    radius=0.,
+    length=0.,
     label='RB',
     beam=Beam.soll):
         super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
@@ -249,7 +249,7 @@ class RD(SD):          ## rectangular bending dipole in x-plane
     def shorten(self,l=0.):
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
     def update(self):
-        raise RuntimeWarning('RD.update(): not ready!')    
+        raise RuntimeWarning('RD.update(): not ready!')
 class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,
     sector,
@@ -271,20 +271,20 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         m=wd.matrix
         wd.psi = l/wd.radius
         rinv=1./wd.radius
-        psi=0.5*wd.psi  ## Kantenwinkel 
+        psi=0.5*wd.psi  ## Kantenwinkel
         ckp=rinv*tan(psi)
         ## 6x6 matrix
         m[1,0]=ckp
         m[3,2]=-ckp
         return wd
     def update(self):
-        raise RuntimeWarning('WD.update(): not ready!')    
+        raise RuntimeWarning('WD.update(): not ready!')
 class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
-    def __init__(self, 
-    U0         =CONF['spalt_spannung'], 
-    PhiSoll    =radians(CONF['soll_phase']), 
-    fRF        =CONF['frequenz'], 
-    label      ='RFG', 
+    def __init__(self,
+    U0         =CONF['spalt_spannung'],
+    PhiSoll    =radians(CONF['soll_phase']),
+    fRF        =CONF['frequenz'],
+    label      ='RFG',
     beam       =Beam(CONF['injection_energy']),
     gap        =CONF['spalt_laenge'],
     dWf=1.):
@@ -326,11 +326,11 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def update(self):
         return CAV(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
 class RFG(D):          ## zero length RF gap nach Trace3D
-    def __init__(self, 
-    U0         =CONF['spalt_spannung'], 
-    PhiSoll    =radians(CONF['soll_phase']), 
-    fRF        =CONF['frequenz'], 
-    label      ='RFG', 
+    def __init__(self,
+    U0         =CONF['spalt_spannung'],
+    PhiSoll    =radians(CONF['soll_phase']),
+    fRF        =CONF['frequenz'],
+    label      ='RFG',
     beam       =Beam.soll,
     gap        =CONF['spalt_laenge'],
     dWf=1.):
@@ -350,10 +350,10 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         b           = beam_avg.beta                           # beta @ average energy
         g           = beam_avg.gamma                          # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
-        self.matrix = self._mx(self.tr,b,g,beami,beamf)       # transport matrix            
+        self.matrix = self._mx(self.tr,b,g,beami,beamf)       # transport matrix
         Beam.soll.incTK(self.deltaW)
         # objprnt(Beam.soll,'soll')
-        self.viseo  = 0.25      
+        self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
@@ -362,7 +362,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
     def _mx(self,tr,b,g,beami,beamf):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
         m=self.matrix
         e0 = self.beam.e0
-        kz = 2.*pi*self.u0*tr*sin(self.phis)/(e0*b*b*self.lamb)  
+        kz = 2.*pi*self.u0*tr*sin(self.phis)/(e0*b*b*self.lamb)
         ky = kx = -0.5*kz/(g*g)
         bgi         = sqrt(beami.gamma*beami.gamma-1.)  # beta*gamma (i)
         bgf         = sqrt(beamf.gamma*beamf.gamma-1.)  # beta*gamma (f)
@@ -420,9 +420,9 @@ class QFth(_thin):     ## thin F-quad
         self.triplet = (di,kick,df)
         self.viseo = +0.5
     def shorten(self,l=0.):
-        raise RuntimeWarning('QFth.shorten(): not needed!')    
+        raise RuntimeWarning('QFth.shorten(): not needed!')
     def update(self):
-        raise RuntimeWarning('QFth.update(): not ready!')    
+        raise RuntimeWarning('QFth.update(): not ready!')
 class QDth(_thin):     ## thin D-quad
     def __init__(self,
     k0=0.,
@@ -448,9 +448,9 @@ class QDth(_thin):     ## thin D-quad
         self.triplet = (di,kick,df)
         self.viseo = -0.5
     def shorten(self,l=0.):
-        raise RuntimeWarning('QDth.shorten(): not needed!')    
+        raise RuntimeWarning('QDth.shorten(): not needed!')
     def update(self):
-        raise RuntimeWarning('QDth.update(): not ready!')    
+        raise RuntimeWarning('QDth.update(): not ready!')
 class RFC(_thin):      ## RF cavity as D*RFG*D
     def __init__(self,
     U0=CONF['spalt_spannung'],
@@ -469,16 +469,16 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
         self.gap    = gap
         self.length = length
         self.dWf    = dWf
-        di   = D(length=0.5*length,label='D(i)',beam=beam)
+        di   = D(length=0.5*length,label='cavI',beam=beam)
         kick = RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=self.beam,gap=self.gap,dWf=self.dWf)  ## Trace3D RF gap
         self.tr     = kick.tr
         # objprnt(kick)
-        df   = D(length=0.5*length,label='D(f)',beam=Beam.soll)   # energy update here
+        df   = D(length=0.5*length,label='cavO',beam=Beam.soll)   # energy update here
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
     def shorten(self,l=0.):
-        raise RuntimeWarning('RFC.shorten(): not needed!')    
+        raise RuntimeWarning('RFC.shorten(): not needed!')
     def update(self):
         return RFC(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,length=self.length,dWf=self.dWf)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
@@ -500,7 +500,7 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         beta [v/c]
     """
     if (gradient != 0. and energy != 0. and beta !=0.):
-        return 0.2998*gradient/(beta*energy)             
+        return 0.2998*gradient/(beta*energy)
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
 def test0():
@@ -557,17 +557,17 @@ def test4():
     d10=D(10.,'d10')
     d10.out()
     (d10.shorten(1.e-2)).out()
-    
+
     qf=QF(k0=k,length=1.)
     qf05=qf.shorten(0.2)
     (qf05*qf05*qf05*qf05*qf05).out()
     qf.out()
-    
+
     qd=QD(k0=k,length=1.)
     qd05=qd.shorten(0.2)
     (qd05*qd05*qd05*qd05*qd05).out()
     qd.out()
-    
+
     sd=SD(radius=10.,length=2.)
     sd05=sd.shorten(0.4)
     (sd05*sd05*sd05*sd05*sd05).out()
@@ -621,7 +621,7 @@ def test6():
     mb=SD(rhob,lb,'B')
     mw=WD(mb)
     md=D(ld)
-    
+
     ## test step_through elements ...
     list=[mqf,mqd,mb,mw,md]
     # list=[mqf]
@@ -638,7 +638,7 @@ def test6():
 def test7():
     print('======================================')
     print('test Rechteckmagnet...')
-    rhob= wille()['beding_radius'] 
+    rhob= wille()['beding_radius']
     lb=   wille()['dipole_length']
     mb=SD(radius=rhob,length=lb,label='B')
     mw=WD(mb,label='W')
@@ -673,10 +673,10 @@ def test9():
     print('dB/dz[T/m]\t{:.3f}'.format(grad))
     print('len[m]\t\t{:.3f}'.format(len))
     print('focal len[m]\t{:.3f}'.format(focal))
-    
+
     grad=dBdz(kq,tk) # quad gradient from k and tkinetic
     print('dB/dz[T/m]\t{:.3f}'.format(grad))
-    
+
     mqf=QF(kq,len)
     mqd=QD(kq,len)
     cavity=CAV(
@@ -723,7 +723,7 @@ def test10():
     Beam(200.).out()
     Beam(1.e6).out()
     Beam(1.e9).out()
-    
+
     beam = Beam.soll
     beam.out()
     beam.incTK(150.)

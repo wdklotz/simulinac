@@ -1,4 +1,4 @@
- #!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -34,7 +34,7 @@ def display(functions):
     zero  = [0. for x in bthin]  # zero line
     plot(s,xs,label='bx/thin')
     plot(s,ys,label='by/thin')
-    
+
     s  = [x[0] for x in bthick]    # s
     xs = [x[1] for x in bthick]    # betax
     ys = [x[2] for x in bthick]    # betay
@@ -63,15 +63,15 @@ def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     ld2 = lf2
     ff2 = kf2*lf2
     fd2 = kd2*ld2
-            
+
     ld = ld
-    
+
     DL  = D(length=ld,label='L')
     QF1 = QFth(k0=kf1,length=0.5*lf1,label='QF1')
     QF2 = QFth(k0=kf2,length=0.5*lf2,label='QF2')
     QD1 = QDth(k0=kd1,length=0.5*ld1,label='QD1')
     QD2 = QDth(k0=kd2,length=0.5*ld2,label='QD2')
-    
+
     cell = Lattice()
     cell.add_element(QD1)
     cell.add_element(QF1)
@@ -108,15 +108,15 @@ def make_thick(kf1,kf2,ld,anz=1,verbose=False):
     ld2 = lf2
     ff2 = kf2*lf2
     fd2 = kd2*ld2
-            
+
     ld = ld
-    
+
     DL  = D(length=ld,label='L')
     QF1 = QF(k0=kf1,length=0.5*lf1,label='QF1')
     QF2 = QF(k0=kf2,length=0.5*lf2,label='QF2')
     QD1 = QD(k0=kd1,length=0.5*ld1,label='QD1')
     QD2 = QD(k0=kd2,length=0.5*ld2,label='QD2')
-    
+
     cell = Lattice()
     cell.add_element(QD1)
     cell.add_element(QF1)
@@ -164,8 +164,8 @@ def search():
                     if x < crit and x != 0.:
                         print(x)
                         crit = x
-                        found=(kf,kd,ld) 
-    return found 
+                        found=(kf,kd,ld)
+    return found
 def test0():
     found=search()
     print('found minimal with: (kf, kd, L)= ',found)
@@ -173,7 +173,7 @@ def test1(kf,kd,ld):
     print('test1: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thin(kf,kd,ld)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.BetaMatrix()    
+    beta_matrix = mcell.betaMatrix()
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
     print('vectors\n',vectors)
@@ -187,7 +187,7 @@ def test2(kf,kd,ld):
     print('test2: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thick(kf,kd,ld)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.BetaMatrix()    
+    beta_matrix = mcell.betaMatrix()
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
     print('vectors\n',vectors)
@@ -200,16 +200,16 @@ def test2(kf,kd,ld):
 def test3(kf,kd,ld):
     print('test3: using kf,kd,ld',kf,kd,ld)
     anz = 3
-    # thin 
+    # thin
     cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.BetaMatrix()    
-    beta_fun_thin,cl,sl = cell.functions(steps=100)   
+    beta_matrix = mcell.betaMatrix()
+    beta_fun_thin,cl,sl = cell.functions(steps=100)
     # thick
     cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.BetaMatrix()    
-    beta_fun_thick,cl,sl = cell.functions(steps=100)   
+    beta_matrix = mcell.betaMatrix()
+    beta_fun_thick,cl,sl = cell.functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':

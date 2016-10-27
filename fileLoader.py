@@ -1,4 +1,4 @@
-#!/Users/klotz/pyzo2015a/python
+#!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -29,11 +29,12 @@ def unpack_list_of_dict(alist):
         for key in list(item.keys()):
             new[key] = item[key]
     return new
+
 def instanciate_element(item):
     key = item[0]
     att_list = item[1]
     attributes = unpack_list_of_dict(att_list)
-    # print(key, attributes)
+#       print(key, attributes)
     if key == 'D':
         length   = attributes['length']
         label    = attributes['label']
@@ -76,32 +77,34 @@ def instanciate_element(item):
         return (label,instance)
     else:
         raise RuntimeError('unknown element type: ',key)
+
 def make_segments(segments_dict,instances_dict):
     segment_instance_dict = {}
     for item in segments_dict.items():
-        # segment_id = item[0]
-        # print(segment_id)
+        segment_id = item[0]
+#         print(segment_id)
         element_list = item[1]
-        # print(element_list)
+#         print(element_list)
         segment_label = element_list[0]['label']        ## pull {'label:xxx'} off
-        # print(segment_label)
+#         print(segment_label)
         del element_list[0]
-        # print(element_list)
+#         print(element_list)
         segment = Lattice()
         for element in element_list:
             attributes = unpack_list_of_dict(element)
-            # print(attributes)
+#             print(attributes)
             instance = instances_dict[attributes['label']]
             segment.add_element(instance)
         segment_instance_dict[segment_label] = segment
     return segment_instance_dict
+
 def make_lattice(lattice_segment_list,segment_instance_dict):
     lattice = Lattice()
     seg_counter = 0
     for inner_list in lattice_segment_list:
         repeat = inner_list[0]           ## pull repeats number off...
         del inner_list[0]
-        # print('{:d} * inner_list\t'.format(repeat),inner_list)
+#         print('{:d} * inner_list=\t'.format(repeat),inner_list)
         for anz in range(repeat):
             for segment_label in inner_list:
                 lattice_part = segment_instance_dict[segment_label]
@@ -109,6 +112,7 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
                 seg_counter += 1
     SUMMARY['nboff segments']= seg_counter
     return lattice
+
 def test0():
     wfl= []
     fileobject=open('template.yml','r')
@@ -126,12 +130,14 @@ def test0():
     for l in lattice:
         for i in l:
             print(i)
-def test1():
+
+def test1(input_file):
     import sys, os
     directory = os.path.dirname(__file__)
-    filepath = directory+'/template.yml'       
+    filepath = directory+input_file
     lattice = read_yaml_and_parse(filepath)
     lattice.out()
+
 def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['input_file']= filepath
     with open(filepath,'r') as fileobject:
@@ -139,19 +145,21 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
 #...........*...........*...........*...........*...........*...........*...........*
     flags_list = in_data['flags']
     flags      = unpack_list_of_dict(flags_list)
-    # print('\nflags=\t',flags)
+#     print('\nflags=\t',flags)
     CONF['dWf']              = flags['accON']
     CONF['periodic']         = flags['periodic']
     CONF['verbose']          = flags['verbose']
 
     SUMMARY['dWf']      = CONF['dWf']
-    SUMMARY['periodic'] = CONF['periodic']   
+    SUMMARY['periodic'] = CONF['periodic']
 #...........*...........*...........*...........*...........*...........*...........*
     parameter_list = in_data['parameters']
     parameters     = unpack_list_of_dict(parameter_list)
-    # print('parameters=\t',parameters)
+#     print('parameters=\t',parameters)
     CONF['frequenz']         = parameters['frequency']
-    CONF['quad_gradient']    = parameters['B_grad']
+    CONF['quad_gradient']    = None if not 'B_grad'   in parameters else parameters['B_grad']
+    CONF['quadf_gradient']   = CONF['quad_gradient'] if not 'B_grad_f' in parameters else parameters['B_grad_f']
+    CONF['quadd_gradient']   = CONF['quad_gradient'] if not 'B_grad_d' in parameters else parameters['B_grad_d']
     CONF['injection_energy'] = parameters['TK_i']
     CONF['emitx_i']          = parameters['emitx_i']
     CONF['emity_i']          = parameters['emity_i']
@@ -166,56 +174,59 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     CONF['wellenlänge']      = CONF['lichtgeschwindigkeit']/CONF['frequenz']
     CONF['spalt_spannung']   = CONF['Ez_feld']*CONF['spalt_laenge']
 
-    SUMMARY['frequency [Hz]'] = CONF['frequenz']   
-    SUMMARY['quad_gradient [T/m]'] = CONF['quad_gradient']   
-    SUMMARY['injection_energy [MeV]'] = CONF['injection_energy']   
-    SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']   
-    SUMMARY['emity_i [rad*m]'] = CONF['emity_i']   
-    SUMMARY['sigx_i [m]'] = CONF['sigx_i']   
-    SUMMARY['sigy_i [m]'] = CONF['sigy_i']   
-    SUMMARY['dP/P [%]'] = CONF['dP/P'] * 1.e+2   
-    SUMMARY['synch_phase [deg]'] = CONF['soll_phase']   
-    SUMMARY['dZ [m]'] = CONF['dZ']   
-    SUMMARY['gap_length [m]'] = CONF['spalt_laenge']   
-    SUMMARY['cavity_llength [m]'] = CONF['cavity_laenge']   
-    SUMMARY['wavelength [m]'] = CONF['wellenlänge']   
-    SUMMARY['gap_voltage [MV]'] = CONF['spalt_spannung']   
-    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']   
+    SUMMARY['frequency [Hz]'] = CONF['frequenz']
+    SUMMARY['Quad_gradient [T/m]'] = CONF['quad_gradient']
+    SUMMARY['QF_gradient [T/m]'] = CONF['quadf_gradient']
+    SUMMARY['QD_gradient [T/m]'] = CONF['quadd_gradient']
+    SUMMARY['injection_energy [MeV]'] = CONF['injection_energy']
+    SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
+    SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
+    SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
+    SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
+    SUMMARY["sigx'_i [mrad]"] = 1000.*CONF["sigx_i"]
+    SUMMARY["sigy'_i [mrad]"] = 1000.*CONF["sigy_i"]
+    SUMMARY['dP/P [%]'] = CONF['dP/P'] * 1.e+2
+    SUMMARY['synch_phase [deg]'] = CONF['soll_phase']
+    SUMMARY['dZ [m]'] = CONF['dZ']
+    SUMMARY['gap_length [m]'] = CONF['spalt_laenge']
+    SUMMARY['cavity_length [m]'] = CONF['cavity_laenge']
+    SUMMARY['wavelength [m]'] = CONF['wellenlänge']
+    SUMMARY['gap_voltage [MV]'] = CONF['spalt_spannung']
+    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
 #...........*...........*...........*...........*...........*...........*...........*
     # Beam.soll             = Proton(CONF['injection_energy'])
     elements_list = in_data['elements']
     elements_dict = unpack_list_of_dict(elements_list)
-    # print('\nelements=\t',elements_dict)
+#     print('\nelements=\t',elements_dict)
     instances_dict = {}
     for item in elements_dict.items():
         (label,instance) = instanciate_element(item)
         instances_dict[label]= instance
-    # print(instances_dict.keys())
+#     print('\ninstances=\t',instances_dict.keys())
 #...........*...........*...........*...........*...........*...........*...........*
     segments_list = in_data['segments']
     segments_dict = unpack_list_of_dict(segments_list)
-    # print('\nsegments=\t',segments_dict)
+#     print('\nsegments=\t',segments_dict)
     segment_instance_dict= make_segments(segments_dict,instances_dict)
-    # print(segment_instance_dict)
+#     print('segment_instances=\t',segment_instance_dict)
 #...........*...........*...........*...........*...........*...........*...........*
     # proton: the default synchronous reference particle  (class member!)
     Beam.soll             = Proton(CONF['injection_energy'])
     # objprnt(Beam.soll,text='injected beam')
 #...........*...........*...........*...........*...........*...........*...........*
     lattice_segment_list= in_data['lattice']
-    # print('segment_list=\t',lattice_segment_list)
     lattice_title = lattice_segment_list[0]['label']   ## pull {'label:xxx'} off
     del lattice_segment_list[0]
-    # print('segment_list=\t',lattice_segment_list)
+#     print('segment_list=\t',lattice_segment_list)
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
     lattice.energy_trim()          ## energy update here!  (IMPORTANT)
-    # print(lattice_title)
-    # lattice.out()
+    print('lattice version=\t',lattice_title)
     SUMMARY['lattice_version']    = lattice_title
     SUMMARY['lattice_length [m]'] = lattice.length
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
 #     test0()
-    test1()
+#     test1('/template.yml')
+    test1('/fodo_with_10cav_per_RF.yml')
 
