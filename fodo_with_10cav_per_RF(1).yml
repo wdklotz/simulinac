@@ -30,23 +30,26 @@ flags:                              ## run configuration
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
-parameters:                         ## INPUT parameter definitions
-    - TK_i:                 50.     # [MeV] energy @ entrance (injection)
-    - emitx_i:              5.E-6   # [m*rad] transverse emittance @ entrance x
-    - emity_i:              5.E-6   # [m*rad] transverse emittance @ entrance y
-    - sigx_i:               5.E-3   # [m] one sigma transverse beam size @ entrance x
-    - sigy_i:               5.E-3   # [m] one sigma transverse beam size @ entrance y
-    - alfax_i:              0.      # [-] twiss alpha x @ entrance
-    - alfay_i:              -0.5    # [-] twiss alpha y @ entrance
-    - dP/P:                 2       # [%] relative impulse dP/P @ entrance
-    - dZ:                   1.8E-2  # [m] longitudinal displacement dZ @ entrance
-    - frequency:    &p01    800.E+6 # [Hz] frequency
-    - ql:           &p03    0.2     # [m] half quad-length
-    - B_grad:       &p04    7.5     # [T/m] quadrupole gradient
-    - Ez:           &p05    4.0     # [V/m] electric field strength
-    - phi_sync:     &p06   -45.0    # [deg] synchronous phase
-    - gap:          &p07    0.04    # [m] (accelerating) gap size
-    - cav_len:      &p08    0.08    # [m] cavity length
+parameters:                           ## INPUT parameter definitions
+    - TK_i:                 50.       # [MeV] energy @ entrance (injection)
+    - emitx_i:              6.4E-6    # [m*rad] transverse emittance @ entrance x
+    - emity_i:              54.E-6    # [m*rad] transverse emittance @ entrance y
+    - sigx_i:               5.E-3     # [m] one sigma transverse beam size @ entrance x
+    - sigy_i:               5.E-3     # [m] one sigma transverse beam size @ entrance y
+    - alfax_i:             -0.0       # [-] twiss alpha x @ entrance
+    - alfay_i:             -0.0       # [-] twiss alpha y @ entrance
+    - dP/P:                 2         # [%] relative impulse dP/P @ entrance
+    - dZ:                   1.8E-2    # [m] longitudinal displacement dZ @ entrance
+    - frequency:    &p01    813.E+6   # [Hz] frequency
+    - ql:           &p03    0.05      # [m] half quad-length
+    - B_grad:       &p04    16.0      # [T/m] equal quadrupole gradient QF and QD
+    - B_grad_f:     *p04              # [T/m] quadrupole gradient focusing QF
+    - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
+    - Ez:           &p05    1.04      # [MV/m] electric field strength
+    - phi_sync:     &p06   -45.0      # [deg] synchronous phase
+    - gap:          &p07    0.02      # [m] (accelerating) gap size
+    - cav_len:      &p08    0.08      # [m] cavity length
+    - windings:             30        # [-] quad-coil windings
 ##...........................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
@@ -67,7 +70,7 @@ elements:                           ## ELEMENT definitions
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
-        - gap:      0.04
+        - gap:      *p07    # [m] accelerating. gap
     - RFC:  &rfc            # RF cavity
         - label:    rfc     # ID
         - Ez:       *p05    # [V/m] electric field
@@ -83,41 +86,35 @@ segments:                           ## SEGMENT definitions
         - label:    SEG1    # (changeable) label is mandatory. DON't remove or reposition!
         - *qf1
         - *d1
-        - *rfc
-        - *rfc
-        - *rfc
-        - *d1
-        - *qd1
-        - *qd1
-        - *d1
-        - *rfc
-        - *rfc
-        - *rfc
-        - *d1
-        - *qf1
     - seg2:
         - label:    SEG2    # (changeable) label is mandatory. DON't remove or reposition!
-        - *qf1
-        - *d1
-        - *rfc
-        - *rfc
-        - *rfc
         - *d1
         - *qd1
         - *qd1
         - *d1
-        - *rfc
-        - *rfc
-        - *rfc
+    - seg3:
+        - label:    SEG3    # (changeable) label is mandatory. DON't remove or reposition!
         - *d1
         - *qf1
+    - RFC:
+        - label:    RFC    # (changeable) label is mandatory. DON't remove or reposition!
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
 ##...........................................................................................
 ## LATTICE definition
 ##...........................................................................................
 lattice:                            ## LATTICE definition
-    - label:    FODO2 24.5.2015    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
-    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
-    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
-    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
-    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
+    - label:    FODO_with_10CAV_per_RF 28.10.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
+    - [105, SEG1, RFC, SEG2, RFC, SEG3]
+    - [105, SEG1, RFC, SEG2, RFC, SEG3]
+    - [105, SEG1, RFC, SEG2, RFC, SEG3]
+    - [105, SEG1, RFC, SEG2, RFC, SEG3]
+    - [105, SEG1, RFC, SEG2, RFC, SEG3]

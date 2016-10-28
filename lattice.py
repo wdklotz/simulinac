@@ -95,7 +95,8 @@ class Lattice(object):
         SUMMARY['(ttf_min,ttf_max)']    = (ttfm,ttfx)
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
         self.seq = seq_trimmed      ## replace myself
-    def cell(self,closed=True):    ## full cell inspection
+
+    def cell(self,closed=True):     ## full cell inspection
         # if self.full_cell == 0.0:
         mcell = ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
         for count, ipos in enumerate(self.seq):
@@ -185,6 +186,9 @@ class Lattice(object):
         # aly = vector[4].real
         # gmy = vector[5].real
 
+        emix = CONF['emitx_i']  # Vorgabe emittance @ entrance
+        emiy = CONF['emity_i']
+
         if closed:
             if not unstable:
                 # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
@@ -216,25 +220,31 @@ class Lattice(object):
                 printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
                 printv(0,'Anfang: ',v_beta.T)
                 printv(0,'Ende  : ',v_beta_end.T,'\n')
-                CONF['sigx_i'] = sqrt(bax*CONF['emitx_i'])
-                CONF['sigy_i'] = sqrt(bay*CONF['emity_i'])
+                CONF['sigx_i'] = sqrt(bax*emix)
+                CONF['sigy_i'] = sqrt(bay*emiy)
+                SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
+                SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
+                xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence
+                yip=sqrt(emiy*gmy)
+                SUMMARY["sigx'_i [mrad]"] = 1000.*xip
+                SUMMARY["sigy'_i [mrad]"] = 1000.*yip
             else:
                 raise RuntimeError('stop: unstable lattice')
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-            xi=CONF['sigx_i']
+            # alfa, beta und emittance definieren den beam @ entrance
+            xi=CONF['sigx_i']  # 1 sigma x beam size
             yi=CONF['sigy_i']
-            alx=aly=0.
-            emix = CONF['emitx_i']
-            emiy = CONF['emity_i']
-            bax=xi**2/emix
-            bay=yi**2/emiy
-            gmx=(1.+alx*alx)/bax
+            alx=CONF["alfax_i"]  # twiss alpha @ entrance
+            aly=CONF["alfay_i"]
+            bax=xi*xi/emix  # twiss beta @ entrance from beam size
+            bay=yi*yi/emiy
+            gmx=(1.+alx*alx)/bax  # twiss gamma @ entrance
             gmy=(1.+aly*aly)/bay
-            xip=sqrt(emix*gmx)
+            xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence
             yip=sqrt(emiy*gmy)
-            CONF["sigx'_i"]=xip
-            CONF["sigy'_i"]=yip
+            SUMMARY["sigx'_i [mrad]"] = 1000.*xip
+            SUMMARY["sigy'_i [mrad]"] = 1000.*yip
 
         self.betax0 = bax
         self.alfax0 = alx
@@ -245,6 +255,7 @@ class Lattice(object):
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return (self.full_cell,self.betax0,self.betay0)
+
     def report(self):              ## lattice layout report (may not work!)
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
@@ -265,6 +276,7 @@ class Lattice(object):
                 header = row = ''
         reprt += header+' \n'+row+' \n'
         return reprt
+
     def reverse(self):             ## return a reversed Lattice (not used! probably bogus!)
         raise RuntimeWarning('Lattice.reverse() not ready')
         res=Lattice()
@@ -274,11 +286,13 @@ class Lattice(object):
             elm,s,s=ipos
             res.add_element(elm)
         return res
+
     def append(self,piece):        ## concatenate two Lattice pieces
         seq=copy(piece.seq)
         for ipos in seq:
             elm,s0,s1=ipos
             self.add_element(elm)
+
     def functions(self,steps=10):  ## functions of s
         beta_fun=[]
         # ms=ELM.I()
@@ -290,7 +304,7 @@ class Lattice(object):
         gy = self.gammy0
         v_beta0=NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         v_beta = v_beta0
-        # print(v_beta0)
+#         print(v_beta0)
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -303,11 +317,15 @@ class Lattice(object):
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
                 betax = v_beta[0,0]
+                betaxp = -2.* v_beta[1,0]
                 betay = v_beta[3,0]
+                betayp = -2.* v_beta[4,0]
+#                 if s < 0.2 : print("s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
         (c_like,s_like) = self.cs_traj(steps)
         return (beta_fun,c_like,s_like)
+
     def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
         warnings.warn(UserWarning('Lattice.dispersion() not ready'))
         traj=[]
@@ -330,15 +348,16 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
+
     def cs_traj(self,steps=10):    ## cosine & sine trajectories
         lamb = CONF['wellenlänge']
         c_like =[]
         s_like =[]
-        x1  = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like) with alpha=0
+        x1  = sqrt(CONF['emitx_i']/self.gammx0) # x-plane: principal-1 (cos like)
         x1p = 0.
-        x2  = 0.                                # y-plane: principal-2 (sin like)
+        x2  = 0.                                # x-plane: principal-2 (sin like)
         x2p = sqrt(CONF['emitx_i']/self.betax0)
-        y1  = sqrt(CONF['emity_i']*self.betay0)
+        y1  = sqrt(CONF['emity_i']/self.gammy0)
         y1p = 0.
         y2  = 0.
         y2p = sqrt(CONF['emity_i']/self.betay0)
@@ -373,6 +392,7 @@ class Lattice(object):
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)
+
     def symplecticity(self):       ## test symplecticity
         s=NP.array([[0., 1., 0.,0., 0.,0.],
                     [-1.,0., 0.,0., 0.,0.],
@@ -438,10 +458,12 @@ def make_lattice():  # a test lattice
      # top.append(top)
      # top.append(top)
      return top
+
 def test0():
     lat = make_lattice()
     lat.out()
     print('--------------- EOF test0 --------------------')
+
 def test1():
     lattice=make_lattice()
     mcell,betax,betay=lattice.cell()
@@ -463,6 +485,7 @@ def test1():
 # Antwort: Da die Emittanz noch nicht bekannt ist kann man den
 # Eigenvektor auf 1 normieren und erhält dasselbe wie mit Wille's Formeln.''')
     print('--------------- EOF test1 --------------------')
+
 def test2():
     lattice=make_lattice()
     ## cell boundaries

@@ -24,25 +24,27 @@
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
-    - accON:        true            # accelleration on/off flag
-    - periodic:     false           # treat lattice as periodic cell sequence(else as transfer line)
+    - accON:        false           # accelleration on/off flag
+    - periodic:     true            # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print)
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## INPUT parameter definitions
     - TK_i:                 50.       # [MeV] energy @ entrance (injection)
-    - emitx_i:              3.14E-6   # [m*rad] transverse emittance @ entrance x
-    - emity_i:              3.14E-6   # [m*rad] transverse emittance @ entrance y
-    - sigx_i:               3.14E-3   # [m] one sigma transverse beam size @ entrance x
-    - sigy_i:               3.14E-3   # [m] one sigma transverse beam size @ entrance y
+    - emitx_i:              6.0E-6    # [m*rad] transverse emittance @ entrance x
+    - emity_i:              1.6E-4    # [m*rad] transverse emittance @ entrance y
+    - sigx_i:               5.E-3     # [m] one sigma transverse beam size @ entrance x
+    - sigy_i:               5.E-3     # [m] one sigma transverse beam size @ entrance y
+    - alfax_i:              -0.0      # [-] twiss alpha x @ entrance
+    - alfay_i:              -0.0      # [-] twiss alpha y @ entrance
     - dP/P:                 2         # [%] relative impulse dP/P @ entrance
     - dZ:                   1.8E-2    # [m] longitudinal displacement dZ @ entrance
     - frequency:    &p01    813.E+6   # [Hz] frequency
     - ql:           &p03    0.2       # [m] half quad-length
-#    - B_grad:       &p04    7.5       # [T/m] quadrupole gradient f and d
-    - B_grad_f:     &p09    7.5       # [T/m] quadrupole gradient focusing
-    - B_grad_d:     &p10    6.5       # [T/m] quadrupole gradient defocusing
+    - B_grad:       &p04    0.0       # [T/m] equal quadrupole gradient QF and QD
+    - B_grad_f:     &p09    7.5       # [T/m] quadrupole gradient focusing QF
+    - B_grad_d:     &p10    7.5       # [T/m] quadrupole gradient defocusing QD
     - Ez:           &p05    0.661     # [MV/m] electric field strength
     - phi_sync:     &p06   -45.0      # [deg] synchronous phase
     - gap:          &p07    0.02      # [m] (accelerating) gap size
@@ -116,4 +118,4 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 24.10.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [3, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments
+    - [10, SEG1, SEG2, SEG1, SEG2, SEG1]        ## 50 segments

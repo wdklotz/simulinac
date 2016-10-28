@@ -61,7 +61,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     splot=subplot(211)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plot(z,bxn,label='',color='green')
+#     plot(z,bxn,label='',color='green')
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
@@ -73,7 +73,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     splot=subplot(212)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plot(z,byn,label='',color='green')
+#     plot(z,byn,label='',color='green')
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
@@ -117,7 +117,7 @@ def display1(functions):          ## plotting with longitudinal motion
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plot(z,bxn,label='',color='green')
+#     plot(z,bxn,label='',color='green')
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
@@ -129,7 +129,7 @@ def display1(functions):          ## plotting with longitudinal motion
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plot(z,byn,label='',color='green')
+#     plot(z,byn,label='',color='green')
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
     vscale=axis()[3]*0.1
