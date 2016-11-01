@@ -38,6 +38,7 @@ class Lattice(object):
         self.alfay0 = 0.
         self.gammy0 = 0.
         self.full_cell = 0.
+
     def add_element(self,elment):  ## add element to lattice
         if len(self.seq) == 0:
             s0=0.
@@ -47,6 +48,7 @@ class Lattice(object):
         self.length += l
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
+
     def out(self):                 ## simple log lattice layout to stdout (could be better!)
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
@@ -55,6 +57,7 @@ class Lattice(object):
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
+
     def energy_trim(self):         ## trim lattice matrices for changing beam energy
         def min(a,b):
             r = b
@@ -89,10 +92,10 @@ class Lattice(object):
                 ttfx = max(updated.tr,ttfx)
         printv(1,'Beam @ exit:\n'+Beam.soll.out(tee=False))
         tk_f = Beam.soll.tkin
-        SUMMARY['nboff F-quads']        = qf_counter
-        SUMMARY['nboff D-quads']        = qd_counter
-        SUMMARY['nboff cavities']       = cav_counter
-        SUMMARY['(ttf_min,ttf_max)']    = (ttfm,ttfx)
+        SUMMARY['nboff F-quads*']        = qf_counter
+        SUMMARY['nboff D-quads*']        = qd_counter
+        SUMMARY['nboff cavities*']       = cav_counter
+        SUMMARY['(ttf_min,ttf_max)*']    = (ttfm,ttfx)
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
         self.seq = seq_trimmed      ## replace myself
 
@@ -226,25 +229,24 @@ class Lattice(object):
                 SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
                 xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence
                 yip=sqrt(emiy*gmy)
-                SUMMARY["sigx'_i [mrad]"] = 1000.*xip
-                SUMMARY["sigy'_i [mrad]"] = 1000.*yip
+                SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
+                SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
             else:
                 raise RuntimeError('stop: unstable lattice')
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
-            xi=CONF['sigx_i']  # 1 sigma x beam size
-            yi=CONF['sigy_i']
+            # transfer lattices need not to be stable!
+            bax=CONF['betax_i']  # twiss beta @ entrance
+            bay=CONF['betay_i']
             alx=CONF["alfax_i"]  # twiss alpha @ entrance
             aly=CONF["alfay_i"]
-            bax=xi*xi/emix  # twiss beta @ entrance from beam size
-            bay=yi*yi/emiy
             gmx=(1.+alx*alx)/bax  # twiss gamma @ entrance
             gmy=(1.+aly*aly)/bay
-            xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence
+            xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence @ entrance
             yip=sqrt(emiy*gmy)
-            SUMMARY["sigx'_i [mrad]"] = 1000.*xip
-            SUMMARY["sigy'_i [mrad]"] = 1000.*yip
+            SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
+            SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
 
         self.betax0 = bax
         self.alfax0 = alx
@@ -349,22 +351,18 @@ class Lattice(object):
                 traj.append((s,d,dp))
         return traj
 
-    def cs_traj(self,steps=10):    ## cosine & sine trajectories
+    def cs_traj(self,steps=10):    ## cos & sin trajectories
         lamb = CONF['wellenlänge']
         c_like =[]
         s_like =[]
         x1  = sqrt(CONF['emitx_i']/self.gammx0) # x-plane: principal-1 (cos like)
-        x1p = 0.
-        x2  = 0.                                # x-plane: principal-2 (sin like)
-        x2p = sqrt(CONF['emitx_i']/self.betax0)
+        x2p = sqrt(CONF['emitx_i']/self.betax0) # x-plane: principal-1 (sin like)
         y1  = sqrt(CONF['emity_i']/self.gammy0)
-        y1p = 0.
-        y2  = 0.
         y2p = sqrt(CONF['emity_i']/self.betay0)
         dz  = CONF['dZ']                        # eingabe dZ
         dp  = CONF['dP/P']                      # eingabe dP/P0
-        c_0=NP.array([[x1],[x1p],[y1],[y1p],[dz],[0.]])     # cos-like traj.
-        s_0=NP.array([[x2],[x2p],[y2],[y2p],[0.],[dp]])     # sin-like traj.
+        c_0=NP.array([[x1],[0.],[y1],[0.],[dz],[0.]])       # cos-like traj.
+        s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp]])     # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos

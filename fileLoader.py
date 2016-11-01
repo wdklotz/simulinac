@@ -17,11 +17,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton,objprnt
+from setup import CONF,SUMMARY,Beam,Proton,objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
 import yaml
-from math import radians
+from math import radians,sqrt
 
 def unpack_list_of_dict(alist):
     new = {}
@@ -110,7 +110,7 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
                 lattice_part = segment_instance_dict[segment_label]
                 lattice.append(lattice_part)
                 seg_counter += 1
-    SUMMARY['nboff segments']= seg_counter
+    SUMMARY['nboff segments*']= seg_counter
     return lattice
 
 def test0():
@@ -163,8 +163,8 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     CONF['injection_energy'] = parameters['TK_i']
     CONF['emitx_i']          = parameters['emitx_i']
     CONF['emity_i']          = parameters['emity_i']
-    CONF['sigx_i']           = parameters['sigx_i']
-    CONF['sigy_i']           = parameters['sigy_i']
+    CONF['betax_i']          = parameters['betax_i']
+    CONF['betay_i']          = parameters['betay_i']
     CONF["alfax_i"]          = parameters['alfax_i']
     CONF["alfay_i"]          = parameters['alfay_i']
     CONF['dP/P']             = parameters['dP/P'] * 1.e-2
@@ -178,28 +178,35 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     CONF['n_coil']           = 1 if not 'windings' in parameters else parameters['windings']
 
     SUMMARY['frequency [Hz]'] = CONF['frequenz']
-    SUMMARY['Quad_gradient [T/m]'] = CONF['quad_gradient']
-    SUMMARY['QF_gradient [T/m]'] = CONF['quadf_gradient']
-    SUMMARY['QD_gradient [T/m]'] = CONF['quadd_gradient']
-    SUMMARY['injection_energy [MeV]'] = CONF['injection_energy']
+    SUMMARY['Quad gradient [T/m]'] = CONF['quad_gradient']
+    SUMMARY['QF gradient [T/m]'] = CONF['quadf_gradient']
+    SUMMARY['QD gradient [T/m]'] = CONF['quadd_gradient']
+    SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
     SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
     SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
-    SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
-    SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
-    SUMMARY['dP/P [%]'] = CONF['dP/P'] * 1.e+2
-    SUMMARY['synch_phase [deg]'] = CONF['soll_phase']
+    SUMMARY['sigx_i* [mm]'] = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
+    SUMMARY['sigy_i* [mm]'] = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
+    SUMMARY['<impulse dP/P> [%]'] = CONF['dP/P'] * 1.e+2
+    SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
     SUMMARY['dZ [m]'] = CONF['dZ']
-    SUMMARY['gap_length [m]'] = CONF['spalt_laenge']
-    SUMMARY['cavity_length [m]'] = CONF['cavity_laenge']
+    SUMMARY['cavity gap_length [m]'] = CONF['spalt_laenge']
+    SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
     SUMMARY['wavelength [m]'] = CONF['wellenlänge']
-    SUMMARY['gap_voltage [MV]'] = CONF['spalt_spannung']
-    SUMMARY['acc._field_Ez [MV/m]'] = CONF['Ez_feld']
+    SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
+    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
 #...........*...........*...........*...........*...........*...........*...........*
-    SUMMARY['Q_pole_length [m]'] = 2. * parameters['ql']
-    SUMMARY['QF_pole_strength [T]'] = CONF['quadf_gradient'] * parameters['ql']
-    SUMMARY['QF_current [A]'] = (CONF['quadf_gradient'] * (parameters['ql']*1000.)**2 )/2.52/CONF['n_coil']
-    SUMMARY['QF_power_estimate[W]'] = 0.0115 *SUMMARY['QF_current [A]']**2  # R=0.0115 Ohms
-    SUMMARY['QF_coil [windings]'] = CONF['n_coil']
+    SUMMARY['Quad pole length [m]'] = 2. * parameters['ql']
+    SUMMARY['QF pole strength* [T]'] = CONF['quadf_gradient'] * parameters['ql']
+    SUMMARY['QF current* [A/winding]'] = (CONF['quadf_gradient'] * (parameters['ql']*1000.)**2 )/2.52/CONF['n_coil']
+    SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
+    SUMMARY['QF coil [windings]'] = CONF['n_coil']
+    SUMMARY['<energy dW/W> max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
+        CONF['Ez_feld'],
+        Beam.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
+        CONF['soll_phase'],
+        CONF['wellenlänge'],
+        Beam.soll)*1.e+2
+    SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Beam.soll.gamma)*wakzp  # impule acceptanc in %
 #...........*...........*...........*...........*...........*...........*...........*
     elements_list = in_data['elements']
     elements_dict = unpack_list_of_dict(elements_list)

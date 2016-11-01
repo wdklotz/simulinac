@@ -112,6 +112,7 @@ class _matrix(object): ## the mother of all 6x6 matrices
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
+
 class I(_matrix):      ## unity matrix (an alias to _matrix class)
     def __init__(self,
     label='I',
@@ -121,6 +122,7 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
         self.label=label
         self.viseo=viseo
         self.beam=copy(beam)  # keep a local copy of the Beam instance (IMPORTANT!)
+
 class D(I):            ## drift space nach Trace3D
     def __init__(self,
     length=0.,
@@ -138,6 +140,7 @@ class D(I):            ## drift space nach Trace3D
     def update(self):          # returns a new instance!
         soll = Beam.soll
         return D(length=self.length,label=self.label,beam=soll,viseo=self.viseo)
+
 class QF(D):           ## focusing quad nach Trace3D
     def __init__(self,
     k0=0.,
@@ -186,6 +189,7 @@ class QF(D):           ## focusing quad nach Trace3D
         # print('kf',kf)
         scaled=QF(k0=kf,length=len,label=label,beam=soll)
         return scaled
+
 class QD(QF):          ## defocusing quad nach Trace3D
     def __init__(self,
     k0=0.,
@@ -207,6 +211,7 @@ class QD(QF):          ## defocusing quad nach Trace3D
         kf   =scalek0(k0,tki,tkf)
         scaled=QD(k0=kf,length=len,label=label,beam=soll)
         return scaled
+
 class SD(D):           ## sector bending dipole in x-plane nach Trace3D
     def __init__(self,
     radius=0.,
@@ -236,6 +241,7 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         return m
     def update(self):
         raise RuntimeWarning('SD.update(): not ready!')
+
 class RD(SD):          ## rectangular bending dipole in x-plane
     def __init__(self,
     radius=0.,
@@ -250,6 +256,7 @@ class RD(SD):          ## rectangular bending dipole in x-plane
         return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
     def update(self):
         raise RuntimeWarning('RD.update(): not ready!')
+
 class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Trace3D
     def __init__(self,
     sector,
@@ -279,6 +286,7 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         return wd
     def update(self):
         raise RuntimeWarning('WD.update(): not ready!')
+
 class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def __init__(self,
     U0         =CONF['spalt_spannung'],
@@ -325,6 +333,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return self
     def update(self):
         return CAV(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
+
 class RFG(D):          ## zero length RF gap nach Trace3D
     def __init__(self,
     U0         =CONF['spalt_spannung'],
@@ -376,6 +385,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         return self
     def update(self):
         return RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
+
 class _thin(_matrix):  ## the mother of all thin elements
     def __init__(self,beam=Beam.soll):
         self.beam = copy(beam)      ## keep a local copy of the Beam instance (important!)
@@ -395,6 +405,7 @@ class _thin(_matrix):  ## the mother of all thin elements
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
+
 class QFth(_thin):     ## thin F-quad
     def __init__(self,
     k0=0.,
@@ -423,6 +434,7 @@ class QFth(_thin):     ## thin F-quad
         raise RuntimeWarning('QFth.shorten(): not needed!')
     def update(self):
         raise RuntimeWarning('QFth.update(): not ready!')
+
 class QDth(_thin):     ## thin D-quad
     def __init__(self,
     k0=0.,
@@ -451,6 +463,7 @@ class QDth(_thin):     ## thin D-quad
         raise RuntimeWarning('QDth.shorten(): not needed!')
     def update(self):
         raise RuntimeWarning('QDth.update(): not ready!')
+
 class RFC(_thin):      ## RF cavity as D*RFG*D
     def __init__(self,
     U0=CONF['spalt_spannung'],

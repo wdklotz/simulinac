@@ -40,8 +40,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     #----------*----------*
     bx  = [ sqrt(x[1]*emix) for x in beta_fun]    # envelope (beta-x)
     by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
-    bxn = [-x for x in bx]    # beta-x (negatif)
-    byn = [-x for x in by]    # beta-y (negatif)
+#     bxn = [-x for x in bx]    # beta-x (negatif)
+#     byn = [-x for x in by]    # beta-y (negatif)
     #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
@@ -96,8 +96,8 @@ def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*
     bx  = [ sqrt(x[1]*emix) for x in beta_fun]    # envelope (beta-x)
     by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
-    bxn = [-x for x in bx]    # beta-x (negatif)
-    byn = [-x for x in by]    # beta-y (negatif)
+#     bxn = [-x for x in bx]    # beta-x (negatif)
+#     byn = [-x for x in by]    # beta-y (negatif)
     #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y

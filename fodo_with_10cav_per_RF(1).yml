@@ -24,29 +24,29 @@
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
-    - accON:        true            # accelleration on/off flag
-    - periodic:     false           # treat lattice as periodic cell sequence(else as transfer line)
+    - accON:        True            # accelleration on/off flag
+    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print)
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## INPUT parameter definitions
     - TK_i:                 50.       # [MeV] energy @ entrance (injection)
-    - emitx_i:              6.4E-6    # [m*rad] transverse emittance @ entrance x
-    - emity_i:              54.E-6    # [m*rad] transverse emittance @ entrance y
-    - sigx_i:               5.E-3     # [m] one sigma transverse beam size @ entrance x
-    - sigy_i:               5.E-3     # [m] one sigma transverse beam size @ entrance y
-    - alfax_i:             -0.0       # [-] twiss alpha x @ entrance
-    - alfay_i:             -0.0       # [-] twiss alpha y @ entrance
-    - dP/P:                 2         # [%] relative impulse dP/P @ entrance
-    - dZ:                   1.8E-2    # [m] longitudinal displacement dZ @ entrance
+    - emity_i:              1.E-5     # [m*rad] transverse emittance @ entrance x
+    - emitx_i:              1.E-5     # [m*rad] transverse emittance @ entrance y
+    - betax_i:              0.460     # [m] twiss beta @ entrance x
+    - betay_i:              3.884     # [m] twiss beta @ entrance y
+    - alfax_i:              0.0       # [-] twiss alpha x @ entrance
+    - alfay_i:              0.0       # [-] twiss alpha y @ entrance
+    - dP/P:                 0.2       # [%] relative impulse dP/P @ entrance
+    - dZ:                   0.02      # [m] longitudinal displacement dZ @ entrance
     - frequency:    &p01    813.E+6   # [Hz] frequency
     - ql:           &p03    0.05      # [m] half quad-length
     - B_grad:       &p04    16.0      # [T/m] equal quadrupole gradient QF and QD
     - B_grad_f:     *p04              # [T/m] quadrupole gradient focusing QF
     - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
     - Ez:           &p05    1.04      # [MV/m] electric field strength
-    - phi_sync:     &p06   -45.0      # [deg] synchronous phase
+    - phi_sync:     &p06   -20.       # [deg] synchronous phase
     - gap:          &p07    0.02      # [m] (accelerating) gap size
     - cav_len:      &p08    0.08      # [m] cavity length
     - windings:             30        # [-] quad-coil windings
@@ -84,18 +84,18 @@ elements:                           ## ELEMENT definitions
 segments:                           ## SEGMENT definitions
     - seg1:
         - label:    SEG1    # (changeable) label is mandatory. DON't remove or reposition!
-        - *qf1
+        - *qd1
         - *d1
     - seg2:
         - label:    SEG2    # (changeable) label is mandatory. DON't remove or reposition!
         - *d1
-        - *qd1
-        - *qd1
+        - *qf1
+        - *qf1
         - *d1
     - seg3:
         - label:    SEG3    # (changeable) label is mandatory. DON't remove or reposition!
         - *d1
-        - *qf1
+        - *qd1
     - RFC:
         - label:    RFC    # (changeable) label is mandatory. DON't remove or reposition!
         - *rfc
@@ -113,8 +113,4 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 28.10.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [105, SEG1, RFC, SEG2, RFC, SEG3]
-    - [105, SEG1, RFC, SEG2, RFC, SEG3]
-    - [105, SEG1, RFC, SEG2, RFC, SEG3]
-    - [105, SEG1, RFC, SEG2, RFC, SEG3]
-    - [105, SEG1, RFC, SEG2, RFC, SEG3]
+    - [395, SEG1, RFC, SEG2, RFC, SEG3]
