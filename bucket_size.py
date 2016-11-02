@@ -24,7 +24,8 @@ from elements import RFG
 import yaml
 from fileLoader import unpack_list_of_dict
 
-def display(functions):
+def display_bucket(functions):
+    plt.figure('bucket size for '+CONF['lattice_version'])
     for function in functions:
         phi  = [x[0] for x in function]
         p1   = [x[1] for x in function]
@@ -42,28 +43,8 @@ def psquared(H_invariant,phi,phis):
     res = V-H_invariant
     return res
 
-def read_yaml(filepath):          ## the principal YAML input parser
-    with open(filepath,'r') as fileobject:
-        in_data = yaml.load(fileobject)
-    parameter_list = in_data['parameters']
-    parameters     = unpack_list_of_dict(parameter_list)
-#     print('parameters=\t',parameters)
-    CONF['frequenz']         = parameters['frequency']
-    CONF['injection_energy'] = parameters['TK_i']
-    CONF['dP/P']             = parameters['dP/P'] * 1.e-2
-    CONF['Ez_feld']          = parameters['Ez']
-    CONF['soll_phase']       = parameters['phi_sync']
-    CONF['dZ']               = parameters['dZ']
-    CONF['spalt_laenge']     = parameters['gap']
-    CONF['cavity_laenge']    = parameters['cav_len']
-    CONF['wellenlänge']      = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-    CONF['spalt_spannung']   = CONF['Ez_feld']*CONF['spalt_laenge']
-    CONF['input file']       = filepath
-    return
-
-def bucket(filepath):
+def bucket():
     '''produce the longitudinal phase plots from Dr.Tiede'''
-    read_yaml(filepath)
 
     phis=radians(CONF['soll_phase'])           # KNOB: soll phase
 
@@ -72,28 +53,32 @@ def bucket(filepath):
     pmin=radians(-40.)          # phase lower limit
     anz= int((pmax-pmin)/dphi)  # nboff phase steps
 
-    if True:   # physics dimensions according to T.Wrangler pp.176
-        ws=CONF['injection_energy']
-        particle = Proton(ws)
-        gapl=CONF['spalt_laenge']
-        E0=CONF['Ez_feld']
-        u0=CONF['spalt_spannung']
-        fRF=CONF['frequenz']
-        lamb=CONF['wellenlänge']
-        rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,beam=particle,dWf=1.)
-        dws=rfg.deltaW
-        gammas=particle.gamma
-        betas=particle.beta
-        mc2=particle.e0
-        q=1.
-        T=particle.TrTf(gapl,fRF)
-        A=2.*pi/(gammas*betas)**3/lamb
-        B=q*E0*T/mc2
-        p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
+    functions=[]        # outer: list of functions
+    H_invariant=[-0.05+i*0.0025 for i in range(45)]
 
+    # physics dimensions according to T.Wrangler pp.176
+    ws=CONF['injection_energy']
+    particle = Proton(ws)
+    gapl=CONF['spalt_laenge']
+    E0=CONF['Ez_feld']
+    u0=CONF['spalt_spannung']
+    fRF=CONF['frequenz']
+    lamb=CONF['wellenlänge']
+    rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,beam=particle,dWf=1.)
+    dws=rfg.deltaW
+    gammas=particle.gamma
+    betas=particle.beta
+    mc2=particle.e0
+    q=1.
+    T=particle.TrTf(gapl,fRF)
+    A=2.*pi/(gammas*betas)**3/lamb
+    B=q*E0*T/mc2
+    p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
+
+    if CONF['verbose']:
 #         objprnt(rfg,text='cavity',filter=['matrix','beam'])
 #         objprnt(particle,text='Particle')
-        summary={
+        bucket_summary={
         '        cavity gap [m]':gapl,
         ' cavity frequency [Hz]':fRF,
         '  ref. energy Ws [MeV]':ws,
@@ -105,16 +90,13 @@ def bucket(filepath):
         '    m0*c**2 [MeV/c**2]':mc2,
         '                   ttf':T,
         '         particle type':particle.name,
-        '            input file':CONF['input file']
+        '            input file':CONF['input_file']
         # '                     A':A,
         # '                     B':B,
         # '                   p2w':p2w,
         }
-        dictprnt(summary,text='values for longitudinal dynamics')
+        dictprnt(bucket_summary,text='values for longitudinal dynamics')
 
-    H_invariant=[-0.05+i*0.0025 for i in range(45)]
-
-    functions=[]        # outer: list of functions
     for HTW in H_invariant:
         function=[]        # inner: list of function values
         for i in range(anz):
@@ -125,14 +107,5 @@ def bucket(filepath):
             p=p2w*sqrt(p)
             function.append([degrees(phi),p,-p])
         functions.append(function)
-    display(functions)
+    display_bucket(functions)
     return
-
-#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-if __name__ == '__main__':
-    import sys, os
-    directory = os.path.dirname(__file__)
-#     filepath = directory+'/fodo_with_10cav_per_RF.yml'       ## the default input file (YAML syntax)
-    filepath = directory+'/fodo_with_10cav_per_RF(2).yml'       ## the default input file (YAML syntax)
-    bucket(filepath)
-

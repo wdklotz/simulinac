@@ -21,6 +21,7 @@ from setup import CONF,SUMMARY,dictprnt
 from pylab import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from fileLoader import read_yaml_and_parse
+from bucket_size import bucket
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -111,8 +112,8 @@ def display1(functions):          ## plotting with longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=20; height=12
-    figure(SUMMARY['lattice_version'],figsize=(width,height))
-    # figure(SUMMARY['lattice_version'])
+    figure(CONF['lattice_version'],figsize=(width,height))
+    # figure(CONF['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
@@ -144,7 +145,7 @@ def display1(functions):          ## plotting with longitudinal motion
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
-    ax_l.plot(z,sz,color='green')
+#     ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseoz = [x*vscale for x in viseo]
     ax_l.plot(z,viseoz,label='',color='black')
@@ -155,10 +156,10 @@ def display1(functions):          ## plotting with longitudinal motion
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
     ax_r.plot(z,cdw,label=r'$\Delta$w/w',color='red')
-    ax_r.plot(z,sdw,color='red')
+#     ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
-    show(block=True)
+    show(block=False)
 
 def loesung(filepath):                   ## total classic FODO lattice (1st result, used as reference!)
     super_cell = read_yaml_and_parse(filepath)
@@ -170,6 +171,7 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = super_cell.functions(30)
     display(functions)
+    bucket()
 
 if __name__ == '__main__':
     import sys, os

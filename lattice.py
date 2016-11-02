@@ -53,7 +53,7 @@ class Lattice(object):
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
-            printv(1,'{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
+            printv(3,'{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
                   format(element.label,element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
@@ -75,7 +75,7 @@ class Lattice(object):
         ttfm = +1.e+50
         ttfx = +1.e-50
         seq_trimmed = []
-        printv(1,'Beam @ entrance:\n'+Beam.soll.out(tee=False))
+        printv(2,'Beam @ entrance:\n'+Beam.soll.out(tee=False))
         tk_i = Beam.soll.tkin
         for item in self.seq:
             element,s0,s1 = item
@@ -90,7 +90,7 @@ class Lattice(object):
                 cav_counter += 1
                 ttfm = min(updated.tr,ttfm)
                 ttfx = max(updated.tr,ttfx)
-        printv(1,'Beam @ exit:\n'+Beam.soll.out(tee=False))
+        printv(2,'Beam @ exit:\n'+Beam.soll.out(tee=False))
         tk_f = Beam.soll.tkin
         SUMMARY['nboff F-quads*']        = qf_counter
         SUMMARY['nboff D-quads*']        = qd_counter
@@ -135,23 +135,23 @@ class Lattice(object):
 
         self.full_cell = mcell    # the full cell
         # if verbose:
-        printv(1,'Lattice.cell: Zellenmatrix (i)->(f)')
+        printv(2,'Lattice.cell: Zellenmatrix (i)->(f)')
         self.full_cell.out()
         det = LA.det(self.full_cell.matrix)
         # if verbose:
-        printv(1,'det|full-cell|={:.5f}\n'.format(det))
+        printv(2,'det|full-cell|={:.5f}\n'.format(det))
         # Determinate M-I == 0 ?
         beta_matrix = mcell.betaMatrix()
         for i in range(5):
             beta_matrix[i,i] = beta_matrix[i,i]-1.0
         det = LA.det(beta_matrix)
         # if verbose:
-        printv(1,'det|Mbeta - I|={:.5f}\n'.format(det))
+        printv(2,'det|Mbeta - I|={:.5f}\n'.format(det))
         # symplectic?
         s = self.symplecticity()
         # if verbose:
-        printv(1,'symplectic (+1,-1,+1,-1,+1,-1)?')
-        printv(1,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+        printv(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
+        printv(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
 
         # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor

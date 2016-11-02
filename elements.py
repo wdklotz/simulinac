@@ -31,8 +31,8 @@ class _matrix(object): ## the mother of all 6x6 matrices
         self.slice_min = 0.01  ## minimal slice length
         self.viseo = 0.
     def out(self):
-        printv(1,self.label)
-        printv(1,self.matrix)
+        printv(2,self.label)
+        printv(2,self.matrix)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix()

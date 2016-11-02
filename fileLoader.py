@@ -21,7 +21,7 @@ from setup import CONF,SUMMARY,Beam,Proton,objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
 import yaml
-from math import radians,sqrt
+from math import radians,sqrt,pi,degrees
 
 def unpack_list_of_dict(alist):
     new = {}
@@ -140,19 +140,17 @@ def test1(input_file):
     lattice.out()
 
 def read_yaml_and_parse(filepath):          ## the principal YAML input parser
-    SUMMARY['input_file']= filepath
+    CONF['input_file'] = SUMMARY['input file']= filepath
     with open(filepath,'r') as fileobject:
         in_data = yaml.load(fileobject)
 #...........*...........*...........*...........*...........*...........*...........*
     flags_list = in_data['flags']
     flags      = unpack_list_of_dict(flags_list)
 #     print('\nflags=\t',flags)
-    CONF['dWf']              = flags['accON']
-    CONF['periodic']         = flags['periodic']
-    CONF['verbose']          = flags['verbose']
+    CONF['dWf'] = SUMMARY['acc. ON']                   = flags['accON']
+    CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
+    CONF['verbose']                                    = flags['verbose']
 
-    SUMMARY['dWf']      = CONF['dWf']
-    SUMMARY['periodic'] = CONF['periodic']
 #...........*...........*...........*...........*...........*...........*...........*
     parameter_list = in_data['parameters']
     parameters     = unpack_list_of_dict(parameter_list)
@@ -208,6 +206,7 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
         CONF['wellenlänge'],
         Beam.soll)*1.e+2
     SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Beam.soll.gamma)*wakzp  # impule acceptanc in %
+    SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Beam.soll.beta*CONF['dZ'])
 #...........*...........*...........*...........*...........*...........*...........*
     elements_list = in_data['elements']
     elements_dict = unpack_list_of_dict(elements_list)
@@ -235,8 +234,8 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     lattice = make_lattice(lattice_segment_list,segment_instance_dict)
     lattice.energy_trim()          ## energy update here!  (IMPORTANT)
 #     print('lattice version=\t',lattice_title)
-    SUMMARY['lattice_version']    = lattice_title
-    SUMMARY['lattice_length [m]'] = lattice.length
+    SUMMARY['lattice version']    = CONF['lattice_version'] = lattice_title
+    SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':

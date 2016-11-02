@@ -26,7 +26,7 @@
 flags:                              ## run configuration
     - accON:        True            # accelleration on/off flag
     - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      0               # print flag (0 = minimal print)
+    - verbose:      1               # print flag (0 = minimal print)
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
@@ -48,7 +48,7 @@ parameters:                           ## INPUT parameter definitions
     - Ez:           &p05    1.04      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase
     - gap:          &p07    0.044     # [m] (accelerating) gap size
-    - cav_len:      &p08    0.044      # [m] cavity length
+    - cav_len:      &p08    0.044     # [m] cavity length
     - windings:             30        # [-] quad-coil windings
 ##...........................................................................................
 ## ELEMENT definitions
@@ -113,6 +113,6 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [5, SEG1, RFC, SEG2, RFC, SEG3]
-#   - [197, SEG1, RFC, SEG2, RFC, SEG3]
+#   - [5, SEG1, RFC, SEG2, RFC, SEG3]
+    - [197, SEG1, RFC, SEG2, RFC, SEG3]
 #   - [1, SEG1, RFC, SEG2, RFC, SEG3]
