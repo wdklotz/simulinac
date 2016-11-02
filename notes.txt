@@ -1,2 +1,3 @@
 - for explanation of linear (like Trace3D) longitudinal oscillation see CER-CAS-2006-002, Pichoff
 - for better cavity transit see Comé, LaPostolle, CERN
+- CERN: DYNAC, SixTrack, more?

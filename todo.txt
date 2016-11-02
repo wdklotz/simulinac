@@ -10,4 +10,5 @@
  - better cavity transition? sympl. integrator?
  - vergleich mit sixtrack matrizen? 
  - vergleich mit elegant?
- - Monte Carlo für verluste
+ - Monte Carlo für verluste (mit DYNAC?)
+ - mit DYNAC testen
