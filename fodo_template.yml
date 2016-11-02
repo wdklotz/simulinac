@@ -24,8 +24,8 @@
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
-    - accON:        true            # accelleration on/off flag
-    - periodic:     false           # treat lattice as periodic cell sequence(else as transfer line)
+    - accON:        True            # accelleration on/off flag
+    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print)
 ##...........................................................................................
 ## INPUT parameter definitions
@@ -34,10 +34,10 @@ parameters:                         ## INPUT parameter definitions
     - TK_i:                 50.     # [MeV] energy @ entrance (injection)
     - emitx_i:              5.E-6   # [m*rad] transverse emittance @ entrance x
     - emity_i:              5.E-6   # [m*rad] transverse emittance @ entrance y
-    - sigx_i:               5.E-3   # [m] one sigma transverse beam size @ entrance x
-    - sigy_i:               5.E-3   # [m] one sigma transverse beam size @ entrance y
+    - betax_i:              4.512   # [m] one sigma transverse beam size @ entrance x
+    - betay_i:              0.157   # [m] one sigma transverse beam size @ entrance y
     - alfax_i:              0.      # [-] twiss alpha x @ entrance
-    - alfay_i:              -0.5    # [-] twiss alpha y @ entrance
+    - alfay_i:              0.      # [-] twiss alpha y @ entrance
     - dP/P:                 2       # [%] relative impulse dP/P @ entrance
     - dZ:                   1.8E-2  # [m] longitudinal displacement dZ @ entrance
     - frequency:    &p01    800.E+6 # [Hz] frequency

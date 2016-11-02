@@ -111,6 +111,7 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
                 lattice.append(lattice_part)
                 seg_counter += 1
     SUMMARY['nboff segments*']= seg_counter
+    lattice.out()
     return lattice
 
 def test0():
@@ -181,6 +182,7 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['Quad gradient [T/m]'] = CONF['quad_gradient']
     SUMMARY['QF gradient [T/m]'] = CONF['quadf_gradient']
     SUMMARY['QD gradient [T/m]'] = CONF['quadd_gradient']
+    SUMMARY['Quad pole length [m]'] = parameters['ql']
     SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
     SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
     SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
@@ -195,7 +197,6 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
     SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
 #...........*...........*...........*...........*...........*...........*...........*
-    SUMMARY['Quad pole length [m]'] = 2. * parameters['ql']
     SUMMARY['QF pole strength* [T]'] = CONF['quadf_gradient'] * parameters['ql']
     SUMMARY['QF current* [A/winding]'] = (CONF['quadf_gradient'] * (parameters['ql']*1000.)**2 )/2.52/CONF['n_coil']
     SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms

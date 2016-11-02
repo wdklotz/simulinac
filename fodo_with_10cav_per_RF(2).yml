@@ -32,23 +32,23 @@ flags:                              ## run configuration
 ##...........................................................................................
 parameters:                           ## INPUT parameter definitions
     - TK_i:                 50.       # [MeV] energy @ entrance (injection)
-    - emity_i:              1.E-5     # [m*rad] transverse emittance @ entrance x
-    - emitx_i:              1.E-5     # [m*rad] transverse emittance @ entrance y
-    - betax_i:              0.460     # [m] twiss beta @ entrance x
-    - betay_i:              3.884     # [m] twiss beta @ entrance y
-    - alfax_i:              0.0       # [-] twiss alpha x @ entrance
-    - alfay_i:              0.0       # [-] twiss alpha y @ entrance
-    - dP/P:                 0.02       # [%] relative impulse dP/P @ entrance
-    - dZ:                   0.02      # [m] longitudinal displacement dZ @ entrance
-    - frequency:    &p01    813.E+6   # [Hz] frequency
+    - emity_i:              1.E-6     # [m*rad] transverse emittance @ entrance x
+    - emitx_i:              1.E-6     # [m*rad] transverse emittance @ entrance y
+    - betax_i:              0.780     # [m] twiss beta @ entrance x
+    - betay_i:              2.373     # [m] twiss beta @ entrance y
+    - alfax_i:              000       # [-] twiss alpha x @ entrance
+    - alfay_i:              000       # [-] twiss alpha y @ entrance
+    - dP/P:                 0.3       # [%] relative impulse dP/P @ entrance
+    - dZ:                   0.01      # [m] longitudinal displacement dZ @ entrance
+    - frequency:    &p01    816.6E+6  # [Hz] frequency
     - ql:           &p03    0.05      # [m] quad-length
     - B_grad:       &p04    16.0      # [T/m] equal quadrupole gradient QF and QD
     - B_grad_f:     *p04              # [T/m] quadrupole gradient focusing QF
     - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
     - Ez:           &p05    1.04      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase
-    - gap:          &p07    0.02      # [m] (accelerating) gap size
-    - cav_len:      &p08    0.08      # [m] cavity length
+    - gap:          &p07    0.044     # [m] (accelerating) gap size
+    - cav_len:      &p08    0.044      # [m] cavity length
     - windings:             30        # [-] quad-coil windings
 ##...........................................................................................
 ## ELEMENT definitions
@@ -112,5 +112,6 @@ segments:                           ## SEGMENT definitions
 ## LATTICE definition
 ##...........................................................................................
 lattice:                            ## LATTICE definition
-    - label:    FODO_with_10CAV_per_RF 28.10.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [395, SEG1, RFC, SEG2, RFC, SEG3]
+    - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
+    - [197, SEG1, RFC, SEG2, RFC, SEG3]
+#   - [1, SEG1, RFC, SEG2, RFC, SEG3]

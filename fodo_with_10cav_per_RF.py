@@ -120,7 +120,7 @@ def display1(functions):          ## plotting with longitudinal motion
 #     plot(z,bxn,label='',color='green')
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.')
-    vscale=axis()[3]*0.1
+    vscale=axis()[3]*0.3
     viseox = [x*vscale for x in viseo]
     plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
@@ -132,7 +132,7 @@ def display1(functions):          ## plotting with longitudinal motion
 #     plot(z,byn,label='',color='green')
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
-    vscale=axis()[3]*0.1
+#     vscale=axis()[3]*0.1
     viseoy = [x*vscale for x in viseo]
     plot(z,viseoy,label='',color='black')
     plot(z,zero,color='black')
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     import sys, os
     directory = os.path.dirname(__file__)
 #     filepath = directory+'/fodo_with_10cav_per_RF.yml'       ## the default input file (YAML syntax)
-    filepath = directory+'/fodo_with_10cav_per_RF(1).yml'       ## the default input file (YAML syntax)
+    filepath = directory+'/fodo_with_10cav_per_RF(2).yml'       ## the default input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
