@@ -31,20 +31,20 @@ CONF = {                                      ## CONFIG constants and setup ...
     'frequenz': 813.e6,          # [Hz] default
     'injection_energy': 50.,     # [MeV] default
     'quad_gradient': 16.0,       # [T/m] default
-    'emitx_i': None,             # [m*rad] Vorgabe emittance @ entrance
-    'emity_i': None,             # [m*rad] Vorgabe emittance @ entrance
+    'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
+    'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
     'betax_i': None,             # [m] Vorgabe twiss betax @ entrance
     'betay_i': None,             # [m] Vorgabe twiss betax @ entrance
     'alfax_i': None,             # Vorgabe twiss alphax @ entrance
     'alfay_i': None,             # Vorgabe twiss alphaxy @ entrance
-    'dZ':      None,             # [m] Vorgabe longitudinal displacement dZ
-    'dP/P':    None,             # [rad] Vorgabe relative impulse dP/P
+    'dZ':      0.02,             # [m] Vorgabe longitudinal displacement dZ
+    'dP/P':    0.02,             # [rad] Vorgabe relative impulse dP/P
     'dWf': False,                # acceleration on/off flag default
     'periodic': True,            # periodic lattice? default
     'verbose': 1,                # print flag (True) default
      }
-CONF['wellenlänge']   =CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['spalt_spannung']=CONF['Ez_feld']*CONF['spalt_laenge']
+CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
+CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
 SUMMARY = {
     }
 class Beam(object):                           ## relativistic particle beam

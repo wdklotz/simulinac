@@ -458,11 +458,13 @@ def make_lattice():  # a test lattice
      return top
 
 def test0():
+    print('\nTEST0')
     lat = make_lattice()
     lat.out()
     print('--------------- EOF test0 --------------------')
 
 def test1():
+    print('\nTEST1')
     lattice=make_lattice()
     mcell,betax,betay=lattice.cell()
     beta_matrix = mcell.betaMatrix()
@@ -485,6 +487,7 @@ def test1():
     print('--------------- EOF test1 --------------------')
 
 def test2():
+    print('\nTEST2')
     lattice=make_lattice()
     ## cell boundaries
     mcell,betax,betay=lattice.cell(closed=True)

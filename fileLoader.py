@@ -115,13 +115,14 @@ def make_lattice(lattice_segment_list,segment_instance_dict):
     return lattice
 
 def test0():
+    print('\nTEST0')
     wfl= []
     fileobject=open('template.yml','r')
     wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
         print(i,' =\t',v)
-    seg = wfl['segment']
+    seg = wfl['segments']
     print(seg)
     print('=== segment ===')
     for i in seg:
@@ -133,6 +134,7 @@ def test0():
             print(i)
 
 def test1(input_file):
+    print('\nTEST1')
     import sys, os
     directory = os.path.dirname(__file__)
     filepath = directory+input_file
@@ -239,7 +241,6 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     return lattice
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
-#     test0()
-#     test1('/template.yml')
-    test1('/fodo_with_10cav_per_RF.yml')
+    test0()
+    test1('/fodo_with_10cav_per_RF(2).yml')
 

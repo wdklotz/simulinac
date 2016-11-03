@@ -170,8 +170,8 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     #-----------------------------------------
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = super_cell.functions(30)
-    display(functions)
-    bucket()
+    display(functions)   # twiss functions
+    bucket()             # separatrix
 
 if __name__ == '__main__':
     import sys, os
