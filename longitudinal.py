@@ -18,8 +18,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import CONF,Proton
-from pylab import plot,show,legend,figure,subplot,axis
+from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import pi,cos,radians,degrees
+
 '''apply directly the difference equations from T.Wrangler'''
 def display(functions):
     for func in functions:

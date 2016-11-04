@@ -18,11 +18,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import CONF,Proton,objprnt,dictprnt
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
-import yaml
-from fileLoader import unpack_list_of_dict
 
 def display_bucket(functions):
     plt.figure('bucket size for '+CONF['lattice_version'])
@@ -45,16 +43,14 @@ def psquared(H_invariant,phi,phis):
 
 def bucket():
     '''produce the longitudinal phase plots from Dr.Tiede'''
-
     phis=radians(CONF['soll_phase'])           # KNOB: soll phase
 
+    # Wertebereiche
     dphi=1e-4                   # step size phase
     pmax=radians(+20.)          # phase upper limit
     pmin=radians(-40.)          # phase lower limit
     anz= int((pmax-pmin)/dphi)  # nboff phase steps
-
-    functions=[]        # outer: list of functions
-    H_invariant=[-0.05+i*0.0025 for i in range(45)]
+    H_invariant=[-0.03+i*0.0025 for i in range(45)]      # invariant hamiltonians
 
     # physics dimensions according to T.Wrangler pp.176
     ws=CONF['injection_energy']
@@ -78,7 +74,7 @@ def bucket():
     if CONF['verbose']:
 #         objprnt(rfg,text='cavity',filter=['matrix','beam'])
 #         objprnt(particle,text='Particle')
-        bucket_summary={
+        bucket_summary = {
         '        cavity gap [m]':gapl,
         ' cavity frequency [Hz]':fRF,
         '  ref. energy Ws [MeV]':ws,
@@ -95,17 +91,19 @@ def bucket():
         # '                     B':B,
         # '                   p2w':p2w,
         }
-        dictprnt(bucket_summary,text='values for longitudinal dynamics')
+        dictprnt(bucket_summary,text='longitudinal dynamics')
 
-    for HTW in H_invariant:
-        function=[]        # inner: list of function values
+    functions=[]           # list of functions
+    for h in H_invariant:
+        function=[]        # a function
         for i in range(anz):
             phi = pmin+i*dphi
-            p = psquared(HTW,phi,phis)
+            p = psquared(h,phi,phis)
             if p < 0.:
                 continue
             p=p2w*sqrt(p)
             function.append([degrees(phi),p,-p])
         functions.append(function)
+
     display_bucket(functions)
     return

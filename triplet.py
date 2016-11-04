@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from setup import CONF,dictprnt,objprnt
 from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
 from lattice import Lattice
-from pylab import plot, show, legend, figure, subplot, axis
+from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt,radians
 
 def display(functions,title):  ## plotting

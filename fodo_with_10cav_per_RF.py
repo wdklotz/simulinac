@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import CONF,SUMMARY,dictprnt
-from pylab import plot,show,legend,figure,subplot,axis
+from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from fileLoader import read_yaml_and_parse
 from bucket_size import bucket

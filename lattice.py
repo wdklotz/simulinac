@@ -18,13 +18,13 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import sqrt,fabs,acos,pi,degrees
-import numpy as NP
 from numpy import linalg as LA
 from copy import copy
-from pylab import plot,show,legend
+from matplotlib.pyplot import plot,show,legend
 from setup import wille,CONF,SUMMARY,Beam,objprnt,printv
 import elements as ELM
 import warnings
+import numpy as NP
 
 class Lattice(object):
     def __init__(self):
@@ -59,16 +59,6 @@ class Lattice(object):
         mcell.out()
 
     def energy_trim(self):         ## trim lattice matrices for changing beam energy
-        def min(a,b):
-            r = b
-            if a < b:
-                r = a
-            return r
-        def max(a,b):
-            r = b
-            if a > b:
-                r = a
-            return r
         cav_counter = 0
         qf_counter  = 0
         qd_counter  = 0

@@ -18,9 +18,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0,printv
-import numpy as NP
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
+import numpy as NP
 
 class _matrix(object): ## the mother of all 6x6 matrices
     _dim = 6   # 6x6 matrices

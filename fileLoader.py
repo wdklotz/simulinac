@@ -20,8 +20,8 @@ This file is part of the SIMULINAC code
 from setup import CONF,SUMMARY,Beam,Proton,objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
-import yaml
 from math import radians,sqrt,pi,degrees
+import yaml
 
 def unpack_list_of_dict(alist):
     new = {}
@@ -191,7 +191,7 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
     SUMMARY['<impulse dP/P> [%]'] = CONF['dP/P'] * 1.e+2
     SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
     SUMMARY['dZ [m]'] = CONF['dZ']
-    SUMMARY['cavity gap_length [m]'] = CONF['spalt_laenge']
+    SUMMARY['cavity gap length [m]'] = CONF['spalt_laenge']
     SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
     SUMMARY['wavelength [m]'] = CONF['wellenlänge']
     SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
