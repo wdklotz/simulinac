@@ -1,3 +1,9 @@
 - for explanation of linear (like Trace3D) longitudinal oscillation see CER-CAS-2006-002, Pichoff
 - for better cavity transit see Comé, LaPostolle, CERN
 - CERN: DYNAC, SixTrack, more?
+- beste Zusammenstellung von Dynamik in rf-Cavities:
+    technical note From:
+        Andrei Shishlo, Jeff Holmes,
+        Number: ORNL/TM-2015/247,
+        Date: June 4, 2015
+    my copy: A.Shislo_J.Holmes_Pub55859.pdf

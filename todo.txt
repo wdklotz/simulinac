@@ -1,14 +1,16 @@
- - longitudinal dynamic? non-linear
  - sigma matrices?
  - pretty lattice print?
  - test with electrons/
- - acceptance ellipse?
+ - acceptance ellipse? not needed?
  - emittance ellipse?
- - triplet lattice?
- - doublet lattice?
+ - triplet lattice? pretest with TRACE3D (Wondows & wine on Mac)
+ - doublet lattice? same as above
  - low energy lattice? 5Mev - 50Mev?
- - better cavity transition? sympl. integrator?
- - vergleich mit sixtrack matrizen? 
- - vergleich mit elegant?
+ - vergleich mit sixtrack matrizen?
+ - vergleich mit elegant? have it on Windows - is it runniung?
+ - mit DYNAC testen (Linux)
  - Monte Carlo für verluste (mit DYNAC?)
- - mit DYNAC testen
+ - mit pyORBIT testen (Linux), best candidate for PIC?
+ - neuen python driver pySTEC (python for simple traking and envelope calculations) schreiben
+ - longitudinal dynamics? non-linear (see Shislo, Holmes paper!)
+ - better cavity transition? sympl. integrator? or pySTEC?
