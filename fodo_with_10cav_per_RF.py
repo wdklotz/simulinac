@@ -56,7 +56,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=20; height=12
-    figure(SUMMARY['lattice_version'],figsize=(width,height))
+    figure(SUMMARY['lattice version'],figsize=(width,height))
     # figure(SUMMARY['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(211)
