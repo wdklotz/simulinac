@@ -149,13 +149,20 @@ def test2(input_file):
 	CONF['input_file'] = SUMMARY['input file']= filepath
 	with open(filepath,'r') as fileobject:
 		in_data = yaml.load(fileobject)
-	read_flags(in_data)
-	read_parameters(in_data)
-	read_elements(in_data)
-	read_segments(in_data)
-	read_lattice(in_data)
+	fileobject.close()
+	var = read_flags(in_data)
+	print('flags\n{}'.format(var))
+	var = read_parameters(in_data)
+	print('parameters\n{}'.format(var))
+	var = read_elements(in_data)
+	print('elements\n{}'.format(var))
+	var = read_segments(in_data)
+	print('segments\n{}'.format(var))
+	(var1, var2) = read_lattice(in_data)
+	print('lattice\n{}'.format(var1))
+	print('version\n{}'.format(var2))
 	collect_summaries()
-# 	dictprnt(SUMMARY,text='summary')
+	dictprnt(SUMMARY,text='summary')
 	return
 
 def read_flags(in_data):
@@ -209,7 +216,7 @@ def read_segments(in_data):
 def read_lattice(in_data):
 	lattice_segment_list= in_data['lattice']
 	lattice_title = lattice_segment_list[0]['label']   ## pull {'label:xxx'} off
-	del lattice_segment_list[0]
+	del lattice_segment_list[0]         #pull label off
 	# print('segment_list=\t',lattice_segment_list)
 	return (lattice_segment_list,lattice_title)
 
@@ -284,6 +291,6 @@ def read_yaml_and_parse(filepath):          ## the principal YAML input parser
 #...........*...........*...........*...........*...........*...........*...........*
 if __name__ == '__main__':
 #     test0()
-	test1('/fodo_with_10cav_per_RF(2).yml')
-# 	test2('/fodo_with_10cav_per_RF(2).yml')
+# 	test1('/fodo_with_10cav_per_RF(2).yml')
+	test2('/fodo_with_10cav_per_RF(2).yml')
 
