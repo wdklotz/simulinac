@@ -53,8 +53,8 @@ class Lattice(object):
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
-            printv(3,'{:s}\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
-                  format(element.label,element.length,s0,s1))
+            printv(3,'{:s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
+                  format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
 
