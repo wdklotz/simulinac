@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from setup import CONF,SUMMARY,dictprnt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
-from fileLoader import read_yaml_and_parse
+from fileLoader import parse_yaml_and_fabric
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -161,7 +161,7 @@ def display1(functions):          ## plotting with longitudinal motion
     show(block=True)
 
 def loesung(filepath):                   ## total classic FODO lattice (1st result, used as reference!)
-    super_cell = read_yaml_and_parse(filepath)
+    super_cell = parse_yaml_and_fabric(filepath)
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])

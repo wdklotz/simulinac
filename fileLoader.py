@@ -17,8 +17,9 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton
-from setup import objprnt,Wakzeptanz,dictprnt
+import sys, os
+from setup import CONF,SUMMARY,Beam
+from setup import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
 from math import radians,sqrt,pi,degrees
@@ -32,6 +33,7 @@ def unpack_list_of_dict(alist):
 	return new
 
 def instanciate_element(item):
+# 	print('item >>',item)
 	key = item[0]
 	att_list = item[1]
 	attributes = unpack_list_of_dict(att_list)
@@ -99,21 +101,6 @@ def make_segments(segments_dict,instances_dict):
 			segment_instance_dict[segment_label] = segment
 	return segment_instance_dict
 
-def make_lattice(lattice_segment_list,segment_instance_dict):
-# 	print(lattice_segment_list)
-	lattice = Lattice()
-	nsuper = lattice_segment_list[0]           ## pull nsuper off...
-	del lattice_segment_list[0]
-	seg_counter = 0
-	for anz in range(nsuper):
-		for segment_label in lattice_segment_list:
-			lattice_part = segment_instance_dict[segment_label]
-			lattice.append(lattice_part)
-			seg_counter += 1
-	SUMMARY['nboff segments*']= seg_counter
-	lattice.out()
-	return lattice
-
 def read_flags(in_data):
 #returns ==> {...}
 	flags_list = in_data['flags']
@@ -164,9 +151,10 @@ def read_segments(in_data):
 
 def read_lattice(in_data):
 	lattice_segment_list= in_data['lattice']
-	lattice_title = lattice_segment_list[0]['label']   ## pull {'label:xxx'} off
+	lattice_title = lattice_segment_list[0]['label']
 	del lattice_segment_list[0]         #pull label off
-	return (lattice_segment_list[0],lattice_title)
+	CONF['lattice_version'] = lattice_title
+	return lattice_segment_list[0]
 
 def expand_reduce(in_data):
 #--------
@@ -190,30 +178,28 @@ def expand_reduce(in_data):
 		return res
 #--------
 	def reduce_seg_def(dict):
-	#returns ==> [[str,[str,...,str]],[str,[str,...,str]],...,[str,[str,...,str]]]
+	#returns ==> [{"label":str,"elements":[.....]},...,{"label":str,"elements":[.....]}]
 		list_of_segments=[]
 		for key,l in dict.items():
-			segment=[]
+			segment={}
 			outer_list = l
 			seg_label = outer_list[0]['label']
-			segment.append(seg_label)# 			print(seg_label)
+			segment['label'] = seg_label
 			e_list = outer_list[1:]
 			list_of_segment_items=[]
 			for e_list_item in e_list:
 # 				print('e_list_item ==> ',e_list_item)
 				e_label = e_list_item[0]['label']
 				list_of_segment_items.append(e_label)
-			segment.append(list_of_segment_items)
+			segment['elements']=list_of_segment_items
 			list_of_segments.append(segment)
 		return list_of_segments
-
-	(lattice_segments,lattice_title) = read_lattice(in_data)
+#--------
+	lattice_segments = read_lattice(in_data)
 	nsuper = lattice_segments[0]       #nboff super cells
 	del lattice_segments[0]         #pull nsuper off
-
 	seg_defs = read_segments(in_data)
 	segments = reduce_seg_def(seg_defs)
-
 	elem_defs = read_elements(in_data)
 	elements = reduce_elm_def(elem_defs)
 	return (nsuper,lattice_segments,segments,elements)
@@ -237,7 +223,8 @@ def collect_summaries():
 	SUMMARY['wavelength [m]'] = CONF['wellenlänge']
 	SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
 	SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
-	#...........*...........*...........*...........*...........*...........*...........*
+	SUMMARY['lattice version'] = CONF['lattice_version']
+	#...........*...........*...........*...........*...........*...........*
 	SUMMARY['QF pole strength* [T]'] = CONF['quadf_gradient'] * CONF['ql']
 	SUMMARY['QF current* [A/winding]'] = (CONF['quadf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
 	SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
@@ -250,43 +237,103 @@ def collect_summaries():
 		Beam.soll)*1.e+2
 	SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Beam.soll.gamma)*wakzp  # impule acceptanc in %
 	SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Beam.soll.beta*CONF['dZ'])
+
 # 	dictprnt(SUMMARY,text='summary')
 	return
 
-def read_yaml_and_parse(filepath):          ## the principal YAML input parser
-    CONF['input_file'] = SUMMARY['input file']= filepath
-    with open(filepath,'r') as fileobject:
-        in_data = yaml.load(fileobject)
-#====================================wdk========================================================
-    flags        = read_flags(in_data)
-    parameters   = read_parameters(in_data)
-    collect_summaries()
-#====================================wdk========================================================
-    elements_dict = read_elements(in_data)
+def parse_yaml_and_fabric(factory,input_file):          ## delegates
+	return factory(input_file)
+
+def factory1(input_file):          ## lattice factory v1
+#--------
+	def make_lattice(lattice_segment_list,segment_instance_dict):
+		lattice = Lattice()
+		nsuper = lattice_segment_list[0]           ## pull nsuper off...
+		del lattice_segment_list[0]
+		seg_counter = 0
+		for anz in range(nsuper):
+			for segment_label in lattice_segment_list:
+				lattice_part = segment_instance_dict[segment_label]
+				lattice.append(lattice_part)
+				seg_counter += 1
+		SUMMARY['nboff segments*']= seg_counter
+		lattice.out()
+		return lattice
+#--------
+	SUMMARY['input file'] = CONF['input_file'] = input_file
+	with open(input_file,'r') as fileobject:
+		in_data = yaml.load(fileobject)
+#--------
+	flags        = read_flags(in_data)
+	parameters   = read_parameters(in_data)
+#--------
+	elements_dict = read_elements(in_data)
 #     print('\nelements=\t',elements_dict)
-    instances_dict = {}
-    for item in elements_dict.items():
-        (label,instance) = instanciate_element(item)
-        instances_dict[label]= instance
+	instances_dict = {}
+	for item in elements_dict.items():
+		(label,instance) = instanciate_element(item)
+		instances_dict[label]= instance
 #     print('\ninstances=\t',instances_dict.keys())
-#====================================wdk========================================================
-    segments_dict = read_segments(in_data)
+#--------
+	segments_dict = read_segments(in_data)
 #     print('\nsegments=\t',segments_dict)
-    segment_instance_dict= make_segments(segments_dict,instances_dict)
+	segment_instance_dict= make_segments(segments_dict,instances_dict)
 #     print('segment_instances=\t',segment_instance_dict)
-#====================================wdk========================================================
+#--------
     # proton: the default synchronous reference particle  (class member!)
-    Beam.soll             = Proton(CONF['injection_energy'])
+# 	Beam.soll             = Proton(CONF['injection_energy'])
     # objprnt(Beam.soll,text='injected beam')
-#====================================wdk========================================================
-    (lattice_segment_list, lattice_title) = read_lattice(in_data)
-#     print('segment_list=\t',lattice_segment_list)
-    lattice = make_lattice(lattice_segment_list,segment_instance_dict)
-    lattice.energy_trim()          ## energy update here!  (IMPORTANT)
-#     print('lattice version=\t',lattice_title)
-    SUMMARY['lattice version']    = CONF['lattice_version'] = lattice_title
-    SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
-    return lattice
+#--------
+	lattice_segment_list = read_lattice(in_data)
+	lattice = make_lattice(lattice_segment_list,segment_instance_dict)
+	collect_summaries()
+	return lattice
+
+def factory2(input_file):
+#--------
+	def make_lattice(ns,lat,seg,elm):
+		lattice = Lattice()
+		for h in range(ns):      #loop nsuper
+			for i in lat:        #loop segments in lattice def
+				seg_label = i
+	# 			print('segment >>',seg_label)
+				for j in seg:    #browse for segment def
+					if j['label'] == seg_label:
+						elm_list = j['elements']
+						break
+				for k in elm_list: #loop segment elements
+					elm_label = k
+	# 				print('\telement >>',elm_label)
+					for l in elm: #browse for element in seg
+						if l['label'] == elm_label:
+							attributes=[]
+							for m,n in l.items():  #build item description
+								attributes.append({m:n})
+							item = (l['type'],attributes)
+							label,instance = instanciate_element(item)  #instanciate
+							lattice.add_element(instance)  #add element instance to lattice
+							break
+		return lattice   #the complete lattice
+#--------
+	SUMMARY['input file'] = CONF['input_file'] = input_file
+
+	with open(input_file,'r') as fileobject:
+		in_data = yaml.load(fileobject)
+	fileobject.close()
+
+	read_flags(in_data)
+	read_parameters(in_data)
+	(nsuper,lattice_in,segments_in, elements_in) = expand_reduce(in_data)
+# 	print('nsuper ==>',nsuper)   #nboff super cells
+# 	print('\nlattice_segments ==>',lattice_in)  #def of all segments in lattice
+# 	print('\nsegments ==>',segments_in)  #def of all segments
+# 	print('\nelements ==>',elements_in)  #def of all elements
+	lattice = make_lattice(nsuper,lattice_in,segments_in,elements_in)
+# 	print('lattice >>',end='\n')
+	lattice.out()
+	collect_summaries()
+	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
+	return lattice
 
 def test0():
 	print('\nTEST0')
@@ -308,33 +355,15 @@ def test0():
 			print(i)
 
 def test1(input_file):
-	import sys, os
 	print('\nTEST1')
-	directory = os.path.dirname(__file__)
-	filepath = directory+input_file
-	lattice = read_yaml_and_parse(filepath)
+	lattice = parse_yaml_and_fabric(factory2,input_file)
 
 def test2(input_file):
-	import sys, os
-	print('\nTEST2')
-	directory = os.path.dirname(__file__)
-	filepath = directory+input_file
-	CONF['input_file'] = SUMMARY['input file']= filepath
-	with open(filepath,'r') as fileobject:
-		in_data = yaml.load(fileobject)
-	fileobject.close()
-
-	(nsuper,lattice_segments,segments, elements) = expand_reduce(in_data)
-	print('nsuper ==>',nsuper)
-	print('\nlattice_segments ==>',lattice_segments)
-	print('\nsegments ==>',segments)
-	print('\nelements ==>',elements)
-
-	return
-
-#====================================wdk========================================================
+	print('\nTest2')
+	parse_yaml_and_fabric(factory2,input_file)
+#--------
 if __name__ == '__main__':
 #     test0()
-	test1('/fodo_with_10cav_per_RF(2).yml')
-# 	test2('/fodo_with_10cav_per_RF(2).yml')
+# 	test1('fodo_with_10cav_per_RF(2).yml')
+	test2('fodo_with_10cav_per_RF(2).yml')
 

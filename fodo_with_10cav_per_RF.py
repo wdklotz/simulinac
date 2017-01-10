@@ -17,10 +17,10 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,dictprnt
+from setup import CONF,SUMMARY,Beam,Proton,dictprnt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
-from fileLoader import read_yaml_and_parse
+from fileLoader import parse_yaml_and_fabric, factory1, factory2
 from bucket_size import bucket
 
 def display(functions):
@@ -162,22 +162,24 @@ def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*
     show(block=False)
 
-def loesung(filepath):                   ## total classic FODO lattice (1st result, used as reference!)
-    super_cell = read_yaml_and_parse(filepath)
+def loesung(filepath):                   ## total classic FODO lattice
+#     lattice = parse_yaml_and_fabric(factory1,filepath)
+    lattice = parse_yaml_and_fabric(factory2,filepath)
+    Beam.soll = Proton(CONF['injection_energy'])
+    lattice.energy_trim()          ## energy update here!  (IMPORTANT)
+    SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
-    mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])
+    mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Zeige Grafik: Lösungen als Funktion von (s)
-    functions = super_cell.functions(30)
+    functions = lattice.functions(30)
     display(functions)   # twiss functions
 
 if __name__ == '__main__':
-    import sys, os
-    directory = os.path.dirname(__file__)
-#     filepath = directory+'/fodo_with_10cav_per_RF.yml'       ## the default input file (YAML syntax)
-    filepath = directory+'/fodo_with_10cav_per_RF(2).yml'       ## the default input file (YAML syntax)
+    import sys
+    filepath = 'fodo_with_10cav_per_RF(2).yml'       ## the default input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
