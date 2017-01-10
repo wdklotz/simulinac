@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from setup import CONF,SUMMARY,Beam,Proton,dictprnt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
-from fileLoader import parse_yaml_and_fabric, factory1, factory2
+from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 
 def display(functions):
@@ -163,8 +163,7 @@ def display1(functions):          ## plotting with longitudinal motion
     show(block=False)
 
 def loesung(filepath):                   ## total classic FODO lattice
-#     lattice = parse_yaml_and_fabric(factory1,filepath)
-    lattice = parse_yaml_and_fabric(factory2,filepath)
+    lattice = parse_yaml_and_fabric(filepath)
     Beam.soll = Proton(CONF['injection_energy'])
     lattice.energy_trim()          ## energy update here!  (IMPORTANT)
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
