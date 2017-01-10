@@ -159,12 +159,12 @@ def objprnt (what,text='========',filter=[]): ## helper to print objects as dict
         print(k.rjust(30),':',v)
     return
 
-def dictprnt(what,text='========',filter=[]): ## helper to print objects as dictionary
+def dictprnt(what,text='========',filter=[],njust=30): ## helper to print objects as dictionary
     print('\n          ================= '+text+' =================')
     for k,v in sorted(what.items()):
         if k in filter:
             continue
-        print(k.rjust(30),':',v)
+        print(k.rjust(njust),':',v)
     return
 
 def printv(level,*args):                      ## multilevel printing using verbose flag
