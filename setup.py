@@ -45,8 +45,7 @@ CONF = {                                      ## CONFIG constants and setup ...
      }
 CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
-SUMMARY = {
-    }
+SUMMARY = {}
 class Beam(object):                           ## relativistic particle beam
     soll=None   ## the synchronous reference particle  (class member!)
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):

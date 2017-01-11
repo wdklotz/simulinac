@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from setup import CONF,SUMMARY,dictprnt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
-from fileLoader import parse_yaml_and_fabric
+from lattice_generator import parse_yaml_and_fabric
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -173,8 +173,7 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
 
 if __name__ == '__main__':
     import sys, os
-    directory = os.path.dirname(__file__)
-    filepath = directory+'/fodo_template.yml'       ## the default demo input file (YAML syntax)
+    filepath = 'fodo_template.yml'       ## the default demo input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

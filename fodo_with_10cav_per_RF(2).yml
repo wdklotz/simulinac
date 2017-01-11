@@ -96,7 +96,7 @@ segments:                           ## SEGMENT definitions
         - label:    SEG3    # (changeable) label is mandatory. DON't remove or reposition!
         - *d1
         - *qd1
-    - RFC:
+    - rfc:
         - label:    RFC    # (changeable) label is mandatory. DON't remove or reposition!
         - *rfc
         - *rfc
@@ -113,6 +113,4 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-#   - [5, SEG1, RFC, SEG2, RFC, SEG3]
     - [197, SEG1, RFC, SEG2, RFC, SEG3]
-#    - [1, SEG1, RFC, SEG2, RFC, SEG3]
