@@ -17,12 +17,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton,dictprnt
+from setup import CONF,SUMMARY,Beam,Proton,dictprnt,collect_summary
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
-
 def display(functions):
     if CONF['dWf'] == 0:
         display0(functions)
@@ -170,6 +169,7 @@ def loesung(filepath):                   ## total classic FODO lattice
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
+    collect_summary()
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Zeige Grafik: Lösungen als Funktion von (s)

@@ -21,11 +21,23 @@ from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0,printv
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
 import numpy as NP
+# from tracks import Track
 
-class _matrix(object): ## the mother of all 6x6 matrices
-    _dim = 6   # 6x6 matrices
+class _matrix(object): ## the mother of all 10x10 matrices
+    _dim = 10
+    # 10x10 matrices used here
+    # 0 = x
+    # 1 = x'
+    # 2 = y
+    # 3 = y'
+    # 4 = z
+    # 5 = z'
+    # 6 = E      #accelleration E' = E + deltaW
+    # 7 = 1
+    # 8 = s      #track position      s'  = s + l
+    # 9 = 1
     def __init__(self):
-        self.matrix=NP.eye(_matrix._dim)    ## 6x6 unit matrix
+        self.matrix=NP.eye(_matrix._dim)    ## 10x10 unit matrix
         self.label=''
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
@@ -132,7 +144,8 @@ class D(I):            ## drift space nach Trace3D
         super(D,self).__init__(viseo=viseo,beam=beam)
         self.label=label
         self.length=length     ## hard edge length [m]
-        self.matrix[0,1]=self.matrix[2,3]=self.length
+        self.matrix[0,1] = self.matrix[2,3] =self.length
+        self.matrix[8,9] = self.length     #delta-s
         g=self.beam.gamma
         self.matrix[4,5]=length/(g*g)
     def shorten(self,l=0.):    # returns a new instance!
@@ -140,6 +153,9 @@ class D(I):            ## drift space nach Trace3D
     def update(self):          # returns a new instance!
         soll = Beam.soll
         return D(length=self.length,label=self.label,beam=soll,viseo=self.viseo)
+    def track_through(self,track):
+    	pass
+
 
 class QF(D):           ## focusing quad nach Trace3D
     def __init__(self,
@@ -169,6 +185,7 @@ class QF(D):           ## focusing quad nach Trace3D
         sd  =sinh(phi)/kwurz
         cdp =kwurz*sinh(phi)
         sdp =cd
+        m[8,9] =self.length     #delta-s
         ## 6x6 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
             m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
@@ -238,6 +255,7 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         m[2,3] = self.length
         ## z-plane
         m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
+        m[8,9] =self.length     #delta-s
         return m
     def update(self):
         raise RuntimeWarning('SD.update(): not ready!')
@@ -313,7 +331,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         g           = beam_avg.gamma                          # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g)                   # transport matrix
-        Beam.soll.incTK(self.deltaW)                          # beam accelerated
+        Beam.soll.incTK(self.deltaW)                          # beam accelerated CAV
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
@@ -328,6 +346,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         # print("CAV: dx'/x= ",cxp)
         m[1,0]=cxp
         m[3,2]=cyp
+        m[6,7]=self.deltaW      #energy kick = acceleration
         return m
     def shorten(self,l=0.):
         return self
@@ -360,7 +379,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         g           = beam_avg.gamma                          # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g,beami,beamf)       # transport matrix
-        Beam.soll.incTK(self.deltaW)
+        Beam.soll.incTK(self.deltaW)                          # beam accelerated RFG
         # objprnt(Beam.soll,'soll')
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
@@ -380,6 +399,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         m[1,0]=kx/bgf;    m[1,1]=bgiRbgf
         m[3,2]=ky/bgf;    m[3,3]=bgiRbgf
         m[5,4]=kz/bgf;    m[5,5]=bgiRbgf
+        m[6,7]=self.deltaW      #energy kick = acceleration
         return m
     def shorten(self,l=0.):
         return self
@@ -704,7 +724,7 @@ def test9():
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)
+        Beam.soll.incTK(dt)                                     #test9
         mqf.update().out()
     print('========================')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
@@ -713,7 +733,7 @@ def test9():
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)
+        Beam.soll.incTK(dt)                                    #test9
         mqd.update().out()
     print('========================')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
@@ -722,7 +742,7 @@ def test9():
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)
+        Beam.soll.incTK(dt)                                    #test9
         cavity.update().out()
     print('--------------- EOF test9 --------------------')
 def test10():
@@ -739,7 +759,7 @@ def test10():
 
     beam = Beam.soll
     beam.out()
-    beam.incTK(150.)
+    beam.incTK(150.)                                           #test10
     beam.out()
     print('--------------- EOF test10 --------------------')
 def test11():

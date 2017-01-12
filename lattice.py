@@ -351,8 +351,8 @@ class Lattice(object):
         y2p = sqrt(CONF['emity_i']*self.gammy0)
         dz  = CONF['dZ']      # eingabe dZ
         dp  = CONF['dP/P']    # eingabe dP/P0
-        c_0=NP.array([[x1],[0.],[y1],[0.],[dz],[0.]])       # cos-like traj.
-        s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp]])     # sin-like traj.
+        c_0=NP.array([[x1],[0.],[y1],[0.],[dz],[0.],[0.],[0.],[0.],[0.]])       # cos-like traj.
+        s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])     # sin-like traj.
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -382,12 +382,17 @@ class Lattice(object):
         return (c_like,s_like)
 
     def symplecticity(self):       ## test symplecticity
-        s=NP.array([[0., 1., 0.,0., 0.,0.],
-                    [-1.,0., 0.,0., 0.,0.],
-                    [ 0.,0., 0.,1., 0.,0.],
-                    [ 0.,0.,-1.,0., 0.,0.],
-                    [ 0.,0., 0.,0., 0.,1.],
-                    [ 0.,0., 0.,0.,-1.,0.]])
+        s=NP.array([[ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
+                    [-1.,0., 0.,0., 0.,0.,0.,0.,0.,0.],    #x'
+                    [ 0.,0., 0.,1., 0.,0.,0.,0.,0.,0.],    #y
+                    [ 0.,0.,-1.,0., 0.,0.,0.,0.,0.,0.],    #y'
+                    [ 0.,0., 0.,0., 0.,1.,0.,0.,0.,0.],    #z
+                    [ 0.,0., 0.,0.,-1.,0.,0.,0.,0.,0.],    #z'
+                    [ 0.,0., 0.,0., 0.,0.,1.,0.,0.,0.],    #delta-E
+                    [ 0.,0., 0.,0., 0.,0.,0.,1.,0.,0.],    #1
+                    [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #delta-l
+                    [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
+                    ])
         s=NP.dot(self.full_cell.matrix.T,s)
         s=NP.dot(s,self.full_cell.matrix)
         # dets=LA.det(s)

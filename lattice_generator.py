@@ -107,6 +107,7 @@ def factory(input_file):
 							break
 		return lattice   #the complete lattice
 # --------
+# --------
 	def read_flags(in_data):
 	#returns ==> {...}
 		flags_list = in_data['flags']
@@ -144,41 +145,6 @@ def factory(input_file):
 		CONF['spalt_spannung']   = CONF['Ez_feld']*CONF['spalt_laenge']
 		CONF['n_coil']           = 1 if not 'windings' in parameters else parameters['windings']
 		return parameters
-# --------
-	def collect_summaries():
-		SUMMARY['frequency [Hz]'] = CONF['frequenz']
-		SUMMARY['Quad gradient [T/m]'] = CONF['quad_gradient']
-		SUMMARY['QF gradient [T/m]'] = CONF['quadf_gradient']
-		SUMMARY['QD gradient [T/m]'] = CONF['quadd_gradient']
-		SUMMARY['Quad pole length [m]'] = CONF['ql']
-		SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
-		SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
-		SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
-		SUMMARY['sigx_i* [mm]'] = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-		SUMMARY['sigy_i* [mm]'] = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-		SUMMARY['<impulse dP/P> [%]'] = CONF['dP/P'] * 1.e+2
-		SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
-		SUMMARY['dZ [m]'] = CONF['dZ']
-		SUMMARY['cavity gap length [m]'] = CONF['spalt_laenge']
-		SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
-		SUMMARY['wavelength [m]'] = CONF['wellenlänge']
-		SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
-		SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
-		SUMMARY['lattice version'] = CONF['lattice_version']
-		#...........*...........*...........*...........*...........*...........*
-		SUMMARY['QF pole strength* [T]'] = CONF['quadf_gradient'] * CONF['ql']
-		SUMMARY['QF current* [A/winding]'] = (CONF['quadf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
-		SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
-		SUMMARY['QF coil [windings]'] = CONF['n_coil']
-		SUMMARY['<energy dW/W> max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
-			CONF['Ez_feld'],
-			Beam.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
-			CONF['soll_phase'],
-			CONF['wellenlänge'],
-			Beam.soll)*1.e+2
-		SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Beam.soll.gamma)*wakzp  # impule acceptanc in %
-		SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Beam.soll.beta*CONF['dZ'])
-		return
 # --------
 	def expand_reduce(in_data):
 	#--------
@@ -235,7 +201,7 @@ def factory(input_file):
 				segment['elements']=list_of_segment_items
 				list_of_segments.append(segment)
 			return list_of_segments
-	#--------
+		#§§§§§§§
 		lattice_segments = read_lattice(in_data)
 		nsuper = lattice_segments[0]       #nboff super cells
 		del lattice_segments[0]         #pull nsuper off
@@ -244,7 +210,7 @@ def factory(input_file):
 		elem_defs = read_elements(in_data)
 		elements = reduce_elm_def(elem_defs)
 		return (nsuper,lattice_segments,segments,elements)
-#--------
+	#§§§§§§§
 	SUMMARY['input file'] = CONF['input_file'] = input_file
 
 	with open(input_file,'r') as fileobject:
@@ -261,7 +227,6 @@ def factory(input_file):
 	lattice = make_lattice(nsuper,lattice_in,segments_in,elements_in)
 # 	print('lattice >>',end='\n')
 	lattice.out()
-	collect_summaries()
 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 	return lattice
 
