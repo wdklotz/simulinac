@@ -1,5 +1,5 @@
 RBARC=false;
-BEAM, PARTICLE=PROTON;
+particle, PARTICLE=PROTON;
 
 len_BD = 1.5;
 radius_BD = 3.8197;

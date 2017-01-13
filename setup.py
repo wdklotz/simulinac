@@ -19,6 +19,8 @@ This file is part of the SIMULINAC code
 """
 from math import pi,sqrt,sin, cos, radians, degrees
 
+MDIM=10
+
 CONF = {                                      ## CONFIG constants and setup ...
     'lichtgeschwindigkeit': 299792458.,    # [m/s] const
     'elementarladung': 1.602176565e-19,    # [coulomb] const
@@ -46,8 +48,8 @@ CONF = {                                      ## CONFIG constants and setup ...
 CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
 SUMMARY = {}
-class Beam(object):                           ## relativistic particle beam
-    soll=None   ## the synchronous reference particle  (class member!)
+class Particle(object):                           ## relativistic particle
+    soll=None            #reference particle  (class member!)
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -76,11 +78,11 @@ class Beam(object):                           ## relativistic particle beam
         ttf = sin(teta)/teta
         return ttf
 
-class Proton(Beam):                           ## proton
+class Proton(Particle):                           ## proton
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
 
-Beam.soll             = Proton(CONF['injection_energy'])
+Particle.soll = Proton(CONF['injection_energy'])
 
 def collect_summary():
 	SUMMARY['frequency [Hz]'] = CONF['frequenz']
@@ -109,32 +111,32 @@ def collect_summary():
 	SUMMARY['QF coil [windings]'] = CONF['n_coil']
 	SUMMARY['<energy dW/W> max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
 		CONF['Ez_feld'],
-		Beam.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
+		Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
 		CONF['soll_phase'],
 		CONF['wellenlänge'],
-		Beam.soll)*1.e+2
-	SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Beam.soll.gamma)*wakzp  # impule acceptanc in %
-	SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Beam.soll.beta*CONF['dZ'])
+		Particle.soll)*1.e+2
+	SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Particle.soll.gamma)*wakzp  # impule acceptanc in %
+	SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Particle.soll.beta*CONF['dZ'])
 	return
 
-def Wakzeptanz(Ez,T,phis,lamb,beam):
+def Wakzeptanz(Ez,T,phis,lamb,particle):
     """
     Energieakzeptanz dW/W nach T.Wangler pp. 179
     Ez      [Mev/m] accelerating field gradient on gap axis
     T       transit time factor
     phis    [deg] sync. phase (-90 to 0)
     lamb    [m] rf wave length
-    beam    sync. particle
+    particle    sync. particle
     """
-    gb = beam.gamma_beta
-    m0 = beam.e0  # rest mass
+    gb = particle.gamma_beta
+    m0 = particle.e0  # rest mass
     res = 2.*Ez*T*gb*gb*gb*lamb/pi/m0
     phsoll = radians(phis)
     res = res*(phsoll*cos(phsoll)-sin(phsoll))
-    res = sqrt(res)/(beam.gamma-1)
+    res = sqrt(res)/(particle.gamma-1)
     return res
 
-class Electron(Beam):                         ## electron
+class Electron(Particle):                         ## electron
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
@@ -218,13 +220,13 @@ def wille():
     }
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    Beam.soll = Beam()
+    Particle.soll = Particle()
     dictprnt(CONF,text='CONF')
     dictprnt(wille(),text='wille')
-    print('\n'+Beam.soll.out(False))
+    print('\n'+Particle.soll.out(False))
     Proton(tkin=50.).out()
     Electron(tkin=50.).out()
-    Beam.soll = Electron(50.)
-    objprnt(Beam.soll,text='Beam.soll')
-    Beam.soll = Proton(50.)
-    objprnt(Beam.soll,text='Beam.soll')
+    Particle.soll = Electron(50.)
+    objprnt(Particle.soll,text='Particle.soll')
+    Particle.soll = Proton(50.)
+    objprnt(Particle.soll,text='Particle.soll')

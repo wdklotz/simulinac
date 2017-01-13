@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton,dictprnt,collect_summary
+from setup import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from lattice_generator import parse_yaml_and_fabric
@@ -163,7 +163,7 @@ def display1(functions):          ## plotting with longitudinal motion
 
 def loesung(filepath):                   ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    Beam.soll = Proton(CONF['injection_energy'])
+    Particle.soll = Proton(CONF['injection_energy'])
     lattice.energy_trim()          ## energy update here!  (IMPORTANT)
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     #-----------------------------------------

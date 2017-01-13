@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys, os
-from setup import CONF,SUMMARY,Beam
+from setup import CONF,SUMMARY,Particle
 from setup import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
@@ -41,21 +41,21 @@ def instanciate_element(item):
 	if key == 'D':
 		length   = attributes['length']
 		label    = attributes['label']
-		instance =  ELM.D(length=length,label=label,beam=Beam.soll)
+		instance =  ELM.D(length=length,label=label,particle=Particle.soll)
 		return (label,instance)
 	if key == 'QF':
 		length   = attributes['length']
 		label    = attributes['label']
 		dBdz     = attributes["B'"]
-		kq       = dBdz/Beam.soll.brho
-		instance = ELM.QF(k0=kq,length=length,label=label,beam=Beam.soll)
+		kq       = dBdz/Particle.soll.brho
+		instance = ELM.QF(k0=kq,length=length,label=label,particle=Particle.soll)
 		return (label,instance)
 	if key == 'QD':
 		length   = attributes['length']
 		label    = attributes['label']
 		dBdz     = attributes["B'"]
-		kq       = dBdz/Beam.soll.brho
-		instance = ELM.QD(k0=kq,length=length,label=label,beam=Beam.soll)
+		kq       = dBdz/Particle.soll.brho
+		instance = ELM.QD(k0=kq,length=length,label=label,particle=Particle.soll)
 		return (label,instance)
 	if key == 'RFG':
 		gap       = attributes['gap']
@@ -65,7 +65,7 @@ def instanciate_element(item):
 		fRF       = attributes["fRF"]
 		U0        = Ez * gap
 		dWf       = CONF['dWf']
-		instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,beam=Beam.soll,dWf=dWf)
+		instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=Particle.soll,dWf=dWf)
 		return (label,instance)
 	if key == 'RFC':
 		gap       = attributes['gap']
@@ -76,7 +76,7 @@ def instanciate_element(item):
 		fRF       = attributes["fRF"]
 		U0        = Ez * gap
 		dWf       = CONF['dWf']
-		instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,beam=Beam.soll,dWf=dWf)
+		instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=Particle.soll,dWf=dWf)
 		return (label,instance)
 	else:
 		raise RuntimeError('unknown element type: ',key)

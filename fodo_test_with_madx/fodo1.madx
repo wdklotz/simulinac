@@ -1,5 +1,5 @@
 RBARC=false;
-BEAM, PARTICLE=PROTON;
+particle, PARTICLE=PROTON;
 
 lqd= 0.4;
 lqf=lqd/2.;

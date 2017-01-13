@@ -17,34 +17,24 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import wille,CONF,dictprnt,objprnt,Beam,k0,dBdz,scalek0,printv
+from setup import wille,CONF,MDIM,dictprnt,objprnt,Particle,k0,dBdz,scalek0,printv
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians
 from copy import copy
 import numpy as NP
 # from tracks import Track
 
-class _matrix(object): ## the mother of all 10x10 matrices
-    _dim = 10
-    # 10x10 matrices used here
-    # 0 = x
-    # 1 = x'
-    # 2 = y
-    # 3 = y'
-    # 4 = z
-    # 5 = z'
-    # 6 = E      #accelleration E' = E + deltaW
-    # 7 = 1
-    # 8 = s      #track position      s'  = s + l
-    # 9 = 1
+class _matrix(object): ## the mother of all matrices
+    # MDIMxMDIM matrices used here
+    # 0 = x, 1 = x', 2 = y, 3 = y', 4 = z, 5 = z', 6 = deltaW, 7 = 1, 8 = delta-s, 9 = 1
     def __init__(self):
-        self.matrix=NP.eye(_matrix._dim)    ## 10x10 unit matrix
+        self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
         self.label=''
         self.length=0.         ## default zero length!
         self.slice_min = 0.01  ## minimal slice length
         self.viseo = 0.
-    def out(self):
-        printv(2,self.label)
-        printv(2,self.matrix)
+    def out(self,level=2):
+        printv(level,self.label)
+        printv(level,self.matrix)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix()
@@ -58,8 +48,8 @@ class _matrix(object): ## the mother of all 10x10 matrices
     def reverse(self):
         raise RuntimeError('_matrix:reverse not ready yet!')
         res=_matrix()
-        for i in range(_matrix._dim):
-            for k in range(_matrix._dim):
+        for i in range(MDIM):
+            for k in range(MDIM):
                 res.matrix[i][k] = self.matrix[i][k]
         res.matrix[0][0] = self.matrix[1][1]
         res.matrix[1][1] = self.matrix[0][0]
@@ -129,30 +119,30 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
     def __init__(self,
     label='I',
     viseo=0.,
-    beam=Beam.soll):
+    particle=Particle.soll):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
-        self.beam=copy(beam)  # keep a local copy of the Beam instance (IMPORTANT!)
+        self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 
 class D(I):            ## drift space nach Trace3D
     def __init__(self,
     length=0.,
     viseo=0.,
     label='D',
-    beam=Beam.soll):
-        super(D,self).__init__(viseo=viseo,beam=beam)
+    particle=Particle.soll):
+        super(D,self).__init__(viseo=viseo,particle=particle)
         self.label=label
         self.length=length     ## hard edge length [m]
         self.matrix[0,1] = self.matrix[2,3] =self.length
         self.matrix[8,9] = self.length     #delta-s
-        g=self.beam.gamma
+        g=self.particle.gamma
         self.matrix[4,5]=length/(g*g)
     def shorten(self,l=0.):    # returns a new instance!
-        return D(length=l,label=self.label,beam=self.beam,viseo=self.viseo)
+        return D(length=l,label=self.label,particle=self.particle,viseo=self.viseo)
     def update(self):          # returns a new instance!
-        soll = Beam.soll
-        return D(length=self.length,label=self.label,beam=soll,viseo=self.viseo)
+        soll = Particle.soll
+        return D(length=self.length,label=self.label,particle=soll,viseo=self.viseo)
     def track_through(self,track):
     	pass
 
@@ -162,16 +152,16 @@ class QF(D):           ## focusing quad nach Trace3D
     k0=0.,
     length=0.,
     label='QF',
-    beam=Beam.soll):
-        super(QF,self).__init__(length=length,label=label,beam=beam)
+    particle=Particle.soll):
+        super(QF,self).__init__(length=length,label=label,particle=particle)
         self.k0=k0         ## Quad strength [m**-2]
         self.matrix=self._mx()
         self.viseo = +0.5
     def shorten(self,l=0.):
-        return QF(k0=self.k0,length=l,label=self.label,beam=self.beam)
+        return QF(k0=self.k0,length=l,label=self.label,particle=self.particle)
     def _mx(self):
         m=self.matrix
-        g=self.beam.gamma
+        g=self.particle.gamma
         rzz12=self.length/(g*g)
         kwurz=sqrt(self.k0)
         phi=self.length*kwurz
@@ -185,7 +175,6 @@ class QF(D):           ## focusing quad nach Trace3D
         sd  =sinh(phi)/kwurz
         cdp =kwurz*sinh(phi)
         sdp =cd
-        m[8,9] =self.length     #delta-s
         ## 6x6 matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
             m[0,0]=cf; m[0,1]=sf; m[1,0]=cfp; m[1,1]=sfp; m[2,2]=cd; m[2,3]=sd; m[3,2]=cdp; m[3,3]=sdp; m[4,5]=rzz12
@@ -198,13 +187,13 @@ class QF(D):           ## focusing quad nach Trace3D
         k0   =self.k0
         len  =self.length
         label=self.label
-        beam =self.beam
-        tki  =beam.tkin
-        soll =Beam.soll
+        particle =self.particle
+        tki  =particle.tkin
+        soll =Particle.soll
         tkf  =soll.tkin
         kf   =scalek0(k0,tki,tkf)  # scale quad strength
         # print('kf',kf)
-        scaled=QF(k0=kf,length=len,label=label,beam=soll)
+        scaled=QF(k0=kf,length=len,label=label,particle=soll)
         return scaled
 
 class QD(QF):          ## defocusing quad nach Trace3D
@@ -212,21 +201,21 @@ class QD(QF):          ## defocusing quad nach Trace3D
     k0=0.,
     length=0.,
     label='QD',
-    beam=Beam.soll):
-        super(QD,self).__init__(k0=k0,length=length,label=label,beam=beam)
+    particle=Particle.soll):
+        super(QD,self).__init__(k0=k0,length=length,label=label,particle=particle)
         self.viseo = -0.5
     def shorten(self,l=0.):
-        return QD(k0=self.k0,length=l,label=self.label,beam=self.beam)
+        return QD(k0=self.k0,length=l,label=self.label,particle=self.particle)
     def update(self):
         k0   =self.k0
         len  =self.length
         label=self.label
-        beam =self.beam
-        tki  =beam.tkin
-        soll =Beam.soll
+        particle =self.particle
+        tki  =particle.tkin
+        soll =Particle.soll
         tkf  =soll.tkin
         kf   =scalek0(k0,tki,tkf)
-        scaled=QD(k0=kf,length=len,label=label,beam=soll)
+        scaled=QD(k0=kf,length=len,label=label,particle=soll)
         return scaled
 
 class SD(D):           ## sector bending dipole in x-plane nach Trace3D
@@ -234,20 +223,20 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
     radius=0.,
     length=0.,
     label='SB',
-    beam=Beam.soll):
-        super(SD,self).__init__(length=length,label=label,beam=beam)
+    particle=Particle.soll):
+        super(SD,self).__init__(length=length,label=label,particle=particle)
         self.radius = radius
         self.matrix=self._mx()
         self.viseo = 0.25
     def shorten(self,l=0.):
-        return SD(radius=self.radius,length=l,label=self.label,beam=self.beam)
+        return SD(radius=self.radius,length=l,label=self.label,particle=self.particle)
     def _mx(self):  # nach Trace3D
         m = self.matrix
         rho=self.radius
         k=1./rho
         phi=self.length/rho
         cx=cos(phi) ; sx=sin(phi)
-        b=self.beam.beta
+        b=self.particle.beta
         ## x-plane
         m[0,0] = cx;     m[0,1] = sx/k;  m[0,5] = rho*(1.-cx)
         m[1,0] = -sx*k;  m[1,1] = cx;    m[1,5] = sx
@@ -255,7 +244,6 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         m[2,3] = self.length
         ## z-plane
         m[4,0] = -sx;   m[4,1] = -rho*(1.-cx);   m[4,5] = rho*sx-self.length*b*b
-        m[8,9] =self.length     #delta-s
         return m
     def update(self):
         raise RuntimeWarning('SD.update(): not ready!')
@@ -265,13 +253,13 @@ class RD(SD):          ## rectangular bending dipole in x-plane
     radius=0.,
     length=0.,
     label='RB',
-    beam=Beam.soll):
-        super(RD,self).__init__(radius=radius,length=length,label=label,beam=beam)
-        wd = WD(self,label='',beam=beam)  # wedge myself...
+    particle=Particle.soll):
+        super(RD,self).__init__(radius=radius,length=length,label=label,particle=particle)
+        wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * self * wd
         self.matrix= rd.matrix
     def shorten(self,l=0.):
-        return RD(radius=self.radius,length=l,label=self.label,beam=self.beam)
+        return RD(radius=self.radius,length=l,label=self.label,particle=self.particle)
     def update(self):
         raise RuntimeWarning('RD.update(): not ready!')
 
@@ -279,8 +267,8 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
     def __init__(self,
     sector,
     label='WD',
-    beam=Beam.soll):
-        super(WD,self).__init__(label=label,beam=beam)
+    particle=Particle.soll):
+        super(WD,self).__init__(label=label,particle=particle)
         m=self.matrix
         self.parent = sector
         self.radius = sector.radius
@@ -292,7 +280,7 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         m[1,0]=ckp
         m[3,2]=-ckp
     def shorten(self,l=0.):
-        wd = WD(self.parent,label=self.label,beam=self.beam)
+        wd = WD(self.parent,label=self.label,particle=self.particle)
         m=wd.matrix
         wd.psi = l/wd.radius
         rinv=1./wd.radius
@@ -311,27 +299,27 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     PhiSoll    =radians(CONF['soll_phase']),
     fRF        =CONF['frequenz'],
     label      ='RFG',
-    beam       =Beam(CONF['injection_energy']),
+    particle   =Particle(CONF['injection_energy']),
     gap        =CONF['spalt_laenge'],
     dWf=1.):
-        super(CAV,self).__init__(label=label,beam=beam)
+        super(CAV,self).__init__(label=label,particle=particle)
         self.u0     = U0                       # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
         self.freq   = fRF                      # [Hz]  RF frequenz
         self.dWf    = dWf
         self.gap    = gap
         self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._TrTF(self.beam.beta)              # time-transition factor
+        self.tr     = self._TrTF(self.particle.beta)              # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf      # T.Wrangler pp.221
-        beami       = self.beam                               # Beam @ entrance
-        beamf       = Beam(beami.tkin+self.deltaW)            # Beam @ exit
-        dWavg       = (beamf.tkin - beami.tkin)*0.5+beami.tkin# average energy
-        beam_avg    = Beam(dWavg)                             # Beam @ average energy
-        b           = beam_avg.beta                           # beta @ average energy
-        g           = beam_avg.gamma                          # gamma @ average energy
+        particlei   = self.particle                               # particle @ entrance
+        particlef   = Particle(particlei.tkin+self.deltaW)            # particle @ exit
+        dWavg       = (particlef.tkin - particlei.tkin)*0.5+particlei.tkin# average energy
+        particle_avg = Particle(dWavg)                             # particle @ average energy
+        b           = particle_avg.beta                           # beta @ average energy
+        g           = particle_avg.gamma                          # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx(self.tr,b,g)                   # transport matrix
-        Beam.soll.incTK(self.deltaW)                          # beam accelerated CAV
+        Particle.soll.incTK(self.deltaW)                          # particle accelerated CAV
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
@@ -340,7 +328,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return ttf
     def _mx(self,tr,b,g):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
         m=self.matrix
-        e0 = self.beam.e0
+        e0 = self.particle.e0
         cyp = cxp = -pi*self.u0*tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
         # print(u"CAV: \u0394x'/x= ",cxp)
         # print("CAV: dx'/x= ",cxp)
@@ -351,7 +339,7 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
     def shorten(self,l=0.):
         return self
     def update(self):
-        return CAV(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
+        return CAV(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,particle=Particle.soll,gap=self.gap,dWf=self.dWf)
 
 class RFG(D):          ## zero length RF gap nach Trace3D
     def __init__(self,
@@ -359,41 +347,41 @@ class RFG(D):          ## zero length RF gap nach Trace3D
     PhiSoll    =radians(CONF['soll_phase']),
     fRF        =CONF['frequenz'],
     label      ='RFG',
-    beam       =Beam.soll,
+    particle   =Particle.soll,
     gap        =CONF['spalt_laenge'],
     dWf=1.):
-        super(RFG,self).__init__(label=label,beam=beam)
+        super(RFG,self).__init__(label=label,particle=particle)
         self.u0     = U0*dWf                                  # [MV] gap Voltage
         self.phis   = PhiSoll                                 # [radians] soll phase
         self.freq   = fRF                                     # [Hz]  RF frequenz
         self.dWf    = dWf
         self.gap    = gap
         self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._TrTF(self.beam.beta)
+        self.tr     = self._TrTF(self.particle.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
-        beami       = self.beam                               # Beam @ entrance
-        beamf       = Beam(beami.tkin+self.deltaW)            # Beam @ exit
-        dWavg       = (beamf.tkin - beami.tkin)*0.5+beami.tkin# average energy
-        beam_avg    = Beam(dWavg)                             # Beam @ average energy
-        b           = beam_avg.beta                           # beta @ average energy
-        g           = beam_avg.gamma                          # gamma @ average energy
+        particlei       = self.particle                               # particle @ entrance
+        particlef       = Particle(particlei.tkin+self.deltaW)            # particle @ exit
+        dWavg       = (particlef.tkin - particlei.tkin)*0.5+particlei.tkin# average energy
+        particle_avg    = Particle(dWavg)                             # particle @ average energy
+        b           = particle_avg.beta                           # beta @ average energy
+        g           = particle_avg.gamma                          # gamma @ average energy
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
-        self.matrix = self._mx(self.tr,b,g,beami,beamf)       # transport matrix
-        Beam.soll.incTK(self.deltaW)                          # beam accelerated RFG
-        # objprnt(Beam.soll,'soll')
+        self.matrix = self._mx(self.tr,b,g,particlei,particlef)       # transport matrix
+        Particle.soll.incTK(self.deltaW)                          # particle accelerated RFG
+        # objprnt(Particle.soll,'soll')
         self.viseo  = 0.25
     def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx(self,tr,b,g,beami,beamf):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
+    def _mx(self,tr,b,g,particlei,particlef):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
         m=self.matrix
-        e0 = self.beam.e0
+        e0 = self.particle.e0
         kz = 2.*pi*self.u0*tr*sin(self.phis)/(e0*b*b*self.lamb)
         ky = kx = -0.5*kz/(g*g)
-        bgi         = sqrt(beami.gamma*beami.gamma-1.)  # beta*gamma (i)
-        bgf         = sqrt(beamf.gamma*beamf.gamma-1.)  # beta*gamma (f)
+        bgi         = sqrt(particlei.gamma*particlei.gamma-1.)  # beta*gamma (i)
+        bgf         = sqrt(particlef.gamma*particlef.gamma-1.)  # beta*gamma (f)
         bgiRbgf = bgi/bgf
         # 6x6
         m[1,0]=kx/bgf;    m[1,1]=bgiRbgf
@@ -404,11 +392,11 @@ class RFG(D):          ## zero length RF gap nach Trace3D
     def shorten(self,l=0.):
         return self
     def update(self):
-        return RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,dWf=self.dWf)
+        return RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,particle=Particle.soll,gap=self.gap,dWf=self.dWf)
 
 class _thin(_matrix):  ## the mother of all thin elements
-    def __init__(self,beam=Beam.soll):
-        self.beam = copy(beam)      ## keep a local copy of the Beam instance (important!)
+    def __init__(self,particle=Particle.soll):
+        self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(anz/2)
         anz2 = int(anz-anz1*2)
@@ -431,13 +419,13 @@ class QFth(_thin):     ## thin F-quad
     k0=0.,
     length=0.,
     label='QFT',
-    beam=Beam.soll):
-        super(QFth,self).__init__(beam=beam)
+    particle=Particle.soll):
+        super(QFth,self).__init__(particle=particle)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
-        di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=+0.5)
+        di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=+0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
         m = kick.matrix     ## thin lens quad matrix
@@ -460,13 +448,13 @@ class QDth(_thin):     ## thin D-quad
     k0=0.,
     length=0.,
     label='QDT',
-    beam=Beam.soll):
-        super(QDth,self).__init__(beam=beam)
+    particle=Particle.soll):
+        super(QDth,self).__init__(particle=particle)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
         self.label  = label
-        di = D(length=0.5*length,beam=self.beam,label=self.label,viseo=-0.5)
+        di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=-0.5)
         df = di
         kick = _matrix()    ## 6x6 unit matrix
         m = kick.matrix     ## thin lens quad matrix
@@ -490,11 +478,11 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
     PhiSoll=CONF['soll_phase'],
     fRF=CONF['frequenz'],
     label='RFC',
-    beam=Beam.soll,
+    particle=Particle.soll,
     gap=CONF['spalt_laenge'],
     length=0.,
     dWf=1.):
-        super(RFC,self).__init__(beam=beam)
+        super(RFC,self).__init__(particle=particle)
         self.u0     = U0*dWf
         self.phis   = PhiSoll
         self.freq   = fRF
@@ -502,28 +490,33 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
         self.gap    = gap
         self.length = length
         self.dWf    = dWf
-        di   = D(length=0.5*length,label='cavI',beam=beam)
-        kick = RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=self.beam,gap=self.gap,dWf=self.dWf)  ## Trace3D RF gap
+        di   = D(length=0.5*length,label='cavI',particle=particle)
+        kick = RFG(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,particle=self.particle,gap=self.gap,dWf=self.dWf)  ## Trace3D RF gap
         self.tr     = kick.tr
         # objprnt(kick)
-        df   = D(length=0.5*length,label='cavO',beam=Beam.soll)   # energy update here
+        df   = D(length=0.5*length,label='cavO',particle=Particle.soll)   # energy update here
         lens = (di * kick) * df
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
     def shorten(self,l=0.):
         raise RuntimeWarning('RFC.shorten(): not needed!')
     def update(self):
-        return RFC(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,beam=Beam.soll,gap=self.gap,length=self.length,dWf=self.dWf)
+        return RFC(U0=self.u0,PhiSoll=self.phis,fRF=self.freq,label=self.label,particle=Particle.soll,gap=self.gap,length=self.length,dWf=self.dWf)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 class Test(_matrix):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
-        self.matrix=NP.array([[a,b,0.,0.,0.,0.],
-                              [c,d,0.,0.,0.,0.],
-                              [0.,0.,a,b,0.,0.],
-                              [0.,0.,d,e,0.,0.],
-                              [0.,0.,0.,0.,a,b],
-                              [0.,0.,0.,0.,e,f]])
+        self.matrix=NP.array([[a,b,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [c,d,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,a,b,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,d,e,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,a,b,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,e,f,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+                              ])
         self.label=label
 def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     """
@@ -684,13 +677,13 @@ def test7():
     print('--------------- EOF test7 --------------------')
 def test8():
     print('test cavity...')
-    objprnt(Beam.soll,'soll')
+    objprnt(Particle.soll,'soll')
     cav=CAV()
     objprnt(cav,'CAV')
-    objprnt(Beam.soll,'soll')
+    objprnt(Particle.soll,'soll')
     rfg=RFG()
     objprnt(rfg,'RFG')
-    objprnt(Beam.soll,'soll')
+    objprnt(Particle.soll,'soll')
     print('--------------- EOF test8 --------------------')
 def test9():
     print('\ntest: quad k-faktor and quad scaling')
@@ -701,7 +694,7 @@ def test9():
     focal = kq*len
     focal=1./focal  # focal len [m]
 
-    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Beam(tk).beta))
+    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Particle(tk).beta))
     print('k [1/m**2]\t{:3f}'.format(kq))
     print('dB/dz[T/m]\t{:.3f}'.format(grad))
     print('len[m]\t\t{:.3f}'.format(len))
@@ -719,48 +712,48 @@ def test9():
         label='gap')
     print('========================')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Beam.soll = Beam(tki)
+    Particle.soll = Particle(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)                                     #test9
+        Particle.soll.incTK(dt)                                     #test9
         mqf.update().out()
     print('========================')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Beam.soll = Beam(tki)
+    Particle.soll = Particle(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)                                    #test9
+        Particle.soll.incTK(dt)                                    #test9
         mqd.update().out()
     print('========================')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Beam.soll = Beam(tki)
+    Particle.soll = Particle(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        Beam.soll.incTK(dt)                                    #test9
+        Particle.soll.incTK(dt)                                    #test9
         cavity.update().out()
     print('--------------- EOF test9 --------------------')
 def test10():
-    print('\ntest: Beam class')
+    print('\ntest: Particle class')
     dictprnt(CONF,text='setup.CONF')
 
-    # Beam class
+    # particle class
     print()
-    Beam(0.).out()
-    Beam(50.).out()
-    Beam(200.).out()
-    Beam(1.e6).out()
-    Beam(1.e9).out()
+    Particle(0.).out()
+    Particle(50.).out()
+    Particle(200.).out()
+    Particle(1.e6).out()
+    Particle(1.e9).out()
 
-    beam = Beam.soll
-    beam.out()
-    beam.incTK(150.)                                           #test10
-    beam.out()
+    particle = Particle.soll
+    Particle.out()
+    Particle.incTK(150.)                                           #test10
+    Particle.out()
     print('--------------- EOF test10 --------------------')
 def test11():
     print('\ntest thin lenses:')
@@ -779,15 +772,16 @@ def test11():
     for elm in qd.step_through(7):
         elm.out()
     print('------ RF cavity test & step through --------')
-    objprnt(Beam.soll,'beam(i)')
+    objprnt(Particle.soll,'particle(i)')
     rf=RFC(length=length)
     rf.out()
-    objprnt(Beam.soll,'beam(f)')
+    objprnt(Particle.soll,'particle(f)')
     objprnt(rf,'RFC cavity')
     for elm in rf.step_through():
         elm.out()
     print('--------------- EOF test11 --------------------')
 if __name__ == '__main__':
+    CONF['verbose']=3
     test0()
     test1()
     test2()

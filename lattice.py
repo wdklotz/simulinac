@@ -21,7 +21,7 @@ from math import sqrt,fabs,acos,pi,degrees
 from numpy import linalg as LA
 from copy import copy
 from matplotlib.pyplot import plot,show,legend
-from setup import wille,CONF,SUMMARY,Beam,objprnt,printv
+from setup import wille,CONF,SUMMARY,Particle,objprnt,printv
 import elements as ELM
 import warnings
 import numpy as NP
@@ -58,19 +58,19 @@ class Lattice(object):
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.out()
 
-    def energy_trim(self):         ## trim lattice matrices for changing beam energy
+    def energy_trim(self):         ## trim lattice matrices for changing particle energy
         cav_counter = 0
         qf_counter  = 0
         qd_counter  = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
         seq_trimmed = []
-        printv(2,'Beam @ entrance:\n'+Beam.soll.out(tee=False))
-        tk_i = Beam.soll.tkin
+        printv(2,'particle @ entrance:\n'+Particle.soll.out(tee=False))
+        tk_i = Particle.soll.tkin
         for item in self.seq:
             element,s0,s1 = item
             updated = element.update()
-            # print(updated.label,'\t',Beam.soll.tkin)
+            # print(updated.label,'\t',Particle.soll.tkin)
             seq_trimmed.append((updated,s0,s1))
             if isinstance(updated,ELM.QF) and (not isinstance(updated,ELM.QD)):
                 qf_counter += 1
@@ -80,8 +80,8 @@ class Lattice(object):
                 cav_counter += 1
                 ttfm = min(updated.tr,ttfm)
                 ttfx = max(updated.tr,ttfx)
-        printv(2,'Beam @ exit:\n'+Beam.soll.out(tee=False))
-        tk_f = Beam.soll.tkin
+        printv(2,'particle @ exit:\n'+Particle.soll.out(tee=False))
+        tk_f = Particle.soll.tkin
         SUMMARY['nboff F-quads*']        = qf_counter
         SUMMARY['nboff D-quads*']        = qd_counter
         SUMMARY['nboff cavities*']       = cav_counter
@@ -217,7 +217,7 @@ class Lattice(object):
                 CONF['sigy_i'] = sqrt(bay*emiy)
                 SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
                 SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
-                xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence
+                xip=sqrt(emix*gmx)   # 1 sigma x' particle divergence
                 yip=sqrt(emiy*gmy)
                 SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
                 SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
@@ -225,7 +225,7 @@ class Lattice(object):
                 raise RuntimeError('stop: unstable lattice')
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
-            # alfa, beta und emittance definieren den beam @ entrance
+            # alfa, beta und emittance definieren den particle @ entrance
             # transfer lattices need not to be stable!
             bax=CONF['betax_i']  # twiss beta @ entrance
             bay=CONF['betay_i']
@@ -233,7 +233,7 @@ class Lattice(object):
             aly=CONF["alfay_i"]
             gmx=(1.+alx*alx)/bax  # twiss gamma @ entrance
             gmy=(1.+aly*aly)/bay
-            xip=sqrt(emix*gmx)   # 1 sigma x' beam divergence @ entrance
+            xip=sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
             yip=sqrt(emiy*gmy)
             SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
             SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
@@ -356,8 +356,8 @@ class Lattice(object):
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
-            beam = element.beam
-            # objprnt(beam,text=element.label)
+            particle = element.particle
+            # objprnt(particle,text=element.label)
             for i_element in element.step_through(steps):
                 element_matrix = i_element.matrix
                 c_0 = element_matrix.dot(c_0)
@@ -368,15 +368,15 @@ class Lattice(object):
                 cxp = c_0[1,0]
                 cy  = c_0[2,0]
                 cyp = c_0[3,0]
-                cz  = -c_0[4,0]*360./(beam.beta*lamb)           # conversion zu dPhi [deg]
-                cdw = c_0[5,0]*(beam.gamma+1.)/beam.gamma*100.  # conversion zu dW/W [%]
+                cz  = -c_0[4,0]*360./(particle.beta*lamb)           # conversion zu dPhi [deg]
+                cdw = c_0[5,0]*(particle.gamma+1.)/particle.gamma*100.  # conversion zu dW/W [%]
                 # sin_like
                 sx  = s_0[0,0]
                 sxp = s_0[1,0]
                 sy  = s_0[2,0]
                 syp = s_0[3,0]
-                sz  = -s_0[4,0]*360./(beam.beta*lamb)
-                sdw = s_0[5,0]*(beam.gamma+1.)/beam.gamma*100.
+                sz  = -s_0[4,0]*360./(particle.beta*lamb)
+                sdw = s_0[5,0]*(particle.gamma+1.)/particle.gamma*100.
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)

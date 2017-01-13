@@ -60,7 +60,7 @@ def bucket():
     u0=CONF['spalt_spannung']
     fRF=CONF['frequenz']
     lamb=CONF['wellenlänge']
-    rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,beam=particle,dWf=1.)
+    rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,particle=particle,dWf=1.)
     dws=rfg.deltaW
     gammas=particle.gamma
     betas=particle.beta
@@ -72,7 +72,7 @@ def bucket():
     p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
 
     if CONF['verbose']:
-#         objprnt(rfg,text='cavity',filter=['matrix','beam'])
+#         objprnt(rfg,text='cavity',filter=['matrix','particle'])
 #         objprnt(particle,text='Particle')
         bucket_summary = {
         '        cavity gap [m]':gapl,

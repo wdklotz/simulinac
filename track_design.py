@@ -17,31 +17,25 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton,dictprnt
+from setup import CONF,SUMMARY,dictprnt
 from lattice import Lattice
 from lattice_generator import parse_yaml_and_fabric
 import numpy as np
 from tracks import Track
 
 def track_design(lattice):
-	vorlauf_teilchen = Proton()
-	vorlauf_teilchen.out()
-	dictprnt(SUMMARY,'summary track_design')
-
-	vorlauf_spur = Track(vorlauf_teilchen)
-	for pos in lattice.seq[0:28]:
-		element,s0,s1 = pos
-		print('{}\t(#{}, pos {:.4f}) labelled \'{}\''.format(element.__class__,id(element),s0,element.label))
-		beam = element.beam
+	soll_spur = Track.soll
+# 	for ipos in lattice.seq[0:28]:
+	for ipos in lattice.seq[0:-1]:
+		element,s0,s1 = ipos
+# 		print('{}\t(#{}, pos {:.4f}) labelled \'{}\''.format(element.__class__,id(element),s0,element.label))
 		element_matrix = element.matrix
-		last = vorlauf_spur.get_last_point()
-		print('track before >>',last)
-		new = element_matrix.dot(last[0:6])
-		last[0:6] = new
-		last[6] = Beam.soll.tkin
-		print('track after >>',last)
-		vorlauf_spur.append_pos(s0,vorlauf_teilchen,last)
-# 	vorlauf_spur.out()
+		before = soll_spur.last_out()
+# 		print('i >>',Track.out(before))
+		after = element_matrix.dot(before)
+# 		print('f >>',Track.out(after))
+		soll_spur.push(s0,after)
+	print(soll_spur.all_out())
 
 
 def test0(filepath):

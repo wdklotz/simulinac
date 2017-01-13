@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from setup import CONF,dictprnt,objprnt
-from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Beam
+from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Particle
 from lattice import Lattice
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt,radians
@@ -80,18 +80,18 @@ def make_cavity(w):            ## one cavity
     dWf    = w['dWf']
     cavity = Lattice()
 
-    soll = Beam.soll                   # beam @ entrance
+    soll = Particle.soll                   # particle @ entrance
     tki = soll.tkin
     lcav05 = 0.5*lcav
-    dri = D(length=lcav05, beam=soll, label='>')                               # drift before RFgap
-    gap = RFG(U0=u0, PhiSoll=phi0, fRF=fRF0, label='rfg', beam=soll, dWf=dWf)  # Trace3D
-    drf = D(length=lcav05, beam=soll, label='<')                               # drift after RFgap
+    dri = D(length=lcav05, particle=soll, label='>')                               # drift before RFgap
+    gap = RFG(U0=u0, PhiSoll=phi0, fRF=fRF0, label='rfg', particle=soll, dWf=dWf)  # Trace3D
+    drf = D(length=lcav05, particle=soll, label='<')                               # drift after RFgap
     cavity.add_element(dri)
     cavity.add_element(gap)
     cavity.add_element(drf)
     # CONF['LCAV']=cavity.length
     # print('cavity_length: ',cavity.length)
-    objprnt(soll,'beam @ gap exit',{'matrix'})
+    objprnt(soll,'particle @ gap exit',{'matrix'})
     return cavity
 def make_rf_section(w):        ## many cavities
     gaps = w['gaps']
@@ -112,16 +112,16 @@ def make_cell(w):              ## cell
     kf        = w['kf']
     kd        = w['kd']
 
-    mQFs = QF(k0=kf,length=lq_short, label='QFs', beam=soll)
-    mQFl = QF(k0=kf,length=lq_long,  label='QFl', beam=soll)
-    mQDs = QD(k0=kd,length=lq_short, label='QDs', beam=soll)
-    mQDl = QD(k0=kd,length=lq_long , label='QDl', beam=soll)
-    mD   = D(length=ld, label='D', beam=soll)
+    mQFs = QF(k0=kf,length=lq_short, label='QFs', particle=soll)
+    mQFl = QF(k0=kf,length=lq_long,  label='QFl', particle=soll)
+    mQDs = QD(k0=kd,length=lq_short, label='QDs', particle=soll)
+    mQDl = QD(k0=kd,length=lq_long , label='QDl', particle=soll)
+    mD   = D(length=ld, label='D', particle=soll)
 
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
 
-    # ---- update beam ENERGY --------
+    # ---- update particle ENERGY --------
     mD   = mD.update()
     mQFs = mQFs.update()
     mQDl = mQDl.update()
@@ -136,7 +136,7 @@ def make_cell(w):              ## cell
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
 
-    # ---- update beam ENERGY --------
+    # ---- update particle ENERGY --------
     mD   = mD.update()
     mQFl = mQFl.update()
     mQDs = mQDs.update()
@@ -177,10 +177,10 @@ def test1(x):
     wert={}
     wert['dWf'] = 0.
 
-    # beam
+    # particle
     tk0       = CONF['injection_energy']*1.       # KNOB: injection energy
-    Beam.soll = Beam(tk0)
-    wert['soll'] = Beam.soll
+    Particle.soll = Particle(tk0)
+    wert['soll'] = Particle.soll
 
     # k werte
     sk=1.0
@@ -219,7 +219,7 @@ def test1(x):
         super_cell.append(cell)
 
     mcell,betax,betay=super_cell.cell(closed=True)
-    print('energy(f)= {} [MeV]'.format(Beam.soll.tkin))
+    print('energy(f)= {} [MeV]'.format(Particle.soll.tkin))
 
     CONF['sigx_i']=sqrt(CONF['emitx_i']*betax)
     CONF['sigy_i']=sqrt(CONF['emity_i']*betay)

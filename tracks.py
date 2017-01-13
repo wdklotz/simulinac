@@ -17,33 +17,39 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Beam,Proton,dictprnt
-# from lattice import Lattice
+from setup import MDIM,Particle
 import numpy as np
 
+sollStart=np.array([0.,0.,0.,0.,0.,0.,Particle.soll.tkin,1.,0.,1.])
+sollStart=np.array([1.,0.,1.,0.,0.,0.,Particle.soll.tkin,1.,0.,1.])
+
 class Track(object):
-	def __init__(self,particle,particle_number=0):
-		self.track_points = np.zeros(8)
-		self.track_points[0] = 1.0
-		self.track_points[6] = particle.tkin
+	#---CLASS part
+	soll=None           #track of reference particle
+	def out(p):   #single point out
+		str = 's={:.3f} tk={:.3f} x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f}'.format(p[-2],p[-4],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[8])
+		return str
+	#---INSTANCE part
+	def __init__(self, particle_number=0, start=sollStart):
+		self.track_points = start
 		self.nbof_points = 1
 		self.particle_number = particle_number
 
-	def append_pos(self,pos,particle,new):
-		track = np.zeros(8)       #new empty track point
-		track += new
-		track[6] = particle.tkin
-		track[7] = pos
-		self.track_points = np.append(self.track_points,track)
+	def push(self,pos,new):
+		self.track_points = np.append(self.track_points,new)
 		self.nbof_points +=1
 # 		print('points >>',self.track_points)
 
-	def get_last_point(self):
-		last = self.track_points.reshape(self.nbof_points,8)[-1]
+	def last_out(self):
+		last = self.track_points.reshape(self.nbof_points,MDIM)[-1]
 		return last
 
-	def out(self):
-		points = self.track_points.reshape(self.nbof_points,8)
+	def all_out(self):
+		points = self.track_points.reshape(self.nbof_points,MDIM)
+		str = ''
 		for p in points:
-			print('s={:.3f} tk={:.3f} x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f}'.format(p[-1],p[-2],p[0],p[1],p[2],p[3],p[4],p[5]))
+			str += 's={:.3f} tk={:.3f} x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f}\n'.format(p[-2],p[-4],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[8])
+		return str
+
+Track.soll = Track()      #track of Sollteilchen
 

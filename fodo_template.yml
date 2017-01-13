@@ -34,8 +34,8 @@ parameters:                         ## INPUT parameter definitions
     - TK_i:                 50.     # [MeV] energy @ entrance (injection)
     - emitx_i:              5.E-6   # [m*rad] transverse emittance @ entrance x
     - emity_i:              5.E-6   # [m*rad] transverse emittance @ entrance y
-    - betax_i:              4.512   # [m] one sigma transverse beam size @ entrance x
-    - betay_i:              0.157   # [m] one sigma transverse beam size @ entrance y
+    - betax_i:              4.512   # [m] one sigma transverse particle size @ entrance x
+    - betay_i:              0.157   # [m] one sigma transverse particle size @ entrance y
     - alfax_i:              0.      # [-] twiss alpha x @ entrance
     - alfay_i:              0.      # [-] twiss alpha y @ entrance
     - dP/P:                 2       # [%] relative impulse dP/P @ entrance
