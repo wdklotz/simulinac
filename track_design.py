@@ -23,7 +23,7 @@ from lattice_generator import parse_yaml_and_fabric
 import numpy as np
 from tracks import Track
 
-def track_design(lattice):
+def track_soll(lattice):
 	soll_spur = Track.soll
 # 	for ipos in lattice.seq[0:28]:
 	for ipos in lattice.seq[0:-1]:
@@ -32,7 +32,7 @@ def track_design(lattice):
 		element_matrix = element.matrix
 		before = soll_spur.last_out()
 # 		print('i >>',Track.out(before))
-		after = element_matrix.dot(before)
+		after = element_matrix.dot(before)      #track through!
 # 		print('f >>',Track.out(after))
 		soll_spur.push(s0,after)
 	print(soll_spur.all_out())
@@ -43,7 +43,7 @@ def test0(filepath):
 	lattice = parse_yaml_and_fabric(filepath)
 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 # 	dictprnt(CONF,'CONF'); print()
-	track_design(lattice)
+	track_soll(lattice)
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
