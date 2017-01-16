@@ -31,7 +31,7 @@ flags:                              ## run configuration
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## INPUT parameter definitions
-    - TK_i:                 50.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
     - emity_i:              1.E-6     # [m*rad] transverse emittance @ entrance x
     - emitx_i:              1.E-6     # [m*rad] transverse emittance @ entrance y
     - betax_i:              0.780     # [m] twiss beta @ entrance x
@@ -113,4 +113,5 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [197, SEG1, RFC, SEG2, RFC, SEG3]
+    - [198, SEG1, RFC, SEG2, RFC, SEG3]
+#   - [1, SEG1, RFC, SEG2, RFC, SEG3]

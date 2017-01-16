@@ -17,38 +17,57 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import MDIM,Particle
+from setup import Particle
 import numpy as np
+from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 
-sollStart=np.array([0.,0.,0.,0.,0.,0.,Particle.soll.tkin,1.,0.,1.])
-sollStart=np.array([1.,0.,1.,0.,0.,0.,Particle.soll.tkin,1.,0.,1.])
+#                    x   x'  y   y'  z   z'          Tk          1   s   1
+sollStart=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.])
 
 class Track(object):
+
 	#---CLASS part
 	soll=None           #track of reference particle
-	def out(p):   #single point out
-		str = 's={:.3f} tk={:.3f} x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f}'.format(p[-2],p[-4],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[8])
-		return str
+
+	def string(p):   #single point to string
+		s = 'x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f} s={:.3f} tk={:.5f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[SKOO],p[EKOO])
+		return s
+
 	#---INSTANCE part
 	def __init__(self, particle_number=0, start=sollStart):
 		self.track_points = start
 		self.nbof_points = 1
 		self.particle_number = particle_number
 
-	def push(self,pos,new):
+	def push(self,new):
 		self.track_points = np.append(self.track_points,new)
 		self.nbof_points +=1
-# 		print('points >>',self.track_points)
 
-	def last_out(self):
-		last = self.track_points.reshape(self.nbof_points,MDIM)[-1]
+	def points(self):
+		return self.track_points.reshape(self.nbof_points,MDIM)
+
+	def point_at(self,n):
+		return self.points()[n]
+
+	def first(self):
+		first = self.point_at(0)
+		return first
+
+	def last(self):
+		last = self.point_at(-1)
 		return last
 
-	def all_out(self):
-		points = self.track_points.reshape(self.nbof_points,MDIM)
+	def first_str(self):
+		return Track.string(self.first())
+
+	def last_str(self):
+		return Track.string(self.last())
+
+	def points_str(self):
+		points = self.points()
 		str = ''
 		for p in points:
-			str += 's={:.3f} tk={:.3f} x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f}\n'.format(p[-2],p[-4],p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[8])
+			str += Track.str(p)
 		return str
 
 Track.soll = Track()      #track of Sollteilchen

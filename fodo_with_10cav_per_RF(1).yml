@@ -31,7 +31,7 @@ flags:                              ## run configuration
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## INPUT parameter definitions
-    - TK_i:                 50.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
     - emity_i:              1.E-5     # [m*rad] transverse emittance @ entrance x
     - emitx_i:              1.E-5     # [m*rad] transverse emittance @ entrance y
     - betax_i:              0.460     # [m] twiss beta @ entrance x

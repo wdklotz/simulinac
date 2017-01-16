@@ -19,9 +19,7 @@ This file is part of the SIMULINAC code
 """
 from math import pi,sqrt,sin, cos, radians, degrees
 
-MDIM=10
-
-CONF = {                                      ## CONFIG constants and setup ...
+CONF = {            ## CONFIG constants and setup ...
     'lichtgeschwindigkeit': 299792458.,    # [m/s] const
     'elementarladung': 1.602176565e-19,    # [coulomb] const
     'proton_mass': 938.272,      # [MeV/c**2] const
@@ -51,7 +49,7 @@ CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
 SUMMARY = {}
 
 class Particle(object):                           ## relativistic particle
-    soll=None            #reference particle  (class member!)
+    soll=None            #reference particle a.k.a. soll Teilchen  (class member!)
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -65,14 +63,10 @@ class Particle(object):                           ## relativistic particle
         self.v          = self.beta*CONF['lichtgeschwindigkeit']    #   [m/s]
         self.brho       = 1.e6/CONF['lichtgeschwindigkeit']*self.p  #   [T*m]
         self.name       = name
-    def incTK(self,deltaTK):
-        self._set_self(self.tkin+deltaTK,self.e0,self.name)
-    def out(self,tee=True):
+    def string(self):
         s=(u'          B*rho[Tm] Tk[MeV/c\u00B2] p[MeV/c]   gamma    beta     gamma*beta  E[MeV/c\u00B2]\n'+\
               '{:8s}{:8.4f}   {:8.4f}    {:8.4f} {:8.4f} {:8.4f}  {:8.4f}     {:8.4f}')\
             .format(self.name,self.brho,self.tkin,self.p,self.gamma,self.beta,self.gamma_beta,self.e)
-        if tee:
-            print(s)
         return s
     def TrTf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
@@ -84,7 +78,11 @@ class Proton(Particle):                           ## proton
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
 
-Particle.soll = Proton(CONF['injection_energy'])
+Particle.soll = Proton(CONF['injection_energy'])   #the default reference particle
+
+class Electron(Particle):                         ## electron
+    def __init__(self,tkin=CONF['injection_energy']):
+        super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
 def collect_summary():
 	SUMMARY['frequency [Hz]'] = CONF['frequenz']
@@ -138,10 +136,6 @@ def Wakzeptanz(Ez,T,phis,lamb,particle):
     res = sqrt(res)/(particle.gamma-1)
     return res
 
-class Electron(Particle):                         ## electron
-    def __init__(self,tkin=CONF['injection_energy']):
-        super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
-
 def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field gradient & kin. energy
     """
     quad strength as function of kin. energy and gradient
@@ -155,7 +149,7 @@ def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field grad
         e0=prot.e0
         gamma=prot.gamma
         kres = 1.e-6*CONF['lichtgeschwindigkeit']*gradient/(beta*gamma*e0)
-        # print('k0= ',kres)
+        # DEBUG('k0= ',kres)
         return kres
     else:
         raise RuntimeError('setup.k0(): negative kinetic energy?')
@@ -210,6 +204,9 @@ def printv(level,*args):                      ## multilevel printing using verbo
     if verbose >= level:
         print(*args)
 
+def DEBUG(*args):
+	print('DEBUG: ',*args)
+
 def wille():
     return {
         'k_quad_f':1.2,
@@ -225,9 +222,9 @@ if __name__ == '__main__':
     Particle.soll = Particle()
     dictprnt(CONF,text='CONF')
     dictprnt(wille(),text='wille')
-    print('\n'+Particle.soll.out(False))
-    Proton(tkin=50.).out()
-    Electron(tkin=50.).out()
+    print('\n'+Particle.soll.string())
+    Proton(tkin=50.).string()
+    Electron(tkin=50.).string()
     Particle.soll = Electron(50.)
     objprnt(Particle.soll,text='Particle.soll')
     Particle.soll = Proton(50.)

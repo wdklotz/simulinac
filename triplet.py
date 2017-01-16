@@ -165,8 +165,8 @@ def test0():
 
     mFDF=mQF1*mQD1*mQF1 # 1st triplet
     mDFD=mQD2*mQF2*mQD2 # 2nd triplet
-    mFDF.out()
-    mDFD.out()
+    mFDF.string()
+    mDFD.string()
     fx1=-1./mFDF.matrix[1,0]
     fy1=-1./mFDF.matrix[3,2]
     fx2=-1./mDFD.matrix[1,0]

@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys, os
-from setup import CONF,SUMMARY,Particle
+from setup import CONF,SUMMARY,Particle,DEBUG
 from setup import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
@@ -33,31 +33,28 @@ def unpack_list_of_dict(alist):
 	return new
 
 def instanciate_element(item):
-# 	print('item >>',item)
+	# DEBUG('instanciate_element for item >>',item)
 	key = item[0]
 	att_list = item[1]
 	attributes = unpack_list_of_dict(att_list)
-# 	print(key, attributes)
+# 	DEBUG('',key, attributes)
 	if key == 'D':
 		length   = attributes['length']
 		label    = attributes['label']
 		instance =  ELM.D(length=length,label=label,particle=Particle.soll)
-		return (label,instance)
-	if key == 'QF':
+	elif key == 'QF':
 		length   = attributes['length']
 		label    = attributes['label']
 		dBdz     = attributes["B'"]
 		kq       = dBdz/Particle.soll.brho
 		instance = ELM.QF(k0=kq,length=length,label=label,particle=Particle.soll)
-		return (label,instance)
-	if key == 'QD':
+	elif key == 'QD':
 		length   = attributes['length']
 		label    = attributes['label']
 		dBdz     = attributes["B'"]
 		kq       = dBdz/Particle.soll.brho
 		instance = ELM.QD(k0=kq,length=length,label=label,particle=Particle.soll)
-		return (label,instance)
-	if key == 'RFG':
+	elif key == 'RFG':
 		gap       = attributes['gap']
 		label     = attributes['label']
 		Ez        = attributes["Ez"]
@@ -66,8 +63,7 @@ def instanciate_element(item):
 		U0        = Ez * gap
 		dWf       = CONF['dWf']
 		instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=Particle.soll,dWf=dWf)
-		return (label,instance)
-	if key == 'RFC':
+	elif key == 'RFC':
 		gap       = attributes['gap']
 		length    = attributes['length']
 		label     = attributes['label']
@@ -77,9 +73,10 @@ def instanciate_element(item):
 		U0        = Ez * gap
 		dWf       = CONF['dWf']
 		instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=Particle.soll,dWf=dWf)
-		return (label,instance)
 	else:
 		raise RuntimeError('unknown element type: ',key)
+	# DEBUG('{} instance created'.format(label))
+	return (label,instance)
 
 def factory(input_file):
 #--------
@@ -88,14 +85,14 @@ def factory(input_file):
 		for h in range(ns):      #loop nsuper
 			for i in lat:        #loop segments in lattice def
 				seg_label = i
-	# 			print('segment >>',seg_label)
+	# 			DEBUG('segment >>',seg_label)
 				for j in seg:    #browse for segment def
 					if j['label'] == seg_label:
 						elm_list = j['elements']
 						break
 				for k in elm_list: #loop segment elements
 					elm_label = k
-	# 				print('\telement >>',elm_label)
+					# DEBUG('\telement >>',elm_label)
 					for l in elm: #browse for element in seg
 						if l['label'] == elm_label:
 							attributes=[]
@@ -112,7 +109,7 @@ def factory(input_file):
 	#returns ==> {...}
 		flags_list = in_data['flags']
 		flags      = unpack_list_of_dict(flags_list)
-	# 	print('\nflags=\t',flags)
+	# 	DEBUG('flags=\t',flags)
 		CONF['dWf'] = SUMMARY['acc. ON']                   = flags['accON']
 		CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
 		CONF['verbose']                                    = flags['verbose']
@@ -122,12 +119,12 @@ def factory(input_file):
 	#returns ==> {...}
 		parameter_list = in_data['parameters']
 		parameters     = unpack_list_of_dict(parameter_list)
-		# print('parameters=\t',parameters)
+		# DEBUG('parameters=\t',parameters)
 		CONF['frequenz']         = parameters['frequency']
 		CONF['quad_gradient']    = None if not 'B_grad' in parameters else parameters['B_grad']
 		CONF['quadf_gradient']   = CONF['quad_gradient'] if not 'B_grad_f' in parameters else parameters['B_grad_f']
 		CONF['quadd_gradient']   = CONF['quad_gradient'] if not 'B_grad_d' in parameters else parameters['B_grad_d']
-		CONF['injection_energy'] = parameters['TK_i']
+		CONF['injection_energy'] = parameters['Tkin']
 		CONF['emitx_i']          = parameters['emitx_i']
 		CONF['emity_i']          = parameters['emity_i']
 		CONF['betax_i']          = parameters['betax_i']
@@ -195,22 +192,22 @@ def factory(input_file):
 				e_list = outer_list[1:]
 				list_of_segment_items=[]
 				for e_list_item in e_list:
-	# 				print('e_list_item ==> ',e_list_item)
+	# 				DEBUG('e_list_item ==> ',e_list_item)
 					e_label = e_list_item[0]['label']
 					list_of_segment_items.append(e_label)
 				segment['elements']=list_of_segment_items
 				list_of_segments.append(segment)
 			return list_of_segments
-		#§§§§§§§
+	#--------
 		lattice_segments = read_lattice(in_data)
 		nsuper = lattice_segments[0]       #nboff super cells
-		del lattice_segments[0]         #pull nsuper off
+		del lattice_segments[0]            #pull nsuper off
 		seg_defs = read_segments(in_data)
 		segments = reduce_seg_def(seg_defs)
 		elem_defs = read_elements(in_data)
 		elements = reduce_elm_def(elem_defs)
 		return (nsuper,lattice_segments,segments,elements)
-	#§§§§§§§
+	#--------
 	SUMMARY['input file'] = CONF['input_file'] = input_file
 
 	with open(input_file,'r') as fileobject:
@@ -220,15 +217,15 @@ def factory(input_file):
 	read_flags(in_data)
 	read_parameters(in_data)
 	(nsuper,lattice_in,segments_in, elements_in) = expand_reduce(in_data)
-# 	print('nsuper ==>',nsuper)   #nboff super cells
-# 	print('\nlattice_segments ==>',lattice_in)  #def of all segments in lattice
-# 	print('\nsegments ==>',segments_in)  #def of all segments
-# 	print('\nelements ==>',elements_in)  #def of all elements
+# 	DEBUG('\nnsuper ==>',nsuper)   #nboff super cells
+# 	DEBUG('\nlattice_segments ==>',lattice_in)  #def of all segments in lattice
+# 	DEBUG('\nsegments ==>',segments_in)  #def of all segments
+# 	DEBUG('\nelements ==>',elements_in)  #def of all elements
 	lattice = make_lattice(nsuper,lattice_in,segments_in,elements_in)
-# 	print('lattice >>',end='\n')
-	lattice.out()
+# 	DEBUG('lattice >>',end='\n')
+	lattice.string()
 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
-	return lattice
+	return lattice    #end of factory(...)
 
 def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
 	return factory(input_file)

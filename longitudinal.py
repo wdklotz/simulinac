@@ -45,7 +45,7 @@ def loop(phis0,ws0,phi0,w0):
 
     func=[]
     for i in range(70):
-        # print('{}   (ps,ws)= ({:5.3f},{:5.3f})  (p,w)= ({:5.3f},{:5.3f})'.format(i,ps*deg,ws,p*deg,w))
+        # DEBUG('{}   (ps,ws)= ({:5.3f},{:5.3f})  (p,w)= ({:5.3f},{:5.3f})'.format(i,ps*deg,ws,p*deg,w))
         w = w + energy(energy_factor,ps,p)
         p = p + phase(phase_factor,ws,w)
         fun=(degrees(ps-p),w-ws)

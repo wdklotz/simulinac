@@ -22,7 +22,9 @@ from numpy import linalg as LA
 from copy import copy
 from matplotlib.pyplot import plot,show,legend
 from setup import wille,CONF,SUMMARY,Particle,objprnt,printv
+from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
+from tracks import Track
 import warnings
 import numpy as NP
 
@@ -49,45 +51,38 @@ class Lattice(object):
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
 
-    def out(self):                 ## simple log lattice layout to stdout (could be better!)
+    def string(self):                 ## simple log lattice layout to stdout (could be better!)
         mcell=ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(3,'{:s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
                   format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
-        mcell.out()
+        return mcell.string()
 
-    def energy_trim(self):         ## trim lattice matrices for changing particle energy
+    def stats(self):         ## trim lattice matrices for changing particle energy
         cav_counter = 0
         qf_counter  = 0
         qd_counter  = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
-        seq_trimmed = []
-        printv(2,'particle @ entrance:\n'+Particle.soll.out(tee=False))
-        tk_i = Particle.soll.tkin
+        tk_i = Track.soll.first()[6]
+        tk_f = Track.soll.last()[6]
         for item in self.seq:
             element,s0,s1 = item
-            updated = element.update()
-            # print(updated.label,'\t',Particle.soll.tkin)
-            seq_trimmed.append((updated,s0,s1))
-            if isinstance(updated,ELM.QF) and (not isinstance(updated,ELM.QD)):
+            if isinstance(element,ELM.QF) and (not isinstance(element,ELM.QD)):
                 qf_counter += 1
-            if isinstance(updated,ELM.QD):
+            if isinstance(element,ELM.QD):
                 qd_counter += 1
-            if isinstance(updated,ELM.RFG) or isinstance(updated,ELM.RFC):
+            if isinstance(element,ELM.RFG) or isinstance(element,ELM.RFC):
                 cav_counter += 1
-                ttfm = min(updated.tr,ttfm)
-                ttfx = max(updated.tr,ttfx)
-        printv(2,'particle @ exit:\n'+Particle.soll.out(tee=False))
-        tk_f = Particle.soll.tkin
+                ttfm = min(element.tr,ttfm)
+                ttfx = max(element.tr,ttfx)
         SUMMARY['nboff F-quads*']        = qf_counter
         SUMMARY['nboff D-quads*']        = qd_counter
         SUMMARY['nboff cavities*']       = cav_counter
         SUMMARY['(ttf_min,ttf_max)*']    = (ttfm,ttfx)
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
-        self.seq = seq_trimmed      ## replace myself
 
     def cell(self,closed=True):     ## full cell inspection
         # if self.full_cell == 0.0:
@@ -126,7 +121,7 @@ class Lattice(object):
         self.full_cell = mcell    # the full cell
         # if verbose:
         printv(2,'Lattice.cell: Zellenmatrix (i)->(f)')
-        self.full_cell.out()
+        printv(2,self.full_cell.string())
         det = LA.det(self.full_cell.matrix)
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))
@@ -184,12 +179,16 @@ class Lattice(object):
 
         if closed:
             if not unstable:
-                # Startwerte für twiss-functions aus Formeln von K.Wille (Teubner Studienbücher)
+                # Startwerte für twiss-functions nach Formeln von K.Wille (Teubner Studienbücher)
                 cell_matrix = self.full_cell.matrix
-                m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
-                m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
-                n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
-                n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
+#                 m11 =cell_matrix[0,0];  m12 =cell_matrix[0,1]
+#                 m21 =cell_matrix[1,0];  m22 =cell_matrix[1,1]
+#                 n11 =cell_matrix[2,2];  n12 =cell_matrix[2,3]
+#                 n21 =cell_matrix[3,2];  n22 =cell_matrix[3,3]
+                m11 =cell_matrix[XKOO,XKOO];   m12 =cell_matrix[XKOO,XPKOO]
+                m21 =cell_matrix[XPKOO,XKOO];  m22 =cell_matrix[XPKOO,XPKOO]
+                n11 =cell_matrix[YKOO,YKOO];   n12 =cell_matrix[YKOO,YPKOO]
+                n21 =cell_matrix[YPKOO,YKOO];  n22 =cell_matrix[YPKOO,YPKOO]
                 bax=fabs(2.0-m11*m11-2.*m12*m21-m22*m22)
                 bax=sqrt(bax)
                 bax=2.0*m12/bax
@@ -248,7 +247,7 @@ class Lattice(object):
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return (self.full_cell,self.betax0,self.betay0)
 
-    def report(self):              ## lattice layout report (may not work!)
+    def report(self):      ## lattice layout report (may not work!)
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
         header = ''
@@ -285,9 +284,8 @@ class Lattice(object):
             elm,s0,s1=ipos
             self.add_element(elm)
 
-    def functions(self,steps=10):  ## functions of s
+    def functions(self,steps=10):  ## tracks twiss functions with beta-matrix through lattice
         beta_fun=[]
-        # ms=ELM.I()
         bx = self.betax0
         ax = self.alfax0
         gx = self.gammx0
@@ -296,34 +294,31 @@ class Lattice(object):
         gy = self.gammy0
         v_beta0=NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         v_beta = v_beta0
-#         print(v_beta0)
+#         DEBUG('',v_beta0)
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             for count,i_element in enumerate(element.step_through(steps)):
-                # ms = i_element*ms
-                # print('i_element.label={} viseo={} ms.length={}'.format(i_element.label,i_element.viseo,ms.length))
-                # m_beta = ms.BetaMatrix()
-                # v_beta = m_beta.dot(v_beta0)
                 m_beta = i_element.betaMatrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
-                betax = v_beta[0,0]
+                betax  = v_beta[0,0]
                 betaxp = -2.* v_beta[1,0]
-                betay = v_beta[3,0]
+                betay  = v_beta[3,0]
                 betayp = -2.* v_beta[4,0]
-#                 if s < 0.2 : print("s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
+#                 if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
-        (c_like,s_like) = self.cs_traj(steps)
+        (c_like,s_like) = self.cs_traj(steps)    #call for sin- and cos-like trajectories
         return (beta_fun,c_like,s_like)
 
     def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
-        warnings.warn(UserWarning('Lattice.dispersion() not ready'))
+        raise RuntimeWarning('Lattice.dispersion() not implemented!')
         traj=[]
         v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
         if closed == True:
             m_cell = self.full_cell
+            dispmx = np.eye(5,5)
             m11=m_cell.matrix[0,0]
             m15=m_cell.matrix[0,5]
             d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
@@ -351,9 +346,13 @@ class Lattice(object):
         y2p = sqrt(CONF['emity_i']*self.gammy0)
         dz  = CONF['dZ']      # eingabe dZ
         dp  = CONF['dP/P']    # eingabe dP/P0
-        c_0=NP.array([[x1],[0.],[y1],[0.],[dz],[0.],[0.],[0.],[0.],[0.]])       # cos-like traj.
-        s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])     # sin-like traj.
-        s=0.0
+        # MDIM tracking used here
+        c_0=NP.zeros(ELM.MDIM)
+        s_0=NP.zeros(ELM.MDIM)
+#         c_0=NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
+#         s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
+        c_0[XKOO]  = x1; c_0[YKOO]  =y1; c_0[ZKOO]   =dz; c_0[DEKOO] =1.; c_0[LKOO] =1.  # cos-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] =y2p; s_0[ZPKOO] =dp; s_0[DEKOO] =1.; s_0[LKOO] =1.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle
@@ -362,21 +361,20 @@ class Lattice(object):
                 element_matrix = i_element.matrix
                 c_0 = element_matrix.dot(c_0)
                 s_0 = element_matrix.dot(s_0)
-                s += i_element.length
                 # cos_like
-                cx  = c_0[0,0]
-                cxp = c_0[1,0]
-                cy  = c_0[2,0]
-                cyp = c_0[3,0]
-                cz  = -c_0[4,0]*360./(particle.beta*lamb)           # conversion zu dPhi [deg]
-                cdw = c_0[5,0]*(particle.gamma+1.)/particle.gamma*100.  # conversion zu dW/W [%]
+                cx  = c_0[XKOO]
+                cxp = c_0[XPKOO]
+                cy  = c_0[YKOO]
+                cyp = c_0[YPKOO]
+                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)           # conversion zu dPhi [deg]
+                cdw = c_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.  # conversion zu dW/W [%]
                 # sin_like
-                sx  = s_0[0,0]
-                sxp = s_0[1,0]
-                sy  = s_0[2,0]
-                syp = s_0[3,0]
-                sz  = -s_0[4,0]*360./(particle.beta*lamb)
-                sdw = s_0[5,0]*(particle.gamma+1.)/particle.gamma*100.
+                sx  = s_0[XKOO]
+                sxp = s_0[XPKOO]
+                sy  = s_0[YKOO]
+                syp = s_0[YPKOO]
+                sz  = -s_0[ZKOO]*360./(particle.beta*lamb)
+                sdw = s_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)
@@ -403,7 +401,7 @@ class Lattice(object):
         res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-def make_lattice():  # a test lattice
+def make_wille():  # a test lattice
      print("K.Wille's Beispiel auf pp. 112-113")
      kqf=  wille()['k_quad_f']
      lqf=  wille()['length_quad_f']
@@ -441,7 +439,7 @@ def make_lattice():  # a test lattice
      lattice.add_element(mbr)
      lattice.add_element(md)
      lattice.add_element(mqf)
-     # lattice.out()
+     # lattice.string()
      top=Lattice()
      top.append(lattice)
      # top.append(top)
@@ -454,13 +452,13 @@ def make_lattice():  # a test lattice
 
 def test0():
     print('\nTEST0')
-    lat = make_lattice()
-    lat.out()
+    lat = make_wille()
+    print(lat.string())
     print('--------------- EOF test0 --------------------')
 
 def test1():
     print('\nTEST1')
-    lattice=make_lattice()
+    lattice=make_wille()
     mcell,betax,betay=lattice.cell()
     beta_matrix = mcell.betaMatrix()
 
@@ -483,7 +481,7 @@ def test1():
 
 def test2():
     print('\nTEST2')
-    lattice=make_lattice()
+    lattice=make_wille()
     ## cell boundaries
     mcell,betax,betay=lattice.cell(closed=True)
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
@@ -511,4 +509,4 @@ def test2():
 if __name__ == '__main__':
     test0()
     test1()
-    test2()
+#     test2()
