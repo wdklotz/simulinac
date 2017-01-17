@@ -33,10 +33,10 @@ CONF = {            ## CONFIG constants and setup ...
     'quad_gradient': 16.0,       # [T/m] default
     'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
     'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-    'betax_i': None,             # [m] Vorgabe twiss betax @ entrance
-    'betay_i': None,             # [m] Vorgabe twiss betax @ entrance
-    'alfax_i': None,             # Vorgabe twiss alphax @ entrance
-    'alfay_i': None,             # Vorgabe twiss alphaxy @ entrance
+    'betax_i': 0.780,            # [m] Vorgabe twiss betax @ entrance
+    'betay_i': 2.373,            # [m] Vorgabe twiss betax @ entrance
+    'alfax_i': 0.0,              # Vorgabe twiss alphax @ entrance
+    'alfay_i': 0.0,              # Vorgabe twiss alphaxy @ entrance
     'dZ':      0.02,             # [m] Vorgabe longitudinal displacement dZ
     'dP/P':    0.02,             # [rad] Vorgabe relative impulse dP/P
     'dWf': False,                # acceleration on/off flag default

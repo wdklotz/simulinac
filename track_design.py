@@ -18,30 +18,55 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import radians
+import numpy as np
+
 from setup import CONF,SUMMARY,dictprnt,Particle,DEBUG
 from lattice import Lattice
 from lattice_generator import parse_yaml_and_fabric
-import numpy as np
+from bunch import Bunch
 from tracks import Track
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from elements import RFC,RFG
 
 def track_soll(lattice):
+	"""
+	Tracks the reference particle through the lattice and redefines the lattice element parameters to
+	adapt them to the energy of the accellerated reference particle.
+	"""
 	soll_track = Track.soll       #track of reference particle
-# 	for ipos in lattice.seq[0:3*28]:
-	for ipos in lattice.seq:
+	for ipos in lattice.seq[0:3*28]:
+# 	for ipos in lattice.seq:
 		element,s0,s1 = ipos
 # 		DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
-		ti = soll_track.last()
+		ti = soll_track.last()                #track: at entrance
 # 		DEBUG('\t\ti >>',Track.string(ti))
-		element.adapt_for_energy(ti[EKOO])
-		tf = element.matrix.dot(ti)      #track through!
-		soll_track.push(tf)
-		deltaE = tf[EKOO] - ti[EKOO]
+		element.adapt_for_energy(ti[EKOO])    #enery adopt
+		tf = element.matrix.dot(ti)           #track: at exit
+		soll_track.append(tf)                 #append
+# 		deltaE = tf[EKOO] - ti[EKOO]
 # 		DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 # 	DEBUG('complete track\n{}'.format(soll_track.points_string()))
 # 	DEBUG('{}'.format(soll_track.first_str()))
 # 	DEBUG('{}'.format(soll_track.last_str()))
+
+def track(lattice,bunch):
+	"""
+	Tracks a bunch of particles through the lattice
+	lattice: a list of elements a.k.a. _matrix'es
+	bunch: a list of independent Tracks
+	"""
+	for particle_track in bunch.get_tracks():
+		for ipos in lattice.seq[0:3*28]:
+# 		for ipos in lattice.seq:
+			ti = particle_track.last()
+			element,s0,s1 = ipos
+			tf = element.matrix.dot(ti)      #track through!
+			particle_track.append(tf)
+# 			deltaE = tf[EKOO] - ti[EKOO]
+# 			DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+# 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
+# 		DEBUG('FIRST: {}'.format(particle_track.first_str()))
+		DEBUG('LAST: {}'.format(particle_track.last_str()))
 
 def test0():
 	print('\nTest0: correctness of RFG and RFC')
@@ -80,16 +105,23 @@ def test0():
 		print('tf >>',tf,' deltaW[KeV] >>',deltaW*1.e3)
 		count -= 1
 
-
-
 def test1(filepath):
 	print('\nTest1')
 	lattice = parse_yaml_and_fabric(filepath)
 # 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 # 	dictprnt(CONF,'CONF'); print()
 	track_soll(lattice)
+
+def test2(filepath):
+	print('\nTest2')
+	lattice = parse_yaml_and_fabric(filepath)
+	bunch = Bunch(10)
+	track_soll(lattice)
+	track(lattice,bunch)
+
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
-	test0()
+# 	test0()
 # 	test1(filepath)
+	test2(filepath)

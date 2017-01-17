@@ -22,24 +22,21 @@ import numpy as np
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 
 #                    x   x'  y   y'  z   z'          Tk          1   s   1
-sollStart=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.])
+sollStart=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.])     #a track-point
 
-class Track(object):
-
-	#---CLASS part
+class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
 	soll=None           #track of reference particle
-
 	def string(p):   #single point to string
-		s = 'x={:.3f} x\'={:.3f} y={:.3f} y\'={:.3f} z={:.3f} z\'={:.3f} s={:.3f} tk={:.5f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[SKOO],p[EKOO])
+		s = 'x={:.3e} x\'={:.3e} y={:.3e} y\'={:.3e} z={:.3e} z\'={:.3e}  tk={:.5f} s={:.3f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[EKOO],p[SKOO])
 		return s
 
-	#---INSTANCE part
+#---INSTANCE part
 	def __init__(self, particle_number=0, start=sollStart):
 		self.track_points = start
 		self.nbof_points = 1
 		self.particle_number = particle_number
 
-	def push(self,new):
+	def append(self,new):
 		self.track_points = np.append(self.track_points,new)
 		self.nbof_points +=1
 
@@ -67,7 +64,7 @@ class Track(object):
 		points = self.points()
 		str = ''
 		for p in points:
-			str += Track.str(p)
+			str += Track.string(p)
 		return str
 
 Track.soll = Track()      #track of Sollteilchen
