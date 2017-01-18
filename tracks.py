@@ -17,8 +17,9 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import Particle,DEBUG
 import numpy as np
+
+from setup import Particle,DEBUG
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 
 class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
@@ -134,10 +135,8 @@ def track(lattice,bunch):
 	lattice: a list of elements a.k.a. _matrix'es
 	bunch: a list of independent Tracks
 	"""
-	from time import sleep
-	i = 0
-	l = bunch.nb_particles()
-	printProgressBar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+# 	from time import sleep
+# 	printProgressBar(0, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
 		for ipos in lattice.seq:
 			ti = particle_track.last()
@@ -146,10 +145,9 @@ def track(lattice,bunch):
 			particle_track.append(tf)
 # 			deltaE = tf[EKOO] - ti[EKOO]
 # 			DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
-		sleep(1.0e-3)
-		i += 1
-		printProgressBar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+# 		sleep(1.0e-3)
+# 		printProgressBar(count, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 # 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
 # 		DEBUG('FIRST: {}'.format(particle_track.first_str()))
-# 		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
+		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
 

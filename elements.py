@@ -17,11 +17,12 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import wille,CONF,dictprnt,objprnt,Particle
-from setup import DEBUG,k0,dBdz,scalek0,printv
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees
 from copy import copy
 import numpy as NP
+
+from setup import wille,CONF,dictprnt,objprnt,Particle
+from setup import DEBUG,k0,dBdz,scalek0,printv
 
 MDIM=10        # dimension of matrices
 

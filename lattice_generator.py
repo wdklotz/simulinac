@@ -18,12 +18,13 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys, os
+from math import radians,sqrt,pi,degrees
+import yaml
+
 from setup import CONF,SUMMARY,Particle,DEBUG
 from setup import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
-from math import radians,sqrt,pi,degrees
-import yaml
 
 def unpack_list_of_dict(alist):
 	new = {}

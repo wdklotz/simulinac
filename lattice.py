@@ -19,14 +19,15 @@ This file is part of the SIMULINAC code
 """
 from math import sqrt,fabs,acos,pi,degrees
 from numpy import linalg as LA
+import numpy as NP
 from copy import copy
 from matplotlib.pyplot import plot,show,legend
+import warnings
+
 from setup import wille,CONF,SUMMARY,Particle,objprnt,printv
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from tracks import Track
-import warnings
-import numpy as NP
 
 class Lattice(object):
     def __init__(self):
