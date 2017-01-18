@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,dictprnt
+from setup import CONF,SUMMARY,dictprnt,collect_summary
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from lattice_generator import parse_yaml_and_fabric
@@ -55,7 +55,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=20; height=12
-    figure(SUMMARY['lattice_version'],figsize=(width,height))
+    figure(SUMMARY['lattice version'],figsize=(width,height))
     # figure(SUMMARY['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(211)
@@ -165,6 +165,7 @@ def loesung(filepath):                   ## total classic FODO lattice (1st resu
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = super_cell.cell(closed=CONF['periodic'])
+    collect_summary()
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Zeige: Grafik Lösungen als Funktion von (s)
