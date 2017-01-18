@@ -17,12 +17,13 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
-from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
+from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
+
+from setup import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
-from track_design import trackSoll
+from tracks import trackSoll
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -166,7 +167,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):                   ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     Particle.soll = Proton(CONF['injection_energy'])
-    trackSoll(lattice)            ## track soll Teilchen hier!  (WICHTIG)
+    trackSoll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
     lattice.stats()                ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte

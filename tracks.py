@@ -114,8 +114,7 @@ def trackSoll(lattice):
 	adapt them to the energy of the accellerated reference particle.
 	"""
 	soll_track = Track.soll       #track of reference particle
-	for ipos in lattice.seq[0:3*28]:
-# 	for ipos in lattice.seq:
+	for ipos in lattice.seq:
 		element,s0,s1 = ipos
 # 		DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
 		ti = soll_track.last()                #track: at entrance
@@ -126,8 +125,8 @@ def trackSoll(lattice):
 # 		deltaE = tf[EKOO] - ti[EKOO]
 # 		DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 # 	DEBUG('complete track\n{}'.format(soll_track.points_string()))
-# 	DEBUG('{}'.format(soll_track.first_str()))
-# 	DEBUG('{}'.format(soll_track.last_str()))
+	DEBUG('{}'.format(soll_track.first_str()))
+	DEBUG('{}'.format(soll_track.last_str()))
 
 def track(lattice,bunch):
 	"""
@@ -140,7 +139,6 @@ def track(lattice,bunch):
 	l = bunch.nb_particles()
 	printProgressBar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
-# 		for ipos in lattice.seq[0:3*28]:
 		for ipos in lattice.seq:
 			ti = particle_track.last()
 			element,s0,s1 = ipos
