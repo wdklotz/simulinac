@@ -26,7 +26,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from tracks import Track
 
-def hgplot(x,mu,sigma):      #histogram
+def histPlot(x,mu,sigma):      #histogram
 	num_bins = 50
 	# the histogram of the data
 	(n, bins, patches) = plt.hist(x, num_bins, normed=1, facecolor='green', alpha=0.5)
@@ -39,7 +39,7 @@ def hgplot(x,mu,sigma):      #histogram
 	# Tweak spacing to prevent clipping of ylabel
 	plt.subplots_adjust(left=0.15)
 
-def scplot(x,y,whazit,sctrplt):       #scatter plot
+def sectionPlot(x,y,whazit,sctrplt):       #scatter plot
 
 # 	max values
 	xmax = np.max(np.fabs(x))
@@ -90,17 +90,16 @@ def scplot(x,y,whazit,sctrplt):       #scatter plot
 class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
 	def __init__(self,nbpart=1000,init=True):
 		self.nbof_particles = nbpart
-# 		self.particles = None
-		self.tracks = None
-		if init: self.init_phase_space()
+		self.tracklist = None
+		if init: self.initPhaseSpace()
 	#---
-	def get_nbof_particles():
+	def nb_particles(self):
 		return self.nbof_particles
 	#---
-	def get_tracks(self):
-		return self.tracks
+	def tracks(self):
+		return self.tracklist
 	#---
-	def init_phase_space(self,plane=(1,1,1,1,0,0)):
+	def initPhaseSpace(self,plane=(1,1,1,1,0,0)):
 		def sigmas(alfa,beta,epsi):
 			gamma = (1.+ alfa**2)/beta
 			sigma  = sqrt(epsi*beta)
@@ -118,7 +117,7 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 # 		DEBUG('XP >>',XP)
 # 		DEBUG('Y >>', Y)
 # 		DEBUG('YP >>',YP)
-		self.tracks=[]           #all Tracks in a bunch
+		self.tracklist=[]           #all Tracks in a bunch
 		for i in range(self.nbof_particles):
 			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
 			if plane[0]:
@@ -129,14 +128,14 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 				start[YKOO]=Y[i]
 			if plane[3]:
 				start[YPKOO]=YP[i]
-			self.tracks.append(Track(particle_number=i,start=start))
-# 			DEBUG(self.tracks[-1].first_str())
-# 			DEBUG(self.tracks[-1].last_str())
-		return self.tracks
+			self.tracklist.append(Track(particle_number=i,start=start))
+# 			DEBUG(self.tracklist[-1].first_str())
+# 			DEBUG(self.tracklist[-1].last_str())
+		return self.tracklist
 
 def test2(nbpart):
 	bunch = Bunch(nbpart)
-	bunch.init_phase_space((1,0,0,0,0,0))
+	bunch.initPhaseSpace((1,0,0,0,0,0))
 
 def test1(alfa,beta,epsi):
 	N = 20000
@@ -151,13 +150,13 @@ def test1(alfa,beta,epsi):
 
 # 	plt.figure()
 # 	h1 = plt.subplot2grid((2,1),(0,0))
-# 	hgplot(x,0.,sigma)
+# 	histPlot(x,0.,sigma)
 # 	h2 = plt.subplot2grid((2,1),(1,0))
-# 	hgplot(xp,0.,sigmap)
+# 	histPlot(xp,0.,sigmap)
 
 	plt.figure()
 	sp = plt.subplot()
-	scplot(x,xp,'x-x\'',sp)
+	sectionPlot(x,xp,'x-x\'',sp)
 	plt.show(block=True)
 
 def test0(mu,sigma):
@@ -165,9 +164,10 @@ def test0(mu,sigma):
 # 	mu = 0  # mean of distribution
 # 	sigma = 1  # standard deviation of distribution
 	x = mu + sigma * np.random.randn(2000)
-	hplot(x,mu,sigma)
+	histPlot(x,mu,sigma)
+	plt.show(True)
 
 if __name__ == '__main__':
 # 	test0(2.,1.)
-# 	test1(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
-	test2(10)
+	test1(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
+# 	test2(10)

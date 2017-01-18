@@ -22,7 +22,7 @@ from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
-from track_design import track_soll
+from track_design import trackSoll
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -166,7 +166,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):                   ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     Particle.soll = Proton(CONF['injection_energy'])
-    track_soll(lattice)            ## track soll Teilchen hier!  (WICHTIG)
+    trackSoll(lattice)            ## track soll Teilchen hier!  (WICHTIG)
     lattice.stats()                ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
