@@ -89,7 +89,7 @@ def trackit(filepath):
 	t0 = time.clock()
 	lattice = parse_yaml_and_fabric(filepath)
 	t1 = time.clock()
-	bunch = Bunch(10000)
+	bunch = Bunch(500)
 	t2 = time.clock()
 	trackSoll(lattice)
 	t3 = time.clock()

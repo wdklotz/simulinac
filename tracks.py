@@ -87,7 +87,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 	if iteration == total:
 		print()
 #
-# Sample Usage
+# Sample Usage of printProgressBar(...)
 #
 #
 # from time import sleep
@@ -135,8 +135,8 @@ def track(lattice,bunch):
 	lattice: a list of elements a.k.a. _matrix'es
 	bunch: a list of independent Tracks
 	"""
-# 	from time import sleep
-# 	printProgressBar(0, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+	from time import sleep
+	printProgressBar(0, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
 		for ipos in lattice.seq:
 			ti = particle_track.last()
@@ -145,9 +145,9 @@ def track(lattice,bunch):
 			particle_track.append(tf)
 # 			deltaE = tf[EKOO] - ti[EKOO]
 # 			DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
-# 		sleep(1.0e-3)
-# 		printProgressBar(count, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+		sleep(1.0e-3)
+		printProgressBar(count, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 # 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
 # 		DEBUG('FIRST: {}'.format(particle_track.first_str()))
-		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
+# 		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
 
