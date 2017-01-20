@@ -27,7 +27,7 @@ from setup import DEBUG,k0,dBdz,scalek0,printv
 MDIM=10        # dimension of matrices
 
 # x        x'        y        y'       z         z'       E        dE        s        l       dispersion
-XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9;DISP = 10
+XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9;#DISP = 10
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
@@ -134,6 +134,15 @@ class I(_matrix):      ## unity matrix (an alias to _matrix class)
         self.label=label
         self.viseo=viseo
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
+
+class MRK(I):          ## a marker
+    def __init__(self, label='MRK', particle=Particle.soll):
+        super(MRK,self).__init__(label=label, particle=particle)
+    def shorten(self,l=0):
+        return self
+    def adapt_for_energy(self,tkin):
+        self.__init__(label=self.label, particle=Particle(tkin=tkin))
+        return self
 
 class D(I):            ## drift space nach Trace3D
     def __init__(self, length=0., viseo=0., label='D', particle=Particle.soll):

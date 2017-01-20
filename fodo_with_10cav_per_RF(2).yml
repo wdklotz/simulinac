@@ -78,6 +78,9 @@ elements:                           ## ELEMENT definitions
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
         - length:   *p08    # [m] length
+    - MRK:  &mrk            # Marker
+        - label:    mark    #
+
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
@@ -96,6 +99,9 @@ segments:                           ## SEGMENT definitions
         - label:    SEG3    # (changeable) label is mandatory. DON't remove or reposition!
         - *d1
         - *qd1
+    - mark:
+        - label:    MARK
+        - *mrk
     - rfc:
         - label:    RFC    # (changeable) label is mandatory. DON't remove or reposition!
         - *rfc
@@ -114,4 +120,4 @@ segments:                           ## SEGMENT definitions
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
     - [198, SEG1, RFC, SEG2, RFC, SEG3]
-#   - [1, SEG1, RFC, SEG2, RFC, SEG3]
+    - [1,MARK]

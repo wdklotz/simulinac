@@ -74,6 +74,9 @@ def instanciate_element(item):
 		U0        = Ez * gap
 		dWf       = CONF['dWf']
 		instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=Particle.soll,dWf=dWf)
+	elif key == 'MRK':
+		label     = attributes['label']
+		instance  = ELM.MRK(label=label)
 	else:
 		raise RuntimeError('unknown element type: ',key)
 	# DEBUG('{} instance created'.format(label))
@@ -81,26 +84,28 @@ def instanciate_element(item):
 
 def factory(input_file):
 #--------
-	def make_lattice(ns,lat,seg,elm):
+	def make_lattice(lat,seg,elm):
 		lattice = Lattice()
-		for h in range(ns):      #loop nsuper
-			for i in lat:        #loop segments in lattice def
+		for h in range(1):      #loop nsuper
+			for i in lat:        #loop segments in lattice
 				seg_label = i
-	# 			DEBUG('segment >>',seg_label)
-				for j in seg:    #browse for segment def
+				# DEBUG('seg_label in make_lattice >>',seg_label)
+				for j in seg:    #scan for segment in segment definition
 					if j['label'] == seg_label:
 						elm_list = j['elements']
 						break
-				for k in elm_list: #loop segment elements
+				for k in elm_list: #loop over elements in segment definition
 					elm_label = k
-					# DEBUG('\telement >>',elm_label)
-					for l in elm: #browse for element in seg
+					# DEBUG('\telm_label in make_lattice >>',elm_label)
+					for l in elm: #scan for element in element definition
 						if l['label'] == elm_label:
 							attributes=[]
-							for m,n in l.items():  #build item description
-								attributes.append({m:n})
+							for k,v in l.items():  #build item description
+								attributes.append({k:v})
 							item = (l['type'],attributes)
+							# DEBUG('item in make_lattice',item)
 							label,instance = instanciate_element(item)  #instanciate
+							# DEBUG('(label,instance) in make_lattice',label,instance)
 							lattice.add_element(instance)  #add element instance to lattice
 							break
 		return lattice   #the complete lattice
@@ -161,7 +166,7 @@ def factory(input_file):
 			lattice_title = lattice_segment_list[0]['label']
 			del lattice_segment_list[0]         #pull label off
 			CONF['lattice_version'] = lattice_title
-			return lattice_segment_list[0]
+			return lattice_segment_list
 	#--------
 		def merge_list_of_dicts(lstofdicts):
 		#returns ==> {...}
@@ -200,14 +205,23 @@ def factory(input_file):
 				list_of_segments.append(segment)
 			return list_of_segments
 	#--------
-		lattice_segments = read_lattice(in_data)
-		nsuper = lattice_segments[0]       #nboff super cells
-		del lattice_segments[0]            #pull nsuper off
-		seg_defs = read_segments(in_data)
-		segments = reduce_seg_def(seg_defs)
-		elem_defs = read_elements(in_data)
-		elements = reduce_elm_def(elem_defs)
-		return (nsuper,lattice_segments,segments,elements)
+		lattice_def   = read_lattice(in_data)
+		segment_def   = read_segments(in_data)
+		elemement_def = read_elements(in_data)
+		# DEBUG('lattice_def in reduce_seg_def()',lattice_def)
+		# DEBUG('segment_def in reduce_seg_def()',segment_def)
+		# DEBUG('elemement_def in reduce_seg_def()',elemement_def)
+		segments = reduce_seg_def(segment_def)
+		elements = reduce_elm_def(elemement_def)
+		lattice_segment_list=[]
+		for segment_sub_list in lattice_def:
+			nsuper = segment_sub_list[0]       #nboff super cells
+			del segment_sub_list[0]            #pull nsuper off
+			# DEBUG('segment_sub_list in reduce_seg_def()',segment_sub_list)
+			for i in range(nsuper):
+				for k in segment_sub_list:
+					lattice_segment_list.append(k)
+		return (lattice_segment_list,segments,elements)
 	#--------
 	SUMMARY['input file'] = CONF['input_file'] = input_file
 
@@ -217,14 +231,12 @@ def factory(input_file):
 
 	read_flags(in_data)
 	read_parameters(in_data)
-	(nsuper,lattice_in,segments_in, elements_in) = expand_reduce(in_data)
-# 	DEBUG('\nnsuper ==>',nsuper)   #nboff super cells
-# 	DEBUG('\nlattice_segments ==>',lattice_in)  #def of all segments in lattice
-# 	DEBUG('\nsegments ==>',segments_in)  #def of all segments
-# 	DEBUG('\nelements ==>',elements_in)  #def of all elements
-	lattice = make_lattice(nsuper,lattice_in,segments_in,elements_in)
-# 	DEBUG('lattice >>',end='\n')
-	lattice.string()
+	(exp_lattice,exp_segments, exp_elements) = expand_reduce(in_data)
+	# DEBUG('exp_lattice in factory()',exp_lattice)  #def of all segments in lattice
+	# DEBUG('exp_segments in factory()',exp_segments)  #def of all segments
+	# DEBUG('exp_elements in factory()',exp_elements)  #def of all elements
+	lattice = make_lattice(exp_lattice,exp_segments,exp_elements)
+	# CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 	return lattice    #end of factory(...)
 

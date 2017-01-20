@@ -21,6 +21,7 @@ import numpy as np
 
 from setup import Particle,DEBUG
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+import elements as ELM
 
 class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
 
@@ -138,13 +139,15 @@ def track(lattice,bunch):
 	from time import sleep
 	printProgressBar(0, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
+		ti = particle_track.first()
 		for ipos in lattice.seq:
-			ti = particle_track.last()
 			element,s0,s1 = ipos
 			tf = element.matrix.dot(ti)      #track through!
-			particle_track.append(tf)
-# 			deltaE = tf[EKOO] - ti[EKOO]
-# 			DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+			if isinstance(element,ELM.MRK):
+				particle_track.append(tf)
+# 				deltaE = tf[EKOO] - ti[EKOO]
+# 				DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+			ti = tf
 		sleep(1.0e-3)
 		printProgressBar(count, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 # 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
