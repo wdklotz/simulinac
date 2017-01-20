@@ -87,13 +87,13 @@ def test1(filepath):
 def trackit(filepath):
 	print('\ntrackit')
 	t0 = time.clock()
-	lattice = parse_yaml_and_fabric(filepath)
+	lattice = parse_yaml_and_fabric(filepath)     #make lattice
 	t1 = time.clock()
-	bunch = Bunch(10)
+	bunch = Bunch(particlesPerBunch)              #make bunch
 	t2 = time.clock()
-	trackSoll(lattice)
+	trackSoll(lattice)                            #track design particle
 	t3 = time.clock()
-	track(lattice,bunch)
+	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
 	scatterplot(bunch,XKOO,XPKOO,'x-x\'')
 	scatterplot(bunch,YKOO,YPKOO,'y-y\'')
@@ -111,6 +111,7 @@ def trackit(filepath):
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
+	particlesPerBunch = 2000
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)

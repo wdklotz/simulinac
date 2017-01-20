@@ -86,30 +86,28 @@ def factory(input_file):
 #--------
 	def make_lattice(lat,seg,elm):
 		lattice = Lattice()
-		for h in range(1):      #loop nsuper
-			for i in lat:        #loop segments in lattice
-				seg_label = i
-				# DEBUG('seg_label in make_lattice >>',seg_label)
-				for j in seg:    #scan for segment in segment definition
-					if j['label'] == seg_label:
-						elm_list = j['elements']
+		for i in lat:        #loop segments in lattice
+			seg_label = i
+			# DEBUG('seg_label in make_lattice >>',seg_label)
+			for j in seg:    #scan for segment in segment definition
+				if j['label'] == seg_label:
+					elm_list = j['elements']
+					break
+			for k in elm_list: #loop over elements in segment definition
+				elm_label = k
+				# DEBUG('\telm_label in make_lattice >>',elm_label)
+				for l in elm: #scan for element in element definition
+					if l['label'] == elm_label:
+						attributes=[]
+						for k,v in l.items():  #build element attribute list
+							attributes.append({k:v})
+						elmItem = (l['type'],attributes)
+						# DEBUG('elmItem in make_lattice',elmItem)
+						(label,instance) = instanciate_element(elmItem)  #instanciate
+						# DEBUG('(label,instance) in make_lattice',label,instance)
+						lattice.add_element(instance)  #add element instance to lattice
 						break
-				for k in elm_list: #loop over elements in segment definition
-					elm_label = k
-					# DEBUG('\telm_label in make_lattice >>',elm_label)
-					for l in elm: #scan for element in element definition
-						if l['label'] == elm_label:
-							attributes=[]
-							for k,v in l.items():  #build item description
-								attributes.append({k:v})
-							item = (l['type'],attributes)
-							# DEBUG('item in make_lattice',item)
-							label,instance = instanciate_element(item)  #instanciate
-							# DEBUG('(label,instance) in make_lattice',label,instance)
-							lattice.add_element(instance)  #add element instance to lattice
-							break
 		return lattice   #the complete lattice
-# --------
 # --------
 	def read_flags(in_data):
 	#returns ==> {...}
@@ -231,11 +229,11 @@ def factory(input_file):
 
 	read_flags(in_data)
 	read_parameters(in_data)
-	(exp_lattice,exp_segments, exp_elements) = expand_reduce(in_data)
-	# DEBUG('exp_lattice in factory()',exp_lattice)  #def of all segments in lattice
-	# DEBUG('exp_segments in factory()',exp_segments)  #def of all segments
-	# DEBUG('exp_elements in factory()',exp_elements)  #def of all elements
-	lattice = make_lattice(exp_lattice,exp_segments,exp_elements)
+	(latticeExpand,segmentExpand, elementExpand) = expand_reduce(in_data)
+	# DEBUG('latticeExpand in factory()',latticeExpand)  #def of all segments in lattice
+	# DEBUG('segmentExpand in factory()',segmentExpand)  #def of all segments
+	# DEBUG('elementExpand in factory()',elementExpand)  #def of all elements
+	lattice = make_lattice(latticeExpand,segmentExpand,elementExpand)
 	# CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 	return lattice    #end of factory(...)
