@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import time
 
 from lattice_generator import parse_yaml_and_fabric
-from bunch import Bunch,sectionPlot
+from bunch import Bunch,poincarePlot,Gauss1D,EmittanceContour
 from tracks import Track,track,trackSoll
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from setup import DEBUG
@@ -33,7 +33,7 @@ def scatterplot(bnch,xko,yko,txt):
 		y.append(t.last()[yko])
 	plt.figure()
 	sp = plt.subplot()
-	sectionPlot(x,y,'{} {} particles'.format(txt,bnch.nb_particles()),sp)
+	poincarePlot(x,y,'{} {} particles'.format(txt,bnch.nb_particles()),sp)
 
 def test0():
 	from math import radians
@@ -89,16 +89,44 @@ def trackit(filepath):
 	t0 = time.clock()
 	lattice = parse_yaml_and_fabric(filepath)     #make lattice
 	t1 = time.clock()
-	bunch = Bunch(particlesPerBunch)              #make bunch
+
+# configure bunch genneration
+	distClass = Gauss1D
+# 	distClass = EmittanceContour
+	args = {'plane':(1,1,1,1,0,0),'random':False}
+	custom = False
+
+#generate initial bunch and particle distribution
+	if custom:
+		bunchi = Bunch(init=not custom)                #make customized bunch
+		bunchi.set_distClass(distClass)                  #customize
+		bunchi.set_nbOffParticles(particlesPerBunch)   #customize
+		bunchi.initPhaseSpace(args)                        #init customized
+		bunch = Bunch(init=not custom)                #make customized bunch
+		bunch.set_distClass(distClass)                  #customize
+		bunch.set_nbOffParticles(particlesPerBunch)   #customize
+		bunch.initPhaseSpace(args)                        #init customized
+	else:
+		bunchi = Bunch()                               #make bunch using defaults
+		bunch = Bunch()                               #make bunch using defaults
+
+# 	track and show final
 	t2 = time.clock()
 	trackSoll(lattice)                            #track design particle
 	t3 = time.clock()
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
-	scatterplot(bunch,XKOO,XPKOO,'x-x\'')
-	scatterplot(bunch,YKOO,YPKOO,'y-y\'')
-	scatterplot(bunch,XKOO,YKOO,'x-y')
+	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
+	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
+	scatterplot(bunch,XKOO,YKOO,'x-y final')
+	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
 	t5 = time.clock()
+
+# 	show initial
+	scatterplot(bunchi,XKOO,XPKOO,'x-x\' initial')
+	scatterplot(bunchi,YKOO,YPKOO,'y-y\' initial')
+	plt.draw()
+
 	print()
 	print('total time     >> {:6.3f} [sec]'.format(t5-t0))
 	print('parse lattice  >> {:6.3f} [sec] {:4.1f} [%]'.format((t1-t0),(t1-t0)/(t5-t0)*1.e2))
@@ -111,7 +139,7 @@ def trackit(filepath):
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
-	particlesPerBunch = 2000
+	particlesPerBunch = 1500
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)

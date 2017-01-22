@@ -27,6 +27,12 @@ from setup import DEBUG,CONF,Particle
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from tracks import Track
 
+def sigmas(alfa,beta,epsi):
+	gamma = (1.+ alfa**2)/beta
+	sigma  = sqrt(epsi*beta)
+	sigmap = sqrt(epsi*gamma)
+	return sigma,sigmap
+
 def histPlot(x,mu,sigma):      #histogram
 	num_bins = 50
 	# the histogram of the data
@@ -40,11 +46,12 @@ def histPlot(x,mu,sigma):      #histogram
 	# Tweak spacing to prevent clipping of ylabel
 	plt.subplots_adjust(left=0.15)
 
-def sectionPlot(x,y,whazit,sctrplt):       #scatter plot
+def poincarePlot(x,y,whazit,sctrplt):       #scatter plot
 
 # 	max values
 	xmax = np.max(np.fabs(x))
 	ymax = np.max(np.fabs(y))
+# 	DEBUG('xmax,ymax in poincarePlot() >>',xmax,ymax)
 
 	# the scatter plot
 	sctrplt.scatter(x,y,s=1)
@@ -66,60 +73,92 @@ def sectionPlot(x,y,whazit,sctrplt):       #scatter plot
 	# make some labels invisible
 	plt.setp(axHistx.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
 
-	# now determine nice binning limits by hand
-	binwidthx=xmax/100.
-	binwidthy=ymax/100.
-	limx = (int(xmax/binwidthx)+1)*binwidthx
-	limy = (int(ymax/binwidthy)+1)*binwidthy
-	binsx = np.arange(-limx, limx + binwidthx, binwidthx)
-	binsy = np.arange(-limy, limy + binwidthy, binwidthy)
+	if xmax != 0:
+		# now determine nice binning limits by hand
+		binwidthx=xmax/100.
+		limx = (int(xmax/binwidthx)+1)*binwidthx
+		binsx = np.arange(-limx, limx + binwidthx, binwidthx)
+		axHistx.hist(x, bins=binsx,normed=1)
+		axHistx.tick_params(axis='y',which='both',left='off',right='off',labelleft='off')
 
-	# do the histograms
-	axHistx.hist(x, bins=binsx)
-	axHisty.hist(y, bins=binsy, orientation='horizontal')
+	if ymax != 0.:
+		# now determine nice binning limits by hand
+		binwidthy=ymax/100. if ymax !=0. else 1.
+		limy = (int(ymax/binwidthy)+1)*binwidthy
+		binsy = np.arange(-limy, limy + binwidthy, binwidthy)
+		# do the histograms
+		axHisty.hist(y, bins=binsy, normed=1, orientation='horizontal')
+		axHisty.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
 
-#	axHistx.axis['bottom'].major_ticklabels.set_visible(False)
-	for tl in axHistx.get_xticklabels():
-		tl.set_visible(False)
-	axHistx.set_yticks([0,50,100])
+class EmittanceContour(object):
+	def twiss_conjugate(x,alfa,beta,epsi):
+		gamma = (1.+ alfa**2)/beta
+		a=beta
+		b=2.*alfa*x
+		c=gamma*x**2-epsi
+		d=(b**2-4.*a*c)
+		d=sqrt(d)
+		xp1=(-b+d)/(2.*a)
+		xp2=(-b-d)/(2.*a)
+		return (xp1,xp2)
 
-#	axHisty.axis['left'].major_ticklabels.set_visible(False)
-	for tl in axHisty.get_yticklabels():
-		tl.set_visible(False)
-	axHisty.set_xticks([0,50,100])
-
-class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
-	def __init__(self,nbpart=1000,init=True):
-		self.nbof_particles = nbpart
-		self.tracklist = None
-		if init: self.initPhaseSpace()
-	#---
-	def nb_particles(self):
-		return self.nbof_particles
-	#---
-	def tracks(self):
-		return self.tracklist
-	#---
-	def initPhaseSpace(self,plane=(1,1,1,1,0,0)):
-		def sigmas(alfa,beta,epsi):
-			gamma = (1.+ alfa**2)/beta
-			sigma  = sqrt(epsi*beta)
-			sigmap = sqrt(epsi*gamma)
-			return sigma,sigmap
-		#---
+	def __init__(self,nbof_particles,args):
 		sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
+		if args['random']:
+			Xrand = sigx*(2.*np.random.random_sample((nbof_particles,))-1.)
+		else:
+			Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nbof_particles)
+		X=[]; XP=[]
+		for x in Xrand:
+			xp1,xp2 = EmittanceContour.twiss_conjugate(x,CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
+			X.append(x)
+			XP.append(xp1)
+			X.append(x)
+			XP.append(xp2)
 		sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
-		X  = sigx  *np.random.randn(self.nbof_particles)     #gauss distribution X
-		XP = sigxp *np.random.randn(self.nbof_particles)
-		Y  = sigy  *np.random.randn(self.nbof_particles)
-		YP = sigyp *np.random.randn(self.nbof_particles)
+		if args['random']:
+			Yrand = sigy*(2.*np.random.random_sample((nbof_particles,))-1.)
+		else:
+			Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nbof_particles)
+		Y=[]; YP=[]
+		for y in Yrand:
+			yp1,yp2 = EmittanceContour.twiss_conjugate(y,CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
+			Y.append(y)
+			YP.append(yp1)
+			Y.append(y)
+			YP.append(yp2)
 		tk_in = Particle.soll.tkin                           #energy at entrance
 # 		DEBUG('X >>', X)
 # 		DEBUG('XP >>',XP)
 # 		DEBUG('Y >>', Y)
 # 		DEBUG('YP >>',YP)
 		self.tracklist=[]           #all Tracks in a bunch
-		for i in range(self.nbof_particles):
+		for i in range(2*nbof_particles):
+			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
+			start[XKOO]=X[i]
+			start[XPKOO]=XP[i]
+			start[YKOO]=Y[i]
+			start[YPKOO]=YP[i]
+			self.tracklist.append(Track(particle_number=i,start=start))
+# 			DEBUG(self.tracklist[-1].first_str())
+# 			DEBUG(self.tracklist[-1].last_str())
+
+class Gauss1D(object):
+	def __init__(self,nbof_particles,args):
+		sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
+		sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
+		X  = sigx  *np.random.randn(nbof_particles)     #gauss distribution X
+		XP = sigxp *np.random.randn(nbof_particles)
+		Y  = sigy  *np.random.randn(nbof_particles)
+		YP = sigyp *np.random.randn(nbof_particles)
+		plane = args['plane']
+		tk_in = Particle.soll.tkin                           #energy at entrance
+# 		DEBUG('X >>', X)
+# 		DEBUG('XP >>',XP)
+# 		DEBUG('Y >>', Y)
+# 		DEBUG('YP >>',YP)
+		self.tracklist=[]           #all Tracks in a bunch
+		for i in range(nbof_particles):
 			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
 			if plane[0]:
 				start[XKOO]=X[i]
@@ -132,11 +171,35 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 			self.tracklist.append(Track(particle_number=i,start=start))
 # 			DEBUG(self.tracklist[-1].first_str())
 # 			DEBUG(self.tracklist[-1].last_str())
-		return self.tracklist
 
-def test2(nbpart):
-	bunch = Bunch(nbpart)
-	bunch.initPhaseSpace((1,0,0,0,0,0))
+class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
+	def __init__(self,init=True):
+		self.nbof_particles = 750
+		self.tracklist = None
+		self.plane = (1,1,1,1,0,0)
+		self.distclass=Gauss1D
+		if init: self.initPhaseSpace({'plane':self.plane})
+	#---
+	def nb_particles(self):
+		return self.nbof_particles
+	#---
+	def set_nbOffParticles(self,nb):
+		self.nbof_particles = nb
+	#---
+	def tracks(self):
+		return self.tracklist
+	#---
+	def set_plane(self,plane):
+		self.plane = plane
+	#---
+	def set_distClass(self,distclass):
+		self.distclass = distclass
+	#---
+	def initPhaseSpace(self,args):
+		self.tracklist = self.distclass(self.nbof_particles,args).tracklist
+		if self.distclass == EmittanceContour:
+			self.set_nbOffParticles(len(self.tracklist))
+# 			DEBUG('self.nbof_particles in Bunch.initPhaseSpace() ..',self.nbof_particles)
 
 def test1(alfa,beta,epsi):
 	N = 20000
@@ -145,9 +208,10 @@ def test1(alfa,beta,epsi):
 	sigmap = sqrt(epsi*gamma)
 	x  = sigma *np.random.randn(N)
 	xp = sigmap *np.random.randn(N)
+	xp = xp*xp/(sigmap*sigmap)
 
-# 	DEBUG('x >>',x)
-# 	DEBUG('x\' >>',xp)
+	DEBUG('x >>',x)
+	DEBUG('x\' >>',xp)
 
 # 	plt.figure()
 # 	h1 = plt.subplot2grid((2,1),(0,0))
@@ -157,7 +221,7 @@ def test1(alfa,beta,epsi):
 
 	plt.figure()
 	sp = plt.subplot()
-	sectionPlot(x,xp,'x-x\'',sp)
+	poincarePlot(x,xp,'x-x\'',sp)
 	plt.show(block=True)
 
 def test0(mu,sigma):
@@ -171,4 +235,3 @@ def test0(mu,sigma):
 if __name__ == '__main__':
 # 	test0(2.,1.)
 	test1(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
-# 	test2(10)
