@@ -28,7 +28,7 @@ class Defaults(object):
             'proton_mass': 938.272,      # [MeV/c**2] const
             'electron_mass': 0.5109989,  # [MeV/c**2] const
             }
-        self.conf = {            ## CONFIG constants and setup ...
+        self.conf = {            ## CONFIG constants and setutils ...
             'Ez_feld': 1.04,             # [MV/m] default
             'spalt_laenge': 0.02,        # [m] default
             'cavity_laenge': 0.08,       # [m] default
@@ -211,7 +211,7 @@ def k0(gradient=0.,tkin=0.):                  ## quad strength from B-field grad
         # DEBUG('k0= ',kres)
         return kres
     else:
-        raise RuntimeError('setup.k0(): negative kinetic energy?')
+        raise RuntimeError('setutils.k0(): negative kinetic energy?')
 
 def scalek0(k0=0.,tki=0.,tkf=0.):             ## scale quad  strength with kin. energy
     """
@@ -240,7 +240,7 @@ def dBdz(k0=0.,tkin=0.):                      ## B-field gradient from quad stre
         gamma=prot.gamma
         return k0*(beta*gamma*e0)/1.e-6*CONF['lichtgeschwindigkeit']
     else:
-        raise RuntimeError('setup.k0(): negative kinetic energy?')
+        raise RuntimeError('setutils.k0(): negative kinetic energy?')
 
 def objprnt (what,text='========',filter=[]): ## helper to print objects as dictionary
     print('\n          ================= '+text+' =================')

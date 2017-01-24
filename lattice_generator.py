@@ -21,8 +21,8 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setup import CONF,SUMMARY,Particle,DEBUG
-from setup import objprnt,Wakzeptanz
+from setutils import CONF,SUMMARY,Particle,DEBUG
+from setutils import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
 

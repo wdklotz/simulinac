@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 import numpy as np
 
-from setup import Particle,DEBUG
+from setutils import Particle,DEBUG
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 

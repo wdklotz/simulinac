@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,Proton
+from setutils import CONF,Proton
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import pi,cos,radians,degrees
 

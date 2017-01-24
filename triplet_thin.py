@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import objprnt
+from setutils import objprnt
 from elements import D,QFth,QDth,QF,QD
 from lattice import Lattice
 from numpy import linalg as LA

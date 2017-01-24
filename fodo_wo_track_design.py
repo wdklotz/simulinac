@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setup import CONF,SUMMARY,dictprnt,collect_summary
+from setutils import CONF,SUMMARY,dictprnt,collect_summary
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt
 from lattice_generator import parse_yaml_and_fabric

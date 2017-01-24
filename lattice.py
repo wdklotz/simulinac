@@ -24,7 +24,7 @@ from copy import copy
 from matplotlib.pyplot import plot,show,legend
 import warnings
 
-from setup import wille,CONF,SUMMARY,Particle,objprnt,printv
+from setutils import wille,CONF,SUMMARY,Particle,objprnt,printv
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from tracks import Track

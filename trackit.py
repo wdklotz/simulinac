@@ -24,7 +24,7 @@ from lattice_generator import parse_yaml_and_fabric
 from bunch import Bunch,poincarePlot,Gauss1D,EmittanceContour
 from tracks import Track,track,trackSoll
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
-from setup import DEBUG
+from setutils import DEBUG
 
 def scatterplot(bnch,xko,yko,txt):
 	x=[]; y=[]
@@ -38,7 +38,7 @@ def scatterplot(bnch,xko,yko,txt):
 def test0():
 	from math import radians
 	from elements import RFC,RFG
-	from setup import Particle
+	from setutils import Particle
 	import numpy as np
 	from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 
@@ -77,7 +77,7 @@ def test0():
 		count -= 1
 
 def test1(filepath):
-	from setup import CONF,dictprnt
+	from setutils import CONF,dictprnt
 	print('\ntest1: trackSoll(...)')
 	lattice = parse_yaml_and_fabric(filepath)
 # 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
@@ -120,7 +120,7 @@ def trackit(filepath):
 # 	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
 # 	scatterplot(bunch,XKOO,YKOO,'x-y final')
 # 	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
-	scatterplot(bunch,ZPKOO,ZPKOO,'z\'-z\' final')
+	scatterplot(bunch,ZKOO,ZPKOO,'z-z\' final')
 	t5 = time.clock()
 
 # 	show initial
