@@ -18,35 +18,60 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import pi,sqrt,sin, cos, radians, degrees
+from copy import copy
 
-CONF = {            ## CONFIG constants and setup ...
-    'lichtgeschwindigkeit': 299792458.,    # [m/s] const
-    'elementarladung': 1.602176565e-19,    # [coulomb] const
-    'proton_mass': 938.272,      # [MeV/c**2] const
-    'electron_mass': 0.5109989,  # [MeV/c**2] const
-    'Ez_feld': 1.04,             # [MV/m] default
-    'spalt_laenge': 0.02,        # [m] default
-    'cavity_laenge': 0.08,       # [m] default
-    'soll_phase': -10.0,         # [deg] default
-    'frequenz': 813.e6,          # [Hz] default
-    'injection_energy': 50.,     # [MeV] default
-    'quad_gradient': 16.0,       # [T/m] default
-    'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-    'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-    'betax_i': 0.780,            # [m] Vorgabe twiss betax @ entrance
-    'betay_i': 2.373,            # [m] Vorgabe twiss betax @ entrance
-    'alfax_i': 0.0,              # Vorgabe twiss alphax @ entrance
-    'alfay_i': 0.0,              # Vorgabe twiss alphaxy @ entrance
-    'dZ':      0.02,             # [m] Vorgabe longitudinal displacement dZ
-    'dP/P':    0.02,             # [rad] Vorgabe relative impulse dP/P
-    'dWf': False,                # acceleration on/off flag default
-    'periodic': True,            # periodic lattice? default
-    'verbose': 1,                # print flag (True) default
-     }
-CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
+class Defaults(object):
+    def __init__(self):
+        self.priv = {
+            'lichtgeschwindigkeit': 299792458.,    # [m/s] const
+            'elementarladung': 1.602176565e-19,    # [coulomb] const
+            'proton_mass': 938.272,      # [MeV/c**2] const
+            'electron_mass': 0.5109989,  # [MeV/c**2] const
+            }
+        self.conf = {            ## CONFIG constants and setup ...
+            'Ez_feld': 1.04,             # [MV/m] default
+            'spalt_laenge': 0.02,        # [m] default
+            'cavity_laenge': 0.08,       # [m] default
+            'soll_phase': -10.0,         # [deg] default
+            'frequenz': 813.e6,          # [Hz] default
+            'injection_energy': 50.,     # [MeV] default
+            'qf_gradient': 16.0,         # [T/m] default
+            'qd_gradient': 16.0,         # [T/m] default
+            'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
+            'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
+            'emitz_i': 7.7e-4,           # longitudinal emittance T.Wangler (6.49) pp.186
+            'betax_i': 0.780,            # [m] Vorgabe twiss betax @ entrance
+            'betay_i': 2.373,            # [m] Vorgabe twiss betax @ entrance
+            'alfax_i': 0.0,              # Vorgabe twiss alphax @ entrance
+            'alfay_i': 0.0,              # Vorgabe twiss alphaxy @ entrance
+            'Dz'     : 0.02,             # [m] Vorgabe longitudinal displacement Dz
+            'Dp/p'   : 3.55654e-4,       # [rad] Vorgabe relative impulse Dp/p
+            'dWf': False,                # acceleration on/off flag default
+            'periodic': True,            # periodic lattice? default
+            'verbose': 1,                # print flag (True) default
+            'n_coil': 1                  # nbof coil windings
+            }
+    def __getitem__(self,key):
+        if key in self.conf:
+            return self.conf[key]
+        elif key in self.priv:
+            return self.priv[key]
+        else:
+            return None
+    def __setitem__(self,key,value):
+        self.conf[key]=value
+    def items(self):
+        res={}
+        for k,v in self.priv.items():
+            res[k]=v
+        for k,v in self.conf.items():
+            res[k]=v
+        return res.items()
 
-SUMMARY = {}
+CONF = Defaults()
+CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
+CONF['Dz']              = CONF['wellenlänge']/18.  #Dz 1/18-th of wavelength per default
+CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 class Particle(object):                           ## relativistic particle
     soll=None            #reference particle a.k.a. soll Teilchen  (class member!)
@@ -78,46 +103,80 @@ class Proton(Particle):                           ## proton
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
 
-Particle.soll = Proton(CONF['injection_energy'])   #the default reference particle
+Particle.soll = Proton()   #the default reference particle
 
 class Electron(Particle):                         ## electron
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
+def epsiz(dz,beta,gamma,Trtf):     #helper to calculate longitudinal phase space ellipse parameters
+    """
+    Ellipse nach T.Wangler (6.47) pp.185
+    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon
+    """
+    qE0 = CONF['Ez_feld']
+    lamb = CONF['wellenlänge']
+    m0c2 = CONF['proton_mass']
+    dphi0 = - radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
+    R = qE0*lamb*sin(-radians(CONF['soll_phase']))
+    R = R * beta*beta*beta*gamma*gamma*gamma*Trtf
+    R = R / (2.*pi*m0c2)
+    R = sqrt(R)
+    w0 = R * dphi0
+    epsi = w0 * dphi0
+    sigw = sqrt(epsi*R)
+    sigphi = -sqrt(epsi/R)    #[rad]
+    sigDp = gamma/(gamma+1.)*sigw      #umrechnung DW/W -> Dp/p, W kin. energie
+    sigDz = - beta*lamb/360.*degrees(sigphi)   #[m]
+    sigphi = degrees(sigphi)
+    return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
+
+result = epsiz(CONF['Dz'],
+                Particle.soll.beta,
+                Particle.soll.gamma,
+                Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz'])
+                )
+CONF['emitz_i']   = result['epsi']
+CONF['Dp/p']      = result['sigDp']
+CONF['sigPhiz_i'] = result['sigphi']
+CONF['DW/W']      = result['sigw']
+
+SUMMARY = {}
+
 def collect_summary():
-	SUMMARY['frequency [Hz]'] = CONF['frequenz']
-	SUMMARY['Quad gradient [T/m]'] = CONF['quad_gradient']
-	SUMMARY['QF gradient [T/m]'] = CONF['quadf_gradient']
-	SUMMARY['QD gradient [T/m]'] = CONF['quadd_gradient']
-	SUMMARY['Quad pole length [m]'] = CONF['ql']
-	SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
-	SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
-	SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
-	SUMMARY['sigx_i* [mm]'] = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-	SUMMARY['sigy_i* [mm]'] = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-	SUMMARY['<impulse dP/P> [%]'] = CONF['dP/P'] * 1.e+2
-	SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
-	SUMMARY['dZ [m]'] = CONF['dZ']
-	SUMMARY['cavity gap length [m]'] = CONF['spalt_laenge']
-	SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
-	SUMMARY['wavelength [m]'] = CONF['wellenlänge']
-	SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
-	SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
-	SUMMARY['lattice version'] = CONF['lattice_version']
-	#...........*...........*...........*...........*...........*...........*
-	SUMMARY['QF pole strength* [T]'] = CONF['quadf_gradient'] * CONF['ql']
-	SUMMARY['QF current* [A/winding]'] = (CONF['quadf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
-	SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
-	SUMMARY['QF coil [windings]'] = CONF['n_coil']
-	SUMMARY['<energy dW/W> max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
-		CONF['Ez_feld'],
-		Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
-		CONF['soll_phase'],
-		CONF['wellenlänge'],
-		Particle.soll)*1.e+2
-	SUMMARY['<impulse dP/P> max* [%]'] = 1./(1.+1./Particle.soll.gamma)*wakzp  # impule acceptanc in %
-	SUMMARY['dphi* [deg]'] =degrees( 2*pi*CONF['frequenz']/CONF['lichtgeschwindigkeit']/Particle.soll.beta*CONF['dZ'])
-	return
+    SUMMARY['frequency [Hz]'] = CONF['frequenz']
+    SUMMARY['QF gradient [T/m]'] = CONF['qf_gradient']
+    SUMMARY['QD gradient [T/m]'] = CONF['qd_gradient']
+    SUMMARY['Quad pole length [m]'] = CONF['ql']
+    SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
+    SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
+    SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
+    SUMMARY['emitz_i* [rad]'] = CONF['emitz_i']
+    SUMMARY['sigx_i* [mm]'] = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
+    SUMMARY['sigy_i* [mm]'] = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
+    SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
+    SUMMARY['cavity gap length [m]'] = CONF['spalt_laenge']
+    SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
+    SUMMARY['wavelength [m]'] = CONF['wellenlänge']
+    SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
+    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
+    SUMMARY['lattice version'] = CONF['lattice_version']
+    SUMMARY['QF pole strength* [T]'] = CONF['qf_gradient'] * CONF['ql']
+    SUMMARY['QF current* [A/winding]'] = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
+    SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
+    SUMMARY['QF coil [windings]'] = CONF['n_coil']
+    SUMMARY['Dz_i(bunch spread) [m]'] = CONF['Dz']
+    SUMMARY['Dp/p_i(impulse spread)* [%]'] = CONF['Dp/p']*1.e+2
+    SUMMARY['Dph/ph_i(phase spread)* [deg]'] = CONF['sigPhiz_i']
+    SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
+    SUMMARY['DW/m0c2 max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
+            CONF['Ez_feld'],
+            Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
+            CONF['soll_phase'],
+            CONF['wellenlänge'],
+            Particle.soll)*1.e+2
+    SUMMARY['Dp/p max* [%]'] = 1./(1.+1./Particle.soll.gamma)*wakzp  # impule acceptanc in %
+    return
 
 def Wakzeptanz(Ez,T,phis,lamb,particle):
     """
@@ -219,7 +278,7 @@ def wille():
     }
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    Particle.soll = Particle()
+    Particle.soll = Proton()
     dictprnt(CONF,text='CONF')
     dictprnt(wille(),text='wille')
     print('\n'+Particle.soll.string())
@@ -229,3 +288,11 @@ if __name__ == '__main__':
     objprnt(Particle.soll,text='Particle.soll')
     Particle.soll = Proton(50.)
     objprnt(Particle.soll,text='Particle.soll')
+
+    result = epsiz(CONF['Dz'],     #dz kleiner als 1/10 wellenlaenge
+              Particle.soll.beta,
+              Particle.soll.gamma,
+              Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz'])
+              )
+    for k,v in result.items():
+    	print('{}\t{:g}'.format(k,v))

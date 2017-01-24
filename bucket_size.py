@@ -49,7 +49,7 @@ def bucket():
     dphi=1e-4                   # step size phase
     pmax=radians(+20.)          # phase upper limit
     pmin=radians(-40.)          # phase lower limit
-    anz= int((pmax-pmin)/dphi)  # nboff phase steps
+    anz= int((pmax-pmin)/dphi)  # nbof  phase steps
     H_invariant=[-0.03+i*0.0025 for i in range(45)]      # invariant hamiltonians
 
     # physics dimensions according to T.Wrangler pp.176

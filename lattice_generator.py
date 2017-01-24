@@ -124,27 +124,26 @@ def factory(input_file):
 		parameter_list = in_data['parameters']
 		parameters     = unpack_list_of_dict(parameter_list)
 		# DEBUG('parameters=\t',parameters)
-		CONF['frequenz']         = parameters['frequency']
-		CONF['quad_gradient']    = None if not 'B_grad' in parameters else parameters['B_grad']
-		CONF['quadf_gradient']   = CONF['quad_gradient'] if not 'B_grad_f' in parameters else parameters['B_grad_f']
-		CONF['quadd_gradient']   = CONF['quad_gradient'] if not 'B_grad_d' in parameters else parameters['B_grad_d']
-		CONF['injection_energy'] = parameters['Tkin']
-		CONF['emitx_i']          = parameters['emitx_i']
-		CONF['emity_i']          = parameters['emity_i']
-		CONF['betax_i']          = parameters['betax_i']
-		CONF['betay_i']          = parameters['betay_i']
-		CONF["alfax_i"]          = parameters['alfax_i']
-		CONF["alfay_i"]          = parameters['alfay_i']
-		CONF['dP/P']             = parameters['dP/P'] * 1.e-2
-		CONF['Ez_feld']          = parameters['Ez']
-		CONF['soll_phase']       = parameters['phi_sync']
-		CONF['dZ']               = parameters['dZ']
-		CONF['spalt_laenge']     = parameters['gap']
-		CONF['cavity_laenge']    = parameters['cav_len']
-		CONF['ql']               = parameters['ql']
-		CONF['wellenlänge']      = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-		CONF['spalt_spannung']   = CONF['Ez_feld']*CONF['spalt_laenge']
-		CONF['n_coil']           = 1 if not 'windings' in parameters else parameters['windings']
+		if 'frequency'   in parameters: CONF['frequenz']         = parameters['frequency']
+		if 'B_grad_f'    in parameters: CONF['qf_gradient']      = parameters['B_grad_f']
+		if 'B_grad_d'    in parameters: CONF['qd_gradient']      = parameters['B_grad_d']
+		if 'Tkin'        in parameters: CONF['injection_energy'] = parameters['Tkin']
+		if 'emitx_i'     in parameters: CONF['emitx_i']          = parameters['emitx_i']
+		if 'emity_i'     in parameters: CONF['emity_i']          = parameters['emity_i']
+		if 'betax_i'     in parameters: CONF['betax_i']          = parameters['betax_i']
+		if 'betay_i'     in parameters: CONF['betay_i']          = parameters['betay_i']
+		if 'alfax_i'     in parameters: CONF['alfax_i']          = parameters['alfax_i']
+		if 'alfay_i'     in parameters: CONF['alfay_i']          = parameters['alfay_i']
+		if 'Dp/p'        in parameters: CONF['Dp/p']             = parameters['Dp/p']
+		if 'Ez'          in parameters: CONF['Ez_feld']          = parameters['Ez']
+		if 'phi_sync'    in parameters: CONF['soll_phase']       = parameters['phi_sync']
+		if 'Dz'          in parameters: CONF['Dz']               = parameters['Dz']
+		if 'gap'         in parameters: CONF['spalt_laenge']     = parameters['gap']
+		if 'cav_len'     in parameters: CONF['cavity_laenge']    = parameters['cav_len']
+		if 'ql'          in parameters: CONF['ql']               = parameters['ql']
+		if 'windings'    in parameters: CONF['n_coil']           = parameters['windings']
+		CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
+		CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
 		return parameters
 # --------
 	def expand_reduce(in_data):
@@ -213,7 +212,7 @@ def factory(input_file):
 		elements = reduce_elm_def(elemement_def)
 		lattice_segment_list=[]
 		for segment_sub_list in lattice_def:
-			nsuper = segment_sub_list[0]       #nboff super cells
+			nsuper = segment_sub_list[0]       #multiplier
 			del segment_sub_list[0]            #pull nsuper off
 			# DEBUG('segment_sub_list in reduce_seg_def()',segment_sub_list)
 			for i in range(nsuper):

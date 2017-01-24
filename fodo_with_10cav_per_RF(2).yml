@@ -38,12 +38,11 @@ parameters:                           ## INPUT parameter definitions
     - betay_i:              2.373     # [m] twiss beta @ entrance y
     - alfax_i:              000       # [-] twiss alpha x @ entrance
     - alfay_i:              000       # [-] twiss alpha y @ entrance
-    - dP/P:                 0.3       # [%] relative impulse dP/P @ entrance
-    - dZ:                   0.01      # [m] longitudinal displacement dZ @ entrance
+#    - Dp/p:                 0.0       # [%] relative impulse Dp/p @ entrance
+#    - Dz:                   0.0       # [m] longitudinal displacement Dz @ entrance
     - frequency:    &p01    816.6E+6  # [Hz] frequency
     - ql:           &p03    0.05      # [m] quad-length
-    - B_grad:       &p04    16.0      # [T/m] equal quadrupole gradient QF and QD
-    - B_grad_f:     *p04              # [T/m] quadrupole gradient focusing QF
+    - B_grad_f:     &p04    16.0      # [T/m] quadrupole gradient focusing QF
     - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
     - Ez:           &p05    1.04      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase

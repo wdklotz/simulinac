@@ -93,18 +93,18 @@ def trackit(filepath):
 # configure bunch genneration
 	distClass = Gauss1D
 # 	distClass = EmittanceContour
-	args = {'plane':(1,1,1,1,0,0),'random':False}
-	custom = False
+	args = {'plane':(1,1,1,1,1,1),'random':False}
+	custom = True
 
 #generate initial bunch and particle distribution
 	if custom:
 		bunchi = Bunch(init=not custom)                #make customized bunch
 		bunchi.set_distClass(distClass)                  #customize
-		bunchi.set_nbOffParticles(particlesPerBunch)   #customize
+		bunchi.set_nbOfParticles(particlesPerBunch)   #customize
 		bunchi.initPhaseSpace(args)                        #init customized
 		bunch = Bunch(init=not custom)                #make customized bunch
 		bunch.set_distClass(distClass)                  #customize
-		bunch.set_nbOffParticles(particlesPerBunch)   #customize
+		bunch.set_nbOfParticles(particlesPerBunch)   #customize
 		bunch.initPhaseSpace(args)                        #init customized
 	else:
 		bunchi = Bunch()                               #make bunch using defaults
@@ -116,15 +116,17 @@ def trackit(filepath):
 	t3 = time.clock()
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
-	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
-	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
-	scatterplot(bunch,XKOO,YKOO,'x-y final')
-	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
+# 	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
+# 	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
+# 	scatterplot(bunch,XKOO,YKOO,'x-y final')
+# 	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
+	scatterplot(bunch,ZPKOO,ZPKOO,'z\'-z\' final')
 	t5 = time.clock()
 
 # 	show initial
-	scatterplot(bunchi,XKOO,XPKOO,'x-x\' initial')
-	scatterplot(bunchi,YKOO,YPKOO,'y-y\' initial')
+# 	scatterplot(bunchi,XKOO,XPKOO,'x-x\' initial')
+# 	scatterplot(bunchi,YKOO,YPKOO,'y-y\' initial')
+	scatterplot(bunchi,ZKOO,ZPKOO,'z-z\' initial')
 	plt.draw()
 
 	print()
@@ -139,7 +141,7 @@ def trackit(filepath):
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
-	particlesPerBunch = 1500
+	particlesPerBunch = 3000
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)

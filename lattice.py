@@ -79,9 +79,9 @@ class Lattice(object):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
-        SUMMARY['nboff F-quads*']        = qf_counter
-        SUMMARY['nboff D-quads*']        = qd_counter
-        SUMMARY['nboff cavities*']       = cav_counter
+        SUMMARY['nbof F-quads*']        = qf_counter
+        SUMMARY['nbof D-quads*']        = qd_counter
+        SUMMARY['nbof cavities*']       = cav_counter
         SUMMARY['(ttf_min,ttf_max)*']    = (ttfm,ttfx)
         SUMMARY['(energy_i,energy_f) [MeV]']  = (tk_i,tk_f)
 
@@ -345,8 +345,8 @@ class Lattice(object):
         x2p = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1  = sqrt(CONF['emity_i']*self.betay0)
         y2p = sqrt(CONF['emity_i']*self.gammy0)
-        dz  = CONF['dZ']      # eingabe dZ
-        dp  = CONF['dP/P']    # eingabe dP/P0
+        dz  = CONF['Dz']      # eingabe dZ
+        dp  = CONF['Dp/p']    # eingabe dP/P0
         # MDIM tracking used here
         c_0=NP.zeros(ELM.MDIM)
         s_0=NP.zeros(ELM.MDIM)

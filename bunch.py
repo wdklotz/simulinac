@@ -147,16 +147,22 @@ class Gauss1D(object):
 	def __init__(self,nbof_particles,args):
 		sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
 		sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
+		sigz  = CONF['Dz']
+		sigzp = CONF['Dp/p']
 		X  = sigx  *np.random.randn(nbof_particles)     #gauss distribution X
 		XP = sigxp *np.random.randn(nbof_particles)
 		Y  = sigy  *np.random.randn(nbof_particles)
 		YP = sigyp *np.random.randn(nbof_particles)
+		Z  = sigz *np.random.randn(nbof_particles)
+		ZP = sigzp *np.random.randn(nbof_particles)
 		plane = args['plane']
 		tk_in = Particle.soll.tkin                           #energy at entrance
 # 		DEBUG('X >>', X)
 # 		DEBUG('XP >>',XP)
 # 		DEBUG('Y >>', Y)
 # 		DEBUG('YP >>',YP)
+# 		DEBUG('Z  >>',Z)
+# 		DEBUG('ZP >>',ZP)
 		self.tracklist=[]           #all Tracks in a bunch
 		for i in range(nbof_particles):
 			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
@@ -168,6 +174,10 @@ class Gauss1D(object):
 				start[YKOO]=Y[i]
 			if plane[3]:
 				start[YPKOO]=YP[i]
+			if plane[4]:
+				start[ZKOO]=Z[i]
+			if plane[5]:
+				start[ZPKOO]=ZP[i]
 			self.tracklist.append(Track(particle_number=i,start=start))
 # 			DEBUG(self.tracklist[-1].first_str())
 # 			DEBUG(self.tracklist[-1].last_str())
@@ -176,14 +186,14 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 	def __init__(self,init=True):
 		self.nbof_particles = 750
 		self.tracklist = None
-		self.plane = (1,1,1,1,0,0)
+		self.plane = (1,1,1,1,1,1)
 		self.distclass=Gauss1D
 		if init: self.initPhaseSpace({'plane':self.plane})
 	#---
 	def nb_particles(self):
 		return self.nbof_particles
 	#---
-	def set_nbOffParticles(self,nb):
+	def set_nbOfParticles(self,nb):
 		self.nbof_particles = nb
 	#---
 	def tracks(self):
@@ -198,8 +208,7 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 	def initPhaseSpace(self,args):
 		self.tracklist = self.distclass(self.nbof_particles,args).tracklist
 		if self.distclass == EmittanceContour:
-			self.set_nbOffParticles(len(self.tracklist))
-# 			DEBUG('self.nbof_particles in Bunch.initPhaseSpace() ..',self.nbof_particles)
+			self.set_nbOfParticles(len(self.tracklist))  #EmittanceCountour doubles nbof-tracks
 
 def test1(alfa,beta,epsi):
 	N = 20000
