@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutils import CONF,dictprnt,objprnt
+from setutil import CONF,dictprnt,objprnt
 from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Particle
 from lattice import Lattice
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis

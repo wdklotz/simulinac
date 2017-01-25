@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutils import CONF,Proton,objprnt,dictprnt
+from setutil import CONF,Proton,objprnt,dictprnt
 from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG

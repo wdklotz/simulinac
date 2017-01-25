@@ -21,8 +21,8 @@ from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees
 from copy import copy
 import numpy as NP
 
-from setutils import wille,CONF,dictprnt,objprnt,Particle
-from setutils import DEBUG,k0,dBdz,scalek0,printv
+from setutil import wille,CONF,dictprnt,objprnt,Particle
+from setutil import DEBUG,k0,dBdz,scalek0,printv
 
 MDIM=10        # dimension of matrices
 
@@ -761,7 +761,7 @@ def test9():
     print('--------------- EOF test9 --------------------')
 def test10():
     print('\ntest: Particle class')
-    dictprnt(CONF,text='setutils.CONF')
+    dictprnt(CONF,text='setutil.CONF')
 
     # particle class
     print()

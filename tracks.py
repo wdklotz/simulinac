@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 import numpy as np
 
-from setutils import Particle,DEBUG
+from setutil import Particle,DEBUG
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
@@ -29,6 +29,9 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
 		self.track_points = start
 		self.particle_number = particle_number
 		self.nbof_points = 1
+
+	def nbPoints(self):
+		return self.nbof_points
 
 	def append(self,new):
 		self.track_points = np.append(self.track_points,new)
@@ -137,7 +140,7 @@ def track(lattice,bunch):
 	bunch: a list of independent Tracks
 	"""
 	from time import sleep
-	printProgressBar(0, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+	printProgressBar(0, bunch.nbTracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
 		ti = particle_track.first()
 		for ipos in lattice.seq:
@@ -149,7 +152,7 @@ def track(lattice,bunch):
 # 				DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 			ti = tf
 		sleep(1.0e-3)
-		printProgressBar(count, bunch.nb_particles(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+		printProgressBar(count, bunch.nbTracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 # 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
 # 		DEBUG('FIRST: {}'.format(particle_track.first_str()))
 # 		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))

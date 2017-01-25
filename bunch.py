@@ -23,7 +23,7 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from setutils import DEBUG,CONF,Particle
+from setutil import DEBUG,CONF,Particle
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from tracks import Track
 
@@ -102,12 +102,12 @@ class EmittanceContour(object):
 		xp2=(-b-d)/(2.*a)
 		return (xp1,xp2)
 
-	def __init__(self,nbof_particles,args):
+	def __init__(self,nbof_tracks,args):
 		sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
 		if args['random']:
-			Xrand = sigx*(2.*np.random.random_sample((nbof_particles,))-1.)
+			Xrand = sigx*(2.*np.random.random_sample((nbof_tracks,))-1.)
 		else:
-			Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nbof_particles)
+			Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nbof_tracks)
 		X=[]; XP=[]
 		for x in Xrand:
 			xp1,xp2 = EmittanceContour.twiss_conjugate(x,CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
@@ -117,9 +117,9 @@ class EmittanceContour(object):
 			XP.append(xp2)
 		sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
 		if args['random']:
-			Yrand = sigy*(2.*np.random.random_sample((nbof_particles,))-1.)
+			Yrand = sigy*(2.*np.random.random_sample((nbof_tracks,))-1.)
 		else:
-			Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nbof_particles)
+			Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nbof_tracks)
 		Y=[]; YP=[]
 		for y in Yrand:
 			yp1,yp2 = EmittanceContour.twiss_conjugate(y,CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
@@ -133,7 +133,7 @@ class EmittanceContour(object):
 # 		DEBUG('Y >>', Y)
 # 		DEBUG('YP >>',YP)
 		self.tracklist=[]           #all Tracks in a bunch
-		for i in range(2*nbof_particles):
+		for i in range(2*nbof_tracks):
 			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
 			start[XKOO]=X[i]
 			start[XPKOO]=XP[i]
@@ -144,17 +144,17 @@ class EmittanceContour(object):
 # 			DEBUG(self.tracklist[-1].last_str())
 
 class Gauss1D(object):
-	def __init__(self,nbof_particles,args):
+	def __init__(self,nbof_tracks,args):
 		sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
 		sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
 		sigz  = CONF['Dz']
 		sigzp = CONF['Dp/p']
-		X  = sigx  *np.random.randn(nbof_particles)     #gauss distribution X
-		XP = sigxp *np.random.randn(nbof_particles)
-		Y  = sigy  *np.random.randn(nbof_particles)
-		YP = sigyp *np.random.randn(nbof_particles)
-		Z  = sigz *np.random.randn(nbof_particles)
-		ZP = sigzp *np.random.randn(nbof_particles)
+		X  = sigx  *np.random.randn(nbof_tracks)     #gauss distribution X
+		XP = sigxp *np.random.randn(nbof_tracks)
+		Y  = sigy  *np.random.randn(nbof_tracks)
+		YP = sigyp *np.random.randn(nbof_tracks)
+		Z  = sigz *np.random.randn(nbof_tracks)
+		ZP = sigzp *np.random.randn(nbof_tracks)
 		plane = args['plane']
 		tk_in = Particle.soll.tkin                           #energy at entrance
 # 		DEBUG('X >>', X)
@@ -164,7 +164,7 @@ class Gauss1D(object):
 # 		DEBUG('Z  >>',Z)
 # 		DEBUG('ZP >>',ZP)
 		self.tracklist=[]           #all Tracks in a bunch
-		for i in range(nbof_particles):
+		for i in range(nbof_tracks):
 			start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
 			if plane[0]:
 				start[XKOO]=X[i]
@@ -184,20 +184,26 @@ class Gauss1D(object):
 
 class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
 	def __init__(self,init=True):
-		self.nbof_particles = 750
-		self.tracklist = None
+		self.nbof_tracks = 750
+		self.tracklist = []     #all Tracks in a bunch -- a list []
 		self.plane = (1,1,1,1,1,1)
 		self.distclass=Gauss1D
 		if init: self.initPhaseSpace({'plane':self.plane})
 	#---
-	def nb_particles(self):
-		return self.nbof_particles
+	def nbTracks(self):        #nbof tracks per bunch
+		return self.nbof_tracks
 	#---
-	def set_nbOfParticles(self,nb):
-		self.nbof_particles = nb
+	def set_nbTracks(self,nb):
+		self.nbof_tracks = nb
 	#---
-	def tracks(self):
+	def tracks(self):          #all tracks
 		return self.tracklist
+	#---
+	def last(self):
+		return self.tracklist[-1]
+	#---
+	def nbPointsPTrack(self):     #nbof points per track
+		return self.tracklist[-1].nbPoints()
 	#---
 	def set_plane(self,plane):
 		self.plane = plane
@@ -206,7 +212,7 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 		self.distclass = distclass
 	#---
 	def initPhaseSpace(self,args):
-		self.tracklist = self.distclass(self.nbof_particles,args).tracklist
+		self.tracklist = self.distclass(self.nbof_tracks,args).tracklist
 		if self.distclass == EmittanceContour:
 			self.set_nbOfParticles(len(self.tracklist))  #EmittanceCountour doubles nbof-tracks
 

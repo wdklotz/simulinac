@@ -24,21 +24,35 @@ from lattice_generator import parse_yaml_and_fabric
 from bunch import Bunch,poincarePlot,Gauss1D,EmittanceContour
 from tracks import Track,track,trackSoll
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
-from setutils import DEBUG
+from setutil import DEBUG
 
 def scatterplot(bnch,xko,yko,txt):
-	x=[]; y=[]
-	for t in bnch.tracks():
-		x.append(t.last()[xko])
-		y.append(t.last()[yko])
-	plt.figure()
-	sp = plt.subplot()
-	poincarePlot(x,y,'{} {} particles'.format(txt,bnch.nb_particles()),sp)
+	pptrack= bnch.nbPointsPTrack()        #points per track
+	for point in range(pptrack):
+		text = ''
+		if point == 0:
+			text = '{} initial'.format(txt)
+		elif point == (pptrack-1):
+			text +='{} final'.format(txt)
+		else:
+			text +='{} marker {}'.format(txt,point)
+		x=[]; y=[]
+		for track in bnch.tracks():      #loop over tracks per bunch
+			x.append(track.point_at(point)[xko])
+			y.append(track.point_at(point)[yko])
+		fig = plt.figure()
+		sp = plt.subplot()
+		poincarePlot(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp)
+		plt.draw()
+		plt.savefig('figures/trackit{}.png'.format(point))
+# 		plt.show(block=True)
+		plt.close(fig)
+
 
 def test0():
 	from math import radians
 	from elements import RFC,RFG
-	from setutils import Particle
+	from setutil import Particle
 	import numpy as np
 	from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 
@@ -77,7 +91,7 @@ def test0():
 		count -= 1
 
 def test1(filepath):
-	from setutils import CONF,dictprnt
+	from setutil import CONF,dictprnt
 	print('\ntest1: trackSoll(...)')
 	lattice = parse_yaml_and_fabric(filepath)
 # 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
@@ -98,16 +112,11 @@ def trackit(filepath):
 
 #generate initial bunch and particle distribution
 	if custom:
-		bunchi = Bunch(init=not custom)                #make customized bunch
-		bunchi.set_distClass(distClass)                  #customize
-		bunchi.set_nbOfParticles(particlesPerBunch)   #customize
-		bunchi.initPhaseSpace(args)                        #init customized
 		bunch = Bunch(init=not custom)                #make customized bunch
 		bunch.set_distClass(distClass)                  #customize
-		bunch.set_nbOfParticles(particlesPerBunch)   #customize
+		bunch.set_nbTracks(particlesPerBunch)   #customize
 		bunch.initPhaseSpace(args)                        #init customized
 	else:
-		bunchi = Bunch()                               #make bunch using defaults
 		bunch = Bunch()                               #make bunch using defaults
 
 # 	track and show final
@@ -116,18 +125,12 @@ def trackit(filepath):
 	t3 = time.clock()
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
-# 	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
-# 	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
-# 	scatterplot(bunch,XKOO,YKOO,'x-y final')
-# 	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
-	scatterplot(bunch,ZKOO,ZPKOO,'z-z\' final')
+	# 	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
+	# 	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
+	# 	scatterplot(bunch,XKOO,YKOO,'x-y final')
+	# 	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
+	scatterplot(bunch,ZKOO,ZPKOO,'z-z\'')
 	t5 = time.clock()
-
-# 	show initial
-# 	scatterplot(bunchi,XKOO,XPKOO,'x-x\' initial')
-# 	scatterplot(bunchi,YKOO,YPKOO,'y-y\' initial')
-	scatterplot(bunchi,ZKOO,ZPKOO,'z-z\' initial')
-	plt.draw()
 
 	print()
 	print('total time     >> {:6.3f} [sec]'.format(t5-t0))
@@ -136,12 +139,11 @@ def trackit(filepath):
 	print('track design   >> {:6.3f} [sec] {:4.1f} [%]'.format((t3-t2),(t3-t2)/(t5-t0)*1.e2))
 	print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
 	print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
-	plt.show(block=True)
 
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
-	particlesPerBunch = 3000
+	particlesPerBunch = 1000
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)
