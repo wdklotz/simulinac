@@ -46,11 +46,15 @@ def histPlot(x,mu,sigma):      #histogram
 	# Tweak spacing to prevent clipping of ylabel
 	plt.subplots_adjust(left=0.15)
 
-def poincarePlot(x,y,whazit,sctrplt):       #scatter plot
+def poincarePlot(x,y,whazit,sctrplt,max=(0.,0.)):       #scatter plot
 
 # 	max values
-	xmax = np.max(np.fabs(x))
-	ymax = np.max(np.fabs(y))
+	xmax = max[0]
+	if xmax == 0.:
+		xmax = np.max(np.fabs(x))
+	ymax = max[1]
+	if ymax == 0.:
+		ymax = np.max(np.fabs(y))
 # 	DEBUG('xmax,ymax in poincarePlot() >>',xmax,ymax)
 
 	# the scatter plot
@@ -83,12 +87,13 @@ def poincarePlot(x,y,whazit,sctrplt):       #scatter plot
 
 	if ymax != 0.:
 		# now determine nice binning limits by hand
-		binwidthy=ymax/100. if ymax !=0. else 1.
+		binwidthy=ymax/100.
 		limy = (int(ymax/binwidthy)+1)*binwidthy
 		binsy = np.arange(-limy, limy + binwidthy, binwidthy)
-		# do the histograms
 		axHisty.hist(y, bins=binsy, normed=1, orientation='horizontal')
 		axHisty.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
+
+	return xmax,ymax
 
 class EmittanceContour(object):
 	def twiss_conjugate(x,alfa,beta,epsi):

@@ -27,6 +27,7 @@ from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from setutil import DEBUG
 
 def scatterplot(bnch,xko,yko,txt):
+	max = (0.,0.)
 	pptrack= bnch.nbPointsPTrack()        #points per track
 	for point in range(pptrack):
 		text = ''
@@ -42,12 +43,10 @@ def scatterplot(bnch,xko,yko,txt):
 			y.append(track.point_at(point)[yko])
 		fig = plt.figure()
 		sp = plt.subplot()
-		poincarePlot(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp)
-		plt.draw()
-		plt.savefig('figures/trackit{}.png'.format(point))
-# 		plt.show(block=True)
-		plt.close(fig)
-
+		if point == 1:        #exclude initial for calc of xmax,ymax
+			max = (0.,0.)
+		max = poincarePlot(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp,max=max)
+		yield fig
 
 def test0():
 	from math import radians
@@ -113,9 +112,9 @@ def trackit(filepath):
 #generate initial bunch and particle distribution
 	if custom:
 		bunch = Bunch(init=not custom)                #make customized bunch
-		bunch.set_distClass(distClass)                  #customize
-		bunch.set_nbTracks(particlesPerBunch)   #customize
-		bunch.initPhaseSpace(args)                        #init customized
+		bunch.set_distClass(distClass)                #customize
+		bunch.set_nbTracks(particlesPerBunch)         #customize
+		bunch.initPhaseSpace(args)                    #init customized
 	else:
 		bunch = Bunch()                               #make bunch using defaults
 
@@ -125,11 +124,37 @@ def trackit(filepath):
 	t3 = time.clock()
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
-	# 	scatterplot(bunch,XKOO,XPKOO,'x-x\' final')
-	# 	scatterplot(bunch,YKOO,YPKOO,'y-y\' final')
-	# 	scatterplot(bunch,XKOO,YKOO,'x-y final')
-	# 	scatterplot(bunch,XPKOO,YPKOO,'x\'-y\' final')
-	scatterplot(bunch,ZKOO,ZPKOO,'z-z\'')
+
+	for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'')):
+		plt.draw()
+		plt.savefig('figures/trackit{}.png'.format(point))
+		plt.show(block=True)
+		plt.close(fig)
+
+# 	for point,fig in enumerate(scatterplot(bunch,XKOO,XPKOO,'x-x\'')):
+# 		plt.draw()
+# # 		plt.savefig('figures/trackit{}.png'.format(point))
+# 		plt.show(block=True)
+# 		plt.close(fig)
+#
+# 	for point,fig in enumerate(scatterplot(bunch,YKOO,YPKOO,'y-y\'')):
+# 		plt.draw()
+# # 		plt.savefig('figures/trackit{}.png'.format(point))
+# 		plt.show(block=True)
+# 		plt.close(fig)
+#
+# 	for point,fig in enumerate(scatterplot(bunch,XKOO,YKOO,'x-y')):
+# 		plt.draw()
+# # 		plt.savefig('figures/trackit{}.png'.format(point))
+# 		plt.show(block=True)
+# 		plt.close(fig)
+#
+# 	for point,fig in enumerate(scatterplot(bunch,XPKOO,YPKOO,'x\'-y\'')):
+# 		plt.draw()
+# # 		plt.savefig('figures/trackit{}.png'.format(point))
+# 		plt.show(block=True)
+# 		plt.close(fig)
+
 	t5 = time.clock()
 
 	print()
@@ -142,7 +167,7 @@ def trackit(filepath):
 
 # ---------------------------------------
 if __name__ == '__main__':
-	filepath = 'fodo_with_10cav_per_RF(2).yml'    ## the default input file (YAML syntax)
+	filepath = 'fodo_with_10cav_per_RF(3).yml'    ## the default input file (YAML syntax)
 	particlesPerBunch = 1000
 # 	test0()
 # 	test1(filepath)
