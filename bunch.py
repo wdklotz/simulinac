@@ -46,19 +46,11 @@ def histPlot(x,mu,sigma):      #histogram
 	# Tweak spacing to prevent clipping of ylabel
 	plt.subplots_adjust(left=0.15)
 
-def poincarePlot(x,y,whazit,sctrplt,max=(0.,0.)):       #scatter plot
-
-# 	max values
-	xmax = max[0]
-	if xmax == 0.:
-		xmax = np.max(np.fabs(x))
-	ymax = max[1]
-	if ymax == 0.:
-		ymax = np.max(np.fabs(y))
-# 	DEBUG('xmax,ymax in poincarePlot() >>',xmax,ymax)
-
+def poincare(x,y,whazit,sctrplt,max):       #scatter plot
 	# the scatter plot
-	sctrplt.scatter(x,y,s=1)
+	sctrplt.set_autoscalex_on(False)
+	sctrplt.set_autoscaley_on(False)
+	sctrplt.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
 
 	# set tick label size
 	sctrplt.tick_params(labelsize='xx-small')
@@ -77,6 +69,7 @@ def poincarePlot(x,y,whazit,sctrplt,max=(0.,0.)):       #scatter plot
 	# make some labels invisible
 	plt.setp(axHistx.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
 
+	(xmax,ymax) = max
 	if xmax != 0:
 		# now determine nice binning limits by hand
 		binwidthx=xmax/100.
@@ -93,7 +86,8 @@ def poincarePlot(x,y,whazit,sctrplt,max=(0.,0.)):       #scatter plot
 		axHisty.hist(y, bins=binsy, normed=1, orientation='horizontal')
 		axHisty.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
 
-	return xmax,ymax
+	plt.plot()
+	return
 
 class EmittanceContour(object):
 	def twiss_conjugate(x,alfa,beta,epsi):
@@ -158,7 +152,7 @@ class Gauss1D(object):
 		XP = sigxp *np.random.randn(nbof_tracks)
 		Y  = sigy  *np.random.randn(nbof_tracks)
 		YP = sigyp *np.random.randn(nbof_tracks)
-		Z  = sigz *np.random.randn(nbof_tracks)
+		Z  = sigz  *np.random.randn(nbof_tracks)
 		ZP = sigzp *np.random.randn(nbof_tracks)
 		plane = args['plane']
 		tk_in = Particle.soll.tkin                           #energy at entrance
@@ -184,8 +178,7 @@ class Gauss1D(object):
 			if plane[5]:
 				start[ZPKOO]=ZP[i]
 			self.tracklist.append(Track(particle_number=i,start=start))
-# 			DEBUG(self.tracklist[-1].first_str())
-# 			DEBUG(self.tracklist[-1].last_str())
+			DEBUG('start in Gauss1D() >>',self.tracklist[-1].last_str())
 
 class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
 	def __init__(self,init=True):
@@ -241,7 +234,7 @@ def test1(alfa,beta,epsi):
 
 	plt.figure()
 	sp = plt.subplot()
-	poincarePlot(x,xp,'x-x\'',sp)
+	poincare(x,xp,'x-x\'',sp)
 	plt.show(block=True)
 
 def test0(mu,sigma):

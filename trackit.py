@@ -18,17 +18,18 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import matplotlib.pyplot as plt
+import numpy as np
 import time
 
 from lattice_generator import parse_yaml_and_fabric
-from bunch import Bunch,poincarePlot,Gauss1D,EmittanceContour
+from bunch import Bunch,poincare,Gauss1D,EmittanceContour
 from tracks import Track,track,trackSoll
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from setutil import DEBUG
 
-def scatterplot(bnch,xko,yko,txt):
-	max = (0.,0.)
+def scatterplot(bnch,xko,yko,txt,max):
 	pptrack= bnch.nbPointsPTrack()        #points per track
+	(xmax, ymax) = max                    #axis max values
 	for point in range(pptrack):
 		text = ''
 		if point == 0:
@@ -41,11 +42,12 @@ def scatterplot(bnch,xko,yko,txt):
 		for track in bnch.tracks():      #loop over tracks per bunch
 			x.append(track.point_at(point)[xko])
 			y.append(track.point_at(point)[yko])
+# 		DEBUG('\nx in scatterplot >> ',x,' y in scatterplot >> ',y)
 		fig = plt.figure()
 		sp = plt.subplot()
-		if point == 1:        #exclude initial for calc of xmax,ymax
-			max = (0.,0.)
-		max = poincarePlot(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp,max=max)
+		poincare(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp,max)
+		plt.xlim([-xmax,xmax])
+		plt.ylim([-ymax,ymax])
 		yield fig
 
 def test0():
@@ -125,10 +127,9 @@ def trackit(filepath):
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()
 
-	for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'')):
-		plt.draw()
+	for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.01))):
 		plt.savefig('figures/trackit{}.png'.format(point))
-		plt.show(block=True)
+# 		plt.show(block=True)
 		plt.close(fig)
 
 # 	for point,fig in enumerate(scatterplot(bunch,XKOO,XPKOO,'x-x\'')):
@@ -168,7 +169,7 @@ def trackit(filepath):
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(3).yml'    ## the default input file (YAML syntax)
-	particlesPerBunch = 1000
+	particlesPerBunch = 6
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)

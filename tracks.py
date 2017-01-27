@@ -126,12 +126,13 @@ def trackSoll(lattice):
 # 		DEBUG('\t\ti >>',Track.string(ti))
 		element.adapt_for_energy(ti[EKOO])    #enery adopt
 		tf = element.matrix.dot(ti)           #track: at exit
+# 		DEBUG('\t\tf >>',Track.string(tf))
 		soll_track.append(tf)                 #append
 # 		deltaE = tf[EKOO] - ti[EKOO]
 # 		DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 # 	DEBUG('complete track\n{}'.format(soll_track.points_string()))
-	DEBUG('{}'.format(soll_track.first_str()))
-	DEBUG('{}'.format(soll_track.last_str()))
+# 	DEBUG('{}'.format(soll_track.first_str()))
+# 	DEBUG('{}'.format(soll_track.last_str()))
 
 def track(lattice,bunch):
 	"""
@@ -147,6 +148,7 @@ def track(lattice,bunch):
 			element,s0,s1 = ipos
 			tf = element.matrix.dot(ti)      #track through!
 			if isinstance(element,ELM.MRK):
+# 				if count == 1: DEBUG('tf in track({}) >>'.format(count)+Track.string(tf))
 				particle_track.append(tf)
 # 				deltaE = tf[EKOO] - ti[EKOO]
 # 				DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
