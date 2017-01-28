@@ -123,7 +123,7 @@ def trackit(filepath):
     track(lattice,bunch)                          #track bunch
     t4 = time.clock()
 
-    for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.01))):
+    for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.0025))):
 #         plt.savefig('figures/trackit{}.png'.format(point))
         plt.show(block=True)
         plt.close(fig)

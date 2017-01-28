@@ -28,17 +28,17 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
     def __init__(self, particle_number=0, start=None):
         self.track_points = start
         self.particle_number = particle_number
-        self.nb_points = 1
+        self.nb_points_per_track = 1
 
     def nb_points(self):
-        return self.nb_points
+        return self.nb_points_per_track
 
     def append(self,new):
         self.track_points = np.append(self.track_points,new)
-        self.nb_points +=1
+        self.nb_points_per_track +=1
 
     def points(self):
-        return self.track_points.reshape(self.nb_points,MDIM)
+        return self.track_points.reshape(self.nb_points_per_track,MDIM)
 
     def point_at(self,n):
         return self.points()[n]
