@@ -124,7 +124,7 @@ def track_soll(lattice):
 #         DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
         ti = soll_track.last()                #track: at entrance
 #         DEBUG('\t\ti >>',Track.string(ti))
-        element.adapt_for_energy(ti[EKOO])    #enery adopt
+        element.adapt_for_energy(ti[EKOO])    #enery adaptation
         tf = element.matrix.dot(ti)           #track: at exit
 #         DEBUG('\t\tf >>',Track.string(tf))
         soll_track.append(tf)                 #append

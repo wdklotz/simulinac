@@ -285,7 +285,7 @@ class Lattice(object):
             elm,s0,s1=ipos
             self.add_element(elm)
 
-    def functions(self,steps=10):  ## tracks twiss functions with beta-matrix through lattice
+    def twiss_functions(self,steps=10):  ## tracks twiss functions with beta-matrix through lattice
         beta_fun=[]
         bx = self.betax0
         ax = self.alfax0
@@ -488,7 +488,7 @@ def test2():
     print('BETAx[0] {:.3f} BETAy[0] {:.3f}'.format(betax,betay))
     lattice.symplecticity()
     ## lattice function as f(s)
-    beta_fun,cl,sl = lattice.functions(steps=100)
+    beta_fun,cl,sl = lattice.twiss_functions(steps=100)
     disp = lattice.dispersion(steps=100,closed=True)
     ## plots
     s  = [x[0] for x in beta_fun]    # s

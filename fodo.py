@@ -176,7 +176,7 @@ def loesung(filepath):                   ## total classic FODO lattice
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
     # Zeige Grafik: Lösungen als Funktion von (s)
-    functions = lattice.functions(30)
+    functions = lattice.twiss_functions(30)
     display(functions)   # twiss functions
 
 if __name__ == '__main__':
