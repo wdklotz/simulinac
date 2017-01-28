@@ -23,12 +23,12 @@ import time
 
 from lattice_generator import parse_yaml_and_fabric
 from bunch import Bunch,poincare,Gauss1D,EmittanceContour
-from tracks import Track,track,trackSoll
+from tracks import Track,track,track_soll
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from setutil import DEBUG
 
 def scatterplot(bnch,xko,yko,txt,max):
-	pptrack= bnch.nbPointsPTrack()        #points per track
+	pptrack= bnch.nb_points_p_track()        #points per track
 	for point in range(pptrack):
 		text = ''
 		if point == 0:
@@ -43,7 +43,7 @@ def scatterplot(bnch,xko,yko,txt,max):
 			y.append(track.point_at(point)[yko])
 # 		DEBUG('\nx in scatterplot >> ',x,' y in scatterplot >> ',y)
 		fig,ax = plt.subplots()
-		poincare(x,y,'{} {} particles'.format(text,bnch.nbTracks()),ax,max)
+		poincare(x,y,'{} {} particles'.format(text,bnch.nb_tracks()),ax,max)
 		yield fig
 
 def test0():
@@ -89,11 +89,11 @@ def test0():
 
 def test1(filepath):
 	from setutil import CONF,dictprnt
-	print('\ntest1: trackSoll(...)')
+	print('\ntest1: track_soll(...)')
 	lattice = parse_yaml_and_fabric(filepath)
 # 	SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
 	dictprnt(CONF,'CONF'); print()
-	trackSoll(lattice)
+	track_soll(lattice)
 
 def trackit(filepath):
 	print('\ntrackit')
@@ -111,14 +111,14 @@ def trackit(filepath):
 	if custom:
 		bunch = Bunch(init=not custom)                #make customized bunch
 		bunch.set_distClass(distClass)                #customize
-		bunch.set_nbTracks(particlesPerBunch)         #customize
-		bunch.initPhaseSpace(args)                    #init customized
+		bunch.set_nb_tracks(particlesPerBunch)         #customize
+		bunch.init_phase_space(args)                    #init customized
 	else:
 		bunch = Bunch()                               #make bunch using defaults
 
 # 	track and show final
 	t2 = time.clock()
-	trackSoll(lattice)                            #track design particle
+	track_soll(lattice)                            #track design particle
 	t3 = time.clock()
 	track(lattice,bunch)                          #track bunch
 	t4 = time.clock()

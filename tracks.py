@@ -28,17 +28,17 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
 	def __init__(self, particle_number=0, start=None):
 		self.track_points = start
 		self.particle_number = particle_number
-		self.nbof_points = 1
+		self.nb_points = 1
 
-	def nbPoints(self):
-		return self.nbof_points
+	def nb_points(self):
+		return self.nb_points
 
 	def append(self,new):
 		self.track_points = np.append(self.track_points,new)
-		self.nbof_points +=1
+		self.nb_points +=1
 
 	def points(self):
-		return self.track_points.reshape(self.nbof_points,MDIM)
+		return self.track_points.reshape(self.nb_points,MDIM)
 
 	def point_at(self,n):
 		return self.points()[n]
@@ -72,7 +72,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
 #default track-point    x   x'  y   y'  z   z'          Tk          1   s   1
 Track.soll = Track(start=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.]))
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
 	"""
 	Call in a loop to create terminal progress bar
 	@params:
@@ -91,7 +91,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 	if iteration == total:
 		print()
 #
-# Sample Usage of printProgressBar(...)
+# Sample Usage of print_progress_bar(...)
 #
 #
 # from time import sleep
@@ -102,18 +102,18 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 # l = len(items)
 #
 # # Initial call to print 0% progress
-# printProgressBar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+# print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
 # for item in items:
 #     # Do stuff...
 #     sleep(0.1)
 #     # Update Progress Bar
 #     i += 1
-#     printProgressBar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+#     print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
 #
 # # Sample Output
 # Progress: |█████████████████████████████████████████████-----| 90.0% Complete
 
-def trackSoll(lattice):
+def track_soll(lattice):
 	"""
 	Tracks the reference particle through the lattice and redefines the lattice element parameters to
 	adapt them to the energy of the accellerated reference particle.
@@ -141,7 +141,7 @@ def track(lattice,bunch):
 	bunch: a list of independent Tracks
 	"""
 	from time import sleep
-	printProgressBar(0, bunch.nbTracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+	print_progress_bar(0, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 	for (count,particle_track) in enumerate(bunch.tracks()):
 		ti = particle_track.first()
 		for ipos in lattice.seq:
@@ -154,7 +154,7 @@ def track(lattice,bunch):
 # 				DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 			ti = tf
 		sleep(1.0e-3)
-		printProgressBar(count, bunch.nbTracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
+		print_progress_bar(count, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
 # 		DEBUG('complete track\n{}'.format(particle_track.points_str()))
 # 		DEBUG('FIRST: {}'.format(particle_track.first_str()))
 # 		DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))

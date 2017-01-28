@@ -127,7 +127,7 @@ class Lattice(object):
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))
         # Determinate M-I == 0 ?
-        beta_matrix = mcell.betaMatrix()
+        beta_matrix = mcell.beta_matrix()
         for i in range(5):
             beta_matrix[i,i] = beta_matrix[i,i]-1.0
         det = LA.det(beta_matrix)
@@ -141,7 +141,7 @@ class Lattice(object):
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
 
         # Startwerte für twiss-functions aus Eigenwert- und Eigenvektor
-        # beta_matrix = mcell.BetaMatrix()
+        # beta_matrix = mcell.beta_matrix()
         # eigen, vectors = LA.eig(beta_matrix)
         # print('Eigenwerte\n',eigen)
         # print('Eigenvektoren\n',vectors)
@@ -207,7 +207,7 @@ class Lattice(object):
 
                 # Probe: twiss-functions durch ganze Zelle (nur sinnvoll fuer period. Struktur!)
                 v_beta=NP.array([[bax],[alx],[gmx],[bay],[aly],[gmy]])
-                m_cell=self.full_cell.betaMatrix()
+                m_cell=self.full_cell.beta_matrix()
                 v_beta_end = m_cell.dot(v_beta)
                 # if verbose:
                 printv(0,'Probe: {Twiss_Ende} == {Zellenmatrix}x{Twiss_Anfang}?')
@@ -300,7 +300,7 @@ class Lattice(object):
         for ipos in self.seq:
             element,s0,s1 = ipos
             for count,i_element in enumerate(element.step_through(steps)):
-                m_beta = i_element.betaMatrix()
+                m_beta = i_element.beta_matrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
                 betax  = v_beta[0,0]
@@ -461,7 +461,7 @@ def test1():
     print('\nTEST1')
     lattice=make_wille()
     mcell,betax,betay=lattice.cell()
-    beta_matrix = mcell.betaMatrix()
+    beta_matrix = mcell.beta_matrix()
 
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)

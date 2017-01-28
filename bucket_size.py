@@ -66,7 +66,7 @@ def bucket():
     betas=particle.beta
     mc2=particle.e0
     q=1.
-    T=particle.TrTf(gapl,fRF)
+    T=particle.trtf(gapl,fRF)
     A=2.*pi/(gammas*betas)**3/lamb
     B=q*E0*T/mc2
     p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]

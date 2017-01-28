@@ -93,7 +93,7 @@ class Particle(object):                           ## relativistic particle
               '{:8s}{:8.4f}   {:8.4f}    {:8.4f} {:8.4f} {:8.4f}  {:8.4f}     {:8.4f}')\
             .format(self.name,self.brho,self.tkin,self.p,self.gamma,self.beta,self.gamma_beta,self.e)
         return s
-    def TrTf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+    def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
@@ -109,7 +109,7 @@ class Electron(Particle):                         ## electron
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
-def epsiz(dz,beta,gamma,Trtf):     #helper to calculate longitudinal phase space ellipse parameters
+def epsiz(dz,beta,gamma,trtf):     #helper to calculate longitudinal phase space ellipse parameters
     """
     Ellipse nach T.Wangler (6.47) pp.185
     (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon
@@ -119,7 +119,7 @@ def epsiz(dz,beta,gamma,Trtf):     #helper to calculate longitudinal phase space
     m0c2 = CONF['proton_mass']
     dphi0 = - radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
     R = qE0*lamb*sin(-radians(CONF['soll_phase']))
-    R = R * beta*beta*beta*gamma*gamma*gamma*Trtf
+    R = R * beta*beta*beta*gamma*gamma*gamma*trtf
     R = R / (2.*pi*m0c2)
     R = sqrt(R)
     w0 = R * dphi0
@@ -134,7 +134,7 @@ def epsiz(dz,beta,gamma,Trtf):     #helper to calculate longitudinal phase space
 result = epsiz(CONF['Dz'],
                 Particle.soll.beta,
                 Particle.soll.gamma,
-                Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz'])
+                Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
                 )
 CONF['emitz_i']   = result['epsi']
 CONF['Dp/p']      = result['sigDp']
@@ -171,7 +171,7 @@ def collect_summary():
     SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
     SUMMARY['DW/m0c2 max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
             CONF['Ez_feld'],
-            Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz']),
+            Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz']),
             CONF['soll_phase'],
             CONF['wellenlänge'],
             Particle.soll)*1.e+2
@@ -292,7 +292,7 @@ if __name__ == '__main__':
     result = epsiz(CONF['Dz'],     #dz kleiner als 1/10 wellenlaenge
               Particle.soll.beta,
               Particle.soll.gamma,
-              Particle.soll.TrTf(CONF['spalt_laenge'],CONF['frequenz'])
+              Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
               )
     for k,v in result.items():
     	print('{}\t{:g}'.format(k,v))

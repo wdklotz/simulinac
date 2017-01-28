@@ -41,7 +41,7 @@ def loop(phis0,ws0,phi0,w0):
 
 ##    deg = CONF['degrees']
     pr=Proton(ws); mc2=pr.e0; g=pr.gamma; b=pr.beta; phase_factor = -2*pi/(mc2*g*g*g*b*b)
-    T=pr.TrTf(CONF['spalt_laenge'],CONF['frequenz']); energy_factor=CONF['spalt_spannung']*T
+    T=pr.trtf(CONF['spalt_laenge'],CONF['frequenz']); energy_factor=CONF['spalt_spannung']*T
 
     func=[]
     for i in range(70):

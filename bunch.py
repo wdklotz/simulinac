@@ -161,12 +161,12 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 		self.tracklist = []     #all Tracks in a bunch -- a list []
 		self.plane = (1,1,1,1,1,1)
 		self.distclass=Gauss1D
-		if init: self.initPhaseSpace({'plane':self.plane})
+		if init: self.init_phase_space({'plane':self.plane})
 	#---
-	def nbTracks(self):        #nbof tracks per bunch
+	def nb_tracks(self):        #nbof tracks per bunch
 		return self.nbof_tracks
 	#---
-	def set_nbTracks(self,nb):
+	def set_nb_tracks(self,nb):
 		self.nbof_tracks = nb
 	#---
 	def tracks(self):          #all tracks
@@ -175,8 +175,8 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 	def last(self):
 		return self.tracklist[-1]
 	#---
-	def nbPointsPTrack(self):     #nbof points per track
-		return self.tracklist[-1].nbPoints()
+	def nb_points_p_track(self):     #nbof points per track
+		return self.tracklist[-1].nb_points()
 	#---
 	def set_plane(self,plane):
 		self.plane = plane
@@ -184,7 +184,7 @@ class Bunch(object):  #is a list of Tracks, which is a list of track-points, whi
 	def set_distClass(self,distclass):
 		self.distclass = distclass
 	#---
-	def initPhaseSpace(self,args):
+	def init_phase_space(self,args):
 		self.tracklist = self.distclass(self.nbof_tracks,args).tracklist
 		if self.distclass == EmittanceContour:
 			self.set_nbOfParticles(len(self.tracklist))  #EmittanceCountour doubles nbof-tracks

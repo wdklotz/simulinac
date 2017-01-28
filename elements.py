@@ -31,7 +31,7 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
-class _matrix(object): ## the mother of all matrices
+class _matrix_(object): ## the mother of all matrices
     # MDIMxMDIM matrices used here
     def __init__(self):
         self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
@@ -49,7 +49,7 @@ class _matrix(object): ## the mother of all matrices
     def __mul__(self,other):
 #         DEBUG('A*B >>',self.label,'*',other.label)
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
-        res=_matrix()
+        res=_matrix_()
         if (self.label == ''):
             res.label=other.label
         else:
@@ -58,8 +58,8 @@ class _matrix(object): ## the mother of all matrices
         res.matrix=product
         return res
     def reverse(self):
-        raise RuntimeError('_matrix:reverse not released yet!')
-        res=_matrix()
+        raise RuntimeError('_matrix_:reverse not released yet!')
+        res=_matrix_()
         for i in range(MDIM):
             for k in range(MDIM):
                 res.matrix[i][k] = self.matrix[i][k]
@@ -82,7 +82,7 @@ class _matrix(object): ## the mother of all matrices
             res += self.matrix[i,i]
         return res
     def shorten(self,length=0.):    # virtual function to be implemented by child classes
-        raise RuntimeError('_matrix.shorten(): empty virtual member function called!')
+        raise RuntimeError('_matrix_.shorten(): empty virtual member function called!')
     def step_through(self,anz=10):
         """
         Step through an element - the central nontrivial function.
@@ -109,7 +109,7 @@ class _matrix(object): ## the mother of all matrices
             if i == anz:
                 mx=mr
             yield mx
-    def betaMatrix(self):
+    def beta_matrix(self):
 #         m11 =self.matrix[0,0];  m12 =self.matrix[0,1]
 #         m21 =self.matrix[1,0];  m22 =self.matrix[1,1]
 #         n11 =self.matrix[2,2];  n12 =self.matrix[2,3]
@@ -128,7 +128,7 @@ class _matrix(object): ## the mother of all matrices
             ])
         return m_beta
 
-class I(_matrix):      ## unity matrix (an alias to _matrix class)
+class I(_matrix_):      ## unity matrix (an alias to _matrix_ class)
     def __init__(self, label='I', viseo=0., particle=Particle.soll):
         super(I,self).__init__()
         self.label=label
@@ -163,11 +163,11 @@ class QF(D):           ## focusing quad nach Trace3D
     def __init__(self, k0=0., length=0., label='QF', particle=Particle.soll):
         super(QF,self).__init__(length=length,label=label,particle=particle)
         self.k0=k0         ## Quad strength [m**-2]
-        self.matrix=self._mx()
+        self.matrix=self._mx_()
         self.viseo = +0.5
     def shorten(self,l=0.):
         return QF(k0=self.k0,length=l,label=self.label,particle=self.particle)
-    def _mx(self):
+    def _mx_(self):
         m=self.matrix
         g=self.particle.gamma
         rzz12=self.length/(g*g)
@@ -183,7 +183,7 @@ class QF(D):           ## focusing quad nach Trace3D
         sd  =sinh(phi)/kwurz
         cdp =kwurz*sinh(phi)
         sdp =cd
-        ## 6x6 matrix
+        ## MDIMxMDIM matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
         #       0    0           0    1            1     0            1     1            2     2
             m[XKOO,XKOO]=cf; m[XKOO,XPKOO]=sf; m[XPKOO,XKOO]=cfp; m[XPKOO,XPKOO]=sfp; m[YKOO,YKOO]=cd
@@ -192,7 +192,7 @@ class QF(D):           ## focusing quad nach Trace3D
         elif isinstance(self,QD):
             m[XKOO,XKOO]=cd; m[XKOO,XPKOO]=sd; m[XPKOO,XKOO]=cdp; m[XPKOO,XPKOO]=sdp; m[YKOO,YKOO]=cf; m[YKOO,YPKOO]=sf; m[YPKOO,YKOO]=cfp; m[YPKOO,YPKOO]=sfp; m[ZKOO,ZPKOO]=rzz12
         else:
-            raise RuntimeError('QF._mx: neither QF nor QD! should never happen!')
+            raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
         return m
     def adapt_for_energy(self,tkin):
         kf = scalek0(self.k0,self.particle.tkin,tkin)
@@ -217,11 +217,11 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         raise RuntimeError('SD:not implemented!')
         super(SD,self).__init__(length=length,label=label,particle=particle)
         self.radius = radius
-        self.matrix=self._mx()
+        self.matrix=self._mx_()
         self.viseo = 0.25
     def shorten(self,l=0.):
         return SD(radius=self.radius,length=l,label=self.label,particle=self.particle)
-    def _mx(self):  # nach Trace3D
+    def _mx_(self):  # nach Trace3D
         m = self.matrix
         rho=self.radius
         k=1./rho
@@ -271,7 +271,7 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         rinv=1./self.radius
         psi=0.5*self.psi  ## Kantenwinkel
         ckp=rinv*tan(psi)
-        ## 6x6 matrix
+        ## MDIMxMDIM matrix
 #         m[1,0]=ckp
 #         m[3,2]=-ckp
         m[XPKOO,XKOO]=ckp
@@ -283,7 +283,7 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         rinv=1./wd.radius
         psi=0.5*wd.psi  ## Kantenwinkel
         ckp=rinv*tan(psi)
-        ## 6x6 matrix
+        ## MDIMxMDIM matrix
         m[XPKOO,XKOO]=ckp
         m[YPKOO,YKOO]=-ckp
         return wd
@@ -304,21 +304,21 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         self.dWf    = dWf
         self.gap    = gap
         self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._TrTF(self.particle.beta)          # time-transition factor
+        self.tr     = self._trtf_(self.particle.beta)          # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf      # T.Wrangler pp.221
         tk_center   = self.deltaW*0.5+self.particle.tkin      # energy in gap center
         part_center = Particle(tk_center)                     # particle @ gap center
         b           = part_center.beta                        # beta @ gap center
         g           = part_center.gamma                       # gamma @ gap center
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
-        self.matrix = self._mx(self.tr,b,g)                   # transport matrix
+        self.matrix = self._mx_(self.tr,b,g)                   # transport matrix
         self.viseo  = 0.25
-    def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+    def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*self.freq*self.gap / (beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx(self,tr,b,g):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
+    def _mx_(self,tr,b,g):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
         m=self.matrix
         e0 = self.particle.e0
         cyp = cxp = -pi*self.u0*tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
@@ -352,7 +352,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         self.gap    = gap
         self.dWf    = dWf
         self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._TrTF(self.particle.beta)
+        self.tr     = self._trtf_(self.particle.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
 #         DEBUG('\n',self.particle.string())
 #         DEBUG('RFG U0,phis,tr >>',self.u0,degrees(self.phis),self.tr)
@@ -364,14 +364,14 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         b           = part_center.beta                        # beta @ gap cemter
         g           = part_center.gamma                       # gamma @ gap center
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
-        self.matrix = self._mx(self.tr,b,g,particlei,particlef)       # transport matrix
-    def _TrTF(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+        self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
+    def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / CONF['lichtgeschwindigkeit']
 #         DEBUG('teta , beta>>',teta,beta)
         teta = teta/beta
         ttf = sin(teta)/teta
         return ttf
-    def _mx(self,tr,b,g,particlei,particlef):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
+    def _mx_(self,tr,b,g,particlei,particlef):   # RF gap nach Trace3D pp.17 (LA-UR-97-886)
         m=self.matrix
         e0 = self.particle.e0
         kz = 2.*pi*self.u0*tr*sin(self.phis)/(e0*b*b*self.lamb)
@@ -379,7 +379,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         bgi         = sqrt(particlei.gamma*particlei.gamma-1.)  # beta*gamma (i)
         bgf         = sqrt(particlef.gamma*particlef.gamma-1.)  # beta*gamma (f)
         bgiRbgf = bgi/bgf
-        # 6x6
+        # MDIMxMDIM
 #         m[1,0]=kx/bgf;    m[1,1]=bgiRbgf
 #         m[3,2]=ky/bgf;    m[3,3]=bgiRbgf
 #         m[5,4]=kz/bgf;    m[5,5]=bgiRbgf
@@ -395,7 +395,7 @@ class RFG(D):          ## zero length RF gap nach Trace3D
     def adapt_for_energy(self,tkin):
         return self
 
-class _thin(_matrix):  ## the mother of all thin elements
+class _thin(_matrix_):  ## the mother of all thin elements
     def __init__(self,particle=Particle.soll):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
@@ -428,7 +428,7 @@ class QFth(_thin):     ## thin F-quad
         self.label  = label
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=+0.5)
         df = di
-        kick = _matrix()    ## 6x6 unit matrix
+        kick = _matrix_()    ## MDIMxMDIM unit matrix
         m = kick.matrix     ## thin lens quad matrix
         if(self.k0l == 0.):
 #             m[1,0] = m[3,2] = 0.
@@ -458,7 +458,7 @@ class QDth(_thin):     ## thin D-quad
         self.label  = label
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=-0.5)
         df = di
-        kick = _matrix()    ## 6x6 unit matrix
+        kick = _matrix_()    ## MDIMxMDIM unit matrix
         m = kick.matrix     ## thin lens quad matrix
         if(self.k0l == 0.):
 #             m[1,0] = m[3,2] = 0.
@@ -527,7 +527,7 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
         return self
 
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
-class Test(_matrix):
+class Test(_matrix_):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
         self.matrix=NP.array([[a,b,0.,0.,0.,0.,0.,0.,0.,0.],
@@ -564,14 +564,14 @@ def test0():
     print('--------------- EOF test0 --------------------')
 def test1():
     print('trivial test 1 ...')
-    i1=_matrix()
+    i1=_matrix_()
     i2=i1*i1
     print(i1.string())
     print(i2.string())
     print('--------------- EOF test1 --------------------')
 def test2():
     print('trivial test 2 ...')
-    i1=_matrix()
+    i1=_matrix_()
     d1=D(10.,'D1')
     print(d1.string())
     print((d1*d1).string())
@@ -584,7 +584,7 @@ def test2():
     print((d2*d3).string())
     print('--------------- EOF test2 --------------------')
 def test3():
-    print('test product of _matrix class ...')
+    print('test product of _matrix_ class ...')
     gradient =1.
     beta     =0.5
     energy   =0.2
@@ -592,7 +592,7 @@ def test3():
     k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     print(qf.string())
-    ## test product of _matrix class
+    ## test product of _matrix_ class
     qd=QD(k0=k,length=1.)
     print(qd.string())
     print((qf*qd).string())

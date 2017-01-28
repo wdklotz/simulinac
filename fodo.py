@@ -23,7 +23,7 @@ from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
-from tracks import trackSoll
+from tracks import track_soll
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -66,8 +66,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
 #     plot(z,bxn,label='',color='green')
-    plot(z,cx,label='Cx[m]',color='blue',linestyle='-.')
-    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-.')
+    plot(z,cx,label='Cx[m]',color='blue',linestyle='-')
+    plot(z,sx,label='Sx[m]',color='red' ,linestyle='-')
     vscale=axis()[3]*0.1
     viseox = [x*vscale for x in viseo]
     plot(z,viseox,label='',color='black')
@@ -78,8 +78,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
 #     plot(z,byn,label='',color='green')
-    plot(z,cy,label='Cy[m]',color='blue',linestyle='-.')
-    plot(z,sy,label='Sy[m]',color='red' ,linestyle='-.')
+    plot(z,cy,label='Cy[m]',color='blue',linestyle='-')
+    plot(z,sy,label='Sy[m]',color='red' ,linestyle='-')
     vscale=axis()[3]*0.1
     viseoy = [x*vscale for x in viseo]
     plot(z,viseoy,label='',color='black')
@@ -122,8 +122,8 @@ def display1(functions):          ## plotting with longitudinal motion
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
 #     plot(z,bxn,label='',color='green')
-    plot(z,cx,label='C [m]',color='blue',linestyle='-.')
-    plot(z,sx,label='S [m]',color='red' ,linestyle='-.')
+    plot(z,cx,label='C [m]',color='blue',linestyle='-')
+    plot(z,sx,label='S [m]',color='red' ,linestyle='-')
     vscale=axis()[3]*0.3
     viseox = [x*vscale for x in viseo]
     plot(z,viseox,label='',color='black')
@@ -134,8 +134,8 @@ def display1(functions):          ## plotting with longitudinal motion
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
 #     plot(z,byn,label='',color='green')
-    plot(z,cy,label='C [m]',color='blue',linestyle='-.')
-    plot(z,sy,label='S [m]',color='red' ,linestyle='-.')
+    plot(z,cy,label='C [m]',color='blue',linestyle='-')
+    plot(z,sy,label='S [m]',color='red' ,linestyle='-')
 #     vscale=axis()[3]*0.1
     viseoy = [x*vscale for x in viseo]
     plot(z,viseoy,label='',color='black')
@@ -167,7 +167,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):                   ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     Particle.soll = Proton(CONF['injection_energy'])
-    trackSoll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
+    track_soll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
     lattice.stats()                ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte

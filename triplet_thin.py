@@ -17,7 +17,6 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import objprnt
 from elements import D,QFth,QDth,QF,QD
 from lattice import Lattice
 from numpy import linalg as LA
@@ -173,7 +172,7 @@ def test1(kf,kd,ld):
     print('test1: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thin(kf,kd,ld)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.betaMatrix()
+    beta_matrix = mcell.beta_matrix()
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
     print('vectors\n',vectors)
@@ -187,7 +186,7 @@ def test2(kf,kd,ld):
     print('test2: using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thick(kf,kd,ld)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.betaMatrix()
+    beta_matrix = mcell.beta_matrix()
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
     print('vectors\n',vectors)
@@ -203,12 +202,12 @@ def test3(kf,kd,ld):
     # thin
     cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.betaMatrix()
+    beta_matrix = mcell.beta_matrix()
     beta_fun_thin,cl,sl = cell.functions(steps=100)
     # thick
     cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.betaMatrix()
+    beta_matrix = mcell.beta_matrix()
     beta_fun_thick,cl,sl = cell.functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
