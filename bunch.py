@@ -21,7 +21,6 @@ import numpy as np
 from math import sqrt
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from setutil import DEBUG,CONF,Particle
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
@@ -46,46 +45,22 @@ def histPlot(x,mu,sigma):      #histogram
 	# Tweak spacing to prevent clipping of ylabel
 	plt.subplots_adjust(left=0.15)
 
-def poincare(x,y,whazit,sctrplt,max):       #scatter plot
+def poincare(x,y,whazit,ax,max):       #scatter plot
 	# the scatter plot
-	sctrplt.set_autoscalex_on(False)
-	sctrplt.set_autoscaley_on(False)
-	sctrplt.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
+# 	ax.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
+	ax.scatter(x,y,s=1)
 
 	# set tick label size
-	sctrplt.tick_params(labelsize='xx-small')
+	ax.tick_params(labelsize='xx-small')
 
 	# place a text box in upper left in axes coords
 	props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
-	sctrplt.text(0.05, 0.95, whazit, transform=sctrplt.transAxes, fontsize=10, verticalalignment='top', bbox=props)
-
-	# 	create new axes on the right and on the top
-	divider = make_axes_locatable(sctrplt)
-	axHistx = divider.append_axes('top',   1.2, pad=0.2, sharex=sctrplt)
-	axHisty = divider.append_axes('right', 1.2, pad=0.2, sharey=sctrplt)
-	axHistx.tick_params(labelsize='xx-small')
-	axHisty.tick_params(labelsize='xx-small')
-
-	# make some labels invisible
-	plt.setp(axHistx.get_xticklabels() + axHisty.get_yticklabels(), visible=False)
+	ax.text(0.05, 0.95, whazit, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
 
 	(xmax,ymax) = max
-	if xmax != 0:
-		# now determine nice binning limits by hand
-		binwidthx=xmax/100.
-		limx = (int(xmax/binwidthx)+1)*binwidthx
-		binsx = np.arange(-limx, limx + binwidthx, binwidthx)
-		axHistx.hist(x, bins=binsx,normed=1)
-		axHistx.tick_params(axis='y',which='both',left='off',right='off',labelleft='off')
-
-	if ymax != 0.:
-		# now determine nice binning limits by hand
-		binwidthy=ymax/100.
-		limy = (int(ymax/binwidthy)+1)*binwidthy
-		binsy = np.arange(-limy, limy + binwidthy, binwidthy)
-		axHisty.hist(y, bins=binsy, normed=1, orientation='horizontal')
-		axHisty.tick_params(axis='x',which='both',bottom='off',top='off',labelbottom='off')
-
+	plt.xlim([-xmax,xmax])
+	plt.ylim([-ymax,ymax])
+	plt.autoscale(enable=False,axis='both')
 	plt.plot()
 	return
 
@@ -178,7 +153,7 @@ class Gauss1D(object):
 			if plane[5]:
 				start[ZPKOO]=ZP[i]
 			self.tracklist.append(Track(particle_number=i,start=start))
-			DEBUG('start in Gauss1D() >>',self.tracklist[-1].last_str())
+# 			DEBUG('start in Gauss1D() >>',self.tracklist[-1].last_str())
 
 class Bunch(object):  #is a list of Tracks, which is a list of track-points, which is an array of coordinates
 	def __init__(self,init=True):

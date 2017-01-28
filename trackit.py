@@ -29,7 +29,6 @@ from setutil import DEBUG
 
 def scatterplot(bnch,xko,yko,txt,max):
 	pptrack= bnch.nbPointsPTrack()        #points per track
-	(xmax, ymax) = max                    #axis max values
 	for point in range(pptrack):
 		text = ''
 		if point == 0:
@@ -43,11 +42,8 @@ def scatterplot(bnch,xko,yko,txt,max):
 			x.append(track.point_at(point)[xko])
 			y.append(track.point_at(point)[yko])
 # 		DEBUG('\nx in scatterplot >> ',x,' y in scatterplot >> ',y)
-		fig = plt.figure()
-		sp = plt.subplot()
-		poincare(x,y,'{} {} particles'.format(text,bnch.nbTracks()),sp,max)
-		plt.xlim([-xmax,xmax])
-		plt.ylim([-ymax,ymax])
+		fig,ax = plt.subplots()
+		poincare(x,y,'{} {} particles'.format(text,bnch.nbTracks()),ax,max)
 		yield fig
 
 def test0():
@@ -169,7 +165,7 @@ def trackit(filepath):
 # ---------------------------------------
 if __name__ == '__main__':
 	filepath = 'fodo_with_10cav_per_RF(3).yml'    ## the default input file (YAML syntax)
-	particlesPerBunch = 6
+	particlesPerBunch = 3000
 # 	test0()
 # 	test1(filepath)
 	trackit(filepath)

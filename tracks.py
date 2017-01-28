@@ -131,8 +131,8 @@ def trackSoll(lattice):
 # 		deltaE = tf[EKOO] - ti[EKOO]
 # 		DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
 # 	DEBUG('complete track\n{}'.format(soll_track.points_string()))
-# 	DEBUG('{}'.format(soll_track.first_str()))
-# 	DEBUG('{}'.format(soll_track.last_str()))
+	DEBUG('{}'.format(soll_track.first_str()))
+	DEBUG('{}'.format(soll_track.last_str()))
 
 def track(lattice,bunch):
 	"""
