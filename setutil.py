@@ -264,7 +264,7 @@ def printv(level,*args):                      ## multilevel printing using verbo
         print(*args)
 
 def DEBUG(*args):
-	print('DEBUG: ',*args)
+    print('DEBUG: ',*args)
 
 def wille():
     return {
@@ -295,4 +295,4 @@ if __name__ == '__main__':
               Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
               )
     for k,v in result.items():
-    	print('{}\t{:g}'.format(k,v))
+        print('{}\t{:g}'.format(k,v))
