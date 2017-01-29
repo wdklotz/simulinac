@@ -121,10 +121,10 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - label:    FODO_with_10CAV_per_RF 01.11.2016    # (changeable) description tag is mandatory. DON't remove or reposition!
-    - [198, SEG1,RFC,SEG2,RFC,SEG3]
+    - [198, SEG1,RFC,SEG2,RFC,SEG3,MARK]
 #    - [198, SEG1,RFC,MARK,SEG2,RFC,MARK,SEG3,MARK]
 #    - [6,SEG1,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,
 #         SEG2,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,RFG,MARK,
 #         SEG3]
 #    - [96, SEG1, RFC, SEG2, RFC, SEG3]
-    - [1,MARK]
+#    - [1,MARK]

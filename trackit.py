@@ -43,7 +43,7 @@ def scatterplot(bnch,xko,yko,txt,max):
             y.append(track.point_at(point)[yko])
 #         DEBUG('\nx in scatterplot >> ',x,' y in scatterplot >> ',y)
         fig,ax = plt.subplots()
-        poincare(x,y,'{} {} particles'.format(text,bnch.nb_tracks()),ax,max)
+        poincare(x,y,'{} {} particles'.format(text,bnch.nb_tracks()),max,ax,(1,1))
         yield fig
 
 def test0():
@@ -123,9 +123,9 @@ def trackit(filepath):
     track(lattice,bunch)                          #track bunch
     t4 = time.clock()
 
-    for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.0025))):
-#         plt.savefig('figures/trackit{}.png'.format(point))
-        plt.show(block=True)
+    for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.01))):
+        plt.savefig('figures/trackit{}.png'.format(point))
+        # plt.show(block=True)
         plt.close(fig)
 
 #     for point,fig in enumerate(scatterplot(bunch,XKOO,XPKOO,'x-x\'')):

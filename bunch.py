@@ -45,24 +45,79 @@ def histPlot(x,mu,sigma):      #histogram
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-def poincare(x,y,whazit,ax,max):       #scatter plot
-    # the scatter plot
-#     ax.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
-    ax.scatter(x,y,s=1)
+def poincare(x,y,whazit,max,ax,projections=(0,0)):       #scatter plot
+	from matplotlib.ticker import NullFormatter
+	if projections == (0,0):
+		# the scatter plot
+	#     ax.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
+		ax.scatter(x,y,s=1)
 
-    # set tick label size
-    ax.tick_params(labelsize='xx-small')
+		# set tick label size
+		ax.tick_params(labelsize='xx-small')
 
-    # place a text box in upper left in axes coords
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
-    ax.text(0.05, 0.95, whazit, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+		# place a text box in upper left in axes coords
+		props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
+		ax.text(0.05, 0.95, whazit, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
 
-    (xmax,ymax) = max
-    plt.xlim([-xmax,xmax])
-    plt.ylim([-ymax,ymax])
-    plt.autoscale(enable=False,axis='both')
-    plt.plot()
-    return
+		(xmax,ymax) = max
+		plt.xlim([-xmax,xmax])
+		plt.ylim([-ymax,ymax])
+		plt.autoscale(enable=False,axis='both')
+	
+	elif projections != (0,0):
+		nullfmt = NullFormatter()         # no labels
+		plt.delaxes(ax)
+		# definitions for the axes
+		left, width = 0.1, 0.65
+		bottom, height = 0.1, 0.65
+		bottom_h = bottom + height + 0.02
+		left_h   = left + width + 0.02
+
+		rect_scatter = [left, bottom, width, height]
+		rect_histx   = [left, bottom_h, width, 0.2]
+		rect_histy   = [left_h, bottom, 0.2, height]
+		
+		# the scatter plot:
+		axScatter    = plt.axes(rect_scatter)
+		axScatter.scatter(x, y, s=1)
+
+		# set tick label size
+		axScatter.tick_params(labelsize='xx-small')
+
+		# place a text box in upper left in axes coords
+		props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
+		axScatter.text(0.05, 0.95, whazit, transform=axScatter.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+
+		(prx,pry) = projections
+		(xmax,ymax) = max
+		if prx == 1:
+			axHistx      = plt.axes(rect_histx)
+			# no labels
+			axHistx.xaxis.set_major_formatter(nullfmt)
+			axHistx.yaxis.set_major_formatter(nullfmt)
+			# now determine nice limits by hand:
+			binwidthx = xmax/100.
+			limx = (int(xmax/binwidthx) + 1) * binwidthx
+			axScatter.set_xlim((-limx, limx))
+			binsx = np.arange(-limx, limx + binwidthx, binwidthx)
+			axHistx.hist(x, bins=binsx, color='black')
+			axHistx.set_xlim(axScatter.get_xlim())
+
+		if pry == 1:
+			axHisty      = plt.axes(rect_histy)
+			# no labels
+			axHisty.xaxis.set_major_formatter(nullfmt)
+			axHisty.yaxis.set_major_formatter(nullfmt)
+			# now determine nice limits by hand:
+			binwidthy = ymax/100.
+			limy = (int(ymax/binwidthy) + 1) * binwidthy
+			axScatter.set_ylim((-limy, limy))
+			binsy = np.arange(-limy, limy + binwidthy, binwidthy)
+			axHisty.hist(y, bins=binsy, orientation='horizontal', color='black')
+			axHisty.set_ylim(axScatter.get_ylim())
+
+	plt.plot()
+	return
 
 class EmittanceContour(object):
     def twiss_conjugate(x,alfa,beta,epsi):
