@@ -124,8 +124,8 @@ def trackit(filepath):
     t4 = time.clock()
 
     for point,fig in enumerate(scatterplot(bunch,ZKOO,ZPKOO,'z-z\'',max=(0.04,0.01))):
-        plt.savefig('figures/trackit{}.png'.format(point))
-        # plt.show(block=True)
+        # plt.savefig('figures/trackit{}.png'.format(point))
+        plt.show(block=True)
         plt.close(fig)
 
 #     for point,fig in enumerate(scatterplot(bunch,XKOO,XPKOO,'x-x\'')):

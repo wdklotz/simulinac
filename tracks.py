@@ -72,7 +72,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
 #default track-point                x   x'  y   y'  z   z'          Tk          1   s   1
 Track.soll = Track(start=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.]))
 
-def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '='):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -133,6 +133,7 @@ def track_soll(lattice):
 #     DEBUG('complete track\n{}'.format(soll_track.points_string()))
     DEBUG('{}'.format(soll_track.first_str()))
     DEBUG('{}'.format(soll_track.last_str()))
+    return soll_track
 
 def track(lattice,bunch):
     """

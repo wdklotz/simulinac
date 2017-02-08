@@ -181,7 +181,7 @@ def loesung(filepath):                   ## total classic FODO lattice
 
 if __name__ == '__main__':
     import sys
-    filepath = 'fodo_with_10cav_per_RF(2).yml'       ## the default input file (YAML syntax)
+    filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

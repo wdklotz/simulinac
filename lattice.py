@@ -21,7 +21,6 @@ from math import sqrt,fabs,acos,pi,degrees
 from numpy import linalg as LA
 import numpy as NP
 from copy import copy
-from matplotlib.pyplot import plot,show,legend
 import warnings
 
 from setutil import wille,CONF,SUMMARY,Particle,objprnt,printv

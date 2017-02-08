@@ -19,6 +19,19 @@ This file is part of the SIMULINAC code
 """
 from math import pi,sqrt,sin, cos, radians, degrees
 from copy import copy
+import logging
+
+#create logger
+logger = logging.getLogger("logger")
+logger.setLevel(logging.DEBUG)
+#create console handler
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+#create formatter
+formatter = logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
+ch.setFormatter(formatter)
+#add ch to logger
+logger.addHandler(ch)
 
 class Defaults(object):
     def __init__(self):
@@ -37,6 +50,7 @@ class Defaults(object):
             'injection_energy': 50.,     # [MeV] default
             'qf_gradient': 16.0,         # [T/m] default
             'qd_gradient': 16.0,         # [T/m] default
+			'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m] 
             'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
             'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
             'emitz_i': 7.7e-4,           # longitudinal emittance T.Wangler (6.49) pp.186
@@ -148,6 +162,7 @@ def collect_summary():
     SUMMARY['QF gradient [T/m]'] = CONF['qf_gradient']
     SUMMARY['QD gradient [T/m]'] = CONF['qd_gradient']
     SUMMARY['Quad pole length [m]'] = CONF['ql']
+    SUMMARY['Quad bore radius [m]'] = CONF['quad_bore_radius']
     SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
     SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
     SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
@@ -263,8 +278,23 @@ def printv(level,*args):                      ## multilevel printing using verbo
     if verbose >= level:
         print(*args)
 
-def DEBUG(*args):
-    print('DEBUG: ',*args)
+def DEBUG(string,arg=''):
+	print('\n')
+	if isinstance(arg,list):
+		print('DEBUG {} \nlist={}'.format(string,arg))
+		# for itm in arg:
+			# print('{}, '.format(itm),end='')
+		# print(']\n')
+	elif isinstance(arg,dict):
+		print('DEBUG {} \ndict={}'.format(string,arg))
+		# for k,v in arg.items():
+			# if isinstance(v,str):
+				# print("'{}' : '{}', ".format(k,v),end='')
+			# else:
+				# print("'{}' : {}, ".format(k,v),end='')
+		# print('}\n')
+	else:
+		print('DEBUG: ',string,arg)
 
 def wille():
     return {

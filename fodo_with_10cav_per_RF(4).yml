@@ -1,0 +1,123 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+##...........................................................................................
+## run configuration
+##...........................................................................................
+flags:                              ## run configuration
+    - accON:        True            # accelleration on/off flag
+    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
+    - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
+##...........................................................................................
+## INPUT parameter definitions
+##...........................................................................................
+parameters:                           ## parameter definitions
+    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
+    - emity_i:              1.E-6     # [m*rad] transverse emittance @ entrance x
+    - emitx_i:              1.E-6     # [m*rad] transverse emittance @ entrance y
+    - betax_i:              0.780     # [m] twiss beta @ entrance x
+    - betay_i:              2.373     # [m] twiss beta @ entrance y
+    - alfax_i:              0.0       # [-] twiss alpha x @ entrance
+    - alfay_i:              0.0       # [-] twiss alpha y @ entrance
+#    - Dp/p:                 0.0       # [%] relative impulse Dp/p @ entrance
+#    - Dz:                   0.0       # [m] longitudinal displacement Dz @ entrance
+    - frequency:    &p01    816.6E+6  # [Hz] frequency
+    - ql:           &p03    0.05      # [m] quad-length
+    - B_grad_f:     &p04    16.0      # [T/m] quadrupole gradient focusing QF
+    - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
+    - Ez:           &p05    1.04      # [MV/m] electric field strength
+    - phi_sync:     &p06   -20.       # [deg] synchronous phase
+    - gap:          &p07    0.044     # [m] (accelerating) gap size
+    - cav_len:      &p08    0.044     # [m] cavity length
+    - windings:             30        # [-] quad-coil windings
+##...........................................................................................
+## ELEMENT definitions
+##...........................................................................................
+elements:                           ## ELEMENT definitions
+    - d1:    &d1            # ID  (ID's must be unique!)
+        - type:     D       # D class
+        - length:   0.08    # [m] 
+    - d2:    &d2            # ID
+        - type:     D       # D class
+        - length:   0.44    # [m]
+    - qf1:   &qf1           # ID
+        - type:     QF      # QF class
+        - length:   *p03    # [m] 
+        - B':       *p04    # [T/m] quadrupole gradient
+    - qd1:   &qd1           # ID
+        - type:     QD      # QD class
+        - length:   *p03    # [m] length
+        - B':       *p04    # [T/m] quadrupole gradient
+    - rfg:  &rfg            # ID
+        - type:     RFG     # RFG class
+        - Ez:       *p05    # [V/m] electric field
+        - PhiSync:  *p06    # [deg] synchronous phase
+        - fRF:      *p01    # [Hz] frequency
+        - gap:      *p07    # [m] accelerating. gap
+    - rfc:  &rfc            # ID
+        - type:     RFC     # RFC class
+        - Ez:       *p05    # [V/m] electric field
+        - PhiSync:  *p06    # [deg] synchronous phase
+        - fRF:      *p01    # [Hz] frequency
+        - gap:      *p07    # [m] length
+        - length:   *p08    # [m] length
+    - mrk:  &mrk            # ID
+        - type:    MRK      # MRK class
+##...........................................................................................
+## SEGMENT definitions
+##...........................................................................................
+segments:                           ## SEGMENT definitions
+    - SEG1:
+        - *qd1
+        - *d1
+    - SEG2:
+        - *d1
+        - *qf1
+        - *qf1
+        - *d1
+    - SEG3:
+        - *d1
+        - *qd1
+    - SEG4:
+        - *d2
+    - MARK:
+        - *mrk
+    - RFCAV:
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+        - *rfc
+    - RFGAP:
+        - *rfc
+##...........................................................................................
+## LATTICE definition
+##...........................................................................................
+lattice:                            ## LATTICE definition
+    - title: FODO 07.02.2017    # description is mandatory. DON't remove or reposition!
+    - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+# - [2, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]

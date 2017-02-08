@@ -26,38 +26,32 @@ from setutil import objprnt,Wakzeptanz
 import elements as ELM
 from lattice import Lattice
 
-def unpack_list_of_dict(alist):
-    new = {}
-    for item in alist:
-        for key in list(item.keys()):
-            new[key] = item[key]
-    return new
+def lod2d(l):    ##list of dicts to dict
+    return {k:v for d in l for k,v in d.items()}
 
 def instanciate_element(item):
-    # DEBUG('instanciate_element for item >>',item)
+    # DEBUG('instanciate_element() for ',item)
     key = item[0]
-    att_list = item[1]
-    attributes = unpack_list_of_dict(att_list)
-#     DEBUG('',key, attributes)
+    attributes = item[1]
     if key == 'D':
         length   = attributes['length']
-        label    = attributes['label']
+        label    = attributes['ID']
         instance =  ELM.D(length=length,label=label,particle=Particle.soll)
     elif key == 'QF':
         length   = attributes['length']
-        label    = attributes['label']
+        label    = attributes['ID']
         dBdz     = attributes["B'"]
         kq       = dBdz/Particle.soll.brho
         instance = ELM.QF(k0=kq,length=length,label=label,particle=Particle.soll)
     elif key == 'QD':
         length   = attributes['length']
-        label    = attributes['label']
+        label    = attributes['ID']
         dBdz     = attributes["B'"]
         kq       = dBdz/Particle.soll.brho
         instance = ELM.QD(k0=kq,length=length,label=label,particle=Particle.soll)
     elif key == 'RFG':
         gap       = attributes['gap']
-        label     = attributes['label']
+        label     = attributes['ID']
         Ez        = attributes["Ez"]
         PhiSoll   = radians(attributes["PhiSync"])
         fRF       = attributes["fRF"]
@@ -67,7 +61,7 @@ def instanciate_element(item):
     elif key == 'RFC':
         gap       = attributes['gap']
         length    = attributes['length']
-        label     = attributes['label']
+        label     = attributes['ID']
         Ez        = attributes["Ez"]
         PhiSoll   = radians(attributes["PhiSync"])
         fRF       = attributes["fRF"]
@@ -75,45 +69,38 @@ def instanciate_element(item):
         dWf       = CONF['dWf']
         instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=Particle.soll,dWf=dWf)
     elif key == 'MRK':
-        label     = attributes['label']
+        label     = attributes['ID']
         instance  = ELM.MRK(label=label)
     else:
         raise RuntimeError('unknown element type: ',key)
-    # DEBUG('{} instance created'.format(label))
+    # DEBUG('{} instance created in instanciate_element()'.format(label),'')
     return (label,instance)
 
 def factory(input_file):
 #--------
-    def make_lattice(lat,seg,elm):
+    def make_lattice(latticeList,segments):
         lattice = Lattice()
-        for i in lat:        #loop segments in lattice
-            seg_label = i
-            # DEBUG('seg_label in make_lattice >>',seg_label)
-            for j in seg:    #scan for segment in segment definition
-                if j['label'] == seg_label:
-                    elm_list = j['elements']
-                    break
-            for k in elm_list: #loop over elements in segment definition
-                elm_label = k
-                # DEBUG('\telm_label in make_lattice >>',elm_label)
-                for l in elm: #scan for element in element definition
-                    if l['label'] == elm_label:
-                        attributes=[]
-                        for k,v in l.items():  #build element attribute list
-                            attributes.append({k:v})
-                        elmItem = (l['type'],attributes)
-                        # DEBUG('elmItem in make_lattice',elmItem)
-                        (label,instance) = instanciate_element(elmItem)  #instanciate
-                        # DEBUG('(label,instance) in make_lattice',label,instance)
-                        lattice.add_element(instance)  #add element instance to lattice
-                        break
+        for segID in latticeList:        #loop segments in lattice
+            # DEBUG('segID in make_lattice()',segID)
+            for seg in segments:     #scan for segment in segment-definition
+                if segID in seg:
+                    # DEBUG('found '+segID,seg)
+                    elementList = seg[segID]
+                    break    #after found == true
+            for element in elementList: #loop over elements in element list
+                # DEBUG('element in '+segID,element)
+                elementClass = element['type']
+                elmItem = (elementClass,element)
+                # DEBUG('elmItem in make_lattice',elmItem)
+                (label,instance) = instanciate_element(elmItem)  #INSTANCIATE!!
+                lattice.add_element(instance)  #add element instance to lattice
         return lattice   #the complete lattice
 # --------
     def read_flags(in_data):
     #returns ==> {...}
         flags_list = in_data['flags']
-        flags      = unpack_list_of_dict(flags_list)
-    #     DEBUG('flags=\t',flags)
+        flags      = lod2d(flags_list)
+        # DEBUG('flags in read_flags()',flags)
         CONF['dWf'] = SUMMARY['acc. ON']                   = flags['accON']
         CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
         CONF['verbose']                                    = flags['verbose']
@@ -122,8 +109,8 @@ def factory(input_file):
     def read_parameters(in_data):
     #returns ==> {...}
         parameter_list = in_data['parameters']
-        parameters     = unpack_list_of_dict(parameter_list)
-        # DEBUG('parameters=\t',parameters)
+        parameters     = lod2d(parameter_list)
+        # DEBUG('parameters in read_parameters()',parameters)
         if 'frequency'   in parameters: CONF['frequenz']         = parameters['frequency']
         if 'B_grad_f'    in parameters: CONF['qf_gradient']      = parameters['B_grad_f']
         if 'B_grad_d'    in parameters: CONF['qd_gradient']      = parameters['B_grad_d']
@@ -149,76 +136,55 @@ def factory(input_file):
     def expand_reduce(in_data):
     #--------
         def read_elements(in_data):
-            elements_list = in_data['elements']
-            elements_dict = unpack_list_of_dict(elements_list)
-            return elements_dict
+            element_list = in_data['elements']
+            for elm in element_list:
+                for elmID,attList in elm.items():        #put ID in attribute list
+                    attList.append(dict(ID=elmID))
+            return element_list
     #--------
         def read_segments(in_data):
-            segments_list = in_data['segments']
-            segments_dict = unpack_list_of_dict(segments_list)
-            return segments_dict
+            segment_list = in_data['segments']
+            return segment_list
     #--------
         def read_lattice(in_data):
             lattice_segment_list= in_data['lattice']
-            lattice_title = lattice_segment_list[0]['label']
+            lattice_title = lattice_segment_list[0]['title']
             del lattice_segment_list[0]         #pull label off
             CONF['lattice_version'] = lattice_title
             return lattice_segment_list
     #--------
-        def merge_list_of_dicts(lstofdicts):
-        #returns ==> {...}
-            res={}
-            for d in lstofdicts:
-                for k,v in d.items():
-                    res[k]=v
-            return res
+        def reduce_seg_def(segList):
+            segs = lod2d(segList)      #{'SEG1':[...],'SEG2':[...],...} 
+            # DEBUG('segs in reduce_seg_def()',segs)
+            segments=[]
+            for segID,elmList in segs.items():
+                # DEBUG(segID,elmList)
+                elements=[]
+                for elm in elmList:
+                    elm = lod2d(elm)
+                    # DEBUG('elm',elm)
+                    elements.append(elm)
+                segments.append({segID:elements})
+            # DEBUG("segments",segments)
+            return segments
     #--------
-        def reduce_elm_def(dict):
-        #returns ==> [{k:v,...,k:v},{k:v,...,k:v},...,{k:v,...,k:v}]
-            res=[]
-            for k,v in dict.items():
-                type = k
-                p_list = v
-                p_dict = merge_list_of_dicts(p_list)
-                p_dict['type'] = type
-                res.append(p_dict)
-            return res
-    #--------
-        def reduce_seg_def(dict):
-        #returns ==> [{"label":str,"elements":[.....]},...,{"label":str,"elements":[.....]}]
-            list_of_segments=[]
-            for key,l in dict.items():
-                segment={}
-                outer_list = l
-                seg_label = outer_list[0]['label']
-                segment['label'] = seg_label
-                e_list = outer_list[1:]
-                list_of_segment_items=[]
-                for e_list_item in e_list:
-    #                 DEBUG('e_list_item ==> ',e_list_item)
-                    e_label = e_list_item[0]['label']
-                    list_of_segment_items.append(e_label)
-                segment['elements']=list_of_segment_items
-                list_of_segments.append(segment)
-            return list_of_segments
-    #--------
-        lattice_def   = read_lattice(in_data)
-        segment_def   = read_segments(in_data)
         elemement_def = read_elements(in_data)
-        # DEBUG('lattice_def in reduce_seg_def()',lattice_def)
-        # DEBUG('segment_def in reduce_seg_def()',segment_def)
-        # DEBUG('elemement_def in reduce_seg_def()',elemement_def)
+        segment_def   = read_segments(in_data)
+        lattice_def   = read_lattice(in_data)
+        # DEBUG('elemement_def in expand_reduce()',elemement_def)
+        # DEBUG('segment_def in expand_reduce()',segment_def)
+        # DEBUG('lattice_def in expand_reduce()',lattice_def)
         segments = reduce_seg_def(segment_def)
-        elements = reduce_elm_def(elemement_def)
-        lattice_segment_list=[]
-        for segment_sub_list in lattice_def:
-            nsuper = segment_sub_list[0]       #multiplier
-            del segment_sub_list[0]            #pull nsuper off
-            # DEBUG('segment_sub_list in reduce_seg_def()',segment_sub_list)
-            for i in range(nsuper):
-                for k in segment_sub_list:
-                    lattice_segment_list.append(k)
-        return (lattice_segment_list,segments,elements)
+        # DEBUG('segments in expand_reduce()',segments)
+        latticeList=[]
+        for segSubList in lattice_def:
+            nsuper = segSubList[0]         
+            del segSubList[0]              #pull nsuper off
+            # DEBUG('segSubList in expand_reduce()',segSubList)
+            for i in range(nsuper):        #expand nsuper times
+                for k in segSubList:
+                    latticeList.append(k)
+        return (latticeList,segments)
     #--------
     SUMMARY['input file'] = CONF['input_file'] = input_file
 
@@ -228,13 +194,13 @@ def factory(input_file):
 
     read_flags(in_data)
     read_parameters(in_data)
-    (latticeExpand,segmentExpand, elementExpand) = expand_reduce(in_data)
-    # DEBUG('latticeExpand in factory()',latticeExpand)  #def of all segments in lattice
-    # DEBUG('segmentExpand in factory()',segmentExpand)  #def of all segments
-    # DEBUG('elementExpand in factory()',elementExpand)  #def of all elements
-    lattice = make_lattice(latticeExpand,segmentExpand,elementExpand)
+    (latticeList,segments) = expand_reduce(in_data)
+    # DEBUG('latticeList in factory()',latticeList)  #def of all segments in lattice
+    # DEBUG('segments in factory()',segments)    #def of all segments
+    lattice = make_lattice(latticeList,segments)
     # CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
+    # DEBUG('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)
 
 def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
@@ -265,5 +231,5 @@ def test1(input_file):
 #--------
 if __name__ == '__main__':
 #     test0()
-    test1('fodo_with_10cav_per_RF(2).yml')
+    test1('fodo_with_10cav_per_RF(4).yml')
 
