@@ -13,4 +13,5 @@
  - mit pyORBIT testen (Linux), best candidate for PIC?
  - neuen python driver pySTEC (python for simple traking and envelope calculations) schreiben
  - longitudinal dynamics? non-linear (see Shislo, Holmes paper!)
- - better cavity transition? sympl. integrator? or pySTEC?
+ - better cavity transition? sympl. integrator? or pySTEC with dynac?
+ - custom cavity for 'elegant'?

@@ -2,6 +2,8 @@
 *.bak
 *.pyc
 .project
+.settings/
+.pydevproject
 __pycache__
 fodo_test_with_madx
 *.dat
