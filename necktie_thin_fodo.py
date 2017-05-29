@@ -34,6 +34,7 @@ def kq(grad,tkin):   # quad k [1/m^2] for proton with beta*gamma momentum and gr
 ##-------------------------------------Test0--
 def test0():
     uwerte=[0.+i*0.01 for i in range(int(1./0.01))]
+    print(uwerte)
     vwerte=[-i for i in uwerte]
 
     stabile_werte=[]
@@ -76,5 +77,5 @@ def test1():
 
 
 if __name__ == '__main__':
-#     test0()
-    test1()
+     test0()
+#test1()

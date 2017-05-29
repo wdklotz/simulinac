@@ -58,8 +58,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     #----------*----------*   # figure frame
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
-    width=20; height=12
-    figure(SUMMARY['lattice version'],figsize=(width,height))
+    width=14; height=7.6
+    figure(CONF['lattice_version'],figsize=(width,height),facecolor='eaecef',tight_layout=True)
     # figure(SUMMARY['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(211)
@@ -114,8 +114,8 @@ def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*   # figure frame
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
-    width=20; height=12
-    figure(CONF['lattice_version'],figsize=(width,height))
+    width=14; height=7.6
+    figure(CONF['lattice_version'],figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     # figure(CONF['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(311)

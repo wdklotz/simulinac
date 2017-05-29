@@ -23,7 +23,7 @@ from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
 
 def display_bucket(functions):
-    plt.figure('bucket size for '+CONF['lattice_version'])
+    plt.figure('bucket size for '+CONF['lattice_version'],facecolor='#eaecef')
     for function in functions:
         phi  = [x[0] for x in function]
         p1   = [x[1] for x in function]
