@@ -86,7 +86,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*
-    show(block=True)
+    show(block=False)
 
 def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*   # unpack

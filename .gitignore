@@ -7,4 +7,9 @@
 __pycache__
 fodo_test_with_madx
 *.dat
+.ipynb_checkpoints
+.toto.py
+chirp.py
+subplot_demo.py
+untitled*
 

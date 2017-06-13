@@ -7,16 +7,20 @@ import sys
 from math import sqrt, sin, cos, sinh, cosh
 from matplotlib.pyplot import scatter,show,legend,figure,subplot,axis
 
-def RM44_thin(ld,fx):
+def RM44_thin(ff,fd,L):
+    f1 = ff
+    f2 = -fd
+    a = 1./f1+1./f2-L/(f1*f2)
+    fstar = 1./a
     R=[[0 for i in range(4)] for j in range(4)]
-    R[0][0] = 1.+ld/fx-ld**2/(2.*fx**2)
-    R[0][1] = 2.*ld-ld**3/(2.*fx**2)
-    R[1][0] = -ld/fx**2
-    R[1][1] = 1.-ld/fx-ld**2/(2.*fx**2)
-    R[2][2] = 1.-ld/fx-ld**2/(2.*fx**2)
-    R[2][3] = 2.*ld-ld**3/(2.*fx**2)
-    R[3][2] = -ld/fx**2
-    R[3][3] = 1.+ld/fx-ld**2/(2.*fx**2)
+    R[0][0] = 1.-2.*L/fstar
+    R[0][1] = 2.*L*(1.-L/f2)
+    R[1][0] = -2./fstar*(1.-L/f1)
+    R[1][1] = 1.-2.*L/fstar
+    R[2][2] = 1.-2.*L/fstar
+    R[2][3] = 2.*L*(1.-L/f1)
+    R[3][2] = -2./fstar*(1.-L/f2)
+    R[3][3] = 1.-2.*L/fstar
     Trxx = R[0][0]+R[1][1]
     Tryy = R[2][2]+R[3][3]
     return (R,Trxx,Tryy)
@@ -112,7 +116,7 @@ def betagamma(tkin):    # beta*gamma for proton as function of kin. energy
     res = sqrt(res)
     return res
 
-def kq(g,tkin):   # quad k [1/m**2] for proton with beta*gamma momentum and g [T/m] gradient
+def kq(g,tkin):   # quad k [1/m^2] for proton with beta*gamma momentum and g [T/m] gradient
     res = 0.31952*g/betagamma(tkin)
     return res
 
@@ -121,26 +125,32 @@ stabile_werte=[]        # list stable solutions
 
 ld = 1.     # l drift [m]
 lq = 0.1    # l quad [m]
-fx = 25.13  # thin lens f; >= ld/2 ! for stability
-tkin = 50.  # T kin [MeV]
-gd = 25.    # B gradient [T/m]
-gf = 25.    # B gradient [T/m]
+tkin = 5.  # T kin [MeV]
+L = ld+lq
+gdmx = 20.    # B gradient [T/m]
+gfmx = 20.    # B gradient [T/m]
+bgamma = betagamma(tkin)
 
-stepsize = 0.25
-for gd in [0.5+i*stepsize for i in range(int(gd/stepsize))]:     #vary D=quad gradient
-    for gf in [0.5+i*stepsize for i in range(int(gf/stepsize))]: #vary F-quad gradient
-        kd = kq(gd,tkin)
-        kf = kq(gf,tkin)
-        bgamma = betagamma(tkin)
+stepsize = 0.05
+print(range(int(gdmx/stepsize)))
+for gd in [0.01+i*stepsize for i in range(int(gdmx/stepsize))]:     #vary D=quad gradient
+    for gf in [0.01+j*stepsize for j in range(int(gfmx/stepsize))]: #vary F-quad gradient
+        kd = kq(gd,tkin)    # [1./m^2]
+        kf = kq(gf,tkin)    # [1./m^2]
+        fd = 1./(kd*lq)     # thin lens foc length
+        ff = 1./(kf*lq)     # thin lens foc length
+        u = L/fd
+        v = L/ff
 
-        matrix = RM44(kd,kf,ld,lq)
+#         matrix = RM44(kd,kf,ld,lq)
+        matrix = RM44_thin(ff,fd,L)
         Trxx = matrix[1]
         Tryy = matrix[2]
         cosmux = abs(Trxx)/2.
         cosmuy = abs(Tryy)/2.
-        if cosmux >1. or cosmuy >1.: continue       # discard unstable
+        if cosmux > 1. and cosmuy > 1.: continue       # discard unstable
 
-        stabile_werte.append((gd,kd,cosmux,gf,kf,cosmuy))
+        stabile_werte.append((gd,kd,cosmux,gf,kf,cosmuy,u,v))
 
 #         print('==================================')
 #         params['drift btw. quads[m]'] = ld
@@ -157,15 +167,17 @@ for gd in [0.5+i*stepsize for i in range(int(gd/stepsize))]:     #vary D=quad gr
 #         print('')
 
 #         out('thick',matrix)
+#         print('f-foc={:4.4} f-defoc={:4.4}'.format(ff,fd))
+#         out('thin',matrix)
 # print('stabile Werte')
 # for i in stabile_werte:
 #     print("gd {:4.4}[T/m] kd {:4.4}[1/mˆ2] cos(mux) {:4.4} | gf {:4.4}[T/m] kf {:4.4}[1/mˆ2] cos(muy) {:4.4}".format(i[0],i[1],i[2],i[3],i[4],i[5]))
 
-def gf_as_func_of_gd(werte):
-    gd = [x[0] for x in werte]
-    gf = [x[3] for x in werte]
-    scatter(gd,gf)
+def plot_stabile_werte(werte):
+    ax_x = [x[6] for x in werte]
+    ax_y = [x[7] for x in werte]
+    scatter(ax_x,ax_y)
     show(block=True)
 
-gf_as_func_of_gd(stabile_werte)
+plot_stabile_werte(stabile_werte)
 

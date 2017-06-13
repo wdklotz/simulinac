@@ -45,17 +45,17 @@ def test0():
     stabile_uwerte=[abs(t[0]) for t in stabile_werte]
     stabile_vwerte=[abs(t[1]) for t in stabile_werte]
     plt.scatter(stabile_uwerte,stabile_vwerte)
-    plt.show(block=True)
+    plt.show(block=False)
 
 ##-------------------------------------Test1--
-def test1():
+def test1(params):
     """ quad gradient scan """
-    ld=1.
-    lq=0.1
+    ld=params['ld']
+    lq=params['lq']
     L=ld+lq
-    tkin = 1.
-    grad1 = +20.
-#     grad2 = -20.
+    tkin = params['tkin']
+    grad1 = params['grad_f']
+    grad2 = params['grad_d']
     ssize = 0.04
     bg = betagamma(tkin)
 
@@ -73,9 +73,9 @@ def test1():
     stabile_g2_werte = [abs(t[1]) for t in stabile_werte]
     plt.scatter(stabile_g1_werte,stabile_g2_werte)
     plt.title("axes are dB/dx[T/m], Tk={:4.4}[MeV], L={:4.4}[m]".format(tkin,L))
-    plt.show(block=True)
+    plt.show(block=False)
 
-
-if __name__ == '__main__':
-     test0()
-#test1()
+#-------------------------------------------main---
+#if __name__ == '__main__':
+test0()
+test1(dict(ld=1.,lq=0.1,tkin=1.,grad_f=20.,grad_d=-20.))

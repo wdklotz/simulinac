@@ -154,7 +154,7 @@ def factory(input_file):
             return lattice_segment_list
     #--------
         def reduce_seg_def(segList):
-            segs = lod2d(segList)      #{'SEG1':[...],'SEG2':[...],...} 
+            segs = lod2d(segList)      #{'SEG1':[...],'SEG2':[...],...}
             # DEBUG('segs in reduce_seg_def()',segs)
             segments=[]
             for segID,elmList in segs.items():
@@ -178,7 +178,8 @@ def factory(input_file):
         # DEBUG('segments in expand_reduce()',segments)
         latticeList=[]
         for segSubList in lattice_def:
-            nsuper = segSubList[0]         
+            nsuper = segSubList[0]
+            CONF['nsuper'] = nsuper
             del segSubList[0]              #pull nsuper off
             # DEBUG('segSubList in expand_reduce()',segSubList)
             for i in range(nsuper):        #expand nsuper times

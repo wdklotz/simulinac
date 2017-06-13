@@ -50,7 +50,7 @@ class Defaults(object):
             'injection_energy': 50.,     # [MeV] default
             'qf_gradient': 16.0,         # [T/m] default
             'qd_gradient': 16.0,         # [T/m] default
-			'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m] 
+			'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m]
             'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
             'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
             'emitz_i': 7.7e-4,           # longitudinal emittance T.Wangler (6.49) pp.186
