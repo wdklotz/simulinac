@@ -302,7 +302,8 @@ def wille():
         'length_quad_f':0.2,
         'k_quad_d':1.2,
         'length_quad_d':0.4,
-        'beding_radius':3.8197,
+        # 'bending_radius':3.8197,
+        'bending_radius':1.e4,
         'dipole_length':1.5,
         'drift_length':0.55
     }

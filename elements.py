@@ -26,8 +26,8 @@ from setutil import DEBUG,k0,dBdz,scalek0,printv
 
 MDIM=10        # dimension of matrices
 
-# x        x'        y        y'       z         z'       E        dE        s        l       dispersion
-XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9;#DISP = 10
+# x        x'        y        y'        z       dp/p0     E        dE        s        l     
+XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
@@ -208,13 +208,12 @@ class QD(QF):          ## defocusing quad nach Trace3D
 
 class SD(D):           ## sector bending dipole in x-plane nach Trace3D
 #
-# ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!
     def __init__(self,
                 radius=0.,
                 length=0.,
                 label='SB',
                 particle=Particle.soll):
-        raise RuntimeError('SD:not implemented!')
+        # print('Warning:SD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(SD,self).__init__(length=length,label=label,particle=particle)
         self.radius = radius
         self.matrix=self._mx_()
@@ -242,13 +241,12 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         return m
 
 class RD(SD):          ## rectangular bending dipole in x-plane
-# ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!
     def __init__(self,
                 radius=0.,
                 length=0.,
                 label='RB',
                 particle=Particle.soll):
-        raise RuntimeError('RD:not implemented!')
+        # print('Warning:RD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(RD,self).__init__(radius=radius,length=length,label=label,particle=particle)
         wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * self * wd
@@ -257,12 +255,11 @@ class RD(SD):          ## rectangular bending dipole in x-plane
         return RD(radius=self.radius,length=l,label=self.label,particle=self.particle)
 
 class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Trace3D
-# ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!
     def __init__(self,
                 sector,
                 label='WD',
                 particle=Particle.soll):
-        raise RuntimeError('WD:not implemented!')
+        # print('Warning:WD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(WD,self).__init__(label=label,particle=particle)
         m=self.matrix
         self.parent = sector

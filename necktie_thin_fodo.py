@@ -33,6 +33,7 @@ def kq(grad,tkin):   # quad k [1/m^2] for proton with beta*gamma momentum and gr
 
 ##-------------------------------------Test0--
 def test0():
+    print('------------------------------Test0--')
     uwerte=[0.+i*0.01 for i in range(int(1./0.01))]
     print(uwerte)
     vwerte=[-i for i in uwerte]
@@ -50,6 +51,7 @@ def test0():
 ##-------------------------------------Test1--
 def test1(params):
     """ quad gradient scan """
+    print('------------------------------Test1--')
     ld=params['ld']
     lq=params['lq']
     L=ld+lq
@@ -73,7 +75,7 @@ def test1(params):
     stabile_g2_werte = [abs(t[1]) for t in stabile_werte]
     plt.scatter(stabile_g1_werte,stabile_g2_werte)
     plt.title("axes are dB/dx[T/m], Tk={:4.4}[MeV], L={:4.4}[m]".format(tkin,L))
-    plt.show(block=False)
+    plt.show(block=True)
 
 #-------------------------------------------main---
 #if __name__ == '__main__':

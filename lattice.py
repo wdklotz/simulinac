@@ -312,17 +312,17 @@ class Lattice(object):
         (c_like,s_like) = self.cs_traj(steps)    #call for sin- and cos-like trajectories
         return (beta_fun,c_like,s_like)
 
-    def dispersion(self,steps=10,closed=True):  ## dispersion (not used! probably bogus!)
-        raise RuntimeWarning('Lattice.dispersion() not implemented!')
+    def dispersion(self,steps=10,closed=True): 
+        print('WARNING:Lattice.dispersion() not fully implemented, probably bogus!!')
         traj=[]
-        v_0=NP.array([[0.],[0.],[0.],[0.],[0.],[1.]])
+        v_0=NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
+        v_0.shape = (ELM.MDIM,1)   # MDIM rows, 1 column
         if closed == True:
             m_cell = self.full_cell
-            dispmx = np.eye(5,5)
             m11=m_cell.matrix[0,0]
             m15=m_cell.matrix[0,5]
             d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            v_0=NP.array([[d0],[0.],[0.],[0.],[0.],[1.]])
+            v_0[0,0]=d0
         s=0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -407,7 +407,7 @@ def make_wille():  # a test lattice
      lqf=  wille()['length_quad_f']
      kqd=  wille()['k_quad_d']
      lqd=  wille()['length_quad_d']
-     rhob= wille()['beding_radius']
+     rhob= wille()['bending_radius']
      lb=   wille()['dipole_length']
      ld=   wille()['drift_length']
      ## elements
@@ -463,8 +463,8 @@ def test1():
     beta_matrix = mcell.beta_matrix()
 
     eigen, vectors = LA.eig(beta_matrix)
-    print('eigen\n',eigen)
-    print('vectors\n',vectors)
+    print('Eigenwerte\n',eigen)
+    print('Eigenvectors\n',vectors)
     print('Mit numpy.linalg berechneter Eigenwert: \n',eigen[0].real)
     bx=vectors[0][0].real; ax=vectors[1][0].real; gx=vectors[2][0].real
     print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f}'.format(bx,ax,gx))
@@ -480,6 +480,7 @@ def test1():
     print('--------------- EOF test1 --------------------')
 
 def test2():
+    from matplotlib.pyplot import plot,show,legend
     print('\nTEST2')
     lattice=make_wille()
     ## cell boundaries
@@ -509,4 +510,4 @@ def test2():
 if __name__ == '__main__':
     test0()
     test1()
-#     test2()
+    test2()
