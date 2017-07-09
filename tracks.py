@@ -116,7 +116,7 @@ def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1
 def track_soll(lattice):
     """
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
-    adapt them to the energy of the accellerated reference particle.
+    adapted to the energy of the accellerated reference particle.
     """
     soll_track = Track.soll       #track of reference particle
     for ipos in lattice.seq:

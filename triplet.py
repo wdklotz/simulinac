@@ -22,6 +22,7 @@ from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Particle
 from lattice import Lattice
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt,radians
+from tracks import track_soll
 
 def display(functions,title):  ## plotting
     #----------*----------*   # unpack
@@ -122,9 +123,9 @@ def make_cell(w):              ## cell
     cell.append(rf)                       # RF
 
     # ---- adapt_for_energy particle ENERGY --------
-    mD   = mD.adapt_for_energy()
-    mQFs = mQFs.adapt_for_energy()
-    mQDl = mQDl.adapt_for_energy()
+    # mD   = mD.adapt_for_energy()
+    # mQFs = mQFs.adapt_for_energy()
+    # mQDl = mQDl.adapt_for_energy()
     cell.add_element(mD)                  # D
     cell.add_element(mQFs)                # Fs
     cell.add_element(mQDl)                # Dl
@@ -137,9 +138,9 @@ def make_cell(w):              ## cell
     cell.append(rf)                       # RF
 
     # ---- adapt_for_energy particle ENERGY --------
-    mD   = mD.adapt_for_energy()
-    mQFl = mQFl.adapt_for_energy()
-    mQDs = mQDs.adapt_for_energy()
+    # mD   = mD.adapt_for_energy()
+    # mQFl = mQFl.adapt_for_energy()
+    # mQDs = mQDs.adapt_for_energy()
     cell.add_element(mD)                  # D
     cell.add_element(mQDs)                # Ds
     cell.add_element(mQFl)                # Fl
@@ -218,17 +219,18 @@ def test1(x):
         cell = make_cell(wert)
         super_cell.append(cell)
 
+    track_soll(super_cell)             ## track soll Teilchen hier!  (WICHTIG)
     mcell,betax,betay=super_cell.cell(closed=True)
     print('energy(f)= {} [MeV]'.format(Particle.soll.tkin))
 
     CONF['sigx_i']=sqrt(CONF['emitx_i']*betax)
     CONF['sigy_i']=sqrt(CONF['emity_i']*betay)
-    functions = super_cell.functions(40)
+    functions = super_cell.twiss_functions(40)
     display(functions,'x {}'.format(x))
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    test0()
+    # test0()
     test1(0)
     # for x in [0.0+n*0.1 for n in range(30)]:
         # test0(x)

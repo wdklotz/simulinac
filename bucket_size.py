@@ -33,7 +33,7 @@ def display_bucket(functions):
         plt.ylabel(r'$\Delta$w [Mev]')
         plt.xlabel(r'phi_sync [deg]')
     plt.title('longitudinal bucket')
-    plt.show(block=True)
+    plt.show(block=False)
 
 def psquared(H_invariant,phi,phis):
     ''' solves 0 = p**2 - V(phi) + H_invariant for p**2'''
