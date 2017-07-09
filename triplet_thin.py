@@ -47,7 +47,7 @@ def display(functions):
     plot(s,viseo,label='element',color='black')
     plot(s,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    show(block=True)
+    show(block=False)
 def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     kf1 = kf1
     kd1 = kf1
@@ -62,8 +62,6 @@ def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     ld2 = lf2
     ff2 = kf2*lf2
     fd2 = kd2*ld2
-
-    ld = ld
 
     DL  = D(length=ld,label='L')
     QF1 = QFth(k0=kf1,length=0.5*lf1,label='QF1')
@@ -82,10 +80,12 @@ def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     cell.add_element(DL)
     cell.add_element(QF1)
     cell.add_element(QD1)
+
     lat = Lattice()
     for i in range(anz):
         lat.append(cell)
     mcell,betax,betay=lat.cell()
+
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
@@ -166,10 +166,12 @@ def search():
                         found=(kf,kd,ld)
     return found
 def test0():
+    print('---------------------------------Test0---')
     found=search()
     print('found minimal with: (kf, kd, L)= ',found)
 def test1(kf,kd,ld):
-    print('test1: using kf,kd,ld',kf,kd,ld)
+    print('---------------------------------Test1---')
+    print('using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thin(kf,kd,ld)
     mcell,betax,betay=cell.cell()
     beta_matrix = mcell.beta_matrix()
@@ -183,7 +185,8 @@ def test1(kf,kd,ld):
     print('Probe: \n {:.6f} {:.6f} {:.6f}'.format(probe[0].real,probe[1].real,probe[2].real))
     cell.symplecticity()
 def test2(kf,kd,ld):
-    print('test2: using kf,kd,ld',kf,kd,ld)
+    print('---------------------------------Test2---')
+    print('using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thick(kf,kd,ld)
     mcell,betax,betay=cell.cell()
     beta_matrix = mcell.beta_matrix()
@@ -195,26 +198,32 @@ def test2(kf,kd,ld):
     print('...und sein Eigenvektor dazu: \n {:.6f} {:.6f} {:.6f}'.format(bx,ax,gx))
     probe=beta_matrix.dot(vectors[:,0])
     print('Probe: \n {:.6f} {:.6f} {:.6f}'.format(probe[0].real,probe[1].real,probe[2].real))
+    print("""
+    ================================
+    I don't understand this result!!
+    ================================
+    """)
     cell.symplecticity()
 def test3(kf,kd,ld):
-    print('test3: using kf,kd,ld',kf,kd,ld)
+    print('---------------------------------Test3---')
+    print('using kf,kd,ld',kf,kd,ld)
     anz = 3
     # thin
     cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
     beta_matrix = mcell.beta_matrix()
-    beta_fun_thin,cl,sl = cell.functions(steps=100)
+    beta_fun_thin,cl,sl = cell.twiss_functions(steps=100)
     # thick
     cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
     mcell,betax,betay=cell.cell()
     beta_matrix = mcell.beta_matrix()
-    beta_fun_thick,cl,sl = cell.functions(steps=100)
+    beta_fun_thick,cl,sl = cell.twiss_functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    test0()
-    test1(5.,5.,1.)
-    test2(5.,5.,1.)
-    test3(5.,5.,1.)     # gesund!
+    # test0()
+    # test1(5.,5.,1.)
+    # test2(5.,5.,1.)
+    # test3(5.,5.,1.)     # gesund!
     test3(4.,4.,1.2)    # gesünder!
-    test3(7.,7.,2.1)    # extrem!
+    # test3(7.,7.,2.1)    # extrem!

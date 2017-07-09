@@ -32,7 +32,7 @@ def display(functions,text=''):
         legend(loc='lower right',fontsize='x-small')
         # plot(q,p,label='w(phi)',color='blue')
         # plot(q,vp,label='vp(phi)',color='red')
-    show(block=True)
+    show(block=False)
 class Order2Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
     def __init__(self,stepsize,dHdP,dHdX):
         self.h = stepsize
@@ -276,7 +276,7 @@ def test2(fmap=11.3):              # use pendulum
 if __name__ == '__main__':
     # test0()
     test1()
-    test2()
+    # test2()
 
 
 

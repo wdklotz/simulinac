@@ -31,7 +31,11 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
+##
 class _matrix_(object): ## the mother of all matrices
+    """
+    Base class for thick matrices
+    """
     # MDIMxMDIM matrices used here
     def __init__(self):
         self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
@@ -58,17 +62,9 @@ class _matrix_(object): ## the mother of all matrices
         res.matrix=product
         return res
     def reverse(self):
-        raise RuntimeError('_matrix_:reverse not released yet!')
-        res=_matrix_()
-        for i in range(MDIM):
-            for k in range(MDIM):
-                res.matrix[i][k] = self.matrix[i][k]
-        res.matrix[0][0] = self.matrix[1][1]
-        res.matrix[1][1] = self.matrix[0][0]
-        res.matrix[2][2] = self.matrix[3][3]
-        res.matrix[3][3] = self.matrix[2][2]
-        res.label = '('+self.label+')r'
-        return res
+        raise RuntimeError('_matrix_:reverse not implemented!')
+    def inverse(self):
+        raise RuntimeError('_matrix_:inverse not implemented!')
     def trace(self):
         return self.tracex()+self.tracey
     def tracex(self):
@@ -82,10 +78,11 @@ class _matrix_(object): ## the mother of all matrices
             res += self.matrix[i,i]
         return res
     def shorten(self,length=0.):    # virtual function to be implemented by child classes
-        raise RuntimeError('_matrix_.shorten(): empty virtual member function called!')
+        raise RuntimeError('FATAL: _matrix_.shorten(): virtual member function called!')
     def step_through(self,anz=10):
         """
-        Step through an element - the central nontrivial function.
+        Step through an element:
+        The central function to calculate s-dependent twiss functions (nontrivial!)
         Default is 10 steps/element.
         Minimal step size is self.slice_min.
         """
@@ -110,6 +107,9 @@ class _matrix_(object): ## the mother of all matrices
                 mx=mr
             yield mx
     def beta_matrix(self):
+        """
+        The 6x6 matrix to track twiss functions through the lattice
+        """
 #         m11 =self.matrix[0,0];  m12 =self.matrix[0,1]
 #         m21 =self.matrix[1,0];  m22 =self.matrix[1,1]
 #         n11 =self.matrix[2,2];  n12 =self.matrix[2,3]
@@ -127,14 +127,14 @@ class _matrix_(object): ## the mother of all matrices
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-
+##
 class I(_matrix_):      ## unity matrix (an alias to _matrix_ class)
     def __init__(self, label='I', viseo=0., particle=Particle.soll):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
-
+##
 class MRK(I):          ## a marker
     def __init__(self, label='MRK', particle=Particle.soll):
         super(MRK,self).__init__(label=label, particle=particle)
@@ -143,8 +143,11 @@ class MRK(I):          ## a marker
     def adapt_for_energy(self,tkin):
         self.__init__(label=self.label, particle=Particle(tkin=tkin))
         return self
-
+##
 class D(I):            ## drift space nach Trace3D
+    """
+    Trace3D drift space
+    """
     def __init__(self, length=0., viseo=0., label='D', particle=Particle.soll):
         super(D,self).__init__(viseo=viseo,particle=particle)
         self.label=label
@@ -158,8 +161,11 @@ class D(I):            ## drift space nach Trace3D
     def adapt_for_energy(self,tkin):
         self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=Particle(tkin=tkin))
         return self
-
-class QF(D):           ## focusing quad nach Trace3D
+##
+class QF(D):           ## focussing quad nach Trace3D
+    """
+    Trace3D focussing quad
+    """
     def __init__(self, k0=0., length=0., label='QF', particle=Particle.soll):
         super(QF,self).__init__(length=length,label=label,particle=particle)
         self.k0=k0         ## Quad strength [m**-2]
@@ -173,17 +179,17 @@ class QF(D):           ## focusing quad nach Trace3D
         rzz12=self.length/(g*g)
         kwurz=sqrt(self.k0)
         phi=self.length*kwurz
-        ## focusing
+        # focusing
         cf  =cos(phi)
         sf  =sin(phi)/kwurz
         cfp =-kwurz*sin(phi)
         sfp =cf
-        ## defocusing
+        # defocusing
         cd  =cosh(phi)
         sd  =sinh(phi)/kwurz
         cdp =kwurz*sinh(phi)
         sdp =cd
-        ## MDIMxMDIM matrix
+        # MDIMxMDIM matrix
         if (isinstance(self,QF)  and (isinstance(self,QD)==False)):
         #       0    0           0    1            1     0            1     1            2     2
             m[XKOO,XKOO]=cf; m[XKOO,XPKOO]=sf; m[XPKOO,XKOO]=cfp; m[XPKOO,XPKOO]=sfp; m[YKOO,YKOO]=cd
@@ -198,16 +204,21 @@ class QF(D):           ## focusing quad nach Trace3D
         kf = scalek0(self.k0,self.particle.tkin,tkin)
         self.__init__(k0=kf, length=self.length, label=self.label, particle=Particle(tkin=tkin))
         return self
-
+##
 class QD(QF):          ## defocusing quad nach Trace3D
+    """
+    Trace3D defocussing quad
+    """
     def __init__(self, k0=0., length=0., label='QD', particle=Particle.soll):
         super(QD,self).__init__(k0=k0,length=length,label=label,particle=particle)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0,length=l,label=self.label,particle=self.particle)
-
+##
 class SD(D):           ## sector bending dipole in x-plane nach Trace3D
-#
+    """
+    Trace3d sector dipole in x-plane
+    """
     def __init__(self,
                 radius=0.,
                 length=0.,
@@ -227,20 +238,23 @@ class SD(D):           ## sector bending dipole in x-plane nach Trace3D
         phi=self.length/rho
         cx=cos(phi) ; sx=sin(phi)
         b=self.particle.beta
-        ## x-plane
+        # x-plane
 #         m[0,0] = cx;          m[0,1] = sx/k;           m[0,5] = rho*(1.-cx)
 #         m[1,0] = -sx*k;       m[1,1] = cx;             m[1,5] = sx
         m[XKOO,XKOO]  = cx;     m[XKOO,XPKOO]   = sx/k;  m[XKOO,ZPKOO]  = rho*(1.-cx)
         m[XPKOO,XKOO] = -sx*k;  m[XPKOO,XPKOO]  = cx;    m[XPKOO,ZPKOO] = sx
-        ## y-plane
+        # y-plane
 #         m[2,3] = self.length
         m[YKOO,YPKOO] = self.length
-        ## z-plane
+        # z-plane
 #         m[4,0] = -sx;       m[4,1] = -rho*(1.-cx);          m[4,5] = rho*sx-self.length*b*b
         m[ZKOO,XKOO] = -sx;   m[ZKOO,XPKOO] = -rho*(1.-cx);   m[ZKOO,ZPKOO] = rho*sx-self.length*b*b
         return m
-
+##
 class RD(SD):          ## rectangular bending dipole in x-plane
+    """
+    Trace3D rectangular dipole x-plane
+    """
     def __init__(self,
                 radius=0.,
                 length=0.,
@@ -253,8 +267,11 @@ class RD(SD):          ## rectangular bending dipole in x-plane
         self.matrix= rd.matrix
     def shorten(self,l=0.):
         return RD(radius=self.radius,length=l,label=self.label,particle=self.particle)
-
+##
 class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Trace3D
+    """
+    Trace3d dipole wedge x-plane
+    """
     def __init__(self,
                 sector,
                 label='WD',
@@ -268,7 +285,7 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         rinv=1./self.radius
         psi=0.5*self.psi  ## Kantenwinkel
         ckp=rinv*tan(psi)
-        ## MDIMxMDIM matrix
+        # MDIMxMDIM matrix
 #         m[1,0]=ckp
 #         m[3,2]=-ckp
         m[XPKOO,XKOO]=ckp
@@ -280,12 +297,15 @@ class WD(D):           ## wedge of rectangular bending dipole in x-plane nach Tr
         rinv=1./wd.radius
         psi=0.5*wd.psi  ## Kantenwinkel
         ckp=rinv*tan(psi)
-        ## MDIMxMDIM matrix
+        # MDIMxMDIM matrix
         m[XPKOO,XKOO]=ckp
         m[YPKOO,YKOO]=-ckp
         return wd
-
+##
 class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
+    """
+    Simple thin lens gap nach Dr.Tiede & T.Wrangler 
+    """
     def __init__(self,
                         U0         =CONF['spalt_spannung'],
                         PhiSoll    =radians(CONF['soll_phase']),
@@ -330,8 +350,11 @@ class CAV(D):          ## simple thin lens gap nach Dr.Tiede & T.Wrangler
         return self
     def adapt_for_energy(self,tkin):
         return self
-
+##
 class RFG(D):          ## zero length RF gap nach Trace3D
+    """
+    Trace3D zero length Rf-gap
+    """
     def __init__(self,
                     U0         =CONF['spalt_spannung'],
                     PhiSoll    =radians(CONF['soll_phase']),
@@ -391,8 +414,11 @@ class RFG(D):          ## zero length RF gap nach Trace3D
         return self
     def adapt_for_energy(self,tkin):
         return self
-
+##
 class _thin(_matrix_):  ## the mother of all thin elements
+    """
+    Base class for thin elements
+    """
     def __init__(self,particle=Particle.soll):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
@@ -411,8 +437,11 @@ class _thin(_matrix_):  ## the mother of all thin elements
                 for i in range(anz2):
                     mx=typ.shorten(typ.length/anz2)
                     yield mx
-
+##
 class QFth(_thin):     ## thin F-quad
+    """
+    Thin F-Quad
+    """
     def __init__(self,
     k0=0.,
     length=0.,
@@ -441,8 +470,11 @@ class QFth(_thin):     ## thin F-quad
         self.viseo = +0.5
     def shorten(self,l=0.):
         return self
-
+##
 class QDth(_thin):     ## thin D-quad
+    """
+    Thin D-Quad
+    """
     def __init__(self,
     k0=0.,
     length=0.,
@@ -471,8 +503,11 @@ class QDth(_thin):     ## thin D-quad
         self.viseo = -0.5
     def shorten(self,l=0.):
         return self
-
+##
 class RFC(_thin):      ## RF cavity as D*RFG*D
+    """
+    Rf cavity as product D*RFG*D (experimental!)
+    """
     def __init__(self,
                     U0=CONF['spalt_spannung'],
                     PhiSoll=radians(CONF['soll_phase']),
@@ -522,17 +557,16 @@ class RFC(_thin):      ## RF cavity as D*RFG*D
                     length=self.length,
                     dWf=self.dWf)
         return self
-
-#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+##-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 class Test(_matrix_):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super(Test,self).__init__()
-        self.matrix=NP.array([[a,b,0.,0.,0.,0.,0.,0.,0.,0.],
-                              [c,d,0.,0.,0.,0.,0.,0.,0.,0.],
-                              [0.,0.,a,b,0.,0.,0.,0.,0.,0.],
-                              [0.,0.,d,e,0.,0.,0.,0.,0.,0.],
-                              [0.,0.,0.,0.,a,b,0.,0.,0.,0.],
-                              [0.,0.,0.,0.,e,f,0.,0.,0.,0.],
+        self.matrix=NP.array([[ a, b,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [ c, d,0.,0.,0.,0.,0.,0.,0.,0.],
+                              [0.,0., a, b,0.,0.,0.,0.,0.,0.],
+                              [0.,0., d, e,0.,0.,0.,0.,0.,0.],
+                              [0.,0.,0.,0., a, b,0.,0.,0.,0.],
+                              [0.,0.,0.,0., e, f,0.,0.,0.,0.],
                               [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
                               [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
                               [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
@@ -551,6 +585,7 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
 def test0():
+    print('--------------------------------Test0---')
     print('trivial test 0 ...')
     a=Test(1,2,3,4,5,6,label='a')
     print(a.string())
@@ -558,15 +593,15 @@ def test0():
     print(b.string())
     print((a*b).string())
     print((b*a).string())
-    print('--------------- EOF test0 --------------------')
 def test1():
+    print('--------------------------------Test1---')
     print('trivial test 1 ...')
     i1=_matrix_()
     i2=i1*i1
     print(i1.string())
     print(i2.string())
-    print('--------------- EOF test1 --------------------')
 def test2():
+    print('--------------------------------Test2---')
     print('trivial test 2 ...')
     i1=_matrix_()
     d1=D(10.,'D1')
@@ -579,13 +614,13 @@ def test2():
     print((d1*d2).string())
     d3=D(90.,label='')
     print((d2*d3).string())
-    print('--------------- EOF test2 --------------------')
 def test3():
+    print('--------------------------------Test3---')
     print('test product of _matrix_ class ...')
     gradient =1.
     beta     =0.5
     energy   =0.2
-    print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient,beta,energy))
+    # print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient,beta,energy))
     k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     print(qf.string())
@@ -593,8 +628,8 @@ def test3():
     qd=QD(k0=k,length=1.)
     print(qd.string())
     print((qf*qd).string())
-    print('--------------- EOF test3 --------------------')
 def test4():
+    print('--------------------------------Test4---')
     print('test shortening of elements ...')
     gradient =1.
     beta     =0.5
@@ -619,14 +654,14 @@ def test4():
     sd05=sd.shorten(0.4)
     print((sd05*sd05*sd05*sd05*sd05).string())
     print(sd.string())
-    print('--------------- EOF test4 --------------------')
 def test5():
+    print('--------------------------------Test5---')
     print("K.Wille's Beispiel auf pp. 112-113")
     kqf=  wille()['k_quad_f']
     lqf=  wille()['length_quad_f']
     kqd=  wille()['k_quad_d']
     lqd=  wille()['length_quad_d']
-    rhob= wille()['beding_radius']
+    rhob= wille()['bending_radius']
     lb=   wille()['dipole_length']
     ld=   wille()['drift_length']
     ## elements
@@ -651,14 +686,14 @@ def test5():
     mz=mz *md
     mz=mz *mqf
     print(mz.string())
-    print('--------------- EOF test5 --------------------')
 def test6():
+    print('--------------------------------Test6---')
     print('test step_through elements ...')
     kqf=  wille()['k_quad_f']
     lqf=  wille()['length_quad_f']
     kqd=  wille()['k_quad_d']
     lqd=  wille()['length_quad_d']
-    rhob= wille()['beding_radius']
+    rhob= wille()['bending_radius']
     lb=   wille()['dipole_length']
     ld=   wille()['drift_length']
 
@@ -681,11 +716,10 @@ def test6():
             m_end=m_end*mi
         print(m_end.string())
         print(m_anfang.string())
-    print('--------------- EOF test6 --------------------')
 def test7():
-    print('======================================')
+    print('--------------------------------Test7---')
     print('test Rechteckmagnet...')
-    rhob= wille()['beding_radius']
+    rhob= wille()['bending_radius']
     lb=   wille()['dipole_length']
     mb=SD(radius=rhob,length=lb,label='B')
     mw=WD(mb,label='W')
@@ -695,8 +729,8 @@ def test7():
     print(mr.string())
     mr=RD(radius=rhob,length=lb,label='R')
     print(mr.string())
-    print('--------------- EOF test7 --------------------')
 def test8():
+    print('--------------------------------Test8---')
     print('test cavity...')
     objprnt(Particle.soll,'soll')
     cav=CAV()
@@ -705,11 +739,12 @@ def test8():
     rfg=RFG()
     objprnt(rfg,'RFG')
     objprnt(Particle.soll,'soll')
-    print('--------------- EOF test8 --------------------')
 def test9():
-    print('\ntest: quad k-faktor and quad scaling')
-    grad=CONF['quad_gradient']   # [T/m] gradient
+    print('--------------------------------Test9---')
+    print('test: quad k-faktor and quad scaling')
+    grad=CONF['qd_gradient']   # [T/m] gradient
     tk=CONF['injection_energy']    # [MeV]  kin. energy
+    print(grad,tk)
     kq=k0(gradient=grad,tkin=tk)    # quad strength [1/m**2]
     len=0.4                         # quad len [m]
     focal = kq*len
@@ -755,8 +790,8 @@ def test9():
         k_scaled = scalek0(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
         print(cavity.adapt_for_energy(tkf).string())
-    print('--------------- EOF test9 --------------------')
 def test10():
+    print('--------------------------------Test10---')
     print('\ntest: Particle class')
     dictprnt(CONF,text='setutil.CONF')
 
@@ -767,9 +802,9 @@ def test10():
     print(Particle(200.).string())
     print(Particle(1.e6).string())
     print(Particle(1.e9).string())
-    print('--------------- EOF test10 --------------------')
 def test11():
-    print('\ntest thin lenses:')
+    print('--------------------------------Test11---')
+    print('test thin lenses:')
     print('----------------- product matrix ---------')
     k0=1.
     length = 2.
@@ -792,17 +827,17 @@ def test11():
     objprnt(rf,'RFC cavity')
     for elm in rf.step_through():
         print(elm.string())
-    print('--------------- EOF test11 --------------------')
 def test12():
-    print('\ntest12 adapt_for_energy change:')
-#     d=D(length=99.); print('id >>',d); d.string()
-#     d.adapt_for_energy(tkin=1000.); print('id >>',d); print(d.string())
-#     qf=QF(k0=1.5,length=0.3); print('id >>',qf); print(qf.string())
-#     qf.adapt_for_energy(tkin=200.); print('id >>',qf); print(qf.string())
-#     qd=QD(k0=1.5,length=0.3); print('id >>',qd); print(qd.string())
-#     qd.adapt_for_energy(tkin=200.); print('id >>',qd); print(qd.string())
-    rfc=RFC(length=1.23); print('id >>',rfc); print(rfc.string())
-    rfc.adapt_for_energy(tkin=200.); print('id >>',rfc); print(rfc.string())
+    print('--------------------------------Test12---')
+    print('test12 adapt_for_energy change:')
+    d = D(length=99.);                            print('id >>',d);     print(d.string())
+    d.adapt_for_energy(tkin=1000.);               print('id >>',d);     print(d.string())
+    qf = QF(k0=1.5,length=0.3);                   print('id >>',qf);    print(qf.string())
+    qf.adapt_for_energy(tkin=200.);               print('id >>',qf);    print(qf.string())
+    qd = QD(k0=1.5,length=0.3);                   print('id >>',qd);    print(qd.string())
+    qd.adapt_for_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
+    rfc = RFC(length=1.23);                       print('id >>',rfc);   print(rfc.string())
+    rfc.adapt_for_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
 if __name__ == '__main__':
     CONF['verbose']=3
     test0()

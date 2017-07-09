@@ -70,7 +70,7 @@ def display(functions,title):  ## plotting
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*
-    show(block=True)
+    show(block=False)
 def make_cavity(w):            ## one cavity
     # cavity
     lcav   = CONF['spalt_laenge']
@@ -121,10 +121,10 @@ def make_cell(w):              ## cell
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
 
-    # ---- update particle ENERGY --------
-    mD   = mD.update()
-    mQFs = mQFs.update()
-    mQDl = mQDl.update()
+    # ---- adapt_for_energy particle ENERGY --------
+    mD   = mD.adapt_for_energy()
+    mQFs = mQFs.adapt_for_energy()
+    mQDl = mQDl.adapt_for_energy()
     cell.add_element(mD)                  # D
     cell.add_element(mQFs)                # Fs
     cell.add_element(mQDl)                # Dl
@@ -136,10 +136,10 @@ def make_cell(w):              ## cell
     rf = make_rf_section(w)
     cell.append(rf)                       # RF
 
-    # ---- update particle ENERGY --------
-    mD   = mD.update()
-    mQFl = mQFl.update()
-    mQDs = mQDs.update()
+    # ---- adapt_for_energy particle ENERGY --------
+    mD   = mD.adapt_for_energy()
+    mQFl = mQFl.adapt_for_energy()
+    mQDs = mQDs.adapt_for_energy()
     cell.add_element(mD)                  # D
     cell.add_element(mQDs)                # Ds
     cell.add_element(mQFl)                # Fl
