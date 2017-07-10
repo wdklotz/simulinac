@@ -37,43 +37,43 @@ def display_bucket(functions):
 
 def psquared(H_invariant,phi,phis):
     ''' solves 0 = p**2 - V(phi) + H_invariant for p**2'''
-    V = phi*cos(phis)-sin(phi)
+    V   = phi*cos(phis)-sin(phi)
     res = V-H_invariant
     return res
 
 def bucket():
     '''produce the longitudinal phase plots from Dr.Tiede'''
-    phis=radians(CONF['soll_phase'])           # KNOB: soll phase
+    phis = radians(CONF['soll_phase'])           # KNOB: soll phase
 
     # Wertebereiche
-    dphi=1e-4                   # step size phase
-    pmax=radians(+20.)          # phase upper limit
-    pmin=radians(-40.)          # phase lower limit
-    anz= int((pmax-pmin)/dphi)  # nbof  phase steps
-    H_invariant=[-0.03+i*0.0025 for i in range(45)]      # invariant hamiltonians
+    dphi = 1e-4                   # step size phase
+    pmax = radians(+20.)          # phase upper limit
+    pmin = radians(-40.)          # phase lower limit
+    anz  =  int((pmax-pmin)/dphi)  # nbof  phase steps
+    H_invariant = [-0.03+i*0.0025 for i in range(45)]      # invariant hamiltonians
 
     # physics dimensions according to T.Wrangler pp.176
-    ws=CONF['injection_energy']
+    ws       = CONF['injection_energy']
     particle = Proton(ws)
-    gapl=CONF['spalt_laenge']
-    E0=CONF['Ez_feld']
-    u0=CONF['spalt_spannung']
-    fRF=CONF['frequenz']
-    lamb=CONF['wellenlänge']
-    rfg=RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,particle=particle,dWf=1.)
-    dws=rfg.deltaW
-    gammas=particle.gamma
-    betas=particle.beta
-    mc2=particle.e0
-    q=1.
-    T=particle.trtf(gapl,fRF)
-    A=2.*pi/(gammas*betas)**3/lamb
-    B=q*E0*T/mc2
-    p2w=sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
+    gapl     = CONF['spalt_laenge']
+    E0       = CONF['Ez_feld']
+    u0       = CONF['spalt_spannung']
+    fRF      = CONF['frequenz']
+    lamb     = CONF['wellenlänge']
+    rfg      = RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,particle=particle,dWf=1.)
+    dws      = rfg.deltaW
+    gammas   = particle.gamma
+    betas    = particle.beta
+    mc2      = particle.e0
+    q        = 1.
+    T        = particle.trtf(gapl,fRF)
+    A        = 2.*pi/(gammas*betas)**3/lamb
+    B        = q*E0*T/mc2
+    p2w      = sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
 
     if CONF['verbose']:
-#         objprnt(rfg,text='cavity',filter=['matrix','particle'])
-#         objprnt(particle,text='Particle')
+        # objprnt(rfg,text='cavity',filter=['matrix','particle'])
+        # objprnt(particle,text='Particle')
         bucket_summary = {
         '        cavity gap [m]':gapl,
         ' cavity frequency [Hz]':fRF,
@@ -87,23 +87,22 @@ def bucket():
         '                   ttf':T,
         '         particle type':particle.name,
         '            input file':CONF['input_file']
-        # '                     A':A,
-        # '                     B':B,
-        # '                   p2w':p2w,
         }
         dictprnt(bucket_summary,text='longitudinal dynamics')
 
-    functions=[]           # list of functions
+    functions = []           # list of functions
     for h in H_invariant:
-        function=[]        # a function
+        function = []        # one function
         for i in range(anz):
             phi = pmin+i*dphi
             p = psquared(h,phi,phis)
             if p < 0.:
                 continue
-            p=p2w*sqrt(p)
+            p = p2w*sqrt(p)
             function.append([degrees(phi),p,-p])
         functions.append(function)
-
     display_bucket(functions)
     return
+#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+if __name__ == '__main__':
+    print("bucket_size.py: sorry - nothing todo")

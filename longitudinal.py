@@ -28,7 +28,7 @@ def display(functions):
         offw=  [x[1] for x in func]
         plot(offp,offw,label=r'$\Delta$w($\Delta$phi)')
     # legend(loc='lower right',fontsize='x-small')
-    show(block=True)
+    show(block=False)
 def phase(factor,ws,w):
     return  (w-ws)*factor
 def energy(factor,ps,p):

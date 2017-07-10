@@ -73,7 +73,7 @@ def instanciate_element(item):
         instance  = ELM.MRK(label=label)
     else:
         raise RuntimeError('unknown element type: ',key)
-    # DEBUG('{} instance created in instanciate_element()'.format(label),'')
+    DEBUG('{} instance created in instanciate_element()'.format(label),'')
     return (label,instance)
 
 def factory(input_file):
@@ -231,6 +231,6 @@ def test1(input_file):
     lattice = parse_yaml_and_fabric(input_file)
 #--------
 if __name__ == '__main__':
-#     test0()
+    test0()
     test1('fodo_with_10cav_per_RF(4).yml')
 
