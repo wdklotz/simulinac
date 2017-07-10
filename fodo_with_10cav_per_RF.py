@@ -167,6 +167,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     Particle.soll = Proton(CONF['injection_energy'])
+    # DEBUG('Particle.soll\n',Particle.soll.string())
     track_soll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
     lattice.stats()                 ## count elements and other statistics
     #-----------------------------------------
@@ -178,6 +179,7 @@ def loesung(filepath):              ## total classic FODO lattice
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = lattice.twiss_functions(30)
     display(functions)   # twiss functions
+    # DEBUG('Particle.soll\n',Particle.soll.string())
 
 if __name__ == '__main__':
     import sys

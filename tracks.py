@@ -121,18 +121,18 @@ def track_soll(lattice):
     soll_track = Track.soll       #track of reference particle
     for ipos in lattice.seq:
         element,s0,s1 = ipos
-#         DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
+        # DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
         ti = soll_track.last()                #track: at entrance
-#         DEBUG('\t\ti >>',Track.string(ti))
+        # DEBUG('\t\ti >>',Track.string(ti))
         element.adapt_for_energy(ti[EKOO])    #enery adaptation
         tf = element.matrix.dot(ti)           #track: at exit
-#         DEBUG('\t\tf >>',Track.string(tf))
+        # DEBUG('\t\tf >>',Track.string(tf))
         soll_track.append(tf)                 #append
-#         deltaE = tf[EKOO] - ti[EKOO]
-#         DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
-#     DEBUG('complete track\n{}'.format(soll_track.points_string()))
-    DEBUG('{}'.format(soll_track.first_str()))
-    DEBUG('{}'.format(soll_track.last_str()))
+        # deltaE = tf[EKOO] - ti[EKOO]
+        # DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+    # DEBUG('complete track\n{}'.format(soll_track.points_string()))
+    # DEBUG('soll track(i)\n{}'.format(soll_track.first_str()))
+    # DEBUG('soll track(f)\n{}'.format( soll_track.last_str()))
     return soll_track
 
 def track(lattice,bunch):
@@ -159,4 +159,6 @@ def track(lattice,bunch):
 #         DEBUG('complete track\n{}'.format(particle_track.points_str()))
 #         DEBUG('FIRST: {}'.format(particle_track.first_str()))
 #         DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
-
+#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+if __name__ == '__main__':
+    print("tracks.py: sorry - nothing todo")

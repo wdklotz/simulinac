@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from elements import D,QFth,QDth,QF,QD
 from lattice import Lattice
 from numpy import linalg as LA
-from pylab import plot,show,legend,figure,subplot,axis
+from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import fabs
 
 def display(functions):

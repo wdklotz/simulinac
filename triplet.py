@@ -92,7 +92,7 @@ def make_cavity(w):            ## one cavity
     cavity.add_element(drf)
     # CONF['LCAV']=cavity.length
     # print('cavity_length: ',cavity.length)
-    objprnt(soll,'particle @ gap exit',{'matrix'})
+    # objprnt(soll,'particle @ gap exit',{'matrix'})
     return cavity
 def make_rf_section(w):        ## many cavities
     gaps = w['gaps']
@@ -101,7 +101,7 @@ def make_rf_section(w):        ## many cavities
         cav = make_cavity(w)
         section.append(cav)
     # CONF['RFSection']=section.length
-    print('rf_section_length: ',section.length)
+    # print('rf_section_length: ',section.length)
     return section
 def make_cell(w):              ## cell
     gradient  = CONF['quad_gradient']
@@ -166,15 +166,15 @@ def test0():
 
     mFDF=mQF1*mQD1*mQF1 # 1st triplet
     mDFD=mQD2*mQF2*mQD2 # 2nd triplet
-    mFDF.string()
-    mDFD.string()
+    print(mFDF.string())
+    print(mDFD.string())
     fx1=-1./mFDF.matrix[1,0]
     fy1=-1./mFDF.matrix[3,2]
     fx2=-1./mDFD.matrix[1,0]
     fy2=-1./mDFD.matrix[3,2]
     print('focals triplet 1: fx= {:.3f}  fy= {:.3f}'.format(fx1,fy1))
     print('focals triplet 2: fx= {:.3f}  fy= {:.3f}'.format(fx2,fy2))
-def test1(x):
+def test1():
     wert={}
     wert['dWf'] = 0.
 
@@ -212,25 +212,24 @@ def test1(x):
     ncells = 3
     super_cell = Lattice()
 
-    dictprnt(CONF,'Phys')
-    dictprnt(wert,'w')
+    # dictprnt(CONF,'Phys')
+    # dictprnt(wert,'w')
 
     for ncellsc in range(ncells):
         cell = make_cell(wert)
         super_cell.append(cell)
 
     track_soll(super_cell)             ## track soll Teilchen hier!  (WICHTIG)
-    mcell,betax,betay=super_cell.cell(closed=True)
+    mcell,betax,betay = super_cell.cell(closed=True)
     print('energy(f)= {} [MeV]'.format(Particle.soll.tkin))
 
-    CONF['sigx_i']=sqrt(CONF['emitx_i']*betax)
-    CONF['sigy_i']=sqrt(CONF['emity_i']*betay)
+    CONF['sigx_i'] = sqrt(CONF['emitx_i']*betax)
+    CONF['sigy_i'] = sqrt(CONF['emity_i']*betay)
     functions = super_cell.twiss_functions(40)
-    display(functions,'x {}'.format(x))
+    display(functions,'test1')
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     # test0()
-    test1(0)
-    # for x in [0.0+n*0.1 for n in range(30)]:
-        # test0(x)
+    test1()
+

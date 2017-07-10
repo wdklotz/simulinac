@@ -32,7 +32,7 @@ formatter = logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message
 ch.setFormatter(formatter)
 #add ch to logger
 logger.addHandler(ch)
-##
+## defaults
 class Defaults(object):
     def __init__(self):
         self.priv = {
@@ -86,8 +86,8 @@ CONF = Defaults()
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['Dz']              = CONF['wellenlänge']/18.  #Dz 1/18-th of wavelength per default
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
-##
-class Particle(object):                           ## relativistic particle
+## relativistic particle
+class Particle(object):                          
     soll=None            #reference particle a.k.a. soll Teilchen  (class member!)
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
@@ -112,17 +112,20 @@ class Particle(object):                           ## relativistic particle
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-##
+    def __call__(self,tkin):        # allows to call Particle instance to change kin. energy
+        self._set_self(tkin,self.e0,self.name)
+        return self
+## proton
 class Proton(Particle):                           ## proton
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
-
-Particle.soll = Proton()   #the default reference particle
-##
+## electron
 class Electron(Particle):                         ## electron
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
-
+## the default reference particle
+Particle.soll = Proton()
+## utilities
 def epsiz(dz,beta,gamma,trtf):
     """
     Helper to calculate longitudinal phase space ellipse parameters
@@ -254,10 +257,10 @@ def dBdz(k0=0.,tkin=0.):
         dB/dz in [T/m]
     """
     if (tkin >= 0.):
-        prot=Proton(tkin)
-        beta=prot.beta
-        e0=prot.e0
-        gamma=prot.gamma
+        prot = Proton(tkin)
+        beta = prot.beta
+        e0 = prot.e0
+        gamma = prot.gamma
         return k0*(beta*gamma*e0)/1.e-6*CONF['lichtgeschwindigkeit']
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')

@@ -48,10 +48,10 @@ class Lattice(object):
         Add element to lattice
         """
         if len(self.seq) == 0:
-            s0=0.
+            s0 = 0.
         else:
-            s0=self.seq[-1][-1]
-        l=elment.length
+            s0 = self.seq[-1][-1]
+        l = elment.length
         self.length += l
         elm_with_position = (elment,s0,s0+l)
         self.seq.append(elm_with_position)
@@ -60,7 +60,7 @@ class Lattice(object):
         """
         Log lattice layout to string (could be better!)
         """
-        mcell=ELM.I(label='<=Lattice')     ##  chain matrices
+        mcell = ELM.I(label='<=Lattice')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
@@ -112,14 +112,14 @@ class Lattice(object):
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
         ## Stabilität ?
-        unstable=False
+        unstable = False
         stab = fabs(mcell.tracex())
         # if verbose:
         printv(0,'stability X? ',stab)
         if stab >= 2.0:
             # if verbose:
             printv(0,'unstable Lattice in x-plane\n')
-            unstable=True
+            unstable = True
         else:
             cos_mux = 0.5 * stab
             mux = degrees(acos(cos_mux))
@@ -130,7 +130,7 @@ class Lattice(object):
         if stab >= 2.0:
             # if verbose:
             printv(0,'unstable Lattice in y-plane\n')
-            unstable=True
+            unstable = True
         else:
             cos_muy = 0.5 * stab
             muy = degrees(acos(cos_muy))
@@ -166,14 +166,14 @@ class Lattice(object):
         if closed:
             if not unstable:
                 cell_matrix = self.full_cell.matrix
-#               m11 =cell_matrix[0,0];         m12 =cell_matrix[0,1]
-#               m21 =cell_matrix[1,0];         m22 =cell_matrix[1,1]
-#               n11 =cell_matrix[2,2];         n12 =cell_matrix[2,3]
-#               n21 =cell_matrix[3,2];         n22 =cell_matrix[3,3]
-                m11 =cell_matrix[XKOO,XKOO];   m12 =cell_matrix[XKOO,XPKOO]
-                m21 =cell_matrix[XPKOO,XKOO];  m22 =cell_matrix[XPKOO,XPKOO]
-                n11 =cell_matrix[YKOO,YKOO];   n12 =cell_matrix[YKOO,YPKOO]
-                n21 =cell_matrix[YPKOO,YKOO];  n22 =cell_matrix[YPKOO,YPKOO]
+                # m11  = cell_matrix[0,0];         m12  = cell_matrix[0,1]
+                # m21  = cell_matrix[1,0];         m22  = cell_matrix[1,1]
+                # n11  = cell_matrix[2,2];         n12  = cell_matrix[2,3]
+                # n21  = cell_matrix[3,2];         n22  = cell_matrix[3,3]
+                m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
+                m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
+                n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
+                n21  = cell_matrix[YPKOO,YKOO];  n22  = cell_matrix[YPKOO,YPKOO]
                 ## betax,alphax,gammax from transfer matrix 
                 #  [m11,m12] = [cos(mu) + alpha * sin(mu),       beta * sin(mu)     ]
                 #  [m21,m22] = [     -gamma * sin(mu)    , cos(mu) - alpha * sin(mu)]
@@ -187,7 +187,7 @@ class Lattice(object):
                 gmx = -m21/sinmu 
                 alx2 = bax*gmx-1.
                 # print('alfax^2',alx2)
-                alx = 0. if abs(alx2) < 1.e-10 else sqrt(alx2)
+                alx = 0. if fabs(alx2) < 1.e-9 else sqrt(alx2)
                 print('betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
                 ## betay,alphay,gammay from transfer matrix                 
                 sin2mu = -((n11-n22)**2/4.+n12*n21)
@@ -199,25 +199,25 @@ class Lattice(object):
                 gmy = -n21/sinmu
                 aly2 = bay*gmy-1.
                 # print('alfay^2',aly2)
-                aly = 0. if abs(aly2) < 1.e-10 else sqrt(aly2)
+                aly = 0. if fabs(aly2) < 1.e-9 else sqrt(aly2)
                 print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))                
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
-                v_beta_a    = NP.array([bax,alx,gmx,bay,aly,gmy])
+                v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy])
                 m_cell_beta = self.full_cell.beta_matrix()
-                v_beta_e    = m_cell_beta.dot(v_beta_a)
+                v_beta_e = m_cell_beta.dot(v_beta_a)
                 # if verbose:
-                printv(0,'Probe: {TWf} == {BetaMatrix}x{TWi}?')
+                printv(0,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
                 diffa_e = v_beta_a - v_beta_e
                 for i in range(6):
-                    if abs(diffa_e[i]) < 1.e-10: diffa_e[i] = 0.
-                printv(0,'TWi-TWf (should be [0,...,0]):\n',diffa_e)
-                ## store related variables for later use
+                    if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
+                printv(0,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
+                ## keep related variables for later use
                 CONF['sigx_i'] = sqrt(bax*emix)
                 CONF['sigy_i'] = sqrt(bay*emiy)
                 SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
                 SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
-                xip=sqrt(emix*gmx)   # 1 sigma x' particle divergence
-                yip=sqrt(emiy*gmy)
+                xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence
+                yip = sqrt(emiy*gmy)
                 SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
                 SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
             else:
@@ -226,14 +226,14 @@ class Lattice(object):
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
             # transfer lattices need not to be stable!
-            bax=CONF['betax_i']  # twiss beta @ entrance
-            bay=CONF['betay_i']
-            alx=CONF["alfax_i"]  # twiss alpha @ entrance
-            aly=CONF["alfay_i"]
-            gmx=(1.+alx*alx)/bax  # twiss gamma @ entrance
-            gmy=(1.+aly*aly)/bay
-            xip=sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
-            yip=sqrt(emiy*gmy)
+            bax = CONF['betax_i']  # twiss beta @ entrance
+            bay = CONF['betay_i']
+            alx = CONF["alfax_i"]  # twiss alpha @ entrance
+            aly = CONF["alfay_i"]
+            gmx = (1.+alx*alx)/bax  # twiss gamma @ entrance
+            gmy = (1.+aly*aly)/bay
+            xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
+            yip = sqrt(emiy*gmy)
             SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
             SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
         ## store twiss values as lattice instance varibles
@@ -257,8 +257,8 @@ class Lattice(object):
         row = ''
         for count, ipos in enumerate(reversed(self.seq)):
             elm,si,sf = ipos
-            name= elm.label
-            len =elm.length
+            name = elm.label
+            len = elm.length
             rest = (count+1)%19
             if rest != 0:
                 header += '{:6s}'.format(name)
@@ -273,11 +273,11 @@ class Lattice(object):
 
     def reverse(self):
         raise RuntimeWarning('Lattice.reverse() not implemented and not used! (probably bogus!)')
-        res=Lattice()
-        seq=copy(self.seq)
+        res = Lattice()
+        seq = copy(self.seq)
         seq.reverse()
         for ipos in seq:
-            elm,s,s=ipos
+            elm,s,s = ipos
             res.add_element(elm)
         return res
 
@@ -285,26 +285,26 @@ class Lattice(object):
         """
         Concatenate two Lattice pieces
         """
-        seq=copy(piece.seq)
+        seq = copy(piece.seq)
         for ipos in seq:
-            elm,s0,s1=ipos
+            elm,s0,s1 = ipos
             self.add_element(elm)
 
     def twiss_functions(self,steps=10):
         """
         Track twiss functions with beta-matrix through lattice
         """
-        beta_fun=[]
+        beta_fun = []
         bx = self.betax0
         ax = self.alfax0
         gx = self.gammx0
         by = self.betay0
         ay = self.alfay0
         gy = self.gammy0
-        v_beta0=NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
+        v_beta0 = NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         v_beta = v_beta0
 #         DEBUG('',v_beta0)
-        s=0.0
+        s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             for count,i_element in enumerate(element.step_through(steps)):
@@ -326,16 +326,16 @@ class Lattice(object):
         Track the dispersion function
         """
         # print('WARNING:Lattice.dispersion() not fully implemented, probably bogus!!')
-        traj=[]
-        v_0=NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
+        traj = []
+        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         v_0.shape = (ELM.MDIM,1)   # MDIM rows, 1 column
         if closed == True:
             m_cell = self.full_cell
-            m11=m_cell.matrix[0,0]
-            m15=m_cell.matrix[0,5]
-            d0 = m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            v_0[0,0]=d0
-        s=0.0
+            m11 = m_cell.matrix[0,0]
+            m15 = m_cell.matrix[0,5]
+            d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
+            v_0[0,0] = d0
+        s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             for i_element in element.step_through(steps):
@@ -353,8 +353,8 @@ class Lattice(object):
         Track Cos & Sin trajectories
         """
         lamb = CONF['wellenlänge']
-        c_like =[]
-        s_like =[]
+        c_like = []
+        s_like = []
         x1  = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
         x2p = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1  = sqrt(CONF['emity_i']*self.betay0)
@@ -362,10 +362,10 @@ class Lattice(object):
         dz  = CONF['Dz']      # eingabe dZ
         dp  = CONF['Dp/p']    # eingabe dP/P0
         # MDIM tracking used here
-        c_0=NP.zeros(ELM.MDIM)
-        s_0=NP.zeros(ELM.MDIM)
-#         c_0=NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
-#         s_0=NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
+        c_0 = NP.zeros(ELM.MDIM)
+        s_0 = NP.zeros(ELM.MDIM)
+#         c_0 = NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
+#         s_0 = NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
         c_0[XKOO]  = x1; c_0[YKOO]  =y1; c_0[ZKOO]   =dz; c_0[DEKOO] =1.; c_0[LKOO] =1.  # cos-like traj.
         s_0[XPKOO] =x2p; s_0[YPKOO] =y2p; s_0[ZPKOO] =dp; s_0[DEKOO] =1.; s_0[LKOO] =1.  # sin-like traj.
         for ipos in self.seq:
@@ -398,7 +398,7 @@ class Lattice(object):
         """
         Test symplecticity
         """
-        s=NP.array([[ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
+        s = NP.array([[ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
                     [-1.,0., 0.,0., 0.,0.,0.,0.,0.,0.],    #x'
                     [ 0.,0., 0.,1., 0.,0.,0.,0.,0.,0.],    #y
                     [ 0.,0.,-1.,0., 0.,0.,0.,0.,0.,0.],    #y'
@@ -409,14 +409,14 @@ class Lattice(object):
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #delta-l
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
                     ])
-        s=NP.dot(self.full_cell.matrix.T,s)
-        s=NP.dot(s,self.full_cell.matrix)
-        # dets=LA.det(s)
+        s = NP.dot(self.full_cell.matrix.T,s)
+        s = NP.dot(s,self.full_cell.matrix)
+        # dets = LA.det(s)
         # if fabs(dets-1.) > 1.e-12:
             # for i in range(ELM.Matrix._dim):
                 # print('[{:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}, {:4>+.6f}]\n'.
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
-        res=[s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
+        res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 def make_wille():  
@@ -424,24 +424,24 @@ def make_wille():
     Wille's test lattice
     """
     print("K.Wille's Beispiel auf pp. 112-113")
-    kqf=  wille()['k_quad_f']
-    lqf=  wille()['length_quad_f']
-    kqd=  wille()['k_quad_d']
-    lqd=  wille()['length_quad_d']
-    rhob= wille()['bending_radius']
-    lb=   wille()['dipole_length']
-    ld=   wille()['drift_length']
+    kqf = wille()['k_quad_f']
+    lqf = wille()['length_quad_f']
+    kqd = wille()['k_quad_d']
+    lqd = wille()['length_quad_d']
+    rhob = wille()['bending_radius']
+    lb = wille()['dipole_length']
+    ld = wille()['drift_length']
     ## elements
-    mqf=ELM.QF(kqf,lqf,'QF')
-    mqd=ELM.QD(kqd,lqd,'QD')
-    mb=ELM.SD(rhob,lb,'B')
-    mb1=ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
-    mw=ELM.WD(mb)
-    mw1=ELM.WD(mb1)
-    mbr=ELM.RD(rhob,lb)
-    md=ELM.D(ld)
+    mqf = ELM.QF(kqf,lqf,'QF')
+    mqd = ELM.QD(kqd,lqd,'QD')
+    mb = ELM.SD(rhob,lb,'B')
+    mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
+    mw = ELM.WD(mb)
+    mw1 = ELM.WD(mb1)
+    mbr = ELM.RD(rhob,lb)
+    md = ELM.D(ld)
     ## lattice
-    lattice=Lattice()
+    lattice = Lattice()
     lattice.add_element(mqf)
     lattice.add_element(md)
     # lattice.add_element(mw)
@@ -461,7 +461,7 @@ def make_wille():
     lattice.add_element(md)
     lattice.add_element(mqf)
     # lattice.string()
-    top=Lattice()
+    top = Lattice()
     top.append(lattice)
     # top.append(top)
     # top.append(top)
@@ -478,13 +478,13 @@ def test0():
 
 def test1():
     print('-------------------------------------Test1--')
-    lattice=make_wille()
+    lattice = make_wille()
     mcell,betax,betay=lattice.cell()
 
 def test2():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test2--')
-    lattice=make_wille()
+    lattice = make_wille()
     # cell boundaries
     mcell,betax,betay = lattice.cell(closed=True)
     lattice.symplecticity()
@@ -497,7 +497,7 @@ def test2():
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
     vs = [x[3]-1. for x in beta_fun] # viseo
-    zero=[-1. for x in beta_fun]     # viseo
+    zero = [-1. for x in beta_fun]     # viseo
 
     plot(s,xs,label='bx/bx0')
     plot(s,ys,label='by/by0')
