@@ -25,13 +25,13 @@
 ##...........................................................................................
 flags:                              ## run configuration
     - accON:        False           # accelleration on/off flag
-    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
+    - periodic:     True            # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## parameter definitions
-    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 5.        # [MeV] energy @ entrance (injection)
     - emity_i:              1.E-6     # [m*rad] transverse emittance @ entrance x
     - emitx_i:              1.E-6     # [m*rad] transverse emittance @ entrance y
     - betax_i:              0.780     # [m] twiss beta @ entrance x
@@ -42,7 +42,7 @@ parameters:                           ## parameter definitions
 #    - Dz:                   0.0       # [m] longitudinal displacement Dz @ entrance
     - frequency:    &p01    816.6E+6  # [Hz] frequency
     - ql:           &p03    0.05      # [m] quad-length
-    - B_grad_f:     &p04    16.0      # [T/m] quadrupole gradient focusing QF
+    - B_grad_f:     &p04    30.0      # [T/m] quadrupole gradient focusing QF
     - B_grad_d:     *p04              # [T/m] quadrupole gradient defocusing QD
     - Ez:           &p05    1.04      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase
@@ -118,6 +118,6 @@ segments:                           ## SEGMENT definitions
 ## LATTICE definition
 ##...........................................................................................
 lattice:                            ## LATTICE definition
-    - title: FODO 07.02.2017    # description is mandatory. DON't remove or reposition!
-    - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
-# - [2, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]
+    - title: LEBT FODO 11.07.2017   # description is mandatory. DON't remove or reposition!
+#    - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+    - [2, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]

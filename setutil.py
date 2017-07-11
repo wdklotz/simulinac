@@ -21,7 +21,7 @@ from math import pi,sqrt,sin, cos, radians, degrees
 from copy import copy
 import logging
 
-#create logger
+## create logger
 logger = logging.getLogger("logger")
 logger.setLevel(logging.DEBUG)
 #create console handler
@@ -51,19 +51,19 @@ class Defaults(object):
             'qf_gradient': 16.0,         # [T/m] default
             'qd_gradient': 16.0,         # [T/m] default
             'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m]
-            'emitx_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-            'emity_i': 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-            'emitz_i': 7.7e-4,           # longitudinal emittance T.Wangler (6.49) pp.186
-            'betax_i': 0.780,            # [m] Vorgabe twiss betax @ entrance
-            'betay_i': 2.373,            # [m] Vorgabe twiss betax @ entrance
-            'alfax_i': 0.0,              # Vorgabe twiss alphax @ entrance
-            'alfay_i': 0.0,              # Vorgabe twiss alphaxy @ entrance
-            'Dz'     : 0.02,             # [m] Vorgabe longitudinal displacement Dz
-            'Dp/p'   : 3.55654e-4,       # [rad] Vorgabe relative impulse Dp/p
-            'dWf': False,                # acceleration on/off flag default
+            'emitx_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
+            'emity_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
+            'emitz_i' : 7.7e-4,          # longitudinal emittance T.Wangler (6.49) pp.186
+            'betax_i' : 0.780,           # [m] Vorgabe twiss betax @ entrance
+            'betay_i' : 2.373,           # [m] Vorgabe twiss betax @ entrance
+            'alfax_i' : 0.0,             # Vorgabe twiss alphax @ entrance
+            'alfay_i' : 0.0,             # Vorgabe twiss alphaxy @ entrance
+            'Dz'      : 0.02,            # [m] Vorgabe longitudinal displacement Dz
+            'Dp/p'    : 3.55654e-4,      # [rad] Vorgabe relative impulse Dp/p
+            'dWf'     : False,           # acceleration on/off flag default
             'periodic': True,            # periodic lattice? default
-            'verbose': 1,                # print flag (True) default
-            'n_coil': 1                  # nbof coil windings
+            'verbose' : 1,               # print flag (True) default
+            'n_coil'  : 1                # nbof coil windings
             }
     def __getitem__(self,key):
         if key in self.conf:
@@ -84,11 +84,12 @@ class Defaults(object):
 
 CONF = Defaults()
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['Dz']              = CONF['wellenlänge']/18.  #Dz 1/18-th of wavelength per default
+CONF['Dz']              = CONF['wellenlänge']/18.  # Dz 1/18-th of wavelength per default
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
+
 ## relativistic particle
 class Particle(object):                          
-    soll=None            #reference particle a.k.a. soll Teilchen  (class member!)
+    soll = None  # class member: reference particle a.k.a. soll Teilchen
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -112,15 +113,15 @@ class Particle(object):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):        # allows to call Particle instance to change kin. energy
+    def __call__(self,tkin):        # call Particle instance to change its kin. energy
         self._set_self(tkin,self.e0,self.name)
         return self
 ## proton
-class Proton(Particle):                           ## proton
+class Proton(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
 ## electron
-class Electron(Particle):                         ## electron
+class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 ## the default reference particle
@@ -132,20 +133,20 @@ def epsiz(dz,beta,gamma,trtf):
     Ellipse nach T.Wangler (6.47) pp.185
     (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon
     """
-    qE0 = CONF['Ez_feld']
-    lamb = CONF['wellenlänge']
-    m0c2 = CONF['proton_mass']
+    qE0   = CONF['Ez_feld']
+    lamb  = CONF['wellenlänge']
+    m0c2  = CONF['proton_mass']
     dphi0 = - radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
     R = qE0*lamb*sin(-radians(CONF['soll_phase']))
     R = R * beta*beta*beta*gamma*gamma*gamma*trtf
     R = R / (2.*pi*m0c2)
     R = sqrt(R)
-    w0 = R * dphi0
-    epsi = w0 * dphi0
-    sigw = sqrt(epsi*R)
+    w0     = R * dphi0
+    epsi   = w0 * dphi0
+    sigw   = sqrt(epsi*R)
     sigphi = -sqrt(epsi/R)    #[rad]
-    sigDp = gamma/(gamma+1.)*sigw      #umrechnung DW/W -> Dp/p, W kin. energie
-    sigDz = - beta*lamb/360.*degrees(sigphi)   #[m]
+    sigDp  = gamma/(gamma+1.)*sigw      #umrechnung DW/W -> Dp/p, W kin. energie
+    sigDz  = - beta*lamb/360.*degrees(sigphi)   #[m]
     sigphi = degrees(sigphi)
     return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
 
@@ -154,6 +155,7 @@ result = epsiz(CONF['Dz'],
                 Particle.soll.gamma,
                 Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
                 )
+
 CONF['emitz_i']   = result['epsi']
 CONF['Dp/p']      = result['sigDp']
 CONF['sigPhiz_i'] = result['sigphi']
@@ -200,18 +202,23 @@ def collect_summary():
 def Wakzeptanz(Ez,T,phis,lamb,particle):
     """
     Energieakzeptanz dW/W nach T.Wangler pp. 179
-    Ez      [Mev/m] accelerating field gradient on gap axis
-    T       transit time factor
-    phis    [deg] sync. phase (-90 to 0)
-    lamb    [m] rf wave length
-    particle    sync. particle
+    Ez       - [Mev/m] accelerating field gradient on gap axis
+    T        - transit time factor
+    phis     - [deg] sync. phase (-90 to 0)
+    lamb     - [m] rf wave length
+    particle - sync. particle
     """
-    gb = particle.gamma_beta
-    m0 = particle.e0  # rest mass
-    res = 2.*Ez*T*gb*gb*gb*lamb/pi/m0
-    phsoll = radians(phis)
-    res = res*(phsoll*cos(phsoll)-sin(phsoll))
-    res = sqrt(res)/(particle.gamma-1)
+    if CONF['dWf']:
+        gb = particle.gamma_beta
+        m0 = particle.e0  # rest mass
+        res = 2.*Ez*T*gb*gb*gb*lamb/pi/m0
+        DEBUG('res',res)
+        phsoll = radians(phis)
+        res = res*(phsoll*cos(phsoll)-sin(phsoll))
+        DEBUG('res',res)
+        res = sqrt(res)/(particle.gamma-1.)
+    else:
+        res = 0.
     return res
 
 def k0(gradient=0.,tkin=0.):
@@ -339,7 +346,7 @@ def test0():
 def test1():
     print('--------------------------Test1---')
     print('test epsiz(): the helper to calculate longitudinal phase space parameters')
-    result = epsiz(CONF['Dz'],     #dz kleiner als 1/10 wellenlaenge
+    result = epsiz(CONF['Dz'],
               Particle.soll.beta,
               Particle.soll.gamma,
               Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])

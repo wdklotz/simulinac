@@ -73,7 +73,7 @@ def instanciate_element(item):
         instance  = ELM.MRK(label=label)
     else:
         raise RuntimeError('unknown element type: ',key)
-    DEBUG('{} instance created in instanciate_element()'.format(label),'')
+    # DEBUG('{} instance created in instanciate_element()'.format(label),'')
     return (label,instance)
 
 def factory(input_file):

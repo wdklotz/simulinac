@@ -5,6 +5,7 @@ Copyright 2016 Wolf-Dieter Klotz <wdklotz@gmail.com>
 """
 from math import sqrt, sin, cos, sinh, cosh
 import matplotlib.pyplot as plt
+# from setutil import Proton,k0
 
 def necktie(u,v):
     """
@@ -23,7 +24,7 @@ def necktie(u,v):
 
 def betagamma(tkin):    # beta*gamma for proton as function of kin. energy
     tkin_zu_e0 = tkin/938.  # tkin in [MeV]
-    res = 2.*tkin_zu_e0 + tkin_zu_e0**2
+    res = tkin_zu_e0*(2. + tkin_zu_e0)
     res = sqrt(res)
     return res
 
@@ -56,13 +57,12 @@ def test1(params):
     lq=params['lq']
     L=ld+lq
     tkin = params['tkin']
-    grad1 = params['grad_f']
-    grad2 = params['grad_d']
+    grad1 = params['grad']
     ssize = 0.04
-    bg = betagamma(tkin)
+    anz = int(grad1/ssize)
 
-    grad1_werte=[0.1+i*ssize for i in range(int(grad1/ssize))]
-    grad2_werte=[-i for i in grad1_werte]
+    grad1_werte=[0.1+i*ssize for i in range(anz)]
+    grad2_werte=[-grad1_werte[i] for i in range(anz)]
     stabile_werte=[]
     for g1 in grad1_werte:
         u=L*kq(g1,tkin)*lq
@@ -75,9 +75,9 @@ def test1(params):
     stabile_g2_werte = [abs(t[1]) for t in stabile_werte]
     plt.scatter(stabile_g1_werte,stabile_g2_werte)
     plt.title("axes are dB/dx[T/m], Tk={:4.4}[MeV], L={:4.4}[m]".format(tkin,L))
-    plt.show(block=True)
+    plt.show(block=False)
 
 #-------------------------------------------main---
-#if __name__ == '__main__':
-test0()
-test1(dict(ld=1.,lq=0.1,tkin=1.,grad_f=20.,grad_d=-20.))
+if __name__ == '__main__':
+    # test0()
+    test1(dict(ld=1.,lq=0.1,tkin=5.,grad=15.))

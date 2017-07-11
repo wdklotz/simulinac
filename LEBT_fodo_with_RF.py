@@ -167,7 +167,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     Particle.soll = Proton(CONF['injection_energy'])
-    # DEBUG('Particle.soll\n',Particle.soll.string())
+    DEBUG('Particle.soll\n',Particle.soll.string())
     track_soll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
     lattice.stats()                 ## count elements and other statistics
     #-----------------------------------------
@@ -183,7 +183,7 @@ def loesung(filepath):              ## total classic FODO lattice
 
 if __name__ == '__main__':
     import sys
-    filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    filepath = 'LEBT_fodo_with_RF.yml'       ## the default input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
