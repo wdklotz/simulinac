@@ -17,12 +17,13 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import CONF,dictprnt,objprnt
-from elements import k0,I,D,QF,QD,SD,WD,CAV,RFG,Particle
-from lattice import Lattice
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import sqrt,radians
+
 from tracks import track_soll
+from setutil import CONF,dictprnt,objprnt,Proton
+from elements import I,D,QF,QD,SD,WD,CAV,RFG
+from lattice import Lattice
 
 def display(functions,title):  ## plotting
     #----------*----------*   # unpack
@@ -81,7 +82,7 @@ def make_cavity(w):            ## one cavity
     dWf    = w['dWf']
     cavity = Lattice()
 
-    soll = Particle.soll                   # particle @ entrance
+    soll = CONF['sollteilhen']                   # particle @ entrance
     tki = soll.tkin
     lcav05 = 0.5*lcav
     dri = D(length=lcav05, particle=soll, label='>')                               # drift before RFgap
@@ -180,8 +181,8 @@ def test1():
 
     # particle
     tk0       = CONF['injection_energy']*1.       # KNOB: injection energy
-    Particle.soll = Particle(tk0)
-    wert['soll'] = Particle.soll
+    CONF['sollteilhen'] = Proton(tk0)
+    wert['soll'] = CONF['sollteilhen']
 
     # k werte
     sk=1.0
@@ -221,7 +222,7 @@ def test1():
 
     track_soll(super_cell)             ## track soll Teilchen hier!  (WICHTIG)
     mcell,betax,betay = super_cell.cell(closed=True)
-    print('energy(f)= {} [MeV]'.format(Particle.soll.tkin))
+    print('energy(f)= {} [MeV]'.format(CONF['sollteilhen'].tkin))
 
     CONF['sigx_i'] = sqrt(CONF['emitx_i']*betax)
     CONF['sigy_i'] = sqrt(CONF['emity_i']*betay)

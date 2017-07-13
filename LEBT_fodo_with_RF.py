@@ -20,10 +20,10 @@ This file is part of the SIMULINAC code
 from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
+from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -164,12 +164,10 @@ def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*
     show(block=False)
 
-def loesung(filepath):              ## total classic FODO lattice
+def loesung(filepath):                 ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    Particle.soll = Proton(CONF['injection_energy'])
-    DEBUG('Particle.soll\n',Particle.soll.string())
-    track_soll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
-    lattice.stats()                 ## count elements and other statistics
+    soll_track = track_soll(lattice)   ## track soll Teilchen hier!  (WICHTIG)
+    lattice.stats(soll_track)          ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
@@ -179,7 +177,6 @@ def loesung(filepath):              ## total classic FODO lattice
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = lattice.twiss_functions(30)
     display(functions)   # twiss functions
-    # DEBUG('Particle.soll\n',Particle.soll.string())
 
 if __name__ == '__main__':
     import sys

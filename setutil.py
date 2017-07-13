@@ -32,6 +32,21 @@ formatter = logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message
 ch.setFormatter(formatter)
 #add ch to logger
 logger.addHandler(ch)
+## DEBUG
+def DEBUG(string,arg=''):
+    """
+    Print debug message
+    IN:
+        string to print 
+        values to print
+    """
+    if isinstance(arg,list):
+        print('DEBUG: {} \nlist={}'.format(string,arg))
+    elif isinstance(arg,dict):
+        print('DEBUG: {} \ndict={}'.format(string,arg))
+    else:
+        print('DEBUG: ',string,arg)
+
 ## defaults
 class Defaults(object):
     def __init__(self):
@@ -89,7 +104,7 @@ CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 ## relativistic particle
 class Particle(object):                          
-    soll = None  # class member: reference particle a.k.a. soll Teilchen
+    # soll = None  # class member: reference particle a.k.a. soll Teilchen
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -100,21 +115,33 @@ class Particle(object):
         self.beta       = sqrt(1.-1./(self.gamma*self.gamma))
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0                 # impulse [Mev/c]
-        self.v          = self.beta*CONF['lichtgeschwindigkeit']    #   [m/s]
-        self.brho       = 1.e6/CONF['lichtgeschwindigkeit']*self.p  #   [T*m]
+        self.v          = self.beta*CONF['lichtgeschwindigkeit']    # velocity [m/s]
+        self.brho       = 1.e+6/CONF['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
         self.name       = name
     def string(self):
-        s=(u'          B*rho[Tm] Tk[MeV/c\u00B2] p[MeV/c]   gamma    beta     gamma*beta  E[MeV/c\u00B2]\n'+\
-              '{:8s}{:8.4f}   {:8.4f}    {:8.4f} {:8.4f} {:8.4f}  {:8.4f}     {:8.4f}')\
-            .format(self.name,self.brho,self.tkin,self.p,self.gamma,self.beta,self.gamma_beta,self.e)
+        rows=[]; s=''
+        row=['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','Etot[Mev]']
+        rows.append(row)
+        row=['{:8s}'.format(self.name)]
+        row.append('{:8.4f}'.format(self.brho))
+        row.append('{:8.4f}'.format(self.tkin))
+        row.append('{:8.4f}'.format(self.p))
+        row.append('{:8.4f}'.format(self.gamma))
+        row.append('{:8.4f}'.format(self.beta))
+        row.append('{:8.4f}'.format(self.gamma_beta))
+        row.append('{:8.4f}'.format(self.e))
+        rows.append(row)
+        widths = [max(map(len, col)) for col in zip(*rows)]
+        for row in rows:
+                s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
         return s
     def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):        # call Particle instance to change its kin. energy
-        self._set_self(tkin,self.e0,self.name)
+    def __call__(self,tkin):  # call Particle instance to change its kin. energy
+        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 ## proton
 class Proton(Particle):
@@ -125,7 +152,8 @@ class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 ## the default reference particle
-Particle.soll = Proton()
+# Particle.soll = Proton()
+CONF['sollteilchen'] = Proton()
 ## utilities
 def epsiz(dz,beta,gamma,trtf):
     """
@@ -151,9 +179,9 @@ def epsiz(dz,beta,gamma,trtf):
     return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
 
 result = epsiz(CONF['Dz'],
-                Particle.soll.beta,
-                Particle.soll.gamma,
-                Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
+                CONF['sollteilchen'].beta,
+                CONF['sollteilchen'].gamma,
+                CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz'])
                 )
 
 CONF['emitz_i']   = result['epsi']
@@ -192,11 +220,11 @@ def collect_summary():
     SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
     SUMMARY['DW/m0c2 max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
             CONF['Ez_feld'],
-            Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz']),
+            CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),
             CONF['soll_phase'],
             CONF['wellenlänge'],
-            Particle.soll)*1.e+2
-    SUMMARY['Dp/p max* [%]'] = 1./(1.+1./Particle.soll.gamma)*wakzp  # impule acceptanc in %
+            CONF['sollteilchen'])*1.e+2
+    SUMMARY['Dp/p max* [%]'] = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
     return
 
 def Wakzeptanz(Ez,T,phis,lamb,particle):
@@ -212,49 +240,41 @@ def Wakzeptanz(Ez,T,phis,lamb,particle):
         gb = particle.gamma_beta
         m0 = particle.e0  # rest mass
         res = 2.*Ez*T*gb*gb*gb*lamb/pi/m0
-        DEBUG('res',res)
+        # DEBUG('Wakzeptanz: res',res)
         phsoll = radians(phis)
         res = res*(phsoll*cos(phsoll)-sin(phsoll))
-        DEBUG('res',res)
+        # DEBUG('Wakzeptanz: res',res)
         res = sqrt(res)/(particle.gamma-1.)
     else:
         res = 0.
     return res
 
-def k0(gradient=0.,tkin=0.):
+def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
     IN:
-        gradient: in [Tesla/m]
+        gradient: in [T/m]
         tkin: kinetic energy in [MeV]
     OUT:
         k in [1/m^2]
     """
     if (tkin >= 0.):
-        prot=Proton(tkin)
-        beta=prot.beta
-        e0=prot.e0
-        gamma=prot.gamma
-        kres = 1.e-6*CONF['lichtgeschwindigkeit']*gradient/(beta*gamma*e0)
-        # DEBUG('k0= ',kres)
-        return kres
+        prot = Proton(tkin)
+        k    = gradient/prot.brho
+        return k
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')
 
-def scalek0(k0=0.,tki=0.,tkf=0.):
+def scalek0prot(k0=0.,tki=0.,tkf=0.):
     """
     scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)
     """
-    pi  =Proton(tki)
-    bi  =pi.beta
-    gi  =pi.gamma
-    pf  =Proton(tkf)
-    bf  =pf.beta
-    gf  =pf.gamma
-    kf= k0 * (bi * gi) / (bf * gf)
-    return kf
+    bgi  = Proton(tki).gamma_beta
+    bgf  = Proton(tkf).gamma_beta
+    k= k0 * bgi/bgf
+    return k
 
-def dBdz(k0=0.,tkin=0.):
+def dBdxprot(k0=0.,tkin=0.):
     """
     B-field gradient from quadrupole gradient for given quadrupole strength k0 and kin. energy tkin (only for protons!)
     IN:
@@ -264,11 +284,7 @@ def dBdz(k0=0.,tkin=0.):
         dB/dz in [T/m]
     """
     if (tkin >= 0.):
-        prot = Proton(tkin)
-        beta = prot.beta
-        e0 = prot.e0
-        gamma = prot.gamma
-        return k0*(beta*gamma*e0)/1.e-6*CONF['lichtgeschwindigkeit']
+        return k0 * Proton(tkin).brho
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')
 
@@ -302,21 +318,6 @@ def printv(level,*args):
     if verbose >= level:
         print(*args)
 
-def DEBUG(string,arg=''):
-    """
-    Print debug message
-    IN:
-        string to print 
-        values to print
-    """
-    # print('\n')
-    if isinstance(arg,list):
-        print('DEBUG {} \nlist={}'.format(string,arg))
-    elif isinstance(arg,dict):
-        print('DEBUG {} \ndict={}'.format(string,arg))
-    else:
-        print('DEBUG: ',string,arg)
-
 def wille():
     return {
         'k_quad_f':1.2,
@@ -331,30 +332,29 @@ def wille():
 
 def test0():
     print('--------------------------Test0---')
-    print('test Particle, dictprnt, Proton, Electron, objprnt, DEBUG')
-    Particle.soll = Proton()
-    dictprnt(CONF,text='CONF')
+    dictprnt(CONF,text='CONF')    
+    
+    print('Sollteilchen\n'+CONF['sollteilchen'].string())
+    print('Proton(tkin=5.)\n'+Proton(tkin=5.).string())
+    print('Electron(tkin=5.)\n'+Electron(tkin=5.).string())
+
     dictprnt(wille(),text='wille')
-    DEBUG('\n'+Particle.soll.string())
-    Proton(tkin=50.).string()
-    Electron(tkin=50.).string()
-    Particle.soll = Electron(50.)
-    objprnt(Particle.soll,text='Particle.soll')
-    Particle.soll = Proton(50.)
-    objprnt(Particle.soll,text='Particle.soll')
+    kqf = wille()['k_quad_f']
+    tk  = 5.
+    print('kq[1/m^2] {:4.4f} tk[Mev] {:4.4f} dBzprot(kqf,tk)[T/m] {:4.4f}'.format(kqf,tk,dBdxprot(k0=kqf,tkin=tk)))
 
 def test1():
     print('--------------------------Test1---')
     print('test epsiz(): the helper to calculate longitudinal phase space parameters')
     result = epsiz(CONF['Dz'],
-              Particle.soll.beta,
-              Particle.soll.gamma,
-              Particle.soll.trtf(CONF['spalt_laenge'],CONF['frequenz'])
+              CONF['sollteilchen'].beta,
+              CONF['sollteilchen'].gamma,
+              CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz'])
               )
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
-#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+## main
 if __name__ == '__main__':
     test0()
-    test1()
+    # test1()
 

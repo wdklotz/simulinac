@@ -164,7 +164,7 @@ def trackit(filepath):
 
 # ---------------------------------------
 if __name__ == '__main__':
-    filepath = 'fodo_with_10cav_per_RF(3).yml'    ## the default input file (YAML syntax)
+    filepath = 'fodo_with_10cav_per_RF(4).yml'    ## the default input file (YAML syntax)
     particlesPerBunch = 3000
 #     test0()
 #     test1(filepath)

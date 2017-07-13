@@ -166,10 +166,8 @@ def display1(functions):          ## plotting with longitudinal motion
 
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    Particle.soll = Proton(CONF['injection_energy'])
-    # DEBUG('Particle.soll\n',Particle.soll.string())
-    track_soll(lattice)             ## track soll Teilchen hier!  (WICHTIG)
-    lattice.stats()                 ## count elements and other statistics
+    soll_track = track_soll(lattice)          ## track soll Teilchen hier!  (WICHTIG)
+    lattice.stats(soll_track)                 ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])

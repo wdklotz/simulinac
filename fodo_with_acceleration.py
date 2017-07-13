@@ -6,7 +6,7 @@ Copyright 2016 Wolf-Dieter Klotz <wdklotz@gmail.com>
 from math import sqrt, sin, cos, sinh, cosh, log, acos, degrees
 import matplotlib.pyplot as plt
 
-def betagamma(tkin):    # 
+def betagamma(tkin):    
     """
     Out: beta*gamma for proton
     In:

@@ -21,8 +21,8 @@ from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees
 from copy import copy
 import numpy as NP
 
-from setutil import wille,CONF,dictprnt,objprnt,Particle
-from setutil import DEBUG,k0,dBdz,scalek0,printv
+from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron
+from setutil import dBdxprot,scalek0prot,k0prot,printv
 
 MDIM=10        # dimension of matrices
 
@@ -51,7 +51,6 @@ class _matrix_(object):
             s+='\n'
         return s
     def __mul__(self,other):
-        # DEBUG('A*B >>',self.label,'*',other.label)
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix_()
         if (self.label == ''):
@@ -129,14 +128,14 @@ class _matrix_(object):
         return m_beta
 ## unity matrix: keeps particle instance!
 class I(_matrix_):     
-    def __init__(self, label='I', viseo=0., particle=Particle.soll):
+    def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## the marker
 class MRK(I):        
-    def __init__(self, label='MRK', particle=Particle.soll):
+    def __init__(self, label='MRK', particle=CONF['sollteilchen']):
         super(MRK,self).__init__(label=label, particle=particle)
     def shorten(self,l=0):
         return self
@@ -148,7 +147,7 @@ class D(I):
     """
     Trace3D drift space
     """
-    def __init__(self, length=0., viseo=0., label='D', particle=Particle.soll):
+    def __init__(self, length=0., viseo=0., label='D', particle=CONF['sollteilchen']):
         super(D,self).__init__(label=label, viseo=viseo, particle=particle)
         self.length = length     ##  length [m]
         g = self.particle.gamma
@@ -165,7 +164,7 @@ class QF(D):
     """
     Trace3D focussing quad
     """
-    def __init__(self, k0=0., length=0., label='QF', particle=Particle.soll):
+    def __init__(self, k0=0., length=0., label='QF', particle=CONF['sollteilchen']):
         super(QF,self).__init__(length=length, label=label, particle=particle)
         self.k0=k0         ## Quad strength [m**-2]
         self.matrix = self._mx_()
@@ -200,7 +199,7 @@ class QF(D):
             raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
         return m
     def adapt_for_energy(self,tkin):
-        # kf = scalek0(self.k0,self.particle.tkin,tkin)
+        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -212,7 +211,7 @@ class QD(QF):
     """
     Trace3D defocussing quad
     """
-    def __init__(self, k0=0., length=0., label='QD', particle=Particle.soll):
+    def __init__(self, k0=0., length=0., label='QD', particle=CONF['sollteilchen']):
         super(QD,self).__init__(k0=k0, length=length, label=label, particle=particle)
         self.viseo = -0.5
     def shorten(self,l=0.):
@@ -222,7 +221,7 @@ class SD(D):
     """
     Trace3d sector dipole in x-plane
     """
-    def __init__(self, radius=0., length=0., label='SB', particle=Particle.soll):
+    def __init__(self, radius=0., length=0., label='SB', particle=CONF['sollteilchen']):
         # print('Warning:SD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(SD,self).__init__(length=length, label=label, particle=particle)
         self.radius = radius
@@ -261,7 +260,7 @@ class RD(SD):
     """
     Trace3D rectangular dipole x-plane
     """
-    def __init__(self, radius=0., length=0., label='RB', particle=Particle.soll):
+    def __init__(self, radius=0., length=0., label='RB', particle=CONF['sollteilchen']):
         # print('Warning:RD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(RD,self).__init__(radius=radius, length=length, label=label, particle=particle)
         wd = WD(self,label='',particle=particle)  # wedge myself...
@@ -274,7 +273,7 @@ class WD(D):
     """
     Trace3d dipole wedge x-plane
     """
-    def __init__(self, sector, label='WD', particle=Particle.soll):
+    def __init__(self, sector, label='WD', particle=CONF['sollteilchen']):
         # print('Warning:WD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(WD,self).__init__(label=label, particle=particle)
         m = self.matrix
@@ -310,7 +309,7 @@ class CAV(D):
                         PhiSoll    = radians(CONF['soll_phase']),
                         fRF        = CONF['frequenz'],
                         label      = 'RFG',
-                        particle   = Particle.soll,
+                        particle   = CONF['sollteilchen'],
                         gap        = CONF['spalt_laenge'],
                         dWf        = 1.):
         super(CAV,self).__init__(label=label, particle=particle)
@@ -349,7 +348,6 @@ class CAV(D):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # DEBUG('CAV: adapt_for_energy',tkin)
         self.__init__(
                     U0         = self.u0,
                     PhiSoll    = self.phis,
@@ -369,7 +367,7 @@ class RFG(D):
                     PhiSoll    = radians(CONF['soll_phase']),
                     fRF        = CONF['frequenz'],
                     label      = 'RFG',
-                    particle   = Particle.soll,
+                    particle   = CONF['sollteilchen'],
                     gap        = CONF['spalt_laenge'],
                     dWf        = 1.):
         super(RFG,self).__init__(label=label, particle=particle)
@@ -438,7 +436,7 @@ class _thin(_matrix_):
     """
     Base class for thin elements
     """
-    def __init__(self,particle=Particle.soll):
+    def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(anz/2)
@@ -461,7 +459,7 @@ class QFth(_thin):
     """
     Thin F-Quad
     """
-    def __init__(self, k0=0., length=0., label='QFT', particle=Particle.soll):
+    def __init__(self, k0=0., length=0., label='QFT', particle=CONF['sollteilchen']):
         super(QFth,self).__init__(particle=particle)
         self.k0     = k0
         self.length = length
@@ -486,7 +484,7 @@ class QFth(_thin):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # kf = scalek0(self.k0,self.particle.tkin,tkin)
+        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -498,7 +496,7 @@ class QDth(_thin):
     """
     Thin D-Quad
     """
-    def __init__(self, k0=0., length=0., label='QDT', particle=Particle.soll):
+    def __init__(self, k0=0., length=0., label='QDT', particle=CONF['sollteilchen']):
         super(QDth,self).__init__(particle=particle)
         self.k0     = k0
         self.length = length
@@ -523,7 +521,7 @@ class QDth(_thin):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # kf = scalek0(self.k0,self.particle.tkin,tkin)
+        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -540,7 +538,7 @@ class RFC(_thin):
                     PhiSoll  = radians(CONF['soll_phase']),
                     fRF      = CONF['frequenz'],
                     label    = 'RFC',
-                    particle = Particle.soll,
+                    particle = CONF['sollteilchen'],
                     gap      = CONF['spalt_laenge'],
                     length   = 0.,
                     dWf      = 1.):
@@ -573,7 +571,6 @@ class RFC(_thin):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # DEBUG('RFC: adapt_for_energy',tkin)
         self.__init__(
                     U0            = self.u0,
                     PhiSoll       = self.phis,
@@ -647,7 +644,7 @@ def test3():
     gradient =1.
     beta     =0.5
     energy   =0.2
-    # print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient,beta,energy))
+    print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient,beta,energy))
     k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     print(qf.string())
@@ -684,34 +681,34 @@ def test4():
 def test5():
     print('--------------------------------Test5---')
     print("K.Wille's Beispiel auf pp. 112-113")
-    kqf=  wille()['k_quad_f']
-    lqf=  wille()['length_quad_f']
-    kqd=  wille()['k_quad_d']
-    lqd=  wille()['length_quad_d']
-    rhob= wille()['bending_radius']
-    lb=   wille()['dipole_length']
-    ld=   wille()['drift_length']
+    kqf  = wille()['k_quad_f']
+    lqf  = wille()['length_quad_f']
+    kqd  = wille()['k_quad_d']
+    lqd  = wille()['length_quad_d']
+    rhob = wille()['bending_radius']
+    lb   = wille()['dipole_length']
+    ld   = wille()['drift_length']
     # elements
-    mqf=QF(kqf,lqf,'QF')
-    mqd=QD(kqd,lqd,'QD')
-    mb=SD(rhob,lb,'B')
-    mw=WD(mb)
-    md=D(ld)
+    mqf = QF(kqf,lqf,'QF')
+    mqd = QD(kqd,lqd,'QD')
+    mb  = SD(rhob,lb,'B')
+    mw  = WD(mb)
+    md  = D(ld)
     # test matrix multiplication
-    mz=I()
-    mz=mz *mqf
-    mz=mz *md
-    mz=mz *mw
-    mz=mz *mb
-    mz=mz *mw
-    mz=mz *md
-    mz=mz *mqd
-    mz=mz *md
-    mz=mz *mw
-    mz=mz *mb
-    mz=mz *mw
-    mz=mz *md
-    mz=mz *mqf
+    mz = I()
+    mz = mz *mqf
+    mz = mz *md
+    mz = mz *mw
+    mz = mz *mb
+    mz = mz *mw
+    mz = mz *md
+    mz = mz *mqd
+    mz = mz *md
+    mz = mz *mw
+    mz = mz *mb
+    mz = mz *mw
+    mz = mz *md
+    mz = mz *mqf
     print(mz.string())
 def test6():
     print('--------------------------------Test6---')
@@ -746,112 +743,113 @@ def test6():
 def test7():
     print('--------------------------------Test7---')
     print('test Rechteckmagnet...')
-    rhob= wille()['bending_radius']
-    lb=   wille()['dipole_length']
-    mb=SD(radius=rhob,length=lb,label='B')
-    mw=WD(mb,label='W')
+    rhob = wille()['bending_radius']
+    lb   = wille()['dipole_length']
+    mb   = SD(radius=rhob,length=lb,label='B')
+    mw   = WD(mb,label='W')
     mr=mw*mb*mw
     print(mw.string())
     print(mb.string())
     print(mr.string())
-    mr=RD(radius=rhob,length=lb,label='R')
+    mr = RD(radius=rhob,length=lb,label='R')
     print(mr.string())
 def test8():
     print('--------------------------------Test8---')
     print('test cavity...')
-    objprnt(Particle.soll,'soll')
-    cav=CAV()
+    objprnt(CONF['sollteilchen'],'soll')
+    cav = CAV()
     objprnt(cav,'CAV')
-    objprnt(Particle.soll,'soll')
-    rfg=RFG()
+    print('CAV.particle\n'+cav.particle.string())
+    rfg = RFG()
     objprnt(rfg,'RFG')
-    objprnt(Particle.soll,'soll')
+    print('RFG.particle\n'+rfg.particle.string())
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling')
-    grad=CONF['qd_gradient']   # [T/m] gradient
-    tk=CONF['injection_energy']    # [MeV]  kin. energy
-    print(grad,tk)
-    kq=k0(gradient=grad,tkin=tk)    # quad strength [1/m**2]
-    len=0.4                         # quad len [m]
+    grad = CONF['qd_gradient']         # [T/m] gradient
+    tk   = CONF['injection_energy']    # [MeV]  kin. energy
+    kq = k0prot(gradient=grad,tkin=tk) # quad strength [1/m**2]
+    len=0.4                            # quad len [m]
     focal = kq*len
     focal=1./focal  # focal len [m]
 
-    print('\nproton {:.3f}[MeV] ~ beta {:.3f} in quadrupole:'.format(tk,Particle(tk).beta))
-    print('k [1/m**2]\t{:3f}'.format(kq))
+    print('sollteilchen\n'+CONF['sollteilchen'].string())
+    print('kq [1/m**2]\t{:3f}'.format(kq))
     print('dB/dz[T/m]\t{:.3f}'.format(grad))
     print('len[m]\t\t{:.3f}'.format(len))
     print('focal len[m]\t{:.3f}'.format(focal))
 
-    grad=dBdz(kq,tk) # quad gradient from k and tkinetic
-    print('dB/dz[T/m]\t{:.3f}'.format(grad))
+    grad = dBdxprot(kq,tk) # quad gradient from k and tkinetic
+    print('dB/dz[T/m]\t{:.3f} from dBxprot()'.format(grad))
 
-    mqf=QF(kq,len)
-    mqd=QD(kq,len)
-    cavity=CAV(
+    mqf = QF(kq,len)
+    mqd = QD(kq,len)
+    cavity = CAV(
         U0=CONF['spalt_spannung'],
         PhiSoll=radians(CONF['soll_phase']),
-        fRF=CONF['frequenz'],
-        label='gap')
-    print('========================')
+        fRF=CONF['frequenz'])
+    print('======================== adapt_for_energy QF')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Particle.soll = Particle(tki)
+    CONF['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
-        k_scaled = scalek0(kq,tki,tkf)
+        k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
         print(mqf.adapt_for_energy(tkf).string())
-    print('========================')
+        print(mqf.particle.string())
+    print('======================== adapt_for_energy QD')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Particle.soll = Particle(tki)
+    CONF['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
-        k_scaled = scalek0(kq,tki,tkf)
+        k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
         print(mqd.adapt_for_energy(tkf).string())
-    print('========================')
+        print(mqd.particle.string())
+    print('======================== adapt_for_energy CAV')
     tki=CONF['injection_energy']    # [MeV]  kin. energy
-    Particle.soll = Particle(tki)
+    CONF['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
-        k_scaled = scalek0(kq,tki,tkf)
+        k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
         print(cavity.adapt_for_energy(tkf).string())
+        print(cavity.particle.string())
 def test10():
     print('--------------------------------Test10---')
-    print('\ntest: Particle class')
+    print('Particle class test')
     dictprnt(CONF,text='setutil.CONF')
-
     # particle class
     print()
-    print(Particle(0.).string())
-    print(Particle(50.).string())
-    print(Particle(200.).string())
-    print(Particle(1.e6).string())
-    print(Particle(1.e9).string())
+    print( Proton(0.).string())
+    print( Proton(50.).string())
+    print( Proton(200.).string())
+    print( Proton(1.e3).string())
+    print()
+    print( Electron(0.).string())
+    print( Electron(50.).string())
+    print( Electron(200.).string())
+    print( Electron(1.e3).string())
 def test11():
     print('--------------------------------Test11---')
-    print('test thin lenses:')
-    print('----------------- product matrix ---------')
-    k0=1.
+    print('thin lense tests')
+    k0     = 1.
     length = 2.
-    qf=QFth(k0=k0,length=length)
-    objprnt(qf,'QFthin')
-    qd=QDth(k0=k0,length=length)
-    objprnt(qd,'QDthin')
+    qf     = QFth(k0=k0,length=length)
+    qd     = QDth(k0=k0,length=length)
+    rf     = RFC(length=length)
     print(qf.string())
+    print('sollteilchen@QFthin\n'+qf.particle.string())
     print(qd.string())
+    print('sollteilchen@QDthin\n'+qf.particle.string())
+    print(rf.string())
+    print('sollteilchen@RFC cavity\n'+qf.particle.string())
     print('---------------- step through ---------------')
     for elm in qf.step_through(6):
         print(elm.string())
     for elm in qd.step_through(7):
         print(elm.string())
     print('------ RF cavity test & step through --------')
-    objprnt(Particle.soll,'particle(i)')
-    rf=RFC(length=length)
-    print(rf.string())
-    objprnt(Particle.soll,'particle(f)')
-    objprnt(rf,'RFC cavity')
     for elm in rf.step_through():
         print(elm.string())
 def test12():
@@ -865,6 +863,7 @@ def test12():
     qd.adapt_for_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
     rfc = RFC(length=1.23);                       print('id >>',rfc);   print(rfc.string())
     rfc.adapt_for_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
+## main ----------
 if __name__ == '__main__':
     CONF['verbose']=3
     test0()

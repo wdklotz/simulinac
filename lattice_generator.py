@@ -21,8 +21,8 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setutil import CONF,SUMMARY,Particle,DEBUG
-from setutil import objprnt,Wakzeptanz
+from setutil import CONF,SUMMARY,Particle,Proton
+from setutil import objprnt,Wakzeptanz,dictprnt
 import elements as ELM
 from lattice import Lattice
 
@@ -36,19 +36,19 @@ def instanciate_element(item):
     if key == 'D':
         length   = attributes['length']
         label    = attributes['ID']
-        instance =  ELM.D(length=length,label=label,particle=Particle.soll)
+        instance =  ELM.D(length=length,label=label,particle=CONF['sollteilchen'])
     elif key == 'QF':
         length   = attributes['length']
         label    = attributes['ID']
         dBdz     = attributes["B'"]
-        kq       = dBdz/Particle.soll.brho
-        instance = ELM.QF(k0=kq,length=length,label=label,particle=Particle.soll)
+        kq       = dBdz/CONF['sollteilchen'].brho
+        instance = ELM.QF(k0=kq,length=length,label=label,particle=CONF['sollteilchen'])
     elif key == 'QD':
         length   = attributes['length']
         label    = attributes['ID']
         dBdz     = attributes["B'"]
-        kq       = dBdz/Particle.soll.brho
-        instance = ELM.QD(k0=kq,length=length,label=label,particle=Particle.soll)
+        kq       = dBdz/CONF['sollteilchen'].brho
+        instance = ELM.QD(k0=kq,length=length,label=label,particle=CONF['sollteilchen'])
     elif key == 'RFG':
         gap       = attributes['gap']
         label     = attributes['ID']
@@ -57,7 +57,7 @@ def instanciate_element(item):
         fRF       = attributes["fRF"]
         U0        = Ez * gap
         dWf       = CONF['dWf']
-        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=Particle.soll,dWf=dWf)
+        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=CONF['sollteilchen'],dWf=dWf)
     elif key == 'RFC':
         gap       = attributes['gap']
         length    = attributes['length']
@@ -67,7 +67,7 @@ def instanciate_element(item):
         fRF       = attributes["fRF"]
         U0        = Ez * gap
         dWf       = CONF['dWf']
-        instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=Particle.soll,dWf=dWf)
+        instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=CONF['sollteilchen'],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         instance  = ELM.MRK(label=label)
@@ -80,6 +80,7 @@ def factory(input_file):
 #--------
     def make_lattice(latticeList,segments):
         lattice = Lattice()
+        # DEBUG('make_lattice for sollteilchen\n'+CONF['sollteilchen'].string())
         for segID in latticeList:        #loop segments in lattice
             # DEBUG('segID in make_lattice()',segID)
             for seg in segments:     #scan for segment in segment-definition
@@ -110,25 +111,24 @@ def factory(input_file):
     #returns ==> {...}
         parameter_list = in_data['parameters']
         parameters     = lod2d(parameter_list)
-        # DEBUG('parameters in read_parameters()',parameters)
-        if 'frequency'   in parameters: CONF['frequenz']         = parameters['frequency']
-        if 'B_grad_f'    in parameters: CONF['qf_gradient']      = parameters['B_grad_f']
-        if 'B_grad_d'    in parameters: CONF['qd_gradient']      = parameters['B_grad_d']
-        if 'Tkin'        in parameters: CONF['injection_energy'] = parameters['Tkin']
-        if 'emitx_i'     in parameters: CONF['emitx_i']          = parameters['emitx_i']
-        if 'emity_i'     in parameters: CONF['emity_i']          = parameters['emity_i']
-        if 'betax_i'     in parameters: CONF['betax_i']          = parameters['betax_i']
-        if 'betay_i'     in parameters: CONF['betay_i']          = parameters['betay_i']
-        if 'alfax_i'     in parameters: CONF['alfax_i']          = parameters['alfax_i']
-        if 'alfay_i'     in parameters: CONF['alfay_i']          = parameters['alfay_i']
-        if 'Dp/p'        in parameters: CONF['Dp/p']             = parameters['Dp/p']
-        if 'Ez'          in parameters: CONF['Ez_feld']          = parameters['Ez']
-        if 'phi_sync'    in parameters: CONF['soll_phase']       = parameters['phi_sync']
-        if 'Dz'          in parameters: CONF['Dz']               = parameters['Dz']
-        if 'gap'         in parameters: CONF['spalt_laenge']     = parameters['gap']
-        if 'cav_len'     in parameters: CONF['cavity_laenge']    = parameters['cav_len']
-        if 'ql'          in parameters: CONF['ql']               = parameters['ql']
-        if 'windings'    in parameters: CONF['n_coil']           = parameters['windings']
+        if 'frequency'        in parameters: CONF['frequenz']         = parameters['frequency']
+        if 'B_grad_f'         in parameters: CONF['qf_gradient']      = parameters['B_grad_f']
+        if 'B_grad_d'         in parameters: CONF['qd_gradient']      = parameters['B_grad_d']
+        if 'Tkin'             in parameters: CONF['injection_energy'] = parameters['Tkin']
+        if 'emitx_i'          in parameters: CONF['emitx_i']          = parameters['emitx_i']
+        if 'emity_i'          in parameters: CONF['emity_i']          = parameters['emity_i']
+        if 'betax_i'          in parameters: CONF['betax_i']          = parameters['betax_i']
+        if 'betay_i'          in parameters: CONF['betay_i']          = parameters['betay_i']
+        if 'alfax_i'          in parameters: CONF['alfax_i']          = parameters['alfax_i']
+        if 'alfay_i'          in parameters: CONF['alfay_i']          = parameters['alfay_i']
+        if 'Dp/p'             in parameters: CONF['Dp/p']             = parameters['Dp/p']
+        if 'Ez'               in parameters: CONF['Ez_feld']          = parameters['Ez']
+        if 'phi_sync'         in parameters: CONF['soll_phase']       = parameters['phi_sync']
+        if 'Dz'               in parameters: CONF['Dz']               = parameters['Dz']
+        if 'gap'              in parameters: CONF['spalt_laenge']     = parameters['gap']
+        if 'cav_len'          in parameters: CONF['cavity_laenge']    = parameters['cav_len']
+        if 'ql'               in parameters: CONF['ql']               = parameters['ql']
+        if 'windings'         in parameters: CONF['n_coil']           = parameters['windings']
         CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
         CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
         return parameters
@@ -167,7 +167,6 @@ def factory(input_file):
                 segments.append({segID:elements})
             # DEBUG("segments",segments)
             return segments
-    #--------
         elemement_def = read_elements(in_data)
         segment_def   = read_segments(in_data)
         lattice_def   = read_lattice(in_data)
@@ -186,7 +185,7 @@ def factory(input_file):
                 for k in segSubList:
                     latticeList.append(k)
         return (latticeList,segments)
-    #--------
+    ## factory body --------
     SUMMARY['input file'] = CONF['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -195,9 +194,11 @@ def factory(input_file):
 
     read_flags(in_data)
     read_parameters(in_data)
+    # DEBUG('CONF after read _parameters in lattice_generator.factory()',CONF.__dict__)
     (latticeList,segments) = expand_reduce(in_data)
-    # DEBUG('latticeList in factory()',latticeList)  #def of all segments in lattice
-    # DEBUG('segments in factory()',segments)    #def of all segments
+    # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
+    # DEBUG('segments in factory()',segments)            # def of all segments
+    CONF['sollteilchen'](tkin=CONF['injection_energy'])  # !! set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     # CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length

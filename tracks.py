@@ -18,8 +18,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import numpy as np
+from copy import copy
 
-from setutil import Particle,DEBUG
+from setutil import Particle,CONF
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
@@ -69,8 +70,8 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         return s
     soll = None
 
-#default track-point                x   x'  y   y'  z   z'          Tk          1   s   1
-Track.soll = Track(start=np.array([ 0., 0., 0., 0., 0., 0., Particle.soll.tkin, 1., 0., 1.]))
+#default track-point               x   x'  y   y'  z   z'           Tk                1   s   1
+# SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., CONF['sollteilchen'].tkin, 1., 0., 1.]))
 
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '='):
     """
@@ -118,7 +119,9 @@ def track_soll(lattice):
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
     adapted to the energy of the accellerated reference particle.
     """
-    soll_track = Track.soll       #track of reference particle
+    # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                 1   s   1
+    soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., CONF['sollteilchen'].tkin, 1., 0., 1.]))
+      #track of reference particle
     for ipos in lattice.seq:
         element,s0,s1 = ipos
         # DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
@@ -149,16 +152,16 @@ def track(lattice,bunch):
             element,s0,s1 = ipos
             tf = element.matrix.dot(ti)      #track through!
             if isinstance(element,ELM.MRK):
-#                 if count == 1: DEBUG('tf in track({}) >>'.format(count)+Track.string(tf))
+                # if count == 1: DEBUG('tf in track({}) >>'.format(count)+Track.string(tf))
                 particle_track.append(tf)
-#                 deltaE = tf[EKOO] - ti[EKOO]
-#                 DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+                # deltaE = tf[EKOO] - ti[EKOO]
+                # DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
             ti = tf
         sleep(1.0e-3)
         print_progress_bar(count, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
-#         DEBUG('complete track\n{}'.format(particle_track.points_str()))
-#         DEBUG('FIRST: {}'.format(particle_track.first_str()))
-#         DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
+        # DEBUG('complete track\n{}'.format(particle_track.points_str()))
+        # DEBUG('FIRST: {}'.format(particle_track.first_str()))
+        # DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     print("tracks.py: sorry - nothing todo")

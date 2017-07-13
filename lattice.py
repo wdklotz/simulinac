@@ -26,7 +26,7 @@ import warnings
 from setutil import wille,CONF,SUMMARY,Particle,objprnt,printv
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
-from tracks import Track
+# from tracks import Track
 
 class Lattice(object):
     """
@@ -68,7 +68,7 @@ class Lattice(object):
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         return mcell.string()
 
-    def stats(self):
+    def stats(self,soll_track):
         """
         Gather lattice statistics
         """
@@ -77,8 +77,8 @@ class Lattice(object):
         qd_counter  = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
-        tk_i = Track.soll.first()[6]
-        tk_f = Track.soll.last()[6]
+        tk_i = soll_track.first()[6]
+        tk_f = soll_track.last()[6]
         for item in self.seq:
             element,s0,s1 = item
             if isinstance(element,ELM.QF) and (not isinstance(element,ELM.QD)):
@@ -303,7 +303,7 @@ class Lattice(object):
         gy = self.gammy0
         v_beta0 = NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         v_beta = v_beta0
-#         DEBUG('',v_beta0)
+        # DEBUG('',v_beta0)
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -315,7 +315,7 @@ class Lattice(object):
                 betaxp = -2.* v_beta[1,0]
                 betay  = v_beta[3,0]
                 betayp = -2.* v_beta[4,0]
-#                 if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
+                # if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
         (c_like,s_like) = self.cs_traj(steps)    #call for sin- and cos-like trajectories

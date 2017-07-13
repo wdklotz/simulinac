@@ -264,8 +264,8 @@ def test1(alfa,beta,epsi):
 
     plt.figure()
     sp = plt.subplot()
-    poincare(x,xp,'x-x\'',sp)
-    plt.show(block=True)
+    poincare(x,xp,'x-x\'',(0.1,0.1),sp)
+    plt.show(block=False)
 
 def test0(mu,sigma):
     # example data
