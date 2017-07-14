@@ -177,7 +177,6 @@ def loesung(filepath):              ## total classic FODO lattice
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = lattice.twiss_functions(30)
     display(functions)   # twiss functions
-    # DEBUG('Particle.soll\n',Particle.soll.string())
 
 if __name__ == '__main__':
     import sys

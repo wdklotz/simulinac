@@ -364,8 +364,8 @@ class Lattice(object):
         # MDIM tracking used here
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
-#         c_0 = NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
-#         s_0 = NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
+        # c_0 = NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
+        # s_0 = NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
         c_0[XKOO]  = x1; c_0[YKOO]  =y1; c_0[ZKOO]   =dz; c_0[DEKOO] =1.; c_0[LKOO] =1.  # cos-like traj.
         s_0[XPKOO] =x2p; s_0[YPKOO] =y2p; s_0[ZPKOO] =dp; s_0[DEKOO] =1.; s_0[LKOO] =1.  # sin-like traj.
         for ipos in self.seq:
@@ -434,12 +434,12 @@ def make_wille():
     ## elements
     mqf = ELM.QF(kqf,lqf,'QF')
     mqd = ELM.QD(kqd,lqd,'QD')
-    mb = ELM.SD(rhob,lb,'B')
+    mb  = ELM.SD(rhob,lb,'B')
     mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
-    mw = ELM.WD(mb)
+    mw  = ELM.WD(mb)
     mw1 = ELM.WD(mb1)
     mbr = ELM.RD(rhob,lb)
-    md = ELM.D(ld)
+    md  = ELM.D(ld)
     ## lattice
     lattice = Lattice()
     lattice.add_element(mqf)

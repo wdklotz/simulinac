@@ -46,7 +46,6 @@ def DEBUG(string,arg=''):
         print('DEBUG: {} \ndict={}'.format(string,arg))
     else:
         print('DEBUG: ',string,arg)
-
 ## defaults
 class Defaults(object):
     def __init__(self):
@@ -78,7 +77,7 @@ class Defaults(object):
             'dWf'     : False,           # acceleration on/off flag default
             'periodic': True,            # periodic lattice? default
             'verbose' : 1,               # print flag (True) default
-            'n_coil'  : 1                # nbof coil windings
+            'n_coil'  : 30               # nbof coil windings
             }
     def __getitem__(self,key):
         if key in self.conf:
@@ -104,7 +103,7 @@ CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 ## relativistic particle
 class Particle(object):                          
-    # soll = None  # class member: reference particle a.k.a. soll Teilchen
+    # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused seroius error
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -119,22 +118,18 @@ class Particle(object):
         self.brho       = 1.e+6/CONF['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
         self.name       = name
     def string(self):
-        rows=[]; s=''
-        row=['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','Etot[Mev]']
-        rows.append(row)
-        row=['{:8s}'.format(self.name)]
-        row.append('{:8.4f}'.format(self.brho))
-        row.append('{:8.4f}'.format(self.tkin))
-        row.append('{:8.4f}'.format(self.p))
-        row.append('{:8.4f}'.format(self.gamma))
-        row.append('{:8.4f}'.format(self.beta))
-        row.append('{:8.4f}'.format(self.gamma_beta))
-        row.append('{:8.4f}'.format(self.e))
-        rows.append(row)
-        widths = [max(map(len, col)) for col in zip(*rows)]
-        for row in rows:
-                s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
-        return s
+        headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
+        records = [[
+                '{:8s}'.format(self.name),
+                '{:8.4f}'.format(self.brho),
+                '{:8.4f}'.format(self.tkin),
+                '{:8.4f}'.format(self.p),
+                '{:8.4f}'.format(self.gamma),
+                '{:8.4f}'.format(self.beta),
+                '{:8.4f}'.format(self.gamma_beta),
+                '{:8.4f}'.format(self.e)
+                ]]
+        return tblprnt(headr,records)
     def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
         teta = 0.5 * teta
@@ -218,7 +213,7 @@ def collect_summary():
     SUMMARY['Dp/p_i(impulse spread)* [%]'] = CONF['Dp/p']*1.e+2
     SUMMARY['Dph/ph_i(phase spread)* [deg]'] = CONF['sigPhiz_i']
     SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
-    SUMMARY['DW/m0c2 max* [%]'] = wakzp = Wakzeptanz(    # energy acceptance in %
+    SUMMARY['DW/m0c2 max* [%]'] = wakzp = accpt_w(    # energy acceptance in %
             CONF['Ez_feld'],
             CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),
             CONF['soll_phase'],
@@ -227,11 +222,11 @@ def collect_summary():
     SUMMARY['Dp/p max* [%]'] = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
     return
 
-def Wakzeptanz(Ez,T,phis,lamb,particle):
+def accpt_w(Ez,trtf,phis,lamb,particle):
     """
     Energieakzeptanz dW/W nach T.Wangler pp. 179
     Ez       - [Mev/m] accelerating field gradient on gap axis
-    T        - transit time factor
+    trtf     - transit time factor
     phis     - [deg] sync. phase (-90 to 0)
     lamb     - [m] rf wave length
     particle - sync. particle
@@ -239,11 +234,12 @@ def Wakzeptanz(Ez,T,phis,lamb,particle):
     if CONF['dWf']:
         gb = particle.gamma_beta
         m0 = particle.e0  # rest mass
-        res = 2.*Ez*T*gb*gb*gb*lamb/pi/m0
-        # DEBUG('Wakzeptanz: res',res)
+        tk = particle.tkin
+        res = 2.*Ez*trtf*gb*gb*gb*lamb/pi/m0
+        DEBUG('accpt_w: tk {:4.4f} trtf {:4.4f} res {:4.4e}'.format(tk,trtf,res))
         phsoll = radians(phis)
         res = res*(phsoll*cos(phsoll)-sin(phsoll))
-        # DEBUG('Wakzeptanz: res',res)
+        DEBUG('(dW/W)^2 nach T.Wangler pp. 179: res',res)
         res = sqrt(res)/(particle.gamma-1.)
     else:
         res = 0.
@@ -288,22 +284,40 @@ def dBdxprot(k0=0.,tkin=0.):
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')
 
-def objprnt (what,text='========',filter=[]):
+def objprnt (what,text='',filter=[]):
     """
     Helper to print objects as dictionary
     """
-    print('\n          ================= '+text+' =================')
+    template = '============================================'
+    lt  = len(template)
+    lx  = len(text)
+    p1 = int((lt-lx)/2)
+    p2 = int((lt+lx)/2)
+    if p1 < 0:
+        ueberschrift = text
+    else:
+        ueberschrift = template[:p1]+text+template[p2:]
+    print('\n          '+ueberschrift)
     for k,v in sorted(what.__dict__.items()):
         if k in filter:
             continue
         print(k.rjust(30),':',v)
     return
 
-def dictprnt(what,text='========',filter=[],njust=30): 
+def dictprnt(what,text='',filter=[],njust=30): 
     """
     Helper to print dictionaries
     """
-    print('\n          ================= '+text+' =================')
+    template = '============================================'
+    lt  = len(template)
+    lx  = len(text)
+    p1 = int((lt-lx)/2)
+    p2 = int((lt+lx)/2)
+    if p1 < 0:
+        ueberschrift = text
+    else:
+        ueberschrift = template[:p1]+text+template[p2:]
+    print('\n          '+ueberschrift)
     for k,v in sorted(what.items()):
         if k in filter:
             continue
@@ -317,6 +331,25 @@ def printv(level,*args):
     verbose = CONF['verbose']
     if verbose >= level:
         print(*args)
+
+def tblprnt(headr,records):
+    """
+    Print a nice table to memory.
+    IN:
+        headr = table header [...]
+        records = table rows [[...]]
+    OUT:
+        s = the table as a string
+    """
+    rows = []; s=''
+    rows.append(headr)
+    for record in records:
+        row = record
+        rows.append(row)
+    widths = [max(map(len, col)) for col in zip(*rows)]
+    for row in rows:
+            s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
+    return s
 
 def wille():
     return {
@@ -341,8 +374,9 @@ def test0():
     dictprnt(wille(),text='wille')
     kqf = wille()['k_quad_f']
     tk  = 5.
-    print('kq[1/m^2] {:4.4f} tk[Mev] {:4.4f} dBzprot(kqf,tk)[T/m] {:4.4f}'.format(kqf,tk,dBdxprot(k0=kqf,tkin=tk)))
-
+    headr = ['kq[1/m^2]','tk[Mev]','dBzprot(kqf,tk)[T/m]']
+    records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
+    print('\n'+tblprnt(headr,records))
 def test1():
     print('--------------------------Test1---')
     print('test epsiz(): the helper to calculate longitudinal phase space parameters')

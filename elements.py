@@ -126,7 +126,7 @@ class _matrix_(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-## unity matrix: keeps particle instance!
+## unity matrix: owns its particle instance!
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
         super(I,self).__init__()
@@ -199,7 +199,6 @@ class QF(D):
             raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
         return m
     def adapt_for_energy(self,tkin):
-        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -222,7 +221,6 @@ class SD(D):
     Trace3d sector dipole in x-plane
     """
     def __init__(self, radius=0., length=0., label='SB', particle=CONF['sollteilchen']):
-        # print('Warning:SD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(SD,self).__init__(length=length, label=label, particle=particle)
         self.radius = radius
         self.matrix = self._mx_()
@@ -261,7 +259,6 @@ class RD(SD):
     Trace3D rectangular dipole x-plane
     """
     def __init__(self, radius=0., length=0., label='RB', particle=CONF['sollteilchen']):
-        # print('Warning:RD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(RD,self).__init__(radius=radius, length=length, label=label, particle=particle)
         wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * (self * wd)
@@ -274,7 +271,6 @@ class WD(D):
     Trace3d dipole wedge x-plane
     """
     def __init__(self, sector, label='WD', particle=CONF['sollteilchen']):
-        # print('Warning:WD:ACHTUNG Matrix nicht vollstaedig; muss ueberprueft werden!')
         super(WD,self).__init__(label=label, particle=particle)
         m = self.matrix
         self.parent = sector
@@ -382,8 +378,8 @@ class RFG(D):
         self.tr     = self._trtf_(self.particle.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
         # DEBUG('\n',self.particle.string())
-        # DEBUG('RFG U0,phis,tr >>',self.u0,degrees(self.phis),self.tr)
-        # DEBUG('RFG deltaW >>',self.deltaW)
+        # DEBUG('RFG U0,phis,tr: ',self.u0,degrees(self.phis),self.tr)
+        # DEBUG('RFG deltaW: ',self.deltaW)
         tk_center   = self.deltaW*0.5+self.particle.tkin      # energy in gap center
         particle    = copy(self.particle)
         part_center = particle(tk_center)                     # particle @ gap center
@@ -484,7 +480,6 @@ class QFth(_thin):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -521,7 +516,6 @@ class QDth(_thin):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # kf = scalek0prot(self.k0,self.particle.tkin,tkin)
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -560,13 +554,13 @@ class RFC(_thin):
                     particle=self.particle,
                     gap=self.gap,
                     dWf=self.dWf)  ## Trace3D RF gap
-        # DEBUG('RFC-kick deltaW >>',self.kick.deltaW)
+        # DEBUG('RFC-kick: deltaW: ',self.kick.deltaW)
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
         self.df.adapt_for_energy(tk_f)               #update energy for downstream drift after gap
         lens = self.df * (self.kick * self.di)      #one for three
         self.matrix = lens.matrix
-        # DEBUG('RFC matrix >>\n',self.matrix)
+        # DEBUG('RFC matrix\n',self.matrix)
         self.triplet = (self.di,self.kick,self.df)
     def shorten(self,l=0.):
         return self

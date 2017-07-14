@@ -166,7 +166,7 @@ def display1(functions):          ## plotting with longitudinal motion
 
 def loesung(filepath):                 ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    soll_track = track_soll(lattice)   ## track soll Teilchen hier!  (WICHTIG)
+    soll_track = track_soll(lattice)   ## !WICHTIG! track soll Teilchen hier
     lattice.stats(soll_track)          ## count elements and other statistics
     #-----------------------------------------
     # Rechne: ganze Zelle und Anfangswerte
@@ -176,7 +176,7 @@ def loesung(filepath):                 ## total classic FODO lattice
     #-----------------------------------------
     # Zeige Grafik: Lösungen als Funktion von (s)
     functions = lattice.twiss_functions(30)
-    display(functions)   # twiss functions
+    # display(functions)   # twiss functions
 
 if __name__ == '__main__':
     import sys
