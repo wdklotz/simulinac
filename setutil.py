@@ -18,7 +18,6 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import pi,sqrt,sin, cos, radians, degrees
-from copy import copy
 import logging
 
 ## create logger
@@ -98,12 +97,12 @@ class Defaults(object):
 
 CONF = Defaults()
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['Dz']              = CONF['wellenlänge']/18.  # Dz 1/18-th of wavelength per default
+CONF['Dz']              = CONF['wellenlänge']/18.  # Dz aka delta-z is 1/18-th of wavelength per default
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 ## relativistic particle
 class Particle(object):                          
-    # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused seroius error
+    # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -374,7 +373,7 @@ def test0():
     dictprnt(wille(),text='wille')
     kqf = wille()['k_quad_f']
     tk  = 5.
-    headr = ['kq[1/m^2]','tk[Mev]','dBzprot(kqf,tk)[T/m]']
+    headr = ['kq[1/m^2]','tk[Mev]','dBdxprot(kqf,tk)[T/m]']
     records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
     print('\n'+tblprnt(headr,records))
 def test1():

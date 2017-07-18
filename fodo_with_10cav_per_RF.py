@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
+from setutil import CONF,SUMMARY,Proton,dictprnt,collect_summary,DEBUG
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll

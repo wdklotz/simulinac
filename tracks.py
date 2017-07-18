@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 import numpy as np
 from copy import copy
 
-from setutil import Particle,CONF
+from setutil import CONF
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 

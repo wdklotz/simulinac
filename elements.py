@@ -80,7 +80,7 @@ class _matrix_(object):
         raise RuntimeError('FATAL: _matrix_.shorten(): virtual member function called!')
     def step_through(self,anz=10):
         """
-        Step through an element:
+        Generator function to step through an element:
         The central function to calculate s-dependent twiss functions (nontrivial!)
         Default is 10 steps/element.
         Minimal step size is self.slice_min.
@@ -95,7 +95,7 @@ class _matrix_(object):
             (rest,fanz) = modf(self.length/step)
             anz = int(fanz)
             rest = self.length * rest
-            mx = self.shorten(step)
+            mx = self.shorten(step)     # shorten element to length = step, if step < 1mm return I
             if fabs(rest) > 1.e-3:
                 mr = self.shorten(rest)
             else:

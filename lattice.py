@@ -23,10 +23,9 @@ import numpy as NP
 from copy import copy
 import warnings
 
-from setutil import wille,CONF,SUMMARY,Particle,objprnt,printv
+from setutil import wille,CONF,SUMMARY,objprnt,printv
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
-# from tracks import Track
 
 class Lattice(object):
     """
@@ -225,7 +224,7 @@ class Lattice(object):
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
-            # transfer lattices need not to be stable!
+            # NOTE: transfer lattices need not to be stable!
             bax = CONF['betax_i']  # twiss beta @ entrance
             bay = CONF['betay_i']
             alx = CONF["alfax_i"]  # twiss alpha @ entrance
@@ -325,7 +324,6 @@ class Lattice(object):
         """
         Track the dispersion function
         """
-        # print('WARNING:Lattice.dispersion() not fully implemented, probably bogus!!')
         traj = []
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         v_0.shape = (ELM.MDIM,1)   # MDIM rows, 1 column
@@ -398,7 +396,8 @@ class Lattice(object):
         """
         Test symplecticity
         """
-        s = NP.array([[ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
+        s = NP.array([
+                    [ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
                     [-1.,0., 0.,0., 0.,0.,0.,0.,0.,0.],    #x'
                     [ 0.,0., 0.,1., 0.,0.,0.,0.,0.,0.],    #y
                     [ 0.,0.,-1.,0., 0.,0.,0.,0.,0.,0.],    #y'

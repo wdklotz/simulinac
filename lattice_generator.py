@@ -21,7 +21,7 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setutil import CONF,SUMMARY,Particle,Proton
+from setutil import CONF,SUMMARY,Proton
 from setutil import objprnt,dictprnt
 import elements as ELM
 from lattice import Lattice
@@ -101,7 +101,6 @@ def factory(input_file):
     #returns ==> {...}
         flags_list = in_data['flags']
         flags      = lod2d(flags_list)
-        # DEBUG('flags in read_flags()',flags)
         CONF['dWf'] = SUMMARY['acc. ON']                   = flags['accON']
         CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
         CONF['verbose']                                    = flags['verbose']
