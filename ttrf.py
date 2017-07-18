@@ -35,7 +35,7 @@ def test3D(X,Y,Z):
     ax.set_title(title)
     plt.show(block=False)
 if __name__ == '__main__':
-    tk = 50.
+    tk = 100.
     gap = 0.044
     fRF = 816.e6
     anz = 50

@@ -24,19 +24,19 @@
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
-    - accON:        True            # accelleration on/off flag
+    - accON:        False           # accelleration on/off flag
     - periodic:     True            # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:                           ## parameter definitions
-    - Tkin:                 35.0        # [MeV] energy @ entrance (injection)
+    - Tkin:                 5.0         # [MeV] energy @ entrance (injection)
     - ql0:          &p02    0.10      # [m] quad-length
     - ql:           &p03    0.05      # [m] 1/2 quad-length
 #    - B_grad:       &p04    2.86      # [T/m] quadrupole gradient (opt.kappa)
 #    - B_grad:       &p04    9.72      # [T/m] quadrupole gradient (max necktie border)
-    - B_grad:       &p04    2.50      # [T/m] quadrupole gradient (tuned to ~90 deg ph. advance)
+    - B_grad:       &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
     - emity_i:              1.E-6     # [m*rad] transverse emittance @ entrance x
     - emitx_i:              1.E-6     # [m*rad] transverse emittance @ entrance y
 #    - betax_i:              0.780     # [m] twiss beta @ entrance x
@@ -85,4 +85,4 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - title: LEBT FODO 11.07.2017   # description is mandatory. DON't remove or reposition!
-    - [1,FODO]
+    - [4,FODO]
