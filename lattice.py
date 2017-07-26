@@ -59,7 +59,7 @@ class Lattice(object):
         """
         Log lattice layout to string (could be better!)
         """
-        mcell = ELM.I(label='<=Lattice')     ##  chain matrices
+        mcell = ELM.I(label=' <==')     ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
@@ -476,27 +476,23 @@ def test0():
     print(lat.string())
 
 def test1():
-    print('-------------------------------------Test1--')
-    lattice = make_wille()
-    mcell,betax,betay=lattice.cell()
-
-def test2():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test2--')
     lattice = make_wille()
     # cell boundaries
     mcell,betax,betay = lattice.cell(closed=True)
     lattice.symplecticity()
-    # lattice function as f(s)
+    # twiss functions
     beta_fun,cl,sl = lattice.twiss_functions(steps=100)
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
+    vsbase = -1.
     s  = [x[0] for x in beta_fun]    # s
     xs = [x[1] for x in beta_fun]    # betax
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
-    vs = [x[3]-1. for x in beta_fun] # viseo
-    zero = [-1. for x in beta_fun]     # viseo
+    vs = [x[3]+vsbase for x in beta_fun]  # viseo
+    zero = [vsbase for x in beta_fun]     # viseo base line
 
     plot(s,xs,label='bx/bx0')
     plot(s,ys,label='by/by0')
@@ -507,5 +503,4 @@ def test2():
     show(block=False)
 if __name__ == '__main__':
     test0()
-    # test1()
-    test2()
+    test1()

@@ -24,8 +24,8 @@ import numpy as NP
 from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron
 from setutil import dBdxprot,scalek0prot,k0prot,printv
 
+## MDIM
 MDIM=10        # dimension of matrices
-
 # x        x'        y        y'        z       dp/p0     E        dE        s        l     
 XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
 

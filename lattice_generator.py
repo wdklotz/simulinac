@@ -197,7 +197,7 @@ def factory(input_file):
     (latticeList,segments) = expand_reduce(in_data)
     # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
     # DEBUG('segments in factory()',segments)            # def of all segments
-    CONF['sollteilchen'](tkin=CONF['injection_energy'])  # !WICHTIG! set sollteilchen energy
+    CONF['sollteilchen'](tkin=CONF['injection_energy'])  # (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     # CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length

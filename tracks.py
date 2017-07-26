@@ -70,7 +70,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         return s
     soll = None
 
-#default track-point               x   x'  y   y'  z   z'           Tk                1   s   1
+# default track-point                 x   x'  y   y'  z   z'           Tk                1   s   1
 # SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., CONF['sollteilchen'].tkin, 1., 0., 1.]))
 
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '='):

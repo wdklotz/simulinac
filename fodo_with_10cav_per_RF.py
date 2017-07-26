@@ -86,7 +86,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*
-    show(block=False)
+    show()
 
 def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*   # unpack
@@ -162,21 +162,21 @@ def display1(functions):          ## plotting with longitudinal motion
 #     ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
-    show(block=False)
+    show()
 
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    soll_track = track_soll(lattice)          ## track soll Teilchen hier!  (WICHTIG)
+    soll_track = track_soll(lattice)          ## (WICHTIG) track soll Teilchen hier
     lattice.stats(soll_track)                 ## count elements and other statistics
     #-----------------------------------------
-    # Rechne: ganze Zelle und Anfangswerte
+    # rechne ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     collect_summary()
     dictprnt(SUMMARY,text='summary')
     #-----------------------------------------
-    # Zeige Grafik: Lösungen als Funktion von (s)
+    # zeige Grafik mit Lösungen als Funktionen von (s)
     functions = lattice.twiss_functions(30)
-    display(functions)   # twiss functions
+    display(functions)
 
 if __name__ == '__main__':
     import sys

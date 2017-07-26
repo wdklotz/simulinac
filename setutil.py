@@ -31,6 +31,7 @@ formatter = logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message
 ch.setFormatter(formatter)
 #add ch to logger
 logger.addHandler(ch)
+
 ## DEBUG
 def DEBUG(string,arg=''):
     """
@@ -45,6 +46,7 @@ def DEBUG(string,arg=''):
         print('DEBUG: {} \ndict={}'.format(string,arg))
     else:
         print('DEBUG: ',string,arg)
+
 ## defaults
 class Defaults(object):
     def __init__(self):
@@ -95,7 +97,8 @@ class Defaults(object):
             res[k]=v
         return res.items()
 
-CONF = Defaults()
+## BLOCKDATA CONF
+CONF = Defaults()       # global data block called CONF (like Fortran BLOCKDATA)
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['Dz']              = CONF['wellenlänge']/18.  # Dz aka delta-z is 1/18-th of wavelength per default
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
@@ -137,17 +140,21 @@ class Particle(object):
     def __call__(self,tkin):  # call Particle instance to change its kin. energy
         self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
+
 ## proton
 class Proton(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
+
 ## electron
 class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
+
 ## the default reference particle
 # Particle.soll = Proton()
 CONF['sollteilchen'] = Proton()
+
 ## utilities
 def epsiz(dz,beta,gamma,trtf):
     """
@@ -186,39 +193,39 @@ CONF['DW/W']      = result['sigw']
 SUMMARY = {}
 
 def collect_summary():
-    SUMMARY['frequency [Hz]'] = CONF['frequenz']
-    SUMMARY['QF gradient [T/m]'] = CONF['qf_gradient']
-    SUMMARY['QD gradient [T/m]'] = CONF['qd_gradient']
-    SUMMARY['Quad pole length [m]'] = CONF['ql']
-    SUMMARY['Quad bore radius [m]'] = CONF['quad_bore_radius']
-    SUMMARY['injection energy [MeV]'] = CONF['injection_energy']
-    SUMMARY['emitx_i [rad*m]'] = CONF['emitx_i']
-    SUMMARY['emity_i [rad*m]'] = CONF['emity_i']
-    SUMMARY['emitz_i* [rad]'] = CONF['emitz_i']
-    SUMMARY['sigx_i* [mm]'] = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-    SUMMARY['sigy_i* [mm]'] = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-    SUMMARY['sync. phase [deg]'] = CONF['soll_phase']
-    SUMMARY['cavity gap length [m]'] = CONF['spalt_laenge']
-    SUMMARY['cavity length [m]'] = CONF['cavity_laenge']
-    SUMMARY['wavelength [m]'] = CONF['wellenlänge']
-    SUMMARY['cavity gap voltage* [MV]'] = CONF['spalt_spannung']
-    SUMMARY['acc. field Ez [MV/m]'] = CONF['Ez_feld']
-    SUMMARY['lattice version'] = CONF['lattice_version']
-    SUMMARY['QF pole strength* [T]'] = CONF['qf_gradient'] * CONF['ql']
-    SUMMARY['QF current* [A/winding]'] = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
-    SUMMARY['QF power estimate* [W]'] = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
-    SUMMARY['QF coil [windings]'] = CONF['n_coil']
-    SUMMARY['Dz_i(bunch spread) [m]'] = CONF['Dz']
-    SUMMARY['Dp/p_i(impulse spread)* [%]'] = CONF['Dp/p']*1.e+2
+    SUMMARY['frequency [Hz]']                = CONF['frequenz']
+    SUMMARY['QF gradient [T/m]']             = CONF['qf_gradient']
+    SUMMARY['QD gradient [T/m]']             = CONF['qd_gradient']
+    SUMMARY['Quad pole length [m]']          = CONF['ql']
+    SUMMARY['Quad bore radius [m]']          = CONF['quad_bore_radius']
+    SUMMARY['injection energy [MeV]']        = CONF['injection_energy']
+    SUMMARY['emitx_i [rad*m]']               = CONF['emitx_i']
+    SUMMARY['emity_i [rad*m]']               = CONF['emity_i']
+    SUMMARY['emitz_i* [rad]']                = CONF['emitz_i']
+    SUMMARY['sigx_i* [mm]']                  = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
+    SUMMARY['sigy_i* [mm]']                  = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
+    SUMMARY['sync. phase [deg]']             = CONF['soll_phase']
+    SUMMARY['cavity gap length [m]']         = CONF['spalt_laenge']
+    SUMMARY['cavity length [m]']             = CONF['cavity_laenge']
+    SUMMARY['wavelength [m]']                = CONF['wellenlänge']
+    SUMMARY['cavity gap voltage* [MV]']      = CONF['spalt_spannung']
+    SUMMARY['acc. field Ez [MV/m]']          = CONF['Ez_feld']
+    SUMMARY['lattice version']               = CONF['lattice_version']
+    SUMMARY['QF pole strength* [T]']         = CONF['qf_gradient'] * CONF['ql']
+    SUMMARY['QF current* [A/winding]']       = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
+    SUMMARY['QF power estimate* [W]']        = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
+    SUMMARY['QF coil [windings]']            = CONF['n_coil']
+    SUMMARY['Dz_i(bunch spread) [m]']        = CONF['Dz']
+    SUMMARY['Dp/p_i(impulse spread)* [%]']   = CONF['Dp/p']*1.e+2
     SUMMARY['Dph/ph_i(phase spread)* [deg]'] = CONF['sigPhiz_i']
     SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
-    SUMMARY['DW/m0c2 max* [%]'] = wakzp = accpt_w(    # energy acceptance in %
-            CONF['Ez_feld'],
-            CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),
-            CONF['soll_phase'],
-            CONF['wellenlänge'],
-            CONF['sollteilchen'])*1.e+2
-    SUMMARY['Dp/p max* [%]'] = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
+    SUMMARY['DW/m0c2 max* [%]']              = wakzp = accpt_w(    # energy acceptance in %
+                                                CONF['Ez_feld'],
+                                                CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),
+                                                CONF['soll_phase'],
+                                                CONF['wellenlänge'],
+                                                CONF['sollteilchen'])*1.e+2
+    SUMMARY['Dp/p max* [%]']                 = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
     return
 
 def accpt_w(Ez,trtf,phis,lamb,particle):
@@ -376,6 +383,7 @@ def test0():
     headr = ['kq[1/m^2]','tk[Mev]','dBdxprot(kqf,tk)[T/m]']
     records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
     print('\n'+tblprnt(headr,records))
+
 def test1():
     print('--------------------------Test1---')
     print('test epsiz(): the helper to calculate longitudinal phase space parameters')
@@ -386,6 +394,7 @@ def test1():
               )
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
+
 ## main
 if __name__ == '__main__':
     test0()
