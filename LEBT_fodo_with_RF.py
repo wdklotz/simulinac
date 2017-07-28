@@ -23,14 +23,14 @@ from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
-from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
+from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary
 
 def display(functions):
     if CONF['dWf'] == 0:
         display0(functions)
     else:
         display1(functions)
-        bucket()             # separatrix
+        # bucket()             # separatrix
 
 def display0(functions):          ## plotting w/o longitudinal motion
     #----------*----------*   # unpack
@@ -180,7 +180,8 @@ def loesung(filepath):                 ## total classic FODO lattice
 
 if __name__ == '__main__':
     import sys
-    filepath = 'LEBT_fodo_with_RF.yml'       ## the default input file (YAML syntax)
+    # filepath = 'LEBT_fodo_with_RF.yml'       ## the default input file (YAML syntax)
+    filepath = 'LEBT_fodo_with_RF(1).yml'      ## the default input file (YAML syntax)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

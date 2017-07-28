@@ -105,7 +105,7 @@ class Lattice(object):
             twiss prameters beta, alpha, gamma for periodic lattices
             
         """
-        mcell = ELM.I(label=' <= Entrance')     ##  chain matrices for full cell
+        mcell = ELM.I(label=' <==')     ##  chain matrices for full cell
         for count, ipos in enumerate(self.seq):
             element,s0,s1 = ipos
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -139,7 +139,7 @@ class Lattice(object):
 
         self.full_cell = mcell    # the full cell becomes instance variable
         # if verbose:
-        printv(2,'Lattice.cell: Zellenmatrix (i)->(f)')
+        printv(2,'Lattice.cell: full lattice matrix (i)->(f)')
         printv(2,self.full_cell.string())
         det = LA.det(self.full_cell.matrix)
         # if verbose:
@@ -302,11 +302,10 @@ class Lattice(object):
         gy = self.gammy0
         v_beta0 = NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
         v_beta = v_beta0
-        # DEBUG('',v_beta0)
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
-            for count,i_element in enumerate(element.step_through(steps)):
+            for count,i_element in enumerate(element.step_through(anz=steps)):
                 m_beta = i_element.beta_matrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
@@ -317,6 +316,7 @@ class Lattice(object):
                 # if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
+                # DEBUG('{:10s} s {:4.4f} viseo {:4.4f}'.format(element.label,s,viseo))
         (c_like,s_like) = self.cs_traj(steps)    #call for sin- and cos-like trajectories
         return (beta_fun,c_like,s_like)
 
@@ -336,7 +336,7 @@ class Lattice(object):
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
-            for i_element in element.step_through(steps):
+            for i_element in element.step_through(anz=steps):
                 m_beta = i_element.matrix
                 v_0 = m_beta.dot(v_0)
                 s += i_element.length
@@ -370,7 +370,7 @@ class Lattice(object):
             element,s0,s1 = ipos
             particle = element.particle
             # objprnt(particle,text=element.label)
-            for i_element in element.step_through(steps):
+            for i_element in element.step_through(anz=steps):
                 element_matrix = i_element.matrix
                 c_0 = element_matrix.dot(c_0)
                 s_0 = element_matrix.dot(s_0)

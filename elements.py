@@ -17,12 +17,13 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees
+from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
 from copy import copy
 import numpy as NP
+import warnings
 
-from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron
-from setutil import dBdxprot,scalek0prot,k0prot,printv
+from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron,DEBUG
+from setutil import dBdxprot,scalek0prot,k0prot
 
 ## MDIM
 MDIM=10        # dimension of matrices
@@ -41,13 +42,13 @@ class _matrix_(object):
         self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
         self.label=''               ## default empty label
         self.length=0.              ## default zero length!
-        self.slice_min = 0.01       ## minimal slice length
+        self.slice_min = 0.005      ## minimal slice length
         self.viseo = 0.
     def string(self):
         s='{}\n'.format(self.label)
         for i in range(MDIM):
             for j in range(MDIM):
-                s+='{:8.4g} '.format(self.matrix[i,j])
+                s+='{:8.4f} '.format(self.matrix[i,j])
             s+='\n'
         return s
     def __mul__(self,other):
@@ -85,26 +86,36 @@ class _matrix_(object):
         Default is 10 steps/element.
         Minimal step size is self.slice_min.
         """
-        step = self.length/anz
-        if step < self.slice_min:
-            step  = self.slice_min
+        mb = I(label='',viseo=0)                   ## viseo point 
+        mv = I(label='',viseo=self.viseo)          ## viseo point
+        slices = [mb,mv]
+
         if self.length == 0.:           ## zero length element (like WD or CAV)
-            anz = 0; fanz= 0.; rest= 0.
-            mr=self
+            slices.append(self)
+            slices = slices + [mv,mb]
+            for slice in slices: yield slice
+            return
+
         else:
-            (rest,fanz) = modf(self.length/step)
-            anz = int(fanz)
-            rest = self.length * rest
-            mx = self.shorten(step)     # shorten element to length = step, if step < 1mm return I
-            if fabs(rest) > 1.e-3:
+            step = self.length/anz         ## calc step size
+            if step < self.slice_min:
+                step  = self.slice_min
+            (step_fraction_part,step_int_part) = modf(self.length/step)
+
+            rest = step * step_fraction_part
+            mx   = self.shorten(step)     # shorten element to step length
+            mr   = I(label=self.label,viseo=self.viseo)
+            if rest > 1.e-3:
                 mr = self.shorten(rest)
-            else:
-                mr=I(label=self.label,viseo=self.viseo)
-        # DEBUG('label={} fanz={} anz={} step={} rest={}'.format(self.label,fanz,anz,step,rest))
-        for i in range(anz+1):
-            if i == anz:
-                mx=mr
-            yield mx
+            elif rest < 0.:
+                raise RuntimeError('negative resting step size when stepping through')
+
+            for i in range(int(step_int_part)):
+                slices.append(mx)
+            slices = slices + [mr,mv,mb]
+
+            for slice in slices: yield slice
+            return
     def beta_matrix(self):
         """
         The 6x6 matrix to track twiss functions through the lattice
@@ -377,21 +388,22 @@ class RFG(D):
         self.lamb   = CONF['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._trtf_(self.particle.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
-        # DEBUG('\n',self.particle.string())
-        # DEBUG('RFG U0,phis,tr: ',self.u0,degrees(self.phis),self.tr)
-        # DEBUG('RFG deltaW: ',self.deltaW)
+        # DEBUG('RFG: \n',self.particle.string())
+        # DEBUG('RFG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
+        # DEBUG('RFG: deltaW: {:8.6e}'.format(self.deltaW))
         tk_center   = self.deltaW*0.5+self.particle.tkin      # energy in gap center
         particle    = copy(self.particle)
         part_center = particle(tk_center)                     # particle @ gap center
-        particlei   = self.particle                           # particle @ entrance
-        particlef   = particle(particlei.tkin+self.deltaW)    # particle @ exit
         b           = part_center.beta                        # beta @ gap cemter
         g           = part_center.gamma                       # gamma @ gap center
+        particlei   = self.particle                           # particle @ entrance
+        particlef   = particle(particlei.tkin+self.deltaW)    # particle @ exit
+        # DEBUG('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / CONF['lichtgeschwindigkeit']
-        # DEBUG('teta , beta>>',teta,beta)
+        # DEBUG('RFG: teta , beta>>',teta,beta)
         teta = teta/beta
         ttf = sin(teta)/teta
         return ttf
@@ -434,22 +446,26 @@ class _thin(_matrix_):
     """
     def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
-    def step_through(self,anz=10):  ## stepping routine through the triplet (D,Kick,D)
-        anz1 = int(anz/2)
-        anz2 = int(anz-anz1*2)
-        anz2 = int(anz1+anz2)
-        for count,typ in enumerate(self.triplet):
-            if count == 0:
-                for i in range(anz1):
-                    mx=typ.shorten(typ.length/anz1)
-                    yield mx
-            elif count == 1:
-                mx=typ
-                yield mx
-            elif count == 2:
-                for i in range(anz2):
-                    mx=typ.shorten(typ.length/anz2)
-                    yield mx
+    def step_through(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
+        anz1 = int(ceil(anz/2))
+        di   = self.triplet[0]
+        df   = self.triplet[2]
+        kik  = self.triplet[1]
+        d1   = di.shorten(di.length/anz1)
+        d2   = df.shorten(df.length/anz1)
+        slices = []
+        for i in range(anz1):
+            slices.append(d1)
+        slices.append(kik)              ## the Kick
+        for i in range(anz1):
+            slices.append(d2)
+
+        for slice in slices:
+            yield slice
+    def shorten(self,l=0.):
+        warnings.warn("No need to shorten a thin element!",RuntimeWarning)
+        return self
+
 ## thin F-quad
 class QFth(_thin):   
     """
@@ -477,8 +493,6 @@ class QFth(_thin):
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = +0.5
-    def shorten(self,l=0.):
-        return self
     def adapt_for_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
@@ -513,8 +527,6 @@ class QDth(_thin):
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = -0.5
-    def shorten(self,l=0.):
-        return self
     def adapt_for_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
@@ -537,6 +549,7 @@ class RFC(_thin):
                     length   = 0.,
                     dWf      = 1.):
         super(RFC,self).__init__(particle=particle)
+        if length == 0.: length = gap
         self.u0     = U0*dWf
         self.phis   = PhiSoll
         self.freq   = fRF
@@ -558,12 +571,10 @@ class RFC(_thin):
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
         self.df.adapt_for_energy(tk_f)               #update energy for downstream drift after gap
-        lens = self.df * (self.kick * self.di)      #one for three
+        lens = self.df * (self.kick * self.di)       #one for three
         self.matrix = lens.matrix
         # DEBUG('RFC matrix\n',self.matrix)
         self.triplet = (self.di,self.kick,self.df)
-    def shorten(self,l=0.):
-        return self
     def adapt_for_energy(self,tkin):
         self.__init__(
                     U0            = self.u0,
@@ -721,19 +732,22 @@ def test6():
     mb=SD(rhob,lb,'B')
     mw=WD(mb)
     md=D(ld)
+    rfc=RFC(length=4*CONF['spalt_laenge'])
+
+    steps = 13
 
     # test step_through elements ...
     list=[mqf,mqd,mb,mw,md]
-    # list=[mqf]
+    list=[mqf,rfc]
     for m_anfang in list:
         m_end=I()
         print('======================================')
-        for count,mi in enumerate(m_anfang.step_through()):
+        for count,mi in enumerate(m_anfang.step_through(anz=steps)):
             print('step ',count+1,end='  ')
             print(mi.string())
             m_end=m_end*mi
-        print(m_end.string())
-        print(m_anfang.string())
+        print(m_end,'\n'+m_end.string())
+        print(m_anfang,'\n'+m_anfang.string())
 def test7():
     print('--------------------------------Test7---')
     print('test Rechteckmagnet...')
@@ -860,16 +874,16 @@ def test12():
 ## main ----------
 if __name__ == '__main__':
     CONF['verbose']=3
-    test0()
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
+    # test0()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
     test6()
-    test7()
-    test8()
-    test9()
-    test10()
-    test11()
-    test12()
+    # test7()
+    # test8()
+    # test9()
+    # test10()
+    # test11()
+    # test12()

@@ -85,4 +85,4 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - title: LEBT FODO 11.07.2017   # description is mandatory. DON't remove or reposition!
-    - [4,FODO]
+    - [1,FODO]

@@ -21,7 +21,7 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setutil import CONF,SUMMARY,Proton
+from setutil import CONF,SUMMARY,Proton,DEBUG
 from setutil import objprnt,dictprnt
 import elements as ELM
 from lattice import Lattice
@@ -135,9 +135,9 @@ def factory(input_file):
     def expand_reduce(in_data):
     #--------
         def read_elements(in_data):
-            element_list = in_data['elements']
+            element_list = in_data['elements']          # is list of dicts
             for elm in element_list:
-                for elmID,attList in elm.items():        #put ID in attribute list
+                for elmID,attList in elm.items():      #put key as ID in attribute dict
                     attList.append(dict(ID=elmID))
             return element_list
     #--------
@@ -199,7 +199,7 @@ def factory(input_file):
     # DEBUG('segments in factory()',segments)            # def of all segments
     CONF['sollteilchen'](tkin=CONF['injection_energy'])  # (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
-    # CONF['verbose']=3; DEBUG('lattice >>\n',lattice.string())
+    # DEBUG('lattice_generator >> full lattice\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     # DEBUG('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)
