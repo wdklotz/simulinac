@@ -220,7 +220,7 @@ class Lattice(object):
                 SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
                 SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
             else:
-                raise RuntimeError('stop: unstable lattice')
+                raise RuntimeError('STOP: unstable lattice')
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
@@ -300,7 +300,7 @@ class Lattice(object):
         by = self.betay0
         ay = self.alfay0
         gy = self.gammy0
-        v_beta0 = NP.array([[bx],[ax],[gx],[by],[ay],[gy]])
+        v_beta0 = NP.array([bx,ax,gx,by,ay,gy])
         v_beta = v_beta0
         s = 0.0
         for ipos in self.seq:
@@ -309,10 +309,10 @@ class Lattice(object):
                 m_beta = i_element.beta_matrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
-                betax  = v_beta[0,0]
-                betaxp = -2.* v_beta[1,0]
-                betay  = v_beta[3,0]
-                betayp = -2.* v_beta[4,0]
+                betax  = v_beta[0]
+                betaxp = -2.* v_beta[1]
+                betay  = v_beta[3]
+                betayp = -2.* v_beta[4]
                 # if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
@@ -357,8 +357,8 @@ class Lattice(object):
         x2p = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1  = sqrt(CONF['emity_i']*self.betay0)
         y2p = sqrt(CONF['emity_i']*self.gammy0)
-        dz  = CONF['Dz']      # eingabe dZ
-        dp  = CONF['Dp/p']    # eingabe dP/P0
+        dz  = CONF['Dz']      # z-plane:    Eingabe dZ
+        dp  = CONF['Dp/p']    # dp/p=plane: Eingabe dP/P0
         # MDIM tracking used here
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
@@ -379,7 +379,7 @@ class Lattice(object):
                 cxp = c_0[XPKOO]
                 cy  = c_0[YKOO]
                 cyp = c_0[YPKOO]
-                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)           # conversion zu dPhi [deg]
+                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)                # conversion zu dPhi [deg]
                 cdw = c_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.  # conversion zu dW/W [%]
                 # sin_like
                 sx  = s_0[XKOO]

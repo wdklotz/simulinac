@@ -135,5 +135,5 @@ segments:                           ## SEGMENT definitions
 lattice:                            ## LATTICE definition
     - title: LEBT FODO 28.07.2017 (tuned with RF-2x20)   # description is mandatory. DON't remove or reposition!
     # - [26,SEG1,RCAV10,RCAV10,SEG2,RCAV10,RCAV10,SEG3]
-    # - [100,SEG1,RCAV10,RCAV10,SEG2,RCAV10,RCAV10,SEG3]
-    - [1,SEG1,RCAV10,RCAV10,SEG2,RCAV10,RCAV10,SEG3]
+    - [100,SEG1,RCAV10,RCAV10,SEG2,RCAV10,RCAV10,SEG3]
+    # - [1,SEG1,RCAV10,RCAV10,SEG2,RCAV10,RCAV10,SEG3]

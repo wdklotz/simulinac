@@ -108,12 +108,11 @@ class _matrix_(object):
             if rest > 1.e-3:
                 mr = self.shorten(rest)
             elif rest < 0.:
-                raise RuntimeError('negative resting step size when stepping through')
+                raise RuntimeError('FATAL: negative resting step size when stepping through')
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
             slices = slices + [mr,mv,mb]
-
             for slice in slices: yield slice
             return
     def beta_matrix(self):

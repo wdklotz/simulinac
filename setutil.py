@@ -57,11 +57,11 @@ class Defaults(object):
             'electron_mass': 0.5109989,  # [MeV/c**2] const
             }
         self.conf = {            ## CONFIG constants and setutil ...
-            'Ez_feld': 1.04,             # [MV/m] default
+            'Ez_feld': 1.00,             # [MV/m] default
             'spalt_laenge': 0.02,        # [m] default
             'cavity_laenge': 0.08,       # [m] default
             'soll_phase': -10.0,         # [deg] default
-            'frequenz': 813.e6,          # [Hz] default
+            'frequenz': 814.e6,          # [Hz] default
             'injection_energy': 50.,     # [MeV] default
             'qf_gradient': 16.0,         # [T/m] default
             'qd_gradient': 16.0,         # [T/m] default
