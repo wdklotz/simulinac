@@ -32,7 +32,7 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
-## the mother of all lattice elements a.k.a. matrices
+## the mother of all thick lattice elements (a.k.a. matrices)
 class _matrix_(object):
     """
     Base class for thick matrices
@@ -136,14 +136,14 @@ class _matrix_(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-## unity matrix: owns its particle instance!
+## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
         super(I,self).__init__()
         self.label=label
         self.viseo=viseo
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
-## the marker
+## marker
 class MRK(I):        
     def __init__(self, label='MRK', particle=CONF['sollteilchen']):
         super(MRK,self).__init__(label=label, particle=particle)
@@ -152,7 +152,7 @@ class MRK(I):
     def adapt_for_energy(self,tkin):
         self.__init__(label=self.label, particle=self.particle(tkin))
         return self
-## drift space nach Trace3D
+## Trace3D drift space
 class D(I):     
     """
     Trace3D drift space
@@ -169,7 +169,7 @@ class D(I):
     def adapt_for_energy(self,tkin):
         self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin))
         return self
-## focussing quad nach Trace3D
+## Trace3D focussing quad
 class QF(D):     
     """
     Trace3D focussing quad
@@ -215,7 +215,7 @@ class QF(D):
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
         return self
-## defocusing quad nach Trace3D
+## Trace3D defocusing
 class QD(QF):       
     """
     Trace3D defocussing quad
@@ -225,7 +225,7 @@ class QD(QF):
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0, length=l, label=self.label, particle=self.particle)
-## sector bending dipole in x-plane nach Trace3D
+## Trace3D sector bending dipole in x-plane
 class SD(D):         
     """
     Trace3d sector dipole in x-plane
@@ -263,7 +263,7 @@ class SD(D):
         rf = ri*cpf/cpi  # scale bending radius with new impulse
         self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin))
         return self
-## rectangular bending dipole in x-plane
+## Trace3D rectangular bending dipole in x-plane
 class RD(SD):        
     """
     Trace3D rectangular dipole x-plane
@@ -275,7 +275,7 @@ class RD(SD):
         self.matrix= rd.matrix
     def shorten(self,l=0.):
         return RD(radius=self.radius, length=l, label=self.label, particle=self.particle)
-## wedge of rectangular bending dipole in x-plane nach Trace3D
+## Trace3D wedge of rectangular bending dipole in x-plane
 class WD(D):      
     """
     Trace3d dipole wedge x-plane
@@ -305,20 +305,21 @@ class WD(D):
         m[XPKOO,XKOO] = ckp
         m[YPKOO,YKOO] = -ckp
         return wd
-## simple thin lens gap nach Dr.Tiede & T.Wrangler
-class CAV(D):      
+## zero length RF-gap nach Dr.Tiede & T.Wrangler (simple)
+class GAP(D):
     """
-    Simple thin lens gap nach Dr.Tiede & T.Wrangler 
+    Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
+    NOTE: zu einfach: produziert keine long. dynamik wie Trace3D RFG!
     """
     def __init__(self,
                         U0         = CONF['spalt_spannung'],
                         PhiSoll    = radians(CONF['soll_phase']),
                         fRF        = CONF['frequenz'],
-                        label      = 'RFG',
+                        label      = 'GAP',
                         particle   = CONF['sollteilchen'],
                         gap        = CONF['spalt_laenge'],
                         dWf        = 1.):
-        super(CAV,self).__init__(label=label, particle=particle)
+        super(GAP,self).__init__(label=label, particle=particle)
         self.u0     = U0                       # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
         self.freq   = fRF                      # [Hz]  RF frequenz
@@ -340,16 +341,16 @@ class CAV(D):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx_(self,tr,b,g):   # cavity nach Dr.Tiede pp.33 (todo: nach Trace3D)
-        m = self.matrix
-        e0 = self.particle.e0
+    def _mx_(self,tr,b,g):               # cavity nach Dr.Tiede pp.33 
+        m   = self.matrix
+        e0  = self.particle.e0
         cyp = cxp = -pi*self.u0*tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
         # m[1,0]      = cxp
         # m[3,2]      = cyp
-        # m[6,7]      = self.deltaW      #energy kick = acceleration
+        # m[6,7]      = self.deltaW      # energy kick = acceleration
         m[XPKOO,XKOO] = cxp
         m[YPKOO,YKOO] = cyp
-        m[EKOO,DEKOO] = self.deltaW      #energy kick = acceleration
+        m[EKOO,DEKOO] = self.deltaW      # energy kick = acceleration
         return m
     def shorten(self,l=0.):
         return self
@@ -363,7 +364,7 @@ class CAV(D):
                     gap        = self.gap,
                     dWf        = self.dWf)
         return self
-## zero length RF gap nach Trace3D
+## Trace3D zero length RF-gap
 class RFG(D):       
     """
     Trace3D zero length Rf-gap
@@ -533,7 +534,7 @@ class QDth(_thin):
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
         return self
-## RF cavity as D*RFG*D
+## RF cavity als D*RFG*D
 class RFC(_thin):    
     """
     Rf cavity as product D*RFG*D (experimental!)

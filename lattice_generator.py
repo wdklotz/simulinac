@@ -26,11 +26,12 @@ from setutil import objprnt,dictprnt
 import elements as ELM
 from lattice import Lattice
 
+## parse and generate latttice
 def lod2d(l):    ##list of dicts to dict
     return {k:v for d in l for k,v in d.items()}
 
 def instanciate_element(item):
-    # DEBUG('instanciate_element() for ',item)
+    # DEBUG('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
     if key == 'D':
@@ -68,12 +69,21 @@ def instanciate_element(item):
         U0        = Ez * gap
         dWf       = CONF['dWf']
         instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=CONF['sollteilchen'],dWf=dWf)
+    elif key == 'GAP':
+        gap       = attributes['gap']
+        label     = attributes['ID']
+        Ez        = attributes["Ez"]
+        PhiSoll   = radians(attributes["PhiSync"])
+        fRF       = attributes["fRF"]
+        U0        = Ez * gap
+        dWf       = CONF['dWf']
+        instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=CONF['sollteilchen'],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         instance  = ELM.MRK(label=label)
     else:
         raise RuntimeError('unknown element type: ',key)
-    # DEBUG('{} instance created in instanciate_element()'.format(label),'')
+    # DEBUG('instanciate_element: {} instance created'.format(label),'')
     return (label,instance)
 
 def factory(input_file):
@@ -135,9 +145,9 @@ def factory(input_file):
     def expand_reduce(in_data):
     #--------
         def read_elements(in_data):
-            element_list = in_data['elements']          # is list of dicts
+            element_list = in_data['elements']         ## is list of dicts
             for elm in element_list:
-                for elmID,attList in elm.items():      #put key as ID in attribute dict
+                for elmID,attList in elm.items():      ## put key as ID in attribute dict
                     attList.append(dict(ID=elmID))
             return element_list
     #--------
@@ -207,6 +217,7 @@ def factory(input_file):
 def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
     return factory(input_file)
 
+## utilities
 def test0():
     print('\nTEST0')
     wfl= []
@@ -229,7 +240,7 @@ def test0():
 def test1(input_file):
     print('\nTEST1')
     lattice = parse_yaml_and_fabric(input_file)
-#--------
+## main ----------
 if __name__ == '__main__':
     test0()
     test1('fodo_with_10cav_per_RF(4).yml')

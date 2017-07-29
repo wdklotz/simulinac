@@ -78,6 +78,7 @@ elements:                           ## ELEMENT definitions
         - B':       *p09    # [T/m] quadrupole gradient
     - rfg:  &rfg              # ID
         - type:     RFG     # class
+        # - type:     GAP     # class
         - Ez:       *p05    # [V/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
