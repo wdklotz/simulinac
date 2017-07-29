@@ -27,6 +27,7 @@ from setutil import wille,CONF,SUMMARY,objprnt,printv
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
+## Lattice
 class Lattice(object):
     """
     The Lattice object is a sequence of tuples: (ELM.<element>, from_position, to_position)
@@ -313,11 +314,9 @@ class Lattice(object):
                 betaxp = -2.* v_beta[1]
                 betay  = v_beta[3]
                 betayp = -2.* v_beta[4]
-                # if s < 0.2 : DEBUG('s={:.3f},   betax={:.3f},   betax'={:.3f},   betay={:.3f},   betay'={:.3f}".format(s,betax,betaxp,betay,betayp))
                 viseo = i_element.viseo
                 beta_fun.append((s,betax,betay,viseo))
-                # DEBUG('{:10s} s {:4.4f} viseo {:4.4f}'.format(element.label,s,viseo))
-        (c_like,s_like) = self.cs_traj(steps)    #call for sin- and cos-like trajectories
+        (c_like,s_like) = self.cs_traj(steps)    # calc sin- and cos-like trajectories
         return (beta_fun,c_like,s_like)
 
     def dispersion(self,steps=10,closed=True): 
@@ -326,7 +325,7 @@ class Lattice(object):
         """
         traj = []
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
-        v_0.shape = (ELM.MDIM,1)   # MDIM rows, 1 column
+        v_0.shape = (ELM.MDIM,1)   # column vector with MDIM rows, 1 column
         if closed == True:
             m_cell = self.full_cell
             m11 = m_cell.matrix[0,0]
@@ -418,6 +417,7 @@ class Lattice(object):
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+## utilities
 def make_wille():  
     """
     Wille's test lattice
@@ -501,6 +501,7 @@ def test1():
     plot(s,zero,color='black')
     legend(loc='upper left')
     show(block=False)
+## main ----------
 if __name__ == '__main__':
     test0()
     test1()
