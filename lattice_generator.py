@@ -203,11 +203,11 @@ def factory(input_file):
 
     read_flags(in_data)
     read_parameters(in_data)
-    # DEBUG('CONF after read _parameters in lattice_generator.factory()',CONF.__dict__)
+    # DEBUG('CONF after read _parameters()',CONF.__dict__)
     (latticeList,segments) = expand_reduce(in_data)
     # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
     # DEBUG('segments in factory()',segments)            # def of all segments
-    CONF['sollteilchen'](tkin=CONF['injection_energy'])  # (WICHTIG) set sollteilchen energy
+    CONF['sollteilchen'](tkin=CONF['injection_energy'])# (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     # DEBUG('lattice_generator >> full lattice\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length

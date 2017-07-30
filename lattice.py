@@ -30,7 +30,8 @@ import elements as ELM
 ## Lattice
 class Lattice(object):
     """
-    The Lattice object is a sequence of tuples: (ELM.<element>, from_position, to_position)
+    The Lattice object is a sequence of tuples: 
+        (ELM.<element>, from_position, to_position)
     """
     def __init__(self):
         self.seq    = []
@@ -60,7 +61,7 @@ class Lattice(object):
         """
         Log lattice layout to string (could be better!)
         """
-        mcell = ELM.I(label=' <==')     ##  chain matrices
+        mcell = ELM.I(label=' <==')   ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
@@ -106,7 +107,7 @@ class Lattice(object):
             twiss prameters beta, alpha, gamma for periodic lattices
             
         """
-        mcell = ELM.I(label=' <==')     ##  chain matrices for full cell
+        mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
         for count, ipos in enumerate(self.seq):
             element,s0,s1 = ipos
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn

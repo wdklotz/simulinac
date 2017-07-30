@@ -51,6 +51,10 @@ class _matrix_(object):
                 s+='{:8.4f} '.format(self.matrix[i,j])
             s+='\n'
         return s
+    # def ppstring(self):
+    #     import pprint
+    #     pp = pprint.PrettyPrinter(indent=4)
+    #     return pp.pformat(self)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix_()
@@ -139,14 +143,14 @@ class _matrix_(object):
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
-        super(I,self).__init__()
+        super().__init__()
         self.label=label
         self.viseo=viseo
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## marker
 class MRK(I):        
     def __init__(self, label='MRK', particle=CONF['sollteilchen']):
-        super(MRK,self).__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle)
     def shorten(self,l=0):
         return self
     def adapt_for_energy(self,tkin):
@@ -158,7 +162,7 @@ class D(I):
     Trace3D drift space
     """
     def __init__(self, length=0., viseo=0., label='D', particle=CONF['sollteilchen']):
-        super(D,self).__init__(label=label, viseo=viseo, particle=particle)
+        super().__init__(label=label, viseo=viseo, particle=particle)
         self.length = length     ##  length [m]
         g = self.particle.gamma
         self.matrix[XKOO,XPKOO] = self.matrix[YKOO,YPKOO] = self.length
@@ -175,7 +179,7 @@ class QF(D):
     Trace3D focussing quad
     """
     def __init__(self, k0=0., length=0., label='QF', particle=CONF['sollteilchen']):
-        super(QF,self).__init__(length=length, label=label, particle=particle)
+        super().__init__(length=length, label=label, particle=particle)
         self.k0=k0         ## Quad strength [m**-2]
         self.matrix = self._mx_()
         self.viseo = +0.5
@@ -221,7 +225,7 @@ class QD(QF):
     Trace3D defocussing quad
     """
     def __init__(self, k0=0., length=0., label='QD', particle=CONF['sollteilchen']):
-        super(QD,self).__init__(k0=k0, length=length, label=label, particle=particle)
+        super().__init__(k0=k0, length=length, label=label, particle=particle)
         self.viseo = -0.5
     def shorten(self,l=0.):
         return QD(k0=self.k0, length=l, label=self.label, particle=self.particle)
@@ -231,7 +235,7 @@ class SD(D):
     Trace3d sector dipole in x-plane
     """
     def __init__(self, radius=0., length=0., label='SB', particle=CONF['sollteilchen']):
-        super(SD,self).__init__(length=length, label=label, particle=particle)
+        super().__init__(length=length, label=label, particle=particle)
         self.radius = radius
         self.matrix = self._mx_()
         self.viseo = 0.25
@@ -269,7 +273,7 @@ class RD(SD):
     Trace3D rectangular dipole x-plane
     """
     def __init__(self, radius=0., length=0., label='RB', particle=CONF['sollteilchen']):
-        super(RD,self).__init__(radius=radius, length=length, label=label, particle=particle)
+        super().__init__(radius=radius, length=length, label=label, particle=particle)
         wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * (self * wd)
         self.matrix= rd.matrix
@@ -281,7 +285,7 @@ class WD(D):
     Trace3d dipole wedge x-plane
     """
     def __init__(self, sector, label='WD', particle=CONF['sollteilchen']):
-        super(WD,self).__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle)
         m = self.matrix
         self.parent = sector
         self.radius = sector.radius
@@ -319,7 +323,7 @@ class GAP(D):
                         particle   = CONF['sollteilchen'],
                         gap        = CONF['spalt_laenge'],
                         dWf        = 1.):
-        super(GAP,self).__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle)
         self.u0     = U0                       # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
         self.freq   = fRF                      # [Hz]  RF frequenz
@@ -377,7 +381,7 @@ class RFG(D):
                     particle   = CONF['sollteilchen'],
                     gap        = CONF['spalt_laenge'],
                     dWf        = 1.):
-        super(RFG,self).__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle)
         self.viseo  = 0.25
         self.u0     = U0*dWf                                  # [MV] gap Voltage
         self.phis   = PhiSoll                                 # [radians] soll phase
@@ -472,7 +476,7 @@ class QFth(_thin):
     Thin F-Quad
     """
     def __init__(self, k0=0., length=0., label='QFT', particle=CONF['sollteilchen']):
-        super(QFth,self).__init__(particle=particle)
+        super().__init__(particle=particle)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
@@ -506,7 +510,7 @@ class QDth(_thin):
     Thin D-Quad
     """
     def __init__(self, k0=0., length=0., label='QDT', particle=CONF['sollteilchen']):
-        super(QDth,self).__init__(particle=particle)
+        super().__init__(particle=particle)
         self.k0     = k0
         self.length = length
         self.k0l    = k0*length
@@ -548,7 +552,7 @@ class RFC(_thin):
                     gap      = CONF['spalt_laenge'],
                     length   = 0.,
                     dWf      = 1.):
-        super(RFC,self).__init__(particle=particle)
+        super().__init__(particle=particle)
         if length == 0.: length = gap
         self.u0     = U0*dWf
         self.phis   = PhiSoll
@@ -589,7 +593,7 @@ class RFC(_thin):
 ## utilities
 class Test(_matrix_):
     def __init__(self,a,b,c,d,e,f,label='test'):
-        super(Test,self).__init__()
+        super().__init__()
         self.matrix=NP.array([[ a, b,0.,0.,0.,0.,0.,0.,0.,0.],
                               [ c, d,0.,0.,0.,0.,0.,0.,0.,0.],
                               [0.,0., a, b,0.,0.,0.,0.,0.,0.],

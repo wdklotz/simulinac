@@ -59,7 +59,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    figure(CONF['lattice_version'],figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    figure(CONF['lattice_version'],figsize=(width,height),
+                            facecolor='#eaecef',tight_layout=True)
     # figure(SUMMARY['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(211)
@@ -115,7 +116,8 @@ def display1(functions):          ## plotting with longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    figure(CONF['lattice_version'],figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    figure(CONF['lattice_version'],figsize=(width,height),
+                            facecolor='#eaecef',tight_layout=True)
     # figure(CONF['lattice_version'])
     #----------*----------*   # transverse X
     splot=subplot(311)
@@ -180,8 +182,8 @@ def loesung(filepath):                 ## total classic FODO lattice
 
 if __name__ == '__main__':
     import sys
-    # filepath = 'LEBT_fodo_with_RF.yml'       ## the default input file (YAML syntax)
-    filepath = 'LEBT_fodo_with_RF(x).yml'      ## the default input file (YAML syntax)
+    # filepath = 'LEBT_fodo_with_RF.yml'       ## input file (syntax=YAML)
+    filepath = 'LEBT_fodo_with_RF(x).yml'      ## input file (syntax=YAML)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

@@ -18,21 +18,17 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import pi,sqrt,sin, cos, radians, degrees
-import logging
+import logging, pprint
 
-## create logger
-logger = logging.getLogger("logger")
-logger.setLevel(logging.DEBUG)
-#create console handler
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-#create formatter
-formatter = logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
-ch.setFormatter(formatter)
-#add ch to logger
-logger.addHandler(ch)
+## logger
+ch        = logging.StreamHandler()     ## console handler
+ch.setLevel(logging.DEBUG)              ## set handler level
+formatter = \
+    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
+ch.setFormatter(formatter)              ## set handler's format
+logger    = logging.getLogger("logger")
+logger.addHandler(ch)                   ## add handler to logger
 
-## DEBUG
 def DEBUG(string,arg=''):
     """
     Print debug message
@@ -41,13 +37,18 @@ def DEBUG(string,arg=''):
         values to print
     """
     if isinstance(arg,list):
-        print('DEBUG: {} \nlist={}'.format(string,arg))
+        # print('DEBUG: {} \nlist={}'.format(string,arg))
+        pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
+        sarg = pp.pformat(arg)
+        print('DEBUG: {} typ(list)\n{}'.format(string,sarg))
     elif isinstance(arg,dict):
-        print('DEBUG: {} \ndict={}'.format(string,arg))
+        # print('DEBUG: {} \ndict={}'.format(string,arg))
+        pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
+        sarg = pp.pformat(arg)
+        print('DEBUG: {} typ(dict)\n{}'.format(string,sarg))
     else:
         print('DEBUG: ',string,arg)
 
-## defaults
 class Defaults(object):
     def __init__(self):
         self.priv = {
@@ -103,7 +104,6 @@ CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
 CONF['Dz']              = CONF['wellenlänge']/18.  # Dz aka delta-z is 1/18-th of wavelength per default
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
-## relativistic particle
 class Particle(object):                          
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
     def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
@@ -141,12 +141,10 @@ class Particle(object):
         self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 
-## proton
 class Proton(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
 
-## electron
 class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
@@ -155,7 +153,6 @@ class Electron(Particle):
 # Particle.soll = Proton()
 CONF['sollteilchen'] = Proton()
 
-## utilities
 def epsiz(dz,beta,gamma,trtf):
     """
     Helper to calculate longitudinal phase space ellipse parameters
