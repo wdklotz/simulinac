@@ -62,7 +62,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     figure(CONF['lattice_version'],figsize=(width,height),
                             facecolor='#eaecef',tight_layout=True)
     # figure(SUMMARY['lattice_version'])
-    #----------*----------*   # transverse X
+    ## transverse X
     splot=subplot(211)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
@@ -74,7 +74,7 @@ def display0(functions):          ## plotting w/o longitudinal motion
     plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*   # transverse Y
+    ## transverse Y
     splot=subplot(212)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
@@ -119,7 +119,7 @@ def display1(functions):          ## plotting with longitudinal motion
     figure(CONF['lattice_version'],figsize=(width,height),
                             facecolor='#eaecef',tight_layout=True)
     # figure(CONF['lattice_version'])
-    #----------*----------*   # transverse X
+    ##  transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
@@ -131,7 +131,7 @@ def display1(functions):          ## plotting with longitudinal motion
     plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*   # transverse Y
+    ## transverse Y
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
@@ -143,14 +143,14 @@ def display1(functions):          ## plotting with longitudinal motion
     plot(z,viseoy,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*   # longitudinal dPhi, dW/W
+    ## longitudinal dPhi, dW/W
     ax_l=subplot(313)
-    ax_l.set_title('longitudinal z')
+    ax_l.set_title('longitudinal C(z)')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
-#     ax_l.plot(z,sz,color='green')
+    ax_l.plot(z,cz,label=r"$\Delta\phi$",color='green')
+    # ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseoz = [x*vscale for x in viseo]
     ax_l.plot(z,viseoz,label='',color='black')
@@ -161,7 +161,7 @@ def display1(functions):          ## plotting with longitudinal motion
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
     ax_r.plot(z,cdw,label=r'$\Delta$w/w',color='red')
-#     ax_r.plot(z,sdw,color='red')
+    # ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show()
@@ -170,16 +170,14 @@ def loesung(filepath):                 ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     soll_track = track_soll(lattice)   ## !WICHTIG! track soll Teilchen hier
     lattice.stats(soll_track)          ## count elements and other statistics
-    #-----------------------------------------
-    # Rechne: ganze Zelle und Anfangswerte
+    ## Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     collect_summary()
     dictprnt(SUMMARY,text='summary')
-    #-----------------------------------------
-    # Zeige Grafik: Lösungen als Funktion von (s)
+    ## Zeige Grafik: Lösungen als Funktion von (s)
     functions = lattice.twiss_functions(30)
     display(functions)   # twiss functions
-
+## main-------
 if __name__ == '__main__':
     import sys
     # filepath = 'LEBT_fodo_with_RF.yml'       ## input file (syntax=YAML)

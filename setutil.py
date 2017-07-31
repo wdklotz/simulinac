@@ -184,45 +184,40 @@ result = epsiz(CONF['Dz'],
 
 CONF['emitz_i']   = result['epsi']
 CONF['Dp/p']      = result['sigDp']
-CONF['sigPhiz_i'] = result['sigphi']
+CONF['sigphix'] = result['sigphi']
 CONF['DW/W']      = result['sigw']
 
 SUMMARY = {}
 
 def collect_summary():
-    SUMMARY['frequency [Hz]']                = CONF['frequenz']
-    SUMMARY['QF gradient [T/m]']             = CONF['qf_gradient']
-    SUMMARY['QD gradient [T/m]']             = CONF['qd_gradient']
-    SUMMARY['Quad pole length [m]']          = CONF['ql']
-    SUMMARY['Quad bore radius [m]']          = CONF['quad_bore_radius']
-    SUMMARY['injection energy [MeV]']        = CONF['injection_energy']
-    SUMMARY['emitx_i [rad*m]']               = CONF['emitx_i']
-    SUMMARY['emity_i [rad*m]']               = CONF['emity_i']
-    SUMMARY['emitz_i* [rad]']                = CONF['emitz_i']
-    SUMMARY['sigx_i* [mm]']                  = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-    SUMMARY['sigy_i* [mm]']                  = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-    SUMMARY['sync. phase [deg]']             = CONF['soll_phase']
-    SUMMARY['cavity gap length [m]']         = CONF['spalt_laenge']
-    SUMMARY['cavity length [m]']             = CONF['cavity_laenge']
-    SUMMARY['wavelength [m]']                = CONF['wellenlänge']
-    SUMMARY['cavity gap voltage* [MV]']      = CONF['spalt_spannung']
-    SUMMARY['acc. field Ez [MV/m]']          = CONF['Ez_feld']
-    SUMMARY['lattice version']               = CONF['lattice_version']
-    SUMMARY['QF pole strength* [T]']         = CONF['qf_gradient'] * CONF['ql']
-    SUMMARY['QF current* [A/winding]']       = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
-    SUMMARY['QF power estimate* [W]']        = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
-    SUMMARY['QF coil [windings]']            = CONF['n_coil']
-    SUMMARY['Dz_i(bunch spread) [m]']        = CONF['Dz']
-    SUMMARY['Dp/p_i(impulse spread)* [%]']   = CONF['Dp/p']*1.e+2
-    SUMMARY['Dph/ph_i(phase spread)* [deg]'] = CONF['sigPhiz_i']
-    SUMMARY['DW/m0c2_i(energy spread)* [%]'] = CONF['DW/W']*1.e+2
-    SUMMARY['DW/m0c2 max* [%]']              = wakzp = accpt_w(    # energy acceptance in %
-                                                CONF['Ez_feld'],
-                                                CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),
-                                                CONF['soll_phase'],
-                                                CONF['wellenlänge'],
-                                                CONF['sollteilchen'])*1.e+2
-    SUMMARY['Dp/p max* [%]']                 = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
+    SUMMARY['frequency [Hz]']                  = CONF['frequenz']
+    SUMMARY['QF gradient [T/m]']               = CONF['qf_gradient']
+    SUMMARY['QD gradient [T/m]']               = CONF['qd_gradient']
+    SUMMARY['Quad pole length [m]']            = CONF['ql']
+    SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
+    SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
+    SUMMARY['(emitx)i [rad*m]']                = CONF['emitx_i']
+    SUMMARY['(emity)i [rad*m]']                = CONF['emity_i']
+    SUMMARY['(emitz)i* [rad]']                 = CONF['emitz_i']
+    SUMMARY['(sigx)i* [mm]']                   = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
+    SUMMARY['(sigy)i* [mm]']                   = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
+    SUMMARY['sync. phase [deg]']               = CONF['soll_phase']
+    SUMMARY['cavity gap length [m]']           = CONF['spalt_laenge']
+    SUMMARY['cavity length [m]']               = CONF['cavity_laenge']
+    SUMMARY['wavelength [m]']                  = CONF['wellenlänge']
+    SUMMARY['cavity gap voltage* [MV]']        = CONF['spalt_spannung']
+    SUMMARY['acc. field Ez [MV/m]']            = CONF['Ez_feld']
+    SUMMARY['lattice version']                 = CONF['lattice_version']
+    SUMMARY['QF pole strength* [T]']           = CONF['qf_gradient'] * CONF['ql']
+    SUMMARY['QF current* [A/winding]']         = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
+    SUMMARY['QF power estimate* [W]']          = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
+    SUMMARY['QF coil [windings]']              = CONF['n_coil']
+    SUMMARY['(Dz)i [m]']                       = CONF['Dz']
+    SUMMARY['(Dp/p)i(impulse spread)* [%]']    = CONF['Dp/p']*1.e+2
+    SUMMARY['Dphi max* [deg]']                 = CONF['sigphix']
+    SUMMARY['(DW/m0c2)i(energy spread)* [%]']  = CONF['DW/W']*1.e+2
+    SUMMARY['DW/m0c2 max* [%]']                = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
+    SUMMARY['Dp/p max* [%]']                   = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
     return
 
 def accpt_w(Ez,trtf,phis,lamb,particle):
@@ -307,11 +302,11 @@ def objprnt (what,text='',filter=[]):
         print(k.rjust(30),':',v)
     return
 
-def dictprnt(what,text='',filter=[],njust=30): 
+def dictprnt(what,text='',filter=[],njust=35): 
     """
     Helper to print dictionaries
     """
-    template = '============================================'
+    template = '==============================================='
     lt  = len(template)
     lx  = len(text)
     p1 = int((lt-lx)/2)
@@ -321,10 +316,21 @@ def dictprnt(what,text='',filter=[],njust=30):
     else:
         ueberschrift = template[:p1]+text+template[p2:]
     print('\n          '+ueberschrift)
+    fmt   = '{:8.6g} '
+    fmt1  = '{:>'+'{}s'.format(njust)+'} : '
     for k,v in sorted(what.items()):
         if k in filter:
             continue
-        print(k.rjust(njust),':',v)
+        vars = ''
+        if isinstance(v,tuple):
+            for i in v: vars+=fmt.format(i)
+        elif isinstance(v,bool):
+            vars+='{}'.format(v)
+        elif not isinstance(v,str):
+            vars+=fmt.format(v)
+        else:
+            vars='{:s} '.format(v)
+        print(fmt1.format(k)+vars)
     return
 
 def printv(level,*args):
