@@ -93,8 +93,8 @@ class Lattice(object):
         SUMMARY['nbof F-quads*']        = qf_counter
         SUMMARY['nbof D-quads*']        = qd_counter
         SUMMARY['nbof cavities*']       = cav_counter
-        SUMMARY['(ttf_min,ttf_max)*']   = (ttfm,ttfx)
-        SUMMARY['((energy)i,(energy)f)) [MeV]']  = (tk_i,tk_f)
+        SUMMARY['(ttf)min,(ttf)max*']   = (ttfm,ttfx)
+        SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
 
     def cell(self,closed=True):
         """

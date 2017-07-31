@@ -130,7 +130,7 @@ def factory(input_file):
         if 'betay_i'          in parameters: CONF['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: CONF['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: CONF['alfay_i']          = parameters['alfay_i']
-        if 'Dp/p'             in parameters: CONF['Dp/p']             = parameters['Dp/p']
+        # if 'Dp/p'             in parameters: CONF['Dp/p']             = parameters['Dp/p']   # will be calculated
         if 'Ez'               in parameters: CONF['Ez_feld']          = parameters['Ez']
         if 'phi_sync'         in parameters: CONF['soll_phase']       = parameters['phi_sync']
         if 'Dz'               in parameters: CONF['Dz']               = parameters['Dz']

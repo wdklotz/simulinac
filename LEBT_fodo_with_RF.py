@@ -24,6 +24,7 @@ from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
 from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary
+from setutil import epsiz
 
 def display(functions):
     if CONF['dWf'] == 0:
@@ -170,6 +171,7 @@ def loesung(filepath):                 ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     soll_track = track_soll(lattice)   ## !WICHTIG! track soll Teilchen hier
     lattice.stats(soll_track)          ## count elements and other statistics
+    epsiz()                            ## longitudinal params
     ## Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     collect_summary()

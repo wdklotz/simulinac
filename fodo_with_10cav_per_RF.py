@@ -21,6 +21,7 @@ from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
 from setutil import CONF,SUMMARY,Proton,dictprnt,collect_summary,DEBUG
+from setutil import epsiz
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
@@ -166,8 +167,9 @@ def display1(functions):          ## plotting with longitudinal motion
 
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
-    soll_track = track_soll(lattice)          ## (WICHTIG) track soll Teilchen hier
-    lattice.stats(soll_track)                 ## count elements and other statistics
+    soll_track = track_soll(lattice)   ## (WICHTIG) track soll Teilchen hier
+    lattice.stats(soll_track)          ## count elements and other statistics
+    epsiz()                            ## longitudinal params
     #-----------------------------------------
     # rechne ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])

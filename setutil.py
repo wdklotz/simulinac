@@ -33,8 +33,8 @@ def DEBUG(string,arg=''):
     """
     Print debug message
     IN:
-        string to print 
-        values to print
+        string: text to print 
+        arg:  values to print
     """
     if isinstance(arg,list):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
@@ -98,10 +98,10 @@ class Defaults(object):
             res[k]=v
         return res.items()
 
-## BLOCKDATA CONF
-CONF = Defaults()       # global data block called CONF (like Fortran BLOCKDATA)
+## BLOCKDATA "CONF"
+CONF = Defaults()       # global data block called CONF (like Fortran's BLOCKDATA)
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['Dz']              = CONF['wellenlänge']/18.  # Dz aka delta-z is 1/18-th of wavelength per default
+CONF['Dz']              = CONF['wellenlänge']/36.  # Dz (aka delta-z) is 1/36-th of wavelength (i.e.10 deg per default)
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 class Particle(object):                          
@@ -149,46 +149,48 @@ class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
-## the default reference particle
-# Particle.soll = Proton()
+## the reference particle Particle.soll = Proton()
 CONF['sollteilchen'] = Proton()
 
-def epsiz(dz,beta,gamma,trtf):
+## longitudinal emittance 
+def epsiz():
     """
     Helper to calculate longitudinal phase space ellipse parameters
     Ellipse nach T.Wangler (6.47) pp.185
     (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon
     """
-    qE0   = CONF['Ez_feld']
-    lamb  = CONF['wellenlänge']
-    m0c2  = CONF['proton_mass']
-    dphi0 = - radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
-    R = qE0*lamb*sin(-radians(CONF['soll_phase']))
+    particle = CONF['sollteilchen']
+    qE0      = CONF['Ez_feld']
+    lamb     = CONF['wellenlänge']
+    m0c2     = particle.e0
+    dz       = CONF['Dz']
+    beta     = particle.beta
+    gamma    = particle.gamma
+    trtf     = particle.trtf(CONF['spalt_laenge'],CONF['frequenz'])
+    dphi0    = -radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
+    
+    R = qE0*lamb*sin(-radians(CONF['soll_phase']))  ## R ist die grosse Wurzel
     R = R * beta*beta*beta*gamma*gamma*gamma*trtf
     R = R / (2.*pi*m0c2)
     R = sqrt(R)
+    
     w0     = R * dphi0
     epsi   = w0 * dphi0
     sigw   = sqrt(epsi*R)
     sigphi = -sqrt(epsi/R)    #[rad]
+    sigphi = degrees(sigphi)  #[deg]
     sigDp  = gamma/(gamma+1.)*sigw      #umrechnung DW/W -> Dp/p, W kin. energie
-    sigDz  = - beta*lamb/360.*degrees(sigphi)   #[m]
-    sigphi = degrees(sigphi)
+    sigDz  = - beta*lamb/360.*sigphi    #[m]
+
+    CONF['emitz_i']   = epsi
+    CONF['Dp/p']      = sigDp
+    CONF['sigphi']    = sigphi
+    CONF['DW/W']      = sigw
     return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
+epsiz()
 
-result = epsiz(CONF['Dz'],
-                CONF['sollteilchen'].beta,
-                CONF['sollteilchen'].gamma,
-                CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz'])
-                )
-
-CONF['emitz_i']   = result['epsi']
-CONF['Dp/p']      = result['sigDp']
-CONF['sigphix'] = result['sigphi']
-CONF['DW/W']      = result['sigw']
-
+## Summary
 SUMMARY = {}
-
 def collect_summary():
     SUMMARY['frequency [Hz]']                  = CONF['frequenz']
     SUMMARY['QF gradient [T/m]']               = CONF['qf_gradient']
@@ -214,12 +216,13 @@ def collect_summary():
     SUMMARY['QF coil [windings]']              = CONF['n_coil']
     SUMMARY['(Dz)i [m]']                       = CONF['Dz']
     SUMMARY['(Dp/p)i(impulse spread)* [%]']    = CONF['Dp/p']*1.e+2
-    SUMMARY['Dphi max* [deg]']                 = CONF['sigphix']
+    SUMMARY['(Dphi)i* [deg]']                  = CONF['sigphi']
     SUMMARY['(DW/m0c2)i(energy spread)* [%]']  = CONF['DW/W']*1.e+2
-    SUMMARY['DW/m0c2 max* [%]']                = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
-    SUMMARY['Dp/p max* [%]']                   = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
+    SUMMARY['(DW/m0c2)accept limit* [%]']      = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
+    SUMMARY['(Dp/p)accept limit* [%]']         = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
     return
 
+## Energieakzeptanz
 def accpt_w(Ez,trtf,phis,lamb,particle):
     """
     Energieakzeptanz dW/W nach T.Wangler pp. 179
@@ -234,15 +237,16 @@ def accpt_w(Ez,trtf,phis,lamb,particle):
         m0 = particle.e0  # rest mass
         tk = particle.tkin
         res = 2.*Ez*trtf*gb*gb*gb*lamb/pi/m0
-        DEBUG('accpt_w: tk {:4.4f} trtf {:4.4f} res {:4.4e}'.format(tk,trtf,res))
+        # DEBUG('accpt_w: tk {:4.4f} trtf {:4.4f} res {:4.4e}'.format(tk,trtf,res))
         phsoll = radians(phis)
         res = res*(phsoll*cos(phsoll)-sin(phsoll))
-        DEBUG('(dW/W)^2 nach T.Wangler pp. 179: res',res)
+        # DEBUG('(dW/W)^2 nach T.Wangler pp. 179: res',res)
         res = sqrt(res)/(particle.gamma-1.)
     else:
         res = 0.
     return res
 
+## utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -304,8 +308,23 @@ def objprnt (what,text='',filter=[]):
 
 def dictprnt(what,text='',filter=[],njust=35): 
     """
-    Helper to print dictionaries
+    Custom helper to print dictionaries (clever!?)
     """
+    def asstrng(v):
+        txt = ''
+        fmt0  = '{:8.6g} '
+        fmt1 = '{} '
+        fmt2 = '{:s} '
+        if isinstance(v,bool):
+            txt += fmt1.format(v)
+        elif isinstance(v,str):
+            txt += fmt2.format(v)
+        elif isinstance(v,float) or isinstance(v,int) or isinstance(v,complex):
+            txt += fmt0.format(v)
+        else:
+            txt += fmt1.format(v)
+        return txt
+    
     template = '==============================================='
     lt  = len(template)
     lx  = len(text)
@@ -316,21 +335,17 @@ def dictprnt(what,text='',filter=[],njust=35):
     else:
         ueberschrift = template[:p1]+text+template[p2:]
     print('\n          '+ueberschrift)
-    fmt   = '{:8.6g} '
-    fmt1  = '{:>'+'{}s'.format(njust)+'} : '
+
+    fmt  = '{:>'+'{}s'.format(njust)+'} : '
     for k,v in sorted(what.items()):
         if k in filter:
             continue
         vars = ''
         if isinstance(v,tuple):
-            for i in v: vars+=fmt.format(i)
-        elif isinstance(v,bool):
-            vars+='{}'.format(v)
-        elif not isinstance(v,str):
-            vars+=fmt.format(v)
+            for i in v: vars += asstrng(i)
         else:
-            vars='{:s} '.format(v)
-        print(fmt1.format(k)+vars)
+            vars += asstrng(v)
+        print(fmt.format(k)+vars)
     return
 
 def printv(level,*args):
@@ -343,9 +358,9 @@ def printv(level,*args):
 
 def tblprnt(headr,records):
     """
-    Print a nice table to memory.
+    Custom helper to print a nice table to memory (clever!?)
     IN:
-        headr = table header [...]
+        headr   = table header [...]
         records = table rows [[...]]
     OUT:
         s = the table as a string
@@ -390,16 +405,12 @@ def test0():
 def test1():
     print('--------------------------Test1---')
     print('test epsiz(): the helper to calculate longitudinal phase space parameters')
-    result = epsiz(CONF['Dz'],
-              CONF['sollteilchen'].beta,
-              CONF['sollteilchen'].gamma,
-              CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz'])
-              )
+    result = epsiz()
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
 
 ## main
 if __name__ == '__main__':
     test0()
-    # test1()
+    test1()
 

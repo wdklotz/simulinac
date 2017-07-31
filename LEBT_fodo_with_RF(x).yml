@@ -42,8 +42,8 @@ parameters:                           ## parameter definitions
     - betay_i:              1.902     # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0       # [-] twiss alpha x @ entrance
     - alfay_i:              0.0       # [-] twiss alpha y @ entrance
-    - Dp/p:                 0.1       # [%] relative impulse Dp/p @ entrance
-    - Dz:                   1.e-3     # [m] longitudinal displacement Dz @ entrance
+    # - Dp/p: [%] will be calculated from Dz and emitz (ueberarbeiten!!)
+    - Dz:                   2.5e-3    # [m] longitudinal displacement Dz @ entrance
     - frequency:    &p01    816.E+6   # [Hz] frequency f0
     - Ez:           &p05    1.00      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase
