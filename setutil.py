@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import pi,sqrt,sin, cos, radians, degrees
+from math import pi,sqrt,sin, cos, radians, degrees, pow
 import logging, pprint
 
 ## logger
@@ -153,41 +153,42 @@ class Electron(Particle):
 CONF['sollteilchen'] = Proton()
 
 ## longitudinal emittance 
-def epsiz():
+def epsiz(particle=CONF['sollteilchen'],gap=0.0,trtf=0.75):
     """
     Helper to calculate longitudinal phase space ellipse parameters
     Ellipse nach T.Wangler (6.47) pp.185
-    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon
+    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon, alpha=0
     """
-    particle = CONF['sollteilchen']
+    # NOTE: epsiz should be an atrtribute of RF cavities (todo?)
     qE0      = CONF['Ez_feld']
     lamb     = CONF['wellenlänge']
     m0c2     = particle.e0
     dz       = CONF['Dz']
+    gb       = particle.gamma_beta
     beta     = particle.beta
     gamma    = particle.gamma
-    trtf     = particle.trtf(CONF['spalt_laenge'],CONF['frequenz'])
-    dphi0    = -radians((360./beta/lamb)*dz)     #umrechnung [m] -> [rad]
+    if gap != 0.: trtf = particle.trtf(gap,CONF['frequenz'])
+    dphi0    = -radians((360./beta/lamb)*dz)     # Umrechnung [m] -> [rad]
     
     R = qE0*lamb*sin(-radians(CONF['soll_phase']))  ## R ist die grosse Wurzel
-    R = R * beta*beta*beta*gamma*gamma*gamma*trtf
-    R = R / (2.*pi*m0c2)
+    R = R*pow(gb,3)*trtf
+    R = R/(2.*pi*m0c2)
     R = sqrt(R)
     
-    w0     = R * dphi0
-    epsi   = w0 * dphi0
+    w0     = R*dphi0
+    epsi   = w0*dphi0
     sigw   = sqrt(epsi*R)
     sigphi = -sqrt(epsi/R)    #[rad]
     sigphi = degrees(sigphi)  #[deg]
-    sigDp  = gamma/(gamma+1.)*sigw      #umrechnung DW/W -> Dp/p, W kin. energie
-    sigDz  = - beta*lamb/360.*sigphi    #[m]
+    sigDp  = gamma/(gamma+1.)*sigw      # Umrechnung DW/W -> Dp/p, W kin. Energie
+    sigDz  = -beta*lamb/360.*sigphi    # [m]
 
     CONF['emitz_i']   = epsi
     CONF['Dp/p']      = sigDp
     CONF['sigphi']    = sigphi
     CONF['DW/W']      = sigw
     return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
-epsiz()
+epsiz()     ## calculate the long. emittance with def. parameters
 
 ## Summary
 SUMMARY = {}

@@ -171,7 +171,7 @@ def loesung(filepath):                 ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     soll_track = track_soll(lattice)   ## !WICHTIG! track soll Teilchen hier
     lattice.stats(soll_track)          ## count elements and other statistics
-    epsiz()                            ## longitudinal params
+    epsiz(gap=CONF['spalt_laenge'])    ## longitudinal emittance
     ## Rechne: ganze Zelle und Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     collect_summary()
