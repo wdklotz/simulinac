@@ -183,7 +183,8 @@ def loesung(filepath):                 ## total classic FODO lattice
 if __name__ == '__main__':
     import sys
     # filepath = 'LEBT_fodo_with_RF.yml'       ## input file (syntax=YAML)
-    filepath = 'LEBT_fodo_with_RF(x).yml'      ## input file (syntax=YAML)
+    # filepath = 'LEBT_fodo_with_RF(x).yml'    ## input file (syntax=YAML)
+    filepath = 'LEBT_HEBT_with_RF.yml'         ## input file (syntax=YAML)
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
