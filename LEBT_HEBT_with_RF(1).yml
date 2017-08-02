@@ -23,20 +23,20 @@
 ##...........................................................................................
 ## run configuration
 ##...........................................................................................
-flags:                              ## run configuration
+flags:
     - accON:        True            # accelleration on/off flag
-    - periodic:     False            # treat lattice as periodic cell sequence(else as transfer line)
+    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## SEQUENCE definitions
 ##...........................................................................................
-sequences:                           ## sequence tags
+sequences:
     - LEBT:         &lebt   LEBT
     - HEBT:         &hebt   HEBT
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
-parameters:                            ## parameter definitions
+parameters:
     - Tkin:                 5.0        # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
@@ -73,7 +73,7 @@ parameters:                            ## parameter definitions
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
-elements:                           ## ELEMENT definitions
+elements:
 # LEBT
     - d1l:    &d1l          # ID
         - type:     D       # D class
@@ -83,12 +83,12 @@ elements:                           ## ELEMENT definitions
         - type:     D       # D class
         - length:   0.0125  # [m]
         - seq:      *lebt
-    - qf1l:   &qf1l           # ID
+    - qf1l:   &qf1l         # ID
         - type:     QF      # QF class
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
         - seq:      *lebt
-    - qd1l:   &qd1l           # ID
+    - qd1l:   &qd1l         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
@@ -109,9 +109,6 @@ elements:                           ## ELEMENT definitions
     #     - gap:      *p07    # [m] length
     #     - length:   *p08    # [m] length
     #     - seq:      *lebt
-
-    - mrk:  &mrk            # ID
-        - type:    MRK      # MRK class    
 
 # HEBT        
     - d1h:        &d1h
@@ -148,12 +145,15 @@ elements:                           ## ELEMENT definitions
         - length:   *p13    # [m] length
         - seq:      *hebt
 
+    - mrk:  &mrk            # ID
+        - type:    MRK      # MRK class    
+
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
-segments:                           ## SEGMENT definitions
+segments:
 # LEBT
-    - RCAV10L:
+    - RFG10L:
         - *d2l
         - *rfgl
         - *d2l
@@ -231,10 +231,10 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 ## LATTICE definition
 ##...........................................................................................
-lattice:                            ## LATTICE definition
+lattice:
     - title: LEBT+HEBT 01.08.2017   # description is mandatory. DON't remove or reposition!
-    # - [26,SEG1L,RCAV10L,RCAV10L,SEG2L,RCAV10L,RCAV10L,SEG3L]
-    - [52,SEG1L,RCAV10L,RCAV10L,SEG2L,RCAV10L,RCAV10L,SEG3L]
-    # - [26,SEG1L,RCAVL,RCAVL,SEG2L,RCAVL,RCAVL,SEG3L]
-    - [225,SEG1H,RFCAVH,SEG2H,RFCAVH,SEG3H]
+
+    - [52,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    
+    - [225,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
     

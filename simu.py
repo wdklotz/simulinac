@@ -144,7 +144,7 @@ def display1(functions):          ## plotting with longitudinal motion
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*   # longitudinal dPhi, dW/W
     ax_l=subplot(313)
-    ax_l.set_title('longitudinal z')
+    ax_l.set_title('longitudinal z: C(s)')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
@@ -183,6 +183,7 @@ def loesung(filepath):              ## total classic FODO lattice
 if __name__ == '__main__':
     import sys
     filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)
