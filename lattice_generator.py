@@ -21,8 +21,7 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setutil import CONF,SUMMARY,Proton,DEBUG
-from setutil import objprnt,dictprnt
+from setutil import CONF,SUMMARY,Proton,DEBUG,objprnt,dictprnt
 import elements as ELM
 from lattice import Lattice
 
@@ -84,6 +83,10 @@ def instanciate_element(item):
     else:
         raise RuntimeError('unknown element type: ',key)
     # DEBUG('instanciate_element: {} instance created'.format(label),'')
+    try:     ## sequences are not mandatory
+        instance.set_sequence(attributes['seq'])
+    except:
+        instance.set_sequence('undef')
     return (label,instance)
 
 def factory(input_file):
@@ -115,6 +118,16 @@ def factory(input_file):
         CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
         CONF['verbose']                                    = flags['verbose']
         return flags
+# --------
+    def read_sequences(in_data):
+    #returns ==> [...]
+        try:     ## sequences are not mandatory
+            seq_list = in_data['sequences'][0]
+        except:
+            seq_list = []
+        # DEBUG('sequences',seq_list)
+        CONF['sequences'] = seq_list
+        return seq_list
 # --------
     def read_parameters(in_data):
     #returns ==> {...}
@@ -202,6 +215,7 @@ def factory(input_file):
     fileobject.close()
 
     read_flags(in_data)
+    read_sequences(in_data)
     read_parameters(in_data)
     # DEBUG('CONF after read _parameters()',CONF.__dict__)
     (latticeList,segments) = expand_reduce(in_data)
@@ -209,7 +223,7 @@ def factory(input_file):
     # DEBUG('segments in factory()',segments)            # def of all segments
     CONF['sollteilchen'](tkin=CONF['injection_energy'])# (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
-    # DEBUG('lattice_generator >> full lattice\n',lattice.string())
+    # DEBUG('lattice_generator >>\n',lattice.string())
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     # DEBUG('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)

@@ -65,9 +65,9 @@ parameters:                            ## parameter definitions
     # - B_g_LEBT_d: &p09    6.87865    # [T/m] quadrupole gradient focusing QF
     # - B_g_LEBT_f: &p10    6.87865    # [T/m] quadrupole gradient focusing QF
 
-    # - B_g_HEBT:   &p11    16.0       # HEBT Uebernahme
+    - B_g_HEBT:   &p11    16.0       # HEBT Uebernahme
     # - B_g_HEBT:   &p11    11.0       # HEBT tuned
-    - B_g_HEBT:     &p11    6.87065    # HEBT tuned
+    # - B_g_HEBT:     &p11    6.87065    # HEBT tuned
     - gap_HEBT:     &p12    0.044      # HEBT gap
     - cav_HEBT:     &p13    0.044      # HEBT cav len
 #............................................................................................
@@ -232,7 +232,7 @@ segments:                           ## SEGMENT definitions
 ## LATTICE definition
 ##...........................................................................................
 lattice:                            ## LATTICE definition
-    - title: LEBT+HEBT 01.08.2017   # description is mandatory. DON't remove or reposition!
+    - title: LEBT+HEBT 01.08.2017 1st time result  # description is mandatory. DON't remove or reposition!
     # - [26,SEG1L,RCAV10L,RCAV10L,SEG2L,RCAV10L,RCAV10L,SEG3L]
     - [52,SEG1L,RCAV10L,RCAV10L,SEG2L,RCAV10L,RCAV10L,SEG3L]
     # - [26,SEG1L,RCAVL,RCAVL,SEG2L,RCAVL,RCAVL,SEG3L]

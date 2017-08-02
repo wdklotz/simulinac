@@ -44,11 +44,18 @@ class _matrix_(object):
         self.length=0.              ## default zero length!
         self.slice_min = 0.005      ## minimal slice length
         self.viseo = 0.
+        self.seq =''                ## self.seq is sequence object belongs to
     def string(self):
-        s='{}\n'.format(self.label)
+        n = 33
+        nx = 200
+        if len(self.label) > nx:
+            label = self.label[:n]+'.....'+self.label[-n:]   ## when too long keep it short
+        else:
+            label = self.label
+        s='{} [{}]\n'.format(label,self.seq)
         for i in range(MDIM):
             for j in range(MDIM):
-                s+='{:8.4f} '.format(self.matrix[i,j])
+                s+='{:8.4g} '.format(self.matrix[i,j])
             s+='\n'
         return s
     # def ppstring(self):
@@ -140,6 +147,13 @@ class _matrix_(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
+    def set_sequence(self,seq=''):
+        """
+        Setter for sequence tag
+        To distinguish different parts of the lattice, each element can be tagged by a sequence ID
+        indicating the lattice part it belongs to.
+        """
+        self.seq = seq
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
@@ -450,6 +464,7 @@ class _thin(_matrix_):
     """
     def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
+        self.seq =''                        ## self.seq is sequence self belongs to
     def step_through(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
@@ -469,6 +484,13 @@ class _thin(_matrix_):
     def shorten(self,l=0.):
         warnings.warn("No need to shorten a thin element!",RuntimeWarning)
         return self
+    def set_sequence(self,seq=''):
+        """
+        Setter for sequence tag
+        To distinguish different parts of the lattice, each element can be tagged by a sequence ID
+        indicating the lattice part it belongs to.
+        """
+        self.seq = seq
 
 ## thin F-quad
 class QFth(_thin):   

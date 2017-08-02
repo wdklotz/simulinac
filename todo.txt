@@ -1,17 +1,19 @@
- - sigma matrices?
- - pretty lattice print?
- - test with electrons/
+ - SIMULINAC with SIGMA matrices?
+ - pretty lattice print? 1/2 DONE
+ - test with electrons why?
  - acceptance ellipse? not needed?
- - emittance ellipse?
- - triplet lattice? pretest with TRACE3D (Wondows & wine on Mac)
- - doublet lattice? same as above
- - low energy lattice? 5Mev - 50Mev?
- - vergleich mit sixtrack matrizen?
- - vergleich mit elegant? have it on Windows - is it runniung?
- - mit DYNAC testen (Linux)
+ - doublet & triplet lattices? pretest with TRACE3D (Windows & wine on Mac)
+ - low energy lattice? 5Mev - 50Mev?  DONE
+ - ELEGANT vergleich? have it on Windows - is it runniung?
+ - BMAD vergleich?
+ - DYNAC vergleich (Linux)
  - Monte Carlo für verluste (mit DYNAC?)
- - mit pyORBIT testen (Linux), best candidate for PIC?
+ - pyORBIT vergleich (MAC,Windows,Linux), my candidate for PIC!
  - neuen python driver pySTEC (python for simple traking and envelope calculations) schreiben
- - longitudinal dynamics? non-linear (see Shislo, Holmes paper!)
+ - nonlinear long. dynamics? non-linear (see Shislo, Holmes paper!), not for lin. SIMULINAC!
  - better cavity transition? sympl. integrator? or pySTEC with dynac?
- - custom cavity for 'elegant'?
+ - ELEGANT custom cavity?
+ - SIMULINAC tracking with nonlin. cavities? better with pyORBIT!
+ - python lattice parser for simulinac & pyOrbit with MAD syntax - maybe later!
+ - SIMULINAC with magnetic- & alignment-errors!
+ - SIMULINAC end energy variabel 80Mev-200MeV!

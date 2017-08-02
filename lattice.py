@@ -59,14 +59,15 @@ class Lattice(object):
 
     def string(self):
         """
-        Log lattice layout to string (could be better!)
+        Log lattice layout to string (could be even better?)
         """
-        mcell = ELM.I(label=' <==')   ##  chain matrices
+        mcell = ELM.I(label='')   ##  chain matrices
         for ipos in self.seq:
             element,s0,s1 = ipos
             printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
-                  format(element.label,id(element),element.length,s0,s1))
+                format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell.set_sequence('<= full lattice map')
         return mcell.string()
 
     def stats(self,soll_track):

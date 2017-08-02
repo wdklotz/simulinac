@@ -168,6 +168,7 @@ def display1(functions):          ## plotting with longitudinal motion
 def loesung(filepath):              ## total classic FODO lattice
     lattice = parse_yaml_and_fabric(filepath)
     soll_track = track_soll(lattice)   ## (WICHTIG) track soll Teilchen hier
+    print('loesung:\n',lattice.string())
     lattice.stats(soll_track)          ## count elements and other statistics
     epsiz(gap=CONF['spalt_laenge'])    ## longitudinal emittance
     #-----------------------------------------
@@ -183,6 +184,9 @@ def loesung(filepath):              ## total classic FODO lattice
 if __name__ == '__main__':
     import sys
     filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    filepath = 'LEBT_HEBT_with_RF.yml'
+    filepath = 'LEBT_HEBT_with_RF(1).yml'
+    filepath = 'LEBT_HEBT_with_RF(2).yml'
     filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]

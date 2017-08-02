@@ -232,7 +232,7 @@ segments:
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - title: LEBT+HEBT 01.08.2017   # description is mandatory. DON't remove or reposition!
+    - title: LEBT+HEBT 01.08.2017 5-200MeV  # description is mandatory. DON't remove or reposition!
 
     - [52,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     
