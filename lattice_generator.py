@@ -84,9 +84,9 @@ def instanciate_element(item):
         raise RuntimeError('unknown element type: ',key)
     # DEBUG('instanciate_element: {} instance created'.format(label),'')
     try:     ## sequences are not mandatory
-        instance.set_sequence(attributes['seq'])
+        instance.set_sequence(seq=attributes['seq'])
     except:
-        instance.set_sequence('undef')
+        instance.set_sequenceseq=('undef')
     return (label,instance)
 
 def factory(input_file):

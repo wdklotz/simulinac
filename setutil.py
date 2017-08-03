@@ -149,10 +149,10 @@ class Electron(Particle):
     def __init__(self,tkin=CONF['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
 
-## the reference particle Particle.soll = Proton()
+## Sollteichen
 CONF['sollteilchen'] = Proton()
 
-## longitudinal emittance 
+## long. emittance
 def epsiz(particle=CONF['sollteilchen'],gap=0.0,trtf=0.75):
     """
     Helper to calculate longitudinal phase space ellipse parameters
@@ -190,40 +190,6 @@ def epsiz(particle=CONF['sollteilchen'],gap=0.0,trtf=0.75):
     return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
 epsiz()     ## calculate the long. emittance with def. parameters
 
-## Summary
-SUMMARY = {}
-def collect_summary():
-    SUMMARY['frequency [Hz]']                  = CONF['frequenz']
-    SUMMARY['QF gradient [T/m]']               = CONF['qf_gradient']
-    SUMMARY['QD gradient [T/m]']               = CONF['qd_gradient']
-    SUMMARY['Quad pole length [m]']            = CONF['ql']
-    SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
-    SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
-    SUMMARY['(emitx)i [rad*m]']                = CONF['emitx_i']
-    SUMMARY['(emity)i [rad*m]']                = CONF['emity_i']
-    SUMMARY['(emitz)i* [rad]']                 = CONF['emitz_i']
-    SUMMARY['(sigx)i* [mm]']                   = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-    SUMMARY['(sigy)i* [mm]']                   = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-    SUMMARY['sync. phase [deg]']               = CONF['soll_phase']
-    SUMMARY['cavity gap length [m]']           = CONF['spalt_laenge']
-    SUMMARY['cavity length [m]']               = CONF['cavity_laenge']
-    SUMMARY['wavelength [m]']                  = CONF['wellenlänge']
-    SUMMARY['cavity gap voltage* [MV]']        = CONF['spalt_spannung']
-    SUMMARY['acc. field Ez [MV/m]']            = CONF['Ez_feld']
-    SUMMARY['lattice version']                 = CONF['lattice_version']
-    SUMMARY['QF pole strength* [T]']           = CONF['qf_gradient'] * CONF['ql']
-    SUMMARY['QF current* [A/winding]']         = (CONF['qf_gradient'] * (CONF['ql']*1000.)**2 )/2.52/CONF['n_coil']
-    SUMMARY['QF power estimate* [W]']          = 0.0115 *SUMMARY['QF current* [A/winding]']**2  # R=0.0115 Ohms
-    SUMMARY['QF coil [windings]']              = CONF['n_coil']
-    SUMMARY['(Dz)i [m]']                       = CONF['Dz']
-    SUMMARY['(Dp/p)i(impulse spread)* [%]']    = CONF['Dp/p']*1.e+2
-    SUMMARY['(Dphi)i* [deg]']                  = CONF['sigphi']
-    SUMMARY['(DW/m0c2)i(energy spread)* [%]']  = CONF['DW/W']*1.e+2
-    SUMMARY['(DW/m0c2)accept limit* [%]']      = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
-    SUMMARY['(Dp/p)accept limit* [%]']         = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
-    return
-
-## Energieakzeptanz
 def accpt_w(Ez,trtf,phis,lamb,particle):
     """
     Energieakzeptanz dW/W nach T.Wangler pp. 179
@@ -246,6 +212,103 @@ def accpt_w(Ez,trtf,phis,lamb,particle):
     else:
         res = 0.
     return res
+
+## data for summary
+SUMMARY = {}
+def collect_data_for_summary(lattice):
+    def elements_in_lattice(typ,seq):
+        '''
+        Filter elements of class <typ> and sequence <seq> form lattice
+        IN:
+            lattice = object [Lattice]
+            typ     = element class [string]
+            seq     = sequence name [string]
+        OUT:
+            iterator of filtered elements
+        '''
+        import itertools
+        def predicate(element):
+            try:
+                test = (type(element[0]).__name__ == typ and element[0].seq == seq)
+            except AttributeError:
+                test = (type(element[0]).__name__ == typ)  ## no seq tags? take all!
+            return not test
+        filtered_elements = itertools.filterfalse(predicate,lattice.seq)
+        # for t in filtered_elements: DEBUG('filterfalse',(t,t[0].label))  ## whazit
+        return filtered_elements
+
+    def elements_in_sequence(typ,seq):
+        """
+        Get a list of elements of same type in a sequence
+        """
+        elements = list(elements_in_lattice(typ,seq))
+        new_elements = []
+        seen = set()                  ## helper to eliminate duplicate entries
+        for itm in elements:
+            label = itm[0].label      ## itm is tupel (element,s0,s1)
+            if label in seen:
+                continue
+            else:
+                seen.add(label)
+                new_elements.append(itm[0])
+        return new_elements
+
+    sequences = CONF['sequences']   ## comes from INPUT
+    if len(sequences) == 0: sequences = ['*']      ## sequence wildcart
+    types = ['QF','QD']
+    for seq in sequences:
+        for typ in types:
+            elements = elements_in_sequence(typ,seq)
+            for itm in elements:
+                k0 = itm.k0
+                dBdz = k0*itm.particle.brho
+                length = itm.length
+                # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(seq,typ,itm.label)] = k0
+                SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(seq,typ,itm.label)] = dBdz
+                SUMMARY['{2} [{1}.{0}]   length [m]'.format(seq,typ,itm.label)] = length
+    types = ['RFG']
+    for seq in sequences:
+        for typ in types:
+            elements = elements_in_sequence(typ,seq)
+            for itm in elements:
+                gap     = itm.gap
+                Ez      = itm.u0/gap
+                PhiSoll = degrees(itm.phis)
+                # length  = itm.length
+                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(seq,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(seq,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(seq,typ,itm.label)] = PhiSoll
+    types = ['RFC']
+    for seq in sequences:
+        for typ in types:
+            elements = elements_in_sequence(typ,seq)
+            for itm in elements:
+                gap     = itm.gap
+                Ez      = itm.u0/gap
+                PhiSoll = degrees(itm.phis)
+                length  = itm.length
+                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(seq,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(seq,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(seq,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]  length [m]'.format(seq,typ,itm.label)] = length
+
+    SUMMARY['frequency [Hz]']                  = CONF['frequenz']
+    SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
+    SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
+    SUMMARY['(emitx)i [rad*m]']                = CONF['emitx_i']
+    SUMMARY['(emity)i [rad*m]']                = CONF['emity_i']
+    SUMMARY['(emitz)i* [rad]']                 = CONF['emitz_i']
+    SUMMARY['(sigx)i* [mm]']                   = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
+    SUMMARY['(sigy)i* [mm]']                   = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
+    SUMMARY['wavelength [m]']                  = CONF['wellenlänge']
+    SUMMARY['lattice version']                 = CONF['lattice_version']
+    SUMMARY['(Dz)i [m]']                       = CONF['Dz']
+    SUMMARY['(Dp/p)i(impulse spread)* [%]']    = CONF['Dp/p']*1.e+2
+    SUMMARY['(Dphi)i* [deg]']                  = CONF['sigphi']
+    SUMMARY['(DW/m0c2)i(energy spread)* [%]']  = CONF['DW/W']*1.e+2
+    SUMMARY['(DW/m0c2)accept limit* [%]']      = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
+    SUMMARY['(Dp/p)accept limit* [%]']         = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
+    return
 
 ## utilities
 def k0prot(gradient=0.,tkin=0.):
@@ -289,7 +352,7 @@ def dBdxprot(k0=0.,tkin=0.):
 
 def objprnt (what,text='',filter=[]):
     """
-    Helper to print objects as dictionary
+    Custom helper to print objects as dictionary
     """
     template = '============================================'
     lt  = len(template)

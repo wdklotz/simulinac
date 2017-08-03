@@ -17,11 +17,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import sqrt
+from math import sqrt,degrees
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import CONF,SUMMARY,Proton,dictprnt,collect_summary,DEBUG
-from setutil import epsiz
+from setutil import CONF,SUMMARY,Proton,dictprnt,DEBUG,epsiz
+from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
@@ -165,17 +165,17 @@ def display1(functions):          ## plotting with longitudinal motion
     #----------*----------*
     show()
 
-def loesung(filepath):              ## total classic FODO lattice
+def loesung(filepath):                 ## START here
     lattice = parse_yaml_and_fabric(filepath)
-    soll_track = track_soll(lattice)   ## (WICHTIG) track soll Teilchen hier
+    soll_track = track_soll(lattice)   ## (WICHTIG) track Sollteilchen hier
     print('loesung:\n',lattice.string())
     lattice.stats(soll_track)          ## count elements and other statistics
     epsiz(gap=CONF['spalt_laenge'])    ## longitudinal emittance
     #-----------------------------------------
-    # rechne ganze Zelle und Anfangswerte
+    # ganze Zelle, Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
-    collect_summary()
-    dictprnt(SUMMARY,text='summary')
+    collect_data_for_summary(lattice)    ## summary
+    dictprnt(SUMMARY,text='summary')     ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
     functions = lattice.twiss_functions(30)
@@ -185,8 +185,8 @@ if __name__ == '__main__':
     import sys
     filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
     filepath = 'LEBT_HEBT_with_RF.yml'
-    filepath = 'LEBT_HEBT_with_RF(1).yml'
-    filepath = 'LEBT_HEBT_with_RF(2).yml'
+    # filepath = 'LEBT_HEBT_with_RF(1).yml'
+    # filepath = 'LEBT_HEBT_with_RF(2).yml'
     filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]

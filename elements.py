@@ -44,7 +44,6 @@ class _matrix_(object):
         self.length=0.              ## default zero length!
         self.slice_min = 0.005      ## minimal slice length
         self.viseo = 0.
-        self.seq =''                ## self.seq is sequence object belongs to
     def string(self):
         n = 33
         nx = 200
@@ -52,7 +51,10 @@ class _matrix_(object):
             label = self.label[:n]+'.....'+self.label[-n:]   ## when too long keep it short
         else:
             label = self.label
-        s='{} [{}]\n'.format(label,self.seq)
+        try:
+            s='{} [{}]\n'.format(label,self.seq)         ## sequences are not mandatory
+        except AttributeError:
+            s='{}\n'.format(label)
         for i in range(MDIM):
             for j in range(MDIM):
                 s+='{:8.4g} '.format(self.matrix[i,j])
@@ -149,7 +151,7 @@ class _matrix_(object):
         return m_beta
     def set_sequence(self,seq=''):
         """
-        Setter for sequence tag
+        Setter for sequence tag (sequences are not mandatory!)
         To distinguish different parts of the lattice, each element can be tagged by a sequence ID
         indicating the lattice part it belongs to.
         """
@@ -464,7 +466,6 @@ class _thin(_matrix_):
     """
     def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
-        self.seq =''                        ## self.seq is sequence self belongs to
     def step_through(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
@@ -486,7 +487,7 @@ class _thin(_matrix_):
         return self
     def set_sequence(self,seq=''):
         """
-        Setter for sequence tag
+        Setter for sequence tag (sequences are not mandatory!)
         To distinguish different parts of the lattice, each element can be tagged by a sequence ID
         indicating the lattice part it belongs to.
         """

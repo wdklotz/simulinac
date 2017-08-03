@@ -30,7 +30,7 @@ import elements as ELM
 ## Lattice
 class Lattice(object):
     """
-    The Lattice object is a sequence of tuples: 
+    The Lattice object is a list of tuples: 
         (ELM.<element>, from_position, to_position)
     """
     def __init__(self):
