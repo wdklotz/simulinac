@@ -28,11 +28,10 @@ flags:                              ## run configuration
     - periodic:     False            # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
-## SEQUENCE definitions
+## SECTION definitions
 ##...........................................................................................
-sequences:                           ## sequence tags
-    - LEBT:         &lebt   LEBT
-    - HEBT:         &hebt   HEBT
+sections:                           ## section tags
+    - [&lebt LEBT,  &hebt HEBT]
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
@@ -78,21 +77,21 @@ elements:                           ## ELEMENT definitions
     - d1l:    &d1l          # ID
         - type:     D       # D class
         - length:   0.05    # [m]
-        - seq:      *lebt
+        - sec:      *lebt
     - d2l:    &d2l          # ID
         - type:     D       # D class
         - length:   0.0125  # [m]
-        - seq:      *lebt
+        - sec:      *lebt
     - qf1l:   &qf1l           # ID
         - type:     QF      # QF class
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
-        - seq:      *lebt
+        - sec:      *lebt
     - qd1l:   &qd1l           # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
-        - seq:      *lebt
+        - sec:      *lebt
     - rfgl:  &rfgl          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
@@ -100,7 +99,7 @@ elements:                           ## ELEMENT definitions
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
-        - seq:      *lebt
+        - sec:      *lebt
     # - rfcl:  &rfcl          # ID
     #     - type:     RFC     # RFC class
     #     - Ez:       *p05    # [V/m] electric field
@@ -108,7 +107,7 @@ elements:                           ## ELEMENT definitions
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p07    # [m] length
     #     - length:   *p08    # [m] length
-    #     - seq:      *lebt
+    #     - sec:      *lebt
 
     - mrk:  &mrk            # ID
         - type:    MRK      # MRK class    
@@ -117,28 +116,28 @@ elements:                           ## ELEMENT definitions
     - d1h:        &d1h
         - type:     D       # D class
         - length:   0.08    # [m] 
-        - seq:      *hebt
+        - sec:      *hebt
     - d2h:    &d2h          # ID
         - type:     D       # D class
         - length:   0.44    # [m]
-        - seq:      *hebt
+        - sec:      *hebt
     - qf1h:   &qf1h         # ID
         - type:     QF      # QF class
         - length:   *p03    # [m] 
         - B':       *p11    # [T/m] quadrupole gradient
-        - seq:      *hebt
+        - sec:      *hebt
     - qd1h:   &qd1h         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p11    # [T/m] quadrupole gradient
-        - seq:      *hebt
+        - sec:      *hebt
     # - rfgh:  &rfgh          # ID
     #     - type:     RFG     # RFG class
     #     - Ez:       *p05    # [V/m] electric field
     #     - PhiSync:  *p06    # [deg] synchronous phase
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p12    # [m] accelerating. gap
-    #     - seq:      *hebt
+    #     - sec:      *hebt
     - rfch:  &rfch          # ID
         - type:     RFC     # RFC class
         - Ez:       *p05    # [V/m] electric field
@@ -146,7 +145,7 @@ elements:                           ## ELEMENT definitions
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p12    # [m] length
         - length:   *p13    # [m] length
-        - seq:      *hebt
+        - sec:      *hebt
 
 ##...........................................................................................
 ## SEGMENT definitions

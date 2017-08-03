@@ -83,10 +83,11 @@ def instanciate_element(item):
     else:
         raise RuntimeError('unknown element type: ',key)
     # DEBUG('instanciate_element: {} instance created'.format(label),'')
-    try:     ## sequences are not mandatory
-        instance.set_sequence(seq=attributes['seq'])
+    try:     ## sections are not mandatory
+        instance.set_section(sec=attributes['sec'])
     except:
-        instance.set_sequenceseq=('undef')
+        pass
+        # instance.set_section(sec='undef')
     return (label,instance)
 
 def factory(input_file):
@@ -119,15 +120,14 @@ def factory(input_file):
         CONF['verbose']                                    = flags['verbose']
         return flags
 # --------
-    def read_sequences(in_data):
+    def read_sections(in_data):
     #returns ==> [...]
-        try:     ## sequences are not mandatory
-            seq_list = in_data['sequences'][0]
+        try:     ## sections are not mandatory
+            sec_list = in_data['sections'][0]
         except:
-            seq_list = []
-        # DEBUG('sequences',seq_list)
-        CONF['sequences'] = seq_list
-        return seq_list
+            sec_list = []
+        CONF['sections'] = sec_list
+        return sec_list
 # --------
     def read_parameters(in_data):
     #returns ==> {...}
@@ -215,7 +215,7 @@ def factory(input_file):
     fileobject.close()
 
     read_flags(in_data)
-    read_sequences(in_data)
+    read_sections(in_data)
     read_parameters(in_data)
     # DEBUG('CONF after read _parameters()',CONF.__dict__)
     (latticeList,segments) = expand_reduce(in_data)

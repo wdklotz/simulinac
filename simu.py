@@ -60,8 +60,8 @@ def display0(functions):          ## plotting w/o longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    figure(CONF['lattice_version'],figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    # figure(SUMMARY['lattice_version'])
+    fighdr = 'lattice version = {}, input file = {}'.format(CONF['lattice_version'],CONF['input_file'])
+    figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #----------*----------*   # transverse X
     splot=subplot(211)
     splot.set_title('transverse x')
@@ -116,8 +116,8 @@ def display1(functions):          ## plotting with longitudinal motion
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    figure(CONF['lattice_version'],figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    # figure(CONF['lattice_version'])
+    fighdr = 'lattice version = {}, input file = {}'.format(CONF['lattice_version'],CONF['input_file'])
+    figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #----------*----------*   # transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
@@ -183,11 +183,14 @@ def loesung(filepath):                 ## START here
 
 if __name__ == '__main__':
     import sys
-    filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
-    filepath = 'LEBT_HEBT_with_RF.yml'
+    # filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    # filepath = 'LEBT_fodo_with_RF.yml'
+    # filepath = 'LEBT_fodo_with_RF(1).yml'
+    # filepath = 'LEBT_fodo_with_RF(2).yml'
+    # filepath = 'LEBT_HEBT_with_RF.yml'
     # filepath = 'LEBT_HEBT_with_RF(1).yml'
-    # filepath = 'LEBT_HEBT_with_RF(2).yml'
-    filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'LEBT_HEBT_with_RF(2).yml'
+    # filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

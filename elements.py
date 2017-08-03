@@ -52,7 +52,7 @@ class _matrix_(object):
         else:
             label = self.label
         try:
-            s='{} [{}]\n'.format(label,self.seq)         ## sequences are not mandatory
+            s='{} [{}]\n'.format(label,self.sec)         ## sections are not mandatory
         except AttributeError:
             s='{}\n'.format(label)
         for i in range(MDIM):
@@ -149,13 +149,13 @@ class _matrix_(object):
             [ 0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
-    def set_sequence(self,seq=''):
+    def set_section(self,sec=''):
         """
-        Setter for sequence tag (sequences are not mandatory!)
-        To distinguish different parts of the lattice, each element can be tagged by a sequence ID
+        Setter for section tag (sections are not mandatory!)
+        To distinguish different parts of the lattice, each element can be tagged by a section ID
         indicating the lattice part it belongs to.
         """
-        self.seq = seq
+        self.sec = sec
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
@@ -485,13 +485,13 @@ class _thin(_matrix_):
     def shorten(self,l=0.):
         warnings.warn("No need to shorten a thin element!",RuntimeWarning)
         return self
-    def set_sequence(self,seq=''):
+    def set_section(self,sec=''):
         """
-        Setter for sequence tag (sequences are not mandatory!)
-        To distinguish different parts of the lattice, each element can be tagged by a sequence ID
+        Setter for section tag (sections are not mandatory!)
+        To distinguish different parts of the lattice, each element can be tagged by a section ID
         indicating the lattice part it belongs to.
         """
-        self.seq = seq
+        self.sec = sec
 
 ## thin F-quad
 class QFth(_thin):   

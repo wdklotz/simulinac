@@ -216,32 +216,32 @@ def accpt_w(Ez,trtf,phis,lamb,particle):
 ## data for summary
 SUMMARY = {}
 def collect_data_for_summary(lattice):
-    def elements_in_lattice(typ,seq):
+    def elements_in_lattice(typ,sec):
         '''
-        Filter elements of class <typ> and sequence <seq> form lattice
+        Filter elements of class <typ> and section <sec> form lattice
         IN:
             lattice = object [Lattice]
             typ     = element class [string]
-            seq     = sequence name [string]
+            sec     = section name [string]
         OUT:
             iterator of filtered elements
         '''
         import itertools
         def predicate(element):
             try:
-                test = (type(element[0]).__name__ == typ and element[0].seq == seq)
+                test = (type(element[0]).__name__ == typ and element[0].sec == sec)
             except AttributeError:
-                test = (type(element[0]).__name__ == typ)  ## no seq tags? take all!
+                test = (type(element[0]).__name__ == typ)  ## no sec tags? take all!
             return not test
         filtered_elements = itertools.filterfalse(predicate,lattice.seq)
         # for t in filtered_elements: DEBUG('filterfalse',(t,t[0].label))  ## whazit
         return filtered_elements
 
-    def elements_in_sequence(typ,seq):
+    def elements_in_section(typ,sec):
         """
-        Get a list of elements of same type in a sequence
+        Get a list of elements of same type in a section
         """
-        elements = list(elements_in_lattice(typ,seq))
+        elements = list(elements_in_lattice(typ,sec))
         new_elements = []
         seen = set()                  ## helper to eliminate duplicate entries
         for itm in elements:
@@ -253,45 +253,46 @@ def collect_data_for_summary(lattice):
                 new_elements.append(itm[0])
         return new_elements
 
-    sequences = CONF['sequences']   ## comes from INPUT
-    if len(sequences) == 0: sequences = ['*']      ## sequence wildcart
+    sections = CONF['sections']   ## comes from INPUT
+    if len(sections) == 0: sections = ['*']      ## section wildcart
     types = ['QF','QD']
-    for seq in sequences:
+    for sec in sections:
         for typ in types:
-            elements = elements_in_sequence(typ,seq)
+            elements = elements_in_section(typ,sec)
             for itm in elements:
                 k0 = itm.k0
                 dBdz = k0*itm.particle.brho
                 length = itm.length
-                # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(seq,typ,itm.label)] = k0
-                SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(seq,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]   length [m]'.format(seq,typ,itm.label)] = length
+                # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
+                SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
+                SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
     types = ['RFG']
-    for seq in sequences:
+    for sec in sections:
         for typ in types:
-            elements = elements_in_sequence(typ,seq)
+            elements = elements_in_section(typ,sec)
             for itm in elements:
                 gap     = itm.gap
                 Ez      = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 # length  = itm.length
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(seq,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(seq,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(seq,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
     types = ['RFC']
-    for seq in sequences:
+    for sec in sections:
         for typ in types:
-            elements = elements_in_sequence(typ,seq)
+            elements = elements_in_section(typ,sec)
             for itm in elements:
                 gap     = itm.gap
                 Ez      = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 length  = itm.length
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(seq,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(seq,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(seq,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  length [m]'.format(seq,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
 
+    SUMMARY['sections']                        = CONF['sections']
     SUMMARY['frequency [Hz]']                  = CONF['frequenz']
     SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
     SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
