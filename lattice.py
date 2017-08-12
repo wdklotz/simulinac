@@ -23,9 +23,10 @@ import numpy as NP
 from copy import copy
 import warnings
 
-from setutil import wille,CONF,SUMMARY,objprnt,printv
+from setutil import wille,CONF,SUMMARY,objprnt,printv,DEBUG,mxprnt
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
+from sigma import Sigma
 
 ## Lattice
 class Lattice(object):
@@ -294,7 +295,7 @@ class Lattice(object):
 
     def twiss_functions(self,steps=10):
         """
-        Track twiss functions with beta-matrix through lattice
+        Track twiss functions with beta-matrix through lattice and scale to sigmas
         """
         beta_fun = []
         bx = self.betax0
@@ -313,13 +314,39 @@ class Lattice(object):
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
                 betax  = v_beta[0]
-                betaxp = -2.* v_beta[1]
                 betay  = v_beta[3]
-                betayp = -2.* v_beta[4]
+                sigx   = sqrt(betax*CONF['emitx_i'])   ## scale twiss-beta to sigma
+                sigy   = sqrt(betay*CONF['emity_i'])
                 viseo = i_element.viseo
-                beta_fun.append((s,betax,betay,viseo))
+                beta_fun.append((s,sigx,sigy,viseo))
         (c_like,s_like) = self.cs_traj(steps)    # calc sin- and cos-like trajectories
         return (beta_fun,c_like,s_like)
+
+    def sigma_functions(self,steps=10):
+        """
+        Track the sigma-matrix through the lattice
+        """
+        sigma_fun = []
+        # sigma initial
+        sigma_i = Sigma(emitx=CONF['emitx_i'],betax=self.betax0,alphax=self.alfax0,
+                        emity=CONF['emity_i'],betay=self.betay0,alphay=self.alfay0,
+                        emitz=CONF['emitz_i'],betaz=1.,alphaz=0.)
+        # DEBUG('sigma_i:\n',mxprnt(sigma_i()))
+        s = 0.0
+        for ipos in self.seq:
+            element,s0,s1 = ipos
+            for count,i_element in enumerate(element.step_through(anz=steps)):
+                # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
+                sigma_f = sigma_i.rmap(i_element)
+                sigf = sigma_f()
+                xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
+                yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
+                s += i_element.length
+                viseo = i_element.viseo
+                sigma_fun.append((s,xxav,yyav,viseo))
+                sigma_i = sigma_f.clone()
+        (c_like,s_like) = self.cs_traj(steps)    # calc sin- and cos-like trajectories
+        return (sigma_fun,c_like,s_like)
 
     def dispersion(self,steps=10,closed=True): 
         """

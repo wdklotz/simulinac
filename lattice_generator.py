@@ -115,9 +115,11 @@ def factory(input_file):
     #returns ==> {...}
         flags_list = in_data['flags']
         flags      = lod2d(flags_list)
-        CONF['dWf'] = SUMMARY['acc. ON']                   = flags['accON']
-        CONF['periodic'] = SUMMARY['ring lattice']         = flags['periodic']
-        CONF['verbose']                                    = flags['verbose']
+        CONF['dWf']      = SUMMARY['acc. ON']                 = flags['accON']
+        CONF['periodic'] = SUMMARY['ring lattice']            = flags['periodic']
+        CONF['egf']      = SUMMARY['emittance growth']        = flags['egf']
+        CONF['sigma']    = SUMMARY['sigma tracking']          = flags['sigma']
+        CONF['verbose']                                       = flags['verbose']
         return flags
 # --------
     def read_sections(in_data):

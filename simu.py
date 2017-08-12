@@ -33,20 +33,19 @@ def display(functions):
         display1(functions)
         bucket()             # separatrix
 
-def display0(functions):          ## plotting w/o longitudinal motion
+def display0(functions):
+    """          
+    Plotting w/o longitudinal motion
+    """
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
-    emix=CONF['emitx_i']  # emittance @ entrance
-    emiy=CONF['emity_i']  # emittance @ entrance
     #----------*----------*   # bahnkoordinate z
     z   = [ x[0] for x in beta_fun]
     #----------*----------*
-    bx  = [ sqrt(x[1]*emix) for x in beta_fun]    # envelope (beta-x)
-    by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
-#     bxn = [-x for x in bx]    # beta-x (negatif)
-#     byn = [-x for x in by]    # beta-y (negatif)
+    bx  = [x[1] for x in beta_fun]    # envelope (sigma-x)
+    by  = [x[2] for x in beta_fun]    # envelope (sigma-y)
     #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
@@ -89,20 +88,19 @@ def display0(functions):          ## plotting w/o longitudinal motion
     #----------*----------*
     show()
 
-def display1(functions):          ## plotting with longitudinal motion
+def display1(functions):
+    """
+    Plotting with longitudinal motion
+    """
     #----------*----------*   # unpack
     beta_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
-    emix=CONF['emitx_i']  # emittance @ entrance
-    emiy=CONF['emity_i']  # emittance @ entrance
     #----------*----------*   # bahnkoordinate z
     z   = [ x[0] for x in beta_fun]
     #----------*----------*
-    bx  = [ sqrt(x[1]*emix) for x in beta_fun]    # envelope (beta-x)
-    by  = [ sqrt(x[2]*emiy) for x in beta_fun]    # envelope (beta-y)
-#     bxn = [-x for x in bx]    # beta-x (negatif)
-#     byn = [-x for x in by]    # beta-y (negatif)
+    bx  = [x[1] for x in beta_fun]    # envelope (sigma-x)
+    by  = [x[2] for x in beta_fun]    # envelope (sigma-y)
     #----------*----------*   # trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
@@ -178,18 +176,21 @@ def loesung(filepath):                 ## START here
     dictprnt(SUMMARY,text='summary')     ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
-    functions = lattice.twiss_functions(30)
+    if CONF['sigma']:
+        functions = lattice.sigma_functions(30)     ## calc. beamsize from sigma-matrix
+    else:
+        functions = lattice.twiss_functions(30)     ## calc. beamsize from beta-matrix
     display(functions)
 
 if __name__ == '__main__':
     import sys
-    # filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
-    # filepath = 'LEBT_fodo_with_RF.yml'
-    # filepath = 'LEBT_fodo_with_RF(1).yml'
-    # filepath = 'LEBT_fodo_with_RF(2).yml'
-    # filepath = 'LEBT_HEBT_with_RF.yml'
+    filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    filepath = 'LEBT_fodo_with_RF.yml'
+    filepath = 'LEBT_fodo_with_RF(1).yml'
+    filepath = 'LEBT_fodo_with_RF(2).yml'
+    filepath = 'LEBT_HEBT_with_RF.yml'
     # filepath = 'LEBT_HEBT_with_RF(1).yml'
-    filepath = 'LEBT_HEBT_with_RF(2).yml'
+    # filepath = 'LEBT_HEBT_with_RF(2).yml'
     # filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]

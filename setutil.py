@@ -79,6 +79,8 @@ class Defaults(object):
             'dWf'     : False,           # acceleration on/off flag default
             'periodic': True,            # periodic lattice? default
             'verbose' : 1,               # print flag (True) default
+            'egf'     : False,           # emittance grow flag default
+            'sigma'   : True,            # beam sizes by sigma-tracking
             'n_coil'  : 30               # nbof coil windings
             }
     def __getitem__(self,key):
@@ -439,6 +441,16 @@ def tblprnt(headr,records):
     for row in rows:
             s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
     return s
+
+def mxprnt(matrix):
+    """
+    Simple matrix print
+    """
+    s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
+    lens = [max(map(len, col)) for col in zip(*s)]
+    fmt = ''.join('{{:{}}}'.format(x) for x in lens)
+    table = [fmt.format(*row) for row in s]
+    return '\n'.join(table)
 
 def wille():
     return {

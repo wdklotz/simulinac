@@ -27,6 +27,8 @@ flags:                              ## run configuration
     - accON:        False           # accelleration on/off flag
     - periodic:     True            # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
+    - egf:          False           # emittance growth flag
+    - sigma:        True            # beam sizes by sigma-matrix
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................

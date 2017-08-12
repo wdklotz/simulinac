@@ -26,7 +26,7 @@ import numpy as np
 from elements import RFG
 # from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron,DEBUG
 # from setutil import dBdxprot,scalek0prot,k0prot
-from setutil import Proton,DEBUG
+from setutil import Proton,DEBUG,mxprnt
 
 MDIM=6   #(0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
@@ -149,19 +149,15 @@ def test0():
     print('test __call__ method of SIGMA class:\n',s())
 def test1():
     print('-----------------------------Test1--')
-    def mxprnt(matrix):
-        s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
-        lens = [max(map(len, col)) for col in zip(*s)]
-        fmt = ''.join('{{:{}}}'.format(x) for x in lens)
-        table = [fmt.format(*row) for row in s]
-        return '\n'.join(table)
 
     particle = Proton(tkin=2.)
     R = RFG(particle=particle)
 
-    sigma_i = Sigma(emitx=1.,betax=1.,alphax=1.,emity=1.,betay=1.,alphay=0.,emitz=1.,betaz=1.,alphaz=0.)
+    sigma_i = Sigma(emitx=1.,betax=1.,alphax=1.,
+                    emity=1.,betay=1.,alphay=0.,
+                    emitz=1.,betaz=1.,alphaz=0.)
     s1 = sigma_i()
-    sigma_f = sigma_i.rmap(R)   ## map sigma
+    sigma_f = sigma_i.rmap(R)   ## apply map to sigma
     s2 = sigma_f()
     DEBUG('{sigma}\n',mxprnt(s1))
     DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2))

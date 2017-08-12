@@ -24,9 +24,11 @@
 ## run configuration
 ##...........................................................................................
 flags:
-    - accON:        True       # accelleration on/off flag
-    - periodic:     False      # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      0          # print flag (0 = minimal print), try 0,1,2,3
+    - accON:        True          # accelleration on/off flag
+    - periodic:     False         # treat lattice as periodic cell sequence(else as transfer line)
+    - verbose:      0             # print flag (0 = minimal print), try 0,1,2,3
+    - egf:          False         # emittance growth flag
+    - sigma:        True          # beam sizes by sigma-matrix
 ##...........................................................................................
 ## SECTION definitions
 ##...........................................................................................
@@ -236,7 +238,7 @@ segments:
 lattice:
     - title: LEBT+HEBT 02.08.2017 5-80MeV   # description is mandatory. DON't remove or reposition!
 
-    # - [2,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     - [52,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     - [225,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
     
