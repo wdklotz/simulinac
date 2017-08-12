@@ -44,6 +44,8 @@ class _matrix_(object):
         self.length=0.              ## default zero length!
         self.slice_min = 0.005      ## minimal slice length
         self.viseo = 0.
+    def __call__(self,n=MDIM,m=MDIM):
+        return self.matrix[:n,:m]     ## return upper left nxm submatrix
     def string(self):
         n = 33
         nx = 200
@@ -421,6 +423,8 @@ class RFG(D):
         # DEBUG('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
+        self.particlei = particlei
+        self.particlef = particlef
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / CONF['lichtgeschwindigkeit']
         # DEBUG('RFG: teta , beta>>',teta,beta)

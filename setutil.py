@@ -47,7 +47,7 @@ def DEBUG(string,arg=''):
         sarg = pp.pformat(arg)
         print('DEBUG: {} typ(dict)\n{}'.format(string,sarg))
     else:
-        print('DEBUG: ',string,arg)
+        print('DEBUG: {}{}'.format(string,arg))
 
 class Defaults(object):
     def __init__(self):
@@ -61,7 +61,7 @@ class Defaults(object):
             'Ez_feld': 1.00,             # [MV/m] default
             'spalt_laenge': 0.02,        # [m] default
             'cavity_laenge': 0.08,       # [m] default
-            'soll_phase': -10.0,         # [deg] default
+            'soll_phase': -30.0,         # [deg] default
             'frequenz': 814.e6,          # [Hz] default
             'injection_energy': 50.,     # [MeV] default
             'qf_gradient': 16.0,         # [T/m] default
