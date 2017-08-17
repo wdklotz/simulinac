@@ -24,14 +24,12 @@ import numpy as np
 # import warnings
 
 from elements import RFG
-# from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron,DEBUG
-# from setutil import dBdxprot,scalek0prot,k0prot
 from setutil import Proton,DEBUG,mxprnt
 
 MDIM=6   #(0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
 class Sigma(object):
-    def __init__(self,emitx=0.,betax=1.,alphax=0.,emity=0.,betay=1,alphay=0.,emitz=0.,betaz=1,alphaz=0.):
+    def __init__(self,emitx=0.,betax=1.,alphax=0.,emity=0.,betay=1,alphay=0.,emitz=0.,betaz=1.,alphaz=0.):
 
         self.matrix = np.zeros((MDIM,MDIM))      ## sigma matrix (6x6)
 

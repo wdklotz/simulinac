@@ -328,9 +328,9 @@ class Lattice(object):
         """
         sigma_fun = []
         # sigma initial
-        sigma_i = Sigma(emitx=CONF['emitx_i'],betax=self.betax0,alphax=self.alfax0,
-                        emity=CONF['emity_i'],betay=self.betay0,alphay=self.alfay0,
-                        emitz=CONF['emitz_i'],betaz=1.,alphaz=0.)
+        sigma_i = Sigma(emitx=CONF['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
+                        emity=CONF['emity_i'], betay=self.betay0,    alphay=self.alfay0,
+                        emitz=CONF['emitz_i'], betaz=CONF['betaz_i'],alphaz=0.)
         # DEBUG('sigma_i:\n',mxprnt(sigma_i()))
         s = 0.0
         for ipos in self.seq:
@@ -338,6 +338,10 @@ class Lattice(object):
             for count,i_element in enumerate(element.step_through(anz=steps)):
                 # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.rmap(i_element)
+                if isinstance(i_element,ELM.RFG) and CONF['egf']:
+                    rf_gap    = i_element
+                    delta_phi = CONF['Dphi0']
+                    sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
                 sigf = sigma_f()
                 xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
@@ -385,15 +389,17 @@ class Lattice(object):
         x2p = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1  = sqrt(CONF['emity_i']*self.betay0)
         y2p = sqrt(CONF['emity_i']*self.gammy0)
-        dz  = CONF['Dz']      # z-plane:    Eingabe dZ
-        dp  = CONF['Dp/p']    # dp/p=plane: Eingabe dP/P0
+        dz    = CONF['sigmaz_i']                  # z-plane:    Vorgabe sigmaz_i [m]
+        gamma = CONF['sollteilchen'].gamma
+        beta  = CONF['sollteilchen'].beta
+        dp = gamma/(1.+gamma)*CONF['w0']          # dp/p-plane conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
         # c_0 = NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
         # s_0 = NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
-        c_0[XKOO]  = x1; c_0[YKOO]  =y1; c_0[ZKOO]   =dz; c_0[DEKOO] =1.; c_0[LKOO] =1.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] =y2p; s_0[ZPKOO] =dp; s_0[DEKOO] =1.; s_0[LKOO] =1.  # sin-like traj.
+        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = dz; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp; s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle

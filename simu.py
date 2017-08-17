@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from math import sqrt,degrees
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import CONF,SUMMARY,Proton,dictprnt,DEBUG,epsiz
+from setutil import CONF,SUMMARY,Proton,dictprnt,DEBUG
 from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
@@ -147,7 +147,7 @@ def display1(functions):
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
-#     ax_l.plot(z,sz,color='green')
+    # ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseoz = [x*vscale for x in viseo]
     ax_l.plot(z,viseoz,label='',color='black')
@@ -158,7 +158,7 @@ def display1(functions):
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
     ax_r.plot(z,cdw,label=r'$\Delta$w/w',color='red')
-#     ax_r.plot(z,sdw,color='red')
+    # ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     show()
@@ -168,7 +168,6 @@ def loesung(filepath):                 ## START here
     soll_track = track_soll(lattice)   ## (WICHTIG) track Sollteilchen hier
     print('loesung:\n',lattice.string())
     lattice.stats(soll_track)          ## count elements and other statistics
-    epsiz(gap=CONF['spalt_laenge'])    ## longitudinal emittance
     #-----------------------------------------
     # ganze Zelle, Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
@@ -191,7 +190,7 @@ if __name__ == '__main__':
     filepath = 'LEBT_HEBT_with_RF.yml'
     # filepath = 'LEBT_HEBT_with_RF(1).yml'
     # filepath = 'LEBT_HEBT_with_RF(2).yml'
-    # filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

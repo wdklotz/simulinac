@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import pi,sqrt,sin, cos, radians, degrees, pow
+from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs
 import logging, pprint
 
 ## logger
@@ -69,13 +69,11 @@ class Defaults(object):
             'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m]
             'emitx_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
             'emity_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
-            'emitz_i' : 7.7e-4,          # longitudinal emittance T.Wangler (6.49) pp.186
             'betax_i' : 0.780,           # [m] Vorgabe twiss betax @ entrance
             'betay_i' : 2.373,           # [m] Vorgabe twiss betax @ entrance
             'alfax_i' : 0.0,             # Vorgabe twiss alphax @ entrance
             'alfay_i' : 0.0,             # Vorgabe twiss alphaxy @ entrance
-            'Dz'      : 0.02,            # [m] Vorgabe longitudinal displacement Dz
-            'Dp/p'    : 3.55654e-4,      # [rad] Vorgabe relative impulse Dp/p
+            'sigmaz_i': 0.02,            # [m] max long. half-width displacement
             'dWf'     : False,           # acceleration on/off flag default
             'periodic': True,            # periodic lattice? default
             'verbose' : 1,               # print flag (True) default
@@ -103,7 +101,7 @@ class Defaults(object):
 ## BLOCKDATA "CONF"
 CONF = Defaults()       # global data block called CONF (like Fortran's BLOCKDATA)
 CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['Dz']              = CONF['wellenlänge']/36.  # Dz (aka delta-z) is 1/36-th of wavelength (i.e.10 deg per default)
+CONF['sigmaz_i']        = CONF['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
 
 class Particle(object):                          
@@ -155,65 +153,82 @@ class Electron(Particle):
 CONF['sollteilchen'] = Proton()
 
 ## long. emittance
-def epsiz(particle=CONF['sollteilchen'],gap=0.0,trtf=0.75):
+def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
     Ellipse nach T.Wangler (6.47) pp.185
-    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht (gamma*x)**2 + (beta*x')**2 = epsilon, alpha=0
+    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht gammaz*w0**2 + betaz*Dphi0**2 = emittz, alphaz=0
+    IN:
+        sigmaz:   max half-width long. displacement [m]
+        qE0:      gap field strength [MV/m]
+        lamb:     wavelength [m]
+        phis:     syncronous phase [rad]
+        gap:      cavity gap [m]
+        particle: Particle object
     """
-    # NOTE: epsiz should be an atrtribute of RF cavities (todo?)
-    qE0      = CONF['Ez_feld']
-    lamb     = CONF['wellenlänge']
-    m0c2     = particle.e0
-    dz       = CONF['Dz']
-    gb       = particle.gamma_beta
-    beta     = particle.beta
-    gamma    = particle.gamma
-    if gap != 0.: trtf = particle.trtf(gap,CONF['frequenz'])
-    dphi0    = -radians((360./beta/lamb)*dz)     # Umrechnung [m] -> [rad]
-    
-    R = qE0*lamb*sin(-radians(CONF['soll_phase']))  ## R ist die grosse Wurzel
-    R = R*pow(gb,3)*trtf
-    R = R/(2.*pi*m0c2)
-    R = sqrt(R)
-    
-    w0     = R*dphi0
-    epsi   = w0*dphi0
-    sigw   = sqrt(epsi*R)
-    sigphi = -sqrt(epsi/R)    #[rad]
-    sigphi = degrees(sigphi)  #[deg]
-    sigDp  = gamma/(gamma+1.)*sigw      # Umrechnung DW/W -> Dp/p, W kin. Energie
-    sigDz  = -beta*lamb/360.*sigphi    # [m]
-
-    CONF['emitz_i']   = epsi
-    CONF['Dp/p']      = sigDp
-    CONF['sigphi']    = sigphi
-    CONF['DW/W']      = sigw
-    return dict(epsi=epsi,dz=dz,sigDz=sigDz,sigDp=sigDp,sigw=sigw,sigphi=sigphi)
-epsiz()     ## calculate the long. emittance with def. parameters
-
-def accpt_w(Ez,trtf,phis,lamb,particle):
-    """
-    Energieakzeptanz dW/W nach T.Wangler pp. 179
-    Ez       - [Mev/m] accelerating field gradient on gap axis
-    trtf     - transit time factor
-    phis     - [deg] sync. phase (-90 to 0)
-    lamb     - [m] rf wave length
-    particle - sync. particle
-    """
-    if CONF['dWf']:
-        gb = particle.gamma_beta
-        m0 = particle.e0  # rest mass
-        tk = particle.tkin
-        res = 2.*Ez*trtf*gb*gb*gb*lamb/pi/m0
-        # DEBUG('accpt_w: tk {:4.4f} trtf {:4.4f} res {:4.4e}'.format(tk,trtf,res))
-        phsoll = radians(phis)
-        res = res*(phsoll*cos(phsoll)-sin(phsoll))
-        # DEBUG('(dW/W)^2 nach T.Wangler pp. 179: res',res)
-        res = sqrt(res)/(particle.gamma-1.)
+    # NOTE: epsiz should be an atrtribute of RF cavities (I am not sure!?)
+    m0c2      = particle.e0
+    gb        = particle.gamma_beta
+    beta      = particle.beta
+    gamma     = particle.gamma
+    if gap != 0.: 
+        T = particle.trtf(gap,CONF['frequenz'])
     else:
-        res = 0.
+        T = 0.75       # have to take some reasonable value!
+    
+    # large amplitude oscillations (T.Wangler pp. 175)
+    wmax  = sqrt(2.*qE0*T*pow(gb,3)*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
+    DWmax = wmax*m0c2       # [MeV]
+    phi1s = -phis           # [rad]
+    phi2s = 2.*phis         # [rad] Naehrung T.Wangler pp.178
+    psis  = 3.*fabs(phis)   # [rad] Naehrung T.Wangler pp.178
+    
+    # small amplitude oscillations (T.Wangler pp.184)
+    kl02 = 2.*pi*qE0*T*sin(-phis)/(m0c2*pow(gb,3)*lamb)
+    omegal0 = sqrt(kl02)*beta*CONF['lichtgeschwindigkeit']
+    omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
+    
+    # Dphi0 = phi0 - phis (maximum half-width phase dispersion) acc. to T.Wangler
+    Dphi0  = (2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
+    w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
+    DW     = w0*m0c2              # [MeV]
+    emitz  = Dphi0*DW             # [rad*MeV]
+    gammaz = pow(Dphi0,2)/emitz   # [rad/MeV]
+    betaz  = pow(DW,2)/emitz      # [MeV/rad]
+    alphaz = 0.
+
+    res =  dict(
+            Dphi0           = Dphi0,
+            DWmax           = DWmax,
+            Dphimax         = psis,
+            omegal0         = omegal0,
+            w0              = w0,
+            emitz           = emitz,
+            gammaz          = gammaz,
+            betaz           = betaz,
+            DW              = DW,
+            alphaz          = alphaz )
+    res['omegal0/omega']    = omegal0_div_omega
+    res['Dphimax+']         = phi1s
+    res['Dphimax-']         = phi2s
     return res
+
+## update CONF with initials
+CONF.conf.update(
+    zellipse(CONF['sigmaz_i'],     ## calculate the long. emittance with def. parameters
+             CONF['Ez_feld'],
+             CONF['wellenlänge'],
+     radians(CONF['soll_phase']),
+             CONF['spalt_laenge'],
+             CONF['sollteilchen']))
+CONF['emitz_i']  = CONF['emitz']   # here zellipse calculated initial values
+CONF['betaz_i']  = CONF['betaz']   # here zellipse calculated initial values
+CONF['gammaz_i'] = CONF['gammaz']  # here zellipse calculated initial values
+del CONF.conf['emitz']             # del unused 
+del CONF.conf['betaz']             # del unused 
+del CONF.conf['gammaz']            # del unused 
+
+# DEBUG('CONF (after defaults)',CONF.conf)
 
 ## data for summary
 SUMMARY = {}
@@ -295,22 +310,25 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
 
     SUMMARY['sections']                        = CONF['sections']
-    SUMMARY['frequency [Hz]']                  = CONF['frequenz']
+    SUMMARY['frequency [MHz]']                 = CONF['frequenz']*1.e-6
     SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
     SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
-    SUMMARY['(emitx)i [rad*m]']                = CONF['emitx_i']
-    SUMMARY['(emity)i [rad*m]']                = CONF['emity_i']
-    SUMMARY['(emitz)i* [rad]']                 = CONF['emitz_i']
-    SUMMARY['(sigx)i* [mm]']                   = 1000.*sqrt(CONF['betax_i']*CONF['emitx_i'])  # enveloppe @ entrance
-    SUMMARY['(sigy)i* [mm]']                   = 1000.*sqrt(CONF['betay_i']*CONF['emity_i'])
-    SUMMARY['wavelength [m]']                  = CONF['wellenlänge']
+    SUMMARY['(emitx)i [mrad*mm]']              = CONF['emitx_i']*1.e6
+    SUMMARY['(emity)i [mrad*mm]']              = CONF['emity_i']*1.e6
+    SUMMARY['(emitz)i* [rad*KeV]']             = CONF['emitz_i']*1.e3
+    SUMMARY['(sigx)i* [mm]']                   = sqrt(CONF['betax_i']*CONF['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigy)i* [mm]']                   = sqrt(CONF['betay_i']*CONF['emity_i'])*1.e3
+    SUMMARY['wavelength* [cm]']                = CONF['wellenlänge']*1.e2
     SUMMARY['lattice version']                 = CONF['lattice_version']
-    SUMMARY['(Dz)i [m]']                       = CONF['Dz']
-    SUMMARY['(Dp/p)i(impulse spread)* [%]']    = CONF['Dp/p']*1.e+2
-    SUMMARY['(Dphi)i* [deg]']                  = CONF['sigphi']
-    SUMMARY['(DW/m0c2)i(energy spread)* [%]']  = CONF['DW/W']*1.e+2
-    SUMMARY['(DW/m0c2)accept limit* [%]']      = wakzp = accpt_w(CONF['Ez_feld'],CONF['sollteilchen'].trtf(CONF['spalt_laenge'],CONF['frequenz']),CONF['soll_phase'],CONF['wellenlänge'],CONF['sollteilchen'])*1.e+2  ## energy acceptance
-    SUMMARY['(Dp/p)accept limit* [%]']         = 1./(1.+1./CONF['sollteilchen'].gamma)*wakzp  # impule acceptanc in %
+    SUMMARY['(sigmaz)i [mm]']                  = CONF['sigmaz_i']*1.e3
+    SUMMARY['(DW)i* [KeV]']                    = CONF['DW']*1.e3
+    SUMMARY['(Dphi)i* [deg]']                  = degrees(CONF['Dphi0'])
+    SUMMARY['(DW)max* [KeV]']                  = CONF['DWmax']*1.e3        # energy acceptance
+    SUMMARY['max bunch length* [deg]']         = degrees(CONF['Dphimax'])  # phase acceptance
+    SUMMARY['betaz_i* [KeV/rad]']              = CONF['betaz_i']*1.e3
+    SUMMARY['gammaz_i* [rad/KeV]']             = CONF['gammaz_i']*1.e-3
+    SUMMARY['synchrotron freq_i* [MHz]']       = CONF['omegal0']*1.e-6
+    SUMMARY['sync.freq_i/rf_freq* [%]']      = CONF['omegal0/omega']*1.e2
     return
 
 ## utilities
