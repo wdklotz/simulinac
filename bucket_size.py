@@ -17,91 +17,76 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import CONF,Proton,objprnt,dictprnt
+from setutil import CONF,Proton
 from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
 
-def display_bucket(functions):
+def display_bucket(functions,phis,tki,gapl,qE0,fRF,name):
+    # frame
     plt.figure('bucket size for '+CONF['lattice_version'],facecolor='#eaecef')
+    # functions
     for function in functions:
         phi  = [x[0] for x in function]
         p1   = [x[1] for x in function]
         p2   = [x[2] for x in function]
         plt.plot(phi,p1,label='w(phi)',color='blue')
         plt.plot(phi,p2,label='',color='blue')
-        plt.ylabel(r'$\Delta$w [Mev]')
-        plt.xlabel(r'phi_sync [deg]')
+        plt.ylabel(r'$\Delta$W [KeV]')
+        plt.xlabel(r'$\Delta$$\Phi$ [deg]')
+    # make a text box
+    xy_nx = plt.axis()
+    tx1 = r'$\Phi$s: {:4.1f} [deg], '.format(phis)
+    tx2 =    r'Tkin: {:4.1f} [MeV], '.format(tki)
+    tx3 =       r'gap: {:4.1f} [mm] '.format(gapl*1.e3)
+    tx4 =   r'Ez0: {:4.1f} [MeV/m], '.format(qE0)
+    tx5 =     r'frf: {:4.1f} [MHz], '.format(fRF*1.e-6)
+    tx6 =                      r'{}'.format(name)
+    txt = tx1+tx2+tx3+'\n'+tx4+tx5+tx6
+    plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
+    # figure title
     plt.title('longitudinal bucket')
     plt.show(block=False)
 
-def psquared(H_invariant,phi,phis):
-    ''' solves 0 = p**2 - V(phi) + H_invariant for p**2'''
-    V   = phi*cos(phis)-sin(phi)
-    res = V-H_invariant
-    return res
-
 def bucket():
-    '''produce the longitudinal phase plots from Dr.Tiede'''
+    '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
     phis = radians(CONF['soll_phase'])           # KNOB: soll phase
 
     # Wertebereiche
     dphi = 1e-4                   # step size phase
-    pmax = radians(+20.)          # phase upper limit
-    pmin = radians(-40.)          # phase lower limit
-    anz  =  int((pmax-pmin)/dphi)  # nbof  phase steps
-    H_invariant = [-0.03+i*0.0025 for i in range(45)]      # invariant hamiltonians
+    phimax = CONF['Dphimax+']     # stable phase upper limit
+    phimin = CONF['Dphimax-']     # stable phase lower limit
+    anz  =  int((phimax-phimin)/dphi) # nbof  phase steps
 
-    # physics dimensions according to T.Wrangler pp.176
-    ws       = CONF['injection_energy']
-    particle = Proton(ws)
+    tki      = CONF['injection_energy']
+    particle = Proton(tkin=tki)
     gapl     = CONF['spalt_laenge']
-    E0       = CONF['Ez_feld']
+    qE0      = CONF['Ez_feld']
     u0       = CONF['spalt_spannung']
     fRF      = CONF['frequenz']
     lamb     = CONF['wellenlänge']
     rfg      = RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,particle=particle,dWf=1.)
-    dws      = rfg.deltaW
-    gammas   = particle.gamma
-    betas    = particle.beta
-    mc2      = particle.e0
-    q        = 1.
+    gamma    = particle.gamma
+    beta     = particle.beta
+    m0c2     = particle.e0
     T        = particle.trtf(gapl,fRF)
-    A        = 2.*pi/(gammas*betas)**3/lamb
-    B        = q*E0*T/mc2
-    p2w      = sqrt(2.*B/A)*mc2   # conversion pk -> delta(w-ws) [Mev]
-
-    if CONF['verbose']:
-        # objprnt(rfg,text='cavity',filter=['matrix','particle'])
-        # objprnt(particle,text='Particle')
-        bucket_summary = {
-        '        cavity gap [m]':gapl,
-        ' cavity frequency [Hz]':fRF,
-        '  ref. energy Ws [MeV]':ws,
-        '     delta-W/gap [MeV]':dws,
-        '        particle gamma':gammas,
-        '        particle  beta':betas,
-        '         RF lambda [m]':lamb,
-        '      cavity Ez [MV/m]':E0,
-        '    m0*c**2 [MeV/c**2]':mc2,
-        '                   ttf':T,
-        '         particle type':particle.name,
-        '            input file':CONF['input_file']
-        }
-        dictprnt(bucket_summary,text='longitudinal dynamics')
+    A        = 2.*pi/pow(gamma*beta,3)/lamb
+    B        = qE0*T/m0c2
+    H0       = -B*(sin(phis)-phis*cos(phis))      # hamiltonian
+    H        = [H0 - (i-1)*H0/5. for i in range(11)]
 
     functions = []           # list of functions
-    for h in H_invariant:
+    for h in H:
         function = []        # one function
-        for i in range(anz):
-            phi = pmin+i*dphi
-            p = psquared(h,phi,phis)
-            if p < 0.:
+        for i in range(-2,anz+2):
+            phi = phimin+i*dphi
+            w2 = 2./A*(h-B*(sin(phi)-phi*cos(phis)))
+            if w2 < 0.:
                 continue
-            p = p2w*sqrt(p)
-            function.append([degrees(phi),p,-p])
+            w = sqrt(w2)*m0c2*1.e3
+            function.append([degrees(phi),w,-w])
         functions.append(function)
-    display_bucket(functions)
+    display_bucket(functions,degrees(phis),tki,gapl,qE0,fRF,particle.name)
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':

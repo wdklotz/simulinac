@@ -21,7 +21,7 @@ import sys, os
 from math import radians,sqrt,pi,degrees
 import yaml
 
-from setutil import CONF,SUMMARY,Proton,DEBUG,objprnt,dictprnt
+from setutil import CONF,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
 import elements as ELM
 from lattice import Lattice
 
@@ -145,10 +145,9 @@ def factory(input_file):
         if 'betay_i'          in parameters: CONF['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: CONF['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: CONF['alfay_i']          = parameters['alfay_i']
-        # if 'Dp/p'             in parameters: CONF['Dp/p']             = parameters['Dp/p']   # will be calculated
         if 'Ez'               in parameters: CONF['Ez_feld']          = parameters['Ez']
         if 'phi_sync'         in parameters: CONF['soll_phase']       = parameters['phi_sync']
-        if 'Dz'               in parameters: CONF['Dz']               = parameters['Dz']
+        if 'sigmaz_i'         in parameters: CONF['sigmaz_i']         = parameters['sigmaz_i']
         if 'gap'              in parameters: CONF['spalt_laenge']     = parameters['gap']
         if 'cav_len'          in parameters: CONF['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: CONF['ql']               = parameters['ql']
@@ -219,13 +218,31 @@ def factory(input_file):
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-    # DEBUG('CONF after read _parameters()',CONF.__dict__)
+    # update CONF with overriding initials
+    CONF.update(
+        zellipse(CONF['sigmaz_i'],     ## calculate the long. emittance with def. parameters
+                CONF['Ez_feld'],
+                CONF['wellenlänge'],
+        radians(CONF['soll_phase']),
+                CONF['spalt_laenge'],
+                CONF['sollteilchen']))
+    CONF['emitz_i']  = CONF['emitz']   # here zellipse calculated initial values
+    CONF['betaz_i']  = CONF['betaz']   # here zellipse calculated initial values
+    CONF['gammaz_i'] = CONF['gammaz']  # here zellipse calculated initial values
+    # del unused key-values from zellipse
+    CONF.delete('emitz')
+    CONF.delete('betaz')
+    CONF.delete('gammaz')
+    # DEBUG('CONF after read_parameters()',CONF.__dict__)
+
     (latticeList,segments) = expand_reduce(in_data)
     # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
     # DEBUG('segments in factory()',segments)            # def of all segments
+
     CONF['sollteilchen'](tkin=CONF['injection_energy'])# (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     # DEBUG('lattice_generator >>\n',lattice.string())
+
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     # DEBUG('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)

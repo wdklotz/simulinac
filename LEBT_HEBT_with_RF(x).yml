@@ -27,7 +27,7 @@ flags:
     - accON:        True          # accelleration on/off flag
     - periodic:     False         # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0             # print flag (0 = minimal print), try 0,1,2,3
-    - egf:          False         # emittance growth flag
+    - egf:          True          # emittance growth flag
     - sigma:        True          # beam sizes by sigma-matrix
 ##...........................................................................................
 ## SECTION definitions
@@ -59,7 +59,7 @@ parameters:
     - B_g_LEBT:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
 
     - Ez_LEBT:      &p05    1.00       # [MV/m] electric field strength
-    - phi_sync:     &p06   -20.        # [deg] synchronous phase
+    - phi_sync:     &p06   -30.        # [deg] synchronous phase
     - gap:          &p07    0.020      # [m] (accelerating) gap size
     - cav_LEBT:     &p08    0.020      # [m] cavity length
     - windings:             30         # [-] quad-coil windings

@@ -51,7 +51,7 @@ parameters:
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
     # - Dp/p: [%] will be calculated from Dz and emitz (ueberarbeiten!!)
-    - Dz:                   2.5e-3     # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:              2.5e-3    # [m] longitudinal displacement Dz @ entrance
     - Ez:           &p05    1.00       # [MV/m] electric field strength
     - phi_sync:     &p06   -20.        # [deg] synchronous phase
     - gap:          &p07    0.020      # [m] (accelerating) gap size

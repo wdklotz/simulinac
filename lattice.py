@@ -413,8 +413,10 @@ class Lattice(object):
                 cxp = c_0[XPKOO]
                 cy  = c_0[YKOO]
                 cyp = c_0[YPKOO]
-                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)                # conversion zu dPhi [deg]
-                cdw = c_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.  # conversion zu dW/W [%]
+                # cz  = -c_0[ZKOO]        # dz [m]
+                # cdw = c_0[ZPKOO]*100.   # dp/p [%]
+                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)                # conversion dz --> dPhi [deg]
+                cdw = c_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.  # conversion dp/p --> dW/W [%]
                 # sin_like
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]

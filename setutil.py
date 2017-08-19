@@ -67,6 +67,7 @@ class Defaults(object):
             'qf_gradient': 16.0,         # [T/m] default
             'qd_gradient': 16.0,         # [T/m] default
             'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m]
+            'n_coil'  : 30,              # nbof coil windings
             'emitx_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
             'emity_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
             'betax_i' : 0.780,           # [m] Vorgabe twiss betax @ entrance
@@ -76,10 +77,9 @@ class Defaults(object):
             'sigmaz_i': 0.02,            # [m] max long. half-width displacement
             'dWf'     : False,           # acceleration on/off flag default
             'periodic': True,            # periodic lattice? default
-            'verbose' : 1,               # print flag (True) default
             'egf'     : False,           # emittance grow flag default
             'sigma'   : True,            # beam sizes by sigma-tracking
-            'n_coil'  : 30               # nbof coil windings
+            'verbose' : 1                # print flag (True) default
             }
     def __getitem__(self,key):
         if key in self.conf:
@@ -97,6 +97,10 @@ class Defaults(object):
         for k,v in self.conf.items():
             res[k]=v
         return res.items()
+    def update(self,dict):
+        self.conf.update(dict)
+    def delete(self,key):
+        del self.conf[key]
 
 ## BLOCKDATA "CONF"
 CONF = Defaults()       # global data block called CONF (like Fortran's BLOCKDATA)
@@ -178,7 +182,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     
     # large amplitude oscillations (T.Wangler pp. 175)
     wmax  = sqrt(2.*qE0*T*pow(gb,3)*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
-    DWmax = wmax*m0c2       # [MeV]
+    DWmax = wmax*m0c2       # [MeV] conversion ---> [MeV]
     phi1s = -phis           # [rad]
     phi2s = 2.*phis         # [rad] Naehrung T.Wangler pp.178
     psis  = 3.*fabs(phis)   # [rad] Naehrung T.Wangler pp.178
@@ -188,14 +192,14 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     omegal0 = sqrt(kl02)*beta*CONF['lichtgeschwindigkeit']
     omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
     
-    # Dphi0 = phi0 - phis (maximum half-width phase dispersion) acc. to T.Wangler
+    # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
     Dphi0  = (2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
     w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
-    DW     = w0*m0c2              # [MeV]
+    DW     = w0*m0c2              # conversion --> [MeV]
     emitz  = Dphi0*DW             # [rad*MeV]
     gammaz = pow(Dphi0,2)/emitz   # [rad/MeV]
     betaz  = pow(DW,2)/emitz      # [MeV/rad]
-    alphaz = 0.
+    alphaz = 0.                   # always!
 
     res =  dict(
             Dphi0           = Dphi0,
@@ -212,23 +216,6 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     res['Dphimax+']         = phi1s
     res['Dphimax-']         = phi2s
     return res
-
-## update CONF with initials
-CONF.conf.update(
-    zellipse(CONF['sigmaz_i'],     ## calculate the long. emittance with def. parameters
-             CONF['Ez_feld'],
-             CONF['wellenlänge'],
-     radians(CONF['soll_phase']),
-             CONF['spalt_laenge'],
-             CONF['sollteilchen']))
-CONF['emitz_i']  = CONF['emitz']   # here zellipse calculated initial values
-CONF['betaz_i']  = CONF['betaz']   # here zellipse calculated initial values
-CONF['gammaz_i'] = CONF['gammaz']  # here zellipse calculated initial values
-del CONF.conf['emitz']             # del unused 
-del CONF.conf['betaz']             # del unused 
-del CONF.conf['gammaz']            # del unused 
-
-# DEBUG('CONF (after defaults)',CONF.conf)
 
 ## data for summary
 SUMMARY = {}
