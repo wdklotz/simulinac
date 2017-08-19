@@ -112,8 +112,8 @@ class Sigma(object):
         ksix          = ksi[0]
         ksiy          = ksi[1]
         gamma_av      = (rf_gap.particlei.gamma+rf_gap.particlef.gamma)/2.
-        kz            = -2.*kx*gamma_av**2*(1.+delta_phi**2/12.)
-        cfactor2      = (kz*delta_phi)**2*(cos(Phis)**2/8.+delta_phi*sin(Phis)/576.)
+        kz            = -2.*kx*gamma_av**2*(1.+(delta_phi**2)/12.)
+        cfactor2      = (kz*delta_phi)**2*((cos(Phis)**2)/8.+delta_phi*sin(Phis)/576.)
         delta_xp2_av  = cfactor1*(sigma_i.matrix[0,0]+ksix**2)
         delta_yp2_av  = cfactor1*(sigma_i.matrix[2,2]+ksiy**2)
         delta_dp2_av  = cfactor2*sigma_i.matrix[4,4]
