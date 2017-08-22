@@ -27,8 +27,8 @@ flags:
     - accON:        True          # accelleration on/off flag
     - periodic:     False         # treat lattice as periodic cell sequence(else as transfer line)
     - verbose:      0             # print flag (0 = minimal print), try 0,1,2,3
-    - egf:          False          # emittance growth flag
-    - sigma:        False          # beam sizes by sigma-matrix
+    - egf:          True          # emittance growth flag
+    - sigma:        True          # beam sizes by sigma-matrix
 ##...........................................................................................
 ## SECTION definitions
 ##...........................................................................................

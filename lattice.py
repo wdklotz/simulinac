@@ -336,7 +336,7 @@ class Lattice(object):
             element,s0,s1 = ipos
             for count,i_element in enumerate(element.step_through(anz=steps)):
                 # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
-                sigma_f = sigma_i.rmap(i_element)
+                sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
                 if isinstance(i_element,ELM.RFG) and CONF['egf']:
                     rf_gap    = i_element
                     delta_phi = CONF['Dphi0']
@@ -401,9 +401,8 @@ class Lattice(object):
             particle = element.particle
             # objprnt(particle,text=element.label)
             for i_element in element.step_through(anz=steps):
-                element_matrix = i_element.matrix
-                c_0 = element_matrix.dot(c_0)
-                s_0 = element_matrix.dot(s_0)
+                c_0 = i_element.rmap(c_0)
+                s_0 = i_element.rmap(s_0)
                 # cos_like
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]

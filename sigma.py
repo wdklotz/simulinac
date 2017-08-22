@@ -57,7 +57,7 @@ class Sigma(object):
         return str
     def __call__(self):
         return self.matrix
-    def rmap(self,R):
+    def RSRt(self,R):
         """
         Map this sigma through element R
         """

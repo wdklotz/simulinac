@@ -158,6 +158,12 @@ class _matrix_(object):
         indicating the lattice part it belongs to.
         """
         self.sec = sec
+    def rmap(self,track_i):
+        """
+        Linear mapping of trjectory from (i) to (f)
+        """
+        track_f = self.matrix.dot(track_i)
+        return track_f
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=CONF['sollteilchen']):
