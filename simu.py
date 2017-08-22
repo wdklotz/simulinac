@@ -175,22 +175,24 @@ def loesung(filepath):                 ## START here
     dictprnt(SUMMARY,text='summary')     ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
+    (c_like,s_like) = lattice.cs_traj(steps=30)       # calc sin- and cos-like trajectories
     if CONF['sigma']:
-        functions = lattice.sigma_functions(30)     ## calc. beamsize from sigma-matrix
+        sigma = lattice.sigma_functions(steps=30)     # calc. beamsize from sigma-matrix
+        display((sigma,c_like,s_like))
     else:
-        functions = lattice.twiss_functions(30)     ## calc. beamsize from beta-matrix
-    display(functions)
+        twiss = lattice.twiss_functions(steps=30)     # calc. beamsize from beta-matrix
+        display((twiss,c_like,s_like))
 
 if __name__ == '__main__':
     import sys
     filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
-    # filepath = 'LEBT_fodo_with_RF.yml'
-    # filepath = 'LEBT_fodo_with_RF(1).yml'
-    # filepath = 'LEBT_fodo_with_RF(2).yml'
+    filepath = 'LEBT_fodo_with_RF.yml'
+    filepath = 'LEBT_fodo_with_RF(1).yml'
+    filepath = 'LEBT_fodo_with_RF(2).yml'
     filepath = 'LEBT_HEBT_with_RF.yml'
-    # filepath = 'LEBT_HEBT_with_RF(5-200).yml'
-    # filepath = 'LEBT_HEBT_with_RF(5-80).yml'
-    # filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'LEBT_HEBT_with_RF(5-200).yml'
+    filepath = 'LEBT_HEBT_with_RF(5-80).yml'
+    filepath = 'LEBT_HEBT_with_RF(x).yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

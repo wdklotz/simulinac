@@ -315,7 +315,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['betaz_i* [KeV/rad]']              = CONF['betaz_i']*1.e3
     SUMMARY['gammaz_i* [rad/KeV]']             = CONF['gammaz_i']*1.e-3
     SUMMARY['synchrotron freq_i* [MHz]']       = CONF['omegal0']*1.e-6
-    SUMMARY['sync.freq_i/rf_freq* [%]']      = CONF['omegal0/omega']*1.e2
+    SUMMARY['sync.freq_i/rf_freq* [%]']        = CONF['omegal0/omega']*1.e2
     return
 
 ## utilities

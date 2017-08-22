@@ -319,8 +319,7 @@ class Lattice(object):
                 sigy   = sqrt(betay*CONF['emity_i'])
                 viseo = i_element.viseo
                 beta_fun.append((s,sigx,sigy,viseo))
-        (c_like,s_like) = self.cs_traj(steps)    # calc sin- and cos-like trajectories
-        return (beta_fun,c_like,s_like)
+        return beta_fun
 
     def sigma_functions(self,steps=10):
         """
@@ -349,8 +348,7 @@ class Lattice(object):
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))
                 sigma_i = sigma_f.clone()
-        (c_like,s_like) = self.cs_traj(steps)    # calc sin- and cos-like trajectories
-        return (sigma_fun,c_like,s_like)
+        return sigma_fun
 
     def dispersion(self,steps=10,closed=True): 
         """
@@ -382,24 +380,22 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
-        lamb = CONF['wellenlänge']
+        lamb        = CONF['wellenlänge']
+        x1          = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
+        x2p         = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
+        y1          = sqrt(CONF['emity_i']*self.betay0)
+        y2p         = sqrt(CONF['emity_i']*self.gammy0)
+        sigmaz_i    = CONF['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
+        gamma       = CONF['sollteilchen'].gamma
+        beta        = CONF['sollteilchen'].beta
+        dp2p_i      = gamma/(1.+gamma)*CONF['w0']   # z-plane: conv. dW/W --> dp/p []
+        # MDIM tracking used here
         c_like = []
         s_like = []
-        x1  = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
-        y1  = sqrt(CONF['emity_i']*self.betay0)
-        y2p = sqrt(CONF['emity_i']*self.gammy0)
-        dz    = CONF['sigmaz_i']                  # z-plane:    Vorgabe sigmaz_i [m]
-        gamma = CONF['sollteilchen'].gamma
-        beta  = CONF['sollteilchen'].beta
-        dp = gamma/(1.+gamma)*CONF['w0']          # dp/p-plane conv. dW/W --> dp/p []
-        # MDIM tracking used here
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
-        # c_0 = NP.array([[x1],[0.], [y1],[0.], [dz],[0.],[0.],[0.],[0.],[0.]])
-        # s_0 = NP.array([[0.],[x2p],[0.],[y2p],[0.],[dp],[0.],[0.],[0.],[0.]])
-        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = dz; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp; s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
+        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i;   s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle
@@ -413,17 +409,15 @@ class Lattice(object):
                 cxp = c_0[XPKOO]
                 cy  = c_0[YKOO]
                 cyp = c_0[YPKOO]
-                # cz  = -c_0[ZKOO]        # dz [m]
-                # cdw = c_0[ZPKOO]*100.   # dp/p [%]
-                cz  = -c_0[ZKOO]*360./(particle.beta*lamb)                # conversion dz --> dPhi [deg]
-                cdw = c_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.  # conversion dp/p --> dW/W [%]
+                cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
+                cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
                 # sin_like
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
                 sy  = s_0[YKOO]
                 syp = s_0[YPKOO]
-                sz  = -s_0[ZKOO]*360./(particle.beta*lamb)
-                sdw = s_0[ZPKOO]*(particle.gamma+1.)/particle.gamma*100.
+                sz  = -s_0[ZKOO]*360./(beta*lamb)
+                sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
                 c_like.append((cx,cxp,cy,cyp,cz,cdw))
                 s_like.append((sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)
