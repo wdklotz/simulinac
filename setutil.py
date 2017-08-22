@@ -321,7 +321,7 @@ def collect_data_for_summary(lattice):
 def I0(x):
     """
     Modified Bessel function I of integer order 0
-    [ref] Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
+    ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     t = x/3.75
     if 0. <= x and x < 3.75:
@@ -352,7 +352,7 @@ def I0(x):
 def I1(x):
     """
     Modified Bessel function I of integer order 1
-    [ref] Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
+    ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     t = x/3.75
     if 0. <= x and x < 3.75:

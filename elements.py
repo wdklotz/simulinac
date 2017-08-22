@@ -105,6 +105,7 @@ class _matrix_(object):
         mv = I(label='',viseo=self.viseo)          ## viseo point
         slices = [mb,mv]
 
+        DEBUG('_matrix_.step_through: {} {:8.4f}'.format(self.label,self.length))
         if self.length == 0.:           ## zero length element (like WD or CAV)
             slices.append(self)
             slices = slices + [mv,mb]
@@ -577,6 +578,7 @@ class _thin(_matrix_):
     def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def step_through(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
+        DEBUG('_thin.step_through: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]
@@ -708,7 +710,7 @@ class RFC(_thin):
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
         self.df.adapt_for_energy(tk_f)               #update energy for downstream drift after gap
-        lens = self.df * (self.kick * self.di)       #one for three
+        lens = self.df * self.kick * self.df         #one for three
         self.matrix = lens.matrix
         # DEBUG('RFC matrix\n',self.matrix)
         self.triplet = (self.di,self.kick,self.df)

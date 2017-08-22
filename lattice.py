@@ -392,14 +392,14 @@ class Lattice(object):
         y1          = sqrt(CONF['emity_i']*self.betay0)
         y2p         = sqrt(CONF['emity_i']*self.gammy0)
         sigmaz_i    = CONF['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
-        dpzp_i      = gamma/(1.+gamma)*CONF['w0']   # z-plane: conv. dW/W --> dp/p []
+        dpdivp_i    = gamma/(1.+gamma)*CONF['w0']       # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpzp_i;   s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpdivp_i; s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle

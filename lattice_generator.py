@@ -234,7 +234,7 @@ def factory(input_file):
     CONF.delete('emitz')
     CONF.delete('betaz')
     CONF.delete('gammaz')
-    # DEBUG('CONF after read_parameters()',CONF.__dict__)
+    DEBUG('CONF after read_parameters()',CONF.__dict__)
 
     (latticeList,segments) = expand_reduce(in_data)
     # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
