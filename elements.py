@@ -392,6 +392,87 @@ class GAP(D):
                     gap        = self.gap,
                     dWf        = self.dWf)
         return self
+## Basic RF-gap model from A.Shislo
+class RFB(D):
+    """
+    Base RF Gap Model from pyOrbit (A.Shislo)
+    """
+    def __init__(self,
+                    U0         = CONF['spalt_spannung'],
+                    PhiSoll    = radians(CONF['soll_phase']),
+                    fRF        = CONF['frequenz'],
+                    T          = 0.75,
+                    label      = 'RFB',
+                    gap        = CONF['spalt_laenge'],
+                    particle   = CONF['sollteilchen']):
+        super().__init__(label=label, particle=particle)
+        self.viseo    = 0.25
+        self.u0       = U0                                      # [MV] gap Voltage
+        self.phis     = PhiSoll                                 # [radians] soll phase
+        self.freq     = fRF                                     # [Hz] RF frequenz
+        self.tr       = T
+        self.label    = label
+        self.gap      = gap
+        self.particle = particle
+        self.lamb     = CONF['lichtgeschwindigkeit']/self.freq  # [m]
+    def rmap(self,i_track):
+        """
+        Mapping of track from position (i) to (f)
+        """
+        xi        = i_track[XKOO]       # [0]
+        xip       = i_track[XPKOO]      # [1]
+        yi        = i_track[YKOO]       # [2]
+        yip       = i_track[YPKOO]      # [3]
+        zi        = i_track[ZKOO]       # [4]
+        zip       = i_track[ZPKOO]      # [5]
+        Wi        = i_track[EKOO]       # [6]
+        DWi       = i_track[DEKOO]      # [7]
+        si        = i_track[SKOO]       # [8]
+        li        = i_track[LKOO]       # [9]
+
+        particlei = self.particle
+        tkini     = self.particle.tkin
+        betai     = particlei.beta
+        gammai    = particlei.gamma
+        gbi       = particlei.gamma_beta
+        qE0L      = self.u0
+        m0c2      = particlei.e0
+        T         = self.tr
+        lamb      = self.lamb
+        phii      = -(2.*pi)/(betai*lamb)*zi   # conv. z[m] --> phi[rad]
+        phif      = phii   # phase does not change
+        xf        = xi     # x does not change
+        yf        = yi     # y does not change
+        lf        = li     # stays constant 1
+        DWf       = DWi    # stays constant 1
+        sf        = si     # because self.length always 0
+
+        r         = sqrt(xi**2+yi**2)      # transverse radial distance from axis
+        k0        = (2.*pi)/lamb 
+        k         = k0/betai
+        Kr        = k/gammai*r             # argument for Bessel functions
+        i0        = I0(Kr)
+        i1        = I1(Kr)
+        # DEBUG('tkini {:8.4f} T {:8.4f} phii {:8.4f} r {:8.4f} Kr {:8.4f}'.format(tkini,T,degrees(phii),r,Kr))
+        
+        DW        = qE0L*T*i0*cos(phii)    # W(out) - W(in)   energy delta
+        Wf        = Wi + DW
+        tkinf     = tkini + Wf             # new energy
+        # DEBUG('phii {:8.4f}[deg] DW {:8.4g}[M eV] Wf {:8.4g}[MeV]'.format(degrees(phii),DW,Wf))
+
+        particlef = copy(particlei)(tkin=tkinf)
+        betaf     = particlef.beta
+        gammaf    = particlef.gamma
+        gbf       = particlef.gamma_beta
+
+        xfp       = gbi/gbf*xip - (1./gbf) * xi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
+        yfp       = gbi/gbf*yip - (1./gbf) * yi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
+        zf        = betaf/betai*zi
+        zfp       = gammaf/(1.+gammaf)*DW/Wf   # conv. DW/W --> dp/p
+
+        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,Wf,DWf,sf,lf])
+        # DEBUG(['{:8.4f}'.format(i*1.e6) for i in [xip-xfp,yip-yfp,zi-zf,zip-zfp]])
+        return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
     """
@@ -431,6 +512,14 @@ class RFG(D):
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
         self.particlei = particlei
         self.particlef = particlef
+        if CONF['rfb']:             # use map instead of matrix
+            self.rfb = RFB( U0           = self.u0,
+                            PhiSoll      = self.phis,
+                            fRF          = self.freq,
+                            T            = self.tr,
+                            label        = 'RFB',
+                            gap          = self.gap,
+                            particle     = self.particle)
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / CONF['lichtgeschwindigkeit']
         # DEBUG('RFG: teta , beta>>',teta,beta)
@@ -469,6 +558,17 @@ class RFG(D):
                     gap        = self.gap,
                     dWf        = self.dWf)
         return self
+    def rmap(self,i_track):
+        """
+        Mapping of track from position (i) to (f)
+        """
+        if CONF['rfb']:
+            # NOTE: non linear mapping with RFB-map
+            f_track = self.rfb.rmap(i_track)
+        else:
+            # NOTE: linear mapping with RFG-transport matrix
+            f_track = self.matrix.dot(i_track)
+        return f_track
 ## the mother of all thin elements: keeps particle instance!
 class _thin(_matrix_): 
     """

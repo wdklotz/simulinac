@@ -119,6 +119,7 @@ def factory(input_file):
         CONF['periodic'] = SUMMARY['ring lattice']            = flags['periodic']
         CONF['egf']      = SUMMARY['emittance growth']        = flags['egf']
         CONF['sigma']    = SUMMARY['sigma tracking']          = flags['sigma']
+        CONF['rfb']      = SUMMARY['track with RFB']          = flags['rfb']
         CONF['verbose']                                       = flags['verbose']
         return flags
 # --------

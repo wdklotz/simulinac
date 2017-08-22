@@ -309,6 +309,8 @@ class Lattice(object):
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
+            # particle = element.particle                                      # DEBUG
+            # objprnt(particle,text='twiss_functions: '+element.label)         # DEBUG
             for count,i_element in enumerate(element.step_through(anz=steps)):
                 m_beta = i_element.beta_matrix()
                 v_beta = m_beta.dot(v_beta)
@@ -334,6 +336,8 @@ class Lattice(object):
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
+            # particle = element.particle                                      # DEBUG
+            # objprnt(particle,text='sigma_functions: '+element.label)         # DEBUG
             for count,i_element in enumerate(element.step_through(anz=steps)):
                 # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
@@ -380,26 +384,26 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
+        gamma       = CONF['sollteilchen'].gamma
+        beta        = CONF['sollteilchen'].beta
         lamb        = CONF['wellenlänge']
         x1          = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
         x2p         = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1          = sqrt(CONF['emity_i']*self.betay0)
         y2p         = sqrt(CONF['emity_i']*self.gammy0)
         sigmaz_i    = CONF['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
-        gamma       = CONF['sollteilchen'].gamma
-        beta        = CONF['sollteilchen'].beta
-        dp2p_i      = gamma/(1.+gamma)*CONF['w0']   # z-plane: conv. dW/W --> dp/p []
+        dpzp_i      = gamma/(1.+gamma)*CONF['w0']   # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i;   s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpzp_i;   s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle
-            # objprnt(particle,text=element.label)
+            # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
             for i_element in element.step_through(anz=steps):
                 c_0 = i_element.rmap(c_0)
                 s_0 = i_element.rmap(s_0)
