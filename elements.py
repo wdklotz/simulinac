@@ -448,13 +448,13 @@ class RFB(D):
         sf        = si     # because self.length always 0
 
         r         = sqrt(xi**2+yi**2)      # transverse radial distance from axis
-        k0        = (2.*pi)/lamb 
+        k0        = (2.*pi)/lamb
         k         = k0/betai
         Kr        = k/gammai*r             # argument for Bessel functions
         i0        = I0(Kr)
         i1        = I1(Kr)
         # DEBUG('tkini {:8.4f} T {:8.4f} phii {:8.4f} r {:8.4f} Kr {:8.4f}'.format(tkini,T,degrees(phii),r,Kr))
-        
+
         DW        = qE0L*T*i0*cos(phii)    # W(out) - W(in)   energy delta
         Wf        = Wi + DW
         tkinf     = tkini + Wf             # new energy
