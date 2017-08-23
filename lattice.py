@@ -311,7 +311,8 @@ class Lattice(object):
             element,s0,s1 = ipos
             # particle = element.particle                                      # DEBUG
             # objprnt(particle,text='twiss_functions: '+element.label)         # DEBUG
-            for count,i_element in enumerate(element.step_through(anz=steps)):
+            slices = element.make_slices(anz=steps)
+            for i_element in slices:
                 m_beta = i_element.beta_matrix()
                 v_beta = m_beta.dot(v_beta)
                 s += i_element.length
@@ -332,13 +333,13 @@ class Lattice(object):
         sigma_i = Sigma(emitx=CONF['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
                         emity=CONF['emity_i'], betay=self.betay0,    alphay=self.alfay0,
                         emitz=CONF['emitz_i'], betaz=CONF['betaz_i'],alphaz=0.)
-        # DEBUG('sigma_i:\n',mxprnt(sigma_i()))
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             # particle = element.particle                                      # DEBUG
             # objprnt(particle,text='sigma_functions: '+element.label)         # DEBUG
-            for count,i_element in enumerate(element.step_through(anz=steps)):
+            slices = element.make_slices(anz=steps)
+            for i_element in slices:
                 # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
                 if isinstance(i_element,ELM.RFG) and CONF['egf']:
@@ -370,7 +371,8 @@ class Lattice(object):
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
-            for i_element in element.step_through(anz=steps):
+            slices = element.make_slices(anz=steps)
+            for i_element in slices:
                 m_beta = i_element.matrix
                 v_0 = m_beta.dot(v_0)
                 s += i_element.length
@@ -404,7 +406,8 @@ class Lattice(object):
             element,s0,s1 = ipos
             particle = element.particle
             # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
-            for i_element in element.step_through(anz=steps):
+            slices = element.make_slices(anz=steps)
+            for i_element in slices:
                 c_0 = i_element.rmap(c_0)
                 s_0 = i_element.rmap(s_0)
                 # cos_like

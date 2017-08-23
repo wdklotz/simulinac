@@ -94,23 +94,16 @@ class _matrix_(object):
         return res
     def shorten(self,length=0.):    # virtual function to be implemented by child classes
         raise RuntimeError('FATAL: _matrix_.shorten(): virtual member function called!')
-    def step_through(self,anz=10):
-        """
-        Generator function to step through an element:
-        The central function to calculate s-dependent twiss functions (nontrivial!)
-        Default is 10 steps/element.
-        Minimal step size is self.slice_min.
-        """
+    def make_slices(self,anz=10):
         mb = I(label='',viseo=0)                   ## viseo point 
         mv = I(label='',viseo=self.viseo)          ## viseo point
         slices = [mb,mv]
 
-        DEBUG('_matrix_.step_through: {} {:8.4f}'.format(self.label,self.length))
+        # DEBUG('_matrix_.make_slices: {} {:8.4f}'.format(self.label,self.length))
         if self.length == 0.:           ## zero length element (like WD or CAV)
             slices.append(self)
             slices = slices + [mv,mb]
-            for slice in slices: yield slice
-            return
+            return slices
 
         else:
             step = self.length/anz         ## calc step size
@@ -129,8 +122,7 @@ class _matrix_(object):
             for i in range(int(step_int_part)):
                 slices.append(mx)
             slices = slices + [mr,mv,mb]
-            for slice in slices: yield slice
-            return
+        return slices
     def beta_matrix(self):
         """
         The 6x6 matrix to track twiss functions through the lattice
@@ -577,8 +569,8 @@ class _thin(_matrix_):
     """
     def __init__(self,particle=CONF['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
-    def step_through(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
-        DEBUG('_thin.step_through: {} {:8.4f}'.format(self.label,self.length))
+    def make_slices(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
+        # DEBUGll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]
@@ -591,9 +583,7 @@ class _thin(_matrix_):
         slices.append(kik)              ## the Kick
         for i in range(anz1):
             slices.append(d2)
-
-        for slice in slices:
-            yield slice
+        return slices
     def shorten(self,l=0.):
         warnings.warn("No need to shorten a thin element!",RuntimeWarning)
         return self
