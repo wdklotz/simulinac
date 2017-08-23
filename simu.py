@@ -175,11 +175,14 @@ def loesung(filepath):                 ## START here
     dictprnt(SUMMARY,text='summary')     ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
+    DEBUG('CALCULATE C+S TRAJECTORIES')
     (c_like,s_like) = lattice.cs_traj(steps=30)       # calc sin- and cos-like trajectories
     if CONF['sigma']:
+        DEBUG('CALCULATE SIGMA')
         sigma = lattice.sigma_functions(steps=30)     # calc. beamsize from sigma-matrix
         display((sigma,c_like,s_like))
     else:
+        DEBUG('CALCULATE TWISS')
         twiss = lattice.twiss_functions(steps=30)     # calc. beamsize from beta-matrix
         display((twiss,c_like,s_like))
 
