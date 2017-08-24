@@ -230,10 +230,12 @@ def factory(input_file):
     CONF['emitz_i']  = CONF['emitz']   # here zellipse calculated initial values
     CONF['betaz_i']  = CONF['betaz']   # here zellipse calculated initial values
     CONF['gammaz_i'] = CONF['gammaz']  # here zellipse calculated initial values
+    CONF['alfaz_i']  = CONF['alphaz']  # here zellipse calculated initial values
     # del unused key-values from zellipse
     CONF.delete('emitz')
     CONF.delete('betaz')
     CONF.delete('gammaz')
+    CONF.delete('alphaz')
     DEBUG('CONF after read_parameters()',CONF.__dict__)
 
     (latticeList,segments) = expand_reduce(in_data)
