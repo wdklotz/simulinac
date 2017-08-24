@@ -17,13 +17,14 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
 from copy import copy
 import numpy as NP
 import warnings
 
 from setutil import wille,CONF,dictprnt,objprnt,Proton,Electron,DEBUG
-from setutil import dBdxprot,scalek0prot,k0prot
+from setutil import dBdxprot,scalek0prot,k0prot,I0,I1
 
 ## MDIM
 MDIM=10        # dimension of matrices
@@ -444,9 +445,17 @@ class RFB(D):
         k0        = (2.*pi)/lamb
         k         = k0/betai
         Kr        = k/gammai*r             # argument for Bessel functions
-        i0        = I0(Kr)
-        i1        = I1(Kr)
-        # DEBUG('tkini {:8.4f} T {:8.4f} phii {:8.4f} r {:8.4f} Kr {:8.4f}'.format(tkini,T,degrees(phii),r,Kr))
+        try:
+            i0 = I0(Kr)
+        except:
+            print('I0->Kr {} argument too large'.format(Kr))
+            sys.exit(1)
+        try:
+            i1 = I1(Kr)
+        except:
+            print('I1->Kr {} argument too large'.format(Kr))
+            sys.exit(1)
+        # DEBUG('RFB.rmap->tkini {:8.4f} T {:8.4f} zi {:8.4f} r {:8.4f} Kr {:8.4f}'.format(tkini,T,zis,r,Kr))
 
         DW        = qE0L*T*i0*cos(phii)    # W(out) - W(in)   energy delta
         Wf        = Wi + DW

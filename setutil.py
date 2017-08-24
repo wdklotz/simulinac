@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs
+from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
 ## logger
@@ -333,6 +333,7 @@ def I0(x):
         res+= 0.2659732*t2*t2*t2*t2
         res+= 0.0360768*t2*t2*t2*t2*t2
         res+= 0.0045813*t2*t2*t2*t2*t2*t2
+        # DEBUG('I0->x ',x)
     elif 3.75 <= x:
         tm1 = 1./t
         res = 0.39894228
@@ -344,6 +345,7 @@ def I0(x):
         res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
+        # DEBUG('I0->x ',x)
         res = res*exp(x)/sqrt(x)
     else:
         raise RuntimeError('I0(x): negative argument!')
