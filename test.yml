@@ -1,0 +1,73 @@
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+##...........................................................................................
+## run configuration
+##...........................................................................................
+flags:
+    - accON:        True          # accelleration on/off flag
+    - periodic:     False         # treat lattice as periodic cell sequence(else as transfer line)
+    - verbose:      0             # print flag (0 = minimal print), try 0,1,2,3
+    - egf:          False         # emittance growth flag
+    - sigma:        True          # beam sizes by sigma-matrix
+    # - rfb:          False         # track trajectories through map for RFG
+    - rfb:          True         # track trajectories through map for RFG
+##...........................................................................................
+## INPUT parameter definitions
+##...........................................................................................
+parameters:
+    - Tkin:                 50.        # [MeV] energy @ entrance (injection)
+    - frequency:    &f      816.E+6    # [Hz] frequency f0
+    - sigmaz_i:             2.5e-3     # [m] longitudinal displacement Dz @ entrance
+    - Ez:           &qE0    1.00       # [MV/m] electric field strength
+    - phi_sync:     &phis   -20.       # [deg] synchronous phase
+    - gapl:         &lg     0.020      # [m] (accelerating) gap size
+    - cavl:         &lcav   0.020      # [m] cavity length
+    - d:            &drift  0.05
+    - gaphalb:      &lghalb 0.010
+#............................................................................................
+## ELEMENT definitions
+##...........................................................................................
+elements:
+    - d:    &d                # ID
+        - type:     D         # class
+        - length:   *drift    # [m]
+    - dg:    &dg              # ID
+        - type:     D         # class
+        - length:   *lghalb   # [m]
+    - rfg:  &rfg              # ID
+        - type:     RFG       # class
+        # - type:     GAP     # class
+        - Ez:       *qE0      # [V/m] electric field
+        - PhiSync:  *phis     # [deg] synchronous phase
+        - fRF:      *f        # [Hz] frequency
+        - gap:      *lg       # [m] length
+    - rfc:  &rfc              # ID
+        - type:     RFC       # RFC class
+        - Ez:       *qE0      # [V/m] electric field
+        - PhiSync:  *phis     # [deg] synchronous phase
+        - fRF:      *f        # [Hz] frequency
+        - gap:      *lg       # [m] length
+        - length:   *lcav     # [m] length
+##...........................................................................................
+## SEGMENT definitions
+##...........................................................................................
+segments:
+    - RFG:
+        # - *d
+        - *dg      # 1/2 gap
+        - *rfg     # kick
+        - *dg      # 1/2 gap
+        # - *d
+    - RFC:
+        - *d
+        - *rfc
+        - *d
+##...........................................................................................
+## LATTICE definition
+##...........................................................................................
+lattice:
+    - title: test   # description is mandatory. DON't remove or reposition!
+    - [100,RFG]
+    # - [10,RFC]
+    

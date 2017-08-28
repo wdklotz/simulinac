@@ -161,7 +161,7 @@ def display1(functions):
     # ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
-    show()
+    # show()
 
 def loesung(filepath):                 ## START here
     lattice = parse_yaml_and_fabric(filepath)
@@ -176,26 +176,28 @@ def loesung(filepath):                 ## START here
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
     print('CALCULATE C+S TRAJECTORIES')
-    (c_like,s_like) = lattice.cs_traj(steps=30)       # calc sin- and cos-like trajectories
+    resolution = 23
+    (c_like,s_like) = lattice.cs_traj(steps=resolution)       # calc sin- and cos-like trajectories
     if CONF['sigma']:
         print('CALCULATE SIGMA')
-        sigma = lattice.sigma_functions(steps=30)     # calc. beamsize from sigma-matrix
+        sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
         display((sigma,c_like,s_like))
     else:
         print('CALCULATE TWISS')
-        twiss = lattice.twiss_functions(steps=30)     # calc. beamsize from beta-matrix
+        twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
         display((twiss,c_like,s_like))
 
 if __name__ == '__main__':
     import sys
-    filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
-    filepath = 'LEBT_fodo_with_RF.yml'
-    filepath = 'LEBT_fodo_with_RF(1).yml'
-    filepath = 'LEBT_fodo_with_RF(2).yml'
-    filepath = 'LEBT_HEBT_with_RF.yml'
-    filepath = 'LEBT_HEBT_with_RF(5-200).yml'
-    filepath = 'LEBT_HEBT_with_RF(5-80).yml'
+    # filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
+    # filepath = 'LEBT_fodo_with_RF.yml'
+    # filepath = 'LEBT_fodo_with_RF(1).yml'
+    # filepath = 'LEBT_fodo_with_RF(2).yml'
+    # filepath = 'LEBT_HEBT_with_RF.yml'
+    # filepath = 'LEBT_HEBT_with_RF(5-200).yml'
+    # filepath = 'LEBT_HEBT_with_RF(5-80).yml'
     # filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'test.yml'
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

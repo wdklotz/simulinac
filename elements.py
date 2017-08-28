@@ -43,7 +43,7 @@ class _matrix_(object):
         self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
         self.label=''               ## default empty label
         self.length=0.              ## default zero length!
-        self.slice_min = 0.005      ## minimal slice length
+        self.slice_min = 0.001      ## minimal slice length
         self.viseo = 0.
     def __call__(self,n=MDIM,m=MDIM):
         return self.matrix[:n,:m]     ## return upper left nxm submatrix
@@ -98,23 +98,25 @@ class _matrix_(object):
     def make_slices(self,anz=10):
         mb = I(label='',viseo=0)                   ## viseo point 
         mv = I(label='',viseo=self.viseo)          ## viseo point
-        slices = [mb,mv]
+        mr = I(label=self.label,viseo=self.viseo)  ## very small rest
+        # slices = [mb,mv]
+        slices = []
 
-        # DEBUG('_matrix_.make_slices: {} {:8.4f}'.format(self.label,self.length))
         if self.length == 0.:           ## zero length element (like WD or CAV)
             slices.append(self)
-            slices = slices + [mv,mb]
-            return slices
+            # slices = slices + [mv,mb]
+            # DEBUG('_matrix_.make_slices',dict(label=self.label,length='zero lenth element'))
 
         else:
             step = self.length/anz         ## calc step size
             if step < self.slice_min:
                 step  = self.slice_min
+
             (step_fraction_part,step_int_part) = modf(self.length/step)
+            # DEBUG('_matrix_.make_slices',dict(label=self.label,length=self.length,anz=anz,step=step,step_fracion=step_fraction_part,step_int=step_int_part))
 
             rest = step * step_fraction_part
             mx   = self.shorten(step)     # shorten element to step length
-            mr   = I(label=self.label,viseo=self.viseo)
             if rest > 1.e-3:
                 mr = self.shorten(rest)
             elif rest < 0.:
@@ -122,7 +124,9 @@ class _matrix_(object):
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
-            slices = slices + [mr,mv,mb]
+            # slices = slices + [mr,mv,mb]
+        slices += [mr]
+        # DEBUG('_matrix_.make_slices',slices)
         return slices
     def beta_matrix(self):
         """
@@ -391,7 +395,7 @@ class RFB(D):
     """
     Base RF Gap Model from pyOrbit (A.Shislo)
     """
-    def __init__(self,
+    def __init__(self,parent,
                     U0         = CONF['spalt_spannung'],
                     PhiSoll    = radians(CONF['soll_phase']),
                     fRF        = CONF['frequenz'],
@@ -409,6 +413,7 @@ class RFB(D):
         self.gap      = gap
         self.particle = particle
         self.lamb     = CONF['lichtgeschwindigkeit']/self.freq  # [m]
+        self.parent   = parent
     def rmap(self,i_track):
         """
         Mapping of track from position (i) to (f)
@@ -417,63 +422,88 @@ class RFB(D):
         xip       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
         yip       = i_track[YPKOO]      # [3]
-        zi        = i_track[ZKOO]       # [4]
-        zip       = i_track[ZPKOO]      # [5]
-        Wi        = i_track[EKOO]       # [6]
-        DWi       = i_track[DEKOO]      # [7]
-        si        = i_track[SKOO]       # [8]
-        li        = i_track[LKOO]       # [9]
+        zi        = i_track[ZKOO]       # [4] z-z0
+        zip       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
+        Ti        = i_track[EKOO]       # [6] summe aller delta-T
+        DTi       = i_track[DEKOO]      # [7] 1 immer
+        si        = i_track[SKOO]       # [8] summe aller laengen
+        Dsi       = i_track[LKOO]       # [9] 1 immer
 
-        particlei = self.particle
-        tkini     = self.particle.tkin
-        betai     = particlei.beta
-        gammai    = particlei.gamma
-        gbi       = particlei.gamma_beta
-        qE0L      = self.u0
-        m0c2      = particlei.e0
-        T         = self.tr
-        lamb      = self.lamb
-        phii      = -(2.*pi)/(betai*lamb)*zi   # conv. z[m] --> phi[rad]
-        phif      = phii   # phase does not change
-        xf        = xi     # x does not change
-        yf        = yi     # y does not change
-        lf        = li     # stays constant 1
-        DWf       = DWi    # stays constant 1
-        sf        = si     # because self.length always 0
+        qE0L       = self.u0
+        m0c2       = self.particle.e0
+        T          = self.tr
+        lamb       = self.lamb
+        phis       = self.phis
 
-        r         = sqrt(xi**2+yi**2)      # transverse radial distance from axis
-        k0        = (2.*pi)/lamb
-        k         = k0/betai
-        Kr        = k/gammai*r             # argument for Bessel functions
-        try:
-            i0 = I0(Kr)
-        except:
-            print('I0->Kr {} argument too large'.format(Kr))
-            sys.exit(1)
-        try:
-            i1 = I1(Kr)
-        except:
-            print('I1->Kr {} argument too large'.format(Kr))
-            sys.exit(1)
-        # DEBUG('RFB.rmap->tkini {:8.4f} T {:8.4f} zi {:8.4f} r {:8.4f} Kr {:8.4f}'.format(tkini,T,zis,r,Kr))
+        particlesi = self.particle
+        tkinsi     = particlesi.tkin
+        betasi     = particlesi.beta
+        gammasi    = particlesi.gamma
+        gbsi       = particlesi.gamma_beta
 
-        DW        = qE0L*T*i0*cos(phii)    # W(out) - W(in)   energy delta
-        Wf        = Wi + DW
-        tkinf     = tkini + Wf             # new energy
-        # DEBUG('phii {:8.4f}[deg] DW {:8.4g}[M eV] Wf {:8.4g}[MeV]'.format(degrees(phii),DW,Wf))
+        # r         = sqrt(xi**2+yi**2)      # transverse radial distance from axis
+        # k0        = (2.*pi)/lamb
+        # k         = k0/betasi
+        # Kr        = k/gammasi*r             # argument for Bessel functions = sqrt(k**2-k0*2)*r
+        # try:
+        #     i0 = I0(Kr)
+        # except:
+        #     print('I0->Kr {} argument too large'.format(Kr))
+        #     sys.exit(1)
+        # try:
+        #     i1 = I1(Kr)
+        # except:
+        #     print('I1->Kr {} argument too large'.format(Kr))
+        #     sys.exit(1)
+        i0=1.
+        i1=0.
+        
+        DWs        = qE0L*T*cos(phis)
+        DDW        = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)*zi
+        DW         = DDW-DWs
 
-        particlef = copy(particlei)(tkin=tkinf)
-        betaf     = particlef.beta
-        gammaf    = particlef.gamma
-        gbf       = particlef.gamma_beta
+        tkini      = (zip*(gammasi+1.)/gammasi+1.)*tkinsi
+        tkinf      = tkini + DW
+        tkinsf     = tkinsi + DWs 
+        particlesf = copy(particlesi)(tkin=tkinsf)
+        particlei  = copy(particlesi)(tkin=tkini)
+        particlef  = copy(particlesi)(tkin=tkinf)
+        betasf     = particlesf.beta
+        gammasf    = particlesf.gamma
+        gbsf       = particlesf.gamma_beta
+        betai      = particlei.beta
+        gammai     = particlei.gamma
+        gbi        = particlei.gamma_beta
+        betaf      = particlef.beta
+        gammaf     = particlef.gamma
+        gbf        = particlef.gamma_beta
 
-        xfp       = gbi/gbf*xip - (1./gbf) * xi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
-        yfp       = gbi/gbf*yip - (1./gbf) * yi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
-        zf        = betaf/betai*zi
-        zfp       = gammaf/(1.+gammaf)*DW/Wf   # conv. DW/W --> dp/p
+        xf         = xi     # x does not change
+        yf         = yi     # y does not change
+        DTf        = DTi    # 1
+        sf         = si     # because self.length always 0
+        Dsf        = Dsi    # 1
+        # xfp       = gbsi/gbsf*xip - (1./gbsf) * xi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
+        # yfp       = gbsi/gbsf*yip - (1./gbsf) * yi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
+        xfp       = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        yfp       = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        zf        = betasf/betasi*zi          # 4.1.10 A.Shislo
+        # zfp       = DW/(m0c2*betasi*gbsf)  # conv. dW --> dP/P
+        # zfp       = DW/(betasi*gbsf)  # conv. dW --> dP/P
+        # zfp       = DDW/tkinsf*gammasf/(gammasf+1.)
+        # zfp       = DDW*gammasf/(gammasf+1.)
+        zfp       = DDW
 
-        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,Wf,DWf,sf,lf])
-        # DEBUG(['{:8.4f}'.format(i*1.e6) for i in [xip-xfp,yip-yfp,zi-zf,zip-zfp]])
+        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DWs,sf,Dsf])
+        DEBUG('RFG.rmap',
+            dict(
+                zi=zi, zip=zip, zf=zf, zfp=zfp, 
+                tkinsi=tkinsi,tkinsf=tkinsf, tkini=tkini, tkinf=tkinf,
+                gbsi=gbsi, gbsf=gbsf, gbi=gbi, gbf=gbf,
+                DW=DW*1e3, DWs=DWs*1e3, DDW=DDW*1e3, i0=i0, i1=i1
+                )
+            )  
+            
         return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
@@ -515,7 +545,8 @@ class RFG(D):
         self.particlei = particlei
         self.particlef = particlef
         if CONF['rfb']:             # use map instead of matrix
-            self.rfb = RFB( U0           = self.u0,
+            self.rfb = RFB( self,
+                            U0           = self.u0,
                             PhiSoll      = self.phis,
                             fRF          = self.freq,
                             T            = self.tr,
@@ -592,6 +623,7 @@ class _thin(_matrix_):
         slices.append(kik)              ## the Kick
         for i in range(anz1):
             slices.append(d2)
+        # DEBUG('slices',slices)
         return slices
     def shorten(self,l=0.):
         warnings.warn("No need to shorten a thin element!",RuntimeWarning)

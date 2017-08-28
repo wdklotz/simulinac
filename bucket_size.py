@@ -46,7 +46,7 @@ def display_bucket(functions,phis,tki,gapl,qE0,fRF,name):
     plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
     # figure title
     plt.title('longitudinal bucket')
-    plt.show(block=False)
+    plt.show()
 
 def bucket():
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''

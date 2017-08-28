@@ -43,7 +43,7 @@ def DEBUG(string,arg=''):
         print('DEBUG: {} typ(list)\n{}'.format(string,sarg))
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
+        pp   = pprint.PrettyPrinter(indent=4,width=60)  ## use pprint module
         sarg = pp.pformat(arg)
         print('DEBUG: {} typ(dict)\n{}'.format(string,sarg))
     else:

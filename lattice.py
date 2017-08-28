@@ -386,8 +386,10 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
+        # DEBUG('cs_traj.steps: ',steps)
         gamma       = CONF['sollteilchen'].gamma
         beta        = CONF['sollteilchen'].beta
+        tkin        = CONF['sollteilchen'].tkin
         lamb        = CONF['wellenlänge']
         x1          = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
         x2p         = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
@@ -400,11 +402,12 @@ class Lattice(object):
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
-        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[DEKOO] =0.; c_0[LKOO] =0.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpdivp_i; s_0[DEKOO] =0.; s_0[LKOO] =0.  # sin-like traj.
+        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpdivp_i; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle
+            gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
