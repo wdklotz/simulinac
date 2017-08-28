@@ -440,69 +440,41 @@ class RFB(D):
         betasi     = particlesi.beta
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
-
-        # r         = sqrt(xi**2+yi**2)      # transverse radial distance from axis
-        # k0        = (2.*pi)/lamb
-        # k         = k0/betasi
-        # Kr        = k/gammasi*r             # argument for Bessel functions = sqrt(k**2-k0*2)*r
-        # try:
-        #     i0 = I0(Kr)
-        # except:
-        #     print('I0->Kr {} argument too large'.format(Kr))
-        #     sys.exit(1)
-        # try:
-        #     i1 = I1(Kr)
-        # except:
-        #     print('I1->Kr {} argument too large'.format(Kr))
-        #     sys.exit(1)
-        i0=1.
-        i1=0.
         
         DWs        = qE0L*T*cos(phis)
-        DDW        = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)*zi
-        DW         = DDW-DWs
-
-        tkini      = (zip*(gammasi+1.)/gammasi+1.)*tkinsi
-        tkinf      = tkini + DW
         tkinsf     = tkinsi + DWs 
         particlesf = copy(particlesi)(tkin=tkinsf)
-        particlei  = copy(particlesi)(tkin=tkini)
-        particlef  = copy(particlesi)(tkin=tkinf)
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
         gbsf       = particlesf.gamma_beta
-        betai      = particlei.beta
-        gammai     = particlei.gamma
-        gbi        = particlei.gamma_beta
-        betaf      = particlef.beta
-        gammaf     = particlef.gamma
-        gbf        = particlef.gamma_beta
 
+        m11 = gbsf/gbsi
+        m12 = 0.
+        m21 = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)
+        m22 = 1.
+
+        DWi = m0c2*betasi**2*gammasi*zip  # dp/p --> dT
+        zf = m11*zi + m12*DWi
+        DWf= m21*zi + m22*DWi
+        zfp = DWf/(m0c2*betasf**2*gammasf)   # dT --> dp/p
+        
         xf         = xi     # x does not change
         yf         = yi     # y does not change
         DTf        = DTi    # 1
         sf         = si     # because self.length always 0
         Dsf        = Dsi    # 1
-        # xfp       = gbsi/gbsf*xip - (1./gbsf) * xi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
-        # yfp       = gbsi/gbsf*yip - (1./gbsf) * yi/r * (qE0L*T/(m0c2*gbi)) * i1 * sin(phii)
         xfp       = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
         yfp       = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
-        zf        = betasf/betasi*zi          # 4.1.10 A.Shislo
-        # zfp       = DW/(m0c2*betasi*gbsf)  # conv. dW --> dP/P
-        # zfp       = DW/(betasi*gbsf)  # conv. dW --> dP/P
-        # zfp       = DDW/tkinsf*gammasf/(gammasf+1.)
-        # zfp       = DDW*gammasf/(gammasf+1.)
-        zfp       = DDW
 
         f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DWs,sf,Dsf])
-        DEBUG('RFG.rmap',
-            dict(
-                zi=zi, zip=zip, zf=zf, zfp=zfp, 
-                tkinsi=tkinsi,tkinsf=tkinsf, tkini=tkini, tkinf=tkinf,
-                gbsi=gbsi, gbsf=gbsf, gbi=gbi, gbf=gbf,
-                DW=DW*1e3, DWs=DWs*1e3, DDW=DDW*1e3, i0=i0, i1=i1
-                )
-            )  
+        # DEBUG('RFG.rmap',
+        #     dict(
+        #         zi=zi, zip=zip, zf=zf, zfp=zfp, 
+        #         tkinsi=tkinsi,tkinsf=tkinsf,
+        #         gbsi=gbsi, gbsf=gbsf,
+        #         DWi=DWi*1e3, DWf=DWf*1e3, DWs=DWs*1e3
+        #         )
+        #     )  
             
         return f_track
 ## Trace3D zero length RF-gap
