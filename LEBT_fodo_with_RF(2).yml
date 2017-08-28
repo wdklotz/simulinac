@@ -29,6 +29,7 @@ flags:                              ## run configuration
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
     - egf:          False           # emittance growth flag
     - sigma:        True            # beam sizes by sigma-matrix
+    - map:          False           # use maps to track trajectories through RFGap
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................

@@ -156,7 +156,7 @@ class _matrix_(object):
         indicating the lattice part it belongs to.
         """
         self.sec = sec
-    def rmap(self,track_i):
+    def map(self,track_i):
         """
         Linear mapping of trjectory from (i) to (f)
         """
@@ -414,9 +414,9 @@ class RFB(D):
         self.particle = particle
         self.lamb     = CONF['lichtgeschwindigkeit']/self.freq  # [m]
         self.parent   = parent
-    def rmap(self,i_track):
+    def map(self,i_track):
         """
-        Mapping of track from position (i) to (f)
+        Mapping of track from position (i) to (f) in linear approx. (A.Shislo 4.1)
         """
         xi        = i_track[XKOO]       # [0]
         xip       = i_track[XPKOO]      # [1]
@@ -452,21 +452,22 @@ class RFB(D):
         m12 = 0.
         m21 = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)
         m22 = 1.
-
-        DWi = m0c2*betasi**2*gammasi*zip  # dp/p --> dT
-        zf = m11*zi + m12*DWi
-        DWf= m21*zi + m22*DWi
-        zfp = DWf/(m0c2*betasf**2*gammasf)   # dT --> dp/p
+        condPdT = m0c2*betasi**2*gammasi
+        DWi = condPdT*zip  # dp/p --> dT
+        zf  = m11*zi + m12*DWi
+        DWf = m21*zi + m22*DWi
+        conDtdP = 1./(m0c2*betasf**2*gammasf)
+        zfp = DWf*conDtdP   # dT --> dp/p
         
-        xf         = xi     # x does not change
-        yf         = yi     # y does not change
-        DTf        = DTi    # 1
-        sf         = si     # because self.length always 0
-        Dsf        = Dsi    # 1
-        xfp       = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
-        yfp       = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        xf   = xi     # x does not change
+        yf   = yi     # y does not change
+        DTf  = DTi    # 1
+        sf   = si     # because self.length always 0
+        Dsf  = Dsi    # 1
+        xfp  = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        yfp  = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
-        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DWs,sf,Dsf])
+        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DTf,sf,Dsf])
         # DEBUG('RFG.rmap',
         #     dict(
         #         zi=zi, zip=zip, zf=zf, zfp=zfp, 
@@ -516,7 +517,7 @@ class RFG(D):
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
         self.particlei = particlei
         self.particlef = particlef
-        if CONF['rfb']:             # use map instead of matrix
+        if CONF['map']:             # use map instead of matrix
             self.rfb = RFB( self,
                             U0           = self.u0,
                             PhiSoll      = self.phis,
@@ -563,15 +564,15 @@ class RFG(D):
                     gap        = self.gap,
                     dWf        = self.dWf)
         return self
-    def rmap(self,i_track):
+    def map(self,i_track):
         """
         Mapping of track from position (i) to (f)
         """
-        if CONF['rfb']:
-            # NOTE: non linear mapping with RFB-map
-            f_track = self.rfb.rmap(i_track)
+        if CONF['map']:
+            # NOTE: mapping with RFB-map
+            f_track = self.rfb.map(i_track)
         else:
-            # NOTE: linear mapping with RFG-transport matrix
+            # NOTE: linear mapping with T3D matrix
             f_track = self.matrix.dot(i_track)
         return f_track
 ## the mother of all thin elements: keeps particle instance!

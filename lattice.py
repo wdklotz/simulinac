@@ -411,8 +411,8 @@ class Lattice(object):
             # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
-                c_0 = i_element.rmap(c_0)
-                s_0 = i_element.rmap(s_0)
+                c_0 = i_element.map(c_0)
+                s_0 = i_element.map(s_0)
                 # cos_like
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
