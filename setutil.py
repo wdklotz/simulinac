@@ -348,7 +348,7 @@ def I0(x):
         # DEBUG('I0->x ',x)
         res = res*exp(x)/sqrt(x)
     else:
-        raise RuntimeError('I0(x): negative argument!')
+        raise RuntimeError('I0(): x={} negative argument!'.format(x))
     return res
 
 def I1(x):

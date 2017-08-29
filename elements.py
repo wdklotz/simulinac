@@ -416,18 +416,18 @@ class RFB(D):
         self.parent   = parent
     def map(self,i_track):
         which_map = self.lin_map
-        # which_map = self.rfb_map
+        which_map = self.rfb_map
         return which_map(i_track)
     def lin_map(self,i_track):
         """
         Mapping of track from position (i) to (f) in linear approx. (A.Shislo 4.1)
         """
         xi        = i_track[XKOO]       # [0]
-        xip       = i_track[XPKOO]      # [1]
+        xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
-        yip       = i_track[YPKOO]      # [3]
+        ypi       = i_track[YPKOO]      # [3]
         zi        = i_track[ZKOO]       # [4] z-z0
-        zip       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
+        zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
         Ti        = i_track[EKOO]       # [6] summe aller delta-T
         DTi       = i_track[DEKOO]      # [7] 1 immer
         si        = i_track[SKOO]       # [8] summe aller laengen
@@ -438,6 +438,8 @@ class RFB(D):
         T          = self.tr
         lamb       = self.lamb
         phis       = self.phis
+        qE0LT      = qE0L*T
+        twopi        = 2.*pi
 
         particlesi = self.particle
         tkinsi     = particlesi.tkin
@@ -445,7 +447,7 @@ class RFB(D):
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
-        DWs        = qE0L*T*cos(phis)
+        DWs        = qE0LT*cos(phis)
         tkinsf     = tkinsi + DWs 
         particlesf = copy(particlesi)(tkin=tkinsf)
         betasf     = particlesf.beta
@@ -454,27 +456,27 @@ class RFB(D):
 
         m11 = gbsf/gbsi
         m12 = 0.
-        m21 = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)
+        m21 = qE0LT*twopi/(lamb*betasi)*sin(phis)
         m22 = 1.
         condPdT = m0c2*betasi**2*gammasi
-        DWi = condPdT*zip  # dp/p --> dT
+        DWi = condPdT*zpi  # dp/p --> dT
         zf  = m11*zi + m12*DWi
         DWf = m21*zi + m22*DWi
-        conDtdP = 1./(m0c2*betasf**2*gammasf)
-        zfp = DWf*conDtdP   # dT --> dp/p
+        condTdP = 1./(m0c2*betasf**2*gammasf)
+        zfp = DWf*condTdP   # dT --> dp/p
         
         xf   = xi     # x does not change
         yf   = yi     # y does not change
         DTf  = DTi    # 1
         sf   = si     # because self.length always 0
         Dsf  = Dsi    # 1
-        xfp  = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
-        yfp  = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
-        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DTf,sf,Dsf])
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,DTf,sf,Dsf])
         # DEBUG('RFB.lin_map',
         #     dict(
-        #         zi=zi, zip=zip, zf=zf, zfp=zfp, 
+        #         zi=zi, zpi=zpi, zf=zf, zfp=zfp, 
         #         tkinsi=tkinsi,tkinsf=tkinsf,
         #         gbsi=gbsi, gbsf=gbsf,
         #         DWi=DWi*1e3, DWf=DWf*1e3, DWs=DWs*1e3
@@ -483,24 +485,26 @@ class RFB(D):
         return f_track
     def rfb_map(self,i_track):
         """
-        Mapping of track from position (i) to (f) in linear approx. (A.Shislo 4.1)
+        Mapping of track from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
         """
         xi        = i_track[XKOO]       # [0]
-        xip       = i_track[XPKOO]      # [1]
+        xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
-        yip       = i_track[YPKOO]      # [3]
+        ypi       = i_track[YPKOO]      # [3]
         zi        = i_track[ZKOO]       # [4] z-z0
-        zip       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
+        zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
         Ti        = i_track[EKOO]       # [6] summe aller delta-T
         DTi       = i_track[DEKOO]      # [7] 1 immer
         si        = i_track[SKOO]       # [8] summe aller laengen
         Dsi       = i_track[LKOO]       # [9] 1 immer
 
-        qE0L       = self.u0
-        m0c2       = self.particle.e0
         T          = self.tr
+        qE0L       = self.u0
+        qE0LT      = qE0L*T
+        m0c2       = self.particle.e0
         lamb       = self.lamb
         phis       = self.phis
+        twopi      = 2.*pi
 
         particlesi = self.particle
         tkinsi     = particlesi.tkin
@@ -508,39 +512,54 @@ class RFB(D):
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
-        DWs        = qE0L*T*cos(phis)
-        tkinsf     = tkinsi + DWs 
-        particlesf = copy(particlesi)(tkin=tkinsf)
+        DWs        = qE0LT*cos(phis)
+        Wsf        = tkinsi + DWs 
+        particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
         gbsf       = particlesf.gamma_beta
-
-        m11 = gbsf/gbsi
-        m12 = 0.
-        m21 = qE0L*T*2.*pi/(lamb*betasi)*sin(phis)
-        m22 = 1.
+        
         condPdT = m0c2*betasi**2*gammasi
-        DWi = condPdT*zip  # dp/p --> dT
-        zf  = m11*zi + m12*DWi
-        DWf = m21*zi + m22*DWi
-        conDtdP = 1./(m0c2*betasf**2*gammasf)
-        zfp = DWf*conDtdP   # dT --> dp/p
+        condTdP = 1./(m0c2*betasf**2*gammasf)
+
+        DWi       = condPdT*zpi                                # dp/p --> dT
+        Wi        = tkinsi + DWi    
+        if Wi < 0.:
+            raise RuntimeError('negative kinetic energy {:8.4g}'.format(Wi))
+        particlei = copy(particlesi)(tkin=Wi)
+        betai     = particlei.beta
+        gbi       = particlei.gamma_beta
+        
+        r = sqrt(xi**2+yi**2)
+        Kr = (twopi*r)/(lamb*gbi)
+        # DEBUG('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
+        i0 = I0(Kr)
+        i1 = I1(Kr)
+
+        zf      = gbsf/gbsi*zi
+        Dphii   = -zi*twopi/(betai*lamb)                       # z -> dPhi
+        phii    = Dphii+phis                                   # phi(in)
+        WfmWi   = qE0LT*i0*cos(phii)                           # W(f) - W(i)
+        WsfmWsi = DWs                                          # Ws(f) - Ws(i)
+        DWf     = WfmWi - WsfmWsi + DWi                        # DW(f)
+        zfp     = DWf*condTdP                                  # dT --> dp/p
         
         xf   = xi     # x does not change
         yf   = yi     # y does not change
         DTf  = DTi    # 1
         sf   = si     # because self.length always 0
         Dsf  = Dsi    # 1
-        xfp  = gbsi/gbsf*xip - xi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
-        yfp  = gbsi/gbsf*yip - yi * (pi*qE0L*T/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        commonf = qE0LT/(m0c2*gbsi*gbsf)*i1
+        xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)
+        ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)
 
-        f_track = NP.array([xf,xfp,yf,yfp,zf,zfp,tkinsf,DTf,sf,Dsf])
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,DTf,sf,Dsf])
+        # Wf      = Wi+DWf
+        # Wsi     = tkinsi
         # DEBUG('RFB.rfb_map',
         #     dict(
-        #         zi=zi, zip=zip, zf=zf, zfp=zfp, 
-        #         tkinsi=tkinsi,tkinsf=tkinsf,
-        #         gbsi=gbsi, gbsf=gbsf,
-        #         DWi=DWi*1e3, DWf=DWf*1e3, DWs=DWs*1e3
+        #         zi=zi, zpi=zpi, zf=zf, zfp=zfp,
+        #         Wi=Wi,Wf=Wf,Wsi=Wsi,Wsf=Wsf,phis=degrees(phis),phii=degrees(phii)
         #         )
         #     )  
         return f_track

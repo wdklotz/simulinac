@@ -29,7 +29,7 @@ flags:                              ## run configuration
     - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
     - egf:          False           # emittance growth flag
     - sigma:        True            # beam sizes by sigma-matrix
-    - map:          False           # use maps to track trajectories through RFGap
+    - map:          True            # use maps to track trajectories through RFGap
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
@@ -41,8 +41,7 @@ parameters:                           ## parameter definitions
     - betay_i:              2.373     # [m] twiss beta @ entrance y
     - alfax_i:              0.0       # [-] twiss alpha x @ entrance
     - alfay_i:              0.0       # [-] twiss alpha y @ entrance
-#    - Dp/p:                 0.0       # [%] relative impulse Dp/p @ entrance
-#    - Dz:                   0.0       # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:             2.5e-3    # [m] longitudinal displacement Dz @ entrance
     - frequency:    &p01    816.6E+6  # [Hz] frequency
     - ql:           &p03    0.05      # [m] quad-length
     - B_grad_f:     &p04    16.0      # [T/m] quadrupole gradient focusing QF
@@ -122,6 +121,6 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - title: FODO 07.02.2017    # description is mandatory. DON't remove or reposition!
-    - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
-#    - [1, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
-#    - [1, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]
+    # - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+    - [10, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+    # - [1, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]
