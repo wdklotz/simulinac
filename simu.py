@@ -143,12 +143,13 @@ def display1(functions):
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*   # longitudinal dPhi, dW/W
     ax_l=subplot(313)
-    ax_l.set_title('longitudinal: C(z)')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
-    # ax_l.plot(z,sz,color='green')
+    # ax_l.set_title('longitudinal: C(z)')
+    # ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
+    ax_l.set_title('longitudinal: S(z)')
+    ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseoz = [x*vscale for x in viseo]
     ax_l.plot(z,viseoz,label='',color='black')
