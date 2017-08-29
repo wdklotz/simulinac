@@ -27,6 +27,7 @@ from bucket_size import bucket
 from tracks import track_soll
 
 def display(functions):
+    print('PREPARE DISPLAY')
     if CONF['dWf'] == 0:
         display0(functions)
     else:
@@ -197,8 +198,10 @@ if __name__ == '__main__':
     # filepath = 'LEBT_HEBT_with_RF.yml'
     # filepath = 'LEBT_HEBT_with_RF(5-200).yml'
     # filepath = 'LEBT_HEBT_with_RF(5-80).yml'
-    filepath = 'LEBT_HEBT_with_RF(x).yml'
+    # filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'LE_HE_15inj.yml'
     # filepath = 'test.yml'
+    
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

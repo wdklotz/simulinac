@@ -460,6 +460,7 @@ class RFB(D):
         m22 = 1.
         condPdT = m0c2*betasi**2*gammasi
         DWi = condPdT*zpi  # dp/p --> dT
+        # THE MAP
         zf  = m11*zi + m12*DWi
         DWf = m21*zi + m22*DWi
         condTdP = 1./(m0c2*betasf**2*gammasf)
@@ -512,7 +513,7 @@ class RFB(D):
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
-        DWs        = qE0LT*cos(phis)
+        DWs        = qE0LT*cos(phis)                # energy increase sync. particle
         Wsf        = tkinsi + DWs 
         particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
@@ -530,17 +531,18 @@ class RFB(D):
         betai     = particlei.beta
         gbi       = particlei.gamma_beta
         
-        r = sqrt(xi**2+yi**2)
+        r = sqrt(xi**2+yi**2)                                 # radial coordinate
         Kr = (twopi*r)/(lamb*gbi)
         # DEBUG('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
-        i0 = I0(Kr)
-        i1 = I1(Kr)
+        i0 = I0(Kr)                                           # bessel function
+        i1 = I1(Kr)                                           # bessel function
 
+        # THE MAP
         zf      = gbsf/gbsi*zi
         Dphii   = -zi*twopi/(betai*lamb)                       # z -> dPhi
         phii    = Dphii+phis                                   # phi(in)
         WfmWi   = qE0LT*i0*cos(phii)                           # W(f) - W(i)
-        WsfmWsi = DWs                                          # Ws(f) - Ws(i)
+        WsfmWsi = DWs                                          # Ws(f) - Ws(i) particle energy increase
         DWf     = WfmWi - WsfmWsi + DWi                        # DW(f)
         zfp     = DWf*condTdP                                  # dT --> dp/p
         
@@ -549,9 +551,9 @@ class RFB(D):
         DTf  = DTi    # 1
         sf   = si     # because self.length always 0
         Dsf  = Dsi    # 1
-        commonf = qE0LT/(m0c2*gbsi*gbsf)*i1
-        xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)
-        ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)
+        commonf = qE0LT/(m0c2*gbsi*gbsf)*i1                   # common factor
+        xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)         # tranverse coordinate
+        ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)         # tranverse coordinate
 
         f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,DTf,sf,Dsf])
         # Wf      = Wi+DWf
