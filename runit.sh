@@ -1,0 +1,3 @@
+python simu.py
+echo $?
+

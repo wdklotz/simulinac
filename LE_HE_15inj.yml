@@ -39,7 +39,8 @@ sections:
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - Tkin:                 15.0         # [MeV] energy @ entrance (injection)
+    - aperture:             0.01       # [m] aperture = bore radius
+    - Tkin:                 15.0       # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length

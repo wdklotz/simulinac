@@ -81,6 +81,7 @@ class _matrix_(object):
         raise RuntimeError('_matrix_:reverse not implemented!')
     def inverse(self):
         raise RuntimeError('_matrix_:inverse not implemented!')
+        sys.exit(1)
     def trace(self):
         return self.tracex()+self.tracey
     def tracex(self):
@@ -121,6 +122,8 @@ class _matrix_(object):
                 mr = self.shorten(rest)
             elif rest < 0.:
                 raise RuntimeError('FATAL: negative resting step size when stepping through')
+                sys.exit(1)
+                
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
@@ -233,6 +236,7 @@ class QF(D):
             m[XKOO,XKOO]=cd; m[XKOO,XPKOO]=sd; m[XPKOO,XKOO]=cdp; m[XPKOO,XPKOO]=sdp; m[YKOO,YKOO]=cf; m[YKOO,YPKOO]=sf; m[YPKOO,YKOO]=cfp; m[YPKOO,YPKOO]=sfp; m[ZKOO,ZPKOO]=rzz12
         else:
             raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
+            sys.exit(1)
         return m
     def adapt_for_energy(self,tkin):
         ki = self.k0
@@ -527,6 +531,7 @@ class RFB(D):
         Wi        = tkinsi + DWi    
         if Wi < 0.:
             raise RuntimeError('negative kinetic energy {:8.4g}'.format(Wi))
+            sys.exit(1)
         particlei = copy(particlesi)(tkin=Wi)
         betai     = particlei.beta
         gbi       = particlei.gamma_beta
@@ -843,6 +848,7 @@ def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
         return 0.2998*gradient/(beta*energy)
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
+        sys.exit(1)
 def test0():
     print('--------------------------------Test0---')
     print('trivial test 0 ...')

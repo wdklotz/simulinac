@@ -225,6 +225,7 @@ class Lattice(object):
                 SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
             else:
                 raise RuntimeError('STOP: unstable lattice')
+                sys.exit(1)
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
@@ -349,6 +350,10 @@ class Lattice(object):
                 sigf = sigma_f()
                 xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
+                r = sqrt(xxav**2+yyav**2)
+                if 3.*r > CONF['aperture']:
+                    raise RuntimeError('out of aperture!')
+                    sys.exit(1)
                 s += i_element.length
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))

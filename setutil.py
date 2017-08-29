@@ -79,6 +79,7 @@ class Defaults(object):
             'periodic': True,            # periodic lattice? default
             'egf'     : False,           # emittance grow flag default
             'sigma'   : True,            # beam sizes by sigma-tracking
+            'aperture': 0.011,           # aperture = bore radius
             'verbose' : 1                # print flag (True) default
             }
     def __getitem__(self,key):
@@ -316,6 +317,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['gammaz_i* [rad/KeV]']             = CONF['gammaz_i']*1.e-3
     SUMMARY['synchrotron freq_i* [MHz]']       = CONF['omegal0']*1.e-6
     SUMMARY['sync.freq_i/rf_freq* [%]']        = CONF['omegal0/omega']*1.e2
+    SUMMARY['aperture [m]']                    = CONF['aperture']
     return
 
 def I0(x):
@@ -349,6 +351,7 @@ def I0(x):
         res = res*exp(x)/sqrt(x)
     else:
         raise RuntimeError('I0(): x={} negative argument!'.format(x))
+        sys.exit(1)
     return res
 
 def I1(x):
@@ -381,6 +384,7 @@ def I1(x):
         res = res*exp(x)/sqrt(x)
     else:
         raise RuntimeError('I1(x): negative argument!')
+        sys.exit(1)
     return res
 ## utilities
 def k0prot(gradient=0.,tkin=0.):
@@ -398,6 +402,7 @@ def k0prot(gradient=0.,tkin=0.):
         return k
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')
+        sys.exit(1)
 
 def scalek0prot(k0=0.,tki=0.,tkf=0.):
     """
@@ -421,6 +426,7 @@ def dBdxprot(k0=0.,tkin=0.):
         return k0 * Proton(tkin).brho
     else:
         raise RuntimeError('setutil.k0(): negative kinetic energy?')
+        sys.exit(1)
 
 def objprnt (what,text='',filter=[]):
     """

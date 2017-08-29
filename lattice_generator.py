@@ -83,6 +83,7 @@ def instanciate_element(item):
     else:
         raise RuntimeError('unknown element type: ',key)
     # DEBUG('instanciate_element: {} instance created'.format(label),'')
+        sys.exit(1)
     try:     ## sections are not mandatory
         instance.set_section(sec=attributes['sec'])
     except:
@@ -152,6 +153,7 @@ def factory(input_file):
         if 'gap'              in parameters: CONF['spalt_laenge']     = parameters['gap']
         if 'cav_len'          in parameters: CONF['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: CONF['ql']               = parameters['ql']
+        if 'aperture'         in parameters: CONF['aperture']         = parameters['aperture']
         if 'windings'         in parameters: CONF['n_coil']           = parameters['windings']
         CONF['wellenlänge']    = CONF['lichtgeschwindigkeit']/CONF['frequenz']
         CONF['spalt_spannung'] = CONF['Ez_feld']*CONF['spalt_laenge']
@@ -246,6 +248,7 @@ def factory(input_file):
     lattice = make_lattice(latticeList,segments)
     # DEBUG('lattice_generator >>\n',lattice.string())
 
+    SUMMARY['aperture [m]']       = CONF['aperture']
     SUMMARY['lattice length [m]'] = CONF['lattice_length']  = lattice.length
     # DEBUG('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)
