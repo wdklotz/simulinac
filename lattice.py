@@ -118,10 +118,10 @@ class Lattice(object):
         unstable = False
         stab = fabs(mcell.tracex())
         # if verbose:
-        printv(0,'stability X? ',stab)
+        printv(1,'stability X? ',stab)
         if stab >= 2.0:
             # if verbose:
-            printv(0,'unstable Lattice in x-plane\n')
+            printv(1,'unstable Lattice in x-plane\n')
             unstable = True
         else:
             cos_mux = 0.5 * stab
@@ -129,22 +129,22 @@ class Lattice(object):
 
         stab = fabs(mcell.tracey())
         # if verbose:
-        printv(0,'stability Y? ',stab)
+        printv(1,'stability Y? ',stab)
         if stab >= 2.0:
             # if verbose:
-            printv(0,'unstable Lattice in y-plane\n')
+            printv(1,'unstable Lattice in y-plane\n')
             unstable = True
         else:
             cos_muy = 0.5 * stab
             muy = degrees(acos(cos_muy))
         if not unstable:
             # if verbose:
-            printv(0,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+            printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
         self.full_cell = mcell    # the full cell becomes instance variable
         # if verbose:
-        printv(2,'Lattice.cell: full lattice matrix (i)->(f)')
-        printv(2,self.full_cell.string())
+        printv(0,'Lattice.cell: full lattice matrix (i)->(f)')
+        printv(0,self.full_cell.string())
         det = LA.det(self.full_cell.matrix)
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))
@@ -209,11 +209,11 @@ class Lattice(object):
                 m_cell_beta = self.full_cell.beta_matrix()
                 v_beta_e = m_cell_beta.dot(v_beta_a)
                 # if verbose:
-                printv(0,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
+                printv(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
                 diffa_e = v_beta_a - v_beta_e
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
-                printv(0,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
+                printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
                 ## keep related variables for later use
                 CONF['sigx_i'] = sqrt(bax*emix)
                 CONF['sigy_i'] = sqrt(bay*emiy)

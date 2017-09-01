@@ -348,7 +348,7 @@ class GAP(D):
                         label      = 'GAP',
                         particle   = CONF['sollteilchen'],
                         gap        = CONF['spalt_laenge'],
-                        dWf        = 1.):
+                        dWf        = CONF['dWf']):
         super().__init__(label=label, particle=particle)
         self.u0     = U0                       # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
@@ -582,7 +582,7 @@ class RFG(D):
                     label      = 'RFG',
                     particle   = CONF['sollteilchen'],
                     gap        = CONF['spalt_laenge'],
-                    dWf        = 1.):
+                    dWf        = CONF['dWf']):
         super().__init__(label=label, particle=particle)
         self.viseo  = 0.25
         self.u0     = U0*dWf                                  # [MV] gap Voltage
@@ -782,7 +782,7 @@ class RFC(_thin):
                     particle = CONF['sollteilchen'],
                     gap      = CONF['spalt_laenge'],
                     length   = 0.,
-                    dWf      = 1.):
+                    dWf      = CONF['dWf']):
         super().__init__(particle=particle)
         if length == 0.: length = gap
         self.u0     = U0*dWf

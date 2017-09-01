@@ -24,12 +24,13 @@
 ## run configuration
 ##...........................................................................................
 flags:
-    - accON:        True            # accelleration on/off flag
-    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
+    - accON:        True            # acceleration on/off flag
     - egf:          True            # emittance growth flag
-    - sigma:        True            # beam sizes by sigma-matrix
     - map:          True            # use maps to track trajectories through RFGap
+    # - KVprint:      False           # print a dictionary of Key-Value pairs, no display
+    # - sigma:        True            # beam sizes by sigma-matrix
+    # - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
+    # - verbose:      2               # print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## SECTION definitions
 ##...........................................................................................
@@ -74,7 +75,8 @@ parameters:
 
     - gap_HE:     &p12    0.044      # HE gap
     - cav_HE:     &p13    0.044      # HE cav len
-    - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
+    # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
+    - Ez_HE:      &p14    1.       # [MV/m] electric field strength
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................

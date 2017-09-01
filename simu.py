@@ -168,26 +168,32 @@ def display1(functions):
 def loesung(filepath):                 ## START here
     lattice = parse_yaml_and_fabric(filepath)
     soll_track = track_soll(lattice)   ## (WICHTIG) track Sollteilchen hier
-    print('loesung:\n',lattice.string())
     lattice.stats(soll_track)          ## count elements and other statistics
     #-----------------------------------------
     # ganze Zelle, Anfangswerte
     mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
     collect_data_for_summary(lattice)    ## summary
-    dictprnt(SUMMARY,text='summary')     ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
-    print('CALCULATE C+S TRAJECTORIES')
+    if not CONF['KVprint']: print('CALCULATE C+S TRAJECTORIES')
     resolution = 23
     (c_like,s_like) = lattice.cs_traj(steps=resolution)       # calc sin- and cos-like trajectories
     if CONF['sigma']:
-        print('CALCULATE SIGMA')
         sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
-        display((sigma,c_like,s_like))
+        if CONF['KVprint']:
+            print(CONF.conf)
+        else:
+            print('CALCULATE SIGMA')
+            dictprnt(SUMMARY,text='summary')     ## summary
+            display((sigma,c_like,s_like))
     else:
-        print('CALCULATE TWISS')
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
-        display((twiss,c_like,s_like))
+        if CONF['KVprint']:
+            print(CONF.conf)
+        else:
+            print('CALCULATE TWISS')
+            dictprnt(SUMMARY,text='summary')     ## summary
+            display((twiss,c_like,s_like))
 
 if __name__ == '__main__':
     import sys

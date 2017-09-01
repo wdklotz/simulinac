@@ -116,12 +116,15 @@ def factory(input_file):
     #returns ==> {...}
         flags_list = in_data['flags']
         flags      = lod2d(flags_list)
-        CONF['dWf']      = SUMMARY['acc. ON']                 = flags['accON']
-        CONF['periodic'] = SUMMARY['ring lattice']            = flags['periodic']
-        CONF['egf']      = SUMMARY['emittance growth']        = flags['egf']
-        CONF['sigma']    = SUMMARY['sigma tracking']          = flags['sigma']
-        CONF['map']      = SUMMARY['track with map']          = flags['map']
-        CONF['verbose']                                       = flags['verbose']
+        if 'accON' in flags and flags['accON']: 
+            CONF['dWf']      = 1.
+            SUMMARY['accON'] = True
+        if 'periodic'    in flags: CONF['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
+        if 'egf'         in flags: CONF['egf']      = SUMMARY['emittance growth'] = flags['egf']
+        if 'sigma'       in flags: CONF['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
+        if 'map'         in flags: CONF['map']      = SUMMARY['track with map']   = flags['map']
+        if 'KVprint'     in flags: CONF['KVprint']                                = flags['KVprint']
+        if 'verbose'     in flags: CONF['verbose']                                = flags['verbose']
         return flags
 # --------
     def read_sections(in_data):

@@ -75,12 +75,14 @@ class Defaults(object):
             'alfax_i' : 0.0,             # Vorgabe twiss alphax @ entrance
             'alfay_i' : 0.0,             # Vorgabe twiss alphaxy @ entrance
             'sigmaz_i': 0.02,            # [m] max long. half-width displacement
-            'dWf'     : False,           # acceleration on/off flag default
-            'periodic': True,            # periodic lattice? default
+            'dWf'     : 0.,              # acceleration on/off flag 1=on,0=off
+            'periodic': False,           # periodic lattice? default
             'egf'     : False,           # emittance grow flag default
             'sigma'   : True,            # beam sizes by sigma-tracking
             'aperture': 0.011,           # aperture = bore radius
-            'verbose' : 1                # print flag (True) default
+            'KVprint' : False,           # print a dictionary of Key-Value pairs, no display
+            'map'     : False,           # use maps to track trajectories through RFGap
+            'verbose' : 0                # print flag (True) default
             }
     def __getitem__(self,key):
         if key in self.conf:
@@ -297,7 +299,11 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
 
-    SUMMARY['sections']                        = CONF['sections']
+    SUMMARY['track with map']                  = CONF['map']
+    SUMMARY['sigma tracking']                  = CONF['sigma']
+    SUMMARY['emittance growth']                = CONF['egf']
+    SUMMARY['ring lattice']                    = CONF['periodic']
+    SUMMARY['accON']                           = False if CONF['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 = CONF['frequenz']*1.e-6
     SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
     SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
@@ -495,7 +501,7 @@ def printv(level,*args):
     Multilevel printing using verbose flag
     """
     verbose = CONF['verbose']
-    if verbose >= level:
+    if verbose >= level and not CONF['KVprint']:
         print(*args)
 
 def tblprnt(headr,records):
