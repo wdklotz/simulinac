@@ -74,7 +74,8 @@ parameters:
 
     - gap_HE:     &p12    0.044      # HE gap
     - cav_HE:     &p13    0.044      # HE cav len
-    - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
+    # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength for 80MeV
+    - Ez_HE:      &p14    1.0       # [MV/m] electric field strength for 200MeV
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
