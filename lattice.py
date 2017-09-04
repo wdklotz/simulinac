@@ -218,12 +218,12 @@ class Lattice(object):
                 ## keep related variables for later use
                 PARAMS['sigx_i'] = sqrt(bax*emix)
                 PARAMS['sigy_i'] = sqrt(bay*emiy)
-                SUMMARY['sigx_i [mm]'] = 1000.*PARAMS['sigx_i']
-                SUMMARY['sigy_i [mm]'] = 1000.*PARAMS['sigy_i']
+                SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
+                SUMMARY['(sigy)i [mm]'] = 1000.*PARAMS['sigy_i']
                 xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence
                 yip = sqrt(emiy*gmy)
-                SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
-                SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
+                SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
+                SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
             else:
                 raise RuntimeError('STOP: unstable lattice')
                 sys.exit(1)
@@ -239,8 +239,8 @@ class Lattice(object):
             gmy = (1.+aly*aly)/bay
             xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
             yip = sqrt(emiy*gmy)
-            SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
-            SUMMARY["sigy'_i* [mrad]"] = 1000.*yip
+            SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
+            SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
         ## store twiss values as lattice instance varibles
         self.betax0 = bax
         self.alfax0 = alx
