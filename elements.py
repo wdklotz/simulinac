@@ -23,6 +23,7 @@ from copy import copy
 import numpy as NP
 import warnings
 
+import setutil
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1
 
@@ -174,12 +175,15 @@ class I(_matrix_):
         self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## marker
 class MRK(I):        
-    def __init__(self, label='MRK', particle=PARAMS['sollteilchen']):
+    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], actions=[]):
         super().__init__(label=label, particle=particle)
+        self.actions = actions
     def shorten(self,l=0):
         return self
+    def do_actions(self):
+        setutil.do_actions(self.actions)
     def adapt_for_energy(self,tkin):
-        self.__init__(label=self.label, particle=self.particle(tkin))
+        self.__init__(label=self.label, particle=self.particle(tkin), actions=self.actions)
         return self
 ## Trace3D drift space
 class D(I):     

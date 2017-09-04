@@ -79,7 +79,8 @@ def instanciate_element(item):
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
-        instance  = ELM.MRK(label=label)
+        actions   = attributes['actions'] if 'actions' in attributes else []
+        instance  = ELM.MRK(label=label,actions=actions)
     else:
         raise RuntimeError('unknown element type: ',key)
     # DEBUG('instanciate_element: {} instance created'.format(label),'')

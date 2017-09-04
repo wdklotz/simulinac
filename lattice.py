@@ -23,7 +23,8 @@ import numpy as NP
 from copy import copy
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt
+# import setutil
+from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,CpValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
@@ -355,7 +356,11 @@ class Lattice(object):
                 s += i_element.length
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))
+                CpValues.update({'z':s,'sigma_x':xxav,'sigma_y':yyav})
+                # DEBUG('CpValues: ',CpValues)
                 sigma_i = sigma_f.clone()
+                if isinstance(i_element,ELM.MRK):
+                    i_element.do_actions()
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True): 

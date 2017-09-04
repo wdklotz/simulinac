@@ -88,6 +88,8 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
+CpValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
+
 class Particle(object):                          
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
@@ -382,6 +384,18 @@ def I1(x):
         sys.exit(1)
     return res
 ## utilities
+def do_actions(actions):
+    if 'sigma_x' in actions:
+        # print('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
+        SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
+        PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
+    if 'sigma_y' in actions:
+        # print('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
+        SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
+        PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
+    # if 'Tkin' in actions:
+    #     print('Tkin')
+
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)

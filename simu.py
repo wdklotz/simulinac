@@ -179,22 +179,17 @@ def loesung(filepath):                 ## START here
     resolution = 23
     (c_like,s_like) = lattice.cs_traj(steps=resolution)       # calc sin- and cos-like trajectories
     if FLAGS['sigma']:
+        print('CALCULATE SIGMA')
         sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
-        if FLAGS['KVprint']:
-            dictprnt(PARAMS,text='PARAMS',njust=1)
-        else:
-            print('CALCULATE SIGMA')
-            dictprnt(SUMMARY,text='summary')     ## summary
-            display((sigma,c_like,s_like))
-    else:
+    elif not FLAGS['sigma']:
+        print('CALCULATE TWISS')
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
         sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i']),x[3]) for x in twiss]
-        if FLAGS['KVprint']:
-            dictprnt(PARAMS,text='PARAMS',njust=1)
-        else:
-            print('CALCULATE TWISS')
-            dictprnt(SUMMARY,text='summary')     ## summary
-            display((sigma,c_like,s_like))
+    if not FLAGS['KVprint']:
+        dictprnt(SUMMARY,text='summary')     ## summary
+        display((sigma,c_like,s_like))
+    else:
+        dictprnt(PARAMS,text='PARAMS',njust=1)
 
 if __name__ == '__main__':
     import sys
