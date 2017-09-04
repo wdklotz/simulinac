@@ -23,8 +23,7 @@ from copy import copy
 import numpy as NP
 import warnings
 
-import setutil
-from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG
+from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1
 
 ## MDIM
@@ -181,7 +180,8 @@ class MRK(I):
     def shorten(self,l=0):
         return self
     def do_actions(self):                   # do actions attached to the marker
-        setutil.do_actions(self.actions)
+        for action in self.actions:
+            MarkerActions[action]()
     def adapt_for_energy(self,tkin):
         self.__init__(label=self.label, particle=self.particle(tkin), actions=self.actions)
         return self

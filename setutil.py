@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
-## logger
+## Logger
 ch        = logging.StreamHandler()     ## console handler
 ch.setLevel(logging.DEBUG)              ## set handler level
 formatter = \
@@ -48,7 +48,6 @@ def DEBUG(string,arg=''):
         print('DEBUG: {} typ(dict)\n{}'.format(string,sarg))
     else:
         print('DEBUG: {}{}'.format(string,arg))
-
 
 ## DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
@@ -138,7 +137,7 @@ class Electron(Particle):
 ## Sollteichen
 PARAMS['sollteilchen'] = Proton()
 
-## long. emittance
+## Long. Emittance
 def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
@@ -199,7 +198,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     res['Dphimax-']         = phi2s
     return res
 
-## data for summary
+## Data For Summary
 SUMMARY = {}
 def collect_data_for_summary(lattice):
     def elements_in_lattice(typ,sec):
@@ -383,7 +382,8 @@ def I1(x):
         raise RuntimeError('I1(x): negative argument!')
         sys.exit(1)
     return res
-## utilities
+
+## Marker Actions
 def sigma_x_action():
     # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
     SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
@@ -395,15 +395,13 @@ def sigma_y_action():
 def Tkin_action():
     pass
 
-MarkerActions = dict(sigma_x=sigma_x_action,sigma_y=sigma_y_action,Tkin=Tkin_action)
+MarkerActions = dict(                   # all possible actions for a Marker
+            sigma_x=sigma_x_action,
+            sigma_y=sigma_y_action,
+            Tkin=Tkin_action
+            )
 
-def do_actions(actions):
-    """
-    do actions that are attached to a marker
-    """
-    for action in actions:
-        MarkerActions[action]()
-
+## Utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -585,7 +583,7 @@ def test1():
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
 
-## main
+## Main
 if __name__ == '__main__':
     test0()
     test1()

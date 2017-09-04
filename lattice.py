@@ -356,10 +356,9 @@ class Lattice(object):
                 s += i_element.length
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))
-                CpValues.update({'z':s,'sigma_x':xxav,'sigma_y':yyav})
-                # DEBUG('CpValues: ',CpValues)
+                CpValues.update({'z':s,'sigma_x':xxav,'sigma_y':yyav})   # keep previous
                 sigma_i = sigma_f.clone()
-                if isinstance(i_element,ELM.MRK):
+                if isinstance(i_element,ELM.MRK):                        # marker actions
                     i_element.do_actions()
         return sigma_fun
 
