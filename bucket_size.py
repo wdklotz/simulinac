@@ -17,14 +17,14 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import CONF,Proton
+from setutil import PARAMS,Proton
 from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
 
 def display_bucket(functions,phis,tki,gapl,qE0,fRF,name):
     # frame
-    plt.figure('bucket size for '+CONF['lattice_version'],facecolor='#eaecef')
+    plt.figure('bucket size for '+PARAMS['lattice_version'],facecolor='#eaecef')
     # functions
     for function in functions:
         phi  = [x[0] for x in function]
@@ -50,21 +50,21 @@ def display_bucket(functions,phis,tki,gapl,qE0,fRF,name):
 
 def bucket():
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
-    phis = radians(CONF['soll_phase'])           # KNOB: soll phase
+    phis = radians(PARAMS['soll_phase'])           # KNOB: soll phase
 
     # Wertebereiche
     dphi = 1e-4                   # step size phase
-    phimax = CONF['Dphimax+']     # stable phase upper limit
-    phimin = CONF['Dphimax-']     # stable phase lower limit
+    phimax = PARAMS['Dphimax+']     # stable phase upper limit
+    phimin = PARAMS['Dphimax-']     # stable phase lower limit
     anz  =  int((phimax-phimin)/dphi) # nbof  phase steps
 
-    tki      = CONF['injection_energy']
+    tki      = PARAMS['injection_energy']
     particle = Proton(tkin=tki)
-    gapl     = CONF['spalt_laenge']
-    qE0      = CONF['Ez_feld']
-    u0       = CONF['spalt_spannung']
-    fRF      = CONF['frequenz']
-    lamb     = CONF['wellenlänge']
+    gapl     = PARAMS['spalt_laenge']
+    qE0      = PARAMS['Ez_feld']
+    u0       = PARAMS['spalt_spannung']
+    fRF      = PARAMS['frequenz']
+    lamb     = PARAMS['wellenlänge']
     rfg      = RFG(U0=u0,PhiSoll=phis,fRF=fRF,label='RFG',gap=gapl,particle=particle,dWf=1.)
     gamma    = particle.gamma
     beta     = particle.beta

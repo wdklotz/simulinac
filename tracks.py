@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 import numpy as np
 from copy import copy
 
-from setutil import CONF
+from setutil import PARAMS
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
@@ -70,8 +70,8 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         return s
     soll = None
 
-# default track-point                 x   x'  y   y'  z   z'           Tk                1   s   1
-# SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., CONF['sollteilchen'].tkin, 1., 0., 1.]))
+# default track-point                 x   x'  y   y'  z   z'           Tk                 1   s   1
+# SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
 
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '='):
     """
@@ -119,8 +119,8 @@ def track_soll(lattice):
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
     adapted to the energy of the accellerated reference particle.
     """
-    # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                 1   s   1
-    soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., CONF['sollteilchen'].tkin, 1., 0., 1.]))
+    # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                   1   s   1
+    soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
       #track of reference particle
     for ipos in lattice.seq:
         element,s0,s1 = ipos

@@ -23,7 +23,7 @@ import numpy as NP
 from copy import copy
 import warnings
 
-from setutil import wille,CONF,SUMMARY,objprnt,printv,DEBUG,mxprnt
+from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
@@ -162,8 +162,8 @@ class Lattice(object):
         printv(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
         ## Vorgabe emittance @ entrance
-        emix = CONF['emitx_i']  
-        emiy = CONF['emity_i']
+        emix = PARAMS['emitx_i']  
+        emiy = PARAMS['emity_i']
 
         ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
         if closed:
@@ -215,10 +215,10 @@ class Lattice(object):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
                 printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
                 ## keep related variables for later use
-                CONF['sigx_i'] = sqrt(bax*emix)
-                CONF['sigy_i'] = sqrt(bay*emiy)
-                SUMMARY['sigx_i [mm]'] = 1000.*CONF['sigx_i']
-                SUMMARY['sigy_i [mm]'] = 1000.*CONF['sigy_i']
+                PARAMS['sigx_i'] = sqrt(bax*emix)
+                PARAMS['sigy_i'] = sqrt(bay*emiy)
+                SUMMARY['sigx_i [mm]'] = 1000.*PARAMS['sigx_i']
+                SUMMARY['sigy_i [mm]'] = 1000.*PARAMS['sigy_i']
                 xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence
                 yip = sqrt(emiy*gmy)
                 SUMMARY["sigx'_i* [mrad]"] = 1000.*xip
@@ -230,10 +230,10 @@ class Lattice(object):
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
             # NOTE: transfer lattices need not to be stable!
-            bax = CONF['betax_i']  # twiss beta @ entrance
-            bay = CONF['betay_i']
-            alx = CONF["alfax_i"]  # twiss alpha @ entrance
-            aly = CONF["alfay_i"]
+            bax = PARAMS['betax_i']  # twiss beta @ entrance
+            bay = PARAMS['betay_i']
+            alx = PARAMS["alfax_i"]  # twiss alpha @ entrance
+            aly = PARAMS["alfay_i"]
             gmx = (1.+alx*alx)/bax  # twiss gamma @ entrance
             gmy = (1.+aly*aly)/bay
             xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
@@ -319,10 +319,8 @@ class Lattice(object):
                 s += i_element.length
                 betax  = v_beta[0]
                 betay  = v_beta[3]
-                sigx   = sqrt(betax*CONF['emitx_i'])   ## scale twiss-beta to sigma
-                sigy   = sqrt(betay*CONF['emity_i'])
-                viseo = i_element.viseo
-                beta_fun.append((s,sigx,sigy,viseo))
+                viseo  = i_element.viseo
+                beta_fun.append((s,betax,betay,viseo))
         return beta_fun
 
     def sigma_functions(self,steps=10):
@@ -331,9 +329,9 @@ class Lattice(object):
         """
         sigma_fun = []
         # sigma initial
-        sigma_i = Sigma(emitx=CONF['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
-                        emity=CONF['emity_i'], betay=self.betay0,    alphay=self.alfay0,
-                        emitz=CONF['emitz_i'], betaz=CONF['betaz_i'],alphaz=0.)
+        sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
+                        emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
+                        emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -343,15 +341,15 @@ class Lattice(object):
             for i_element in slices:
                 # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
-                if isinstance(i_element,ELM.RFG) and CONF['egf']:
+                if isinstance(i_element,ELM.RFG) and FLAGS['egf']:
                     rf_gap    = i_element
-                    delta_phi = CONF['Dphi0']
+                    delta_phi = PARAMS['Dphi0']
                     sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
                 sigf = sigma_f()
                 xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
                 r = sqrt(xxav**2+yyav**2)
-                if 3.*r > CONF['aperture']:
+                if 3.*r > PARAMS['aperture']:
                     raise RuntimeError('out of aperture!')
                     sys.exit(1)
                 s += i_element.length
@@ -392,16 +390,16 @@ class Lattice(object):
         Track Cos & Sin trajectories
         """
         # DEBUG('cs_traj.steps: ',steps)
-        gamma       = CONF['sollteilchen'].gamma
-        beta        = CONF['sollteilchen'].beta
-        tkin        = CONF['sollteilchen'].tkin
-        lamb        = CONF['wellenlänge']
-        x1          = sqrt(CONF['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p         = sqrt(CONF['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
-        y1          = sqrt(CONF['emity_i']*self.betay0)
-        y2p         = sqrt(CONF['emity_i']*self.gammy0)
-        sigmaz_i    = CONF['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
-        dpdivp_i    = gamma/(1.+gamma)*CONF['w0']       # z-plane: conv. dW/W --> dp/p []
+        gamma       = PARAMS['sollteilchen'].gamma
+        beta        = PARAMS['sollteilchen'].beta
+        tkin        = PARAMS['sollteilchen'].tkin
+        lamb        = PARAMS['wellenlänge']
+        x1          = sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
+        x2p         = sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
+        y1          = sqrt(PARAMS['emity_i']*self.betay0)
+        y2p         = sqrt(PARAMS['emity_i']*self.gammy0)
+        sigmaz_i    = PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
+        dpdivp_i    = gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []
         s_like = []
@@ -528,7 +526,8 @@ def test1():
     mcell,betax,betay = lattice.cell(closed=True)
     lattice.symplecticity()
     # twiss functions
-    beta_fun,cl,sl = lattice.twiss_functions(steps=100)
+    beta_fun = lattice.twiss_functions(steps=100)
+    # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
     vsbase = -1.
@@ -545,7 +544,7 @@ def test1():
     plot(s,vs,label='element',color='black')
     plot(s,zero,color='black')
     legend(loc='upper left')
-    show(block=False)
+    show()
 ## main ----------
 if __name__ == '__main__':
     test0()

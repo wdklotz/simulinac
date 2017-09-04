@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from math import sqrt,degrees
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import CONF,SUMMARY,Proton,dictprnt,DEBUG
+from setutil import PARAMS,FLAGS,SUMMARY,Proton,dictprnt,DEBUG
 from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
@@ -28,7 +28,7 @@ from tracks import track_soll
 
 def display(functions):
     print('PREPARE DISPLAY')
-    if CONF['dWf'] == 0:
+    if FLAGS['dWf'] == 0:
         display0(functions)
     else:
         display1(functions)
@@ -60,7 +60,7 @@ def display0(functions):
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    fighdr = 'lattice version = {}, input file = {}'.format(CONF['lattice_version'],CONF['input_file'])
+    fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #----------*----------*   # transverse X
     splot=subplot(211)
@@ -115,7 +115,7 @@ def display1(functions):
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
-    fighdr = 'lattice version = {}, input file = {}'.format(CONF['lattice_version'],CONF['input_file'])
+    fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #----------*----------*   # transverse X
     splot=subplot(311)
@@ -170,30 +170,31 @@ def loesung(filepath):                 ## START here
     soll_track = track_soll(lattice)   ## (WICHTIG) track Sollteilchen hier
     lattice.stats(soll_track)          ## count elements and other statistics
     #-----------------------------------------
-    # ganze Zelle, Anfangswerte
-    mcell,betax,betay = lattice.cell(closed=CONF['periodic'])
+    # ganze Zelle, Anfangswerte, summary
+    mcell,betax,betay = lattice.cell(closed=FLAGS['periodic'])
     collect_data_for_summary(lattice)    ## summary
     #-----------------------------------------
     # zeige Grafik mit Lösungen als Funktionen von (s)
-    if not CONF['KVprint']: print('CALCULATE C+S TRAJECTORIES')
+    if not FLAGS['KVprint']: print('CALCULATE C+S TRAJECTORIES')
     resolution = 23
     (c_like,s_like) = lattice.cs_traj(steps=resolution)       # calc sin- and cos-like trajectories
-    if CONF['sigma']:
+    if FLAGS['sigma']:
         sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
-        if CONF['KVprint']:
-            print(CONF.conf)
+        if FLAGS['KVprint']:
+            print(PARAMS)
         else:
             print('CALCULATE SIGMA')
             dictprnt(SUMMARY,text='summary')     ## summary
             display((sigma,c_like,s_like))
     else:
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
-        if CONF['KVprint']:
-            print(CONF.conf)
+        sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i']),x[3]) for x in twiss]
+        if FLAGS['KVprint']:
+            print(PARAMS)
         else:
             print('CALCULATE TWISS')
             dictprnt(SUMMARY,text='summary')     ## summary
-            display((twiss,c_like,s_like))
+            display((sigma,c_like,s_like))
 
 if __name__ == '__main__':
     import sys
