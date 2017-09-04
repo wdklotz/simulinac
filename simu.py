@@ -181,7 +181,7 @@ def loesung(filepath):                 ## START here
     if FLAGS['sigma']:
         sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
         if FLAGS['KVprint']:
-            print(PARAMS)
+            dictprnt(PARAMS,text='PARAMS',njust=1)
         else:
             print('CALCULATE SIGMA')
             dictprnt(SUMMARY,text='summary')     ## summary
@@ -190,7 +190,7 @@ def loesung(filepath):                 ## START here
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
         sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i']),x[3]) for x in twiss]
         if FLAGS['KVprint']:
-            print(PARAMS)
+            dictprnt(PARAMS,text='PARAMS',njust=1)
         else:
             print('CALCULATE TWISS')
             dictprnt(SUMMARY,text='summary')     ## summary
@@ -199,14 +199,14 @@ def loesung(filepath):                 ## START here
 if __name__ == '__main__':
     import sys
     filepath = 'fodo_with_10cav_per_RF(4).yml'       ## the default input file (YAML syntax)
-    # filepath = 'LEBT_fodo_with_RF.yml'
-    # filepath = 'LEBT_fodo_with_RF(1).yml'
-    # filepath = 'LEBT_fodo_with_RF(2).yml'
-    # filepath = 'LEBT_fodo_with_RF(x).yml'
-    # filepath = 'LEBT_HEBT_with_RF.yml'
-    # filepath = 'LEBT_HEBT_with_RF(5-200).yml'
-    # filepath = 'LEBT_HEBT_with_RF(5-80).yml'
-    # filepath = 'LEBT_HEBT_with_RF(x).yml'
+    filepath = 'LEBT_fodo_with_RF.yml'
+    filepath = 'LEBT_fodo_with_RF(1).yml'
+    filepath = 'LEBT_fodo_with_RF(2).yml'
+    filepath = 'LEBT_fodo_with_RF(x).yml'
+    filepath = 'LEBT_HEBT_with_RF.yml'
+    filepath = 'LEBT_HEBT_with_RF(5-200).yml'
+    filepath = 'LEBT_HEBT_with_RF(5-80).yml'
+    filepath = 'LEBT_HEBT_with_RF(x).yml'
     filepath = 'LE_HE_15inj.yml'
     # filepath = 'test.yml'
     

@@ -292,22 +292,22 @@ def collect_data_for_summary(lattice):
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
     SUMMARY['emittance growth']                =  FLAGS['egf']
     SUMMARY['ring lattice']                    =  FLAGS['periodic']
-    SUMMARY['accON']                           = False if  FLAGS['dWf'] == 0. else  True
+    SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['Quad bore radius [m]']            =  PARAMS['quad_bore_radius']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
     SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6
     SUMMARY['(emitz)i* [rad*KeV]']             =  PARAMS['emitz_i']*1.e3
-    SUMMARY['(sigx)i* [mm]']                   = sqrt( PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
-    SUMMARY['(sigy)i* [mm]']                   = sqrt( PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
+    SUMMARY['(sigx)i* [mm]']                   =  sqrt( PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigy)i* [mm]']                   =  sqrt( PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
     SUMMARY['wavelength* [cm]']                =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
     SUMMARY['(DW)i* [KeV]']                    =  PARAMS['DW']*1.e3
-    SUMMARY['(Dphi)i* [deg]']                  = degrees( PARAMS['Dphi0'])
+    SUMMARY['(Dphi)i* [deg]']                  =  degrees( PARAMS['Dphi0'])
     SUMMARY['(DW)max* [KeV]']                  =  PARAMS['DWmax']*1.e3        # energy acceptance
-    SUMMARY['max bunch length* [deg]']         = degrees( PARAMS['Dphimax'])  # phase acceptance
+    SUMMARY['max bunch length* [deg]']         =  degrees( PARAMS['Dphimax'])  # phase acceptance
     SUMMARY['betaz_i* [KeV/rad]']              =  PARAMS['betaz_i']*1.e3
     SUMMARY['gammaz_i* [rad/KeV]']             =  PARAMS['gammaz_i']*1.e-3
     SUMMARY['synchrotron freq_i* [MHz]']       =  PARAMS['omegal0']*1.e-6
@@ -489,8 +489,8 @@ def printv(level,*args):
     """
     Multilevel printing using verbose flag
     """
-    verbose =  FLAGS['verbose']
-    if verbose >= level and not  FLAGS['KVprint']:
+    verbose = FLAGS['verbose']
+    if verbose >= level and not FLAGS['KVprint']:
         print(*args)
 
 def tblprnt(headr,records):
