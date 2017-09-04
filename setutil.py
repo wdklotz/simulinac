@@ -385,12 +385,15 @@ def I1(x):
     return res
 ## utilities
 def do_actions(actions):
+    """
+    actions that can be attached to a marker
+    """
     if 'sigma_x' in actions:
-        # print('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
+        # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
         SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
         PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
     if 'sigma_y' in actions:
-        # print('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
+        # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
         SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
         PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
     # if 'Tkin' in actions:

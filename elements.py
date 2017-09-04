@@ -180,7 +180,7 @@ class MRK(I):
         self.actions = actions
     def shorten(self,l=0):
         return self
-    def do_actions(self):
+    def do_actions(self):                   # do actions attached to the marker
         setutil.do_actions(self.actions)
     def adapt_for_energy(self,tkin):
         self.__init__(label=self.label, particle=self.particle(tkin), actions=self.actions)
