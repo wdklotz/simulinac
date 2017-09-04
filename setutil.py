@@ -384,20 +384,25 @@ def I1(x):
         sys.exit(1)
     return res
 ## utilities
+def sigma_x_action():
+    # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
+    SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
+    PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
+def sigma_y_action():
+    # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
+    SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
+    PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
+def Tkin_action():
+    pass
+
+MarkerActions = dict(sigma_x=sigma_x_action,sigma_y=sigma_y_action,Tkin=Tkin_action)
+
 def do_actions(actions):
     """
-    actions that can be attached to a marker
+    do actions that are attached to a marker
     """
-    if 'sigma_x' in actions:
-        # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
-        SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
-        PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
-    if 'sigma_y' in actions:
-        # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
-        SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
-        PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
-    # if 'Tkin' in actions:
-    #     print('Tkin')
+    for action in actions:
+        MarkerActions[action]()
 
 def k0prot(gradient=0.,tkin=0.):
     """
