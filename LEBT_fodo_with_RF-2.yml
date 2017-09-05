@@ -24,12 +24,13 @@
 ## run configuration
 ##...........................................................................................
 flags:                              ## run configuration
-    - accON:        True            # accelleration on/off flag
-    - periodic:     False           # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      0               # print flag (0 = minimal print), try 0,1,2,3
-    - egf:          False           # emittance growth flag
-    - sigma:        True            # beam sizes by sigma-matrix
-    - map:          False           # use maps to track trajectories through RFGap
+    # - accON:        False           # [True]  acceleration on/off flag
+    # - egf:          True            # [False] emittance growth flag
+    - map:          False           # [True]  use maps to track trajectories through RFGap
+    - sigma:        False           # [True]  beam sizes by sigma-matrix
+    # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
+    # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
+    # - verbose:      2               # [0]     print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
@@ -45,8 +46,7 @@ parameters:                           ## parameter definitions
     - betay_i:              1.902     # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0       # [-] twiss alpha x @ entrance
     - alfay_i:              0.0       # [-] twiss alpha y @ entrance
-    # - Dp/p: [%] will be calculated from Dz and emitz (ueberarbeiten!!)
-    - Dz:                   2.5e-3    # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:              2.5e-4    # [m] longitudinal displacement Dz @ entrance
     - frequency:    &p01    816.E+6   # [Hz] frequency f0
     - Ez:           &p05    1.00      # [MV/m] electric field strength
     - phi_sync:     &p06   -20.       # [deg] synchronous phase

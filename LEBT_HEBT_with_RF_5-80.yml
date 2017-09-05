@@ -26,8 +26,8 @@
 flags:
     # - accON:        False           # [True]  acceleration on/off flag
     # - egf:          True            # [False] emittance growth flag
-    # - map:          False           # [True]  use maps to track trajectories through RFGap
-    # - sigma:        False           # [True]  beam sizes by sigma-matrix
+    - map:          False           # [True]  use maps to track trajectories through RFGap
+    - sigma:        False           # [True]  beam sizes by sigma-matrix
     # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
     # - verbose:      2               # [0]     print flag (0 = minimal print), try 0,1,2,3
@@ -35,13 +35,12 @@ flags:
 ## SECTION definitions
 ##...........................................................................................
 sections:
-    - [&LE LE,  &HE HE]
+    - [&lebt LEBT,  &hebt HEBT]
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - aperture:             0.01       # [m] aperture = bore radius
-    - Tkin:                 15.0       # [MeV] energy @ entrance (injection)
+    - Tkin:                 5.0         # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length
@@ -53,53 +52,53 @@ parameters:
     - betay_i:              1.902      # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
-    - sigmaz_i:              2.5e-4    # [m] longitudinal displacement Dz @ entrance
+    # - Dp/p: [%] will be calculated from Dz and emitz (ueberarbeiten!!)
+    - sigmaz_i:              2.5e-3    # [m] longitudinal displacement Dz @ entrance
 
-    # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
-    # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
-    # - B_g_LE:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
-    - B_g_LE:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
+    # - B_g_LEBT:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
+    # - B_g_LEBT:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
+    # - B_g_LEBT:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
+    - B_g_LEBT:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
 
-    - Ez_LE:      &p05    1.00       # [MV/m] electric field strength
+    - Ez_LEBT:      &p05    1.00       # [MV/m] electric field strength
     - phi_sync:     &p06   -20.        # [deg] synchronous phase
     - gap:          &p07    0.020      # [m] (accelerating) gap size
-    - cav_LE:     &p08    0.020      # [m] cavity length
+    - cav_LEBT:     &p08    0.020      # [m] cavity length
     - windings:             30         # [-] quad-coil windings
 
-    # - B_g_LE_d: &p09    6.87865    # [T/m] quadrupole gradient focusing QF
-    # - B_g_LE_f: &p10    6.87865    # [T/m] quadrupole gradient focusing QF
+    # - B_g_LEBT_d: &p09    6.87865    # [T/m] quadrupole gradient focusing QF
+    # - B_g_LEBT_f: &p10    6.87865    # [T/m] quadrupole gradient focusing QF
 
-    # - B_g_HE:   &p11    16.0       # HE Uebernahme
-    # - B_g_HE:   &p11    11.0       # HE tuned
-    - B_g_HE:     &p11    6.87065    # HE tuned
+    # - B_g_HEBT:   &p11    16.0       # HEBT Uebernahme
+    # - B_g_HEBT:   &p11    11.0       # HEBT tuned
+    - B_g_HEBT:     &p11    6.87065    # HEBT tuned
 
-    - gap_HE:     &p12    0.044      # HE gap
-    - cav_HE:     &p13    0.044      # HE cav len
-    # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength for 80MeV
-    - Ez_HE:      &p14    1.0       # [MV/m] electric field strength for 200MeV
+    - gap_HEBT:     &p12    0.044      # HEBT gap
+    - cav_HEBT:     &p13    0.044      # HEBT cav len
+    - Ez_HEBT:      &p14    0.28       # [MV/m] electric field strength
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
 elements:
-# LE
+# LEBT
     - d1l:    &d1l          # ID
         - type:     D       # D class
         - length:   0.05    # [m]
-        - sec:      *LE
+        - sec:      *lebt
     - d2l:    &d2l          # ID
         - type:     D       # D class
         - length:   0.0125  # [m]
-        - sec:      *LE
+        - sec:      *lebt
     - qf1l:   &qf1l         # ID
         - type:     QF      # QF class
-        - length:   *p03    # [m]
+        - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
-        - sec:      *LE
+        - sec:      *lebt
     - qd1l:   &qd1l         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
-        - sec:      *LE
+        - sec:      *lebt
     - rfgl:  &rfgl          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
@@ -107,7 +106,7 @@ elements:
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
-        - sec:      *LE
+        - sec:      *lebt
     # - rfcl:  &rfcl          # ID
     #     - type:     RFC     # RFC class
     #     - Ez:       *p05    # [V/m] electric field
@@ -115,34 +114,34 @@ elements:
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p07    # [m] length
     #     - length:   *p08    # [m] length
-    #     - sec:      *LE
+    #     - sec:      *lebt
 
-# HE
+# HEBT        
     - d1h:        &d1h
         - type:     D       # D class
-        - length:   0.08    # [m]
-        - sec:      *HE
+        - length:   0.08    # [m] 
+        - sec:      *hebt
     - d2h:    &d2h          # ID
         - type:     D       # D class
         - length:   0.44    # [m]
-        - sec:      *HE
+        - sec:      *hebt
     - qf1h:   &qf1h         # ID
         - type:     QF      # QF class
-        - length:   *p03    # [m]
+        - length:   *p03    # [m] 
         - B':       *p11    # [T/m] quadrupole gradient
-        - sec:      *HE
+        - sec:      *hebt
     - qd1h:   &qd1h         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p11    # [T/m] quadrupole gradient
-        - sec:      *HE
+        - sec:      *hebt
     # - rfgh:  &rfgh          # ID
     #     - type:     RFG     # RFG class
     #     - Ez:       *p05    # [V/m] electric field
     #     - PhiSync:  *p06    # [deg] synchronous phase
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p12    # [m] accelerating. gap
-    #     - sec:      *HE
+    #     - sec:      *hebt
     - rfch:  &rfch          # ID
         - type:     RFC     # RFC class
         - Ez:       *p14    # [V/m] electric field
@@ -150,19 +149,16 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p12    # [m] length
         - length:   *p13    # [m] length
-        - sec:      *HE
+        - sec:      *hebt
 
     - mrk:  &mrk            # ID
-        - type:    MRK      # MRK class
-        - actions:
-            - sigma_x
-            - sigma_y
-        #     - Tkin
+        - type:    MRK      # MRK class    
+
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
 segments:
-# LE
+# LEBT
     - RFG10L:
         - *d2l
         - *rfgl
@@ -215,7 +211,7 @@ segments:
     - SEG3L:
         - *d1l
         - *qf1l
-# HE
+# HEBT
     - SEG1H:
         - *qf1h
         - *d1h
@@ -237,17 +233,16 @@ segments:
         - *rfch
         - *rfch
         - *rfch
-    - MARK:
-        - *mrk
+    
 ##...........................................................................................
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - title: LE+HE 29.08.2017 15MeV inj          # description is mandatory. DON't remove or reposition!
-    # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
-    # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
-    - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
-    - [204,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [1,       SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H,    MARK]
+    - title: LEBT+HEBT 02.08.2017 5-80MeV   # description is mandatory. DON't remove or reposition!
+
+    # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    - [52,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    - [225,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
+    # - [1,RFG10L]
+    # - [1,RFCAVH]
+    

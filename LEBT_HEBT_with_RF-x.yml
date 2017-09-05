@@ -24,12 +24,13 @@
 ## run configuration
 ##...........................................................................................
 flags:
-    - accON:        True          # accelleration on/off flag
-    - periodic:     False         # treat lattice as periodic cell sequence(else as transfer line)
-    - verbose:      0             # print flag (0 = minimal print), try 0,1,2,3
-    - egf:          False         # emittance growth flag
-    - sigma:        True          # beam sizes by sigma-matrix
-    - map:          True          # use maps to track trajectories through RFGap
+    # - accON:        False           # [True]  acceleration on/off flag
+    # - egf:          True            # [False] emittance growth flag
+    - map:          False           # [True]  use maps to track trajectories through RFGap
+    - sigma:        False           # [True]  beam sizes by sigma-matrix
+    # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
+    # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
+    # - verbose:      2               # [0]     print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## SECTION definitions
 ##...........................................................................................
@@ -39,7 +40,7 @@ sections:
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - Tkin:                 5.0         # [MeV] energy @ entrance (injection)
+    - Tkin:                 15.0         # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length
@@ -52,7 +53,7 @@ parameters:
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
     # - Dp/p: [%] will be calculated from Dz and emitz (ueberarbeiten!!)
-    - sigmaz_i:              2.5e-3    # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:              2.5e-4    # [m] longitudinal displacement Dz @ entrance
 
     # - B_g_LEBT:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
     # - B_g_LEBT:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
@@ -238,10 +239,8 @@ segments:
 ##...........................................................................................
 lattice:
     - title: LEBT+HEBT 02.08.2017 5-80MeV   # description is mandatory. DON't remove or reposition!
-
-    # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     - [52,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     - [225,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    # - [1,RFG10L]
-    # - [1,RFCAVH]
     

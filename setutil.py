@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
-## logger
+## Logger
 ch        = logging.StreamHandler()     ## console handler
 ch.setLevel(logging.DEBUG)              ## set handler level
 formatter = \
@@ -49,71 +49,49 @@ def DEBUG(string,arg=''):
     else:
         print('DEBUG: {}{}'.format(string,arg))
 
-class Defaults(object):
-    def __init__(self):
-        self.priv = {
-            'lichtgeschwindigkeit': 299792458.,    # [m/s] const
-            'elementarladung': 1.602176565e-19,    # [coulomb] const
-            'proton_mass': 938.272,      # [MeV/c**2] const
-            'electron_mass': 0.5109989,  # [MeV/c**2] const
-            }
-        self.conf = {            ## CONFIG constants and setutil ...
-            'Ez_feld': 1.00,             # [MV/m] default
-            'spalt_laenge': 0.02,        # [m] default
-            'cavity_laenge': 0.08,       # [m] default
-            'soll_phase': -30.0,         # [deg] default
-            'frequenz': 814.e6,          # [Hz] default
-            'injection_energy': 50.,     # [MeV] default
-            'qf_gradient': 16.0,         # [T/m] default
-            'qd_gradient': 16.0,         # [T/m] default
-            'quad_bore_radius': 0.02,    # Vorgabe quadrupole bore radius [m]
-            'n_coil'  : 30,              # nbof coil windings
-            'emitx_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
-            'emity_i' : 1.e-6,           # [m*rad] Vorgabe emittance @ entrance
-            'betax_i' : 0.780,           # [m] Vorgabe twiss betax @ entrance
-            'betay_i' : 2.373,           # [m] Vorgabe twiss betax @ entrance
-            'alfax_i' : 0.0,             # Vorgabe twiss alphax @ entrance
-            'alfay_i' : 0.0,             # Vorgabe twiss alphaxy @ entrance
-            'sigmaz_i': 0.02,            # [m] max long. half-width displacement
-            'dWf'     : 0.,              # acceleration on/off flag 1=on,0=off
-            'periodic': False,           # periodic lattice? default
-            'egf'     : False,           # emittance grow flag default
-            'sigma'   : True,            # beam sizes by sigma-tracking
-            'aperture': 0.011,           # aperture = bore radius
-            'KVprint' : False,           # print a dictionary of Key-Value pairs, no display
-            'map'     : False,           # use maps to track trajectories through RFGap
-            'verbose' : 0                # print flag (True) default
-            }
-    def __getitem__(self,key):
-        if key in self.conf:
-            return self.conf[key]
-        elif key in self.priv:
-            return self.priv[key]
-        else:
-            return None
-    def __setitem__(self,key,value):
-        self.conf[key]=value
-    def items(self):
-        res={}
-        for k,v in self.priv.items():
-            res[k]=v
-        for k,v in self.conf.items():
-            res[k]=v
-        return res.items()
-    def update(self,dict):
-        self.conf.update(dict)
-    def delete(self,key):
-        del self.conf[key]
+## DEFAULTS "FLAGS" & "PARAMS"
+FLAGS  = dict(
+        periodic             = False,            # periodic lattice? default
+        egf                  = True,             # emittance grow flag default
+        sigma                = True,             # beam sizes by sigma-tracking
+        KVprint              = False,            # print a dictionary of Key-Value pairs, no display
+        map                  = True,             # use maps to track trajectories through RFGap
+        dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
+        verbose              = 0                 # print flag default = 0
+        )
+PARAMS = dict(
+        lichtgeschwindigkeit = 299792458.,       # [m/s] const
+        elementarladung      = 1.602176565e-19,  # [coulomb] const
+        proton_mass          = 938.272,          # [MeV/c**2] const
+        electron_mass        = 0.5109989,        # [MeV/c**2] const
+        Ez_feld              = 1.00,             # [MV/m] default
+        spalt_laenge         = 0.02,             # [m] default
+        cavity_laenge        = 0.08,             # [m] default
+        soll_phase           = -30.0,            # [deg] default
+        frequenz             = 814.e6,           # [Hz] default
+        injection_energy     = 50.,              # [MeV] default
+        qf_gradient          = 16.0,             # [T/m] default
+        qd_gradient          = 16.0,             # [T/m] default
+        quad_bore_radius     = 0.02,             # Vorgabe quadrupole bore radius [m]
+        n_coil               = 30,               # nbof coil windings
+        emitx_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
+        emity_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
+        betax_i              = 0.780,            # [m] Vorgabe twiss betax @ entrance
+        betay_i              = 2.373,            # [m] Vorgabe twiss betax @ entrance
+        alfax_i              = 0.0,              # Vorgabe twiss alphax @ entrance
+        alfay_i              = 0.0,              # Vorgabe twiss alphaxy @ entrance
+        sigmaz_i             = 0.02,             # [m] max long. half-width displacement
+        aperture             = 0.011,            # aperture = bore radius
+        )
+PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
+PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
+PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-## BLOCKDATA "CONF"
-CONF = Defaults()       # global data block called CONF (like Fortran's BLOCKDATA)
-CONF['wellenlänge']     = CONF['lichtgeschwindigkeit']/CONF['frequenz']
-CONF['sigmaz_i']        = CONF['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
-CONF['spalt_spannung']  = CONF['Ez_feld']*CONF['spalt_laenge']
+CpValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):                          
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
-    def __init__(self,tkin=0.,mass=CONF['proton_mass'],name='proton'):
+    def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
@@ -123,8 +101,8 @@ class Particle(object):
         self.beta       = sqrt(1.-1./(self.gamma*self.gamma))
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0                 # impulse [Mev/c]
-        self.v          = self.beta*CONF['lichtgeschwindigkeit']    # velocity [m/s]
-        self.brho       = 1.e+6/CONF['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
+        self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
+        self.brho       = 1.e+6/ PARAMS['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
         self.name       = name
     def string(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
@@ -140,7 +118,7 @@ class Particle(object):
                 ]]
         return tblprnt(headr,records)
     def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*fRF*gap / (self.beta*CONF['lichtgeschwindigkeit'])
+        teta = 2.*pi*fRF*gap / (self.beta* PARAMS['lichtgeschwindigkeit'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
@@ -149,17 +127,17 @@ class Particle(object):
         return self
 
 class Proton(Particle):
-    def __init__(self,tkin=CONF['injection_energy']):
-        super(Proton,self).__init__(tkin=tkin,mass=CONF['proton_mass'],name='proton')
+    def __init__(self,tkin= PARAMS['injection_energy']):
+        super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
 
 class Electron(Particle):
-    def __init__(self,tkin=CONF['injection_energy']):
-        super(Electron,self).__init__(tkin=tkin,mass=CONF['electron_mass'],name='electron')
+    def __init__(self,tkin= PARAMS['injection_energy']):
+        super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
 
 ## Sollteichen
-CONF['sollteilchen'] = Proton()
+PARAMS['sollteilchen'] = Proton()
 
-## long. emittance
+## Long. Emittance
 def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
@@ -173,13 +151,13 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
         gap:      cavity gap [m]
         particle: Particle object
     """
-    # NOTE: epsiz should be an atrtribute of RF cavities (I am not sure!?)
+    # NOTE: zellipse should be an atrtribute of RF cavities (I am not sure!?)
     m0c2      = particle.e0
     gb        = particle.gamma_beta
     beta      = particle.beta
     gamma     = particle.gamma
     if gap != 0.: 
-        T = particle.trtf(gap,CONF['frequenz'])
+        T = particle.trtf(gap, PARAMS['frequenz'])
     else:
         T = 0.75       # have to take some reasonable value!
     
@@ -192,7 +170,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     
     # small amplitude oscillations (T.Wangler pp.184)
     kl02 = 2.*pi*qE0*T*sin(-phis)/(m0c2*pow(gb,3)*lamb)
-    omegal0 = sqrt(kl02)*beta*CONF['lichtgeschwindigkeit']
+    omegal0 = sqrt(kl02)*beta* PARAMS['lichtgeschwindigkeit']
     omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
     
     # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
@@ -220,7 +198,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     res['Dphimax-']         = phi2s
     return res
 
-## data for summary
+## Data For Summary
 SUMMARY = {}
 def collect_data_for_summary(lattice):
     def elements_in_lattice(typ,sec):
@@ -260,7 +238,7 @@ def collect_data_for_summary(lattice):
                 new_elements.append(itm[0])
         return new_elements
 
-    sections = CONF['sections']   ## comes from INPUT
+    sections =  PARAMS['sections']   ## comes from INPUT
     if len(sections) == 0: sections = ['*']      ## section wildcart
     types = ['QF','QD']
     for sec in sections:
@@ -273,6 +251,9 @@ def collect_data_for_summary(lattice):
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
                 SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
                 SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
+
+                PARAMS['{2}[{1}.{0}]dBdZ'.format(sec,typ,itm.label)] = dBdz
+                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
     types = ['RFG']
     for sec in sections:
         for typ in types:
@@ -285,6 +266,10 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
+
+                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
+                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
+                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
     types = ['RFC']
     for sec in sections:
         for typ in types:
@@ -299,31 +284,36 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
 
-    SUMMARY['track with map']                  = CONF['map']
-    SUMMARY['sigma tracking']                  = CONF['sigma']
-    SUMMARY['emittance growth']                = CONF['egf']
-    SUMMARY['ring lattice']                    = CONF['periodic']
-    SUMMARY['accON']                           = False if CONF['dWf'] == 0. else  True
-    SUMMARY['frequency [MHz]']                 = CONF['frequenz']*1.e-6
-    SUMMARY['Quad bore radius [m]']            = CONF['quad_bore_radius']
-    SUMMARY['injection energy [MeV]']          = CONF['injection_energy']
-    SUMMARY['(emitx)i [mrad*mm]']              = CONF['emitx_i']*1.e6
-    SUMMARY['(emity)i [mrad*mm]']              = CONF['emity_i']*1.e6
-    SUMMARY['(emitz)i* [rad*KeV]']             = CONF['emitz_i']*1.e3
-    SUMMARY['(sigx)i* [mm]']                   = sqrt(CONF['betax_i']*CONF['emitx_i'])*1.e3  # enveloppe @ entrance
-    SUMMARY['(sigy)i* [mm]']                   = sqrt(CONF['betay_i']*CONF['emity_i'])*1.e3
-    SUMMARY['wavelength* [cm]']                = CONF['wellenlänge']*1.e2
-    SUMMARY['lattice version']                 = CONF['lattice_version']
-    SUMMARY['(sigmaz)i [mm]']                  = CONF['sigmaz_i']*1.e3
-    SUMMARY['(DW)i* [KeV]']                    = CONF['DW']*1.e3
-    SUMMARY['(Dphi)i* [deg]']                  = degrees(CONF['Dphi0'])
-    SUMMARY['(DW)max* [KeV]']                  = CONF['DWmax']*1.e3        # energy acceptance
-    SUMMARY['max bunch length* [deg]']         = degrees(CONF['Dphimax'])  # phase acceptance
-    SUMMARY['betaz_i* [KeV/rad]']              = CONF['betaz_i']*1.e3
-    SUMMARY['gammaz_i* [rad/KeV]']             = CONF['gammaz_i']*1.e-3
-    SUMMARY['synchrotron freq_i* [MHz]']       = CONF['omegal0']*1.e-6
-    SUMMARY['sync.freq_i/rf_freq* [%]']        = CONF['omegal0/omega']*1.e2
-    SUMMARY['aperture [m]']                    = CONF['aperture']
+                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
+                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
+                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
+                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
+
+    SUMMARY['track with map']                  =  FLAGS['map']
+    SUMMARY['sigma tracking']                  =  FLAGS['sigma']
+    SUMMARY['emittance growth']                =  FLAGS['egf']
+    SUMMARY['ring lattice']                    =  FLAGS['periodic']
+    SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
+    SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
+    SUMMARY['quad bore radius [m]']            =  PARAMS['quad_bore_radius']
+    SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
+    SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
+    SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6
+    SUMMARY['(emitz)i* [rad*KeV]']             =  PARAMS['emitz_i']*1.e3
+    SUMMARY['(sigmax)i* [mm]']                 =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigmay)i* [mm]']                 =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
+    SUMMARY['wavelength* [cm]']                =  PARAMS['wellenlänge']*1.e2
+    SUMMARY['lattice version']                 =  PARAMS['lattice_version']
+    SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
+    SUMMARY['(DW)i* [KeV]']                    =  PARAMS['DW']*1.e3
+    SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['Dphi0'])
+    SUMMARY['(DW)max* [KeV]']                  =  PARAMS['DWmax']*1.e3        # energy acceptance
+    SUMMARY['max bunch length* [deg]']         =  degrees(PARAMS['Dphimax'])  # phase acceptance
+    SUMMARY['(betaz)i* [KeV/rad]']             =  PARAMS['betaz_i']*1.e3
+    SUMMARY['(gammaz)i* [rad/KeV]']            =  PARAMS['gammaz_i']*1.e-3
+    SUMMARY['(sync.freq)i* [MHz]']             =  PARAMS['omegal0']*1.e-6
+    SUMMARY['(sync.freq)i/rf_freq* [%]']       =  PARAMS['omegal0/omega']*1.e2
+    SUMMARY['aperture [m]']                    =  PARAMS['aperture']
     return
 
 def I0(x):
@@ -392,7 +382,26 @@ def I1(x):
         raise RuntimeError('I1(x): negative argument!')
         sys.exit(1)
     return res
-## utilities
+
+## Marker Actions
+def sigma_x_action():
+    # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
+    SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
+    PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
+def sigma_y_action():
+    # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
+    SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
+    PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
+def Tkin_action():
+    pass
+
+MarkerActions = dict(                   # all possible actions for a Marker
+            sigma_x=sigma_x_action,
+            sigma_y=sigma_y_action,
+            Tkin=Tkin_action
+            )
+
+## Utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -500,8 +509,8 @@ def printv(level,*args):
     """
     Multilevel printing using verbose flag
     """
-    verbose = CONF['verbose']
-    if verbose >= level and not CONF['KVprint']:
+    verbose = FLAGS['verbose']
+    if verbose >= level and not FLAGS['KVprint']:
         print(*args)
 
 def tblprnt(headr,records):
@@ -547,9 +556,9 @@ def wille():
 
 def test0():
     print('--------------------------Test0---')
-    dictprnt(CONF,text='CONF')    
+    dictprnt( PARAMS,text=' PARAMS')    
     
-    print('Sollteilchen\n'+CONF['sollteilchen'].string())
+    print('Sollteilchen\n'+ PARAMS['sollteilchen'].string())
     print('Proton(tkin=5.)\n'+Proton(tkin=5.).string())
     print('Electron(tkin=5.)\n'+Electron(tkin=5.).string())
 
@@ -562,12 +571,19 @@ def test0():
 
 def test1():
     print('--------------------------Test1---')
-    print('test epsiz(): the helper to calculate longitudinal phase space parameters')
-    result = epsiz()
+    print('test zellipse(): the helper to calculate longitudinal phase space parameters')
+    result = zellipse(
+            PARAMS['sigmaz_i'],
+            PARAMS['Ez_feld'],
+            PARAMS['wellenlänge'],
+            radians(PARAMS['soll_phase']),
+            PARAMS['spalt_laenge'],
+            PARAMS['sollteilchen']
+            )
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
 
-## main
+## Main
 if __name__ == '__main__':
     test0()
     test1()
