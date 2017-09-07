@@ -157,7 +157,7 @@ elements:
         - actions:
             - sigma_x
             - sigma_y
-        #     - Tkin  
+            - Tkin  
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
@@ -246,9 +246,8 @@ lattice:
     - title: LE+HE 29.08.2017 15MeV inj          # description is mandatory. DON't remove or reposition!
     # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
     # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
     - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
-    - [204,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [1,       SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H,    MARK]
+    - [1,       MARK]
+    - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
+    - [1,       MARK]
     

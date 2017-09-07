@@ -65,7 +65,7 @@ PARAMS = dict(
         proton_mass          = 938.272,          # [MeV/c**2] const
         electron_mass        = 0.5109989,        # [MeV/c**2] const
         Ez_feld              = 1.00,             # [MV/m] default
-        spalt_laenge         = 0.02,             # [m] default
+        spalt_laenge         = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
         soll_phase           = -30.0,            # [deg] default
         frequenz             = 814.e6,           # [Hz] default
@@ -87,7 +87,7 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-CpValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
+CpValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)      # used to keep current values
 
 class Particle(object):                          
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
@@ -386,14 +386,15 @@ def I1(x):
 ## Marker Actions
 def sigma_x_action():
     # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
-    SUMMARY['sigma-x({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
-    PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_x']*1.e3
+    SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
+    PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
 def sigma_y_action():
     # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
-    SUMMARY['sigma-y({:8.4f}[m])[mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
-    PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])]=CpValues['sigma_y']*1.e3
+    SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
+    PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
 def Tkin_action():
-    pass
+    SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(CpValues['z'])] = CpValues['Tkin']
+    PARAMS['Tkin({:0=6.2f})'.format(CpValues['z'])] = CpValues['Tkin']
 
 MarkerActions = dict(                   # all possible actions for a Marker
             sigma_x=sigma_x_action,
