@@ -34,7 +34,8 @@ def Intg(sig,bl,dphi): # use integral fomula 3.896.2.pp.480 from I.S.Gradshteyn
 def test0():
     particle = Proton(tkin=100.)
     beta     = particle.beta
-    lamb     = PARAMS['wellenlänge']
+    freq     = 800.*1.e6    # Hz
+    lamb     = PARAMS['lichtgeschwindigkeit']/freq
     gap      = PARAMS['spalt_laenge']
     phis     = [0,-25,-50., -75.]
     for cnt,dphi in enumerate(phis):
@@ -66,8 +67,9 @@ def test0():
         ax.plot(z,RF,  'r-',  label=r'cos($phi$(z))')
         ax.plot(z,Ez0, 'g-',  label='Ez cav.(z)')
         ax.plot(z,Ezav,'k--', label='<Ez0> acc.')
-        ax.set_title('sync.phase{:5.1f}[deg], T(p+){:5.1f}[MeV]'.format(np.degrees(dphi),particle.tkin))
+        ax.set_title('f {:5.1f}[MHz], sync.phase {:5.1f}[deg], T(p+) {:5.0f}[MeV]'.format(freq*1.e-6,np.degrees(dphi),particle.tkin))
         plt.legend(loc='lower right',fontsize='x-small')
+        plt.axhline(linestyle=':',color='m')
     plt.show()
 
 if __name__ == '__main__':

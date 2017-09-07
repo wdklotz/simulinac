@@ -1,4 +1,4 @@
-from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
+import matplotlib.pyplot as plt
 
 Ez0_tab = []
 input_file = 'SF_WDK2g44.TBL'
@@ -22,10 +22,10 @@ Ezp  = [+float(x[2]) for x in Ez0_tab]
 zn   = [-float(x[0]) for x in reversed(Ez0_tab)]
 Ezn  = [+float(x[2]) for x in reversed(Ez0_tab)]
 
-ax  = subplot(111)
+ax  = plt.subplot(111)
 ax.set_title(input_file)
 ax.set_ylabel('Ez0 [MV/m]')
 ax.set_xlabel('z [cm]')
-ax.plot(zn+zp,Ezn+Ezp)
-show()
+plt.plot(zn+zp,Ezn+Ezp)
+plt.show()
         
