@@ -15,10 +15,7 @@ def Ez(z,sig,mu1,mu2,dphi,bl,zpjump):
     factor = 2.*np.pi/bl
     z0 = z                      # Ordinate
     Amp = A(z0,sig,mu1,mu2)
-    z1 = z+zpjump
-    dz = np.mod(z1,2*zpjump)
-    z1 = -zpjump+dz
-    phix = factor*zpjump          # phase jump
+    phix = factor*zpjump        # phase jump
     phi0 = factor*z0+dphi
     phi1 = phi0-2.*phix
     rf0  = np.cos(phi0)
@@ -29,28 +26,20 @@ def Ez(z,sig,mu1,mu2,dphi,bl,zpjump):
        rf = rf1           # in 2nd cavity
     res = NGauss(z0,sig,mu1)*rf0 + NGauss(z0,sig,mu2)*rf1 # superposition of 2 cavities
     return (res,rf)
-def Intg(sig,bl,dphi): # use fomula 3.896.2.pp.480 from I.S.Gradshteyn for integration
+def Intg(sig,bl,dphi): # use integral fomula 3.896.2.pp.480 from I.S.Gradshteyn
     ex = np.exp(-2*(np.pi*sig/bl)**2)
-    # print('ex',ex)
-    res = np.sqrt(2*np.pi)*sig*ex*np.cos(dphi)  # Note: prpostional to cos(dphi)! simple!
+    res = np.sqrt(2*np.pi)*sig*ex*np.cos(dphi)  # Note: proportional to cos(dphi)! simple!
     return res
 
 def test0():
-    t = np.arange(0.0, 6*np.pi, 2*np.pi/100.)
-    dphi=np.radians(-40.)
-    plt.subplot(121)
-    plt.plot(t, f(t), 'b-') 
-    plt.plot(t, f(t-dphi), 'g-')
-    plt.plot(t, g(t,dphi), 'r-')
-def test1():
     particle = Proton(tkin=100.)
     beta     = particle.beta
     lamb     = PARAMS['wellenlänge']
     gap      = PARAMS['spalt_laenge']
-    phis     = [0,-25,-50,-75]
+    phis     = [0,-25,-50., -75.]
     for cnt,dphi in enumerate(phis):
         dphi = np.radians(dphi)
-        zpjump  = (gap/2.+0.002)      # phase jump @ loc. of cavity ext. limit
+        zpjump  = (gap/2.+0.005)      # loc. of phase jump @ ext. limit of cavity 
         sig  = zpjump/3.              # 3 sigma field strength @ cavity join
         mu1  = 0.                     # center of 1st cav. @ z=0
         mu2  = 2*zpjump               # center of 2nd cavity
@@ -61,11 +50,12 @@ def test1():
         z    = np.arange(zl,zr,step)
         E    = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[0] for x in z] # what the particle sees
         RF   = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[1] for x in z] # the time dependant modulation of the cavity field
-        Ez0  =[A(x,sig,mu1,mu2) for x in z]                     # E(z,r=0) in cavities
+        Ez0  = [A(x,sig,mu1,mu2) for x in z]                    # E(z,r=0) in cavities
 
         Ez_av_int = 2*Intg(sig,bl,dphi)/(zr-zl)   # average using integral formula
         Ezav = [Ez_av_int for x in z]             # average of field the particle sees
-        # Ezsum = 0.
+
+        # Ezsum = 0.                              # numerical integration
         # for i in range(0,len(z)):
         #     Ezsum += E[i]
         # Ez_av_num = Ezsum*step/(zr-zl)
@@ -78,12 +68,7 @@ def test1():
         ax.plot(z,Ezav,'k--', label='<Ez0> acc.')
         ax.set_title('sync.phase{:5.1f}[deg], T(p+){:5.1f}[MeV]'.format(np.degrees(dphi),particle.tkin))
         plt.legend(loc='lower right',fontsize='x-small')
-    # ax.annotate('RF',           xy=(10,  0.74),   xytext=(14, 0.74),   arrowprops=dict(facecolor='red',   shrink=0.001))
-    # ax.annotate('cav. profile', xy=(1.57,0.91),   xytext=(7.3, 0.91),  arrowprops=dict(facecolor='green', shrink=0.001))
-    # ax.annotate('acc. field',   xy=(17.43, 0.56), xytext=(21.33, 0.56),arrowprops=dict(facecolor='blue',  shrink=0.001))
-    # ax.annotate('Ez0 av.',      xy=(0.20, 0.32),  xytext=(0.20, 0.10), arrowprops=dict(facecolor='black', shrink=0.001))
     plt.show()
 
 if __name__ == '__main__':
-    # test0()
-    test1()
+    test0()
