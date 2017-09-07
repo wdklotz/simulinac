@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.insert(0,'..')
-from setutil import PARAMS,Proton
+from setutil import PARAMS,Proton,DEBUG
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = np.exp(-(((x-mu)/sig)**2/2.))
@@ -29,6 +29,11 @@ def Ez(z,sig,mu1,mu2,dphi,bl,zpjump):
        rf = rf1           # in 2nd cavity
     res = NGauss(z0,sig,mu1)*rf0 + NGauss(z0,sig,mu2)*rf1 # superposition of 2 cavities
     return (res,rf)
+def Intg(sig,bl,dphi): # use fomula 3.896.2.pp.480 from I.S.Gradshteyn for integration
+    ex = np.exp(-2*(np.pi*sig/bl)**2)
+    # print('ex',ex)
+    res = np.sqrt(2*np.pi)*sig*ex*np.cos(dphi)  # Note: prpostional to cos(dphi)! simple!
+    return res
 
 def test0():
     t = np.arange(0.0, 6*np.pi, 2*np.pi/100.)
@@ -46,21 +51,25 @@ def test1():
     for cnt,dphi in enumerate(phis):
         dphi = np.radians(dphi)
         zpjump  = (gap/2.+0.002)      # phase jump @ loc. of cavity ext. limit
-        sig = zpjump/3.               # 3 sigma field strength @ cavity join
-        mu1 = 0.                      # center of 1st cav. @ z=0
-        mu2 = 2*zpjump                # center of 2nd cavity
-        bl    = beta*lamb             # beta*lambda factor
-        zr1  = mu2+zpjump             # right limit of intervall
-        z  = np.arange(-zpjump,zr1,(zr1-zpjump)/100.)
-        E  = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[0] for x in z] # what the particle sees
-        RF = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[1] for x in z] # the time dependant modulation of the cavity field
-        Ez0 =[A(x,sig,mu1,mu2) for x in z]                    # E(z,r=0) in cavities
-        step = z[1]-z[0]
-        Eint = 0.
-        for i in range(1,len(z)):
-            Eint += E[i]
-        Eint = Eint*step/(z[len(z)-1]-z[0])
-        Ezav = [Eint for x in z]      # average of field the particle sees
+        sig  = zpjump/3.              # 3 sigma field strength @ cavity join
+        mu1  = 0.                     # center of 1st cav. @ z=0
+        mu2  = 2*zpjump               # center of 2nd cavity
+        bl   = beta*lamb              # beta*lambda factor
+        zr   = mu2+zpjump             # right limit of intervall
+        zl   = -zpjump                # left limit of intervall
+        step = (zr-zl)/1000.
+        z    = np.arange(zl,zr,step)
+        E    = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[0] for x in z] # what the particle sees
+        RF   = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[1] for x in z] # the time dependant modulation of the cavity field
+        Ez0  =[A(x,sig,mu1,mu2) for x in z]                     # E(z,r=0) in cavities
+
+        Ez_av_int = 2*Intg(sig,bl,dphi)/(zr-zl)   # average using integral formula
+        Ezav = [Ez_av_int for x in z]             # average of field the particle sees
+        # Ezsum = 0.
+        # for i in range(0,len(z)):
+        #     Ezsum += E[i]
+        # Ez_av_num = Ezsum*step/(zr-zl)
+        # DEBUG('<Ez>num {}  <Ez>int {}'.format(Ez_av_num,Ez_av_int))
         
         ax = plt.subplot(2,2,cnt+1)
         ax.plot(z,E,   'b-',  label='Ez acc.(z)')
