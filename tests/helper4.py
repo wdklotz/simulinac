@@ -11,16 +11,16 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 def A(z,sig,mu1,mu2):    # Amplitudenfunktion von 2 hintereinander liegenden Kavitaeten
     res = NGauss(z,sig,mu1)+NGauss(z,sig,mu2)
     return res
-def Ez(z,sig,mu1,mu2,dphi,bl,zpjump):
+def Ez(z,sig,mu1,mu2,dphi,bl,zpjmp):
     factor = 2.*np.pi/bl
     z0 = z                      # Ordinate
     Amp = A(z0,sig,mu1,mu2)
-    phix = factor*zpjump        # phase jump
+    phix = factor*zpjmp         # phase jump
     phi0 = factor*z0+dphi
     phi1 = phi0-2.*phix
     rf0  = np.cos(phi0)
     rf1  = np.cos(phi1)
-    if z <= zpjump:
+    if z <= zpjmp:
         rf = rf0          # in 1st cavity
     else:
        rf = rf1           # in 2nd cavity
@@ -39,18 +39,18 @@ def test0():
     phis     = [0,-25,-50., -75.]
     for cnt,dphi in enumerate(phis):
         dphi = np.radians(dphi)
-        zpjump  = (gap/2.+0.005)      # loc. of phase jump @ ext. limit of cavity 
-        sig  = zpjump/3.              # 3 sigma field strength @ cavity join
-        mu1  = 0.                     # center of 1st cav. @ z=0
-        mu2  = 2*zpjump               # center of 2nd cavity
-        bl   = beta*lamb              # beta*lambda factor
-        zr   = mu2+zpjump             # right limit of intervall
-        zl   = -zpjump                # left limit of intervall
+        zpjmp= (gap/2.+0.005)        # loc. of phase jump @ ext. limit of cavity 
+        sig  = zpjmp/3.              # 3 sigma field strength @ cavity join
+        mu1  = 0.                    # center of 1st cav. @ z=0
+        mu2  = 2*zpjmp               # center of 2nd cavity
+        bl   = beta*lamb             # beta*lambda factor
+        zr   = mu2+zpjmp             # right limit of intervall
+        zl   = -zpjmp                # left limit of intervall
         step = (zr-zl)/1000.
         z    = np.arange(zl,zr,step)
-        E    = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[0] for x in z] # what the particle sees
-        RF   = [Ez(x,sig,mu1,mu2,dphi,bl,zpjump)[1] for x in z] # the time dependant modulation of the cavity field
-        Ez0  = [A(x,sig,mu1,mu2) for x in z]                    # E(z,r=0) in cavities
+        E    = [Ez(x,sig,mu1,mu2,dphi,bl,zpjmp)[0] for x in z] # what the particle sees
+        RF   = [Ez(x,sig,mu1,mu2,dphi,bl,zpjmp)[1] for x in z] # the time dependant modulation of the cavity field
+        Ez0  = [A(x,sig,mu1,mu2) for x in z]                   # E(z,r=0) in cavities
 
         Ez_av_int = 2*Intg(sig,bl,dphi)/(zr-zl)   # average using integral formula
         Ezav = [Ez_av_int for x in z]             # average of field the particle sees
