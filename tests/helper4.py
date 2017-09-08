@@ -20,11 +20,8 @@ def Ez(z,sig,mu1,mu2,dphi,bl,zpjmp):
     phi1 = phi0-2.*phix
     rf0  = np.cos(phi0)
     rf1  = np.cos(phi1)
-    if z <= zpjmp:
-        rf = rf0          # in 1st cavity
-    else:
-       rf = rf1           # in 2nd cavity
     res = NGauss(z0,sig,mu1)*rf0 + NGauss(z0,sig,mu2)*rf1 # superposition of 2 cavities
+    rf = rf0 if z <= zpjmp else rf1
     return (res,rf)
 def Intg(sig,bl,dphi): # use integral fomula 3.896.2.pp.480 from I.S.Gradshteyn
     ex = np.exp(-2*(np.pi*sig/bl)**2)
@@ -37,39 +34,40 @@ def test0():
     freq     = 800.*1.e6    # Hz
     lamb     = PARAMS['lichtgeschwindigkeit']/freq
     gap      = PARAMS['spalt_laenge']
-    phis     = [0,-25,-50., -75.]
+    gap      = 0.044
+    # phis     = [0, -30, -60., -90.]
+    phis     = [0,-25, -50., -75.]
     for cnt,dphi in enumerate(phis):
         dphi = np.radians(dphi)
         zpjmp= (gap/2.+0.005)        # loc. of phase jump @ ext. limit of cavity 
-        sig  = zpjmp/3.              # 3 sigma field strength @ cavity join
+        # sig  = zpjmp/3.              # 3 sigma field strength @ cavity join
+        sig  = zpjmp/2.2             # our data
+        # sig  = zpjmp/1.              # test
+        bl   = beta*lamb             # beta*lambda factor
         mu1  = 0.                    # center of 1st cav. @ z=0
         mu2  = 2*zpjmp               # center of 2nd cavity
-        bl   = beta*lamb             # beta*lambda factor
         zr   = mu2+zpjmp             # right limit of intervall
         zl   = -zpjmp                # left limit of intervall
         step = (zr-zl)/1000.
         z    = np.arange(zl,zr,step)
         E    = [Ez(x,sig,mu1,mu2,dphi,bl,zpjmp)[0] for x in z] # what the particle sees
         RF   = [Ez(x,sig,mu1,mu2,dphi,bl,zpjmp)[1] for x in z] # the time dependant modulation of the cavity field
-        Ez0  = [A(x,sig,mu1,mu2) for x in z]                   # E(z,r=0) in cavities
+        Ez0  = [A(x,sig,mu1,mu2) for x in z]                   # E(z,r=0) peak field in cavities
 
-        Ez_av_int = 2*Intg(sig,bl,dphi)/(zr-zl)   # average using integral formula
-        Ezav = [Ez_av_int for x in z]             # average of field the particle sees
-
-        # Ezsum = 0.                              # numerical integration
-        # for i in range(0,len(z)):
-        #     Ezsum += E[i]
-        # Ez_av_num = Ezsum*step/(zr-zl)
-        # DEBUG('<Ez>num {}  <Ez>int {}'.format(Ez_av_num,Ez_av_int))
+        Vz = []; sum = 0
+        for i in range(0,len(z)):
+            sum += 20*E[i]*step
+            Vz.append(sum)   # acc. voltage over intervall in [50KV] units to fit vert. axis
         
         ax = plt.subplot(2,2,cnt+1)
-        ax.plot(z,E,   'b-',  label='Ez acc.(z)')
-        ax.plot(z,RF,  'r-',  label=r'cos($phi$(z))')
-        ax.plot(z,Ez0, 'g-',  label='Ez cav.(z)')
-        ax.plot(z,Ezav,'k--', label='<Ez0> acc.')
-        ax.set_title('f {:5.1f}[MHz], sync.phase {:5.1f}[deg], T(p+) {:5.0f}[MeV]'.format(freq*1.e-6,np.degrees(dphi),particle.tkin))
-        plt.legend(loc='lower right',fontsize='x-small')
-        plt.axhline(linestyle=':',color='m')
+        ax.plot(z,E,  'b-',  label='Ez[MV/m]')
+        ax.plot(z,RF, 'r-',  label=r'cos($phi$(z))')
+        ax.plot(z,Ez0,'g-',  label='Ez-cav.[Mv/m]')
+        ax.plot(z,Vz, 'k--', label='Vz[50KV]')
+        ax.set_title(r'f={:5.1f}[MHz] gap={:3.0f}[mm] gap/2$\sigma$={:3.1f} sync.phase={:5.1f}[deg] Tkin={:3.0f}[MeV]'.
+            format(freq*1.e-6,gap*1.e3,zpjmp/sig,np.degrees(dphi),particle.tkin))
+        ax.axhline(linestyle=':',color='m')
+        ax.legend(loc='lower right',fontsize='x-small')
     plt.show()
 
 if __name__ == '__main__':
