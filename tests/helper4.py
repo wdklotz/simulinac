@@ -39,7 +39,7 @@ def test0():
     phis     = [0,-25, -50., -75.]
     for cnt,dphi in enumerate(phis):
         dphi = np.radians(dphi)
-        zpjmp= (gap/2.+0.005)        # loc. of phase jump @ ext. limit of cavity 
+        zpjmp= (gap/2.+0.005)        # loc. z of phase jump (@ ext. limit of cavity) 
         # sig  = zpjmp/3.              # 3 sigma field strength @ cavity join
         sig  = zpjmp/2.2             # our data
         # sig  = zpjmp/1.              # test
