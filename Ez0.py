@@ -12,46 +12,61 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
 
-def Kpoly(z,sigma,E):
+def Kpoly(z,sigma,mu,E):
     """
     Calculate polynom coefficients
     """
     poly = []
-    Interval = namedtuple('Interval',['zl','z0','zr','dz','E0','a','b'])
+    Interval = namedtuple('Interval',['zl','z0','zr','dz','b','a','E0','coeff'])
     anz = len(z)
     for i in range(0,anz-2,2):
         zl  = z[i]
         z0  = z[i+1]
         zr  = z[i+2]
         dz  =  z0-zl
-        El  = E*NGauss(zl,sigma,0.)
-        E0  = E*NGauss(z0,sigma,0.)
-        Er  = E*NGauss(zr,sigma,0.)
-        a   = (Er-El)/(2*E0*dz)
-        b   = (Er+El-2*E0)/(2*E0*dz**2)
-        interval = Interval(zl,z0,zr,dz,E0,a,b)
+        El  = E*NGauss(zl,sigma,mu)
+        E0  = E*NGauss(z0,sigma,mu)
+        Er  = E*NGauss(zr,sigma,mu)
+        b = (Er+El-2*E0)/(2*E0*dz**2)
+        a = (Er-El)/(2*E0*dz)
+            # USE np.polyfit()
+            # x   = np.array((zl,z0,zr))
+            # y   = np.array((El,E0,Er))
+            # coeff = np.polyfit(x,y,2)
+            # b   = coeff[0]
+            # a   = coeff[1]
+            # E0  = coeff[2]
+            # interval = Interval(zl,z0,zr,dz,b,a,E0,coeff)
+            # ENDUSE np.polyfit()
+        interval = Interval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(interval)
     return poly
 
 def Epoly(z,poly):
     """
-    Plynomial fit
+    eval polynomial fit
     """
     ix = -1
     for i in range(len(poly)):
         zl = poly[i].zl
-        z0 = poly[i].z0
         zr = poly[i].zr
         if zl <= z and z <= zr:
             ix = i
             break
     if ix <0:
         raise RuntimeError('arg out of range! {}'.format(z))
-    E0 = poly[ix].E0
-    a  = poly[ix].a
-    b  = poly[ix].b
+        # USE np.poly1d()
+        # coeff = poly[ix].coeff
+        # res   = np.poly1d(coeff)
+        # res   = res(z)
+        # ENDUSE np.poly1d()
+    ival = poly[ix]
+    z0 = ival.z0
     dz = z-z0
-    res = E0*(1.+ a*dz+b*dz**2)
+    E0 = ival.E0
+    a  = ival.a
+    b  = ival.b
+    res = E0*(1.+a*dz+b*dz**2)
     return res
 
 def V0(poly):
@@ -135,6 +150,7 @@ def test0():
     '''
     Superfish data
     '''
+    gap = 4.4
     Ez0_tab = []
     Ez_max = 1.
     with open(input_file,'r') as f:
@@ -151,23 +167,31 @@ def test0():
                 Ez_max = float(Ez)      # normalization factor
             Ez = float(Ez)/Ez_max
             Ez0_tab.append((z,R,Ez))
+    display(Ez0_tab,'sf')
     # for x in Ez0_tab:
     #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
-    display(Ez0_tab,'sf')
 
 def test1():
     '''
     Gauss'che Normalverteilung
     '''
-    z = np.arange(0.,4.4,0.044)
+    gap = 4.4
+    z = np.arange(0.,gap,0.044)
     sigm = 1.14
     Ez0_tab = [(x,0.,NGauss(x,sigm,0.)) for x in z]
-    cavlen = 2.5
+    display(Ez0_tab,'NG')
+
+    # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
+    # Ez2_tab = []
+    # for i in range(len(z)):
+    #     x = z[i]
+    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
+    #     Ez2_tab.append((x,0.,Ez2))
+    # cavlen = 2.5
     # print('sigma {}[cm], half-cavity length = {}[cm] = {}sigma'.
     #     format(sigm,cavlen,cavlen/sigm))
     # for x in Ez0_tab:
     #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
-    display(Ez0_tab,'NG')
 
 def test2():
     '''
@@ -179,24 +203,34 @@ def test2():
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)
 
-    anz   = 12           # nboff slices
+    anz   = 8            # nboff slices
     gap   = 4.4          #[cm] full gap length
-    zl    = -gap/2.      #left  interval boundary
-    zr    = +gap/2.      #right interval boundary
-    sigma = zr/1.89      # sigma of NGauss (best fit with SF)
-    E0    = 1.0          # top of NGauss   (best fit with SF)
+    zl    = -2.*gap/2.   #left  interval boundary
+    zr    = +2.*gap/2.   #right interval boundary
+    sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
+    # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
+    E0    = 1.           # top of NGauss   (best fit with SF)
 
     z = np.linspace(zl,zr,2*anz+1)
     # DEBUG('z',z)
     Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
-    display1(Ez0_tab,'slice')
-    poly = Kpoly(z,sigma,E0)
+    # display1(Ez0_tab,'slice')
+    poly  = Kpoly(z,sigma,0.,E0*1.)
     # DEBUG('poly',poly)
-
     zstep = (zr-zl)/1000.
     z = np.arange(zl,zr,zstep)
-    Ez0_tab = [(x,0.,Epoly(x,poly)) for x in z]
+    Ez0_tab = [(x,0.,Epoly(x, poly)) for x in z]
     display1(Ez0_tab,'poly')
+
+    # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
+    # Ez1_tab = [(x,0.,Epoly(x,poly1)) for x in z]
+    # display1(Ez1_tab,'poly1')
+    # Ez2_tab = []
+    # for i in range(len(z)):
+    #     x = z[i]
+    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
+    #     Ez2_tab.append((x,0.,Ez2))
+    # display1(Ez2_tab,'poly2')
 
     # TTF calculations
     v0  = V0(poly)
@@ -204,10 +238,10 @@ def test2():
     sk  = Sk(poly,k)
     tkp = Tkp(poly,k)
     skp = Skp(poly,k)
-    DEBUG('v0',   v0)
-    DEBUG('T(k)', tk)
-    DEBUG('S(k)', sk)
+    DEBUG('V0',v0)
+    DEBUG('T(k)',tk)
     DEBUG("T'(k)",tkp)
+    DEBUG('S(k)',sk)
     DEBUG("S'(k)",skp)
 
 if __name__ == '__main__':
