@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sin,cos,tan,pi,exp,fabs
+from math import sin,cos,tan,pi,exp,fabs,pow,sqrt
 from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
@@ -12,84 +12,134 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
 
-def polint(xa,ya,n,x):     # EXPERIMENTAL
-    """
-    Given arrays xa,ya and given a value x, this routine returns a value y,
-    and an error estimate dy. If P(x) is the polynomial of degre n-1 such that
-    P(xai) = yai, i = (1,...,n), then the returned value y = P(x).
-    Numerical recepies in C, Cambridge Univ. Press, 1988
-    """
-    def IX(n):
-        return n-1
+            # EXPERIMENTAL
+# b0 = 2.5052367      from Abramowitz-Stegun
+# b2 = 1.2831204
+# b4 = 0.2264718
+# b6 = 0.1306469
+# b8 = -0.0202490
+# b10= 0.0039132
+# zcof = [b0,0,b2,0,b4,0,b6,0,b8,0,b10]
 
-    # DEBUG('xa',xa)
-    # DEBUG('ya',ya)
-    # DEBUG('n ',n)
-    ns = 1
-    dif = fabs(x-xa[IX(1)])
-    c = [ya[i] for i in range(n)]
-    d = [ya[i] for i in range(n)]
-    for i in range(1,n+1):
-        dift = fabs(x-xa[IX(i)])
-        # DEBUG('dift ',dift)
-        if dift < dif:
-            ns = i
-            dif = dift
-        c[IX(i)] = ya[IX(i)]
-        d[IX(i)] = ya[IX(i)]
-    # DEBUG('ns ',ns)
-    ns -= 1
-    y = ya[IX(ns)]
-    # DEBUG('ns ',ns)
-    # DEBUG('y ',y)
-    dy = 0.
-    for m in range(1,n):
-        # DEBUG('range(1,n-m+1) ',range(1,n-m+1))
-        for i in range(1,n-m+1):
-            ho = xa[IX(i)]-x
-            hp = xa[IX(i+m)]-x
-            w = c[IX(i+1)]-d[IX(i)]
-            den = ho-hp
-            # DEBUG('m,i,ho,hp,w,den {},{},{},{},{},{}'.format(m,i,ho,hp,w,den))
-            if den == 0.:
-                raise RuntimeError('Error in routine POLINT')
-            den = w/den
-            d[IX(i)] = hp*den
-            c[IX(i)] = ho*den
-        if (2*ns) < (n-m):
-            dy = c[IX(ns+1)]
-        else:
-            ns -= 1
-            dy  = d[IX(ns)]
-        y += dy
-    return y,dy
+# def Z(x,sigma,mu):       #from Abramowitz-Stegun
+#     x =(x-mu)/sigma
+#     b0 = zcof[0]
+#     b2 = zcof[2]
+#     b4 = zcof[4]
+#     b6 = zcof[6]
+#     b8 = zcof[8]
+#     b10= zcof[10]
+#     res = sqrt(2*pi)/(b0+b2*pow(x,2)+b4*pow(x,4)+b6*pow(x,6)+b8*pow(x,8)+b10*pow(x,10))
+#     return res
+            # END-EXPERIMENTAL
 
-def polcof(x,y,n):     # EXPERIMENTAL
-    """
-    Given arrays x,y containing a tabulated function f=f(x), this routine
-    returns an array of coefficients cof[i], such that y(xi)=SUMi(cof[i]*xi**i)
-    Numerical recepies in C, Cambridge Univ. Press, 1988
-    """
-    xw = [x[i] for i in range(len(x))]
-    yw = [y[i] for i in range(len(y))]
-    cof = np.zeros(len(x))
+            # EXPERIMENTAL
+# def ZR():                  # Verusch mit numpy library
+#     quo,rem = np.polynomial.polynomial.polydiv([1.,0.,0.,0.,0.,0.],zcof)
+#     print('quo,rem',quo,rem)
+            # END-EXPERIMENTAL
 
-    for j in range(n+1):
-        # DEBUG('j ',j)
-        cof[j],dy = polint(xw,yw,n+1-j,0.0)
-        # DEBUG('cof[j]',cof[j])
-        xmin = 1.0e38
-        k = -1
-        for i in range(n-j+1):
-            if fabs(xw[i]) < xmin:
-                xmin = fabs(xw[i])
-                k = i
-            if xw[i] != 0.:
-                yw[i] = (yw[i]-cof[j])/xw[i]
-        for i in range(k+1,n-j+1):
-            yw[i-1] = yw[i]
-            xw[i-1] = xw[i]
-    return cof
+            # EXPERIMENTAL
+# def Zinv(x,sigma,mu):       # Versuch mit reziprokem Polynom
+#     b = zcof
+#     c = [0. for x in range(11)]
+#     c[0] = 1./b[0]
+#     for n in range(1,11,1):
+#         for i in range(0,n,1):
+#             print('c[{}],b[{}] {} {}'.format(i,n-i,c[i],b[n-i]))
+#             c[n] -= (c[i]*b[n-i])/b[0]
+#     print(c)
+#     x = (x-mu)/sigma
+#     b0 = c[0]
+#     b2 = c[2]
+#     b4 = c[4]
+#     b6 = c[6]
+#     b8 = c[8]
+#     b10= c[10]
+#     res = sqrt(2*pi)*(b0+b2*pow(x,2)+b4*pow(x,4)+b6*pow(x,6)+b8*pow(x,8)+b10*pow(x,10))
+#     return res
+            # END-EXPERIMENTAL
+
+            # EXPERIMENTAL
+# def polint(xa,ya,n,x): # Versuch Uebersetzung von Routinen von Numerical recipies
+#     """
+#     Given arrays xa,ya and given a value x, this routine returns a value y,
+#     and an error estimate dy. If P(x) is the polynomial of degre n-1 such that
+#     P(xai) = yai, i = (1,...,n), then the returned value y = P(x).
+#     Numerical recipies in C, Cambridge Univ. Press, 1988
+#     """
+#     def IX(n):
+#         return n-1
+# 
+#     # DEBUG('xa',xa)
+#     # DEBUG('ya',ya)
+#     # DEBUG('n ',n)
+#     ns = 1
+#     dif = fabs(x-xa[IX(1)])
+#     c = [ya[i] for i in range(n)]
+#     d = [ya[i] for i in range(n)]
+#     for i in range(1,n+1):
+#         dift = fabs(x-xa[IX(i)])
+#         # DEBUG('dift ',dift)
+#         if dift < dif:
+#             ns = i
+#             dif = dift
+#         c[IX(i)] = ya[IX(i)]
+#         d[IX(i)] = ya[IX(i)]
+#     # DEBUG('ns ',ns)
+#     ns -= 1
+#     y = ya[IX(ns)]
+#     # DEBUG('ns ',ns)
+#     # DEBUG('y ',y)
+#     dy = 0.
+#     for m in range(1,n):
+#         # DEBUG('range(1,n-m+1) ',range(1,n-m+1))
+#         for i in range(1,n-m+1):
+#             ho = xa[IX(i)]-x
+#             hp = xa[IX(i+m)]-x
+#             w = c[IX(i+1)]-d[IX(i)]
+#             den = ho-hp
+#             # DEBUG('m,i,ho,hp,w,den {},{},{},{},{},{}'.format(m,i,ho,hp,w,den))
+#             if den == 0.:
+#                 raise RuntimeError('Error in routine POLINT')
+#             den = w/den
+#             d[IX(i)] = hp*den
+#             c[IX(i)] = ho*den
+#         if (2*ns) < (n-m):
+#             dy = c[IX(ns+1)]
+#         else:
+#             ns -= 1
+#             dy  = d[IX(ns)]
+#         y += dy
+#     return y,dy
+
+# def polcof(x,y,n):
+#     """
+#     Given arrays x,y containing a tabulated function f=f(x), this routine
+#     returns an array of coefficients cof[i], such that y(xi)=SUMi(cof[i]*xi**i)
+#     Numerical recepies in C, Cambridge Univ. Press, 1988
+#     """
+#     xw = [x[i] for i in range(len(x))]
+#     yw = [y[i] for i in range(len(y))]
+#     cof = np.zeros(len(x))
+# 
+#     for j in range(n+1):
+#         # DEBUG('j ',j)
+#         cof[j],dy = polint(xw,yw,n+1-j,0.0)
+#         # DEBUG('cof[j]',cof[j])
+#         xmin = 1.0e38
+#         k = -1
+#         for i in range(n-j+1):
+#             if fabs(xw[i]) < xmin:
+#                 xmin = fabs(xw[i])
+#                 k = i
+#             if xw[i] != 0.:
+#                 yw[i] = (yw[i]-cof[j])/xw[i]
+#         for i in range(k+1,n-j+1):
+#             yw[i-1] = yw[i]
+#             xw[i-1] = xw[i]
+#     return cof
+            # END-EXPERIMENTAL
 
 def Kpoly(z,sigma,mu,E):
     """
@@ -106,28 +156,26 @@ def Kpoly(z,sigma,mu,E):
         El  = E*NGauss(zl,sigma,mu)
         E0  = E*NGauss(z0,sigma,mu)
         Er  = E*NGauss(zr,sigma,mu)
-        b = (Er+El-2*E0)/(2*E0*dz**2)
-        a = (Er-El)/(2*E0*dz)
+        b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+        a = (Er-El)/(2*E0*dz)           # getetstet mit Bleistift u. Papier
         interval = Interval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(interval)
 
-            # USE np.polyfit()
-            # x   = np.array((zl,z0,zr))
-            # y   = np.array((El,E0,Er))
-            # coeff = np.polyfit(x,y,2)
-            # b   = coeff[0]
-            # a   = coeff[1]
-            # E0  = coeff[2]
-            # interval = Interval(zl,z0,zr,dz,b,a,E0,coeff)
-            # END-USE np.polyfit()
+            # USE np.polyfit() - liefert gleiches Resultat wie Langrange 3 Punkt
+        # x   = np.array((zl,z0,zr))
+        # y   = np.array((El,E0,Er))
+        # coeff = np.polyfit(x,y,2)
+        # b   = coeff[0]
+        # a   = coeff[1]
+        # E0  = coeff[2]
+        # interval = Interval(zl,z0,zr,dz,b,a,E0,coeff)
 
-            # EXPERIMENTAL
-            # x = [zl,z0,zr]
-            # y = [El,E0,Er]
-            # cof = polcof(x,y,2)
-            # print('cof =====',cof)
-            # print('E0,a,b ',E0,a,b,'\n')
-            # END-EXPERIMENTAL
+        # x = [zl,z0,zr]
+        # y = [El,E0,Er]
+        # cof = polcof(x,y,2)
+        # print('cof =====',cof)
+        # print('E0,a,b ',E0,a,b,'\n')
+            # END-USE np.polyfit()
 
     return poly
 
@@ -144,10 +192,10 @@ def Epoly(z,poly):
             break
     if ix <0:
         raise RuntimeError('arg out of range! {}'.format(z))
-            # USE np.poly1d()
-            # coeff = poly[ix].coeff
-            # res   = np.poly1d(coeff)
-            # res   = res(z)
+            # USE np.polyfit() - liefert gleiches Resultat wie Langrange 3 Punkt
+    # coeff = poly[ix].coeff
+    # res   = np.poly1d(coeff)
+    # res   = res(z)
             # END-USE np.poly1d()
     ival = poly[ix]
     z0 = ival.z0
@@ -265,10 +313,14 @@ def test1():
     Gauss'che Normalverteilung
     '''
     gap = 4.4
-    z = np.arange(0.,gap,0.044)
-    sigm = 1.14
-    Ez0_tab = [(x,0.,NGauss(x,sigm,0.)) for x in z]
-    display(Ez0_tab,'NG')
+    z = np.arange(-gap,gap,gap/100.)
+    sigma = 1.14
+    Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
+    display1(Ez0_tab,'NG')
+            # EXPERIMENTAL
+    # EzZ_tab = [(x,0.,Z(x,sigma,0.01 )) for x in z]
+    # display1(EzZ_tab,'Z')
+            # END-EXPERIMENTAL
 
     # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
     # Ez2_tab = []
@@ -284,7 +336,7 @@ def test1():
 
 def test2():
     '''
-    Second order polynomial fit
+    Second order polynomial fit with Lagrange 3 point formula
     '''
     particle = Proton(tkin=100.)
     beta     = particle.beta
@@ -301,16 +353,14 @@ def test2():
     E0    = 1.           # top of NGauss   (best fit with SF)
 
     z = np.linspace(zl,zr,2*anz+1)
-    # DEBUG('z',z)
     Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
     # display1(Ez0_tab,'slice')
     poly  = Kpoly(z,sigma,0.,E0*1.)
-    # DEBUG('poly',poly)
 
     zstep = (zr-zl)/1000.
     z = np.arange(zl,zr,zstep)
     Ez0_tab = [(x,0.,Epoly(x, poly)) for x in z]
-    display1(Ez0_tab,'poly')
+    # display1(Ez0_tab,'poly')
 
     # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
     # Ez1_tab = [(x,0.,Epoly(x,poly1)) for x in z]
@@ -328,11 +378,11 @@ def test2():
     sk  = Sk(poly,k)
     tkp = Tkp(poly,k)
     skp = Skp(poly,k)
-    # DEBUG('V0',v0)
-    # DEBUG('T(k)',tk)
-    # DEBUG("T'(k)",tkp)
-    # DEBUG('S(k)',sk)
-    # DEBUG("S'(k)",skp)
+    DEBUG('V0',v0)
+    DEBUG('T(k)',tk)
+    DEBUG("T'(k)",tkp)
+    DEBUG('S(k)',sk)
+    DEBUG("S'(k)",skp)
 
 if __name__ == '__main__':
     input_file = 'SF_WDK2g44.TBL'
