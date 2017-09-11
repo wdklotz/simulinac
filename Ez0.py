@@ -143,7 +143,7 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 
 def Kpoly(z,sigma,mu,E):
     """
-    Calculate polynom coefficients
+    Calculate polynom coefficients from NG formula
     """
     poly = []
     Interval = namedtuple('Interval',['zl','z0','zr','dz','b','a','E0','coeff'])
@@ -179,9 +179,38 @@ def Kpoly(z,sigma,mu,E):
 
     return poly
 
-def Epoly(z,poly):
+def KpolySF():
     """
-    eval polynomial fit
+    Calculate polynom coefficients from SF data
+    """
+    poly = []
+    Interval = namedtuple('Interval',['zl','z0','zr','dz','b','a','E0','coeff'])
+    Ez0_tab  = test0(plot=False)   # getting the data from file
+    z = []
+    Ez = []
+    for cnt,p in enumerate(Ez0_tab):
+        zp,R,Ezp = p
+        z.append(zp)
+        Ez.append(Ezp)
+        DEBUG('cnt {}: z {} Ez {}'.format(cnt,zp,Ezp))
+    anz = len(z)
+    for i in range(0,anz-2,2):
+        zl  = z[i]
+        z0  = z[i+1]
+        zr  = z[i+2]
+        dz  =  z0-zl
+        El  = Ez[i]
+        E0  = Ez[i+1]
+        Er  = Ez[i+2]
+        b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+        a = (Er-El)/(2*E0*dz)           # getetstet mit Bleistift u. Papier
+        interval = Interval(zl,z0,zr,dz,b,a,E0,0.)
+        poly.append(interval)
+    return poly
+
+def Ipoly(z,poly):
+    """
+    interpolate with polynomial fit
     """
     ix = -1
     for i in range(len(poly)):
@@ -283,11 +312,10 @@ def display1(table,legend):
     Ez  = [+float(x[2]) for x in table]
     plt.plot(z,Ez,label=legend)
 
-def test0():
+def test0(plot=True):
     '''
     Superfish data
     '''
-    gap = 4.4
     Ez0_tab = []
     Ez_max = 1.
     with open(input_file,'r') as f:
@@ -303,23 +331,25 @@ def test0():
             if cnt == 0:
                 Ez_max = float(Ez)      # normalization factor
             Ez = float(Ez)/Ez_max
-            Ez0_tab.append((z,R,Ez))
-    display(Ez0_tab,'sf')
-    # for x in Ez0_tab:
-    #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
+            Ez0_tab.append((float(z),float(R),Ez))
+    if plot: 
+        display(Ez0_tab,'sf')
+        # for x in Ez0_tab:
+        #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
+    return Ez0_tab
 
 def test1():
     '''
     Gauss'che Normalverteilung
     '''
     gap = 4.4
-    z = np.arange(-gap,gap,gap/100.)
+    z = np.arange(0.,gap,gap/500.)
     sigma = 1.14
     Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
-    display1(Ez0_tab,'NG')
+    display(Ez0_tab,'NG')
             # EXPERIMENTAL
     # EzZ_tab = [(x,0.,Z(x,sigma,0.01 )) for x in z]
-    # display1(EzZ_tab,'Z')
+    # display(EzZ_tab,'Z')
             # END-EXPERIMENTAL
 
     # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
@@ -336,7 +366,7 @@ def test1():
 
 def test2():
     '''
-    Second order polynomial fit with Lagrange 3 point formula
+    Second order polynomial fit with Lagrange 3 point formula to NG formula
     '''
     particle = Proton(tkin=100.)
     beta     = particle.beta
@@ -344,33 +374,76 @@ def test2():
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)
 
-    anz   = 8            # nboff slices
+    anz   = 80           # nboff slices
     gap   = 4.4          #[cm] full gap length
-    zl    = -2.*gap/2.   #left  interval boundary
-    zr    = +2.*gap/2.   #right interval boundary
+    zl    = 0.           #left  interval boundary
+    zr    = gap/2.       #right interval boundary
     sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
     # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
     E0    = 1.           # top of NGauss   (best fit with SF)
 
     z = np.linspace(zl,zr,2*anz+1)
     Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
-    # display1(Ez0_tab,'slice')
+    # display(Ez0_tab,'slice')
     poly  = Kpoly(z,sigma,0.,E0*1.)
 
     zstep = (zr-zl)/1000.
     z = np.arange(zl,zr,zstep)
-    Ez0_tab = [(x,0.,Epoly(x, poly)) for x in z]
-    # display1(Ez0_tab,'poly')
+    Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
+    display(Ez0_tab,'poly')
 
     # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
-    # Ez1_tab = [(x,0.,Epoly(x,poly1)) for x in z]
-    # display1(Ez1_tab,'poly1')
+    # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
+    # display(Ez1_tab,'poly1')
     # Ez2_tab = []
     # for i in range(len(z)):
     #     x = z[i]
     #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
     #     Ez2_tab.append((x,0.,Ez2))
-    # display1(Ez2_tab,'poly2')
+    # display(Ez2_tab,'poly2')
+
+    # TTF calculations
+    v0  = V0(poly)
+    tk  = Tk(poly,k)
+    sk  = Sk(poly,k)
+    tkp = Tkp(poly,k)
+    skp = Skp(poly,k)
+    DEBUG('V0',v0)
+    DEBUG('T(k)',tk)
+    DEBUG("T'(k)",tkp)
+    DEBUG('S(k)',sk)
+    DEBUG("S'(k)",skp)
+
+def test3():
+    '''
+    Second order polynomial fit with Lagrange 3 point formula to SF data
+    '''
+    particle = Proton(tkin=100.)
+    beta     = particle.beta
+    c        = PARAMS['lichtgeschwindigkeit']
+    freq     = PARAMS['frequenz']
+    k        = 2*pi*freq/(c*beta)
+
+    Ez0_tab = test0(plot=False)
+    zl      = Ez0_tab[0][0]
+    zr      = Ez0_tab[-1][0]
+    # display(Ez0_tab,'slice')
+    poly  = KpolySF()
+
+    zstep = (zr-zl)/500.
+    z = np.arange(zl,zr,zstep)
+    Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
+    display(Ez0_tab,'poly')
+
+    # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
+    # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
+    # display(Ez1_tab,'poly1')
+    # Ez2_tab = []
+    # for i in range(len(z)):
+    #     x = z[i]
+    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
+    #     Ez2_tab.append((x,0.,Ez2))
+    # display(Ez2_tab,'poly2')
 
     # TTF calculations
     v0  = V0(poly)
@@ -387,8 +460,9 @@ def test2():
 if __name__ == '__main__':
     input_file = 'SF_WDK2g44.TBL'
     ax = pre_plt()
-    test0()
-    test1()
-    test2()
+    test0(plot=True)     # SF
+    # test1()            # NG
+    # test2()            # poly-fit to NG
+    test3()              # poly-fit to SF
     post_plt(ax)
         
