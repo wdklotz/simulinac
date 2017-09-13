@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sin,cos,tan,pi,exp,fabs,pow,sqrt
+from math import sin,cos,tan,pi,exp,fabs,pow,sqrt,fmod
 from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
@@ -11,6 +11,45 @@ Cavity E(z,r=0) field profile
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
+
+def SFdata(input_file,Epeak=1.):
+    '''
+    Superfish data
+    '''
+    Dpoint = namedtuple('DataPoint',['z','R','Ez'])  # data-point structure
+    zp = []
+    rp = []
+    ep = []
+    with open(input_file,'r') as f:
+        lines = list(f)
+        for line in lines[41:-2]:
+            # print(line,end='')
+            stripped    = line.strip()
+            (z,sep,aft) = stripped.partition(' ')
+            z =float(z)
+            stripped    = aft.strip()
+            (R,sep,aft) = stripped.partition(' ')
+            R = float(R)
+            stripped     = aft.strip()
+            (Ez,sep,aft) = stripped.partition(' ')
+            Ez = float(Ez)
+            zp.append(z)
+            rp.append(R)
+            ep.append(Ez)
+    zprev = [-x for x in reversed(zp[1:])]
+    zp = zprev+zp
+    rprev = [-x for x in reversed(rp[1:])]
+    rp = rprev+rp
+    eprev = [x for x in reversed(ep[1:])]
+    ep =eprev+ep
+    emax = max(ep)
+    enorm = Epeak/emax
+    Ez0_tab = []
+    for i in range(len(zp)):   # normalize and pack
+        ep[i] = ep[i]*enorm
+        dpoint = Dpoint(zp[i],rp[i],ep[i])
+        Ez0_tab.append(dpoint)
+    return Ez0_tab
 
             # EXPERIMENTAL
 # b0 = 2.5052367      from Abramowitz-Stegun
@@ -31,15 +70,11 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 #     b10= zcof[10]
 #     res = sqrt(2*pi)/(b0+b2*pow(x,2)+b4*pow(x,4)+b6*pow(x,6)+b8*pow(x,8)+b10*pow(x,10))
 #     return res
-            # END-EXPERIMENTAL
 
-            # EXPERIMENTAL
 # def ZR():                  # Verusch mit numpy library
 #     quo,rem = np.polynomial.polynomial.polydiv([1.,0.,0.,0.,0.,0.],zcof)
 #     print('quo,rem',quo,rem)
-            # END-EXPERIMENTAL
 
-            # EXPERIMENTAL
 # def Zinv(x,sigma,mu):       # Versuch mit reziprokem Polynom
 #     b = zcof
 #     c = [0. for x in range(11)]
@@ -58,9 +93,7 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 #     b10= c[10]
 #     res = sqrt(2*pi)*(b0+b2*pow(x,2)+b4*pow(x,4)+b6*pow(x,6)+b8*pow(x,8)+b10*pow(x,10))
 #     return res
-            # END-EXPERIMENTAL
 
-            # EXPERIMENTAL
 # def polint(xa,ya,n,x): # Versuch Uebersetzung von Routinen von Numerical recipies
 #     """
 #     Given arrays xa,ya and given a value x, this routine returns a value y,
@@ -141,6 +174,44 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 #     return cof
             # END-EXPERIMENTAL
 
+def KpolySF(Ez0_tab,anz=4):
+    """
+    Calculate polynom coefficients from SF data
+    """
+    def indexer(nbslices,M):
+        """
+            nbslices = nboff slices
+            N = nboff half-length-slices
+            M = nboff poly-points
+            n = nboff poly-intervals/half-length-slice
+        """
+        N=2*nbslices    # factor 2 more intervals than slices
+        if N>M: 
+            raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
+        M = int(M-fmod(M,N))
+        n = int(M/N)
+        # DEBUG('(N,M,n)=({},{},{})'.format(N,M,n))
+        for i in range(0,M,2*n):
+            # DEBUG('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+            yield((i,i+n,i+2*n))
+    
+    poly = []
+    Interval = namedtuple('Interval',['zl','z0','zr','dz','b','a','E0','coeff'])
+    for (il,i0,ir) in indexer(anz,len(Ez0_tab)):
+        # DEBUG('(il,i0,ir) ',((il,i0,ir)))
+        zl = Ez0_tab[il].z
+        z0 = Ez0_tab[i0].z
+        zr = Ez0_tab[ir].z
+        El = Ez0_tab[il].Ez
+        E0 = Ez0_tab[i0].Ez
+        Er = Ez0_tab[ir].Ez
+        dz = z0-zl
+        b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+        a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
+        interval = Interval(zl,z0,zr,dz,b,a,E0,0.)
+        poly.append(interval)
+    return poly
+
 def Kpoly(z,sigma,mu,E):
     """
     Calculate polynom coefficients from NG formula
@@ -152,7 +223,7 @@ def Kpoly(z,sigma,mu,E):
         zl  = z[i]
         z0  = z[i+1]
         zr  = z[i+2]
-        dz  =  z0-zl
+        dz  = z0-zl
         El  = E*NGauss(zl,sigma,mu)
         E0  = E*NGauss(z0,sigma,mu)
         Er  = E*NGauss(zr,sigma,mu)
@@ -179,35 +250,6 @@ def Kpoly(z,sigma,mu,E):
 
     return poly
 
-def KpolySF():
-    """
-    Calculate polynom coefficients from SF data
-    """
-    poly = []
-    Interval = namedtuple('Interval',['zl','z0','zr','dz','b','a','E0','coeff'])
-    Ez0_tab  = test0(plot=False)   # getting the data from file
-    z = []
-    Ez = []
-    for cnt,p in enumerate(Ez0_tab):
-        zp,R,Ezp = p
-        z.append(zp)
-        Ez.append(Ezp)
-        DEBUG('cnt {}: z {} Ez {}'.format(cnt,zp,Ezp))
-    anz = len(z)
-    for i in range(0,anz-2,2):
-        zl  = z[i]
-        z0  = z[i+1]
-        zr  = z[i+2]
-        dz  =  z0-zl
-        El  = Ez[i]
-        E0  = Ez[i+1]
-        Er  = Ez[i+2]
-        b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
-        a = (Er-El)/(2*E0*dz)           # getetstet mit Bleistift u. Papier
-        interval = Interval(zl,z0,zr,dz,b,a,E0,0.)
-        poly.append(interval)
-    return poly
-
 def Ipoly(z,poly):
     """
     interpolate with polynomial fit
@@ -221,11 +263,14 @@ def Ipoly(z,poly):
             break
     if ix <0:
         raise RuntimeError('arg out of range! {}'.format(z))
-            # USE np.polyfit() - liefert gleiches Resultat wie Langrange 3 Punkt
+
+            # USE np.polyfit()
+            # liefert gleiches Resultat wie Langrange 3 Punkt
     # coeff = poly[ix].coeff
     # res   = np.poly1d(coeff)
     # res   = res(z)
             # END-USE np.poly1d()
+
     ival = poly[ix]
     z0 = ival.z0
     dz = z-z0
@@ -235,9 +280,13 @@ def Ipoly(z,poly):
     res = E0*(1.+a*dz+b*dz**2)
     return res
 
-def V0(poly):
+def V0(poly,zl,zr):
     v0 = []
     for i in range(len(poly)):
+        zil = poly[i].zl
+        zir = poly[i].zr
+        dz  = zir-zil
+        if zil < zl or zir > zr: continue
         E0 = poly[i].E0
         b  = poly[i].b
         dz = poly[i].dz
@@ -245,20 +294,31 @@ def V0(poly):
         v0.append(v)
     return v0
 
-def Tk(poly,k):
+def Tk(poly,k,zl,zr):
     tk = []
     for i in range(len(poly)):
+        zil = poly[i].zl
+        zir = poly[i].zr
+        dz  = zir-zil
+        if zil < zl or zir > zr: continue
+        # DEBUG('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         a  = poly[i].a
         b  = poly[i].b
         dz = poly[i].dz
-        rs = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        rs = rs * (1.+b*dz**2-2*b/k**2+2*b*dz/k/tan(k*dz))
+        f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+        # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+        rs = f1*f2
         tk.append(rs)
     return tk
 
-def Sk(poly,k):
+def Sk(poly,k,zl,zr):
     sk = []
     for i in range(len(poly)):
+        zil = poly[i].zl
+        zir = poly[i].zr
+        dz  = zir-zil
+        if zil < zl or zir > zr: continue
         a  = poly[i].a
         b  = poly[i].b
         dz = poly[i].dz
@@ -267,9 +327,13 @@ def Sk(poly,k):
         sk.append(rs)
     return sk
 
-def Tkp(poly,k):
+def Tkp(poly,k,zl,zr):
     tkp = []
     for i in range(len(poly)):
+        zil = poly[i].zl
+        zir = poly[i].zr
+        dz  = zir-zil
+        if zil < zl or zir > zr: continue
         a  = poly[i].a
         b  = poly[i].b
         dz = poly[i].dz
@@ -278,9 +342,13 @@ def Tkp(poly,k):
         tkp.append(rs)
     return tkp
 
-def Skp(poly,k):
+def Skp(poly,k,zl,zr):
     skp = []
     for i in range(len(poly)):
+        zil = poly[i].zl
+        zir = poly[i].zr
+        dz  = zir-zil
+        if zil < zl or zir > zr: continue
         a  = poly[i].a
         b  = poly[i].b
         dz = poly[i].dz
@@ -289,55 +357,34 @@ def Skp(poly,k):
         skp.append(rs)
     return skp
 
-def pre_plt():
+def pre_plt(input_file):
     ax  = plt.subplot(111)
-    ax.set_title(input_file)
     ax.set_ylabel('Ez0 [MV/m]')
     ax.set_xlabel('z [cm]')
+    ax.set_title(input_file)
     return ax
 
 def post_plt(ax):
     plt.legend(loc='lower right',fontsize='x-small')
     plt.show()
 
-def display(table,legend):
+def displayLR(table,legend):
     zp   = [+float(x[0]) for x in table]
     Ezp  = [+float(x[2]) for x in table]
     zn   = [-float(x[0]) for x in reversed(table)]
     Ezn  = [+float(x[2]) for x in reversed(table)]
     plt.plot(zn+zp,Ezn+Ezp,label=legend)
 
-def display1(table,legend):
+def display(table,legend):
     z   = [+float(x[0]) for x in table]
     Ez  = [+float(x[2]) for x in table]
     plt.plot(z,Ez,label=legend)
 
-def test0(plot=True):
-    '''
-    Superfish data
-    '''
-    Ez0_tab = []
-    Ez_max = 1.
-    with open(input_file,'r') as f:
-        lines = list(f)
-        for cnt,line in enumerate(lines[41:-2]):
-            # print(line,end='')
-            stripped    = line.strip()
-            (z,sep,aft) = stripped.partition(' ')
-            stripped    = aft.strip()
-            (R,sep,aft) = stripped.partition(' ')
-            stripped     = aft.strip()
-            (Ez,sep,aft) = stripped.partition(' ')
-            if cnt == 0:
-                Ez_max = float(Ez)      # normalization factor
-            Ez = float(Ez)/Ez_max
-            Ez0_tab.append((float(z),float(R),Ez))
+def test0(input_file,ax,plot=True):
+    Ez0_tab = SFdata(input_file)
     if plot: 
-        display(Ez0_tab,'sf')
-        # for x in Ez0_tab:
-        #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
-    return Ez0_tab
-
+        display(Ez0_tab,'SF')
+    
 def test1():
     '''
     Gauss'che Normalverteilung
@@ -346,12 +393,14 @@ def test1():
     z = np.arange(0.,gap,gap/500.)
     sigma = 1.14
     Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
-    display(Ez0_tab,'NG')
+    displayLR(Ez0_tab,'NG')
+
             # EXPERIMENTAL
     # EzZ_tab = [(x,0.,Z(x,sigma,0.01 )) for x in z]
     # display(EzZ_tab,'Z')
             # END-EXPERIMENTAL
 
+            # OVERAP?
     # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
     # Ez2_tab = []
     # for i in range(len(z)):
@@ -363,6 +412,7 @@ def test1():
     #     format(sigm,cavlen,cavlen/sigm))
     # for x in Ez0_tab:
     #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
+            # END-OVERAP?
 
 def test2():
     '''
@@ -374,9 +424,9 @@ def test2():
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)
 
-    anz   = 80           # nboff slices
-    gap   = 4.4          #[cm] full gap length
-    zl    = 0.           #left  interval boundary
+    anz   = 6           # nboff slices
+    gap   = 4.8          #[cm] full gap length
+    zl    = -gap/2.      #left  interval boundary
     zr    = gap/2.       #right interval boundary
     sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
     # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
@@ -387,11 +437,12 @@ def test2():
     # display(Ez0_tab,'slice')
     poly  = Kpoly(z,sigma,0.,E0*1.)
 
-    zstep = (zr-zl)/1000.
+    zstep = (zr-zl)/500.
     z = np.arange(zl,zr,zstep)
     Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
-    display(Ez0_tab,'poly')
+    display(Ez0_tab,'NG-poly')
 
+            # OVERAP?
     # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
     # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
     # display(Ez1_tab,'poly1')
@@ -401,20 +452,21 @@ def test2():
     #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
     #     Ez2_tab.append((x,0.,Ez2))
     # display(Ez2_tab,'poly2')
+            # END-OVERAP?
 
     # TTF calculations
-    v0  = V0(poly)
-    tk  = Tk(poly,k)
-    sk  = Sk(poly,k)
-    tkp = Tkp(poly,k)
-    skp = Skp(poly,k)
-    DEBUG('V0',v0)
+    # v0  = V0(poly,zl,zr)
+    tk  = Tk(poly,k,zl,zr)
+    # sk  = Sk(poly,k,zl,zr)
+    tkp = Tkp(poly,k,zl,zr)
+    # skp = Skp(poly,k,zl,zr)
+    # DEBUG('V0',v0)
     DEBUG('T(k)',tk)
     DEBUG("T'(k)",tkp)
-    DEBUG('S(k)',sk)
-    DEBUG("S'(k)",skp)
+    # DEBUG('S(k)',sk)
+    # DEBUG("S'(k)",skp)
 
-def test3():
+def test3(input_file):
     '''
     Second order polynomial fit with Lagrange 3 point formula to SF data
     '''
@@ -424,45 +476,37 @@ def test3():
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)
 
-    Ez0_tab = test0(plot=False)
-    zl      = Ez0_tab[0][0]
-    zr      = Ez0_tab[-1][0]
+    Ez0_tab = SFdata(input_file,1.)
     # display(Ez0_tab,'slice')
-    poly  = KpolySF()
+    poly    = KpolySF(Ez0_tab,anz=10)
+    # zl  = poly[0].zl
+    # zr  = poly[-1].zr
+    gap = 4.8
+    zl  = -gap/2.
+    zr  = +gap/2.
 
     zstep = (zr-zl)/500.
     z = np.arange(zl,zr,zstep)
     Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
-    display(Ez0_tab,'poly')
-
-    # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
-    # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
-    # display(Ez1_tab,'poly1')
-    # Ez2_tab = []
-    # for i in range(len(z)):
-    #     x = z[i]
-    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
-    #     Ez2_tab.append((x,0.,Ez2))
-    # display(Ez2_tab,'poly2')
+    display(Ez0_tab,'SF-poly')
 
     # TTF calculations
-    v0  = V0(poly)
-    tk  = Tk(poly,k)
-    sk  = Sk(poly,k)
-    tkp = Tkp(poly,k)
-    skp = Skp(poly,k)
+    v0  = V0(poly,zl,zr)
+    tk  = Tk(poly,k,zl,zr)
+    # sk  = Sk(poly,k,zl,zr)
+    tkp = Tkp(poly,k,zl,zr)
+    # skp = Skp(poly,k,zl,zr)
     DEBUG('V0',v0)
     DEBUG('T(k)',tk)
     DEBUG("T'(k)",tkp)
-    DEBUG('S(k)',sk)
-    DEBUG("S'(k)",skp)
+    # DEBUG('S(k)',sk)
+    # DEBUG("S'(k)",skp)
 
 if __name__ == '__main__':
-    input_file = 'SF_WDK2g44.TBL'
-    ax = pre_plt()
-    test0(plot=True)     # SF
-    # test1()            # NG
-    # test2()            # poly-fit to NG
-    test3()              # poly-fit to SF
+    input_file='SF_WDK2g44.TBL'
+    ax = pre_plt(input_file)
+    # test0(input_file,ax,plot=True)  # SF
+    # test1()                         # NG
+    test2()                         # poly-fit to NG
+    test3(input_file)               # poly-fit to SF
     post_plt(ax)
-        
