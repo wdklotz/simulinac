@@ -23,7 +23,9 @@ import yaml
 
 from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
 import elements as ELM
+import TTFG
 from lattice import Lattice
+form Ez0 import SFdata
 
 ## parse and generate latttice
 def lod2d(l):    ##list of dicts to dict
@@ -77,6 +79,18 @@ def instanciate_element(item):
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
+    elif key == 'TTFG':
+        PhiSoll   = radians(attributes["PhiSync"])
+        fRF       = attributes["fRF"]
+        label     = attributes['ID']
+        gap       = attributes['gap']
+        length    = attributes['length']
+        fname     = attributes["SFdata"]     # file name of SF-Data
+        Ez0       = attributes["Ezpeak"]
+        dWf       = FLAGS['dWf']
+        if fname not in PARAMS:
+            PARAMS[fname] = SFdata(fname,Ez0)
+        instance  =  TTFG.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,Ez=PARAMS[fname],Ez0=Ez0,dWf=dWf,particle=PARAMS['sollteilchen'])
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = attributes['actions'] if 'actions' in attributes else []
@@ -286,5 +300,5 @@ def test1(input_file):
 ## main ----------
 if __name__ == '__main__':
     test0()
-    test1('fodo_with_10cav_per_RF(4).yml')
+    test1('fodo_with_10cav_per_RF-4.yml')
 

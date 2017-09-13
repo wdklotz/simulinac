@@ -14,7 +14,7 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 
 def SFdata(input_file,Epeak=1.):
     '''
-    Superfish data
+    Superfish data  (normiert auf max(E-Feld) = Epeak)
     '''
     Dpoint = namedtuple('DataPoint',['z','R','Ez'])  # data-point structure
     zp = []
@@ -280,6 +280,13 @@ def Ipoly(z,poly):
     res = E0*(1.+a*dz+b*dz**2)
     return res
 
+def V0n(poly,n):
+        E0 = poly[n].E0                     #[MV/m]
+        b  = poly[n].b
+        dz = poly[n].dz                     #[cm]
+        v  = E0*(2*dz+2./3.*b*dz**3)/100.   #[MV] 
+        return v
+
 def V0(poly,zl,zr):
     v0 = []
     for i in range(len(poly)):
@@ -287,12 +294,18 @@ def V0(poly,zl,zr):
         zir = poly[i].zr
         dz  = zir-zil
         if zil < zl or zir > zr: continue
-        E0 = poly[i].E0
-        b  = poly[i].b
-        dz = poly[i].dz
-        v  = E0*(2*dz+2./3.*b*dz**3)
-        v0.append(v)
+        v0.append(V0n(poly,i))
     return v0
+
+def Tkn(poly,k,n):
+        a  = poly[n].a
+        b  = poly[n].b
+        dz = poly[n].dz
+        f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+        # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+        res = f1*f2
+        return res
 
 def Tk(poly,k,zl,zr):
     tk = []
@@ -302,15 +315,16 @@ def Tk(poly,k,zl,zr):
         dz  = zir-zil
         if zil < zl or zir > zr: continue
         # DEBUG('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
-        a  = poly[i].a
-        b  = poly[i].b
-        dz = poly[i].dz
-        f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-        # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
-        rs = f1*f2
-        tk.append(rs)
+        tk.append(Tkn(poly,k,i))
     return tk
+
+def Skn(poly,k,n):
+        a  = poly[n].a
+        b  = poly[n].b
+        dz = poly[n].dz
+        sk = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
+        sk = sk * (1.-k*dz/tan(k*dz))
+        return sk
 
 def Sk(poly,k,zl,zr):
     sk = []
@@ -319,13 +333,16 @@ def Sk(poly,k,zl,zr):
         zir = poly[i].zr
         dz  = zir-zil
         if zil < zl or zir > zr: continue
-        a  = poly[i].a
-        b  = poly[i].b
-        dz = poly[i].dz
-        rs = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
-        rs = rs * (1.-k*dz/tan(k*dz))
-        sk.append(rs)
+        sk.append(Skn(poly,k,i))
     return sk
+
+def Tkpn(poly,k,n):
+        a   = poly[n].a
+        b   = poly[n].b
+        dz  = poly[n].dz
+        tkp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+        tkp = tkp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
+        return tkp
 
 def Tkp(poly,k,zl,zr):
     tkp = []
@@ -334,13 +351,16 @@ def Tkp(poly,k,zl,zr):
         zir = poly[i].zr
         dz  = zir-zil
         if zil < zl or zir > zr: continue
-        a  = poly[i].a
-        b  = poly[i].b
-        dz = poly[i].dz
-        rs = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        rs = rs * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
-        tkp.append(rs)
+        tkp.append(Tkpn(poly,k,i))
     return tkp
+
+def Skpn(poly,k,n):
+        a   = poly[n].a
+        b   = poly[n].b
+        dz  = poly[n].dz
+        skp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
+        skp = skp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
+        return skp
 
 def Skp(poly,k,zl,zr):
     skp = []
@@ -349,12 +369,7 @@ def Skp(poly,k,zl,zr):
         zir = poly[i].zr
         dz  = zir-zil
         if zil < zl or zir > zr: continue
-        a  = poly[i].a
-        b  = poly[i].b
-        dz = poly[i].dz
-        rs = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
-        rs = rs * (dz**2-2./k**2+2*dz/k/tan(k*dz))
-        skp.append(rs)
+        skp.append(Skpn(poly,k,i))
     return skp
 
 def pre_plt(input_file):
@@ -461,8 +476,8 @@ def test2():
     tkp = Tkp(poly,k,zl,zr)
     # skp = Skp(poly,k,zl,zr)
     # DEBUG('V0',v0)
-    DEBUG('T(k)',tk)
-    DEBUG("T'(k)",tkp)
+    # DEBUG('T(k)',tk)
+    # DEBUG("T'(k)",tkp)
     # DEBUG('S(k)',sk)
     # DEBUG("S'(k)",skp)
 
@@ -493,14 +508,14 @@ def test3(input_file):
     # TTF calculations
     v0  = V0(poly,zl,zr)
     tk  = Tk(poly,k,zl,zr)
-    # sk  = Sk(poly,k,zl,zr)
+    sk  = Sk(poly,k,zl,zr)
     tkp = Tkp(poly,k,zl,zr)
-    # skp = Skp(poly,k,zl,zr)
+    skp = Skp(poly,k,zl,zr)
     DEBUG('V0',v0)
     DEBUG('T(k)',tk)
     DEBUG("T'(k)",tkp)
-    # DEBUG('S(k)',sk)
-    # DEBUG("S'(k)",skp)
+    DEBUG('S(k)',sk)
+    DEBUG("S'(k)",skp)
 
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'

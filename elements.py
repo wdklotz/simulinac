@@ -367,7 +367,7 @@ class GAP(D):
         part_center = particle(tk_center)                     # particle @ gap center
         b           = part_center.beta                        # beta @ gap center
         g           = part_center.gamma                       # gamma @ gap center
-        self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
+        # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g)                  # transport matrix
         self.viseo  = 0.25
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
@@ -609,7 +609,7 @@ class RFG(D):
         particlei   = self.particle                           # particle @ entrance
         particlef   = particle(particlei.tkin+self.deltaW)    # particle @ exit
         # DEBUG('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
-        self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
+        # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
         self.particlei = particlei
         self.particlef = particlef
@@ -671,14 +671,14 @@ class RFG(D):
             # NOTE: linear mapping with T3D matrix
             f_track = self.matrix.dot(i_track)
         return f_track
-## Transition Time Factors RF Gap Model
-class TTFMG(D):
-    """
-    Transition Time Factors RF Gap Model (A.Shishlo ORNL/TM-2015/247)
-    """
-    def __init__(self):
-        super().__init__(label=label, particle=particle)
-        pass
+# # Transition Time Factors RF Gap Model
+# class TTFMG(D):
+#     """
+#     Transition Time Factors RF Gap Model (A.Shishlo ORNL/TM-2015/247)
+#     """
+#     def __init__(self):
+#         super().__init__(label=label, particle=particle)
+#         pass
 ## the mother of all thin elements: keeps particle instance!
 class _thin(_matrix_): 
     """
