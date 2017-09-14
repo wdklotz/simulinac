@@ -89,7 +89,8 @@ def instanciate_element(item):
         Ez0       = attributes["Ezpeak"]
         dWf       = FLAGS['dWf']
         if fname not in PARAMS:
-            PARAMS[fname] = SFdata(fname,Ez0)
+            interval = (-gap/2.,+gap/2.)
+            PARAMS[fname] = SFdata(fname,interval=interval,Epeak=Ez0)
         instance  =  TTFG.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,Ez=PARAMS[fname],Ez0=Ez0,dWf=dWf,particle=PARAMS['sollteilchen'])
     elif key == 'MRK':
         label     = attributes['ID']

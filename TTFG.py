@@ -1,13 +1,83 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from math import sin,cos,tan,pi,exp,fabs,pow,sqrt,fmod,radians
+# import matplotlib.pyplot as plt
+# import numpy as np
+# from math import sin,cos,tan,pi,exp,fabs,pow,sqrt,fmod,radians
+from math import sin,cos,tan,pi,radians,degrees
 from collections import namedtuple
+from copy import copy
 
 from setutil import FLAGS,PARAMS,DEBUG,Proton
 import elements as ELM
-from Ez0 import SFdata,KpolySF,V0,Tk,Tkp,Sk,Skp
+from Ez0 import SFdata
 
 ## Transition Time Factors RF Gap Model
+class TTFGslice(object):
+    def __init__(self,ttfg,poly,particle):
+        self.driver     = ttfg
+        self.polyval    = poly  #ACHTUNG: Polynomkoeffizienten in [1/cm] u. [1/cm**2]
+        self.particle   = copy(particle)           # incoming sync. particle
+        self.beta       = self.particle.beta
+        self.ks         = (2*pi)/(PARAMS['wellenlänge']*self.beta)*1.e-2    #[1/cm]
+        self.Tk         = self._T (self.polyval,self.ks)
+        self.Tkp        = self._Tp(self.polyval,self.ks)
+        self.V0         = self._V0(self.polyval)
+        self.phi      = 0.      # ? radians(-25.) oder 0. ?
+        # self.phi        = self.driver.phis
+        self.DWs        = self._DWs()
+        self.Dphase     = self._DPhase()
+    def setPhase(self,value):
+        self.phi = value
+    def getPhase(self):
+        return self.phi
+    def getDWs(self):   # delta-Ws
+        return self.DWs
+    def getDphase(self): # delta-phi
+        return self.Dphase
+    def _T(self,poly,k):
+            a  = poly.a
+            b  = poly.b
+            dz = poly.dz
+            f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+            f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+            # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+            t = f1*f2
+            return t
+    def _Tp(self,poly,k):
+            a   = poly.a
+            b   = poly.b
+            dz  = poly.dz
+            tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+            tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
+            return tp
+    def _V0(self,poly):
+            E0 = poly.E0                          #[MV/m]
+            b  = poly.b
+            dz = poly.dz                          #[cm]
+            v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   #[MV] 
+            return v0
+    def _DWs(self):
+        V0    = self.V0
+        Tk    = self.Tk
+        phase = self.phi
+        res = V0*Tk*cos(phase)
+        return res
+    def _DPhase(self):
+        f     = PARAMS['frequenz']
+        c     = PARAMS['lichtgeschwindigkeit']
+        m0c2  = self.particle.e0
+        bg    = self.particle.gamma_beta
+        phase = self.phi
+        res = self.V0*2*pi*f/(m0c2*c)/bg**3
+        res = res * self.Tkp*sin(phase)
+        return res
+    def adapt_for_energy(self,tkin):
+            self.particle(tkin)
+            self.beta    = self.particle.beta
+            self.ks      = (2*pi)/(PARAMS['wellenlänge']*self.beta)*1.e-2    #[1/cm]
+            self.Tk      = self._T (self.polyval,self.ks)
+            self.Tkp     = self._Tp(self.polyval,self.ks)
+            self.DWs     = self._DWs()
+            self.Dphase  = self._DPhase()
+            return self
 class TTFG(ELM.D):
     """
     Transition Time Factors RF Gap Model (A.Shishlo ORNL/TM-2015/247)
@@ -30,30 +100,46 @@ class TTFG(ELM.D):
         self.gap    = gap        # [m]
         self.length = length     # [m]
         self.Ez     = Ez         # the SF-table, a list(DataPoints)
-        self.Ez0    = max([dpoint.Ez for dpoint in self.Ez])    # peak of EZ-values
+        # self.Ez0    = max([dpoint.Ez for dpoint in self.Ez.Ez_table()])    # peak of EZ-values
         self.dWf    = dWf
-        self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.anz    = 10                                        # nboff slices (imutable!)
-        self.poly   = KpolySF(self.Ez,anz=self.anz)
-        self.ks     = (2*pi)/(self.lamb*self.particle.beta)
-        self.v0s()
-    def v0s(self):
-        zl          = -self.gap/2.*100.              #[cm]
-        zr          = -zl     
-        t     = Tk (self.poly,self.ks,zl,zr)
-        V     = V0 (self.poly,zl,zr)                 #[MV] 
-        self.V0 = [V[i]*t[i] for i in range(len(t))] # energy gain of sollteichen
+        self.lamb   = PARAMS['wellenlänge']
+        self.slices = self._make_slices()
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
         DEBUG('TTFG: adapt_for_energy ',tkin)
-        self.particle(tkin)
-        self.v0s()
+        slicep = self.slices[0]                    # 1st slide
+        dz = self.Ez.Ez_poly()[0].dz*1.e-2         # [cm] --> [m]
+        Dphase = -2*pi/(self.particle.beta*self.lamb)*dz   # Achtung: (+) oder (-)?
+        next_phase = slicep.getPhase()+Dphase
+        slicep.setPhase(next_phase)
+        slicep.adapt_for_energy(tkin)
+        DEBUG('next_phase {}, next_tkin {}'.format(degrees(next_phase),tkin))
+        Dphase = slicep.getDphase()
+        DWs    = slicep.getDWs()    # 1st slide
+        for slice in self.slices[1:]:
+            next_phase = slicep.getPhase()+Dphase
+            slice.setPhase(next_phase)             # increment phase (must be before energy)
+            next_tkin = slicep.particle.tkin+DWs
+            DEBUG('next_phase {}, next_tkin {}'.format(degrees(next_phase),next_tkin))
+            slice.adapt_for_energy(next_tkin)      # increment energy
+            Dphase = slice.getDphase()
+            DWs    = slice.getDWs()
+            slicep = slice
         return self
-    def make_slices(self,anz=0):
-        anz = self.anz      # prevent caller to set anz (shall stay fixed)
-        slices = np.full(anz,self)
-        self.active_slice = 0
+    def _make_slices(self,anz=0):
+        slices = []
+        zl = -self.gap/2.*100.   # [m] --> [cm]
+        zr = -zl
+        zl2zr = (zl,zr)
+        poly = self.Ez.Ez_poly()
+        for i in range(len(poly)):
+            zil = poly[i].zl
+            zir = poly[i].zr
+            if zil < zl or zir > zr: continue
+            # DEBUG('poly[{}]'.format(i))
+            slice = TTFGslice(self,poly[i],self.particle)
+            slices.append(slice)
         return slices
     def map(self,i_track):
         """
@@ -146,8 +232,9 @@ def test0():
     ttfg = TTFG(length=0.044,gap=0.048,Ez=Ez0_tab)
     # DEBUG('ttfg.__dict__',ttfg.__dict__)
     ttfg.adapt_for_energy(100.)
-    slices = ttfg.make_slices(anz=100)
-    DEBUG('slices:\n',slices)
+    slices = ttfg.slices
+    for slice in slices:
+        DEBUG('slice\n',slice.__dict__)
     DEBUG('ttfg.__dict__',ttfg.__dict__)
     
 if __name__ == '__main__':
