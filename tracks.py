@@ -68,7 +68,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
     def string(p):   #single point to string
         s = 'x={:.3e} x\'={:.3e} y={:.3e} y\'={:.3e} z={:.3e} z\'={:.3e}  tk={:.5f} s={:.3f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[EKOO],p[SKOO])
         return s
-    soll = None
+    # soll = None
 
 # default track-point                 x   x'  y   y'  z   z'           Tk                 1   s   1
 # SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
@@ -128,7 +128,7 @@ def track_soll(lattice):
         ti = soll_track.last()                #track: at entrance
         # DEBUG('\t\ti >>',Track.string(ti))
         element.adapt_for_energy(ti[EKOO])    #enery adaptation
-        tf = element.matrix.dot(ti)           #track: at exit
+        tf = element.map(ti)           #track: at exit
         # DEBUG('\t\tf >>',Track.string(tf))
         soll_track.append(tf)                 #append
         # deltaE = tf[EKOO] - ti[EKOO]

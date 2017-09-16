@@ -153,6 +153,8 @@ class TTFG(ELM.D):
             slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
             slices.append(slice)
         return slices
+    def make_slices(self,anz=0):
+        return [self]
     def map(self,i_track):
         def slice_map(track):
             """
@@ -229,11 +231,15 @@ class TTFG(ELM.D):
             yf = yi                          # no change
 
             commonf = qV0/(m0c2*gbi*gbf)*i1                   # common factor
-            xpf = gbi/gbf*xpi-xi/r*commonf*(Tki*sin(phii)+Ski*cos(phii)) # Formel 4.3.3 A.Shishlo
-            ypf = gbi/gbf*ypi-yi/r*commonf*(Tki*sin(phii)+Ski*cos(phii)) # Formel 4.3.3 A.Shishlo
+            if r > 0.:
+                xpf = gbi/gbf*xpi-xi/r*commonf*(Tki*sin(phii)+Ski*cos(phii)) # Formel 4.3.3 A.Shishlo
+                ypf = gbi/gbf*ypi-yi/r*commonf*(Tki*sin(phii)+Ski*cos(phii))
+            elif r == 0.:
+                xpf = gbi/gbf*xpi
+                ypf = gbi/gbf*ypi
 
             Tf   = Ti + DWs
-            sf   = si + slice.getLen()*1.e-2                  # [cm] --> [m]
+            sf   = si          #because lenght will be added to track before return
 
             dbTab1Row = [      # for DEBUGGING
                 '{:8.4f}'.format(Wsi),
@@ -255,19 +261,21 @@ class TTFG(ELM.D):
                 '{:8.4g}'.format((Tf-Ti)*1.e3),
                 ]
             dbTab2Rows.append(dbTab2Row)
-            f_track = np.array([xf,xpf,yf,ypf,zf,zpf,Tf,1.,sf,1.])
+
             # for DEBUGGING
             dbTab1Headr = ['Ws(in)','r','Kr','i0','i1','Dphi(in)[deg]','Ti[MeV]']
             dbTab2Headr = ['z[mm]','Dphi(out)[deg]','dp/p[%]','Wf-Wi[KeV]',"x'[mrad]","y'[mrad]",'Tf-Ti[KeV]']
             DEBUG_THIS_MODULE('at position IN:\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
             DEBUG_THIS_MODULE('at position OUT:\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
 
+            f_track = np.array([xf,xpf,yf,ypf,zf,zpf,Tf,1.,sf,1.])
             return f_track
 
         for cnt,slice in enumerate(self.slices):
             DEBUG_THIS_MODULE('SLICE # {}'.format(cnt))      # for DEBUGGING
             f_track = slice_map(i_track)
             i_track = f_track
+        f_track[SKOO] += self.length         # add TTGF's length
         return f_track
 def test0():
     from tracks import Track

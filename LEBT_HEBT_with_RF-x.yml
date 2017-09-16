@@ -26,7 +26,7 @@
 flags:
     # - accON:        False           # [True]  acceleration on/off flag
     # - egf:          True            # [False] emittance growth flag
-    - map:          False           # [True]  use maps to track trajectories through RFGap
+    # - map:          False           # [True]  use maps to track trajectories through RFGap
     - sigma:        False           # [True]  beam sizes by sigma-matrix
     # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)

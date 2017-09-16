@@ -23,7 +23,7 @@ import yaml
 
 from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
 import elements as ELM
-import TTFG
+import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata
 
@@ -89,9 +89,8 @@ def instanciate_element(item):
         Ez0       = attributes["Ezpeak"]
         dWf       = FLAGS['dWf']
         if fname not in PARAMS:
-            interval = (-gap/2.,+gap/2.)
-            PARAMS[fname] = SFdata(fname,interval=interval,Epeak=Ez0)
-        instance  =  TTFG.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,Ez=PARAMS[fname],Ez0=Ez0,dWf=dWf,particle=PARAMS['sollteilchen'])
+            PARAMS[fname] = SFdata(fname,Epeak=Ez0)
+        instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,length=length,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = attributes['actions'] if 'actions' in attributes else []

@@ -41,7 +41,8 @@ sections:
 ##...........................................................................................
 parameters:
     - aperture:             0.01       # [m] aperture = bore radius
-    - Tkin:                 15.0       # [MeV] energy @ entrance (injection)
+    # - Tkin:                 15.0       # [MeV] energy @ entrance (injection)
+    - Tkin:                 50.0       # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length
@@ -103,14 +104,14 @@ elements:
     - rfgl:  &rfgl          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
-        - Ez:       *p05    # [V/m] electric field
+        - Ez:       *p05    # [MV/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
         - sec:      *LE
     # - rfcl:  &rfcl          # ID
     #     - type:     RFC     # RFC class
-    #     - Ez:       *p05    # [V/m] electric field
+    #     - Ez:       *p05    # [MV/m] electric field
     #     - PhiSync:  *p06    # [deg] synchronous phase
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p07    # [m] length
@@ -138,20 +139,28 @@ elements:
         - sec:      *HE
     # - rfgh:  &rfgh          # ID
     #     - type:     RFG     # RFG class
-    #     - Ez:       *p05    # [V/m] electric field
+    #     - Ez:       *p05    # [MV/m] electric field
     #     - PhiSync:  *p06    # [deg] synchronous phase
     #     - fRF:      *p01    # [Hz] frequency
     #     - gap:      *p12    # [m] accelerating. gap
     #     - sec:      *HE
     - rfch:  &rfch          # ID
         - type:     RFC     # RFC class
-        - Ez:       *p14    # [V/m] electric field
+        - Ez:       *p14    # [MV/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p12    # [m] length
         - length:   *p13    # [m] length
         - sec:      *HE
-
+    - ttfg:  &ttfg          # ID
+        - type:     TTFG    # TTFG class
+        - PhiSync:  *p06    # [deg] synchronous phase
+        - fRF:      *p01    # [Hz] frequency
+        - gap:      0.048   # [m] length
+        - length:   0.044   # [m] length
+        - SFdata:   SF_WDK2g44.TBL
+        - Ezpeak:   1.8055  # [MV/m]
+        - sec:      *HE
     - mrk:  &mrk            # ID
         - type:    MRK      # MRK class  
         - actions:
@@ -237,6 +246,17 @@ segments:
         - *rfch
         - *rfch
         - *rfch
+    - TTFGH:
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
+        - *ttfg
     - MARK:
         - *mrk
 ##...........................................................................................
@@ -246,8 +266,9 @@ lattice:
     - title: LE+HE 29.08.2017 15MeV inj          # description is mandatory. DON't remove or reposition!
     # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
     # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
-    - [1,       MARK]
-    - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [1,       MARK]
+    # - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    # - [1,       MARK]
+    # - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
+    - [3,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
+    # - [1,       MARK]
     

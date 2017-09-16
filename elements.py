@@ -423,7 +423,7 @@ class RFB(D):
         self.lamb     = PARAMS['lichtgeschwindigkeit']/self.freq  # [m]
         self.parent   = parent
     def map(self,i_track):
-        which_map = self.lin_map
+        # which_map = self.lin_map
         which_map = self.rfb_map
         return which_map(i_track)
     def lin_map(self,i_track):
@@ -437,9 +437,7 @@ class RFB(D):
         zi        = i_track[ZKOO]       # [4] z-z0
         zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
         Ti        = i_track[EKOO]       # [6] summe aller delta-T
-        DTi       = i_track[DEKOO]      # [7] 1 immer
         si        = i_track[SKOO]       # [8] summe aller laengen
-        Dsi       = i_track[LKOO]       # [9] 1 immer
 
         qE0L       = self.u0
         m0c2       = self.particle.e0
@@ -450,14 +448,14 @@ class RFB(D):
         twopi        = 2.*pi
 
         particlesi = self.particle
-        tkinsi     = particlesi.tkin
+        Wsi        = particlesi.tkin
         betasi     = particlesi.beta
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
         DWs        = qE0LT*cos(phis)
-        tkinsf     = tkinsi + DWs 
-        particlesf = copy(particlesi)(tkin=tkinsf)
+        Wsf        = Wsi + DWs 
+        particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
         gbsf       = particlesf.gamma_beta
@@ -476,26 +474,18 @@ class RFB(D):
         
         xf   = xi     # x does not change
         yf   = yi     # y does not change
-        DTf  = DTi    # 1
+        Tf   = Ti+DWs
         sf   = si     # because self.length always 0
-        Dsf  = Dsi    # 1
         xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
-        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,DTf,sf,Dsf])
-        # DEBUG('RFB.lin_map',
-        #     dict(
-        #         zi=zi, zpi=zpi, zf=zf, zfp=zfp, 
-        #         tkinsi=tkinsi,tkinsf=tkinsf,
-        #         gbsi=gbsi, gbsf=gbsf,
-        #         DWi=DWi*1e3, DWf=DWf*1e3, DWs=DWs*1e3
-        #         )
-        #     )  
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1,sf,1])
         return f_track
     def rfb_map(self,i_track):
         """
         Mapping of track from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
         """
+        # DEBUG('i_track:\n',str(i_track))
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
@@ -514,13 +504,13 @@ class RFB(D):
         twopi      = 2.*pi
 
         particlesi = self.particle
-        tkinsi     = particlesi.tkin
+        Wsi        = particlesi.tkin
         betasi     = particlesi.beta
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
         DWs        = qE0LT*cos(phis)                # energy increase sync. particle
-        Wsf        = tkinsi + DWs 
+        Wsf        = Wsi + DWs 
         particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
@@ -530,7 +520,7 @@ class RFB(D):
         condTdP = 1./(m0c2*betasf**2*gammasf)
 
         DWi       = condPdT*zpi                                # dp/p --> dT
-        Wi        = tkinsi + DWi    
+        Wi        = Wsi + DWi    
         if Wi < 0.:
             raise RuntimeError('negative kinetic energy {:8.4g}'.format(Wi))
             sys.exit(1)
@@ -555,12 +545,18 @@ class RFB(D):
         
         xf   = xi     # x does not change
         yf   = yi     # y does not change
+        Tf   = Ti+DWs
         sf   = si     # because self.length always 0
         commonf = qE0LT/(m0c2*gbsi*gbsf)*i1                   # common factor
-        xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)         # tranverse coordinate
-        ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)         # tranverse coordinate
+        if r > 0.:
+            xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)     # Formel 4.2.6 A.Shishlo
+            ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)
+        elif r == 0.:
+            xpf  = gbsi/gbsf*xpi
+            ypf  = gbsi/gbsf*ypi
 
-        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,1.,sf,1.])
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1.,sf,1.])
+        # DEBUG('f_track:\n',str(f_track))
         return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
