@@ -173,6 +173,7 @@ class SFdata(object):
     Superfish data class  (normiert auf max(E-Feld) = Epeak)
     '''
     def __init__(self,input_file,Epeak=1.):
+        print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
         self.Epeak      = Epeak
         self.make_Ez_table()
@@ -221,8 +222,8 @@ class SFdata(object):
             """
                 nbslices = nboff slices
                 N = nboff half-length-slices
-                M = nboff poly-points
-                n = nboff poly-intervals/half-length-slice
+                M = nboff SF-points
+                n = nboff SF-points/half-length-slice
             """
             N=2*nbslices    # factor 2 more intervals than slices
             if N>M: 
@@ -230,6 +231,7 @@ class SFdata(object):
             M = int(M-fmod(M,N))
             n = int(M/N)
             # DEBUG('(N,M,n)=({},{},{})'.format(N,M,n))
+            print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
                 # DEBUG('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
