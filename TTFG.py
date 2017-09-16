@@ -5,11 +5,19 @@ import sys
 from math import sin,cos,tan,pi,radians,degrees,sqrt
 from collections import namedtuple
 from copy import copy
+import numpy as np
 
 from setutil import FLAGS,PARAMS,DEBUG,Proton,I0,I1,tblprnt
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from Ez0 import SFdata
+
+## DEBUG printouts
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_THIS_MODULE = DEBUG_ON
 
 ## Transition Time Factors RF Gap Model
 class TTFGslice(object):
@@ -48,7 +56,7 @@ class TTFGslice(object):
             dz = poly.dz
             f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
             f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-            # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+            # DEBUG_THIS_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
             t  = f1*f2
             return t
     def _Tp(self,poly,k):
@@ -125,7 +133,7 @@ class TTFG(ELM.D):
         next_phase = self.phis
         next_tkin  = tkin
         for cnt,slice in enumerate(self.slices):
-            DEBUG('TTFGslice[{}]: phase {},\ttkin {}'.format(cnt,degrees(next_phase),next_tkin))
+            DEBUG_THIS_MODULE('TTFGslice[{}]: phase {},\ttkin {}'.format(cnt,degrees(next_phase),next_tkin))
             slice.setPhase(next_phase)
             slice.adapt_for_energy(next_tkin)
             DPhase     = slice.getDPhase()
@@ -146,30 +154,27 @@ class TTFG(ELM.D):
             slices.append(slice)
         return slices
     def map(self,i_track):
-        """
-        Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
-        """
-        xi        = i_track[XKOO]       # [0]
-        xpi       = i_track[XPKOO]      # [1]
-        yi        = i_track[YKOO]       # [2]
-        ypi       = i_track[YPKOO]      # [3]
-        zi        = i_track[ZKOO]       # [4] z-z0
-        zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
-        Ti        = i_track[EKOO]       # [6] summe aller deltaW
-        # DTi       = i_track[DEKOO]    # [7] 1 
-        si        = i_track[SKOO]       # [8] summe aller laengen
-        # Dsi       = i_track[LKOO]     # [9] 1 
+        def slice_map(track):
+            """
+            Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
+            """
+            xi        = track[XKOO]       # [0]
+            xpi       = track[XPKOO]      # [1]
+            yi        = track[YKOO]       # [2]
+            ypi       = track[YPKOO]      # [3]
+            zi        = track[ZKOO]       # [4] z-z0
+            zpi       = track[ZPKOO]      # [5] dp/p - (dp/p)0
+            Ti        = track[EKOO]       # [6] summe aller deltaW
+            si        = track[SKOO]       # [8] summe aller laengen
 
-        m0c2       = self.particle.e0
-        lamb       = self.lamb
-        twopi      = 2.*pi
-        c          = PARAMS['lichtgeschwindigkeit']
+            m0c2       = self.particle.e0
+            lamb       = self.lamb
+            twopi      = 2.*pi
+            c          = PARAMS['lichtgeschwindigkeit']
 
-        dbTab1Rows  = []
-        dbTab2Rows  = []
-        
-        for slice in self.slices:
-            dbTab1Row = []
+            dbTab1Rows  = []      # for DEBUGGING
+            dbTab2Rows  = []      # for DEBUGGING
+
             particlei = slice.particle
             betai     = particlei.beta
             gammai    = particlei.gamma
@@ -178,6 +183,7 @@ class TTFG(ELM.D):
             Tki       = slice.getTk()
             Tkpi      = slice.getTkp()
             Wsi       = slice.getW()         # sync. part. W @ (in)
+            DWs       = slice.getDW()
             phisi     = slice.getPhase()     # sync. part. phi @ (in)
             Ski       = 0.
             Skpi      = 0.
@@ -193,7 +199,7 @@ class TTFG(ELM.D):
             Dphii   = conv_zDPhi*zi          # zi -> dPhi
             phii    = phisi+Dphii            # part. phi @ (in)
             commonf = twopi*qV0/(lamb*m0c2*c*gbi**3)
-            phifmphii = commonf*(i0*r*(Tkpi*sin(phii)+Skpi*cos(phii))+
+            phifmphii = commonf*(i0*(Tkpi*sin(phii)+Skpi*cos(phii))+
                 gammai*r*i1*(Tki*sin(phii)+Ski*cos(phii)))*zi # Formel 4.3.2 A.Shishlo
             phisf = phisi+slice.getDPhase()
             phisfmphisi = phisf - phisi
@@ -204,7 +210,7 @@ class TTFG(ELM.D):
             if Wi < 0.:
                 raise RuntimeError('negative kinetic energy {:8.4g}'.format(Wi))
                 sys.exit(1)
-            Wsf = Wsi+slice.getDW()          # sync. part W @ (f)
+            Wsf = Wsi+DWs                    # sync. part W @ (f)
             particlef = copy(particlei)(tkin=Wsf)
             betaf = particlef.beta
             gammaf = particlef.gamma
@@ -213,13 +219,12 @@ class TTFG(ELM.D):
             conv_Dphiz = -(betaf*lamb)/twopi    # conversion factor Dphi --> z @ (f)
             conv_dTdP  = (m0c2*betaf**2*gammaf) # conversion factor dT --> dp/p @ (f)
             WsfmWsi = Wsf - Wsi
-            WfmWi= qV0*i0*(Tki*cos(phii)-Ski*sin(phii))  # Formel 4.3.1 A.Shishlo     
+            WfmWi= qV0*i0*(Tki*cos(phii)-Ski*sin(phii))  # Formel 4.3.1 A.Shishlo
             DWf = WfmWi - WsfmWsi
-            
-            zf  = conv_Dphiz*Dphi            # Dphf --> zf
-                                             # zf   = gbf/gbi*zi  ?? needed ??
             zpf = conv_dTdP*DWf              # dT --> dp/p
 
+            zf  = conv_Dphiz*Dphi            # Dphf --> zf
+                                                # zf   = gbf/gbi*zi  ?? needed ??
             xf = xi                          # no change
             yf = yi                          # no change
 
@@ -227,56 +232,64 @@ class TTFG(ELM.D):
             xpf = gbi/gbf*xpi-xi/r*commonf*(Tki*sin(phii)+Ski*cos(phii)) # Formel 4.3.3 A.Shishlo
             ypf = gbi/gbf*ypi-yi/r*commonf*(Tki*sin(phii)+Ski*cos(phii)) # Formel 4.3.3 A.Shishlo
 
-            Tf   = Ti + slice.getDW()
+            Tf   = Ti + DWs
             sf   = si + slice.getLen()*1.e-2                  # [cm] --> [m]
 
-            dbTab1Row = [
+            dbTab1Row = [      # for DEBUGGING
                 '{:8.4f}'.format(Wsi),
                 '{:8.4f}'.format(r),
                 '{:8.4f}'.format(Kr),
                 '{:8.4f}'.format(i0),
                 '{:8.4f}'.format(i1),
-                '{:8.4g}'.format(degrees(Dphii))
+                '{:8.4g}'.format(degrees(Dphii)),
+                '{:8.4g}'.format(Ti),
                 ]
             dbTab1Rows.append(dbTab1Row)
-            dbTab2Row = [
+            dbTab2Row = [      # for DEBUGGING
                 '{:8.4g}'.format(zf*1.e3),
                 '{:8.4g}'.format(degrees(Dphi)),
                 '{:8.4g}'.format(zpf*1.e2),
                 '{:8.4g}'.format(DWf*1.e3),
                 '{:8.4g}'.format(xpf*1.e3),
                 '{:8.4g}'.format(ypf*1.e3),
+                '{:8.4g}'.format((Tf-Ti)*1.e3),
                 ]
             dbTab2Rows.append(dbTab2Row)
-#   f_track = NP.array([xf,xpf,yf,ypf,zf,zpf,DWs,DTf,sf,Dsf])
-        dbTab1Headr = ['Ws(in)','r','Kr','i0','i1','Dphi(in)']
-        dbTab2Headr = ['z[mm]','Dphi[deg]','dp/p[%]','DWf[KeV]','xp[mrad]','yp[mrad]']
-        DEBUG(' at position IN:\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
-        DEBUG(' at position OUT:\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
-        pass
+            f_track = np.array([xf,xpf,yf,ypf,zf,zpf,Tf,1.,sf,1.])
+            # for DEBUGGING
+            dbTab1Headr = ['Ws(in)','r','Kr','i0','i1','Dphi(in)[deg]','Ti[MeV]']
+            dbTab2Headr = ['z[mm]','Dphi(out)[deg]','dp/p[%]','Wf-Wi[KeV]',"x'[mrad]","y'[mrad]",'Tf-Ti[KeV]']
+            DEBUG_THIS_MODULE('at position IN:\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
+            DEBUG_THIS_MODULE('at position OUT:\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
+
+            return f_track
+
+        for cnt,slice in enumerate(self.slices):
+            DEBUG_THIS_MODULE('SLICE # {}'.format(cnt))      # for DEBUGGING
+            f_track = slice_map(i_track)
+            i_track = f_track
+        return f_track
 def test0():
     from tracks import Track
-    import numpy as np
     
     input_file='SF_WDK2g44.TBL'
     Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
     SF_tab = SFdata(input_file,Epeak)
     
     ttfg = TTFG(length=0.044,gap=0.048,Ez=SF_tab)
-    ttfg.adapt_for_energy(50.)
-    DEBUG('ttfg.__dict__',ttfg.__dict__)
+    tkin = 50.
+    ttfg.adapt_for_energy(tkin=tkin)
+    DEBUG_THIS_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     slices = ttfg.slices
     for slice in slices:
-        DEBUG('slice\n',slice.__dict__)
+        DEBUG_THIS_MODULE('slice\n',slice.__dict__)      # for DEBUGGING
 
     z = 1.e-3
     x=y=1.e-2
-    tkin=10.
-    # a track-point is that:       x   x'  y  y'  z   z'  W    1   s   1
-    track = Track(start=np.array([ x,  0., y, 0., z,  0.,tkin, 1., 0., 1.]))
-    # track point @ (i)
-    track_i = track.first()
-    ttfg.map(track_i)
+    T = tkin
+    # a track-point fields:        x   x'  y  y'  z   z'  T  1   s   1
+    track = Track(start=np.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
+    ttfg.map(track.first())
 
 if __name__ == '__main__':
     test0()

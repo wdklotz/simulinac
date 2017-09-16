@@ -25,7 +25,7 @@ from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
 import elements as ELM
 import TTFG
 from lattice import Lattice
-form Ez0 import SFdata
+from Ez0 import SFdata
 
 ## parse and generate latttice
 def lod2d(l):    ##list of dicts to dict

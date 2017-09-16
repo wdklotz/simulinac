@@ -503,9 +503,7 @@ class RFB(D):
         zi        = i_track[ZKOO]       # [4] z-z0
         zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
         Ti        = i_track[EKOO]       # [6] summe aller delta-T
-        DTi       = i_track[DEKOO]      # [7] 1 immer
         si        = i_track[SKOO]       # [8] summe aller laengen
-        Dsi       = i_track[LKOO]       # [9] 1 immer
 
         T          = self.tr
         qE0L       = self.u0
@@ -557,22 +555,12 @@ class RFB(D):
         
         xf   = xi     # x does not change
         yf   = yi     # y does not change
-        DTf  = DTi    # 1
         sf   = si     # because self.length always 0
-        Dsf  = Dsi    # 1
         commonf = qE0LT/(m0c2*gbsi*gbsf)*i1                   # common factor
         xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)         # tranverse coordinate
         ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)         # tranverse coordinate
 
-        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,DTf,sf,Dsf])
-        # Wf      = Wi+DWf
-        # Wsi     = tkinsi
-        # DEBUG('RFB.rfb_map',
-        #     dict(
-        #         zi=zi, zpi=zpi, zf=zf, zfp=zfp,
-        #         Wi=Wi,Wf=Wf,Wsi=Wsi,Wsf=Wsf,phis=degrees(phis),phii=degrees(phii)
-        #         )
-        #     )  
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,DWs,1.,sf,1.])
         return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
