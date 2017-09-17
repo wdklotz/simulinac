@@ -26,6 +26,13 @@ import warnings
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 ## MDIM
 MDIM=10        # dimension of matrices
 # x        x'        y        y'        z       dp/p0     E        dE        s        l     
@@ -106,7 +113,7 @@ class _matrix_(object):
         if self.length == 0.:           ## zero length element (like WD or CAV)
             slices.append(self)
             # slices = slices + [mv,mb]
-            # DEBUG('_matrix_.make_slices',dict(label=self.label,length='zero lenth element'))
+            # DEBUG_MODULE('_matrix_.make_slices',dict(label=self.label,length='zero lenth element'))
 
         else:
             step = self.length/anz         ## calc step size
@@ -114,7 +121,7 @@ class _matrix_(object):
                 step  = self.slice_min
 
             (step_fraction_part,step_int_part) = modf(self.length/step)
-            # DEBUG('_matrix_.make_slices',dict(label=self.label,length=self.length,anz=anz,step=step,step_fracion=step_fraction_part,step_int=step_int_part))
+            # DEBUG_MODULE('_matrix_.make_slices',dict(label=self.label,length=self.length,anz=anz,step=step,step_fracion=step_fraction_part,step_int=step_int_part))
 
             rest = step * step_fraction_part
             mx   = self.shorten(step)     # shorten element to step length
@@ -129,7 +136,7 @@ class _matrix_(object):
                 slices.append(mx)
             # slices = slices + [mr,mv,mb]
         slices += [mr]
-        # DEBUG('_matrix_.make_slices',slices)
+        # DEBUG_MODULE('_matrix_.make_slices',slices)
         return slices
     def beta_matrix(self):
         """
@@ -485,7 +492,7 @@ class RFB(D):
         """
         Mapping of track from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
         """
-        # DEBUG('i_track:\n',str(i_track))
+        # DEBUG_MODULE('i_track:\n',str(i_track))
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
@@ -530,7 +537,7 @@ class RFB(D):
         
         r = sqrt(xi**2+yi**2)                                 # radial coordinate
         Kr = (twopi*r)/(lamb*gbi)
-        # DEBUG('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
+        # DEBUG_MODULE('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
         i0 = I0(Kr)                                           # bessel function
         i1 = I1(Kr)                                           # bessel function
 
@@ -556,7 +563,7 @@ class RFB(D):
             ypf  = gbsi/gbsf*ypi
 
         f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1.,sf,1.])
-        # DEBUG('f_track:\n',str(f_track))
+        # DEBUG_MODULE('f_track:\n',str(f_track))
         return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
@@ -582,9 +589,9 @@ class RFG(D):
         self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
         self.tr     = self._trtf_(self.particle.beta)
         self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
-        # DEBUG('RFG: \n',self.particle.string())
-        # DEBUG('RFG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
-        # DEBUG('RFG: deltaW: {:8.6e}'.format(self.deltaW))
+        # DEBUG_MODULE('RFG: \n',self.particle.string())
+        # DEBUG_MODULE('RFG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
+        # DEBUG_MODULE('RFG: deltaW: {:8.6e}'.format(self.deltaW))
         tk_center   = self.deltaW*0.5+self.particle.tkin      # energy in gap center
         particle    = copy(self.particle)
         part_center = particle(tk_center)                     # particle @ gap center
@@ -592,7 +599,7 @@ class RFG(D):
         g           = part_center.gamma                       # gamma @ gap center
         particlei   = self.particle                           # particle @ entrance
         particlef   = particle(particlei.tkin+self.deltaW)    # particle @ exit
-        # DEBUG('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
+        # DEBUG_MODULE('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
         self.particlei = particlei
@@ -608,7 +615,7 @@ class RFG(D):
                             particle     = self.particle)
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / PARAMS['lichtgeschwindigkeit']
-        # DEBUG('RFG: teta , beta>>',teta,beta)
+        # DEBUG_MODULE('RFG: teta , beta>>',teta,beta)
         teta = teta/beta
         ttf = sin(teta)/teta
         return ttf
@@ -634,7 +641,7 @@ class RFG(D):
     def shorten(self,l=0.):
         return self
     def adapt_for_energy(self,tkin):
-        # DEBUG('RFG: adapt_for_energy',tkin)
+        # DEBUG_MODULE('RFG: adapt_for_energy',tkin)
         self.__init__(
                     U0         = self.u0,
                     PhiSoll    = self.phis,
@@ -671,7 +678,7 @@ class _thin(_matrix_):
     def __init__(self,particle=PARAMS['sollteilchen']):
         self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
     def make_slices(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
-        # DEBUGll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
+        # DEBUG_MODULEll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]
@@ -684,7 +691,7 @@ class _thin(_matrix_):
         slices.append(kik)              ## the Kick
         for i in range(anz1):
             slices.append(d2)
-        # DEBUG('slices',slices)
+        # DEBUG_MODULE('slices',slices)
         return slices
     def shorten(self,l=0.):
         warnings.warn("No need to shorten a thin element!",RuntimeWarning)
@@ -798,13 +805,13 @@ class RFC(_thin):
                     particle=self.particle,
                     gap=self.gap,
                     dWf=self.dWf)  ## Trace3D RF gap
-        # DEBUG('RFC-kick: deltaW: ',self.kick.deltaW)
+        # DEBUG_MODULE('RFC-kick: deltaW: ',self.kick.deltaW)
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
         self.df.adapt_for_energy(tk_f)               #update energy for downstream drift after gap
         lens = self.df * self.kick * self.df         #one for three
         self.matrix = lens.matrix
-        # DEBUG('RFC matrix\n',self.matrix)
+        # DEBUG_MODULE('RFC matrix\n',self.matrix)
         self.triplet = (self.di,self.kick,self.df)
     def adapt_for_energy(self,tkin):
         self.__init__(

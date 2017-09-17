@@ -20,10 +20,18 @@ This file is part of the SIMULINAC code
 import numpy as np
 from copy import copy
 
-from setutil import PARAMS
+from setutil import PARAMS,DEBUG
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
+## Track class
 class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
 
     def __init__(self, particle_number=0, start=None):
@@ -124,18 +132,18 @@ def track_soll(lattice):
       #track of reference particle
     for ipos in lattice.seq:
         element,s0,s1 = ipos
-        # DEBUG('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
+        # DEBUG_MODULE('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
         ti = soll_track.last()                #track: at entrance
-        # DEBUG('\t\ti >>',Track.string(ti))
+        # DEBUG_MODULE('\t\ti >>',Track.string(ti))
         element.adapt_for_energy(ti[EKOO])    #enery adaptation
         tf = element.map(ti)           #track: at exit
-        # DEBUG('\t\tf >>',Track.string(tf))
+        # DEBUG_MODULE('\t\tf >>',Track.string(tf))
         soll_track.append(tf)                 #append
         # deltaE = tf[EKOO] - ti[EKOO]
-        # DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
-    # DEBUG('complete track\n{}'.format(soll_track.points_string()))
-    # DEBUG('soll track(i)\n{}'.format(soll_track.first_str()))
-    # DEBUG('soll track(f)\n{}'.format( soll_track.last_str()))
+        # DEBUG_MODULE('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+    # DEBUG_MODULE('complete track\n{}'.format(soll_track.points_string()))
+    # DEBUG_MODULE('soll track(i)\n{}'.format(soll_track.first_str()))
+    # DEBUG_MODULE('soll track(f)\n{}'.format( soll_track.last_str()))
     return soll_track
 
 def track(lattice,bunch):
@@ -152,16 +160,16 @@ def track(lattice,bunch):
             element,s0,s1 = ipos
             tf = element.matrix.dot(ti)      #track through!
             if isinstance(element,ELM.MRK):
-                # if count == 1: DEBUG('tf in track({}) >>'.format(count)+Track.string(tf))
+                # if count == 1: DEBUG_MODULE('tf in track({}) >>'.format(count)+Track.string(tf))
                 particle_track.append(tf)
                 # deltaE = tf[EKOO] - ti[EKOO]
-                # DEBUG('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+                # DEBUG_MODULE('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
             ti = tf
         sleep(1.0e-3)
         print_progress_bar(count, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
-        # DEBUG('complete track\n{}'.format(particle_track.points_str()))
-        # DEBUG('FIRST: {}'.format(particle_track.first_str()))
-        # DEBUG('{} LAST: {}'.format(count,particle_track.last_str()))
+        # DEBUG_MODULE('complete track\n{}'.format(particle_track.points_str()))
+        # DEBUG_MODULE('FIRST: {}'.format(particle_track.first_str()))
+        # DEBUG_MODULE('{} LAST: {}'.format(count,particle_track.last_str()))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     print("tracks.py: sorry - nothing todo")

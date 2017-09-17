@@ -29,6 +29,13 @@ from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 ## Lattice
 class Lattice(object):
     """
@@ -340,7 +347,7 @@ class Lattice(object):
             # objprnt(particle,text='sigma_functions: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
-                # DEBUG('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
+                # DEBUG_MODULE('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
                 if isinstance(i_element,ELM.RFG) and FLAGS['egf']:
                     rf_gap    = i_element
@@ -393,7 +400,7 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
-        # DEBUG('cs_traj.steps: ',steps)
+        # DEBUG_MODULE('cs_traj.steps: ',steps)
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin

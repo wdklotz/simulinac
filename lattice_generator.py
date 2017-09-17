@@ -27,12 +27,19 @@ import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 ## parse and generate latttice
 def lod2d(l):    ##list of dicts to dict
     return {k:v for d in l for k,v in d.items()}
 
 def instanciate_element(item):
-    # DEBUG('instanciate_element: instanciate {}'.format(item))
+    # DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
     if key == 'D':
@@ -97,7 +104,7 @@ def instanciate_element(item):
         instance  = ELM.MRK(label=label,actions=actions)
     else:
         raise RuntimeError('unknown element type: ',key)
-    # DEBUG('instanciate_element: {} instance created'.format(label),'')
+    # DEBUG_MODULE('instanciate_element: {} instance created'.format(label),'')
         sys.exit(1)
     try:     ## sections are not mandatory
         instance.set_section(sec=attributes['sec'])
@@ -110,19 +117,19 @@ def factory(input_file):
 #--------
     def make_lattice(latticeList,segments):
         lattice = Lattice()
-        # DEBUG('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
+        # DEBUG_MODULE('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
         for segID in latticeList:        #loop segments in lattice
-            # DEBUG('segID in make_lattice()',segID)
+            # DEBUG_MODULE('segID in make_lattice()',segID)
             for seg in segments:     #scan for segment in segment-definition
                 if segID in seg:
-                    # DEBUG('found '+segID,seg)
+                    # DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
                     break    #after found == true
             for element in elementList: #loop over elements in element list
-                # DEBUG('element in '+segID,element)
+                # DEBUG_MODULE('element in '+segID,element)
                 elementClass = element['type']
                 elmItem = (elementClass,element)
-                # DEBUG('elmItem in make_lattice',elmItem)
+                # DEBUG_MODULE('elmItem in make_lattice',elmItem)
                 (label,instance) = instanciate_element(elmItem)  #INSTANCIATE!!
                 lattice.add_element(instance)  #add element instance to lattice
         return lattice   #the complete lattice
@@ -199,32 +206,32 @@ def factory(input_file):
     #--------
         def reduce_seg_def(segList):
             segs = lod2d(segList)      #{'SEG1':[...],'SEG2':[...],...}
-            # DEBUG('segs in reduce_seg_def()',segs)
+            # DEBUG_MODULE('segs in reduce_seg_def()',segs)
             segments=[]
             for segID,elmList in segs.items():
-                # DEBUG(segID,elmList)
+                # DEBUG_MODULE(segID,elmList)
                 elements=[]
                 for elm in elmList:
                     elm = lod2d(elm)
-                    # DEBUG('elm',elm)
+                    # DEBUG_MODULE('elm',elm)
                     elements.append(elm)
                 segments.append({segID:elements})
-            # DEBUG("segments",segments)
+            # DEBUG_MODULE("segments",segments)
             return segments
         elemement_def = read_elements(in_data)
         segment_def   = read_segments(in_data)
         lattice_def   = read_lattice(in_data)
-        # DEBUG('elemement_def in expand_reduce()',elemement_def)
-        # DEBUG('segment_def in expand_reduce()',segment_def)
-        # DEBUG('lattice_def in expand_reduce()',lattice_def)
+        # DEBUG_MODULE('elemement_def in expand_reduce()',elemement_def)
+        # DEBUG_MODULE('segment_def in expand_reduce()',segment_def)
+        # DEBUG_MODULE('lattice_def in expand_reduce()',lattice_def)
         segments = reduce_seg_def(segment_def)
-        # DEBUG('segments in expand_reduce()',segments)
+        # DEBUG_MODULE('segments in expand_reduce()',segments)
         latticeList=[]
         for segSubList in lattice_def:
             nsuper = segSubList[0]
             PARAMS['nsuper'] = nsuper
             del segSubList[0]              #pull nsuper off
-            # DEBUG('segSubList in expand_reduce()',segSubList)
+            # DEBUG_MODULE('segSubList in expand_reduce()',segSubList)
             for i in range(nsuper):        #expand nsuper times
                 for k in segSubList:
                     latticeList.append(k)
@@ -256,19 +263,19 @@ def factory(input_file):
     del PARAMS['betaz']
     del PARAMS['gammaz']
     del PARAMS['alphaz']
-    # DEBUG('PARAMS after read_parameters()',PARAMS.__dict__)
+    # DEBUG_MODULE('PARAMS after read_parameters()',PARAMS.__dict__)
 
     (latticeList,segments) = expand_reduce(in_data)
-    # DEBUG('latticeList in factory()',latticeList)      # def of all segments in lattice
-    # DEBUG('segments in factory()',segments)            # def of all segments
+    # DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
+    # DEBUG_MODULE('segments in factory()',segments)            # def of all segments
 
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# (WICHTIG) set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
-    # DEBUG('lattice_generator >>\n',lattice.string())
+    # DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
     SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    # DEBUG('SUMMARY in factory()',SUMMARY)
+    # DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
     return lattice    #end of factory(...)
 
 def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory

@@ -12,12 +12,12 @@ from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from Ez0 import SFdata
 
-## DEBUG printouts
+## DEBUG MODULE
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_THIS_MODULE = DEBUG_ON
+DEBUG_MODULE = DEBUG_OFF
 
 ## Transition Time Factors RF Gap Model
 class TTFGslice(object):
@@ -56,7 +56,7 @@ class TTFGslice(object):
             dz = poly.dz
             f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
             f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-            # DEBUG_THIS_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+            # DEBUG_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
             t  = f1*f2
             return t
     def _Tp(self,poly,k):
@@ -133,7 +133,7 @@ class TTFG(ELM.D):
         next_phase = self.phis
         next_tkin  = tkin
         for cnt,slice in enumerate(self.slices):
-            DEBUG_THIS_MODULE('TTFGslice[{}]: phase {},\ttkin {}'.format(cnt,degrees(next_phase),next_tkin))
+            DEBUG_MODULE('TTFGslice[{}]: phase {},\ttkin {}'.format(cnt,degrees(next_phase),next_tkin))
             slice.setPhase(next_phase)
             slice.adapt_for_energy(next_tkin)
             DPhase     = slice.getDPhase()
@@ -265,14 +265,14 @@ class TTFG(ELM.D):
             # for DEBUGGING
             dbTab1Headr = ['Ws(in)','r','Kr','i0','i1','Dphi(in)[deg]','Ti[MeV]']
             dbTab2Headr = ['z[mm]','Dphi(out)[deg]','dp/p[%]','Wf-Wi[KeV]',"x'[mrad]","y'[mrad]",'Tf-Ti[KeV]']
-            DEBUG_THIS_MODULE('at position IN:\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
-            DEBUG_THIS_MODULE('at position OUT:\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
+            DEBUG_MODULE('at position IN:\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
+            DEBUG_MODULE('at position OUT:\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
 
             f_track = np.array([xf,xpf,yf,ypf,zf,zpf,Tf,1.,sf,1.])
             return f_track
 
         for cnt,slice in enumerate(self.slices):
-            DEBUG_THIS_MODULE('SLICE # {}'.format(cnt))      # for DEBUGGING
+            DEBUG_MODULE('SLICE # {}'.format(cnt))      # for DEBUGGING
             f_track = slice_map(i_track)
             i_track = f_track
         f_track[SKOO] += self.length         # add TTGF's length
@@ -287,10 +287,10 @@ def test0():
     ttfg = TTFG(length=0.044,gap=0.048,Ez=SF_tab)
     tkin = 50.
     ttfg.adapt_for_energy(tkin=tkin)
-    DEBUG_THIS_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
+    DEBUG_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     slices = ttfg.slices
     for slice in slices:
-        DEBUG_THIS_MODULE('slice\n',slice.__dict__)      # for DEBUGGING
+        DEBUG_MODULE('slice\n',slice.__dict__)      # for DEBUGGING
 
     z = 1.e-3
     x=y=1.e-2

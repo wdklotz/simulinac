@@ -20,6 +20,13 @@ This file is part of the SIMULINAC code
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 ## Logger
 ch        = logging.StreamHandler()     ## console handler
 ch.setLevel(logging.DEBUG)              ## set handler level
@@ -219,7 +226,7 @@ def collect_data_for_summary(lattice):
                 test = (type(element[0]).__name__ == typ)  ## no sec tags? take all!
             return not test
         filtered_elements = itertools.filterfalse(predicate,lattice.seq)
-        # for t in filtered_elements: DEBUG('filterfalse',(t,t[0].label))  ## whazit
+        # for t in filtered_elements: DEBUG_MODULE('filterfalse',(t,t[0].label))  ## whazit
         return filtered_elements
 
     def elements_in_section(typ,sec):
@@ -331,7 +338,7 @@ def I0(x):
         res+= 0.2659732*t2*t2*t2*t2
         res+= 0.0360768*t2*t2*t2*t2*t2
         res+= 0.0045813*t2*t2*t2*t2*t2*t2
-        # DEBUG('I0->x ',x)
+        # DEBUG_MODULE('I0->x ',x)
     elif 3.75 <= x:
         tm1 = 1./t
         res = 0.39894228
@@ -343,7 +350,7 @@ def I0(x):
         res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-        # DEBUG('I0->x ',x)
+        # DEBUG_MODULE('I0->x ',x)
         res = res*exp(x)/sqrt(x)
     else:
         raise RuntimeError('I0(): x={} negative argument!'.format(x))
@@ -385,11 +392,11 @@ def I1(x):
 
 ## Marker Actions
 def sigma_x_action():
-    # DEBUG('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
+    # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
     PARAMS['sigma-x({:0=6.2f})'.format(CpValues['z'])] = CpValues['sigma_x']*1.e3
 def sigma_y_action():
-    # DEBUG('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
+    # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(CpValues['z'],CpValues['sigma_y']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
     PARAMS['sigma-y({:0=6.2f})'.format(CpValues['z'])] = CpValues['sigma_y']*1.e3
 def Tkin_action():

@@ -5,6 +5,13 @@ from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 '''
 Cavity E(z,r=0) field profile
 '''
@@ -102,7 +109,7 @@ def Tn(poly,k,n):
         dz = poly[n].dz
         f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-        # DEBUG('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+        # DEBUG_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
         t = f1*f2
         return t
 def T(poly,k,zl2zr):
@@ -113,7 +120,7 @@ def T(poly,k,zl2zr):
         zir = poly[i].zr
         dz  = zir-zil
         if zil < zl or zir > zr: continue
-        # DEBUG('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
+        # DEBUG_MODULE('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
 def Sn(poly,k,n):
@@ -230,17 +237,16 @@ class SFdata(object):
                 raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
             M = int(M-fmod(M,N))
             n = int(M/N)
-            # DEBUG('(N,M,n)=({},{},{})'.format(N,M,n))
             print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
-                # DEBUG('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+                # DEBUG_MODULE('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
         Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
         self.poly = []
         anz = 10        # interpolate SF-data with 'anz' polynomials od 2nd order
         for (il,i0,ir) in indexer(anz,len(self.Ez0_tab)):
-            # DEBUG('(il,i0,ir) ',((il,i0,ir)))
+            # DEBUG_MODULE('(il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez0_tab[il].z
             z0 = self.Ez0_tab[i0].z
             zr = self.Ez0_tab[ir].z
@@ -358,11 +364,11 @@ def test2():
     s   = S(poly,k,zl2zr)
     tp  = Tp(poly,k,zl2zr)
     sp  = Sp(poly,k,zl2zr)
-    DEBUG('V0',v0)
-    DEBUG('T(k)',t)
-    DEBUG("T'(k)",tp)
-    DEBUG('S(k)',s)
-    DEBUG("S'(k)",sp)
+    DEBUG_MODULE('V0',v0)
+    DEBUG_MODULE('T(k)',t)
+    DEBUG_MODULE("T'(k)",tp)
+    DEBUG_MODULE('S(k)',s)
+    DEBUG_MODULE("S'(k)",sp)
 
 def test3(input_file):
     '''
@@ -393,11 +399,11 @@ def test3(input_file):
     s   = S(poly,k,zl2zr)
     tp  = Tp(poly,k,zl2zr)
     sp  = Sp(poly,k,zl2zr)
-    DEBUG('V0',v0)
-    DEBUG('T(k)',t)
-    DEBUG("T'(k)",tp)
-    DEBUG('S(k)',s)
-    DEBUG("S'(k)",sp)
+    DEBUG_MODULE('V0',v0)
+    DEBUG_MODULE('T(k)',t)
+    DEBUG_MODULE("T'(k)",tp)
+    DEBUG_MODULE('S(k)',s)
+    DEBUG_MODULE("S'(k)",sp)
 
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'

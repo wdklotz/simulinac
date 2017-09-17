@@ -26,6 +26,13 @@ from lattice_generator import parse_yaml_and_fabric
 from bucket_size import bucket
 from tracks import track_soll
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
 def display(functions):
     print('PREPARE DISPLAY')
     if FLAGS['dWf'] == 0:
