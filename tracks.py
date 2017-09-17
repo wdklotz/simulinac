@@ -136,7 +136,7 @@ def track_soll(lattice):
         ti = soll_track.last()                #track: at entrance
         # DEBUG_MODULE('\t\ti >>',Track.string(ti))
         element.adapt_for_energy(ti[EKOO])    #enery adaptation
-        tf = element.map(ti)           #track: at exit
+        tf = element.map(ti)                  #track: at exit
         # DEBUG_MODULE('\t\tf >>',Track.string(tf))
         soll_track.append(tf)                 #append
         # deltaE = tf[EKOO] - ti[EKOO]

@@ -213,7 +213,7 @@ if __name__ == '__main__':
     # filepath = 'LE_HE_15inj-ref.yml'
     filepath = 'LE_HE_15inj.yml'
     # filepath = 'test.yml'
-    
+
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     loesung(filepath)

@@ -59,7 +59,7 @@ def DEBUG(string,arg=''):
 ## DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
-        egf                  = True,             # emittance grow flag default
+        egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
         map                  = True,             # use maps to track trajectories through RFGap
@@ -293,6 +293,24 @@ def collect_data_for_summary(lattice):
 
                 PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
                 PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
+                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
+                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
+    types = ['TTFG']
+    for sec in sections:
+        for typ in types:
+            elements = elements_in_section(typ,sec)
+            for itm in elements:
+                gap     = itm.gap
+                Epeak   = itm.Epeak
+                PhiSoll = degrees(itm.phis)
+                length  = itm.length
+                SUMMARY['{2} [{1}.{0}]  gap     [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  Epeak[MV/m]'.format(sec,typ,itm.label)] = Epeak
+                SUMMARY['{2} [{1}.{0}]  phis  [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]  length  [m]'.format(sec,typ,itm.label)] = length
+
+                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
+                PARAMS['{2}[{1}.{0}]Epeak'.format(sec,typ,itm.label)] = Epeak
                 PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
                 PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
 

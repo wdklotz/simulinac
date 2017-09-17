@@ -104,7 +104,7 @@ def instanciate_element(item):
         instance  = ELM.MRK(label=label,actions=actions)
     else:
         raise RuntimeError('unknown element type: ',key)
-    # DEBUG_MODULE('instanciate_element: {} instance created'.format(label),'')
+        # DEBUG_MODULE('instanciate_element: {} instance created'.format(label),'')
         sys.exit(1)
     try:     ## sections are not mandatory
         instance.set_section(sec=attributes['sec'])

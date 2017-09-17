@@ -40,7 +40,7 @@ sections:
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - aperture:             0.01       # [m] aperture = bore radius
+    - aperture:             0.10       # [m] aperture = bore radius
     # - Tkin:                 15.0       # [MeV] energy @ entrance (injection)
     - Tkin:                 50.0       # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
@@ -54,7 +54,7 @@ parameters:
     - betay_i:              1.902      # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
-    - sigmaz_i:              2.5e-4    # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:              2.5e-5    # [m] longitudinal displacement Dz @ entrance
 
     # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
     # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
@@ -249,14 +249,14 @@ segments:
     - TTFGH:
         - *ttfg
         - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
-        - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
+        # - *ttfg
     - MARK:
         - *mrk
 ##...........................................................................................
@@ -269,6 +269,6 @@ lattice:
     # - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     # - [1,       MARK]
     # - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [3,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
+    - [60,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
     # - [1,       MARK]
     
