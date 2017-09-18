@@ -662,15 +662,6 @@ class RFG(D):
             # NOTE: linear mapping with T3D matrix
             f_track = self.matrix.dot(i_track)
         return f_track
-# # Transition Time Factors RF Gap Model
-# class TTFMG(D):
-#     """
-#     Transition Time Factors RF Gap Model (A.Shishlo ORNL/TM-2015/247)
-#     """
-#     def __init__(self):
-#         super().__init__(label=label, particle=particle)
-#         pass
-## the mother of all thin elements: keeps particle instance!
 class _thin(_matrix_): 
     """
     Base class for thin elements
@@ -703,7 +694,6 @@ class _thin(_matrix_):
         indicating the lattice part it belongs to.
         """
         self.sec = sec
-
 ## thin F-quad
 class QFth(_thin):   
     """

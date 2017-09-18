@@ -91,13 +91,13 @@ def instanciate_element(item):
         fRF       = attributes["fRF"]
         label     = attributes['ID']
         gap       = attributes['gap']
-        length    = attributes['length']
+        # length    = attributes['length']
         fname     = attributes["SFdata"]     # file name of SF-Data
         Ez0       = attributes["Ezpeak"]
         dWf       = FLAGS['dWf']
         if fname not in PARAMS:
             PARAMS[fname] = SFdata(fname,Epeak=Ez0)
-        instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,length=length,Ez=PARAMS[fname],dWf=dWf)
+        instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = attributes['actions'] if 'actions' in attributes else []

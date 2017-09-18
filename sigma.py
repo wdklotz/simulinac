@@ -61,10 +61,11 @@ class Sigma(object):
         """
         Map this sigma through element R
         """
+        # remember R is isinstance off ELM._matrix!
         new = Sigma()
-        r = R(MDIM,MDIM)    ## np.ndarray
+        r = R(MDIM,MDIM) #!! use _matrix.__call__() to get element matrix as np.ndarray
         rt = np.transpose(r)
-        s1 = self.matrix    ## np.ndarray
+        s1 = self()      #!! use Sigma.__call__() to get matrix as np.ndarray
         new.matrix = np.dot(r,np.dot(s1,rt))  ## matrix multiplication here
         return new
     def clone(self):
@@ -155,7 +156,7 @@ def test1():
                     emity=1.,betay=1.,alphay=0.,
                     emitz=1.,betaz=1.,alphaz=0.)
     s1 = sigma_i()
-    sigma_f = sigma_i.rmap(R)   ## apply map to sigma
+    sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
     s2 = sigma_f()
     DEBUG('{sigma}\n',mxprnt(s1))
     DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2))

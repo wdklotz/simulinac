@@ -109,14 +109,6 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
         - sec:      *LE
-    # - rfcl:  &rfcl          # ID
-    #     - type:     RFC     # RFC class
-    #     - Ez:       *p05    # [MV/m] electric field
-    #     - PhiSync:  *p06    # [deg] synchronous phase
-    #     - fRF:      *p01    # [Hz] frequency
-    #     - gap:      *p07    # [m] length
-    #     - length:   *p08    # [m] length
-    #     - sec:      *LE
 
 # HE        
     - d1h:        &d1h
@@ -125,7 +117,11 @@ elements:
         - sec:      *HE
     - d2h:    &d2h          # ID
         - type:     D       # D class
-        - length:   0.44    # [m]
+        - length:   0.44    # [m] full cavity
+        - sec:      *HE
+    - dttfg:    &dttfg      # ID
+        - type:     D       # D class
+        - length:   0.022   # [m] half cavity
         - sec:      *HE
     - qf1h:   &qf1h         # ID
         - type:     QF      # QF class
@@ -137,13 +133,6 @@ elements:
         - length:   *p02    # [m] length
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *HE
-    # - rfgh:  &rfgh          # ID
-    #     - type:     RFG     # RFG class
-    #     - Ez:       *p05    # [MV/m] electric field
-    #     - PhiSync:  *p06    # [deg] synchronous phase
-    #     - fRF:      *p01    # [Hz] frequency
-    #     - gap:      *p12    # [m] accelerating. gap
-    #     - sec:      *HE
     - rfch:  &rfch          # ID
         - type:     RFC     # RFC class
         - Ez:       *p14    # [MV/m] electric field
@@ -157,7 +146,6 @@ elements:
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      0.048   # [m] length
-        - length:   0.044   # [m] length
         - SFdata:   SF_WDK2g44.TBL
         - Ezpeak:   1.8055  # [MV/m]
         - sec:      *HE
@@ -203,17 +191,6 @@ segments:
         - *d2l
         - *rfgl
         - *d2l
-    # - RFCAVL:
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
-    #     - *rfcl
     - SEG1L:
         - *qf1l
         - *d1l
@@ -247,8 +224,12 @@ segments:
         - *rfch
         - *rfch
     - TTFGH:
+        - *dttfg
         - *ttfg
+        - *dttfg
+        - *dttfg
         - *ttfg
+        - *dttfg
         # - *ttfg
         # - *ttfg
         # - *ttfg
@@ -269,6 +250,6 @@ lattice:
     # - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     # - [1,       MARK]
     # - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [60,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
+    - [1200,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
     # - [1,       MARK]
     
