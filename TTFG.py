@@ -58,7 +58,7 @@ class TTFGslice(object):
         return self.Tk
     def getTkp(self):
         return self.Tkp
-s    def _T(self,poly,k):
+    def _T(self,poly,k):
             a  = poly.a
             b  = poly.b
             dz = poly.dz
