@@ -139,13 +139,17 @@ class TTFG(ELM.I):
         def adapt_slices_for_energy(tkin):
             next_phase = self.phis
             next_tkin  = tkin
+            # deltaW = 0.
             for slice in self.slices:
                 slice.setPhase(next_phase)
                 slice.adapt_for_energy(next_tkin)
                 DPhase     = slice.getDPhase()
                 DW         = slice.getDW()
+                # deltaW += DW
                 next_phase = slice.getPhase()+DPhase
                 next_tkin  = slice.particle.tkin+DW
+            deltaW = next_tkin-tkin
+            return deltaW
         
         self.__init__(PhiSoll     = self.phis,
                       fRF         = self.freq,
@@ -155,8 +159,7 @@ class TTFG(ELM.I):
                       Ez          = self.Ez,
                       dWf         = self.dWf)
 
-        adapt_slices_for_energy(tkin)
-        deltaW = self.slices[-1].getW()-self.slices[0].getW()  #deltaW for lin.map
+        deltaW = adapt_slices_for_energy(tkin)  #deltaW for lin.map
         self.matrix[EKOO,DEKOO] = deltaW
         return(self)
     def make_slices(self,anz=0):
