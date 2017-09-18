@@ -91,7 +91,6 @@ def instanciate_element(item):
         fRF       = attributes["fRF"]
         label     = attributes['ID']
         gap       = attributes['gap']
-        # length    = attributes['length']
         fname     = attributes["SFdata"]     # file name of SF-Data
         Ez0       = attributes["Ezpeak"]
         dWf       = FLAGS['dWf']
