@@ -36,7 +36,7 @@ ch.setFormatter(formatter)              ## set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   ## add handler to logger
 
-def DEBUG(string,arg=''):
+def DEBUG(string,arg='',end='\n'):
     """
     Print debug message
     IN:
@@ -47,14 +47,14 @@ def DEBUG(string,arg=''):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(list)\n{}'.format(string,sarg))
+        print('DEBUG: {} typ(list)\n{}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4,width=60)  ## use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(dict)\n{}'.format(string,sarg))
+        print('DEBUG: {} typ(dict)\n{}'.format(string,sarg),end=end)
     else:
-        print('DEBUG: {}{}'.format(string,arg))
+        print('DEBUG: {}{}'.format(string,arg),end=end)
 
 ## DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
@@ -181,7 +181,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
     
     # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
-    Dphi0  = (2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
+    Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
     w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
     DW     = w0*m0c2              # conversion --> [MeV]
     emitz  = Dphi0*DW             # [rad*MeV]

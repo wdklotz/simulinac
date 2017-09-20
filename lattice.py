@@ -28,6 +28,7 @@ from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,CpVal
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
+import TTFG as TTF
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -51,7 +52,7 @@ class Lattice(object):
         self.betay0 = 0.
         self.alfay0 = 0.
         self.gammy0 = 0.
-        self.full_cell = 0.
+        self.accel  = 0.
 
     def add_element(self,elment):
         """
@@ -96,7 +97,9 @@ class Lattice(object):
                 qf_counter += 1
             if isinstance(element,ELM.QD):
                 qd_counter += 1
-            if isinstance(element,ELM.RFG) or isinstance(element,ELM.RFC):
+            if isinstance(element,ELM.RFG) \
+                or isinstance(element,ELM.RFC) \
+                or isinstance(element,TTF.TTFG):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
@@ -149,11 +152,11 @@ class Lattice(object):
             # if verbose:
             printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
 
-        self.full_cell = mcell    # the full cell becomes instance variable
+        self.accel = mcell    # the full cell becomes instance variable
         # if verbose:
-        printv(0,'Lattice.cell: full lattice matrix (i)->(f)')
-        printv(0,self.full_cell.string())
-        det = LA.det(self.full_cell.matrix)
+        printv(0,'Full Accelerator Matrix (i)->(f)')
+        printv(0,self.accel.string())
+        det = LA.det(self.accel.matrix)
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))
         ## Determinate M-I == 0 ?
@@ -176,7 +179,7 @@ class Lattice(object):
         ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
         if closed:
             if not unstable:
-                cell_matrix = self.full_cell.matrix
+                cell_matrix = self.accel.matrix
                 # m11  = cell_matrix[0,0];         m12  = cell_matrix[0,1]
                 # m21  = cell_matrix[1,0];         m22  = cell_matrix[1,1]
                 # n11  = cell_matrix[2,2];         n12  = cell_matrix[2,3]
@@ -214,7 +217,7 @@ class Lattice(object):
                 print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))                
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy])
-                m_cell_beta = self.full_cell.beta_matrix()
+                m_cell_beta = self.accel.beta_matrix()
                 v_beta_e = m_cell_beta.dot(v_beta_a)
                 # if verbose:
                 printv(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
@@ -257,7 +260,7 @@ class Lattice(object):
         self.gammy0 = gmy
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
-        return (self.full_cell,self.betax0,self.betay0)
+        return (self.accel,self.betax0,self.betay0)
 
     def report(self):
         """
@@ -343,8 +346,7 @@ class Lattice(object):
         s = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
-            # particle = element.particle                                      # DEBUG
-            # objprnt(particle,text='sigma_functions: '+element.label)         # DEBUG
+            # objprnt(element.particle ,text='sigma_functions: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 # DEBUG_MODULE('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
@@ -377,7 +379,7 @@ class Lattice(object):
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         v_0.shape = (ELM.MDIM,1)   # column vector with MDIM rows, 1 column
         if closed == True:
-            m_cell = self.full_cell
+            m_cell = self.accel
             m11 = m_cell.matrix[0,0]
             m15 = m_cell.matrix[0,5]
             d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
@@ -401,16 +403,17 @@ class Lattice(object):
         Track Cos & Sin trajectories
         """
         # DEBUG_MODULE('cs_traj.steps: ',steps)
+        sollt_test = 1.     # 0. to test map for soll Teilchen
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
-        x1          = sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p         = sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
-        y1          = sqrt(PARAMS['emity_i']*self.betay0)
-        y2p         = sqrt(PARAMS['emity_i']*self.gammy0)
-        sigmaz_i    = PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
-        dpdivp_i    = gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
+        x1          = sollt_test*sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
+        x2p         = sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
+        y1          = sollt_test*sqrt(PARAMS['emity_i']*self.betay0)
+        y2p         = sollt_test*sqrt(PARAMS['emity_i']*self.gammy0)
+        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
+        dpdivp_i    = sollt_test*gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []
         s_like = []
@@ -461,8 +464,8 @@ class Lattice(object):
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #delta-l
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
                     ])
-        s = NP.dot(self.full_cell.matrix.T,s)
-        s = NP.dot(s,self.full_cell.matrix)
+        s = NP.dot(self.accel.matrix.T,s)
+        s = NP.dot(s,self.accel.matrix)
         # dets = LA.det(s)
         # if fabs(dets-1.) > 1.e-12:
             # for i in range(ELM.Matrix._dim):

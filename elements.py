@@ -172,6 +172,12 @@ class _matrix_(object):
         """
         track_f = self.matrix.dot(track_i)
         return track_f
+    def soll_map(self,track_i):
+        """
+        Linear mapping of trjectory from (i) to (f)
+        """
+        track_f = self.map(track_i)
+        return track_f
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen']):
@@ -660,7 +666,10 @@ class RFG(D):
             f_track = self.rfb.map(i_track)
         else:
             # NOTE: linear mapping with T3D matrix
-            f_track = self.matrix.dot(i_track)
+            f_track = super.map(i_track)
+        return f_track
+    def soll_map(self,i_track):
+        f_track = super.soll_map(i_track)
         return f_track
 class _thin(_matrix_): 
     """

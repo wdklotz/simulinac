@@ -227,17 +227,43 @@ segments:
         - *dttfg
         - *ttfg
         - *dttfg
+        #
         - *dttfg
         - *ttfg
         - *dttfg
+        #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
+        # - *dttfg
         # - *ttfg
+        # - *dttfg
+        # #
     - MARK:
         - *mrk
 ##...........................................................................................
@@ -250,6 +276,7 @@ lattice:
     # - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
     # - [1,       MARK]
     # - [207,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
-    - [1200,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
     # - [1,       MARK]
+    # - [1200,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
+    - [600,       SEG1H,    TTFGH,                SEG2H,    TTFGH,                SEG3H]
     
