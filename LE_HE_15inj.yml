@@ -76,9 +76,14 @@ parameters:
 
     - gap_HE:     &p12    0.044      # HE gap
     - cav_HE:     &p13    0.044      # HE cav len
+<<<<<<< HEAD
     # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
     - Ez_HE:      &p14    1.        # [MV/m] electric field strength
     - GAP:        &p15    0.048     # [m] RF gap
+=======
+    # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength for 80MeV
+    - Ez_HE:      &p14    1.0       # [MV/m] electric field strength for 200MeV
+>>>>>>> a99ffcb52b186772cf3dc742ecba2d846b6f51f7
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
@@ -94,7 +99,7 @@ elements:
         - sec:      *LE
     - qf1l:   &qf1l         # ID
         - type:     QF      # QF class
-        - length:   *p03    # [m] 
+        - length:   *p03    # [m]
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *LE
     - qd1l:   &qd1l         # ID
@@ -111,10 +116,10 @@ elements:
         - gap:      *p07    # [m] length
         - sec:      *LE
 
-# HE        
+# HE
     - d1h:        &d1h
         - type:     D       # D class
-        - length:   0.08    # [m] 
+        - length:   0.08    # [m]
         - sec:      *HE
     - d2h:    &d2h          # ID
         - type:     D       # D class
@@ -126,7 +131,7 @@ elements:
         - sec:      *HE
     - qf1h:   &qf1h         # ID
         - type:     QF      # QF class
-        - length:   *p03    # [m] 
+        - length:   *p03    # [m]
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *HE
     - qd1h:   &qd1h         # ID
@@ -159,11 +164,15 @@ elements:
         - Ezpeak:   1.8055  # [MV/m]
         - sec:      *HE
     - mrk:  &mrk            # ID
-        - type:    MRK      # MRK class  
+        - type:    MRK      # MRK class
         - actions:
             - sigma_x
             - sigma_y
+<<<<<<< HEAD
             - Tkin  
+=======
+        #     - Tkin
+>>>>>>> a99ffcb52b186772cf3dc742ecba2d846b6f51f7
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
@@ -290,9 +299,19 @@ segments:
 ##...........................................................................................
 lattice:
     - title: LE+HE 29.08.2017 15MeV inj          # description is mandatory. DON't remove or reposition!
+<<<<<<< HEAD
     # - [1,         SEG1L,    RFG10L,    RFG10L,   SEG2L,    RFG10L,    RFG10L,   SEG3L,    MARK]
     # - [1200,      SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     # - [600,       SEG1H,    RFCAVH,              SEG2H,    RFCAVH,              SEG3H]
     # - [600,       SEG1H,    RFGH,                SEG2H,    RFGH,                SEG3H]
     - [1,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     
+=======
+    # - [1,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
+    # - [25,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
+    - [50,      SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L]
+    - [1,       SEG1L,    RFG10L,    RFG10L,    SEG2L,    RFG10L,    RFG10L,    SEG3L,    MARK]
+    - [204,     SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H]
+    - [1,       SEG1H,    RFCAVH,               SEG2H,    RFCAVH,               SEG3H,    MARK]
+>>>>>>> a99ffcb52b186772cf3dc742ecba2d846b6f51f7
