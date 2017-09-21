@@ -409,10 +409,10 @@ class Lattice(object):
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
         x1          = sollt_test*sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p         = sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
+        x2p         = 0.*sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1          = sollt_test*sqrt(PARAMS['emity_i']*self.betay0)
         y2p         = sollt_test*sqrt(PARAMS['emity_i']*self.gammy0)
-        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
+        sigmaz_i    = 0.*sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
         dpdivp_i    = sollt_test*gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []

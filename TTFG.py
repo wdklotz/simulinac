@@ -19,7 +19,7 @@ def DEBUG_ON(string,arg='',end='\n'):
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
 DEBUG_MODULE   = DEBUG_OFF
-DEBUG_MAP      = DEBUG_OFF
+DEBUG_MAP      = DEBUG_ON
 DEBUG_SOLL_MAP = DEBUG_OFF
 twopi          = 2*PI
 
@@ -57,6 +57,10 @@ class TTFGslice(object):
         return self.Tk
     def getTkp(self):
         return self.Tkp
+    def getT(self,k):
+        return self._T(self.polyval,k)
+    def getTp(self,k):
+        return self._Tp(self.polyval,k)
     def _T(self,poly,k):
             a  = poly.a
             b  = poly.b
@@ -167,7 +171,7 @@ class TTFG(ELM.I):
     def shorten(self,l=0.):
         return self
     def map(self,i_track):
-        def slice_map(track):
+        def slice_map_depricated(track):   # REPLACED by slice_map_1
             """
             Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
             """
@@ -257,6 +261,7 @@ class TTFG(ELM.I):
             conv_phase2z = -(betaf*lamb)/twopi       # conversion-factor phi-phis --> z 
             conv_W2zp    = 1./(m0c2*betaf**2*gammaf) # conversion-factor dW --> dp/p
             z  = phase2z(conv_phase2z,pOUT,pOUTs)
+            # z = conv_phase2z*(dw+pIN-pOUTs)
             zp = W2zp(conv_W2zp,WOUT,dws)            
             
             DEBUG_MAP("(z,z')",(z,zp))
@@ -291,10 +296,129 @@ class TTFG(ELM.I):
 
             f_track = np.array([x,xpf,y,ypf,z,zp,T,1.,s,1.])
             return f_track
+        def slice_map_1(track):
+            """
+            Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
+            """
+            def phiout_phiin(conv,g,r,i0,i1,tkp,skp,tk,sk,phi):
+                # Formel 4.3.2 A.Shishlo
+                return  conv*i0*(tkp*sin(phi)+skp*cos(phi)+g*r*i1*(tk*sin(phi)+sk*cos(phi)))
+            def wout_win(conv,i0,tk,sk,phi):
+                # Formel 4.3.1 A.Shishlo
+                return conv*i0*(tk*cos(phi)-sk*sin(phi))
+
+            x        = track[XKOO]       # [0]
+            xp       = track[XPKOO]      # [1]
+            y        = track[YKOO]       # [2]
+            yp       = track[YPKOO]      # [3]
+            z        = track[ZKOO]       # [4] z~(phi-phis)
+            zp       = track[ZPKOO]      # [5] dp/p~dT
+            T        = track[EKOO]       # [6] summe aller dT
+            s        = track[SKOO]       # [8] summe aller laengen
+
+            # DEBUG_MAP("\n(x,x',y,y') ",arg=(x,xp,y,yp))
+            DEBUG_MAP('(z,zp)',(z,zp))
+
+            m0c2       = self.particle.e0
+            lamb       = self.lamb
+            c          = PARAMS['lichtgeschwindigkeit']
+            omeg       = twopi*self.freq
+   
+            # dbTab2Rows  = []      # for DEBUGGING
+
+            soll = slice.particle
+            bes       = soll.beta
+            gas       = soll.gamma
+            gbs       = soll.gamma_beta
+            qV0       = slice.getV0()
+            ks        = omeg/(c*bes)
+            Ts        = slice.getT(ks)
+            Tps       = slice.getTp(ks)
+            pINs      = slice.getPhase()           # soll phase  @ (i)
+            pIN       = -z*omeg/(c*bes) + pINs     # phase @ (i)
+            WIN       = slice.getW()               # soll energy @ (i)
+            win       = (zp*(gas+1.)/gas+1.)*WIN   # energy @ (i)
+            particle  = copy(soll)(tkin=win)
+            be        = particle.beta
+            ga        = particle.gamma
+            gb        = particle.gamma_beta
+            k         = omeg/(c*be)
+            T         = slice.getT(k)
+            Tp        = slice.getTp(k)
+            
+            # DEBUG_MAP('(WIN,win,pIN,pINs)',(WIN,win,degrees(pIN),degrees(pINs)))
+
+            r = sqrt(x**2+y**2)                 # radial coordinate
+            Kbess = ks * r
+            i0 = I0(Kbess)                      # bessel function
+            i1 = I1(Kbess)                      # bessel function
+
+            WOUT = WIN + wout_win(qV0,1.,Ts,0.,pINs)
+            wout = win + wout_win(qV0,i0,Ts,0.,pIN)
+        
+            facs  = qV0*omeg/(m0c2*c*gbs**3)
+            # fac   = qV0*omeg/(m0c2*c*gb**3)
+            pOUTs = pINs + phiout_phiin(facs, gas , 0. , 1. , 0. , Ts , 0. , Tps , 0. , pINs)
+            pOUT  = pIN  + phiout_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pINs)
+
+            # DEBUG_MAP('(pOUTs,pOUT)',(degrees(pOUTs),degrees(pOUT)))
+            
+            dp = -(pOUT-pOUTs)
+            dw = -(wout-WOUT)
+            
+            DEBUG_MAP('(pINs,pIN,pINs-pIN)',(pINs,pIN,pINs-pIN))
+            DEBUG_MAP('(pOUTs,pOUT,dp)',(pOUTs,pOUT,dp))
+            
+            z  = - dp / ks
+            zp = gas/(gas+1) * dw/wout
+
+            # DEBUG_MAP('(z,zp)',(z,zp))
+
+            gbi = gbs
+            gbf = gb
+            common = qV0/(m0c2*gbi*gbf)*i1
+            if r > 0.:
+                xp = gbi/gbf*xp-x/r*common*(T*sin(pIN)) # Formel 4.3.3 A.Shishlo (Sk=0.)
+                yp = gbi/gbf*yp-y/r*common*(T*sin(pIN))
+            elif r == 0.:
+                xp = gbi/gbf*xp
+                yp = gbi/gbf*yp
+
+            T = T + WOUT       # soll-energy gained
+
+            dbTab1Row = [      # for DEBUGGING
+                '{:8.4f}'.format(degrees(pINs)),
+                '{:8.4g}'.format(WIN),
+                '{:8.4f}'.format(z*1.e6),
+                '{:8.4f}'.format(zp*1.e6),
+                '{:8.4f}'.format(win),
+                '{:8.4f}'.format(r*1.e3),
+                '{:8.4g}'.format(i0*1.e3),
+                '{:8.4g}'.format(i1*1.e3),
+                '{:8.4g}'.format(x*1.e3),
+                '{:8.4g}'.format(xp*1.e3)]
+
+            dbTab1Rows.append(dbTab1Row)
+            # dbTab2Row = [      # for DEBUGGING
+            #     '{:8.4g}'.format(z*1.e3),
+            #     '{:8.4g}'.format(zp*1.e2),
+            #     '{:8.4g}'.format(xpf*1.e3),
+            #     '{:8.4g}'.format(ypf*1.e3),
+            #     '{:8.4g}'.format(degrees(pOUT-pOUTs)*1.e3),
+            #     ]
+            # dbTab2Rows.append(dbTab2Row)
+
+           ##   # for DEBUGGING
+            # dbTab2Headr = ['z[mm]',"z'=dp/p[%]","x'[mrad]","y'[mrad]",'pOUT-pOUTs[mdeg]']
+            # DEBUG_MAP ('\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
+
+            f_track = np.array([x,xp,y,yp,z,zp,T,1.,s,1.])
+            return f_track
         # body --------------------------------------------------------------        
+        dbTab1Rows  = []      # for DEBUGGING
+        dbTab1Headr = ['pINs','WIN','z*10^6','zp*10^6','win','r*10^3','I0*10^3','I1*10^3','x*10^3','xp*10^3']
         for cnt,slice in enumerate(self.slices):
-            DEBUG_MAP('SLICE # {} '.format(cnt),end='')  # for DEBUGGING
-            f_track = slice_map(i_track)
+            f_track = slice_map_1(i_track)
             i_track = f_track
                 # z = f_track[ZKOO]                # relativistic scaling. Is it needed?
                 # betai = self.particle.beta
@@ -302,6 +426,7 @@ class TTFG(ELM.I):
                 # betaf = Proton(tkin=tkin+self.deltaW).beta
                 # z = betaf/betai*z
                 # f_track[ZKOO] = z
+        DEBUG_MAP('SLICES\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
         return f_track
     def soll_map(self,i_track):
         def slice_map(track):
@@ -330,7 +455,7 @@ class TTFG(ELM.I):
 
             dws = Dwout_win(qV0,i0,Tk,0.,pINs)    
             T = T + dws       # soll energy gained
-            slice.setDW(dws)  # my delatW
+            slice.setDW(dws)  # my deltaW
             
             if (x,xp,y,yp,z,zp) != (0.,0.,0.,0.,0.,0.):
                 DEBUG_SOLL_MAP('(T,dws,x,xp,y,yp,z,zp)',(T,dws,x,xp,y,yp,z,zp))
@@ -356,7 +481,7 @@ def test0():
     Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
     SF_tab = SFdata(input_file,Epeak)
     
-    ttfg = TTFG(length=0.044,gap=0.048,Ez=SF_tab)
+    ttfg = TTFG(gap=0.048,Ez=SF_tab)
     tkin = 50.
     ttfg.adapt_for_energy(tkin=tkin)
     # DEBUG_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING

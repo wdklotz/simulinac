@@ -150,12 +150,11 @@ def display1(functions):
     legend(loc='lower right',fontsize='x-small')
     #----------*----------*   # longitudinal dPhi, dW/W
     ax_l=subplot(313)
+    ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    # ax_l.set_title('longitudinal: C(z)')
-    # ax_l.plot(z,cz,label=r"$\Delta\phi$"  ,color='green')
-    ax_l.set_title('longitudinal: S(z)')
+    ax_l.plot(z,cz,color='green',linestyle=':')
     ax_l.plot(z,sz,color='green')
     vscale=ax_l.axis()[3]*0.1
     viseoz = [x*vscale for x in viseo]
@@ -166,8 +165,8 @@ def display1(functions):
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z,cdw,label=r'$\Delta$w/w',color='red')
-    # ax_r.plot(z,sdw,color='red')
+    ax_r.plot(z,cdw,color='red',linestyle=':')
+    ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
     #----------*----------*
     # show()
@@ -202,17 +201,7 @@ def loesung(filepath):                 ## START here
 if __name__ == '__main__':
     import sys
     # filepath = 'fodo_with_10cav_per_RF-4.yml'       ## the default input file (YAML syntax)
-    # filepath = 'LEBT_fodo_with_RF.yml'
-    # filepath = 'LEBT_fodo_with_RF-1.yml'
-    # filepath = 'LEBT_fodo_with_RF-2.yml'
-    # filepath = 'LEBT_fodo_with_RF-x.yml'
-    # filepath = 'LEBT_HEBT_with_RF.yml'
-    # filepath = 'LEBT_HEBT_with_RF-5-200.yml'
-    # filepath = 'LEBT_HEBT_with_RF-5-80.yml'
-    # filepath = 'LEBT_HEBT_with_RF-x.yml'
-    # filepath = 'LE_HE_15inj-ref.yml'
-    filepath = 'LE_HE_15inj.yml'
-    # filepath = 'test.yml'
+    filepath = 'HE_50inj_ttfg.yml'
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
