@@ -47,12 +47,12 @@ def DEBUG(string,arg='',end='\n'):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(list)\n{}'.format(string,sarg),end=end)
+        print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4,width=60)  ## use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(dict)\n{}'.format(string,sarg),end=end)
+        print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
     else:
         print('DEBUG: {}{}'.format(string,arg),end=end)
 

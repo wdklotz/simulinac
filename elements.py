@@ -195,7 +195,7 @@ class MRK(I):
     def do_actions(self):                   # do actions attached to the marker
         for action in self.actions:
             MarkerActions[action]()
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         self.__init__(label=self.label, particle=self.particle(tkin), actions=self.actions)
         return self
 ## Trace3D drift space
@@ -212,7 +212,7 @@ class D(I):
         self.matrix[SKOO,LKOO]  = self.length     #delta-s
     def shorten(self,l=0.):    # returns a new instance!
         return D(length=l,label=self.label, particle=self.particle, viseo=self.viseo)
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin))
         return self
 ## Trace3D focussing quad
@@ -255,7 +255,7 @@ class QF(D):
             raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
             sys.exit(1)
         return m
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -303,7 +303,7 @@ class SD(D):
         # m[4,0] = -sx;       m[4,1] = -rho*(1.-cx);          m[4,5] = rho*sx-self.length*b*b
         m[ZKOO,XKOO] = -sx;   m[ZKOO,XPKOO] = -rho*(1.-cx);   m[ZKOO,ZPKOO] = rho*sx-self.length*b*b
         return m
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         ri = self.radius
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -401,7 +401,7 @@ class GAP(D):
         return m
     def shorten(self,l=0.):
         return self
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         self.__init__(
                     U0         = self.u0,
                     PhiSoll    = self.phis,
@@ -714,8 +714,8 @@ class RFG(D):
         return m
     def shorten(self,l=0.):
         return self
-    def adapt_for_energy(self,tkin):
-        # DEBUG_MODULE('RFG: adapt_for_energy',tkin)
+    def adjust_energy(self,tkin):
+        # DEBUG_MODULE('RFG: adjust_energy',tkin)
         self.__init__(
                     U0         = self.u0,
                     PhiSoll    = self.phis,
@@ -798,7 +798,7 @@ class QFth(_thin):
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = +0.5
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -832,7 +832,7 @@ class QDth(_thin):
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = -0.5
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
         cpf = self.particle(tkin).gamma_beta
@@ -875,12 +875,12 @@ class RFC(_thin):
         # DEBUG_MODULE('RFC-kick: deltaW: ',self.kick.deltaW)
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
-        self.df.adapt_for_energy(tk_f)               #update energy for downstream drift after gap
+        self.df.adjust_energy(tk_f)               #update energy for downstream drift after gap
         lens = self.df * self.kick * self.df         #one for three
         self.matrix = lens.matrix
         # DEBUG_MODULE('RFC matrix\n',self.matrix)
         self.triplet = (self.di,self.kick,self.df)
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
         self.__init__(
                     U0            = self.u0,
                     PhiSoll       = self.phis,
@@ -1103,32 +1103,32 @@ def test9():
         U0=PARAMS['spalt_spannung'],
         PhiSoll=radians(PARAMS['soll_phase']),
         fRF=PARAMS['frequenz'])
-    print('======================== adapt_for_energy QF')
+    print('======================== adjust_energy QF')
     tki=PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        print(mqf.adapt_for_energy(tkf).string())
+        print(mqf.adjust_energy(tkf).string())
         print(mqf.particle.string())
-    print('======================== adapt_for_energy QD')
+    print('======================== adjust_energy QD')
     tki=PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        print(mqd.adapt_for_energy(tkf).string())
+        print(mqd.adjust_energy(tkf).string())
         print(mqd.particle.string())
-    print('======================== adapt_for_energy CAV')
+    print('======================== adjust_energy CAV')
     tki=PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0.,950.]:
         tkf=tki+dt
         k_scaled = scalek0prot(kq,tki,tkf)
         print('k[{} MeV] {:.3f} --> k[{} MeV] {:.3f}'.format(tki,kq,tkf,k_scaled))
-        print(cavity.adapt_for_energy(tkf).string())
+        print(cavity.adjust_energy(tkf).string())
         print(cavity.particle.string())
 def test10():
     print('--------------------------------Test10---')
@@ -1169,15 +1169,15 @@ def test11():
         print(elm.string())
 def test12():
     print('--------------------------------Test12---')
-    print('test12 adapt_for_energy change:')
+    print('test12 adjust_energy change:')
     d = D(length=99.);                            print('id >>',d);     print(d.string())
-    d.adapt_for_energy(tkin=1000.);               print('id >>',d);     print(d.string())
+    d.adjust_energy(tkin=1000.);               print('id >>',d);     print(d.string())
     qf = QF(k0=1.5,length=0.3);                   print('id >>',qf);    print(qf.string())
-    qf.adapt_for_energy(tkin=200.);               print('id >>',qf);    print(qf.string())
+    qf.adjust_energy(tkin=200.);               print('id >>',qf);    print(qf.string())
     qd = QD(k0=1.5,length=0.3);                   print('id >>',qd);    print(qd.string())
-    qd.adapt_for_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
+    qd.adjust_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
     rfc = RFC(length=1.23);                       print('id >>',rfc);   print(rfc.string())
-    rfc.adapt_for_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
+    rfc.adjust_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
 ## main ----------
 if __name__ == '__main__':
     FLAGS['verbose']=3

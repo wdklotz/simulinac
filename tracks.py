@@ -135,10 +135,10 @@ def track_soll(lattice):
         # DEBUG_MODULE('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
         ti = soll_track.last()                #track: at entrance
         # DEBUG_MODULE('\t\ti >>',Track.string(ti))
-        element.adapt_for_energy(ti[EKOO])    #enery adaptation
-        tf = element.soll_map(ti)                  #track: at exit
+        element.adjust_energy(ti[EKOO])    #enery adaptation
+        tf = element.soll_map(ti)             #track: at exit
         # DEBUG_MODULE('\t\tf >>',Track.string(tf))
-        soll_track.append(tf)                 #append
+        soll_track.append(tf)
         # deltaE = tf[EKOO] - ti[EKOO]
         # DEBUG_MODULE('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
     # DEBUG_MODULE('complete track\n{}'.format(soll_track.points_string()))

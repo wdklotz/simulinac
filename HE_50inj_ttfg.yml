@@ -41,7 +41,7 @@ sections:
 ##...........................................................................................
 parameters:
     - aperture:             0.10       # [m] aperture = bore radius
-    - Tkin:                 50.0       # [MeV] energy @ entrance (injection)
+    - Tkin:                 150.0       # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.E+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length
@@ -233,14 +233,14 @@ segments:
         - *ttfg
         - *dttfg
         #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
+        - *dttfg
+        - *ttfg
+        - *dttfg
+        #
+        - *dttfg
+        - *ttfg
+        - *dttfg
+        #
         # - *dttfg
         # - *ttfg
         # - *dttfg
@@ -286,5 +286,5 @@ lattice:
     # - [1200,      SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     # - [600,       SEG1H,    RFCAVH,              SEG2H,    RFCAVH,              SEG3H]
     # - [600,       SEG1H,    RFGH,                SEG2H,    RFGH,                SEG3H]
-    - [3,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
+    - [1,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     

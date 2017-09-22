@@ -402,17 +402,16 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
-        # DEBUG_MODULE('cs_traj.steps: ',steps)
         sollt_test = 1.     # 0. to test map for soll Teilchen
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
         x1          = sollt_test*sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p         = 0.*sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
+        x2p         = sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1          = sollt_test*sqrt(PARAMS['emity_i']*self.betay0)
         y2p         = sollt_test*sqrt(PARAMS['emity_i']*self.gammy0)
-        sigmaz_i    = 0.*sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
+        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
         dpdivp_i    = sollt_test*gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
         # MDIM tracking used here
         c_like = []
@@ -428,16 +427,18 @@ class Lattice(object):
             # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
+                ## cos_like
+                DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
                 c_0 = i_element.map(c_0)
-                s_0 = i_element.map(s_0)
-                # cos_like
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
                 cy  = c_0[YKOO]
                 cyp = c_0[YPKOO]
                 cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
-                # sin_like
+                ## sin_like
+                # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
+                # s_0 = i_element.map(s_0)
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
                 sy  = s_0[YKOO]

@@ -21,6 +21,7 @@ def DEBUG_OFF(string,arg='',end='\n'):
 DEBUG_MODULE   = DEBUG_OFF
 DEBUG_MAP      = DEBUG_ON
 DEBUG_SOLL_MAP = DEBUG_OFF
+DEBUG_SLICE    = DEBUG_OFF
 twopi          = 2*PI
 
 ## Transition Time Factors RF Gap Model
@@ -30,23 +31,25 @@ class TTFGslice(object):
         self.polyval    = polyval # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.particle   = copy(particle)   # incoming sync. particle
         self.beta       = self.particle.beta
-        self.ks         = twopi/(self.elemnt.lamb*self.beta)*1.e-2    #[1/m] -->[1/cm]
+        self.ks         = twopi/(self.elemnt.lamb*self.beta)
         self.Tk         = self._T (self.polyval,self.ks)
         self.Tkp        = self._Tp(self.polyval,self.ks)
         self.dWf        = self.elemnt.dWf
         self.V0         = self._V0(self.polyval)
     def setPhase(self,value):
         self.phi = value   # phase of sync.particle
+    def setDW(self,value):
+        self.deltaw = value
     def getPhase(self):
         try:
             return self.phi
         except:
             raise RuntimeError("phase @ slice not known yet!")
             sys.exit(1)
-    def setDW(self,value):
-        self.deltaw = value
     def getW(self):
-        return self.particle.tkin
+        res = self.particle.tkin
+        # DEBUG('getW() ',res)
+        return res
     def getDW(self):         # my deltaW
         return self._DW()
     def getDPhase(self):     # my delta-phi
@@ -65,6 +68,7 @@ class TTFGslice(object):
             a  = poly.a
             b  = poly.b
             dz = poly.dz
+            k  = k*1.e-2      # [1/m] --> [1/cm]
             f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
             f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
             t  = f1*f2
@@ -73,6 +77,7 @@ class TTFGslice(object):
             a   = poly.a
             b   = poly.b
             dz  = poly.dz
+            k   = k*1.e-2      # [1/m] --> [1/cm]
             tp  = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
             tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
             tp  = tp*1.e-2     # [cm] --> [m]
@@ -92,12 +97,12 @@ class TTFGslice(object):
         return res
     def _DPhase(self):
         pvlen = -self.polyval.dz
-        res = self.ks*pvlen
+        res = self.ks*pvlen*1.e-2        # [cm] --> [m]
         return res
-    def adapt_for_energy(self,tkin):
+    def adjust_energy(self,tkin):
             self.particle(tkin)
             self.beta    = self.particle.beta
-            self.ks      = twopi/(self.elemnt.lamb*self.beta)*1.e-2    #[1/cm]
+            self.ks      = twopi/(self.elemnt.lamb*self.beta)
             self.Tk      = self._T (self.polyval,self.ks)
             self.Tkp     = self._Tp(self.polyval,self.ks)
             return self
@@ -127,6 +132,38 @@ class TTFG(ELM.I):
         except:
             raise RuntimeError("can't create object without SF-data!")
             sys.exit(1)
+    def adjust_energy(self,tkin):
+        def adjust_slice_energy(tkin):
+            next_phase = self.phis
+            next_tkin  = tkin
+            Tklist = []
+            for slice in self.slices:
+                # DEBUG_SLICE('(next_phase,next_tkin)',(degrees(next_phase),next_tkin))
+                slice.setPhase(next_phase)
+                slice.adjust_energy(next_tkin)
+                DEBUG_SLICE('adjust_slice_energy  PARTICLE tkin :',slice.particle.tkin)
+                DPhase     = slice.getDPhase()
+                DW         = slice.getDW()
+                Tklist.append(slice.getTk())
+                next_phase = slice.getPhase()+DPhase
+                next_tkin  = slice.particle.tkin+DW
+            deltaW   = next_tkin-tkin
+            self.tr  = min(Tklist)
+            return deltaW
+        # body --------------------------------------------------------------        
+        # self.__init__(PhiSoll     = self.phis,
+        #               fRF         = self.freq,
+        #               label       = self.label,
+        #               particle    = self.particle(tkin),
+        #               gap         = self.gap,
+        #               Ez          = self.Ez,
+        #               dWf         = self.dWf)
+        self.particle(tkin)
+        DEBUG_SLICE('adjust_energy       PARTICLE      :',self.particle)
+        DEBUG_SLICE('adjust_energy       PARTICLE tkin :',self.particle.tkin)
+        self.deltaW = adjust_slice_energy(tkin)  # deltaW for lin.map
+        self.matrix[EKOO,DEKOO] = self.deltaW
+        return(self)
     def _make_slices(self):
         slices = []
         zl = -self.gap/2.*100.   # [m] --> [cm]
@@ -138,47 +175,21 @@ class TTFG(ELM.I):
             slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
             slices.append(slice)
         return slices
-    def adapt_for_energy(self,tkin):
-        def adapt_slices_for_energy(tkin):
-            next_phase = self.phis
-            next_tkin  = tkin
-            Tklist = []
-            for slice in self.slices:
-                slice.setPhase(next_phase)
-                slice.adapt_for_energy(next_tkin)
-                DPhase     = slice.getDPhase()
-                DW         = slice.getDW()
-                Tklist.append(slice.getTk())
-                next_phase = slice.getPhase()+DPhase
-                next_tkin  = slice.particle.tkin+DW
-            deltaW   = next_tkin-tkin
-            self.tr  = min(Tklist)
-            return deltaW
-        # body --------------------------------------------------------------        
-        self.__init__(PhiSoll     = self.phis,
-                      fRF         = self.freq,
-                      label       = self.label,
-                      particle    = self.particle(tkin),
-                      gap         = self.gap,
-                      Ez          = self.Ez,
-                      dWf         = self.dWf)
-
-        self.deltaW = adapt_slices_for_energy(tkin)  # deltaW for lin.map
-        self.matrix[EKOO,DEKOO] = self.deltaW
-        return(self)
     def make_slices(self,anz=0):
-        return [self]
+        res = [self]
+        DEBUG_SLICE('ttfg-make_slices: ',res)
+        return res
     def shorten(self,l=0.):
         return self
     def map(self,i_track):
-        def slice_map_depricated(track):   # REPLACED by slice_map_1
+        def DEPRICATED_slice_map(track):   # REPLACED by slice_map_1
             """
             Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
             """
-            def Dphiout_phiin(conv,g,r,i0,i1,tkp,skp,tk,sk,phi):
+            def Dphiout_minus_phiin(conv,g,r,i0,i1,tkp,skp,tk,sk,phi):
                 # Formel 4.3.2 A.Shishlo
                 return  conv*i0*(tkp*sin(phi)+skp*cos(phi)+g*r*i1*(tk*sin(phi)+sk*cos(phi)))
-            def Dwout_win(conv,i0,tk,sk,phi):
+            def Dwout_minus_win(conv,i0,tk,sk,phi):
                 # Formel 4.3.1 A.Shishlo
                 return conv*i0*(tk*cos(phi)-sk*sin(phi))
             def z2phase(conv,z,ps):
@@ -229,8 +240,8 @@ class TTFG(ELM.I):
             conv_z2phase = -twopi/(betai*lamb)       # conversion-factor z --> (phi-phis)
             pIN = z2phase(conv_z2phase,z,pINs)       # phase(IN)
             common = twopi*qV0/(lamb*m0c2*gbi**3)
-            dps = Dphiout_phiin(common,gammai,0.,1.,0.,Tkp,0.,Tk,0.,pINs)#pf-pi soll
-            dp  = Dphiout_phiin(common,gammai,r ,i0,i1,Tkp,0.,Tk,0.,pIN) #pf-pi teilchen
+            dps = Dphiout_minus_phiin(common,gammai,0.,1.,0.,Tkp,0.,Tk,0.,pINs)#pf-pi soll
+            dp  = Dphiout_minus_phiin(common,gammai,r ,i0,i1,Tkp,0.,Tk,0.,pIN) #pf-pi teilchen
             pOUTs = pINs+dps
             pOUT  = pIN+dp
 
@@ -238,8 +249,8 @@ class TTFG(ELM.I):
 
             conv_zp2W = (m0c2*betai**2*gammai)       # conversion-factor dp/p --> dW
             WIN = zp2W(conv_zp2W,zp)                 # energy(IN)
-            dws = Dwout_win(qV0,1.,Tk,0.,pINs)
-            dw  = Dwout_win(qV0,i0,Tk,0.,pIN)
+            dws = Dwout_minus_win(qV0,1.,Tk,0.,pINs)
+            dw  = Dwout_minus_win(qV0,i0,Tk,0.,pIN)
             WOUTs = WINs+dws
             WOUT  = WIN+dw
     
@@ -296,14 +307,14 @@ class TTFG(ELM.I):
 
             f_track = np.array([x,xpf,y,ypf,z,zp,T,1.,s,1.])
             return f_track
-        def slice_map_1(track):
+        def slice_map(track):
             """
             Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
             """
-            def phiout_phiin(conv,g,r,i0,i1,tkp,skp,tk,sk,phi):
+            def phiout_minus_phiin(conv,g,r,i0,i1,tkp,skp,tk,sk,phi):
                 # Formel 4.3.2 A.Shishlo
                 return  conv*i0*(tkp*sin(phi)+skp*cos(phi)+g*r*i1*(tk*sin(phi)+sk*cos(phi)))
-            def wout_win(conv,i0,tk,sk,phi):
+            def wout_minus_win(conv,i0,tk,sk,phi):
                 # Formel 4.3.1 A.Shishlo
                 return conv*i0*(tk*cos(phi)-sk*sin(phi))
 
@@ -316,15 +327,10 @@ class TTFG(ELM.I):
             T        = track[EKOO]       # [6] summe aller dT
             s        = track[SKOO]       # [8] summe aller laengen
 
-            # DEBUG_MAP("\n(x,x',y,y') ",arg=(x,xp,y,yp))
-            DEBUG_MAP('(z,zp)',(z,zp))
-
             m0c2       = self.particle.e0
-            lamb       = self.lamb
+            # lamb       = self.lamb
             c          = PARAMS['lichtgeschwindigkeit']
             omeg       = twopi*self.freq
-   
-            # dbTab2Rows  = []      # for DEBUGGING
 
             soll = slice.particle
             bes       = soll.beta
@@ -338,41 +344,33 @@ class TTFG(ELM.I):
             pIN       = -z*omeg/(c*bes) + pINs     # phase @ (i)
             WIN       = slice.getW()               # soll energy @ (i)
             win       = (zp*(gas+1.)/gas+1.)*WIN   # energy @ (i)
-            particle  = copy(soll)(tkin=win)
-            be        = particle.beta
-            ga        = particle.gamma
-            gb        = particle.gamma_beta
-            k         = omeg/(c*be)
-            T         = slice.getT(k)
-            Tp        = slice.getTp(k)
-            
-            # DEBUG_MAP('(WIN,win,pIN,pINs)',(WIN,win,degrees(pIN),degrees(pINs)))
 
+            particle  = copy(soll)(tkin=win)
+            # be        = particle.beta
+            # ga        = particle.gamma
+            gb        = particle.gamma_beta
+            # k         = omeg/(c*be)
+            # T         = slice.getT(k)
+            # Tp        = slice.getTp(k)
+            
             r = sqrt(x**2+y**2)                 # radial coordinate
             Kbess = ks * r
             i0 = I0(Kbess)                      # bessel function
             i1 = I1(Kbess)                      # bessel function
 
-            WOUT = WIN + wout_win(qV0,1.,Ts,0.,pINs)
-            wout = win + wout_win(qV0,i0,Ts,0.,pIN)
+            WOUT = WIN + wout_minus_win(qV0,1.,Ts,0.,pINs)
+            wout = win + wout_minus_win(qV0,i0,Ts,0.,pIN)
         
             facs  = qV0*omeg/(m0c2*c*gbs**3)
             # fac   = qV0*omeg/(m0c2*c*gb**3)
-            pOUTs = pINs + phiout_phiin(facs, gas , 0. , 1. , 0. , Ts , 0. , Tps , 0. , pINs)
-            pOUT  = pIN  + phiout_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pINs)
+            pOUTs = pINs + phiout_minus_phiin(facs, gas , 0. , 1. , 0. , Ts , 0. , Tps , 0. , pINs)
+            pOUT  = pIN  + phiout_minus_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pINs)
 
-            # DEBUG_MAP('(pOUTs,pOUT)',(degrees(pOUTs),degrees(pOUT)))
-            
             dp = -(pOUT-pOUTs)
             dw = -(wout-WOUT)
             
-            DEBUG_MAP('(pINs,pIN,pINs-pIN)',(pINs,pIN,pINs-pIN))
-            DEBUG_MAP('(pOUTs,pOUT,dp)',(pOUTs,pOUT,dp))
-            
             z  = - dp / ks
             zp = gas/(gas+1) * dw/wout
-
-            # DEBUG_MAP('(z,zp)',(z,zp))
 
             gbi = gbs
             gbf = gb
@@ -388,37 +386,40 @@ class TTFG(ELM.I):
 
             dbTab1Row = [      # for DEBUGGING
                 '{:8.4f}'.format(degrees(pINs)),
+                '{:8.4g}'.format(degrees(pIN)),
+                '{:8.4g}'.format(degrees(dp)),
                 '{:8.4g}'.format(WIN),
-                '{:8.4f}'.format(z*1.e6),
-                '{:8.4f}'.format(zp*1.e6),
                 '{:8.4f}'.format(win),
-                '{:8.4f}'.format(r*1.e3),
+                '{:8.4g}'.format(dw),
+                '{:8.4g}'.format(Ts),
+                '{:8.4g}'.format(Tps)]
+            dbTab1Rows.append(dbTab1Row)
+
+            dbTab2Row = [      # for DEBUGGING
+                '{:8.4g}'.format(x*1.e3),
+                '{:8.4g}'.format(xp*1.e2),
+                '{:8.4g}'.format(y*1.e3),
+                '{:8.4g}'.format(yp*1.e3),
+                '{:8.4g}'.format(z*1.e3),
+                '{:8.4g}'.format(zp*1.e3),
+                '{:8.4g}'.format(r*1.e3),
                 '{:8.4g}'.format(i0*1.e3),
                 '{:8.4g}'.format(i1*1.e3),
-                '{:8.4g}'.format(x*1.e3),
-                '{:8.4g}'.format(xp*1.e3)]
-
-            dbTab1Rows.append(dbTab1Row)
-            # dbTab2Row = [      # for DEBUGGING
-            #     '{:8.4g}'.format(z*1.e3),
-            #     '{:8.4g}'.format(zp*1.e2),
-            #     '{:8.4g}'.format(xpf*1.e3),
-            #     '{:8.4g}'.format(ypf*1.e3),
-            #     '{:8.4g}'.format(degrees(pOUT-pOUTs)*1.e3),
-            #     ]
-            # dbTab2Rows.append(dbTab2Row)
-
-           ##   # for DEBUGGING
-            # dbTab2Headr = ['z[mm]',"z'=dp/p[%]","x'[mrad]","y'[mrad]",'pOUT-pOUTs[mdeg]']
-            # DEBUG_MAP ('\n'+(tblprnt(dbTab2Headr,dbTab2Rows)))
+                ]
+            dbTab2Rows.append(dbTab2Row)
 
             f_track = np.array([x,xp,y,yp,z,zp,T,1.,s,1.])
             return f_track
         # body --------------------------------------------------------------        
         dbTab1Rows  = []      # for DEBUGGING
-        dbTab1Headr = ['pINs','WIN','z*10^6','zp*10^6','win','r*10^3','I0*10^3','I1*10^3','x*10^3','xp*10^3']
+        dbTab1Headr = ['pINs','pIN','dp','WIN','win','dw','Ts','Tps']
+
+        dbTab2Rows  = []      # for DEBUGGING
+        dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','I0*10^3','I1*10^3',]      # for DEBUGGING
+
         for cnt,slice in enumerate(self.slices):
-            f_track = slice_map_1(i_track)
+            # DEBUG_MAP('ttfg-map: {} tkin '.format(cnt),slice)
+            f_track = slice_map(i_track)
             i_track = f_track
                 # z = f_track[ZKOO]                # relativistic scaling. Is it needed?
                 # betai = self.particle.beta
@@ -426,14 +427,16 @@ class TTFG(ELM.I):
                 # betaf = Proton(tkin=tkin+self.deltaW).beta
                 # z = betaf/betai*z
                 # f_track[ZKOO] = z
-        DEBUG_MAP('SLICES\n'+(tblprnt(dbTab1Headr,dbTab1Rows)))
+        DEBUG_MAP('ttfg-map: Slices settings')
+        DEBUG_MAP('\n',tblprnt(dbTab1Headr,dbTab1Rows))
+        DEBUG_MAP('\n',tblprnt(dbTab2Headr,dbTab2Rows))
         return f_track
     def soll_map(self,i_track):
         def slice_map(track):
             """
             Mapping of soll track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
             """
-            def Dwout_win(conv,i0,tk,sk,phi):
+            def wout_minus_win(conv,i0,tk,sk,phi):
                 # Formel 4.3.1 A.Shishlo
                 return conv*i0*(tk*cos(phi)-sk*sin(phi))
 
@@ -453,7 +456,7 @@ class TTFG(ELM.I):
             WINs      = slice.getW()       # soll energy @ (i)
             i0 = 1.
 
-            dws = Dwout_win(qV0,i0,Tk,0.,pINs)    
+            dws = wout_minus_win(qV0,i0,Tk,0.,pINs)    
             T = T + dws       # soll energy gained
             slice.setDW(dws)  # my deltaW
             
@@ -483,7 +486,7 @@ def test0():
     
     ttfg = TTFG(gap=0.048,Ez=SF_tab)
     tkin = 50.
-    ttfg.adapt_for_energy(tkin=tkin)
+    ttfg.adjust_energy(tkin=tkin)
     # DEBUG_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     slices = ttfg.slices
     for slice in slices:
@@ -501,7 +504,7 @@ def test0():
         tf = ttfg.map(ti)
         track.append(tf)
         # DEBUG_MAP(track.last_str())
-        ttfg.adapt_for_energy(tf[EKOO])    #enery adaptation
+        ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
 if __name__ == '__main__':
     test0()

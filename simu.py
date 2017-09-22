@@ -180,7 +180,7 @@ def loesung(filepath):                 ## START here
     mcell,betax,betay = lattice.cell(closed=FLAGS['periodic'])
     collect_data_for_summary(lattice)    ## summary
     #-----------------------------------------
-    # zeige Grafik mit Lösungen als Funktionen von (s)
+    ## Grafik & Lösungen
     KVprint_flag = FLAGS['KVprint']
     if not KVprint_flag: print('CALCULATE C+S TRAJECTORIES')
     resolution = 23
@@ -192,11 +192,12 @@ def loesung(filepath):                 ## START here
         if not KVprint_flag: print('CALCULATE TWISS')
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
         sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i']),x[3]) for x in twiss]
-    if not KVprint_flag:
-        dictprnt(SUMMARY,text='summary')     ## summary
-        display((sigma,c_like,s_like))
-    else:
+    if KVprint_flag:
         dictprnt(PARAMS,text='PARAMS',njust=1)
+    else:
+        dictprnt(SUMMARY,text='summary')     # summary
+        # plot functions
+        display((sigma,c_like,s_like))
 
 if __name__ == '__main__':
     import sys
