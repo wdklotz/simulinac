@@ -137,9 +137,13 @@ def factory(input_file):
     #returns ==> {...}
         flags_list = in_data['flags']
         flags = lod2d(flags_list) if flags_list != None else {}
-        if 'accON' in flags and flags['accON']: 
-            FLAGS['dWf']     = 1.
-            SUMMARY['accON'] = True
+        if 'accON' in flags: 
+            if flags['accON']: 
+                FLAGS['dWf'] = 1.
+                SUMMARY['accON'] = True
+            else:
+                FLAGS['dWf'] = 0.
+                SUMMARY['accON'] = False
         if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
         if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
         if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']

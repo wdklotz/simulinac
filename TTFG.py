@@ -86,7 +86,7 @@ class TTFGslice(object):
             E0 = poly.E0                          #[MV/m]
             b  = poly.b                           #[1/cm**2]
             dz = poly.dz                          #[cm]
-            v0 = (2*dz+2./3.*b*dz**3)*1.e-2       #[m]
+            v0 = (2*dz+2./3.*b*dz**3)*1.e-2       #[cm] --> [m]
             v0 = v0*E0*self.dWf
             return v0
     def _DW(self):
@@ -151,18 +151,11 @@ class TTFG(ELM.I):
             self.tr  = min(Tklist)
             return deltaW
         # body --------------------------------------------------------------        
-        # self.__init__(PhiSoll     = self.phis,
-        #               fRF         = self.freq,
-        #               label       = self.label,
-        #               particle    = self.particle(tkin),
-        #               gap         = self.gap,
-        #               Ez          = self.Ez,
-        #               dWf         = self.dWf)
-        self.particle(tkin)
+        self.particle(tkin)                     # adjust my particle energy
         DEBUG_SLICE('adjust_energy       PARTICLE      :',self.particle)
         DEBUG_SLICE('adjust_energy       PARTICLE tkin :',self.particle.tkin)
-        self.deltaW = adjust_slice_energy(tkin)  # deltaW for lin.map
-        self.matrix[EKOO,DEKOO] = self.deltaW
+        self.deltaW = adjust_slice_energy(tkin) # ajust my slices
+        self.matrix[EKOO,DEKOO] = self.deltaW   # my deltaW to lin.map
         return(self)
     def _make_slices(self):
         slices = []
@@ -182,6 +175,17 @@ class TTFG(ELM.I):
     def shorten(self,l=0.):
         return self
     def map(self,i_track):
+        """
+        Mapping of track from position (i) to (f)
+        """
+        if FLAGS['map']:
+            # NOTE: mapping with RFB-map
+            f_track = self._map(i_track)
+        else:
+            # NOTE: linear mapping with T3D matrix
+            f_track = super().map(i_track)
+        return f_track
+    def _map(self,i_track):
         def DEPRICATED_slice_map(track):   # REPLACED by slice_map_1
             """
             Mapping of track from position (i) to (f) in TTF-Gap model approx. (A.Shislo 4.4)
@@ -328,8 +332,8 @@ class TTFG(ELM.I):
             s        = track[SKOO]       # [8] summe aller laengen
 
             m0c2       = self.particle.e0
-            # lamb       = self.lamb
             c          = PARAMS['lichtgeschwindigkeit']
+            m0c3       = m0c2*c
             omeg       = twopi*self.freq
 
             soll = slice.particle
@@ -340,6 +344,7 @@ class TTFG(ELM.I):
             ks        = omeg/(c*bes)
             Ts        = slice.getT(ks)
             Tps       = slice.getTp(ks)
+            S         = 0.
             pINs      = slice.getPhase()           # soll phase  @ (i)
             pIN       = -z*omeg/(c*bes) + pINs     # phase @ (i)
             WIN       = slice.getW()               # soll energy @ (i)
@@ -354,35 +359,37 @@ class TTFG(ELM.I):
             # Tp        = slice.getTp(k)
             
             r = sqrt(x**2+y**2)                 # radial coordinate
-            Kbess = ks * r
+            Kbess = omeg/(c*gbs) * r
             i0 = I0(Kbess)                      # bessel function
             i1 = I1(Kbess)                      # bessel function
 
             WOUT = WIN + wout_minus_win(qV0,1.,Ts,0.,pINs)
             wout = win + wout_minus_win(qV0,i0,Ts,0.,pIN)
         
-            facs  = qV0*omeg/(m0c2*c*gbs**3)
+            facs  = qV0*omeg/(m0c3*gbs**3)
             # fac   = qV0*omeg/(m0c2*c*gb**3)
             pOUTs = pINs + phiout_minus_phiin(facs, gas , 0. , 1. , 0. , Ts , 0. , Tps , 0. , pINs)
-            pOUT  = pIN  + phiout_minus_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pINs)
+            pOUT  = pIN  + phiout_minus_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pIN)
 
-            dp = -(pOUT-pOUTs)
-            dw = -(wout-WOUT)
+            dp = +(pOUT-pOUTs)
+            dw = +(wout-WOUT)
             
-            z  = - dp / ks
+            z  = - dp * (c*bes)/omeg
             zp = gas/(gas+1) * dw/wout
 
             gbi = gbs
             gbf = gb
             common = qV0/(m0c2*gbi*gbf)*i1
             if r > 0.:
-                xp = gbi/gbf*xp-x/r*common*(T*sin(pIN)) # Formel 4.3.3 A.Shishlo (Sk=0.)
-                yp = gbi/gbf*yp-y/r*common*(T*sin(pIN))
+                xp = gbi/gbf*xp-x/r*common*(T*sin(pIN)+S*cos(pIN)) # Formel 4.3.3 A.Shishlo (Sk=0.)
+                yp = gbi/gbf*yp-y/r*common*(T*sin(pIN)+S*cos(pIN))
             elif r == 0.:
                 xp = gbi/gbf*xp
                 yp = gbi/gbf*yp
 
             T = T + WOUT       # soll-energy gained
+
+            qV0_av.append(qV0) # gather gap voltages for average
 
             dbTab1Row = [      # for DEBUGGING
                 '{:8.4f}'.format(degrees(pINs)),
@@ -392,7 +399,8 @@ class TTFG(ELM.I):
                 '{:8.4f}'.format(win),
                 '{:8.4g}'.format(dw),
                 '{:8.4g}'.format(Ts),
-                '{:8.4g}'.format(Tps)]
+                '{:8.4g}'.format(Tps),
+                '{:8.4g}'.format(qV0*1.e3)]
             dbTab1Rows.append(dbTab1Row)
 
             dbTab2Row = [      # for DEBUGGING
@@ -412,12 +420,13 @@ class TTFG(ELM.I):
             return f_track
         # body --------------------------------------------------------------        
         dbTab1Rows  = []      # for DEBUGGING
-        dbTab1Headr = ['pINs','pIN','dp','WIN','win','dw','Ts','Tps']
+        dbTab1Headr = ['pINs','pIN','dp','WIN','win','dw','Ts','Tps','qV0*10^3']
 
         dbTab2Rows  = []      # for DEBUGGING
         dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','I0*10^3','I1*10^3',]      # for DEBUGGING
 
-        for cnt,slice in enumerate(self.slices):
+        qV0_av = []
+        for slice in self.slices:
             # DEBUG_MAP('ttfg-map: {} tkin '.format(cnt),slice)
             f_track = slice_map(i_track)
             i_track = f_track
@@ -427,8 +436,9 @@ class TTFG(ELM.I):
                 # betaf = Proton(tkin=tkin+self.deltaW).beta
                 # z = betaf/betai*z
                 # f_track[ZKOO] = z
-        DEBUG_MAP('ttfg-map: Slices settings')
-        DEBUG_MAP('\n',tblprnt(dbTab1Headr,dbTab1Rows))
+        qV0_av = sum(qV0_av)/len(self.slices)*1.e3
+        DEBUG_MAP('ttfg-map: settings of slices')
+        DEBUG_MAP('<qV0>*10^3 {:8.4f}\n'.format(qV0_av),tblprnt(dbTab1Headr,dbTab1Rows))
         DEBUG_MAP('\n',tblprnt(dbTab2Headr,dbTab2Rows))
         return f_track
     def soll_map(self,i_track):

@@ -428,7 +428,7 @@ class Lattice(object):
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 ## cos_like
-                DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
+                # DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
                 c_0 = i_element.map(c_0)
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
@@ -438,7 +438,7 @@ class Lattice(object):
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
                 ## sin_like
                 # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
-                # s_0 = i_element.map(s_0)
+                s_0 = i_element.map(s_0)
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
                 sy  = s_0[YKOO]

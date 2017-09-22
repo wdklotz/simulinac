@@ -41,17 +41,17 @@ sections:
 ##...........................................................................................
 parameters:
     - aperture:             0.10       # [m] aperture = bore radius
-    - Tkin:                 150.0       # [MeV] energy @ entrance (injection)
-    - frequency:    &p01    816.E+6    # [Hz] frequency f0
+    - Tkin:                 50.0       # [MeV] energy @ entrance (injection)
+    - frequency:    &p01    816.e+6    # [Hz] frequency f0
     - ql0:          &p02    0.10       # [m] quad-length
     - ql:           &p03    0.05       # [m] 1/2 quad-length
-    - emity_i:              1.E-6      # [m*rad] transverse emittance @ entrance x
-    - emitx_i:              1.E-6      # [m*rad] transverse emittance @ entrance y
+    - emity_i:      &emy    1.e-6      # [m*rad] transverse emittance @ entrance x
+    - emitx_i:              *emy      # [m*rad] transverse emittance @ entrance y
     - betax_i:              7.084      # [m] twiss beta @ entrance x (tuned with RF-2x20)
     - betay_i:              1.902      # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
-    - sigmaz_i:              2.5e-5    # [m] longitudinal displacement Dz @ entrance
+    - sigmaz_i:             2.5e-4     # [m] longitudinal displacement Dz @ entrance
 
     # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
     # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
@@ -64,7 +64,8 @@ parameters:
     - cav_LE:     &p08    0.020      # [m] cavity length
     - windings:             30         # [-] quad-coil windings
 
-    - B_g_HE:     &p11    6.87065    # HE tuned
+    # - B_g_HE:     &p11    6.87065    # HE tuned
+    - B_g_HE:     &p11    20.
 
     - gap_HE:     &p12    0.044      # HE gap
     - cav_HE:     &p13    0.044      # HE cav len
@@ -106,7 +107,8 @@ elements:
 # HE        
     - d1h:        &d1h
         - type:     D       # D class
-        - length:   0.08    # [m] 
+        # - length:   0.08    # [m] 
+        - length:   0.01    # [m] 
         - sec:      *HE
     - d2h:    &d2h          # ID
         - type:     D       # D class
@@ -229,42 +231,10 @@ segments:
         - *ttfg
         - *dttfg
         #
-        - *dttfg
-        - *ttfg
-        - *dttfg
+        # - *dttfg
+        # - *ttfg
+        # - *dttfg
         #
-        - *dttfg
-        - *ttfg
-        - *dttfg
-        #
-        - *dttfg
-        - *ttfg
-        - *dttfg
-        #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
-        # #
     - RFGH:
         - *dttfg
         - *rfgh
@@ -285,6 +255,6 @@ lattice:
     # - [1,         SEG1L,    RFG10L,    RFG10L,   SEG2L,    RFG10L,    RFG10L,   SEG3L,    MARK]
     # - [1200,      SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     # - [600,       SEG1H,    RFCAVH,              SEG2H,    RFCAVH,              SEG3H]
-    # - [600,       SEG1H,    RFGH,                SEG2H,    RFGH,                SEG3H]
-    - [1,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
+    # - [300,       SEG1H,    RFGH,                SEG2H,    RFGH,                SEG3H]
+    - [2,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
     
