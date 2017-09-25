@@ -264,5 +264,5 @@ lattice:
     # - [1200, SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     # - [600,  SEG1H,    RFCAVH,         SEG2H, RFCAVH,       SEG3H]
     # - [300,  SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
-    - [100,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    - [40,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     

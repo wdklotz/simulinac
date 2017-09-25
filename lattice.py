@@ -401,7 +401,7 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
-        sollt_test = 1.     # 0. to test map for soll Teilchen
+        sollt_test = 0.     # 0. to test map for soll Teilchen
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
@@ -437,7 +437,7 @@ class Lattice(object):
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
                 ## sin_like
                 # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
-                s_0 = i_element.map(s_0)
+                # s_0 = i_element.map(s_0)
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
                 sy  = s_0[YKOO]
