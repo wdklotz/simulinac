@@ -360,8 +360,7 @@ class Lattice(object):
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
                 r = sqrt(xxav**2+yyav**2)
                 if 3.*r > PARAMS['aperture']:
-                    raise RuntimeError('out of aperture! - STOP')
-                    sys.exit(1)
+                    warnings.warn('OUT-of-APERTURE.')
                 s += i_element.length
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))

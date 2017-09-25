@@ -762,7 +762,7 @@ class _thin(_matrix_):
         # DEBUG_MODULE('slices',slices)
         return slices
     def shorten(self,l=0.):
-        warnings.warn("No need to shorten a thin element!",RuntimeWarning)
+        warnings.warn("No need to shorten a thin element!")
         return self
     def set_section(self,sec=''):
         """
