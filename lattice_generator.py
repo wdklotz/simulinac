@@ -102,7 +102,7 @@ def instanciate_element(item):
         actions   = attributes['actions'] if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
     else:
-        raise RuntimeError('unknown element type: ',key)
+        print('unknown element type encountered during parsing: {} - STOP'.format(key))
         # DEBUG_MODULE('instanciate_element: {} instance created'.format(label),'')
         sys.exit(1)
     try:     ## sections are not mandatory

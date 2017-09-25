@@ -43,59 +43,60 @@ parameters:
     - aperture:             0.10       # [m] aperture = bore radius
     - Tkin:                 50.0       # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.e+6    # [Hz] frequency f0
-    - ql0:          &p02    0.10       # [m] quad-length
-    - ql:           &p03    0.05       # [m] 1/2 quad-length
-    - emity_i:      &emy    1.e-6      # [m*rad] transverse emittance @ entrance x
-    - emitx_i:              *emy      # [m*rad] transverse emittance @ entrance y
+    # - ql0:          &p02    0.10       # [m] quad-length
+    # - ql:           &p03    0.05       # [m] 1/2 quad-length
+    - ql0:          &p02    0.15       # [m] quad-length
+    - ql:           &p03    0.075       # [m] 1/2 quad-length
+    - emity_i:      &emy    1.e-6     # [m*rad] transverse emittance @ entrance x
+    - emitx_i:              *emy       # [m*rad] transverse emittance @ entrance y
     - betax_i:              7.084      # [m] twiss beta @ entrance x (tuned with RF-2x20)
     - betay_i:              1.902      # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0        # [-] twiss alpha x @ entrance
     - alfay_i:              0.0        # [-] twiss alpha y @ entrance
-    - sigmaz_i:             2.5e-4     # [m] longitudinal displacement Dz @ entrance
-
-    # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
-    # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
-    # - B_g_LE:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
-    - B_g_LE:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
-
+    - sigmaz_i:             2.5e-3     # [m] longitudinal displacement Dz @ entrance
     - Ez_LE:      &p05    1.00       # [MV/m] electric field strength
     - phi_sync:   &p06   -20.        # [deg] synchronous phase
     - gap:        &p07    0.020      # [m] (accelerating) gap size
     - cav_LE:     &p08    0.020      # [m] cavity length
     - windings:             30         # [-] quad-coil windings
-
+    - GAP:        &p15    0.048     # [m] RF gap
+## LE    
+    # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
+    # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
+    # - B_g_LE:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
+    - B_g_LE:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
+## HE
     # - B_g_HE:     &p11    6.87065    # HE tuned
-    - B_g_HE:     &p11    20.
+    # - B_g_HE:     &p11    35.      #versuch
 
     - gap_HE:     &p12    0.044      # HE gap
     - cav_HE:     &p13    0.044      # HE cav len
     # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
     - Ez_HE:      &p14    1.        # [MV/m] electric field strength
-    - GAP:        &p15    0.048     # [m] RF gap
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
 elements:
-# LE
-    - d1l:    &d1l          # ID
+## LE
+    - D1:     &D1           # ID
         - type:     D       # D class
         - length:   0.05    # [m]
         - sec:      *LE
-    - d2l:    &d2l          # ID
+    - D2:    &D2            # ID
         - type:     D       # D class
         - length:   0.0125  # [m]
         - sec:      *LE
-    - qf1l:   &qf1l         # ID
+    - QFL:   &QFL           # ID
         - type:     QF      # QF class
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *LE
-    - qd1l:   &qd1l         # ID
+    - QDL:   &QDL           # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *LE
-    - rfgl:  &rfgl          # ID
+    - RFGL:  &RFGL          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
         - Ez:       *p05    # [MV/m] electric field
@@ -104,31 +105,31 @@ elements:
         - gap:      *p07    # [m] length
         - sec:      *LE
 
-# HE        
-    - d1h:        &d1h
+## HE        
+    - D3:        &D3
         - type:     D       # D class
+        - length:   0.04    # [m] 
         # - length:   0.08    # [m] 
-        - length:   0.01    # [m] 
         - sec:      *HE
-    - d2h:    &d2h          # ID
+    - D4:    &D4            # ID
         - type:     D       # D class
         - length:   0.44    # [m] full cavity
         - sec:      *HE
-    - dttfg:    &dttfg      # ID
+    - D5:    &D5            # ID
         - type:     D       # D class
         - length:   0.022   # [m] half cavity
         - sec:      *HE
-    - qf1h:   &qf1h         # ID
+    - QFH:   &QFH           # ID
         - type:     QF      # QF class
         - length:   *p03    # [m] 
-        - B':       *p11    # [T/m] quadrupole gradient
+        - B':       &Bgrad   40. # [T/m] quadrupole gradient
         - sec:      *HE
-    - qd1h:   &qd1h         # ID
+    - QDH:   &QDH           # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
-        - B':       *p11    # [T/m] quadrupole gradient
+        - B':       *Bgrad  # [T/m] quadrupole gradient
         - sec:      *HE
-    - rfgh:  &rfgh          # ID
+    - RFGH:  &RFGH          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
         - Ez:       1.00    # [MV/m] electric field
@@ -136,7 +137,7 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
         - sec:      *HE
-    - rfch:  &rfch          # ID
+    - RFCAV:  &RFCAV        # ID
         - type:     RFC     # RFC class
         - Ez:       *p14    # [MV/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
@@ -144,7 +145,7 @@ elements:
         - gap:      *p12    # [m] length
         - length:   *p13    # [m] length
         - sec:      *HE
-    - ttfg:  &ttfg          # ID
+    - TTG:  &TTG            # ID
         - type:     TTFG    # TTFG class
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
@@ -152,7 +153,7 @@ elements:
         - SFdata:   SF_WDK2g44.TBL
         - Ezpeak:   1.8055  # [MV/m]
         - sec:      *HE
-    - mrk:  &mrk            # ID
+    - M:  &M            # ID
         - type:    MRK      # MRK class  
         - actions:
             - sigma_x
@@ -162,99 +163,102 @@ elements:
 ## SEGMENT definitions
 ##...........................................................................................
 segments:
-# LE
+## LE
     - RFG10L:
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
-        - *d2l
-        - *rfgl
-        - *d2l
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
+        - *D2
+        - *RFGL
+        - *D2
     - SEG1L:
-        - *qf1l
-        - *d1l
+        - *QFL
+        - *D1
     - SEG2L:
-        - *d1l
-        - *qd1l
-        - *d1l
+        - *D1
+        - *QDL
+        - *D1
     - SEG3L:
-        - *d1l
-        - *qf1l
-# HE
+        - *D1
+        - *QFL
+## HE
     - SEG1H:
-        - *qf1h
-        - *d1h
+        - *QFH
+        - *D3
     - SEG2H:
-        - *d1h
-        - *qd1h
-        - *d1h
+        - *D3
+        - *QDH
+        - *D3
     - SEG3H:
-        - *d1h
-        - *qf1h
+        - *D3
+        - *QFH
     - RFCAVH:
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-        - *rfch
-    - TTFGH:
-        - *dttfg
-        - *ttfg
-        - *dttfg
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+        - *RFCAV
+    - TTGH:
+        - *D5
+        - *TTG
+        - *D5
         #
-        # - *dttfg
-        # - *ttfg
-        # - *dttfg
+        - *D5
+        - *TTG
+        - *D5
+        #
+        - *D5
+        - *TTG
+        - *D5
         #
     - RFGH:
-        - *dttfg
-        - *rfgh
-        - *dttfg
+        - *D5
+        - *RFGH
+        - *D5
         #
-        - *dttfg
-        - *rfgh
-        - *dttfg
+        - *D5
+        - *RFGH
+        - *D5
         #
-        
     - MARK:
-        - *mrk
+        - *M
 ##...........................................................................................
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - title: LE+HE 29.08.2017 15MeV inj          # description is mandatory. DON't remove or reposition!
-    # - [1,         SEG1L,    RFG10L,    RFG10L,   SEG2L,    RFG10L,    RFG10L,   SEG3L,    MARK]
-    # - [1200,      SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
-    # - [600,       SEG1H,    RFCAVH,              SEG2H,    RFCAVH,              SEG3H]
-    # - [300,       SEG1H,    RFGH,                SEG2H,    RFGH,                SEG3H]
-    - [2,       SEG1H,    TTFGH,               SEG2H,    TTFGH,               SEG3H]
+    - title: LE+HE 23.09.2017 versuche # description is mandatory. DON't remove or reposition!
+    # - [1,    SEG1L,    RFG10L, RFG10L, SEG2L, RFG10L, RFG10L, SEG3L, MARK]
+    # - [1200, SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    # - [600,  SEG1H,    RFCAVH,         SEG2H, RFCAVH,       SEG3H]
+    # - [300,  SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
+    - [800,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     

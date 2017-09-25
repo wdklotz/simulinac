@@ -128,7 +128,7 @@ class _matrix_(object):
             if rest > 1.e-3:
                 mr = self.shorten(rest)
             elif rest < 0.:
-                raise RuntimeError('FATAL: negative resting step size when stepping through')
+                raise RuntimeError('FATAL: negative resting step size when stepping through - STOP')
                 sys.exit(1)
                 
 
@@ -252,7 +252,7 @@ class QF(D):
         elif isinstance(self,QD):
             m[XKOO,XKOO]=cd; m[XKOO,XPKOO]=sd; m[XPKOO,XKOO]=cdp; m[XPKOO,XPKOO]=sdp; m[YKOO,YKOO]=cf; m[YKOO,YPKOO]=sf; m[YPKOO,YKOO]=cfp; m[YPKOO,YPKOO]=sfp; m[ZKOO,ZPKOO]=rzz12
         else:
-            raise RuntimeError('QF._mx_: neither QF nor QD! should never happen!')
+            print('QF: neither QF nor QD! should never happen! - STOP')
             sys.exit(1)
         return m
     def adjust_energy(self,tkin):

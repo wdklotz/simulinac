@@ -18,8 +18,8 @@ def DEBUG_ON(string,arg='',end='\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
-DEBUG_MODULE   = DEBUG_OFF
-DEBUG_MAP      = DEBUG_ON
+DEBUG_MODULE   = DEBUG_ON
+DEBUG_MAP      = DEBUG_OFF
 DEBUG_SOLL_MAP = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
 twopi          = 2*PI
@@ -44,7 +44,7 @@ class TTFGslice(object):
         try:
             return self.phi
         except:
-            raise RuntimeError("phase @ slice not known yet!")
+            raise RuntimeError("phase @ slice not known yet! - STOP")
             sys.exit(1)
     def getW(self):
         res = self.particle.tkin
@@ -72,6 +72,7 @@ class TTFGslice(object):
             f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
             f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
             t  = f1*f2
+            # DEBUG_MAP('(T,k)',(t,k))
             return t
     def _Tp(self,poly,k):
             a   = poly.a
@@ -130,7 +131,7 @@ class TTFG(ELM.I):
             self.Epeak  = Ez.Epeak
             self.slices = self._make_slices()
         except:
-            raise RuntimeError("can't create object without SF-data!")
+            raise RuntimeError("can't create object without SF-data! - STOP")
             sys.exit(1)
     def adjust_energy(self,tkin):
         def adjust_slice_energy(tkin):
@@ -330,77 +331,97 @@ class TTFG(ELM.I):
             zp       = track[ZPKOO]      # [5] dp/p~dT
             T        = track[EKOO]       # [6] summe aller dT
             s        = track[SKOO]       # [8] summe aller laengen
+            
+            # DEBUG_MAP('(z,zp)',(z,zp))
 
-            m0c2       = self.particle.e0
             c          = PARAMS['lichtgeschwindigkeit']
+            m0c2       = self.particle.e0
             m0c3       = m0c2*c
             omeg       = twopi*self.freq
-
+            
             soll = slice.particle
             bes       = soll.beta
             gas       = soll.gamma
             gbs       = soll.gamma_beta
             qV0       = slice.getV0()
             ks        = omeg/(c*bes)
-            Ts        = slice.getT(ks)
-            Tps       = slice.getTp(ks)
-            S         = 0.
-            pINs      = slice.getPhase()           # soll phase  @ (i)
-            pIN       = -z*omeg/(c*bes) + pINs     # phase @ (i)
+            TINs      = slice.getT(ks)
+            TpINs     = slice.getTp(ks)
+            PIN       = slice.getPhase()           # soll phase  @ (i)
             WIN       = slice.getW()               # soll energy @ (i)
-            win       = (zp*(gas+1.)/gas+1.)*WIN   # energy @ (i)
 
-            particle  = copy(soll)(tkin=win)
+            pin       = -z*omeg/(c*bes) + PIN      # phase @ (i)  ~ (-z)
+            win       = (zp*(gas+1.)/gas+1.)*WIN   # energy @ (i) ~ (zp)
+            
+            # DEBUG_MAP('win ',win)
+            
+            # particle  = copy(soll)(tkin=win)
             # be        = particle.beta
             # ga        = particle.gamma
-            gb        = particle.gamma_beta
+            # gb        = particle.gamma_beta
             # k         = omeg/(c*be)
-            # T         = slice.getT(k)
-            # Tp        = slice.getTp(k)
+            # TIN       = slice.getT(k)
+            # TpIN      = slice.getTp(k)
             
             r = sqrt(x**2+y**2)                 # radial coordinate
+            # Kbess = omeg/(c*gb) * r
             Kbess = omeg/(c*gbs) * r
             i0 = I0(Kbess)                      # bessel function
             i1 = I1(Kbess)                      # bessel function
 
-            WOUT = WIN + wout_minus_win(qV0,1.,Ts,0.,pINs)
-            wout = win + wout_minus_win(qV0,i0,Ts,0.,pIN)
-        
-            facs  = qV0*omeg/(m0c3*gbs**3)
-            # fac   = qV0*omeg/(m0c2*c*gb**3)
-            pOUTs = pINs + phiout_minus_phiin(facs, gas , 0. , 1. , 0. , Ts , 0. , Tps , 0. , pINs)
-            pOUT  = pIN  + phiout_minus_phiin(facs ,gas , r  , i0 , i1 , Ts , 0. , Tps , 0. , pIN)
+            WOUT = WIN + wout_minus_win(qV0,1.,TINs,0.,PIN)    # soll energy @ (f)
+            wout = win + wout_minus_win(qV0,i0,TINs,0.,pin)    # energy @ (f)
 
-            dp = +(pOUT-pOUTs)
-            dw = +(wout-WOUT)
+            # DEBUG_MAP('(ks,k) ',(ks,k))
+
+            facs  = qV0*omeg/(m0c3*gbs**3)
+            # fac   = qV0*omeg/(m0c3*gs*3)
+            POUT  = PIN + phiout_minus_phiin(facs,gas ,0.,1.,0.,TINs,0.,TpINs,0.,PIN)  # soll phase  @ (f)
+            pout  = pin + phiout_minus_phiin(facs,gas ,r ,i0,i1,TINs,0.,TpINs,0.,pin)  # phase @ (f)
             
-            z  = - dp * (c*bes)/omeg
-            zp = gas/(gas+1) * dw/wout
+            # DEBUG_MAP('(POUT-PIN,pout-pin) ',(POUT-PIN,pout-pin))
+
+            dp = +(pout-POUT)    # delta phase @ (f)
+            dw = +(wout-WOUT)    # delta energy @ (f)
+            
+            particle  = copy(soll)(tkin=WOUT)
+            bef       = particle.beta
+            gaf       = particle.gamma
+            gbf       = particle.gamma_beta
+
+            # zf  = -dp*(c*be)/omeg
+            # zpf = ga/(ga+1)*dw/wout
+            zf  = -dp*(c*bef)/omeg
+            zpf = gaf/(gaf+1)*dw/WOUT
 
             gbi = gbs
-            gbf = gb
+            # gbf = gb
             common = qV0/(m0c2*gbi*gbf)*i1
             if r > 0.:
-                xp = gbi/gbf*xp-x/r*common*(T*sin(pIN)+S*cos(pIN)) # Formel 4.3.3 A.Shishlo (Sk=0.)
-                yp = gbi/gbf*yp-y/r*common*(T*sin(pIN)+S*cos(pIN))
+                xp = gbi/gbf*xp-x/r*common*TINs*sin(pin)
+                yp = gbi/gbf*yp-y/r*common*TINs*sin(pin)
             elif r == 0.:
                 xp = gbi/gbf*xp
                 yp = gbi/gbf*yp
 
-            T = T + WOUT       # soll-energy gained
-
+            T = T + WOUT-WIN       # soll-energy gained
+            f_track = np.array([x,xp,y,yp,zf,zpf,T,1.,s,1.])
+            
+            # DEBUG utilities
             qV0_av.append(qV0) # gather gap voltages for average
 
             dbTab1Row = [      # for DEBUGGING
-                '{:8.4f}'.format(degrees(pINs)),
-                '{:8.4g}'.format(degrees(pIN)),
-                '{:8.4g}'.format(degrees(dp)),
-                '{:8.4g}'.format(WIN),
-                '{:8.4f}'.format(win),
+                '{:8.4f}'.format(degrees(pout)),
+                '{:8.4f}'.format(degrees(pin)),
+                '{:8.4g}'.format(degrees(pout-pin)),
+                '{:8.4g}'.format(dp),
+                '{:8.4g}'.format(wout),
+                '{:8.4g}'.format(win),
+                '{:8.4g}'.format(wout-win),
+                '{:8.4g}'.format(WOUT),
                 '{:8.4g}'.format(dw),
-                '{:8.4g}'.format(Ts),
-                '{:8.4g}'.format(Tps),
-                '{:8.4g}'.format(qV0*1.e3)]
+                '{:8.3f}'.format(qV0*1.e3),
+                ]
             dbTab1Rows.append(dbTab1Row)
 
             dbTab2Row = [      # for DEBUGGING
@@ -411,23 +432,23 @@ class TTFG(ELM.I):
                 '{:8.4g}'.format(z*1.e3),
                 '{:8.4g}'.format(zp*1.e3),
                 '{:8.4g}'.format(r*1.e3),
-                '{:8.4g}'.format(i0*1.e3),
-                '{:8.4g}'.format(i1*1.e3),
+                '{:8.4g}'.format(TINs),
+                '{:8.3g}'.format(TpINs),
+                '{:8.4g}'.format(i0-1.),
+                '{:8.4g}'.format(i1),
                 ]
             dbTab2Rows.append(dbTab2Row)
-
-            f_track = np.array([x,xp,y,yp,z,zp,T,1.,s,1.])
             return f_track
         # body --------------------------------------------------------------        
         dbTab1Rows  = []      # for DEBUGGING
-        dbTab1Headr = ['pINs','pIN','dp','WIN','win','dw','Ts','Tps','qV0*10^3']
+        dbTab1Headr = ['pout','pin','pout-pin','dp=pout-POUT','wout','win','wout-win','WOUT','dw=wout-WOUT','qV0*10^3']
 
         dbTab2Rows  = []      # for DEBUGGING
-        dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','I0*10^3','I1*10^3',]      # for DEBUGGING
+        dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','TINs',"TpINs",'i0-1','i1']      # for DEBUGGING
 
         qV0_av = []
-        for slice in self.slices:
-            # DEBUG_MAP('ttfg-map: {} tkin '.format(cnt),slice)
+        for cnt,slice in enumerate(self.slices):
+            # DEBUG_MAP('ttfg-map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
             f_track = slice_map(i_track)
             i_track = f_track
                 # z = f_track[ZKOO]                # relativistic scaling. Is it needed?
@@ -438,7 +459,7 @@ class TTFG(ELM.I):
                 # f_track[ZKOO] = z
         qV0_av = sum(qV0_av)/len(self.slices)*1.e3
         DEBUG_MAP('ttfg-map: settings of slices')
-        DEBUG_MAP('<qV0>*10^3 {:8.4f}\n'.format(qV0_av),tblprnt(dbTab1Headr,dbTab1Rows))
+        DEBUG_MAP('<qV0>/slice*10^3 {:8.4f}\n'.format(qV0_av),tblprnt(dbTab1Headr,dbTab1Rows))
         DEBUG_MAP('\n',tblprnt(dbTab2Headr,dbTab2Rows))
         return f_track
     def soll_map(self,i_track):
@@ -462,17 +483,15 @@ class TTFG(ELM.I):
             particlei = slice.particle
             qV0       = slice.getV0()
             Tk        = slice.getTk()
-            pINs      = slice.getPhase()   # soll phase @ (i)
-            WINs      = slice.getW()       # soll energy @ (i)
-            i0 = 1.
+            PIN      = slice.getPhase()   # soll phase @ (i)
 
-            dws = wout_minus_win(qV0,i0,Tk,0.,pINs)    
+            dws = wout_minus_win(qV0,1.,Tk,0.,PIN)    
             T = T + dws       # soll energy gained
             slice.setDW(dws)  # my deltaW
             
             if (x,xp,y,yp,z,zp) != (0.,0.,0.,0.,0.,0.):
                 DEBUG_SOLL_MAP('(T,dws,x,xp,y,yp,z,zp)',(T,dws,x,xp,y,yp,z,zp))
-                raise RuntimeError("soll-track should have all zeros!")
+                raise RuntimeError("soll-track should have all zeros! - STOP")
                 sys.exit(1)
             else:
                 DEBUG_SOLL_MAP('(T,dws)',(T,dws))
@@ -516,5 +535,43 @@ def test0():
         # DEBUG_MAP(track.last_str())
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
+def test1():
+    from tracks import Track
+    
+    input_file='SF_WDK2g44.TBL'
+    Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
+    SF_tab = SFdata(input_file,Epeak)
+    
+    ttfg = TTFG(PhiSoll=radians(-20.),gap=0.048,Ez=SF_tab)
+    tkin = 150.
+    ttfg.adjust_energy(tkin=tkin)
+    DEBUG_MODULE('ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
+    slices = ttfg.slices
+    
+    von = 0.
+    bis = 1.
+    anz = 20
+    delta = (bis-von)/anz
+    x=xp=y=yp=z=zp=0.0
+    x = 1.e-1
+    z = von
+    T = 0.
+    # start            x   x'  y  y'  z   z'  T  1   s   1
+    start = np.array([ x,  xp, y, yp, z,  zp, T, 1., 0., 1.])
+    track = Track(start=start)
+    ti = track.last()
+    try:
+        for i in range(anz+1 ):
+            # DEBUG_MODULE(track.last_str())
+            tf = ttfg.map(ti)
+            track.append(tf)
+            # print(track.last_str())
+            z += delta
+            start[4] = z
+            ti = start
+    except Exception as inst:
+        print(inst)
+    print(track.asTable())
 if __name__ == '__main__':
-    test0()
+    # test0()    
+    test1()

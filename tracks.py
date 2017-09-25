@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 import numpy as np
 from copy import copy
 
-from setutil import PARAMS,DEBUG
+from setutil import PARAMS,DEBUG,tblprnt
 from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
@@ -72,11 +72,25 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         for p in points:
             str += Track.string(p)
         return str
-
     def string(p):   #single point to string
         s = 'x={:.3e} x\'={:.3e} y={:.3e} y\'={:.3e} z={:.3e} z\'={:.3e}  tk={:.5f} s={:.3f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[EKOO],p[SKOO])
         return s
-    # soll = None
+    def asTable(self):
+        tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
+        tblrows =[]
+        for point in self.points():
+            tblrow = [
+                '{:8.3f}'.format(point[XKOO]),
+                '{:8.3f}'.format(point[XPKOO]),
+                '{:8.3f}'.format(point[YKOO]),
+                '{:8.3f}'.format(point[YPKOO]),
+                '{:8.3f}'.format(point[ZKOO]),
+                '{:8.3f}'.format(point[ZPKOO]),
+                '{:8.3f}'.format(point[EKOO]),
+                '{:8.3f}'.format(point[SKOO]),
+                ]
+            tblrows.append(tblrow)
+        return tblprnt(tblheadr,tblrows)
 
 # default track-point                 x   x'  y   y'  z   z'           Tk                 1   s   1
 # SollTrack = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))

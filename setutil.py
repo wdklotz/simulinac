@@ -17,6 +17,8 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys,traceback
+
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
@@ -26,7 +28,6 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
-
 ## Logger
 ch        = logging.StreamHandler()     ## console handler
 ch.setLevel(logging.DEBUG)              ## set handler level
@@ -105,7 +106,7 @@ class Particle(object):
         self.e0         = mass                     # rest mass [MeV/c**2]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
-        self.beta       = sqrt(1.-1./(self.gamma*self.gamma))
+        self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0                 # impulse [Mev/c]
         self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -130,7 +131,12 @@ class Particle(object):
         ttf = sin(teta)/teta
         return ttf
     def __call__(self,tkin):  # call Particle instance to change its kin. energy
-        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
+        try:
+            self._set_self(tkin=tkin,mass=self.e0,name=self.name)
+        except ValueError:
+            print(traceback.format_exc())
+            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f}) - STOP".format(tkin))
+            sys.exit(1)
         return self
 
 class Proton(Particle):
@@ -257,6 +263,7 @@ def collect_data_for_summary(lattice):
                 length = itm.length
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
                 SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
+                SUMMARY['{2} [{1}.{0}]      B0* [T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
                 SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
 
                 PARAMS['{2}[{1}.{0}]dBdZ'.format(sec,typ,itm.label)] = dBdz
@@ -303,16 +310,13 @@ def collect_data_for_summary(lattice):
                 gap     = itm.gap
                 Epeak   = itm.Epeak
                 PhiSoll = degrees(itm.phis)
-                length  = itm.length
                 SUMMARY['{2} [{1}.{0}]  gap     [m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  Epeak[MV/m]'.format(sec,typ,itm.label)] = Epeak
                 SUMMARY['{2} [{1}.{0}]  phis  [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  length  [m]'.format(sec,typ,itm.label)] = length
 
                 PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
                 PARAMS['{2}[{1}.{0}]Epeak'.format(sec,typ,itm.label)] = Epeak
                 PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
-                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
 
     SUMMARY['track with map']                  =  FLAGS['map']
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
@@ -356,7 +360,7 @@ def I0(x):
         res+= 0.2659732*t2*t2*t2*t2
         res+= 0.0360768*t2*t2*t2*t2*t2
         res+= 0.0045813*t2*t2*t2*t2*t2*t2
-        # DEBUG_MODULE('I0->x ',x)
+        # DEBUG_MODULE('(I0,x )',(res,x))
     elif 3.75 <= x:
         tm1 = 1./t
         res = 0.39894228
@@ -368,11 +372,13 @@ def I0(x):
         res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-        # DEBUG_MODULE('I0->x ',x)
-        res = res*exp(x)/sqrt(x)
-    else:
-        raise RuntimeError('I0(): x={} negative argument!'.format(x))
-        sys.exit(1)
+        try:
+            res = res*exp(x)/sqrt(x)
+            # DEBUG_MODULE('(I0,x )',(res,x))
+        except OverflowError:
+            print(traceback.format_exc())
+            print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
+            sys.exit(1)
     return res
 
 def I1(x):
@@ -391,6 +397,7 @@ def I1(x):
         res+= 0.00301532*t2*t2*t2*t2*t2
         res+= 0.00032411*t2*t2*t2*t2*t2*t2
         res = res*x
+        # DEBUG_MODULE('(I1,x )',(res,x))
     elif 3.75 <= x:
         tm1 = 1/t
         res = 0.39894228
@@ -402,10 +409,13 @@ def I1(x):
         res-= 0.02895312*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.01787654*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-        res = res*exp(x)/sqrt(x)
-    else:
-        raise RuntimeError('I1(x): negative argument!')
-        sys.exit(1)
+        try:
+            res = res*exp(x)/sqrt(x)
+            # DEBUG_MODULE('(I1,x )',(res,x))
+        except OverflowError:
+            print(traceback.format_exc())
+            print('Bessel-function I1 overflow: (arg = {6.3f})! - STOP'.format(x))
+            sys.exit(1)
     return res
 
 ## Marker Actions
@@ -442,7 +452,7 @@ def k0prot(gradient=0.,tkin=0.):
         k    = gradient/prot.brho
         return k
     else:
-        raise RuntimeError('setutil.k0(): negative kinetic energy?')
+        print('k0prot() called with negative kinetic energy? - STOP')
         sys.exit(1)
 
 def scalek0prot(k0=0.,tki=0.,tkf=0.):
@@ -466,7 +476,7 @@ def dBdxprot(k0=0.,tkin=0.):
     if (tkin >= 0.):
         return k0 * Proton(tkin).brho
     else:
-        raise RuntimeError('setutil.k0(): negative kinetic energy?')
+        print('dBdxprot() called with negative kinetic energy?' - STOP)
         sys.exit(1)
 
 def objprnt (what,text='',filter=[]):

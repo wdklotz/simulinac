@@ -235,7 +235,7 @@ class Lattice(object):
                 SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
                 SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
             else:
-                raise RuntimeError('STOP: unstable lattice')
+                print('unstable lattice - STOP')
                 sys.exit(1)
         else:
             # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
@@ -360,7 +360,7 @@ class Lattice(object):
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
                 r = sqrt(xxav**2+yyav**2)
                 if 3.*r > PARAMS['aperture']:
-                    raise RuntimeError('out of aperture!')
+                    raise RuntimeError('out of aperture! - STOP')
                     sys.exit(1)
                 s += i_element.length
                 viseo = i_element.viseo
