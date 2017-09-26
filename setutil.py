@@ -332,7 +332,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['(emitz)i* [rad*KeV]']             =  PARAMS['emitz_i']*1.e3
     SUMMARY['(sigmax)i* [mm]']                 =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
     SUMMARY['(sigmay)i* [mm]']                 =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
-    SUMMARY['wavelength* [cm]']                =  PARAMS['wellenlänge']*1.e2
+    SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
     SUMMARY['(dp/p)i [%]']                     =  PARAMS['dp2p_i']

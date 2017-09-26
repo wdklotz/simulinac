@@ -154,7 +154,7 @@ class Lattice(object):
 
         self.accel = mcell    # the full cell becomes instance variable
         # if verbose:
-        printv(0,'Full Accelerator Matrix (i)->(f)')
+        printv(0,'Full Accelerator Matrix (f)<==(i)')
         printv(0,self.accel.string())
         det = LA.det(self.accel.matrix)
         # if verbose:
@@ -343,7 +343,8 @@ class Lattice(object):
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
                         emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
-        s = 0.0
+        saper = 1.e6                         # aperture control
+        s     = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
             # objprnt(element.particle ,text='sigma_functions: '+element.label)         # DEBUG
@@ -359,8 +360,6 @@ class Lattice(object):
                 xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
                 yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
                 r = sqrt(xxav**2+yyav**2)
-                if 3.*r > PARAMS['aperture']:
-                    warnings.warn('OUT-of-APERTURE.')
                 s += i_element.length
                 viseo = i_element.viseo
                 sigma_fun.append((s,xxav,yyav,viseo))
@@ -368,6 +367,16 @@ class Lattice(object):
                 sigma_i = sigma_f.clone()
                 if isinstance(i_element,ELM.MRK):                        # marker actions
                     i_element.do_actions()
+            if 3.*r > PARAMS['aperture']:    # aperture control
+                saper = min(s0,saper)
+        if saper<1.e6:        # make use of warnings (experimental!)
+            warnings.showwarning(
+                    '3 sigma out of APERTURE at about s={:6.2f}[m]'.format(saper),
+                    UserWarning,
+                    'lattice.py',
+                    'sigma_functions()',
+                    line="if 3.*r > PARAMS['aperture']:    # aperture control"
+                    )
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True): 
