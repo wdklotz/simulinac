@@ -173,7 +173,7 @@ class TTFGslice(object):
         wout = win + wowi                              # energy @ (f)
 
         popi = self.phiout_minus_phiin(fact,ga,r,i0,i1,Tk,0.,Tkp,0.,pin)
-        pout  = pin + popi                             # phase @ (f)
+        pout = pin + popi                              # phase @ (f)
         
         dp = +(pout-self.PHOUT)    # delta phase @ (f)
         dw = +(wout-self.WOUT)     # delta energy @ (f)
@@ -181,11 +181,12 @@ class TTFGslice(object):
         zf  = -dp*(c*be)/omeg
         zpf = ga/(ga+1)*dw/self.WOUT
 
-        f_particle = copy(self.particle)(tkin=wout)
+        # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from particle
+        f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from soll
         gbf        = f_particle.gamma_beta
 
         fact = self.V0/(m0c2*gb*gbf)*i1
-        gbi = self.gb
+        gbi = gb
         if r > 0.:
             xp = gbi/gbf*xp-x/r*fact*Tk*sin(pin)
             yp = gbi/gbf*yp-y/r*fact*Tk*sin(pin)
