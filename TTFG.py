@@ -246,7 +246,7 @@ class TTFG(ELM.I):
         self.gap    = gap        # [m]
         self.dWf    = dWf
         self.lamb   = PARAMS['wellenlänge']
-        self.Ez     = Ez         # the SF-table, a list-of-DataPoints
+        self.Ez     = Ez         # the SF-table, a list-of DataPoints
         try:
             self.Epeak  = Ez.Epeak
             self.slices = self._make_slices()
@@ -262,12 +262,12 @@ class TTFG(ELM.I):
             next_tkin  = tkin
             Tklist = []         # keep values to get min and max
             for slice in self.slices:
-                slice.setSollPhase(next_phase)
-                slice.adjust_energy(next_tkin)
+                slice.setSollPhase(next_phase) # NOTE!: phase  @ slice entrance set here
+                slice.adjust_energy(next_tkin) # NOTE!: energy @ slice entrance set here
                 Tklist.append(slice.Tk)
-                next_phase = slice.PHOUT
-                next_tkin  = slice.WOUT
-            deltaW   = next_tkin-tkin   # the total energy kick of this gap
+                next_phase = slice.PHOUT       # NOTE!: slice OUT becomes next slice IN
+                next_tkin  = slice.WOUT        # NOTE!: slice OUT becomes next slice IN
+            deltaW   = next_tkin-tkin          # total energy kick of this gap
             self.tr  = min(Tklist)
             return deltaW
         # body --------------------------------------------------------------        
@@ -296,7 +296,7 @@ class TTFG(ELM.I):
         res = [self]
         DEBUG_SLICE('SLICE: make_slices: ',res)
         return res
-    def shorten(self,l=0.):
+    def shorten(self,l=0.):        # interface to outside callers (lattice.py)
         return self
     def map(self,i_track):
         """
@@ -305,14 +305,14 @@ class TTFG(ELM.I):
         if FLAGS['map']:
             f_track = self._map(i_track)   # NOTE: use mapping with sliced TTFGap
         else:
-            f_track = super().map(i_track) # NOTE: use linear mapping with T3D matrix
+            f_track = super().map(i_track) # NOTE: use linear mapping with unit matrix
         return f_track
     def _map(self,i_track):  # the wrapper to slice mappings
-        self.dbTab1Rows  = []
-        self.dbTab1Headr = []
-        self.dbTab2Rows  = []
-        self.dbTab2Headr = []
-        if DEBUG_MAP == DEBUG_ON:     # for DEBUGGING
+        self.dbTab1Rows  = []          # for DEBUGGING
+        self.dbTab1Headr = []          # for DEBUGGING
+        self.dbTab2Rows  = []          # for DEBUGGING
+        self.dbTab2Headr = []          # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:      # for DEBUGGING
             self.dbTab1Headr = ['pout','pin','pout-pin','dp=pout-POUT','wout','win','wout-win','WOUT','dw=wout-WOUT','qV0*10^3']
             self.dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','Tk',"Tkp",'i0-1','i1']
 
@@ -320,7 +320,9 @@ class TTFG(ELM.I):
             # DEBUG_MAP('MAP: ttfg-map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
             f_track = slice.map(i_track)
             i_track = f_track
-                # z = f_track[ZKOO]                # relativistic scaling. Is it needed?
+
+                # relativistic scaling. Is it needed?
+                # z = f_track[ZKOO]
                 # betai = self.particle.beta
                 # tkin  = self.particle.tkin
                 # betaf = Proton(tkin=tkin+self.deltaW).beta

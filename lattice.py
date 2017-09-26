@@ -410,15 +410,15 @@ class Lattice(object):
         x2p         = sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
         y1          = sollt_test*sqrt(PARAMS['emity_i']*self.betay0)
         y2p         = sollt_test*sqrt(PARAMS['emity_i']*self.gammy0)
-        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z-plane: Vorgabe sigmaz_i [m]
-        dpdivp_i    = sollt_test*gamma/(1.+gamma)*PARAMS['w0']       # z-plane: conv. dW/W --> dp/p []
+        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z[m] Vorgabe
+        dp2p_i      = sollt_test*PARAMS['dp2p_i']*1.e-2              # dp/p[%] Vorgabe --> []
         # MDIM tracking used here
         c_like = []
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dpdivp_i; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
+        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i  ; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
         for ipos in self.seq:
             element,s0,s1 = ipos
             particle = element.particle

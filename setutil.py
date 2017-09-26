@@ -89,6 +89,7 @@ PARAMS = dict(
         alfax_i              = 0.0,              # Vorgabe twiss alphax @ entrance
         alfay_i              = 0.0,              # Vorgabe twiss alphaxy @ entrance
         sigmaz_i             = 0.02,             # [m] max long. half-width displacement
+        dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
@@ -334,6 +335,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['wavelength* [cm]']                =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
+    SUMMARY['(dp/p)i [%]']                     =  PARAMS['dp2p_i']
     SUMMARY['(DW)i* [KeV]']                    =  PARAMS['DW']*1.e3
     SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['Dphi0'])
     SUMMARY['(DW)max* [KeV]']                  =  PARAMS['DWmax']*1.e3        # energy acceptance

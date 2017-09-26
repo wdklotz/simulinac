@@ -119,6 +119,7 @@ def display1(functions):
     sz = [x[4] for x in sin_like]   # sin-like-z
     sdw= [x[5] for x in sin_like]   # sin-like-dw/w
     #----------*----------*   # figure frame
+    stop_viseo = 6000
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
@@ -128,11 +129,11 @@ def display1(functions):
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-#     plot(z,bxn,label='',color='green')
     plot(z,cx,label='C [m]',color='blue',linestyle='-')
     plot(z,sx,label='S [m]',color='red' ,linestyle='-')
-    vscale=axis()[3]*0.3
+    vscale=axis()[3]*0.4
     viseox = [x*vscale for x in viseo]
+    for i in range(stop_viseo,len(viseo)): viseox[i] = 0.   # stop lattice plotting
     plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
@@ -140,11 +141,11 @@ def display1(functions):
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
-#     plot(z,byn,label='',color='green')
     plot(z,cy,label='C [m]',color='blue',linestyle='-')
     plot(z,sy,label='S [m]',color='red' ,linestyle='-')
-#     vscale=axis()[3]*0.1
+    vscale=axis()[3]*0.4
     viseoy = [x*vscale for x in viseo]
+    for i in range(stop_viseo,len(viseo)): viseoy[i] = 0.   # stop lattice plotting
     plot(z,viseoy,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
@@ -156,8 +157,9 @@ def display1(functions):
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(z,cz,color='green',linestyle=':')
     ax_l.plot(z,sz,color='green')
-    vscale=ax_l.axis()[3]*0.1
+    vscale=ax_l.axis()[3]*0.7
     viseoz = [x*vscale for x in viseo]
+    for i in range(stop_viseo,len(viseo)): viseoz[i] = 0.   # stop lattice plotting
     ax_l.plot(z,viseoz,label='',color='black')
     ax_l.plot(z,zero,color='black')
 

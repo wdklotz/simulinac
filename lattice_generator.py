@@ -178,6 +178,7 @@ def factory(input_file):
         if 'Ez'               in parameters: PARAMS['Ez_feld']          = parameters['Ez']
         if 'phi_sync'         in parameters: PARAMS['soll_phase']       = parameters['phi_sync']
         if 'sigmaz_i'         in parameters: PARAMS['sigmaz_i']         = parameters['sigmaz_i']
+        if 'dp2p_i'           in parameters: PARAMS['dp2p_i']           = parameters['dp2p_i']
         if 'gap'              in parameters: PARAMS['spalt_laenge']     = parameters['gap']
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
