@@ -38,12 +38,12 @@ class TTFGslice(object):
         self.k          = twopi/(self.elemnt.lamb*self.beta)
         self.Tk         = self._T (self.polyval,self.k)
         self.Tkp        = self._Tp(self.polyval,self.k)
-        self.WIN      = None
-        self.WOUT     = None
-        self.deltaW   = None
-        self.PHIN     = None
-        self.PHOUT    = None
-        self.deltaPHI = None
+        self.WIN        = None
+        self.WOUT       = None
+        self.deltaW     = None
+        self.PHIN       = None
+        self.PHOUT      = None
+        self.deltaPHI   = None
     def setSollPhase(self,value): #must be called after instantiation and before usage
         self.phis = value
     def _T(self,poly,k):    # A.Shishlo (4.4.6)

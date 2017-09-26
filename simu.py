@@ -39,7 +39,7 @@ def display(functions):
         display0(functions)
     else:
         display1(functions)
-        bucket()             # separatrix
+        # bucket()             # separatrix
 
 def display0(functions):
     """          
@@ -73,7 +73,6 @@ def display0(functions):
     splot=subplot(211)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-#     plot(z,bxn,label='',color='green')
     plot(z,cx,label='Cx[m]',color='blue',linestyle='-')
     plot(z,sx,label='Sx[m]',color='red' ,linestyle='-')
     vscale=axis()[3]*0.1
@@ -85,7 +84,6 @@ def display0(functions):
     splot=subplot(212)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
-#     plot(z,byn,label='',color='green')
     plot(z,cy,label='Cy[m]',color='blue',linestyle='-')
     plot(z,sy,label='Sy[m]',color='red' ,linestyle='-')
     vscale=axis()[3]*0.1
@@ -100,16 +98,16 @@ def display1(functions):
     """
     Plotting with longitudinal motion
     """
-    #----------*----------*   # unpack
+    ##-------------------- unpack
     beta_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
-    #----------*----------*   # bahnkoordinate z
+    ##-------------------- Bahnkoordinate z
     z   = [ x[0] for x in beta_fun]
     #----------*----------*
     bx  = [x[1] for x in beta_fun]    # envelope (sigma-x)
     by  = [x[2] for x in beta_fun]    # envelope (sigma-y)
-    #----------*----------*   # trajectories
+    ##-------------------- trajectories
     cx = [x[0] for x in cos_like]   # cos-like-x
     cy = [x[2] for x in cos_like]   # cos-like-y
     cz = [x[4] for x in cos_like]   # cos-like-z
@@ -118,14 +116,14 @@ def display1(functions):
     sy = [x[2] for x in sin_like]   # sin-like-x
     sz = [x[4] for x in sin_like]   # sin-like-z
     sdw= [x[5] for x in sin_like]   # sin-like-dw/w
-    #----------*----------*   # figure frame
-    stop_viseo = 6000
+    ##-------------------- figure frame
+    stop_viseo = 6000                  # stop viseo plot after so many points
     viseo = [x[3] for x in beta_fun]
     zero  = [0.   for x in beta_fun]# zero line
     width=14; height=7.6
     fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    #----------*----------*   # transverse X
+    ##-------------------- transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
@@ -137,7 +135,7 @@ def display1(functions):
     plot(z,viseox,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*   # transverse Y
+    ##-------------------- transverse Y
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
@@ -149,7 +147,7 @@ def display1(functions):
     plot(z,viseoy,label='',color='black')
     plot(z,zero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    #----------*----------*   # longitudinal dPhi, dW/W
+    ##-------------------- longitudinal dPhi, dW/W
     ax_l=subplot(313)
     ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
@@ -170,18 +168,20 @@ def display1(functions):
     ax_r.plot(z,cdw,color='red',linestyle=':')
     ax_r.plot(z,sdw,color='red')
     ax_r.plot(z,zero,color='red', linestyle='--')
-    #----------*----------*
-    # show()
 
-def loesung(filepath):                 ## START here
+    show()
+
+## START here
+def loesung(filepath):
     lattice = parse_yaml_and_fabric(filepath)
-    soll_track = track_soll(lattice)   ## (WICHTIG) track Sollteilchen hier
+    ## Energie Konfiguration hier (SUPER WICHTIG)
+    soll_track = track_soll(lattice)
     lattice.stats(soll_track)          ## count elements and other statistics
-    #-----------------------------------------
-    # ganze Zelle, Anfangswerte, summary
+
+    ## ganzer Beschleuniger, Anfangswerte, Summary, etc...
     mcell,betax,betay = lattice.cell(closed=FLAGS['periodic'])
     collect_data_for_summary(lattice)    ## summary
-    #-----------------------------------------
+
     ## Grafik & Lösungen
     KVprint_flag = FLAGS['KVprint']
     if not KVprint_flag: print('CALCULATE C+S TRAJECTORIES')
