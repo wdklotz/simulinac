@@ -1,6 +1,3 @@
-# import matplotlib.pyplot as plt
-# import numpy as np
-# from math import sin,cos,tan,pi,exp,fabs,pow,sqrt,fmod,radians
 import sys
 from math import sin,cos,tan,radians,degrees,sqrt
 from math import pi as PI

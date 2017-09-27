@@ -17,7 +17,6 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-# from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
 from math import pi,radians,degrees,sin,cos
 # from copy import copy
 import numpy as np

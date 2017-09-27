@@ -26,7 +26,7 @@
 flags:
     # - accON:        False           # [True]  acceleration on/off flag
     # - egf:          True            # [False] emittance growth flag
-    # - map:          False           # [True]  use maps to track trajectories through RFGap
+    - map:          False           # [True]  use maps to track trajectories through RFGap
     # - sigma:        False           # [True]  beam sizes by sigma-matrix
     # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
@@ -200,6 +200,10 @@ segments:
         - *RFGH
         - *D5
         #
+        - *D5     # 10th cavity makes it unstable!!
+        - *RFGH
+        - *D5
+        #
     - MARK:
         - *M
 ##...........................................................................................
@@ -207,6 +211,6 @@ segments:
 ##...........................................................................................
 lattice:
     - title: 25.09.2017 versuche 70-200MeV                   # description is mandatory. DON't remove or reposition!
-    # - [185,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    - [155,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    - [185,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    # - [155,    SEG1H, TTGH, SEG2sH, TTGH, SEG3H]
     

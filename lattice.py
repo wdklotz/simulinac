@@ -17,13 +17,15 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
+# import traceback
 from math import sqrt,fabs,acos,asin,pi,degrees
 from numpy import linalg as LA
 import numpy as NP
 from copy import copy
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,CpValues
+from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,KeepValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
@@ -342,7 +344,7 @@ class Lattice(object):
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
                         emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
-        saper = 1.e6                         # aperture control
+        saper = 1.e6  # aperture control
         s     = 0.0
         for ipos in self.seq:
             element,s0,s1 = ipos
@@ -355,14 +357,25 @@ class Lattice(object):
                     rf_gap    = i_element
                     delta_phi = PARAMS['Dphi0']
                     sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
-                sigf = sigma_f()
-                xxav = sqrt(sigf[0,0])       ## sigmax = <x*x>**1/2 [m]
-                yyav = sqrt(sigf[2,2])       ## sigmay = <y*y>**1/2 [m]
-                r = sqrt(xxav**2+yyav**2)
+                sigf = sigma_f()  # call returns sigma-matrix!
+                try:
+                    xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
+                    ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
+                except ValueError:
+                    # traceback.format_exc(limit=2)
+                    # print('WARNING: results may not have physical meanings!')
+                    warnings.showwarning(
+                            'WARNING: sqrt of negative number!\nResult may have no physical meaning!',
+                            UserWarning,
+                            'lattice.py',
+                            'sigma_functions()',
+                            # line="xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]"
+                            )
+                r = sqrt(xsquare_av**2+ysquare_av**2)
                 s += i_element.length
                 viseo = i_element.viseo
-                sigma_fun.append((s,xxav,yyav,viseo))
-                CpValues.update({'z':s,'sigma_x':xxav,'sigma_y':yyav,'Tkin':i_element.particle.tkin})   # keep current values
+                sigma_fun.append((s,xsquare_av,ysquare_av,viseo))
+                KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':i_element.particle.tkin})   # keep current values
                 sigma_i = sigma_f.clone()
                 if isinstance(i_element,ELM.MRK):                        # marker actions
                     i_element.do_actions()
@@ -370,11 +383,11 @@ class Lattice(object):
                 saper = min(s0,saper)
         if saper<1.e6:        # make use of warnings (experimental!)
             warnings.showwarning(
-                    '3 sigma out of APERTURE at about s={:6.2f}[m]'.format(saper),
+                    '3*sigma out of APERTURE at about s ={:5.1f}[m]\nParticle lost!'.format(saper),
                     UserWarning,
                     'lattice.py',
                     'sigma_functions()',
-                    line="if 3.*r > PARAMS['aperture']:    # aperture control"
+                    # line="if 3.*r > PARAMS['aperture']:    # aperture control"
                     )
         return sigma_fun
 

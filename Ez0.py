@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sin,cos,tan,pi,exp,fabs,pow,sqrt,fmod
+from math import sin,cos,tan,pi,exp,fabs,pow,fmod
 from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton

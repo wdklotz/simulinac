@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys, os
-from math import radians,sqrt,pi,degrees
+from math import radians,pi,degrees
 import yaml
 
 from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse

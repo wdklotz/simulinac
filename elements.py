@@ -432,6 +432,7 @@ class RFB(D):
                     T          = 0.75,
                     label      = 'RFB',
                     gap        = PARAMS['spalt_laenge'],
+                    deltaW     = 0.,
                     particle   = PARAMS['sollteilchen']):
         super().__init__(label=label, particle=particle)
         self.viseo    = 0.25
@@ -441,6 +442,7 @@ class RFB(D):
         self.tr       = T
         self.label    = label
         self.gap      = gap
+        self.deltaW   = deltaW
         self.particle = particle
         self.lamb     = PARAMS['lichtgeschwindigkeit']/self.freq  # [m]
         self.parent   = parent
@@ -467,7 +469,7 @@ class RFB(D):
         lamb       = self.lamb
         phis       = self.phis
         qE0LT      = qE0L*T
-        twopi        = 2.*pi
+        twopi      = 2.*pi
 
         particlesi = self.particle
         Wsi        = particlesi.tkin
@@ -475,7 +477,8 @@ class RFB(D):
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
-        DWs        = qE0LT*cos(phis)
+        # DWs        = qE0LT*cos(phis) is same as self.deltaW
+        DWs        = self.deltaW
         Wsf        = Wsi + DWs 
         particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
@@ -488,9 +491,11 @@ class RFB(D):
         m22 = 1.
         condPdT = m0c2*betasi**2*gammasi
         DWi = condPdT*zpi  # dp/p --> dT
-        # THE MAP
+
+        # THE MAP (a 2x2 matrix which is always linear!) A.Shishlo (4.1.6-10)
         zf  = m11*zi + m12*DWi
         DWf = m21*zi + m22*DWi
+
         condTdP = 1./(m0c2*betasf**2*gammasf)
         zfp = DWf*condTdP   # dT --> dp/p
         
@@ -498,7 +503,7 @@ class RFB(D):
         yf   = yi     # y does not change
         Tf   = Ti+DWs
         sf   = si     # because self.length always 0
-        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis) # A.Shishlo 4.1.11)
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
         f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1,sf,1])
@@ -631,6 +636,7 @@ class RFG(D):
                             T            = self.tr,
                             label        = 'RFB',
                             gap          = self.gap,
+                            deltaW       = self.deltaW,
                             particle     = self.particle)
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / PARAMS['lichtgeschwindigkeit']
