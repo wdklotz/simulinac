@@ -273,10 +273,8 @@ segments:
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - title: LE+HE 23.09.2017 versuche # description is mandatory. DON't remove or reposition!
-    # - [1,    SEG1L,    RFG10L, RFG10L, SEG2L, RFG10L, RFG10L, SEG3L, MARK]
-    # - [1200, SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
-    # - [600,  SEG1H,    RFCAVH,         SEG2H, RFCAVH,       SEG3H]
-    # - [300,  SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
-    - [300,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    - title: HE 25.09.2017 versuche # description is mandatory. DON't remove or reposition!
+    # - [300,    SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
+    # - [300,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    - [600,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     

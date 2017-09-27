@@ -204,7 +204,7 @@ def loesung(filepath):
 if __name__ == '__main__':
     import sys
     # filepath = 'fodo_with_10cav_per_RF-4.yml'       ## the default input file (YAML syntax)
-    filepath = 'HE_50inj_ttfg.yml'
+    filepath = 'HE_50inj_ttfg_work.yml'
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]

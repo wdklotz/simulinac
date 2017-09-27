@@ -8,7 +8,7 @@ from collections import namedtuple
 from copy import copy
 import numpy as np
 
-from setutil import FLAGS,PARAMS,DEBUG,Proton,I0,I1,tblprnt
+from setutil import FLAGS,PARAMS,DEBUG,Proton,I0,I1,tblprnt,arrprnt
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from Ez0 import SFdata
@@ -340,6 +340,14 @@ class TTFG(ELM.I):
 
         DEBUG_MAP('MAP: ttfg-map: track through slices:\n',tblprnt(self.dbTab1Headr,self.dbTab1Rows))
         DEBUG_MAP('MAP: ttfg-map: track through slices:\n',tblprnt(self.dbTab2Headr,self.dbTab2Rows))
+
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
 
         return f_track
     def soll_map(self,i_track):   # the wrapper to slice mappings of soll
