@@ -24,7 +24,7 @@ import numpy as NP
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
-from setutil import dBdxprot,scalek0prot,k0prot,I0,I1
+from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -32,6 +32,7 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
+DEBUG_MAP    = DEBUG_OFF
 
 ## MDIM
 MDIM=10        # dimension of matrices
@@ -166,18 +167,26 @@ class _matrix_(object):
         indicating the lattice part it belongs to.
         """
         self.sec = sec
-    def map(self,track_i):
+    def map(self,i_track):
         """
         Linear mapping of trjectory from (i) to (f)
         """
-        track_f = self.matrix.dot(track_i)
-        return track_f
-    def soll_map(self,track_i):
+        f_track = self.matrix.dot(i_track)
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='mtx_map: ')
+
+        return f_track
+    def soll_map(self,i_track):
         """
         Linear mapping of trjectory from (i) to (f)
         """
-        track_f = self.matrix.dot(track_i)
-        return track_f
+        f_track = self.matrix.dot(i_track)
+        return f_track
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
     def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen']):
@@ -493,6 +502,14 @@ class RFB(D):
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
         f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1,sf,1])
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='lin_map: ')
+
         return f_track
     def rfb_map(self,i_track):
         """
@@ -509,136 +526,64 @@ class RFB(D):
         s        = i_track[SKOO]       # [8] summe aller laengen
 
         ttf        = self.tr
-        qE0L       = self.u0
-        qE0LT      = qE0L*ttf
+        qE0LT      = self.u0*ttf
         m0c2       = self.particle.e0
         lamb       = self.lamb
-        pINs       = self.phis       # soll phi @ (i)
         twopi      = 2.*pi
 
-        particlei = self.particle
-        WINs      = particlei.tkin   # soll energy @ (i)
-        betai     = particlei.beta
-        gammai    = particlei.gamma
-        gbi       = particlei.gamma_beta
+        soll      = self.particle
+        PHIN      = self.phis                    # soll phi @ (i)
+        WIN       = soll.tkin                    # soll energy @ (i)
+        WOUT      = qE0LT*cos(PHIN) + WIN        # soll energy @ (f) (4.1.6) A.Shishlo
+        betai     = soll.beta
+        gammai    = soll.gamma
+        gbi       = soll.gamma_beta
 
-        r = sqrt(x**2+y**2)                                 # radial coordinate
-        Kr = (twopi*r)/(lamb*gbi)
-        # DEBUG_MODULE('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
-        i0 = I0(Kr)                                         # bessel function
-        i1 = I1(Kr)                                         # bessel function
+        win       = zp * m0c2*betai**2*gammai + WIN     # energy @ (i) dp/p --> dT
+        pin       = -z * twopi/(betai*lamb)   + PHIN    # phase  @ (i)
 
-        condPdT    = m0c2*betai**2*gammai
-        dw         = condPdT*zp        # dp/p --> dT
-        WIN        = WINs + dw         # energy @ (i)
+        # particlei = copy(self.particle)(tkin=win)
+        # betai     = particlei.beta
+        # gbi       = particlei.gamma_beta
 
-        dws        = qE0LT*cos(pINs)   # (4.1.6) A.Shishlo
-        WOUTs      = WINs + dws        # soll energy @ (f)
+        r    = sqrt(x**2+y**2)                                # radial coordinate
+        Kr   = (twopi*r)/(lamb*gbi)
+        i0   = I0(Kr)                                         # bessel function I0
+        i1   = I1(Kr)                                         # bessel function I1
 
-        dph   = -z*twopi/(betai*lamb)  # z -> (phi-phis)
-        pIN    = dph+pINs              # PHI_in: particle phase @ (i)
+        wout   = win + qE0LT*i0*cos(pin)              # energy @ (f)   (4.2.3) A.Shishlo
 
-        particlef = copy(self.particle)(tkin=WOUTs)
+        # particlef = copy(self.particle)(tkin=wout)
+        particlef = copy(self.particle)(tkin=WOUT)
         betaf     = particlef.beta
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
-        
-        WOUT   = qE0LT*i0*cos(pIN) + WIN      # energy @ (f)   (4.2.3) A.Shishlo
-        dw     = WOUT- WOUTs                 
-        condTdP = 1./(m0c2*betaf**2*gammaf)
-        zpf     = condTdP*dw                  # dT --> dp/p
-        
-        z      = gbf/gbi*z
-        T   = T + dws
 
-        commonf = qE0LT/(m0c2*gbi*gbf)*i1               # common factor
+        dw     = wout- WOUT
+
+        z      = betaf/betai*z                        # z @ (f)
+        zpf    = 1./(m0c2*betaf**2*gammaf) * dw       # dW --> dp/p @ (f)
+        
+        T   = T + WOUT-WIN
+
+        commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
         if r > 0.:
-            xp  = gbi/gbf*xp - x/r*commonf*sin(pIN)     # Formel 4.2.6 A.Shishlo
-            yp  = gbi/gbf*yp - y/r*commonf*sin(pIN)
+            xp  = gbi/gbf*xp - x/r*commonf*sin(pin)   # Formel 4.2.6 A.Shishlo
+            yp  = gbi/gbf*yp - y/r*commonf*sin(pin)
         elif r == 0.:
             xp  = gbi/gbf*xp
             yp  = gbi/gbf*yp
 
         f_track = NP.array([x,xp,y,yp,z,zpf,T,1.,s,1.])
-        # DEBUG_MODULE('f_track:\n',str(f_track))
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='rfb_map: ')
+
         return f_track
-    # def rfb_map(self,i_track):
-    #     """
-    #     Mapping of track from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
-    #     """
-    #     # DEBUG_MODULE('i_track:\n',str(i_track))
-    #     xi        = i_track[XKOO]       # [0]
-    #     xpi       = i_track[XPKOO]      # [1]
-    #     yi        = i_track[YKOO]       # [2]
-    #     ypi       = i_track[YPKOO]      # [3]
-    #     zi        = i_track[ZKOO]       # [4] z-z0
-    #     zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
-    #     Ti        = i_track[EKOO]       # [6] summe aller delta-T
-    #     si        = i_track[SKOO]       # [8] summe aller laengen
-
-   ##       T          = self.tr
-    #     qE0L       = self.u0
-    #     qE0LT      = qE0L*T
-    #     m0c2       = self.particle.e0
-    #     lamb       = self.lamb
-    #     phis       = self.phis
-    #     twopi      = 2.*pi
-
-   ##       particlesi = self.particle
-    #     Wsi        = particlesi.tkin
-    #     betasi     = particlesi.beta
-    #     gammasi    = particlesi.gamma
-    #     gbsi       = particlesi.gamma_beta
-    #     
-    #     DWs        = qE0LT*cos(phis)                # energy increase sync. particle
-    #     Wsf        = Wsi + DWs 
-    #     particlesf = copy(particlesi)(tkin=Wsf)
-    #     betasf     = particlesf.beta
-    #     gammasf    = particlesf.gamma
-    #     gbsf       = particlesf.gamma_beta
-    #     
-    #     condPdT = m0c2*betasi**2*gammasi
-    #     condTdP = 1./(m0c2*betasf**2*gammasf)
-
-   ##       DWi       = condPdT*zpi                                # dp/p --> dT
-    #     Wi        = Wsi + DWi    
-    #     if Wi < 0.:
-    #         raise RuntimeError('negative kinetic energy {:8.4g}'.format(Wi))
-    #         sys.exit(1)
-    #     particlei = copy(particlesi)(tkin=Wi)
-    #     betai     = particlei.beta
-    #     gbi       = particlei.gamma_beta
-    #     
-    #     r = sqrt(xi**2+yi**2)                                 # radial coordinate
-    #     Kr = (twopi*r)/(lamb*gbi)
-    #     # DEBUG_MODULE('r {:8.4g} Kr {:8.4g} gbi {:8.4g} Wi {:8.4g}'.format(r,Kr,gbi,Wi))
-    #     i0 = I0(Kr)                                           # bessel function
-    #     i1 = I1(Kr)                                           # bessel function
-
-   ##       # THE MAP
-    #     zf      = gbsf/gbsi*zi
-    #     Dphii   = -zi*twopi/(betai*lamb)                       # z -> dPhi
-    #     phii    = Dphii+phis                                   # phi(in)
-    #     WfmWi   = qE0LT*i0*cos(phii)                           # W(f) - W(i)
-    #     WsfmWsi = DWs                                          # Ws(f) - Ws(i) particle energy increase
-    #     DWf     = WfmWi - WsfmWsi + DWi                        # DW(f)
-    #     zfp     = DWf*condTdP                                  # dT --> dp/p
-    #     
-    #     xf   = xi     # x does not change
-    #     yf   = yi     # y does not change
-    #     Tf   = Ti+DWs
-    #     sf   = si     # because self.length always 0
-    #     commonf = qE0LT/(m0c2*gbsi*gbsf)*i1                   # common factor
-    #     if r > 0.:
-    #         xpf  = gbsi/gbsf*xpi - xi/r*commonf*sin(phii)     # Formel 4.2.6 A.Shishlo
-    #         ypf  = gbsi/gbsf*ypi - yi/r*commonf*sin(phii)
-    #     elif r == 0.:
-    #         xpf  = gbsi/gbsf*xpi
-    #         ypf  = gbsi/gbsf*ypi
-
-   ##       f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1.,sf,1.])
-    #     # DEBUG_MODULE('f_track:\n',str(f_track))
-    #     return f_track
 ## Trace3D zero length RF-gap
 class RFG(D):       
     """

@@ -38,13 +38,14 @@ class TTFGslice(object):
         self.k          = twopi/(self.elemnt.lamb*self.beta)
         self.Tk         = self._T (self.polyval,self.k)
         self.Tkp        = self._Tp(self.polyval,self.k)
-        self.WIN        = None
-        self.WOUT       = None
-        self.deltaW     = None
-        self.PHIN       = None
-        self.PHOUT      = None
-        self.deltaPHI   = None
-    def setSollPhase(self,value): #must be called after instantiation and before usage
+        self.phis       = None  # initialize before using!
+        self.WIN        = None  # initialize before using!
+        self.WOUT       = None  # initialize before using!
+        self.deltaW     = None  # initialize before using!
+        self.PHIN       = None  # initialize before using!
+        self.PHOUT      = None  # initialize before using!
+        self.deltaPHI   = None  # initialize before using!
+    def setSollPhase(self,value): # must be called after instantiation and before usage
         self.phis = value
     def _T(self,poly,k):    # A.Shishlo (4.4.6)
         a  = poly.a
@@ -306,6 +307,14 @@ class TTFG(ELM.I):
             f_track = self._map(i_track)   # NOTE: use mapping with sliced TTFGap
         else:
             f_track = super().map(i_track) # NOTE: use linear mapping with unit matrix
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
+
         return f_track
     def _map(self,i_track):  # the wrapper to slice mappings
         self.dbTab1Rows  = []          # for DEBUGGING

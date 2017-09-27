@@ -43,10 +43,10 @@ parameters:
     - aperture:             0.10     # [m] aperture = bore radius
     - Tkin:                 50.0     # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.e+6  # [Hz] frequency f0
-    # - ql0:          &p02    0.10       # [m] quad-length
-    # - ql:           &p03    0.05       # [m] 1/2 quad-length
-    - ql0:          &p02    0.15     # [m] quad-length
-    - ql:           &p03    0.075    # [m] 1/2 quad-length
+    - ql0:          &p02    0.10       # [m] quad-length
+    - ql:           &p03    0.05       # [m] 1/2 quad-length
+    # - ql0:          &p02    0.15     # [m] quad-length
+    # - ql:           &p03    0.075    # [m] 1/2 quad-length
     - emity_i:      &emy    1.e-6    # [m*rad] transverse emittance @ entrance x
     - emitx_i:              *emy     # [m*rad] transverse emittance @ entrance y
     - betax_i:              7.084    # [m] twiss beta @ entrance x (tuned with RF-2x20)
@@ -55,6 +55,7 @@ parameters:
     - alfay_i:              0.0      # [-] twiss alpha y @ entrance
     - sigmaz_i:             2.5e-3   # [m] longitudinal displacement z @ inj
     - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ inj
+    # - dp2p_i:               0.005      # [%] longitidinal dp/p spread    @ inj
     - Ez_LE:      &p05    1.00       # [MV/m] electric field strength
     - phi_sync:   &p06   -20.        # [deg] synchronous phase
     - gap:        &p07    0.020      # [m] (accelerating) gap size
@@ -67,7 +68,7 @@ parameters:
     # - B_g_LE:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
     - B_g_LE:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
 ## HE
-    # - B_g_HE:     &p11    6.87065    # HE tuned
+    - B_g_HE:     &p11    6.87065    # HE tuned
     # - B_g_HE:     &p11    35.      #versuch
 
     - gap_HE:     &p12    0.044      # HE gap
@@ -109,8 +110,8 @@ elements:
 ## HE        
     - D3:        &D3
         - type:     D       # D class
-        - length:   0.04    # [m] 
-        # - length:   0.08    # [m] 
+        # - length:   0.04    # [m] 
+        - length:   0.08    # [m] 
         - sec:      *HE
     - D4:    &D4            # ID
         - type:     D       # D class
@@ -254,6 +255,18 @@ segments:
         - *RFGH
         - *D5
         #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
     - MARK:
         - *M
 ##...........................................................................................
@@ -265,5 +278,5 @@ lattice:
     # - [1200, SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     # - [600,  SEG1H,    RFCAVH,         SEG2H, RFCAVH,       SEG3H]
     # - [300,  SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
-    - [400,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    - [300,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
     

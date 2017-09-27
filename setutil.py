@@ -580,6 +580,14 @@ def mxprnt(matrix):
     table = [fmt.format(*row) for row in s]
     return '\n'.join(table)
 
+def arrprnt(array,fmt='{:8.4f}, ',txt=''):
+    """
+    Simple array print
+    """
+    print(txt,end='')
+    for val in array:
+        print(fmt.format(val),end='')
+    print('')
 def wille():
     return {
         'k_quad_f':1.2,

@@ -23,7 +23,6 @@ import numpy as NP
 from copy import copy
 import warnings
 
-# import setutil
 from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,CpValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
