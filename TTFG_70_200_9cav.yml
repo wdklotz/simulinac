@@ -43,69 +43,65 @@ parameters:
     - aperture:             0.10     # [m] aperture = bore radius
     - Tkin:                 70.0     # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.e+6  # [Hz] frequency f0
-    - ql0:          &p02    0.10       # [m] quad-length
-    - ql:           &p03    0.05       # [m] 1/2 quad-length
-    # - ql0:          &p02    0.15     # [m] quad-length
-    # - ql:           &p03    0.075    # [m] 1/2 quad-length
-    - emity_i:      &emy    1.e-6    # [m*rad] transverse emittance @ entrance x
+    - ql0:          &p02    0.10     # [m] quad-length
+    - ql:           &p03    0.05     # [m] 1/2 quad-length
+    - emity_i:      &emy    2.e-6    # [m*rad] transverse emittance @ entrance x
     - emitx_i:              *emy     # [m*rad] transverse emittance @ entrance y
     - betax_i:              7.084    # [m] twiss beta @ entrance x (tuned with RF-2x20)
-    - betay_i:              1.902    # [m] twiss beta @ entrance y (tuned with RF-2x20)
+    - betay_i:              0.04     # [m] twiss beta @ entrance y (tuned with RF-2x20)
     - alfax_i:              0.0      # [-] twiss alpha x @ entrance
     - alfay_i:              0.0      # [-] twiss alpha y @ entrance
     - sigmaz_i:             2.5e-3   # [m] longitudinal displacement z @ inj
     - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ inj
-    # - dp2p_i:               0.005      # [%] longitidinal dp/p spread    @ inj
-    - Ez_LE:      &p05    1.00       # [MV/m] electric field strength
-    - phi_sync:   &p06   -20.        # [deg] synchronous phase
-    - gap:        &p07    0.020      # [m] (accelerating) gap size
-    - cav_LE:     &p08    0.020      # [m] cavity length
+    - phi_sync:     &p06   -20.      # [deg] synchronous phase
     - windings:             30       # [-] quad-coil windings
-    - GAP:        &p15    0.048      # [m] RF gap
+    - GAP:          &p15    0.048    # [m] RF gap
 ## LE    
+    # - Ez_LE:    &p05    1.00       # [MV/m] electric field strength
+    # - gap:      &p07    0.020      # [m] (accelerating) gap size
+    # - cav_LE:   &p08    0.020      # [m] cavity length
     # - B_g_LE:   &p04    2.86       # [T/m] quadrupole gradient (opt.kappa)
     # - B_g_LE:   &p04    9.72       # [T/m] quadrupole gradient (max necktie border)
     # - B_g_LE:   &p04    6.87865    # [T/m] quadrupole gradient (~90 deg ph. advance/cell)
     - B_g_LE:     &p04    6.87065    # [T/m] quadrupole gradient (tuned with RF-2x20)
 ## HE
-    - B_g_HE:     &p11    6.87065    # HE tuned
+    # - B_g_HE:     &p11    6.87065  # HE tuned
     # - B_g_HE:     &p11    35.      #versuch
-
-    - gap_HE:     &p12    0.044      # HE gap
-    - cav_HE:     &p13    0.044      # HE cav len
-    # - Ez_HE:      &p14    0.28       # [MV/m] electric field strength
-    - Ez_HE:      &p14    1.         # [MV/m] electric field strength
+    # - gap_HE:     &p12    0.044    # HE gap
+    # - cav_HE:     &p13    0.044    # HE cav len
+    # - Ez_HE:      &p14    0.28     # [MV/m] electric field strength
+    # - Ez_HE:      &p14    1.       # [MV/m] electric field strength
 #............................................................................................
 ## ELEMENT definitions
 ##...........................................................................................
 elements:
 ## LE
-    - D1:     &D1           # ID
-        - type:     D       # D class
-        - length:   0.05    # [m]
-        - sec:      *LE
-    - D2:    &D2            # ID
-        - type:     D       # D class
-        - length:   0.0125  # [m]
-        - sec:      *LE
-    - QFL:   &QFL           # ID
-        - type:     QF      # QF class
-        - length:   *p03    # [m] 
-        - B':       *p04    # [T/m] quadrupole gradient
-        - sec:      *LE
-    - QDL:   &QDL           # ID
-        - type:     QD      # QD class
-        - length:   *p02    # [m] length
-        - B':       *p04    # [T/m] quadrupole gradient
-        - sec:      *LE
-    - RFGL:  &RFGL          # ID
-        - type:     RFG     # class
-        # - type:     GAP     # class
-        - Ez:       *p05    # [MV/m] electric field
-        - PhiSync:  *p06    # [deg] synchronous phase
-        - fRF:      *p01    # [Hz] frequency
-        - gap:      *p07    # [m] length
-        - sec:      *LE
+    # - D1:     &D1           # ID
+    #     - type:     D       # D class
+    #     - length:   0.05    # [m]
+    #     - sec:      *LE
+    # - D2:    &D2            # ID
+    #     - type:     D       # D class
+    #     - length:   0.0125  # [m]
+    #     - sec:      *LE
+    # - QFL:   &QFL           # ID
+    #     - type:     QF      # QF class
+    #     - length:   *p03    # [m] 
+    #     - B':       *p04    # [T/m] quadrupole gradient
+    #     - sec:      *LE
+    # - QDL:   &QDL           # ID
+    #     - type:     QD      # QD class
+    #     - length:   *p02    # [m] length
+    #     - B':       *p04    # [T/m] quadrupole gradient
+    #     - sec:      *LE
+    # - RFGL:  &RFGL          # ID
+    #     - type:     RFG     # class
+    #     # - type:     GAP     # class
+    #     - Ez:       *p05    # [MV/m] electric field
+    #     - PhiSync:  *p06    # [deg] synchronous phase
+    #     - fRF:      *p01    # [Hz] frequency
+    #     - gap:      *p07    # [m] length
+    #     - sec:      *LE
 
 ## HE        
     - D3:        &D3
@@ -139,14 +135,14 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
         - sec:      *HE
-    - RFCAV:  &RFCAV        # ID
-        - type:     RFC     # RFC class
-        - Ez:       *p14    # [MV/m] electric field
-        - PhiSync:  *p06    # [deg] synchronous phase
-        - fRF:      *p01    # [Hz] frequency
-        - gap:      *p12    # [m] length
-        - length:   *p13    # [m] length
-        - sec:      *HE
+    # - RFCAV:  &RFCAV        # ID
+    #     - type:     RFC     # RFC class
+    #     - Ez:       *p14    # [MV/m] electric field
+    #     - PhiSync:  *p06    # [deg] synchronous phase
+    #     - fRF:      *p01    # [Hz] frequency
+    #     - gap:      *p12    # [m] length
+    #     - length:   *p13    # [m] length
+    #     - sec:      *HE
     - TTG:  &TTG            # ID
         - type:     TTFG    # TTFG class
         - PhiSync:  *p06    # [deg] synchronous phase
@@ -166,47 +162,47 @@ elements:
 ##...........................................................................................
 segments:
 ## LE
-    - RFG10L:
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-        - *D2
-        - *RFGL
-        - *D2
-    - SEG1L:
-        - *QFL
-        - *D1
-    - SEG2L:
-        - *D1
-        - *QDL
-        - *D1
-    - SEG3L:
-        - *D1
-        - *QFL
+    # - RFG10L:
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    #     - *D2
+    #     - *RFGL
+    #     - *D2
+    # - SEG1L:
+    #     - *QFL
+    #     - *D1
+    # - SEG2L:
+    #     - *D1
+    #     - *QDL
+    #     - *D1
+    # - SEG3L:
+    #     - *D1
+    #     - *QFL
 ## HE
     - SEG1H:
         - *QFH
@@ -218,17 +214,17 @@ segments:
     - SEG3H:
         - *D3
         - *QFH
-    - RFCAVH:
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
-        - *RFCAV
+    # - RFCAVH:
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
+    #     - *RFCAV
     - TTGH:
         - *D5
         - *TTG
@@ -266,7 +262,27 @@ segments:
         - *TTG
         - *D5
         #
+        # - *D5   # 10th cavity makes it unstable!!
+        # - *TTG
+        # - *D5
+        #
     - RFGH:
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
         - *D5
         - *RFGH
         - *D5
@@ -293,8 +309,7 @@ segments:
 ## LATTICE definition
 ##...........................................................................................
 lattice:
-    - title: HE 25.09.2017 versuche # description is mandatory. DON't remove or reposition!
-    # - [300,    SEG1H,    RFGH,           SEG2H, RFGH,         SEG3H]
-    # - [300,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
-    - [155,    SEG1H,    TTGH,           SEG2H, TTGH,         SEG3H]
+    - title: 25.09.2017 versuche 70-200MeV                   # description is mandatory. DON't remove or reposition!
+    - [185,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    # - [155,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
     

@@ -446,7 +446,7 @@ class RFB(D):
         self.parent   = parent
     def map(self,i_track):
         which_map = self.lin_map
-        which_map = self.rfb_map
+        # which_map = self.rfb_map
         return which_map(i_track)
     def lin_map(self,i_track):
         """
