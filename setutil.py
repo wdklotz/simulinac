@@ -96,7 +96,9 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)      # used to keep current values
+## KeepValues
+# a global dict to keep key-value pairs
+KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):                          
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
@@ -277,10 +279,12 @@ def collect_data_for_summary(lattice):
                 gap     = itm.gap
                 Ez      = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
+                mapping = itm.mapping
                 # length  = itm.length
                 SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]     mapping'.format(sec,typ,itm.label)] = mapping
 
                 PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
                 PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
@@ -588,6 +592,7 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     for val in array:
         print(fmt.format(val),end='')
     print('')
+
 def wille():
     return {
         'k_quad_f':1.2,

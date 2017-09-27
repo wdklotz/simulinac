@@ -171,7 +171,7 @@ def display1(functions):
 
     show()
 
-## START here
+##-------------------------START here
 def loesung(filepath):
     lattice = parse_yaml_and_fabric(filepath)
     ## Energie Konfiguration hier (SUPER WICHTIG)

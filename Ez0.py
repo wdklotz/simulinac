@@ -40,7 +40,7 @@ def Kpoly(z,sigma,mu,E):
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
-            # USE np.polyfit() - liefert gleiches Resultat wie Langrange 3 Punkt
+        # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
         # x   = np.array((zl,z0,zr))
         # y   = np.array((El,E0,Er))
         # coeff = np.polyfit(x,y,2)

@@ -66,7 +66,8 @@ def instanciate_element(item):
         fRF       = attributes["fRF"]
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
-        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
+        mapping   = attributes["mapping"]
+        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'RFC':
         gap       = attributes['gap']
         length    = attributes['length']

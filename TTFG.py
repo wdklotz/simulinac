@@ -356,9 +356,7 @@ class TTFG(ELM.I):
             f_track = slice.mapSoll(i_track)
             i_track = f_track
         return f_track
-class TTFC(ELM._thin):
-    # TODO 
-    pass
+#todo: class TTFC(ELM._thin):
 def test0():
     from tracks import Track
     

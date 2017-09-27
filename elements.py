@@ -446,9 +446,14 @@ class RFB(D):
         self.particle = particle
         self.lamb     = PARAMS['lichtgeschwindigkeit']/self.freq  # [m]
         self.parent   = parent
-    def map(self,i_track):
-        which_map = self.lin_map
-        # which_map = self.rfb_map
+    def map(self,i_track,mapping):
+        if mapping == 'base':
+            which_map = self.lin_map
+        elif mapping == 'simple':
+            which_map = self.rfb_map
+        else:
+            raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.parent.label))
+            sys.exit(1)
         return which_map(i_track)
     def lin_map(self,i_track):
         """
@@ -601,18 +606,20 @@ class RFG(D):
                     label      = 'RFG',
                     particle   = PARAMS['sollteilchen'],
                     gap        = PARAMS['spalt_laenge'],
+                    mapping    = 'simple',
                     dWf        = FLAGS['dWf']):
         super().__init__(label=label, particle=particle)
-        self.viseo  = 0.25
-        self.u0     = U0*dWf                                  # [MV] gap Voltage
-        self.phis   = PhiSoll                                 # [radians] soll phase
-        self.freq   = fRF                                     # [Hz]  RF frequenz
-        self.label  = label
-        self.gap    = gap
-        self.dWf    = dWf
-        self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
-        self.tr     = self._trtf_(self.particle.beta)
-        self.deltaW = self.u0*self.tr*cos(self.phis)          # Trace3D
+        self.viseo   = 0.25
+        self.u0      = U0*dWf                                  # [MV] gap Voltage
+        self.phis    = PhiSoll                                 # [radians] soll phase
+        self.freq    = fRF                                     # [Hz]  RF frequenz
+        self.label   = label
+        self.gap     = gap
+        self.dWf     = dWf
+        self.mapping = mapping if FLAGS['map'] else 'T3D'
+        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.tr      = self._trtf_(self.particle.beta)
+        self.deltaW  = self.u0*self.tr*cos(self.phis)          # Trace3D
         # DEBUG_MODULE('RFG: \n',self.particle.string())
         # DEBUG_MODULE('RFG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
         # DEBUG_MODULE('RFG: deltaW: {:8.6e}'.format(self.deltaW))
@@ -674,6 +681,7 @@ class RFG(D):
                     label      = self.label,
                     particle   = self.particle(tkin),
                     gap        = self.gap,
+                    mapping    = self.mapping,
                     dWf        = self.dWf)
         return self
     def map(self,i_track):
@@ -682,7 +690,7 @@ class RFG(D):
         """
         if FLAGS['map']:
             # NOTE: mapping with RFB-map
-            f_track = self.rfb.map(i_track)
+            f_track = self.rfb.map(i_track,self.mapping)
         else:
             # NOTE: linear mapping with T3D matrix
             f_track = super().map(i_track)

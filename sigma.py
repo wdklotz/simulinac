@@ -60,7 +60,7 @@ class Sigma(object):
         """
         Map this sigma through element R
         """
-        # remember R is isinstance off ELM._matrix!
+        # remember R isinstance off ELM._matrix!
         new = Sigma()
         r = R(MDIM,MDIM) #!! use _matrix.__call__() to get element matrix as np.ndarray
         rt = np.transpose(r)

@@ -26,7 +26,7 @@
 flags:
     # - accON:        False           # [True]  acceleration on/off flag
     # - egf:          True            # [False] emittance growth flag
-    - map:          False           # [True]  use maps to track trajectories through RFGap
+    # - map:          False           # [True]  use maps to track trajectories through RFGap
     # - sigma:        False           # [True]  beam sizes by sigma-matrix
     # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
@@ -86,11 +86,13 @@ elements:
         - sec:      *HE
     - RFGH:  &RFGH          # ID
         - type:     RFG     # class
-        # - type:     GAP     # class
         - Ez:       1.00    # [MV/m] electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
+        # - mapping:   T3D    # base map model from Shishlo
+        - mapping:   base   # base map model from Shishlo
+        # - mapping:   simple # simple map model from Shishlo
         - sec:      *HE
     - TTG:  &TTG            # ID
         - type:     TTFG    # TTFG class
@@ -200,9 +202,9 @@ segments:
         - *RFGH
         - *D5
         #
-        - *D5     # 10th cavity makes it unstable!!
-        - *RFGH
-        - *D5
+        # - *D5     # 10th cavity makes it unstable!!
+        # - *RFGH
+        # - *D5
         #
     - MARK:
         - *M
