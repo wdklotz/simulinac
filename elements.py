@@ -447,9 +447,9 @@ class RFB(D):
         self.lamb     = PARAMS['lichtgeschwindigkeit']/self.freq  # [m]
         self.parent   = parent
     def map(self,i_track,mapping):
-        if mapping == 'base':
+        if mapping == 'simple':
             which_map = self.lin_map
-        elif mapping == 'simple':
+        elif mapping == 'base':
             which_map = self.rfb_map
         else:
             raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.parent.label))
