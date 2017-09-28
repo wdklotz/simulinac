@@ -206,6 +206,7 @@ if __name__ == '__main__':
     # filepath = 'fodo_with_10cav_per_RF-4.yml'       ## the default input file (YAML syntax)
     filepath = 'HE_50inj_ttfg_work.yml'
     filepath = '25_09_2017_versuche_70_200MeV.yml'
+    # filepath = '25_09_2017_ref_70_200MeV.yml'
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
