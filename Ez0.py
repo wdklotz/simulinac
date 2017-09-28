@@ -88,10 +88,10 @@ def Ipoly(z,poly):
     return res
 
 def V0n(poly,n):
-        E0 = poly[n].E0                       #[MV/m]
+        E0 = poly[n].E0                       # [MV/m]
         b  = poly[n].b
-        dz = poly[n].dz                       #[cm]
-        v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   #[MV] 
+        dz = poly[n].dz                       # [cm]
+        v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
         return v0
 def V0(poly,zl2zr):
     v0 = []
@@ -328,7 +328,7 @@ def test2():
     k        = 2*pi*freq/(c*beta)*1.e-2     # [1/cm]
 
     anz   = 6            # nboff slices
-    gap   = 4.8          #[cm] full gap length
+    gap   = 4.8          # [cm] full gap length
     zl    = -gap/2.      #left  interval boundary
     zr    = gap/2.       #right interval boundary
     sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)

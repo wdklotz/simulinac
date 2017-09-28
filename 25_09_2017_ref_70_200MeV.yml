@@ -76,7 +76,7 @@ elements:
         - sec:      *HE
     - QFH:   &QFH                # ID
         - type:     QF           # QF class
-        - length:   *p03         # [m] 
+        - length:   *p03         # [m]
         - B':       &Bgrad   40. # [T/m] quadrupole gradient
         - sec:      *HE
     - QDH:   &QDH           # ID

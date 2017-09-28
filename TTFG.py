@@ -64,10 +64,10 @@ class TTFGslice(object):
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
     def _V0(self,poly):    # A.Shishlo (4.4.3)
-        E0 = poly.E0                          #[MV/m]
-        b  = poly.b                           #[1/cm**2]
-        dz = poly.dz                          #[cm]
-        v0 = (2*dz+2./3.*b*dz**3)*1.e-2       #[cm] --> [m]
+        E0 = poly.E0                          # [MV/m]
+        b  = poly.b                           # [1/cm**2]
+        dz = poly.dz                          # [cm]
+        v0 = (2*dz+2./3.*b*dz**3)*1.e-2       # [cm] --> [m]
         v0 = v0*E0*self.elemnt.dWf
         return v0
     def mapSoll(self,i_track):
