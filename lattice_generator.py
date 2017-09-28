@@ -35,6 +35,13 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 
 ## parse and generate latttice
+def get_mandatory(attributes,key,item):
+    try:
+        res = attributes[key]
+    except KeyError:
+        print('InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item))
+        sys.exit(1)
+    return res
 def lod2d(l):    ##list of dicts to dict
     return {k:v for d in l for k,v in d.items()}
 
@@ -43,68 +50,67 @@ def instanciate_element(item):
     key = item[0]
     attributes = item[1]
     if key == 'D':
-        length   = attributes['length']
         label    = attributes['ID']
+        length   = get_mandatory(attributes,'length',label)
         instance =  ELM.D(length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'QF':
-        length   = attributes['length']
         label    = attributes['ID']
-        dBdz     = attributes["B'"]
+        length   = get_mandatory(attributes,'length',label)
+        dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
         instance = ELM.QF(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'QD':
-        length   = attributes['length']
         label    = attributes['ID']
-        dBdz     = attributes["B'"]
+        length   = get_mandatory(attributes,'length',label)
+        dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
         instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'RFG':
-        gap       = attributes['gap']
         label     = attributes['ID']
-        Ez        = attributes["Ez"]
-        PhiSoll   = radians(attributes["PhiSync"])
-        fRF       = attributes["fRF"]
+        gap       = get_mandatory(attributes,'gap',label)
+        Ez        = get_mandatory(attributes,"Ez",label)
+        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+        fRF       = get_mandatory(attributes,"fRF",label)
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
-        mapping   = attributes["mapping"]
+        mapping   = get_mandatory(attributes,'mapping',label)
         instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'RFC':
-        gap       = attributes['gap']
-        length    = attributes['length']
         label     = attributes['ID']
-        Ez        = attributes["Ez"]
-        PhiSoll   = radians(attributes["PhiSync"])
-        fRF       = attributes["fRF"]
+        gap       = get_mandatory(attributes,'gap',label)
+        length    = get_mandatory(attributes,'length',label)
+        Ez        = get_mandatory(attributes,"Ez",label)
+        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+        fRF       = get_mandatory(attributes,"fRF",label)
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'GAP':
-        gap       = attributes['gap']
         label     = attributes['ID']
-        Ez        = attributes["Ez"]
-        PhiSoll   = radians(attributes["PhiSync"])
-        fRF       = attributes["fRF"]
+        gap       = get_mandatory(attributes,'gap',label)
+        Ez        = get_mandatory(attributes,"Ez",label)
+        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+        fRF       = get_mandatory(attributes,"fRF",label)
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'TTFG':
-        PhiSoll   = radians(attributes["PhiSync"])
-        fRF       = attributes["fRF"]
         label     = attributes['ID']
-        gap       = attributes['gap']
-        fname     = attributes["SFdata"]     # file name of SF-Data
-        Ez0       = attributes["Ezpeak"]
+        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+        fRF       = get_mandatory(attributes,"fRF",label)
+        gap       = get_mandatory(attributes,'gap',label)
+        fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
+        Ez0       = get_mandatory(attributes,"Ezpeak",label)
         dWf       = FLAGS['dWf']
         if fname not in PARAMS:
             PARAMS[fname] = SFdata(fname,Epeak=Ez0)
         instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
-        actions   = attributes['actions'] if 'actions' in attributes else []
+        actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
     else:
-        print('unknown element type encountered during parsing: {} - STOP'.format(key))
-        DEBUG_MODULE('instanciate_element: {} instance created'.format(label),'')
+        print('InputError: Unknown element type encountered: {} - STOP'.format(key))
         sys.exit(1)
     try:     ## sections are not mandatory
         instance.set_section(sec=attributes['sec'])
