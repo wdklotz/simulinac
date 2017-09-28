@@ -132,7 +132,7 @@ def factory(input_file):
                     DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
                     nboff_elements = len(elementList)
-                    found = segID
+                    found = True
                     break    #after found == true
             if found == False: 
                 print('InputError: Segment {} not found - STOP'.format(segID))
