@@ -283,12 +283,17 @@ class TTFG(ELM.I):
         slices = []
         zl = -self.gap/2.*100.   # [m] --> [cm]
         zr = -zl
+        E0z = 0.
+        z = 0.
         for poly in self.Ez.Ez_poly():
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
             slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
             slices.append(slice)
+            E0z += slice.V0
+            z += (zir-zil)*1.e-2   # [cm] --> [m]
+        self.E0z = E0z/z           # equivalent av. field
         return slices
     def make_slices(self,anz=0):   # interface to outside callers (lattice.py)
         res = [self]

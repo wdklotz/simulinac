@@ -266,7 +266,7 @@ def collect_data_for_summary(lattice):
                 length = itm.length
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
                 SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]      B0* [T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
+                SUMMARY['{2} [{1}.{0}]   B0*    [T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
                 SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
 
                 PARAMS['{2}[{1}.{0}]dBdZ'.format(sec,typ,itm.label)] = dBdz
@@ -284,7 +284,7 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]     mapping'.format(sec,typ,itm.label)] = mapping
+                SUMMARY['{2} [{1}.{0}]  mapping   '.format(sec,typ,itm.label)] = mapping
 
                 PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
                 PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
@@ -315,9 +315,11 @@ def collect_data_for_summary(lattice):
                 gap     = itm.gap
                 Epeak   = itm.Epeak
                 PhiSoll = degrees(itm.phis)
-                SUMMARY['{2} [{1}.{0}]  gap     [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Epeak[MV/m]'.format(sec,typ,itm.label)] = Epeak
-                SUMMARY['{2} [{1}.{0}]  phis  [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                E0zav   = itm.E0z
+                SUMMARY['{2} [{1}.{0}] gap        [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}] (Ez)peak[MV/m]'.format(sec,typ,itm.label)] = Epeak
+                SUMMARY['{2} [{1}.{0}] (Ez)av  [MV/m]'.format(sec,typ,itm.label)] = E0zav
+                SUMMARY['{2} [{1}.{0}] phis     [deg]'.format(sec,typ,itm.label)] = PhiSoll
 
                 PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
                 PARAMS['{2}[{1}.{0}]Epeak'.format(sec,typ,itm.label)] = Epeak
