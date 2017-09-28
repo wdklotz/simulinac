@@ -126,11 +126,17 @@ def factory(input_file):
         DEBUG_MODULE('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
         for segID in latticeList:        #loop segments in lattice
             DEBUG_MODULE('segID in make_lattice()',segID)
+            found = False
             for seg in segments:     #scan for segment in segment-definition
                 if segID in seg:
                     DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
+                    nboff_elements = len(elementList)
+                    found = segID
                     break    #after found == true
+            if found == False: 
+                print('InputError: Segment {} not found - STOP'.format(segID))
+                sys.exit(1)
             for element in elementList: #loop over elements in element list
                 DEBUG_MODULE('element in '+segID,element)
                 elementClass = element['type']

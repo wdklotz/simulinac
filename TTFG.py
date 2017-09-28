@@ -293,7 +293,7 @@ class TTFG(ELM.I):
             slices.append(slice)
             E0z += slice.V0
             z += (zir-zil)*1.e-2   # [cm] --> [m]
-        self.E0z = E0z/z           # equivalent av. field
+        self.E0z = E0z/z           # equivalent av. field  (Ez)av
         return slices
     def make_slices(self,anz=0):   # interface to outside callers (lattice.py)
         res = [self]
