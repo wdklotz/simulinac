@@ -127,8 +127,8 @@ def display1(functions):
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plot(z,cx,label='C [m]',color='blue',linestyle='-')
-    plot(z,sx,label='S [m]',color='red' ,linestyle='-')
+    plot(z,cx,label='C [m]',color='blue',linestyle=':')
+    plot(z,sx,label='S [m]',color='red' ,linestyle=':')
     vscale=axis()[3]*0.4
     viseox = [x*vscale for x in viseo]
     for i in range(stop_viseo,len(viseo)): viseox[i] = 0.   # stop lattice plotting
@@ -139,8 +139,8 @@ def display1(functions):
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plot(z,cy,label='C [m]',color='blue',linestyle='-')
-    plot(z,sy,label='S [m]',color='red' ,linestyle='-')
+    plot(z,cy,label='C [m]',color='blue',linestyle=':')
+    plot(z,sy,label='S [m]',color='red' ,linestyle=':')
     vscale=axis()[3]*0.4
     viseoy = [x*vscale for x in viseo]
     for i in range(stop_viseo,len(viseo)): viseoy[i] = 0.   # stop lattice plotting
