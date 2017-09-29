@@ -53,7 +53,7 @@ parameters:
     - alfay_i:              0.0      # [1] twiss alpha y @ entrance
     # - sigmaz_i:             2.5e-3   # [m] longitudinal displacement z @ inj
     # - sigmaz_i:             8.1795e-3   # separatrix? TTFG
-    - sigmaz_i:             8.1340e-3   # separatrix? RFG-RB
+    - sigmaz_i:             8.1330e-3   # separatrix? RFG-RB
     - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ inj
     - phi_sync:     &p06   -20.      # [deg] synchronous phase
     - windings:             30       # [1] quad-coil windings

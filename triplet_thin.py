@@ -49,41 +49,42 @@ def display(functions):
     legend(loc='lower right',fontsize='x-small')
     show(block=False)
 def make_thin (kf1,kf2,ld,anz=1,verbose=False):
-    kf1 = kf1
-    kd1 = kf1
-    lf1 = 0.4
-    ld1 = lf1
-    ff1 = kf1*lf1
-    fd1 = kd1*ld1
+    kd1 = kf1       # k1 for qf1 & qd1
+    ld1 = lf1 = 0.4 # len qf1 & qd1
+    ff1 = kf1*lf1   # focal length qf1
+    fd1 = kd1*ld1   # focal length qd1
 
     kf2 = kf2
-    kd2 = kf2
-    lf2 = lf1
-    ld2 = lf2
+    kd2 = kf2       # same as above for qf2 & qd2
+    lf2 = ld2 = lf1
     ff2 = kf2*lf2
     fd2 = kd2*ld2
 
+    slices = 1      # present the quad by 1 thin-quads   (bad!)
+    slices = 3      # present the quad by 3 thin-quads   (better!)
+    slices = 6      # present the quad by 6 thin-quads   (near perfect!)
+    
     DL  = D(length=ld,label='L')
-    QF1 = QFth(k0=kf1,length=0.5*lf1,label='QF1')
-    QF2 = QFth(k0=kf2,length=0.5*lf2,label='QF2')
-    QD1 = QDth(k0=kd1,length=0.5*ld1,label='QD1')
-    QD2 = QDth(k0=kd2,length=0.5*ld2,label='QD2')
+    QF1 = QFth(k0=kf1,length=0.5*lf1/slices,label='QF1')
+    QF2 = QFth(k0=kf2,length=0.5*lf2/slices,label='QF2')
+    QD1 = QDth(k0=kd1,length=0.5*ld1/slices,label='QD1')
+    QD2 = QDth(k0=kd2,length=0.5*ld2/slices,label='QD2')
 
     cell = Lattice()
-    cell.add_element(QD1)
-    cell.add_element(QF1)
+    for i in range(slices): cell.add_element(QD1)
+    for i in range(slices): cell.add_element(QF1)
     cell.add_element(DL)
-    cell.add_element(QD2)
-    cell.add_element(QF2)
-    cell.add_element(QF2)
-    cell.add_element(QD2)
+    for i in range(slices): cell.add_element(QD2)
+    for i in range(slices): cell.add_element(QF2)
+    for i in range(slices): cell.add_element(QF2)
+    for i in range(slices): cell.add_element(QD2)
     cell.add_element(DL)
-    cell.add_element(QF1)
-    cell.add_element(QD1)
+    for i in range(slices): cell.add_element(QF1)
+    for i in range(slices): cell.add_element(QD1)
 
     lat = Lattice()
     for i in range(anz):
-        lat.append(cell)
+        lat.concat(cell)
     mcell,betax,betay=lat.cell()
 
     if verbose:
@@ -129,7 +130,7 @@ def make_thick(kf1,kf2,ld,anz=1,verbose=False):
     cell.add_element(QD1)
     lat = Lattice()
     for i in range(anz):
-        lat.append(cell)
+        lat.concat(cell)
     mcell,betax,betay=lat.cell()
     if verbose:
         # {:.3f}
@@ -209,15 +210,15 @@ def test3(kf,kd,ld):
     print('using kf,kd,ld',kf,kd,ld)
     anz = 3
     # thin
-    cell,dummy,dummy = make_thin(kf,kd,ld,anz=anz)
-    mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.beta_matrix()
-    beta_fun_thin,cl,sl = cell.twiss_functions(steps=100)
+    cell,dummy,dummy    = make_thin(kf,kd,ld,anz=anz)
+    mcell,betax,betay   = cell.cell()
+    beta_matrix         = mcell.beta_matrix()
+    beta_fun_thin       = cell.twiss_functions(steps=100)
     # thick
-    cell,dummy,dummy = make_thick(kf,kd,ld,anz=anz)
-    mcell,betax,betay=cell.cell()
-    beta_matrix = mcell.beta_matrix()
-    beta_fun_thick,cl,sl = cell.twiss_functions(steps=100)
+    cell,dummy,dummy    = make_thick(kf,kd,ld,anz=anz)
+    mcell,betax,betay   = cell.cell()
+    beta_matrix         = mcell.beta_matrix()
+    beta_fun_thick      = cell.twiss_functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
@@ -226,4 +227,4 @@ if __name__ == '__main__':
     # test2(5.,5.,1.)
     # test3(5.,5.,1.)     # gesund!
     test3(4.,4.,1.2)    # gesünder!
-    # test3(7.,7.,2.1)    # extrem!
+    # test3(6.,6.,1.8)      # extrem!

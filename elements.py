@@ -738,7 +738,7 @@ class QFth(_thin):
         else:
             # m[1,0]      = -1./self.k0l
             # m[3,2]      = -m[1,0]
-            m[XPKOO,XKOO] = -1./self.k0l
+            m[XPKOO,XKOO] = -self.k0l
             m[YPKOO,YKOO] = -m[XPKOO,XKOO]
         lens = df * (kick * di)     #matrix produkt df*kick*di
         self.matrix = lens.matrix
@@ -772,7 +772,7 @@ class QDth(_thin):
         else:
             # m[1,0]      = 1./self.k0l
             # m[3,2]      = -m[1,0]
-            m[XPKOO,XKOO] = 1./self.k0l
+            m[XPKOO,XKOO] = self.k0l
             m[YPKOO,YKOO] = -m[XPKOO,XKOO]
         lens = df * (kick * di)
         self.matrix = lens.matrix
