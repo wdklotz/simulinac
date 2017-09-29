@@ -27,6 +27,14 @@ from setutil import Proton,DEBUG,mxprnt
 
 MDIM=6   #(0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
+## DEBUG MODULE
+def DEBUG_ON(*args):
+    DEBUG(*args)
+def DEBUG_OFF(*args):
+    pass
+DEBUG_MODULE = DEBUG_OFF
+
+## sigma
 class Sigma(object):
     def __init__(self,emitx=0.,betax=1.,alphax=0.,emity=0.,betay=1,alphay=0.,emitz=0.,betaz=1.,alphaz=0.):
 
@@ -54,8 +62,6 @@ class Sigma(object):
             for k in range(MDIM):
                 str += '{:8.4g}  '.format(self.matrix[i,k])
         return str
-    def __call__(self):
-        return self.matrix
     def RSRt(self,R):
         """
         Map this sigma through element R
@@ -64,7 +70,7 @@ class Sigma(object):
         new = Sigma()
         r = R(MDIM,MDIM) #!! use _matrix.__call__() to get element matrix as np.ndarray
         rt = np.transpose(r)
-        s1 = self()      #!! use Sigma.__call__() to get matrix as np.ndarray
+        s1 = self.matrix
         new.matrix = np.dot(r,np.dot(s1,rt))  ## matrix multiplication here
         return new
     def clone(self):
@@ -120,23 +126,23 @@ class Sigma(object):
         self.matrix[1,1] += delta_xp2_av
         self.matrix[3,3] += delta_yp2_av
         self.matrix[5,5] += delta_dp2_av
-        # DEBUG('Phis',degrees(Phis))
-        # DEBUG('delta_phi',degrees(delta_phi))
-        # DEBUG('E0L',E0L)
-        # DEBUG('T',T)
-        # DEBUG('m0c2',m0c2)
-        # DEBUG('lamb',lamb)
-        # DEBUG('gamma_beta_av',gamma_beta_av)
-        # DEBUG('gamma_beta_f',gamma_beta_f)
-        # DEBUG('gamma_av',gamma_av)
-        # DEBUG('kx',kx)
-        # DEBUG('kz',kz)
-        # DEBUG('cfactor1',cfactor1)
-        # DEBUG('cfactor2',cfactor2)
-        # DEBUG('ksi',ksi)
-        # DEBUG('delta_xp2_av',delta_xp2_av)
-        # DEBUG('delta_yp2_av',delta_yp2_av)
-        # DEBUG('delta_dp2_av',delta_dp2_av)
+        # DEBUG_MODULE('Phis',degrees(Phis))
+        # DEBUG_MODULE('delta_phi',degrees(delta_phi))
+        # DEBUG_MODULE('E0L',E0L)
+        # DEBUG_MODULE('T',T)
+        # DEBUG_MODULE('m0c2',m0c2)
+        # DEBUG_MODULE('lamb',lamb)
+        # DEBUG_MODULE('gamma_beta_av',gamma_beta_av)
+        # DEBUG_MODULE('gamma_beta_f',gamma_beta_f)
+        # DEBUG_MODULE('gamma_av',gamma_av)
+        # DEBUG_MODULE('kx',kx)
+        # DEBUG_MODULE('kz',kz)
+        # DEBUG_MODULE('cfactor1',cfactor1)
+        # DEBUG_MODULE('cfactor2',cfactor2)
+        # DEBUG_MODULE('ksi',ksi)
+        # DEBUG_MODULE('delta_xp2_av',delta_xp2_av)
+        # DEBUG_MODULE('delta_yp2_av',delta_yp2_av)
+        # DEBUG_MODULE('delta_dp2_av',delta_dp2_av)
         return self
 def test0():
     print('-----------------------------Test0--')

@@ -42,6 +42,7 @@ def get_mandatory(attributes,key,item):
         print('InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item))
         sys.exit(1)
     return res
+
 def lod2d(l):    ##list of dicts to dict
     return {k:v for d in l for k,v in d.items()}
 

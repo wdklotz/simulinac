@@ -426,26 +426,19 @@ class RFB(D):
     Base RF Gap Model from pyOrbit (A.Shislo)
     """
     def __init__(self,parent,
-                    U0         = PARAMS['spalt_spannung'],
-                    PhiSoll    = radians(PARAMS['soll_phase']),
-                    fRF        = PARAMS['frequenz'],
-                    T          = 0.75,
                     label      = 'RFB',
-                    gap        = PARAMS['spalt_laenge'],
-                    deltaW     = 0.,
                     particle   = PARAMS['sollteilchen']):
         super().__init__(label=label, particle=particle)
-        self.viseo    = 0.25
-        self.u0       = U0                                      # [MV] gap Voltage
-        self.phis     = PhiSoll                                 # [radians] soll phase
-        self.freq     = fRF                                     # [Hz] RF frequenz
-        self.tr       = T
-        self.label    = label
-        self.gap      = gap
-        self.deltaW   = deltaW
         self.particle = particle
-        self.lamb     = PARAMS['lichtgeschwindigkeit']/self.freq  # [m]
+        self.label    = label
         self.parent   = parent
+        self.viseo    = parent.viseo
+        self.u0       = parent.u0         # [MV] gap Voltage
+        self.phis     = parent.phis       # [radians] soll phase
+        self.tr       = parent.tr
+        self.gap      = parent.gap
+        self.deltaW   = parent.deltaW
+        self.lamb     = parent.lamb
     def map(self,i_track,mapping):
         if mapping == 'simple':
             which_map = self.lin_map
@@ -610,16 +603,16 @@ class RFG(D):
                     dWf        = FLAGS['dWf']):
         super().__init__(label=label, particle=particle)
         self.viseo   = 0.25
-        self.u0      = U0*dWf                                  # [MV] gap Voltage
-        self.phis    = PhiSoll                                 # [radians] soll phase
-        self.freq    = fRF                                     # [Hz]  RF frequenz
+        self.u0      = U0*dWf                                 # [MV] gap Voltage
+        self.phis    = PhiSoll                                # [radians] soll phase
+        self.freq    = fRF                                    # [Hz]  RF frequenz
         self.label   = label
         self.gap     = gap
         self.dWf     = dWf
         self.mapping = mapping if FLAGS['map'] else 'T3D'
-        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
         self.tr      = self._trtf_(self.particle.beta)
-        self.deltaW  = self.u0*self.tr*cos(self.phis)          # Trace3D
+        self.deltaW  = self.u0*self.tr*cos(self.phis)         # deltaW energy kick nach Trace3D
         # DEBUG_MODULE('RFG: \n',self.particle.string())
         # DEBUG_MODULE('RFG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
         # DEBUG_MODULE('RFG: deltaW: {:8.6e}'.format(self.deltaW))
@@ -628,23 +621,17 @@ class RFG(D):
         part_center = particle(tk_center)                     # particle @ gap center
         b           = part_center.beta                        # beta @ gap cemter
         g           = part_center.gamma                       # gamma @ gap center
-        particlei   = self.particle                           # particle @ entrance
-        particlef   = particle(particlei.tkin+self.deltaW)    # particle @ exit
+        particlei   = self.particle                           # particle @ (i)
+        particlef   = particle(particlei.tkin+self.deltaW)    # particle @ (f)
         # DEBUG_MODULE('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
-        self.matrix = self._mx_(self.tr,b,g,particlei,particlef)       # transport matrix
+        self.matrix = self._mx_(self.tr,b,g,particlei,particlef)   # the LINEAR TRANSPORT matrix R
         self.particlei = particlei
         self.particlef = particlef
-        if FLAGS['map']:             # use map instead of matrix
-            self.rfb = RFB( self,
-                            U0           = self.u0,
-                            PhiSoll      = self.phis,
-                            fRF          = self.freq,
-                            T            = self.tr,
-                            label        = 'RFB',
-                            gap          = self.gap,
-                            deltaW       = self.deltaW,
-                            particle     = self.particle)
+        # !!!!!  INSTANCIATE a MAP instead of using the R matrix
+        if FLAGS['map']:
+            self.rfb = RFB(self,label='RFB',particle=self.particle)
+
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / PARAMS['lichtgeschwindigkeit']
         # DEBUG_MODULE('RFG: teta , beta>>',teta,beta)

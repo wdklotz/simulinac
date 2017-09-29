@@ -152,7 +152,7 @@ class Lattice(object):
         if not unstable:
             # if verbose:
             printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
-
+        ## full accelerator
         self.accel = mcell    # the full cell becomes instance variable
         # if verbose:
         printv(0,'Full Accelerator Matrix (f)<==(i)')
@@ -226,7 +226,7 @@ class Lattice(object):
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
                 printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
-                ## keep related variables for later use
+                ## keep variables for later use
                 PARAMS['sigx_i'] = sqrt(bax*emix)
                 PARAMS['sigy_i'] = sqrt(bay*emiy)
                 SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
@@ -252,7 +252,7 @@ class Lattice(object):
             yip = sqrt(emiy*gmy)
             SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
             SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
-        ## store twiss values as lattice instance varibles
+        ## keep twiss values as lattice instance varibles
         self.betax0 = bax
         self.alfax0 = alx
         self.gammx0 = gmx
@@ -297,7 +297,8 @@ class Lattice(object):
             res.add_element(elm)
         return res
 
-    def append(self,piece):
+    # def append(self,piece):
+    def concat(self,piece):
         """
         Concatenate two Lattice pieces
         """
@@ -357,7 +358,7 @@ class Lattice(object):
                     rf_gap    = i_element
                     delta_phi = PARAMS['Dphi0']
                     sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
-                sigf = sigma_f()  # call returns sigma-matrix!
+                sigf = sigma_f.matrix
                 try:
                     xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
@@ -422,17 +423,22 @@ class Lattice(object):
         """
         Track Cos & Sin trajectories
         """
-        sollt_test  = 1.     # set all 0. to simulate soll Teilchen
+        def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
+            return 0.
+        def SollTest_OFF(arg):
+            return arg        
+        soll_test   = SollTest_OFF
+
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
-        x1          = sollt_test*sqrt(PARAMS['emitx_i']*self.betax0) # x-plane: principal-1 (cos like)
-        x2p         = sollt_test*sqrt(PARAMS['emitx_i']*self.gammx0) # x-plane: principal-1 (sin like)
-        y1          = sollt_test*sqrt(PARAMS['emity_i']*self.betay0)
-        y2p         = sollt_test*sqrt(PARAMS['emity_i']*self.gammy0)
-        sigmaz_i    = sollt_test*PARAMS['sigmaz_i']                  # z[m] Vorgabe
-        dp2p_i      = sollt_test*PARAMS['dp2p_i']*1.e-2              # dp/p[%] Vorgabe --> []
+        x1          = soll_test(sqrt(PARAMS['emitx_i']*self.betax0)) # x-plane: principal-1 (cos like)
+        x2p         = soll_test(sqrt(PARAMS['emitx_i']*self.gammx0)) # x-plane: principal-1 (sin like)
+        y1          = soll_test(sqrt(PARAMS['emity_i']*self.betay0))
+        y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
+        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m] Vorgabe
+        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe --> []
         # MDIM tracking used here
         c_like = []
         s_like = []
@@ -539,13 +545,13 @@ def make_wille():
     lattice.add_element(mqf)
     # lattice.string()
     top = Lattice()
-    top.append(lattice)
-    # top.append(top)
-    # top.append(top)
-    # top.append(top)
-    # top.append(top)
-    # top.append(top)
-    # top.append(top)
+    top.concat(lattice)
+    # top.concat(top)
+    # top.concat(top)
+    # top.concat(top)
+    # top.concat(top)
+    # top.concat(top)
+    # top.concat(top)
     return top
 
 def test0():
