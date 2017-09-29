@@ -61,30 +61,30 @@ parameters:
 ##...........................................................................................
 elements:
 ## HE        
-    - D3:        &D3
+    - D3:        &D3        # ID: &alias
         - type:     D       # D class
         # - length:   0.04    # [m] 
         - length:   0.08    # [m] 
         - sec:      *HE
-    - D4:    &D4            # ID
+    - D4:    &D4            # ID: &alias
         - type:     D       # D class
         - length:   0.44    # [m] full cavity
         - sec:      *HE
-    - D5:    &D5            # ID
+    - D5:    &D5            # ID: &alias
         - type:     D       # D class
         - length:   0.022   # [m] half cavity
         - sec:      *HE
-    - QFH:   &QFH                # ID
+    - QFH:   &QFH                # ID: &alias
         - type:     QF           # QF class
         - length:   *p03         # [m] 
         - B':       &Bgrad   40. # [T/m] quadrupole gradient
         - sec:      *HE
-    - QDH:   &QDH           # ID
+    - QDH:   &QDH           # ID: &alias
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *Bgrad  # [T/m] quadrupole gradient
         - sec:      *HE
-    - RFGH:  &RFGH          # ID
+    - RFGH:  &RFGH          # ID: &alias
         - type:     RFG     # class
         - Ez:       1.41    # [MV/m] (Ez)av electric field
         - PhiSync:  *p06    # [deg] synchronous phase
@@ -93,15 +93,15 @@ elements:
         - mapping:   base   # Shishlo's base map model
         # - mapping:   simple # Shishlo's simple map model
         - sec:      *HE
-    - TTG:  &TTG            # ID
+    - TTG:  &TTG            # ID: &alias
         - type:     TTFG    # TTFG class
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
-        - SFdata:   SF_WDK2g44.TBL
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
         - sec:      *HE
-    - M:  &M            # ID
+    - M:  &M                # ID: &alias
         - type:    MRK      # MRK class  
         - actions:
             - sigma_x
