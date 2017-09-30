@@ -690,8 +690,8 @@ class _thin(_matrix_):
     Base class for thin elements
     """
     def __init__(self,particle=PARAMS['sollteilchen']):
-        self.particle = copy(particle)      ## keep a local copy of the particle instance (important!)
-    def make_slices(self,anz=10):          ## stepping routine through the triplet (D,Kick,D)
+        self.particle = copy(particle)     # keep a local copy of the particle instance (important!)
+    def make_slices(self,anz=10):          # stepping routine through the triplet (D,Kick,D)
         # DEBUG_MODULEll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
@@ -718,6 +718,34 @@ class _thin(_matrix_):
         """
         self.sec = sec
 ## thin F-quad
+class QFthx(D):
+    """
+    Thin F-Quad   (express version of QFth)
+    """
+    def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen']):
+        super().__init__(viseo=+0.5, length=length, label=label, particle=particle)
+        self.k0     = k0
+        self.length = length
+        L = self.length
+        m = self.matrix                # thin lens quad matrix
+        m[0,0]  = 1. - k0*(L**2)/2.
+        m[0,1]  = L - k0*(L**3)/4.
+        m[1,0]  = -k0*L
+        m[1,1]  = m[0,0]
+        m[2,2]  = 1. + k0*(L**2)/2.
+        m[2,3]  = L + k0*(L**3)/4.
+        m[3,2]  = +k0*L
+        m[3,3]  = m[2,2]
+    def adjust_energy(self,tkin):
+        cpi = self.particle.gamma_beta
+        self.particle(tkin)          # particle energy adjusted
+        cpf = self.particle(tkin).gamma_beta
+        ki  = self.k0
+        kf  = ki*cpi/cpf     # scale quad strength with new impulse
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
+        return self
+    def shorten(self,l=0.):
+        return QFthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
 class QFth(_thin):   
     """
     Thin F-Quad
@@ -752,6 +780,16 @@ class QFth(_thin):
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
         return self
 ## thin D-quad
+class QDthx(QFthx):
+    """
+    Thin D-Quad   (express version of QDth)
+    """
+    def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen']):
+        super().__init__(k0 = -k0, length=length, label=label, particle=particle)
+        self.viseo = -0.5
+        self.k0 = k0   # hide parent's member
+    def shorten(self,l=0.):
+        return QDthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
 class QDth(_thin):  
     """
     Thin D-Quad

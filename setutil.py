@@ -65,7 +65,8 @@ FLAGS  = dict(
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
         map                  = True,             # use maps to track trajectories through RFGap
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
-        verbose              = 0                 # print flag default = 0
+        verbose              = 0,                # print flag default = 0
+        express              = False             # use express version of thin quads
         )
 PARAMS = dict(
         lichtgeschwindigkeit = 299792458.,       # [m/s] const
@@ -256,7 +257,7 @@ def collect_data_for_summary(lattice):
 
     sections =  PARAMS['sections']   ## comes from INPUT
     if len(sections) == 0: sections = ['*']      ## section wildcart
-    types = ['QF','QD','QFth','QDth']
+    types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
             elements = elements_in_section(typ,sec)
@@ -329,6 +330,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
     SUMMARY['emittance growth']                =  FLAGS['egf']
     SUMMARY['ring lattice']                    =  FLAGS['periodic']
+    SUMMARY['express']                         =  FLAGS['express']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['quad bore radius [m]']            =  PARAMS['quad_bore_radius']

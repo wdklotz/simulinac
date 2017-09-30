@@ -51,7 +51,10 @@ def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
     thinlen = length/slices
     thinlabel = '({})th'.format(label)
     for nb in range(slices):
-        instance = ELM.QFth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        if FLAGS['express']:
+            instance = ELM.QFthx(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        else:
+            instance = ELM.QFth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
         lattice.add_element(instance)
     return lattice
 
@@ -60,7 +63,10 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     thinlen = length/slices
     thinlabel = '({})th'.format(label)
     for nb in range(slices):
-        instance = ELM.QDth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        if FLAGS['express']:
+            instance = ELM.QDthx(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        else:
+            instance = ELM.QDth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
         lattice.add_element(instance)
     return lattice
 
@@ -194,6 +200,7 @@ def factory(input_file):
         if 'map'         in flags: FLAGS['map']      = SUMMARY['track with map']   = flags['map']
         if 'KVprint'     in flags: FLAGS['KVprint']                                = flags['KVprint']
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
+        if 'express'     in flags: FLAGS['express']                                = flags['express']
         return flags
 # --------
     def read_sections(in_data):
