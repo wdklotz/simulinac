@@ -51,7 +51,6 @@ def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
     thinlen = length/slices
     for nb in range(slices):
         if FLAGS['express']:
-            # thinlabel = label+'x'
             instance = ELM.QFthx(k0=k0,length=thinlen,label=label,particle=particle)
         else:
             instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle)
@@ -64,7 +63,6 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
-            # thinlabel = label+'x'
             instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle)
         else:
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle)

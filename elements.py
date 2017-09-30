@@ -267,9 +267,10 @@ class QF(D):
     def adjust_energy(self,tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
-        cpf = self.particle(tkin).gamma_beta
+        self.particle(tkin)
+        cpf = self.particle.gamma_beta
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
         return self
 ## Trace3D defocusing
 class QD(QF):       
@@ -315,9 +316,10 @@ class SD(D):
     def adjust_energy(self,tkin):
         ri = self.radius
         cpi = self.particle.gamma_beta
-        cpf = self.particle(tkin).gamma_beta
+        self.particle(tkin)
+        cpf = self.particle.gamma_beta
         rf = ri*cpf/cpi  # scale bending radius with new impulse
-        self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin))
+        self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle)
         return self
 ## Trace3D rectangular bending dipole in x-plane
 class RD(SD):        
