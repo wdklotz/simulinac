@@ -217,7 +217,7 @@ segments:
 ##...........................................................................................
 lattice:
     - title: 25.09.2017 versuche 70-200MeV        # description -  DON't remove or reposition!
-    # - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    # - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
     

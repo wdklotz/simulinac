@@ -745,17 +745,23 @@ class QFthx(D):
         return self
     def shorten(self,l=0.):
         return QFthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
+    def make_slices(self,anz=10):
+        mb = I(label='',viseo=0)                   ## viseo point
+        # mv = I(label='',viseo=self.viseo)        ## viseo point
+        slices = [mb,self]
+        return slices
 class QFth(_thin):   
     """
     Thin F-Quad
     """
-    def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen']):
+    def __init__(self, k0=0., length=0., label='QFT', viseo=+0.5, particle=PARAMS['sollteilchen']):
         super().__init__(particle=particle)
         self.k0     = k0
         self.length = length
         L = self.length
         self.label  = label
-        di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=+0.5)
+        self.viseo  = viseo
+        di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=self.viseo)
         df = di
         kick = I(particle=self.particle)    # MDIMxMDIM unit matrix
         m = kick.matrix                     # thin lens quad matrix
@@ -766,14 +772,13 @@ class QFth(_thin):
         lens = df * (kick * di)     #matrix produkt df*kick*di
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
-        self.viseo = +0.5
     def adjust_energy(self,tkin):
         cpi = self.particle.gamma_beta
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
+        self.__init__(k0=kf, length=self.length, label=self.label, viseo=self.viseo, particle=self.particle)
         return self
 ## thin D-quad
 class QDthx(QFthx):
@@ -790,9 +795,9 @@ class QDth(QFth):
     """
     Thin D-Quad
     """
-    def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen']):
-        super().__init__(k0 = -k0, length=length, label=label, particle=particle)
-        self.viseo = -0.5
+    def __init__(self, k0=0., length=0., label='QDT', viseo=-0.5, particle=PARAMS['sollteilchen']):
+        super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle)
+        # self.viseo = -0.5
         self.k0    = k0
 ## RF cavity als D*RFG*D
 class RFC(_thin):    
