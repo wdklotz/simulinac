@@ -730,7 +730,7 @@ class QFth(_thin):
         self.label  = label
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=+0.5)
         df = di
-        kick = _matrix_()    ## MDIMxMDIM unit matrix
+        kick = I(particle=self.particle)    ## MDIMxMDIM unit matrix
         m = kick.matrix      ## thin lens quad matrix
         if(self.k0l == 0.):
             # m[1,0]      = m[3,2] = 0.
@@ -764,7 +764,7 @@ class QDth(_thin):
         self.label  = label
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=-0.5)
         df = di
-        kick = _matrix_()    ## MDIMxMDIM unit matrix
+        kick = I(particle=self.particle)    ## MDIMxMDIM unit matrix
         m = kick.matrix      ## thin lens quad matrix
         if(self.k0l == 0.):
             # m[1,0]      = m[3,2]        = 0.

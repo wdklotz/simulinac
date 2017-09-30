@@ -212,12 +212,10 @@ def test3(kf,kd,ld):
     # thin
     cell,dummy,dummy    = make_thin(kf,kd,ld,anz=anz)
     mcell,betax,betay   = cell.cell()
-    beta_matrix         = mcell.beta_matrix()
     beta_fun_thin       = cell.twiss_functions(steps=100)
     # thick
     cell,dummy,dummy    = make_thick(kf,kd,ld,anz=anz)
     mcell,betax,betay   = cell.cell()
-    beta_matrix         = mcell.beta_matrix()
     beta_fun_thick      = cell.twiss_functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*

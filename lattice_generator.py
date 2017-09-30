@@ -46,6 +46,24 @@ def get_mandatory(attributes,key,item):
 def lod2d(l):    ##list of dicts to dict
     return {k:v for d in l for k,v in d.items()}
 
+def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
+    lattice = Lattice()
+    thinlen = length/slices
+    thinlabel = '({})th'.format(label)
+    for nb in range(slices):
+        instance = ELM.QFth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        lattice.add_element(instance)
+    return lattice
+
+def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
+    lattice = Lattice()
+    thinlen = length/slices
+    thinlabel = '({})th'.format(label)
+    for nb in range(slices):
+        instance = ELM.QDth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+        lattice.add_element(instance)
+    return lattice
+
 def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
@@ -59,13 +77,21 @@ def instanciate_element(item):
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
-        instance = ELM.QF(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
+        slices   = get_mandatory(attributes,'slices',label)
+        if slices > 1:
+            instance = replace_QF_with_QFth_lattice(slices,kq,length,label,PARAMS['sollteilchen'])
+        elif slices <= 1:
+            instance = ELM.QF(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'QD':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
-        instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
+        slices   = get_mandatory(attributes,'slices',label)
+        if slices > 1:
+            instance = replace_QD_with_QDth_lattice(slices,kq,length,label,PARAMS['sollteilchen'])
+        elif slices <= 1:
+            instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'RFG':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -143,8 +169,12 @@ def factory(input_file):
                 elementClass = element['type']
                 elmItem = (elementClass,element)
                 DEBUG_MODULE('elmItem in make_lattice',elmItem)
-                (label,instance) = instanciate_element(elmItem)  #INSTANCIATE!!
-                lattice.add_element(instance)  #add element instance to lattice
+                (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
+                DEBUG_MODULE('instance {} {}'.format(label,instance))
+                if isinstance(instance,ELM._matrix_):
+                    lattice.add_element(instance)  # add element instance to lattice
+                elif isinstance(instance,Lattice):
+                    lattice.concat(instance)       # concatenate partial with lattice
         return lattice   #the complete lattice
 # --------
     def read_flags(in_data):

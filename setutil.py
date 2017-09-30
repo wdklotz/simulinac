@@ -256,7 +256,7 @@ def collect_data_for_summary(lattice):
 
     sections =  PARAMS['sections']   ## comes from INPUT
     if len(sections) == 0: sections = ['*']      ## section wildcart
-    types = ['QF','QD']
+    types = ['QF','QD','QFth','QDth']
     for sec in sections:
         for typ in types:
             elements = elements_in_section(typ,sec)

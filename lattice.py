@@ -81,6 +81,17 @@ class Lattice(object):
             mcell.set_section('<= full lattice map')
         return mcell.string()
 
+    def set_section(self,sec=''):
+        """
+        Setter for section tag (sections are not mandatory!)
+        To distinguish different parts of the lattice, each element can be tagged by a section ID
+        indicating the lattice part it belongs to.
+        """
+        for ipos in self.seq:
+            element,s0,s1 = ipos
+            element.set_section(sec)
+        return
+
     def stats(self,soll_track):
         """
         Gather lattice statistics
