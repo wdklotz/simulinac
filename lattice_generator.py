@@ -49,12 +49,12 @@ def lod2d(l):    ##list of dicts to dict
 def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
     lattice = Lattice()
     thinlen = length/slices
-    thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
+            thinlabel = label+'x'
             instance = ELM.QFthx(k0=k0,length=thinlen,label=thinlabel,particle=particle)
         else:
-            instance = ELM.QFth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+            instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle)
         lattice.add_element(instance)
     return lattice
 
@@ -64,9 +64,10 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
+            thinlabel = label+'x'
             instance = ELM.QDthx(k0=k0,length=thinlen,label=thinlabel,particle=particle)
         else:
-            instance = ELM.QDth(k0=k0,length=thinlen,label=thinlabel,particle=particle)
+            instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle)
         lattice.add_element(instance)
     return lattice
 
