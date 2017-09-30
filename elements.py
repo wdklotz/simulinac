@@ -56,8 +56,8 @@ class _matrix_(object):
     def __call__(self,n=MDIM,m=MDIM):
         return self.matrix[:n,:m]     ## return upper left nxm submatrix
     def string(self):
-        n = 33
-        nx = 200
+        n  = 42
+        nx = 300
         if len(self.label) > nx:
             label = self.label[:n]+'.....'+self.label[-n:]   ## when too long keep it short
         else:
@@ -754,30 +754,27 @@ class QFth(_thin):
         super().__init__(particle=particle)
         self.k0     = k0
         self.length = length
-        self.k0l    = k0*length
+        L = self.length
         self.label  = label
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=+0.5)
         df = di
-        kick = I(particle=self.particle)    ## MDIMxMDIM unit matrix
-        m = kick.matrix      ## thin lens quad matrix
-        if(self.k0l == 0.):
-            # m[1,0]      = m[3,2] = 0.
-            m[XPKOO,XKOO] = m[YPKOO,YKOO] = 0.
-        else:
-            # m[1,0]      = -1./self.k0l
+        kick = I(particle=self.particle)    # MDIMxMDIM unit matrix
+        m = kick.matrix                     # thin lens quad matrix
+            # m[1,0]      = -self.k0*L
             # m[3,2]      = -m[1,0]
-            m[XPKOO,XKOO] = -self.k0l
-            m[YPKOO,YKOO] = -m[XPKOO,XKOO]
+        m[XPKOO,XKOO] = -self.k0*L
+        m[YPKOO,YKOO] = -m[XPKOO,XKOO]
         lens = df * (kick * di)     #matrix produkt df*kick*di
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
         self.viseo = +0.5
     def adjust_energy(self,tkin):
-        ki = self.k0
         cpi = self.particle.gamma_beta
+        self.particle(tkin)
         cpf = self.particle(tkin).gamma_beta
+        ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
         return self
 ## thin D-quad
 class QDthx(QFthx):
@@ -790,38 +787,21 @@ class QDthx(QFthx):
         self.k0 = k0   # hide parent's member
     def shorten(self,l=0.):
         return QDthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
-class QDth(_thin):  
+class QDth(QFth):
     """
     Thin D-Quad
     """
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen']):
-        super().__init__(particle=particle)
-        self.k0     = k0
-        self.length = length
-        self.k0l    = k0*length
-        self.label  = label
-        di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=-0.5)
-        df = di
-        kick = I(particle=self.particle)    ## MDIMxMDIM unit matrix
-        m = kick.matrix      ## thin lens quad matrix
-        if(self.k0l == 0.):
-            # m[1,0]      = m[3,2]        = 0.
-            m[XPKOO,XKOO] = m[YPKOO,YKOO] = 0.
-        else:
-            # m[1,0]      = 1./self.k0l
-            # m[3,2]      = -m[1,0]
-            m[XPKOO,XKOO] = self.k0l
-            m[YPKOO,YKOO] = -m[XPKOO,XKOO]
-        lens = df * (kick * di)
-        self.matrix = lens.matrix
-        self.triplet = (di,kick,df)
+        super().__init__(k0 = -k0, length=length, label=label, particle=particle)
+        self.k0    = k0
         self.viseo = -0.5
     def adjust_energy(self,tkin):
-        ki = self.k0
         cpi = self.particle.gamma_beta
+        self.particle(tkin)
         cpf = self.particle(tkin).gamma_beta
+        ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle(tkin))
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
         return self
 ## RF cavity als D*RFG*D
 class RFC(_thin):    
