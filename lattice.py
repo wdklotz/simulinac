@@ -97,26 +97,25 @@ class Lattice(object):
         Gather lattice statistics
         """
         cav_counter = 0
-        qf_counter  = 0
-        qd_counter  = 0
+        q_counter   = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
         tk_i = soll_track.first()[6]
         tk_f = soll_track.last()[6]
         for item in self.seq:
             element,s0,s1 = item
-            if isinstance(element,ELM.QF) and (not isinstance(element,ELM.QD)):
-                qf_counter += 1
-            if isinstance(element,ELM.QD):
-                qd_counter += 1
+            if isinstance(element,ELM.QF) \
+            or isinstance(element,ELM.QD):
+                q_counter += 1
             if isinstance(element,ELM.RFG) \
                 or isinstance(element,ELM.RFC) \
                 or isinstance(element,TTF.TTFG):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
-        SUMMARY['nbof F-quads*']        = qf_counter
-        SUMMARY['nbof D-quads*']        = qd_counter
+            if q_counter == 0:
+                q_counter = '0 (no thick quads?)'
+        SUMMARY['nbof quadrupoles*']    = q_counter
         SUMMARY['nbof cavities*']       = cav_counter
         SUMMARY['(ttf)min,(ttf)max*']   = (ttfm,ttfx)
         SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
