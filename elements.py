@@ -707,9 +707,9 @@ class _thin(_matrix_):
             slices.append(d2)
         # DEBUG_MODULE('slices',slices)
         return slices
-    def shorten(self,l=0.):
-        warnings.warn("No need to shorten a thin element!")
-        return self
+    # def shorten(self,l=0.):
+    #     warnings.warn("No need to shorten a thin element!")
+    #     return self
     def set_section(self,sec=''):
         """
         Setter for section tag (sections are not mandatory!)
@@ -739,7 +739,7 @@ class QFthx(D):
     def adjust_energy(self,tkin):
         cpi = self.particle.gamma_beta
         self.particle(tkin)          # particle energy adjusted
-        cpf = self.particle(tkin).gamma_beta
+        cpf = self.particle.gamma_beta
         ki  = self.k0
         kf  = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
@@ -771,7 +771,7 @@ class QFth(_thin):
     def adjust_energy(self,tkin):
         cpi = self.particle.gamma_beta
         self.particle(tkin)
-        cpf = self.particle(tkin).gamma_beta
+        cpf = self.particle.gamma_beta
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
@@ -795,14 +795,6 @@ class QDth(QFth):
         super().__init__(k0 = -k0, length=length, label=label, particle=particle)
         self.viseo = -0.5
         self.k0    = k0
-    def adjust_energy(self,tkin):
-        cpi = self.particle.gamma_beta
-        self.particle(tkin)
-        cpf = self.particle(tkin).gamma_beta
-        ki = self.k0
-        kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
-        return self
 ## RF cavity als D*RFG*D
 class RFC(_thin):    
     """
