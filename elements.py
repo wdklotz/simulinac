@@ -707,9 +707,6 @@ class _thin(_matrix_):
             slices.append(d2)
         # DEBUG_MODULE('slices',slices)
         return slices
-    # def shorten(self,l=0.):
-    #     warnings.warn("No need to shorten a thin element!")
-    #     return self
     def set_section(self,sec=''):
         """
         Setter for section tag (sections are not mandatory!)
