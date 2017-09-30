@@ -687,11 +687,11 @@ class RFG(D):
         return f_track
 class _thin(_matrix_): 
     """
-    Base class for thin elements
+    Base class for thin elements implemented as triplet D*Kick*D
     """
     def __init__(self,particle=PARAMS['sollteilchen']):
         self.particle = copy(particle)     # keep a local copy of the particle instance (important!)
-    def make_slices(self,anz=10):          # stepping routine through the triplet (D,Kick,D)
+    def make_slices(self,anz=10):          # stepping routine through the triplet
         # DEBUG_MODULEll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
@@ -727,7 +727,7 @@ class QFthx(D):
         self.k0     = k0
         self.length = length
         L = self.length
-        m = self.matrix                # thin lens quad matrix
+        m = self.matrix                # thin lens quad matrix (by hand calculation)
         m[0,0]  = 1. - k0*(L**2)/2.
         m[0,1]  = L - k0*(L**3)/4.
         m[1,0]  = -k0*L
@@ -793,8 +793,8 @@ class QDth(QFth):
     """
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen']):
         super().__init__(k0 = -k0, length=length, label=label, particle=particle)
-        self.k0    = k0
         self.viseo = -0.5
+        self.k0    = k0
     def adjust_energy(self,tkin):
         cpi = self.particle.gamma_beta
         self.particle(tkin)
