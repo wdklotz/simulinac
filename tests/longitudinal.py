@@ -17,7 +17,10 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import CONF,Proton
+import sys
+sys.path.insert(0,'..')
+
+from setutil import PARAMS,Proton
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from math import pi,cos,radians,degrees
 
@@ -39,9 +42,9 @@ def loop(phis0,ws0,phi0,w0):
     ws=ws0
     w=w0
 
-##    deg = CONF['degrees']
+##    deg = PARAMS['degrees']
     pr=Proton(ws); mc2=pr.e0; g=pr.gamma; b=pr.beta; phase_factor = -2*pi/(mc2*g*g*g*b*b)
-    T=pr.trtf(CONF['spalt_laenge'],CONF['frequenz']); energy_factor=CONF['spalt_spannung']*T
+    T=pr.trtf(PARAMS['spalt_laenge'],PARAMS['frequenz']); energy_factor=PARAMS['spalt_spannung']*T
 
     func=[]
     for i in range(70):
@@ -52,7 +55,7 @@ def loop(phis0,ws0,phi0,w0):
         func.append(fun)
     return func
 def test0():
-##    rad = CONF['radians']
+##    rad = PARAMS['radians']
     phis0=-30.
     ws0=50.
     w0 =ws0

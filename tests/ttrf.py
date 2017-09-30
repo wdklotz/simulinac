@@ -1,9 +1,12 @@
+import sys
+sys.path.insert(0,'..')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from setutil import tblprnt
 
-from setutil import CONF,SUMMARY,Particle,Proton,dictprnt,collect_summary,DEBUG
+from setutil import PARAMS,SUMMARY,Particle,Proton,dictprnt,DEBUG
 
 def test2D(X,Y,Z):
     from matplotlib.ticker import MaxNLocator
