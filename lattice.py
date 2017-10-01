@@ -55,17 +55,21 @@ class Lattice(object):
         self.gammy0 = 0.
         self.accel  = 0.
 
-    def add_element(self,elment):
+    def add_element(self,element):
         """
         Add element to lattice
         """
         if len(self.seq) == 0:
             s0 = 0.
         else:
-            s0 = self.seq[-1][-1]
-        l = elment.length
+            s0 = self.seq[-1].position[2]
+        l = element.length
+        si = s0
+        sf = si+l
+        sm = (sf+si)/2.
+        element.position= [si,sm,sf]
         self.length += l
-        elm_with_position = (elment,s0,s0+l)
+        elm_with_position = element
         self.seq.append(elm_with_position)
 
     def string(self):
@@ -73,8 +77,9 @@ class Lattice(object):
         Log lattice layout to string (could be even better?)
         """
         mcell = ELM.I(label='')   ##  chain matrices
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
+            s0 = element.position[0]
+            s1 = element.position[2]
             printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
                 format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -87,8 +92,7 @@ class Lattice(object):
         To distinguish different parts of the lattice, each element can be tagged by a section ID
         indicating the lattice part it belongs to.
         """
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
             element.set_section(sec)
         return
 
@@ -102,8 +106,7 @@ class Lattice(object):
         ttfx = +1.e-50
         tk_i = soll_track.first()[6]
         tk_f = soll_track.last()[6]
-        for item in self.seq:
-            element,s0,s1 = item
+        for element in self.seq:
             if isinstance(element,ELM.QF) \
             or isinstance(element,ELM.QD):
                 q_counter += 1
@@ -132,8 +135,7 @@ class Lattice(object):
             
         """
         mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
-        for count, ipos in enumerate(self.seq):
-            element,s0,s1 = ipos
+        for count,element in enumerate(self.seq):
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
         ## Stabilität ?
@@ -281,10 +283,9 @@ class Lattice(object):
         reprt = ''
         header = ''
         row = ''
-        for count, ipos in enumerate(reversed(self.seq)):
-            elm,si,sf = ipos
-            name = elm.label
-            len = elm.length
+        for count,element in enumerate(reversed(self.seq)):
+            name = element.label
+            len = element.length
             rest = (count+1)%19
             if rest != 0:
                 header += '{:6s}'.format(name)
@@ -302,20 +303,17 @@ class Lattice(object):
         res = Lattice()
         seq = copy(self.seq)
         seq.reverse()
-        for ipos in seq:
-            elm,s,s = ipos
+        for elm in seq:
             res.add_element(elm)
         return res
 
-    # def append(self,piece):
-    def concat(self,piece):
+    def concat(self,lattice_piece):
         """
         Concatenate two Lattice pieces
         """
-        seq = copy(piece.seq)
-        for ipos in seq:
-            elm,s0,s1 = ipos
-            self.add_element(elm)
+        seq = copy(lattice_piece.seq)
+        for element in seq:
+            self.add_element(element)
 
     def twiss_functions(self,steps=10):
         """
@@ -331,8 +329,7 @@ class Lattice(object):
         v_beta0 = NP.array([bx,ax,gx,by,ay,gy])
         v_beta = v_beta0
         s = 0.0
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
             # particle = element.particle                                      # DEBUG
             # objprnt(particle,text='twiss_functions: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
@@ -342,8 +339,7 @@ class Lattice(object):
                 s += i_element.length
                 betax  = v_beta[0]
                 betay  = v_beta[3]
-                viseo  = i_element.viseo
-                beta_fun.append((s,betax,betay,viseo))
+                beta_fun.append((s,betax,betay))
         return beta_fun
 
     def sigma_functions(self,steps=10):
@@ -357,8 +353,9 @@ class Lattice(object):
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
         saper = 1.e6  # aperture control
         s     = 0.0
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
+            s0 = element.position[0]
+            s1 = element.position[2]
             # objprnt(element.particle ,text='sigma_functions: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
@@ -373,32 +370,27 @@ class Lattice(object):
                     xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
                 except ValueError:
-                    # traceback.format_exc(limit=2)
-                    # print('WARNING: results may not have physical meanings!')
                     warnings.showwarning(
                             'WARNING: sqrt of negative number!\nResult may have no physical meaning!',
                             UserWarning,
                             'lattice.py',
                             'sigma_functions()',
-                            # line="xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]"
                             )
                 r = sqrt(xsquare_av**2+ysquare_av**2)
                 s += i_element.length
-                viseo = i_element.viseo
-                sigma_fun.append((s,xsquare_av,ysquare_av,viseo))
+                sigma_fun.append((s,xsquare_av,ysquare_av))
                 KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':i_element.particle.tkin})   # keep current values
                 sigma_i = sigma_f.clone()
                 if isinstance(i_element,ELM.MRK):                        # marker actions
                     i_element.do_actions()
             if 3.*r > PARAMS['aperture']:    # aperture control
                 saper = min(s0,saper)
-        if saper<1.e6:        # make use of warnings (experimental!)
+        if saper<1.e6:        # warnings (experimental!)
             warnings.showwarning(
                     '3*sigma out of APERTURE at about s ={:5.1f}[m]\nParticle lost!'.format(saper),
                     UserWarning,
                     'lattice.py',
                     'sigma_functions()',
-                    # line="if 3.*r > PARAMS['aperture']:    # aperture control"
                     )
         return sigma_fun
 
@@ -416,8 +408,7 @@ class Lattice(object):
             d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
             v_0[0,0] = d0
         s = 0.0
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 m_beta = i_element.matrix
@@ -428,6 +419,20 @@ class Lattice(object):
                 viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
+
+    def lattice_plot_function(self):
+        fun = []   # is list((s = Ordinate,f = Abszisse))
+        for element in self.seq:
+            # DEBUG('position',element.position )
+            pos   = element.position
+            viseo = element.viseo
+            si = pos[0]
+            sf = pos[2]
+            fun.append((si,0))
+            fun.append((si,viseo))
+            fun.append((sf,viseo))
+            fun.append((sf,0))
+        return fun
 
     def cs_traj(self,steps=10):
         """
@@ -450,19 +455,20 @@ class Lattice(object):
         sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m] Vorgabe
         dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe --> []
         # MDIM tracking used here
+        s      = 0.
         c_like = []
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
         s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i  ; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
-        for ipos in self.seq:
-            element,s0,s1 = ipos
+        for element in self.seq:
             particle = element.particle
             gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
+                s += i_element.length
                 ## cos_like
                 # DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
                 c_0 = i_element.map(c_0)
@@ -481,8 +487,8 @@ class Lattice(object):
                 syp = s_0[YPKOO]
                 sz  = -s_0[ZKOO]*360./(beta*lamb)
                 sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
-                c_like.append((cx,cxp,cy,cyp,cz,cdw))
-                s_like.append((sx,sxp,sy,syp,sz,sdw))
+                c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
+                s_like.append((s,sx,sxp,sy,syp,sz,sdw))
         return (c_like,s_like)
 
     def symplecticity(self):

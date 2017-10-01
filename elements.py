@@ -54,7 +54,7 @@ class _matrix_(object):
         self.slice_min = 0.001      ## minimal slice length
         self.viseo = 0.
     def __call__(self,n=MDIM,m=MDIM):
-        return self.matrix[:n,:m]     ## return upper left nxm submatrix
+        return self.matrix[:n,:m]   ## return upper left nxm submatrix
     def string(self):
         n  = 42
         nx = 300
@@ -71,10 +71,6 @@ class _matrix_(object):
                 s+='{:8.4g} '.format(self.matrix[i,j])
             s+='\n'
         return s
-    # def ppstring(self):
-    #     import pprint
-    #     pp = pprint.PrettyPrinter(indent=4)
-    #     return pp.pformat(self)
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_matrix_()
@@ -105,16 +101,11 @@ class _matrix_(object):
     def shorten(self,length=0.):    # virtual function to be implemented by child classes
         raise RuntimeError('FATAL: _matrix_.shorten(): virtual member function called!')
     def make_slices(self,anz=10):
-        mb = I(label='',viseo=0)                   ## viseo point 
-        mv = I(label='',viseo=self.viseo)          ## viseo point
         mr = I(label=self.label,viseo=self.viseo)  ## very small rest
-        # slices = [mb,mv]
         slices = []
 
         if self.length == 0.:           ## zero length element (like WD or CAV)
             slices.append(self)
-            # slices = slices + [mv,mb]
-            # DEBUG_MODULE('_matrix_.make_slices',dict(label=self.label,length='zero lenth element'))
 
         else:
             step = self.length/anz         ## calc step size
@@ -122,7 +113,6 @@ class _matrix_(object):
                 step  = self.slice_min
 
             (step_fraction_part,step_int_part) = modf(self.length/step)
-            # DEBUG_MODULE('_matrix_.make_slices',dict(label=self.label,length=self.length,anz=anz,step=step,step_fracion=step_fraction_part,step_int=step_int_part))
 
             rest = step * step_fraction_part
             mx   = self.shorten(step)     # shorten element to step length
@@ -135,9 +125,7 @@ class _matrix_(object):
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
-            # slices = slices + [mr,mv,mb]
         slices += [mr]
-        # DEBUG_MODULE('_matrix_.make_slices',slices)
         return slices
     def beta_matrix(self):
         """
@@ -189,53 +177,54 @@ class _matrix_(object):
         return f_track
 ## unity matrix (owns its particle instance!)
 class I(_matrix_):     
-    def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen']):
+    def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__()
-        self.label=label
-        self.viseo=viseo
-        self.particle=copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
+        self.label = label
+        self.viseo = viseo
+        self.position = position        # [entrance,middle,exit]
+        self.particle = copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## marker
 class MRK(I):        
-    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], actions=[]):
-        super().__init__(label=label, particle=particle)
+    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0,0,0], actions=[]):
+        super().__init__(label=label, particle=particle, position=position)
         self.actions = actions
     def shorten(self,l=0):
         return self
-    def do_actions(self):                   # do actions attached to the marker
+    def do_actions(self):                # do actions attached to the marker
         for action in self.actions:
             MarkerActions[action]()
     def adjust_energy(self,tkin):
-        self.__init__(label=self.label, particle=self.particle(tkin), actions=self.actions)
+        self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, actions=self.actions)
         return self
 ## Trace3D drift space
 class D(I):     
     """
     Trace3D drift space
     """
-    def __init__(self, length=0., viseo=0., label='D', particle=PARAMS['sollteilchen']):
-        super().__init__(label=label, viseo=viseo, particle=particle)
-        self.length = length     ##  length [m]
+    def __init__(self, length=0., viseo=0., label='D', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(label=label, viseo=viseo, particle=particle, position=position)
+        self.length = length
         g = self.particle.gamma
         self.matrix[XKOO,XPKOO] = self.matrix[YKOO,YPKOO] = self.length
         self.matrix[ZKOO,ZPKOO] = self.length/(g*g)
         self.matrix[SKOO,LKOO]  = self.length     #delta-s
-    def shorten(self,l=0.):    # returns a new instance!
+    def shorten(self,l=0.):
         return D(length=l,label=self.label, particle=self.particle, viseo=self.viseo)
     def adjust_energy(self,tkin):
-        self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin))
+        self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin), position=self.position)
         return self
 ## Trace3D focussing quad
 class QF(D):     
     """
     Trace3D focussing quad
     """
-    def __init__(self, k0=0., length=0., label='QF', particle=PARAMS['sollteilchen']):
-        super().__init__(length=length, label=label, particle=particle)
+    def __init__(self, k0=0., length=0., label='QF', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(length=length, label=label, particle=particle, position=position)
         self.k0=k0         ## Quad strength [m**-2]
         self.matrix = self._mx_()
         self.viseo = +0.5
     def shorten(self,l=0.):
-        return QF(k0=self.k0, length=l, label=self.label, particle=self.particle)
+        return QF(k0=self.k0, length=l, label=self.label, particle=self.particle, position=self.position)
     def _mx_(self):
         m = self.matrix
         g = self.particle.gamma
@@ -270,31 +259,31 @@ class QF(D):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position)
         return self
 ## Trace3D defocusing
 class QD(QF):       
     """
     Trace3D defocussing quad
     """
-    def __init__(self, k0=0., length=0., label='QD', particle=PARAMS['sollteilchen']):
-        super().__init__(k0=k0, length=length, label=label, particle=particle)
+    def __init__(self, k0=0., length=0., label='QD', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(k0=k0, length=length, label=label, particle=particle, position=position)
         self.viseo = -0.5
     def shorten(self,l=0.):
-        return QD(k0=self.k0, length=l, label=self.label, particle=self.particle)
+        return QD(k0=self.k0, length=l, label=self.label, particle=self.particle, position=self.position)
 ## Trace3D sector bending dipole in x-plane
 class SD(D):         
     """
     Trace3d sector dipole in x-plane
     """
-    def __init__(self, radius=0., length=0., label='SB', particle=PARAMS['sollteilchen']):
-        super().__init__(length=length, label=label, particle=particle)
+    def __init__(self, radius=0., length=0., label='SB', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(length=length, label=label, particle=particle, position=position)
         self.radius = radius
         self.matrix = self._mx_()
         self.viseo = 0.25
     def shorten(self,l=0.):
-        return SD(radius=self.radius, length=l, label=self.label, particle=self.particle)
-    def _mx_(self):  # nach Trace3D
+        return SD(radius=self.radius, length=l, label=self.label, particle=self.particle, position=self.position)
+    def _mx_(self):
         m = self.matrix
         rho = self.radius
         k = 1./rho
@@ -319,27 +308,27 @@ class SD(D):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         rf = ri*cpf/cpi  # scale bending radius with new impulse
-        self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle)
+        self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle, position=self.position)
         return self
 ## Trace3D rectangular bending dipole in x-plane
 class RD(SD):        
     """
     Trace3D rectangular dipole x-plane
     """
-    def __init__(self, radius=0., length=0., label='RB', particle=PARAMS['sollteilchen']):
-        super().__init__(radius=radius, length=length, label=label, particle=particle)
+    def __init__(self, radius=0., length=0., label='RB', particle=PARAMS['sollteilchen'],position=[0,0,0]):
+        super().__init__(radius=radius, length=length, label=label, particle=particle, position=self.position)
         wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * (self * wd)
         self.matrix= rd.matrix
     def shorten(self,l=0.):
-        return RD(radius=self.radius, length=l, label=self.label, particle=self.particle)
+        return RD(radius=self.radius, length=l, label=self.label, particle=self.particle, position=self.position)
 ## Trace3D wedge of rectangular bending dipole in x-plane
 class WD(D):      
     """
     Trace3d dipole wedge x-plane
     """
-    def __init__(self, sector, label='WD', particle=PARAMS['sollteilchen']):
-        super().__init__(label=label, particle=particle)
+    def __init__(self, sector, label='WD', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(label=label, particle=particle, position=self.position)
         m = self.matrix
         self.parent = sector
         self.radius = sector.radius
@@ -353,7 +342,7 @@ class WD(D):
         m[XPKOO,XKOO] = ckp
         m[YPKOO,YKOO] = -ckp
     def shorten(self,l=0.):
-        wd = WD(self.parent, label=self.label, particle=self.particle)
+        wd = WD(self.parent, label=self.label, particle=self.particle, position=self.position)
         m = wd.matrix
         wd.psi = l/wd.radius
         rinv = 1./wd.radius
@@ -376,14 +365,15 @@ class GAP(D):
                         label      = 'GAP',
                         particle   = PARAMS['sollteilchen'],
                         gap        = PARAMS['spalt_laenge'],
+                        position   = [0,0,0],
                         dWf        = FLAGS['dWf']):
-        super().__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle, position=position)
         self.u0     = U0                       # [MV] gap Voltage
         self.phis   = PhiSoll                  # [radians] soll phase
         self.freq   = fRF                      # [Hz]  RF frequenz
         self.dWf    = dWf
         self.gap    = gap
-        self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq  # [m] RF wellenlaenge
+        self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq# [m] RF wellenlaenge
         self.tr     = self._trtf_(self.particle.beta)         # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf      # T.Wrangler pp.221
         tk_center   = self.deltaW*0.5+self.particle.tkin      # energy in gap center
@@ -420,6 +410,7 @@ class GAP(D):
                     label      = self.label,
                     particle   = self.particle(tkin),
                     gap        = self.gap,
+                    position   = self.position,
                     dWf        = self.dWf)
         return self
 ## Basic RF-gap model from A.Shislo
@@ -477,7 +468,6 @@ class RFB(D):
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
         
-        # DWs        = qE0LT*cos(phis) is same as self.deltaW
         DWs        = self.deltaW
         Wsf        = Wsi + DWs 
         particlesf = copy(particlesi)(tkin=Wsf)
@@ -551,12 +541,12 @@ class RFB(D):
         # betai     = particlei.beta
         # gbi       = particlei.gamma_beta
 
-        r    = sqrt(x**2+y**2)                                # radial coordinate
+        r    = sqrt(x**2+y**2)                          # radial coordinate
         Kr   = (twopi*r)/(lamb*gbi)
-        i0   = I0(Kr)                                         # bessel function I0
-        i1   = I1(Kr)                                         # bessel function I1
+        i0   = I0(Kr)                                   # bessel function I0
+        i1   = I1(Kr)                                   # bessel function I1
 
-        wout   = win + qE0LT*i0*cos(pin)              # energy @ (f)   (4.2.3) A.Shishlo
+        wout   = win + qE0LT*i0*cos(pin)           # energy @ (f)   (4.2.3) A.Shishlo
 
         # particlef = copy(self.particle)(tkin=wout)
         particlef = copy(self.particle)(tkin=WOUT)
@@ -601,13 +591,14 @@ class RFG(D):
                     label      = 'RFG',
                     particle   = PARAMS['sollteilchen'],
                     gap        = PARAMS['spalt_laenge'],
+                    position   = [0,0,0],
                     mapping    = 'simple',
                     dWf        = FLAGS['dWf']):
-        super().__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle,position=position)
         self.viseo   = 0.25
-        self.u0      = U0*dWf                                 # [MV] gap Voltage
-        self.phis    = PhiSoll                                # [radians] soll phase
-        self.freq    = fRF                                    # [Hz]  RF frequenz
+        self.u0      = U0*dWf             # [MV] gap Voltage
+        self.phis    = PhiSoll            # [radians] soll phase
+        self.freq    = fRF                # [Hz]  RF frequenz
         self.label   = label
         self.gap     = gap
         self.dWf     = dWf
@@ -662,7 +653,6 @@ class RFG(D):
     def shorten(self,l=0.):
         return self
     def adjust_energy(self,tkin):
-        # DEBUG_MODULE('RFG: adjust_energy',tkin)
         self.__init__(
                     U0         = self.u0,
                     PhiSoll    = self.phis,
@@ -670,6 +660,7 @@ class RFG(D):
                     label      = self.label,
                     particle   = self.particle(tkin),
                     gap        = self.gap,
+                    position   = self.position,
                     mapping    = self.mapping,
                     dWf        = self.dWf)
         return self
@@ -691,8 +682,9 @@ class _thin(_matrix_):
     """
     Base class for thin elements implemented as triplet D*Kick*D
     """
-    def __init__(self,particle=PARAMS['sollteilchen']):
+    def __init__(self,particle=PARAMS['sollteilchen'],position=[0,0,0]):
         self.particle = copy(particle)     # keep a local copy of the particle instance (important!)
+        self.position = position
     def make_slices(self,anz=10):          # stepping routine through the triplet
         # DEBUG_MODULEll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
@@ -704,7 +696,7 @@ class _thin(_matrix_):
         slices = []
         for i in range(anz1):
             slices.append(d1)
-        slices.append(kik)              ## the Kick
+        slices.append(kik)                  # the Kick
         for i in range(anz1):
             slices.append(d2)
         # DEBUG_MODULE('slices',slices)
@@ -721,8 +713,8 @@ class QFthx(D):
     """
     Thin F-Quad   (express version of QFth)
     """
-    def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen']):
-        super().__init__(viseo=+0.5, length=length, label=label, particle=particle)
+    def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(viseo=+0.5, length=length, label=label, particle=particle, position=position)
         self.k0     = k0
         self.length = length
         L = self.length
@@ -737,25 +729,23 @@ class QFthx(D):
         m[3,3]  = m[2,2]
     def adjust_energy(self,tkin):
         cpi = self.particle.gamma_beta
-        self.particle(tkin)          # particle energy adjusted
+        self.particle(tkin)            # particle energy adjusted
         cpf = self.particle.gamma_beta
         ki  = self.k0
-        kf  = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle)
+        kf  = ki*cpi/cpf               # scale quad strength with new impulse
+        self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position)
         return self
     def shorten(self,l=0.):
-        return QFthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
+        return QFthx(k0=self.k0,length=l,label=self.label,particle=self.particle, position=self.position)
     def make_slices(self,anz=10):
-        mb = I(label='',viseo=0)                   ## viseo point
-        # mv = I(label='',viseo=self.viseo)        ## viseo point
-        slices = [mb,self]
+        slices = [self]
         return slices
 class QFth(_thin):   
     """
     Thin F-Quad
     """
-    def __init__(self, k0=0., length=0., label='QFT', viseo=+0.5, particle=PARAMS['sollteilchen']):
-        super().__init__(particle=particle)
+    def __init__(self, k0=0., length=0., label='QFT', viseo=+0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(particle=particle,position=position)
         self.k0     = k0
         self.length = length
         L = self.length
@@ -764,9 +754,9 @@ class QFth(_thin):
         di = D(length=0.5*length,particle=self.particle,label=self.label,viseo=self.viseo)
         df = di
         kick = I(particle=self.particle)    # MDIMxMDIM unit matrix
-        m = kick.matrix                     # thin lens quad matrix
-            # m[1,0]      = -self.k0*L
-            # m[3,2]      = -m[1,0]
+        m = kick.matrix                     # my thin lens quad matrix
+        # m[1,0]      = -self.k0*L
+        # m[3,2]      = -m[1,0]
         m[XPKOO,XKOO] = -self.k0*L
         m[YPKOO,YKOO] = -m[XPKOO,XKOO]
         lens = df * (kick * di)     #matrix produkt df*kick*di
@@ -778,25 +768,25 @@ class QFth(_thin):
         cpf = self.particle.gamma_beta
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0=kf, length=self.length, label=self.label, viseo=self.viseo, particle=self.particle)
+        self.__init__(k0=kf, length=self.length, label=self.label, viseo=self.viseo, particle=self.particle, position=self.position)
         return self
 ## thin D-quad
 class QDthx(QFthx):
     """
     Thin D-Quad   (express version of QDth)
     """
-    def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen']):
-        super().__init__(k0 = -k0, length=length, label=label, particle=particle)
+    def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(k0 = -k0, length=length, label=label, particle=particle, position=position)
         self.viseo = -0.5
         self.k0 = k0   # hide parent's member
     def shorten(self,l=0.):
-        return QDthx(k0=self.k0,length=l,label=self.label,particle=self.particle)
+        return QDthx(k0=self.k0,length=l,label=self.label,particle=self.particle,position=self.position)
 class QDth(QFth):
     """
     Thin D-Quad
     """
-    def __init__(self, k0=0., length=0., label='QDT', viseo=-0.5, particle=PARAMS['sollteilchen']):
-        super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle)
+    def __init__(self, k0=0., length=0., label='QDT', viseo=-0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle, position=position)
         # self.viseo = -0.5
         self.k0    = k0
 ## RF cavity als D*RFG*D
@@ -812,8 +802,9 @@ class RFC(_thin):
                     particle = PARAMS['sollteilchen'],
                     gap      = PARAMS['spalt_laenge'],
                     length   = 0.,
+                    position = [0,0,0],
                     dWf      = FLAGS['dWf']):
-        super().__init__(particle=particle)
+        super().__init__(particle=particle,position=position)
         if length == 0.: length = gap
         self.u0     = U0*dWf
         self.phis   = PhiSoll
@@ -832,10 +823,9 @@ class RFC(_thin):
                     particle=self.particle,
                     gap=self.gap,
                     dWf=self.dWf)  ## Trace3D RF gap
-        # DEBUG_MODULE('RFC-kick: deltaW: ',self.kick.deltaW)
         self.tr = self.kick.tr
         tk_f = self.particle.tkin+self.kick.deltaW   #tkinetic after acc. gap
-        self.df.adjust_energy(tk_f)               #update energy for downstream drift after gap
+        self.df.adjust_energy(tk_f)                  #update energy for downstream drift after gap
         lens = self.df * self.kick * self.df         #one for three
         self.matrix = lens.matrix
         # DEBUG_MODULE('RFC matrix\n',self.matrix)
@@ -849,6 +839,7 @@ class RFC(_thin):
                     particle      = self.particle(tkin),
                     gap           = self.gap,
                     length        = self.length,
+                    position      = self.position,
                     dWf           = self.dWf)
         return self
 ## utilities

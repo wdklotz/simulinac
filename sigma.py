@@ -18,9 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import pi,radians,degrees,sin,cos
-# from copy import copy
 import numpy as np
-# import warnings
 
 from elements import RFG
 from setutil import Proton,DEBUG,mxprnt

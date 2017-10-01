@@ -231,12 +231,11 @@ def collect_data_for_summary(lattice):
         import itertools
         def predicate(element):
             try:
-                test = (type(element[0]).__name__ == typ and element[0].sec == sec)
+                test = (type(element).__name__ == typ and element.sec == sec)
             except AttributeError:
-                test = (type(element[0]).__name__ == typ)  ## no sec tags? take all!
+                test = (type(element).__name__ == typ)  ## no sec tags? take all!
             return not test
         filtered_elements = itertools.filterfalse(predicate,lattice.seq)
-        # for t in filtered_elements: DEBUG_MODULE('filterfalse',(t,t[0].label))  ## whazit
         return filtered_elements
 
     def elements_in_section(typ,sec):
@@ -245,17 +244,17 @@ def collect_data_for_summary(lattice):
         """
         elements = list(elements_in_lattice(typ,sec))
         new_elements = []
-        seen = set()                  ## helper to eliminate duplicate entries
+        seen = set()             ## helper to eliminate duplicate entries
         for itm in elements:
-            label = itm[0].label      ## itm is tupel (element,s0,s1)
+            label = itm.label
             if label in seen:
                 continue
             else:
                 seen.add(label)
-                new_elements.append(itm[0])
+                new_elements.append(itm)
         return new_elements
-
-    sections =  PARAMS['sections']   ## comes from INPUT
+    ## body
+    sections =  PARAMS['sections']               ## comes from INPUT
     if len(sections) == 0: sections = ['*']      ## section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:

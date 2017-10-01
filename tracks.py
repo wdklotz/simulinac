@@ -144,9 +144,8 @@ def track_soll(lattice):
     # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                   1   s   1
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
       #track of reference particle
-    for ipos in lattice.seq:
-        element,s0,s1 = ipos
-        # DEBUG_MODULE('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),s0,element.label))
+    for element in lattice.seq:
+        # DEBUG_MODULE('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),element.position[1],element.label))
         ti = soll_track.last()                #track: at entrance
         # DEBUG_MODULE('\t\ti >>',Track.string(ti))
         element.adjust_energy(ti[EKOO])    #enery adaptation
@@ -170,8 +169,7 @@ def track(lattice,bunch):
     print_progress_bar(0, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
     for (count,particle_track) in enumerate(bunch.tracks()):
         ti = particle_track.first()
-        for ipos in lattice.seq:
-            element,s0,s1 = ipos
+        for element in lattice.seq:
             tf = element.matrix.dot(ti)      #track through!
             if isinstance(element,ELM.MRK):
                 # if count == 1: DEBUG_MODULE('tf in track({}) >>'.format(count)+Track.string(tf))
