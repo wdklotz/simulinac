@@ -3,22 +3,23 @@
  - DONE low energy lattice? 5Mev - 50Mev?  
  - DONE nonlinear long. dynamics? non-linear (see Shislo, Holmes paper!), not for lin. SIMULINAC!   
  - DONE SIMULINAC tracking with nonlin. cavities? better with pyORBIT!
+ - DONE elements with  Position member
 
  - DROPPED test with electrons why?
  - DROPPED ELEGANT vergleich? have it on Windows - is it runniung?
  - DROPPED DYNAC vergleich (Linux)
  - DROPPED Monte Carlo für verluste (mit DYNAC?)
+ - DROPPED Cavitychain: phase advance from (i) to (f); kann man vergessen siehe helper5.py
+
+ - POSTPONED ELEGANT vergleich & custom cavity?
+ - POSTPONED generic Display module
+ - POSTPONED Display-Function class
 
  - acceptance ellipse? not needed?
  - doublet & triplet lattices? pre-tests with TRACE3D (Windows & wine on Mac)
  - BMAD vergleich?
  - pyORBIT vergleich (MAC,Windows,Linux), my candidate for PIC!
  - neuen python driver simtrack (python for simple traking) schreiben
- - ELEGANT vergleich & custom cavity?
  - common python lattice parser for simulinac & pyOrbit (with MAD syntax?) - maybe later!
  - SIMULINAC with magnetic- & alignment-errors!
  - SIMULINAC end energy variabel 80Mev-200MeV!
- - Cavitychain: phase advance from (i) to (f)
- - elements with  Position member
- - generic Display module
- - Display-Function class
