@@ -41,8 +41,7 @@ DEBUG_MODULE = DEBUG_OFF
 ## Lattice
 class Lattice(object):
     """
-    The Lattice object is a list of tuples: 
-        (ELM.<element>, from_position, to_position)
+    The Lattice object is a list of elements: ELM.<element>
     """
     def __init__(self):
         self.seq    = []
