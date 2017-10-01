@@ -14,12 +14,16 @@
  - POSTPONED ELEGANT vergleich & custom cavity?
  - POSTPONED generic Display module
  - POSTPONED Display-Function class
+ - POSTPONED acceptance ellipse? not needed?
 
- - acceptance ellipse? not needed?
- - doublet & triplet lattices? pre-tests with TRACE3D (Windows & wine on Mac)
- - BMAD vergleich?
- - pyORBIT vergleich (MAC,Windows,Linux), my candidate for PIC!
- - neuen python driver simtrack (python for simple traking) schreiben
- - common python lattice parser for simulinac & pyOrbit (with MAD syntax?) - maybe later!
- - SIMULINAC with magnetic- & alignment-errors!
- - SIMULINAC end energy variabel 80Mev-200MeV!
+ - VIELLEICHT doublet & triplet lattices? pre-tests with TRACE3D (Windows & wine on Mac)
+ - VIELLEICHT BMAD vergleich?
+ - VIELLEICHT pyORBIT vergleich (MAC,Windows,Linux), my candidate for PIC!
+ - VIELLEICHT neuen python driver simtrack (python for simple traking) schreiben
+ - VIELLEICHT common python lattice parser for simulinac & pyOrbit (with MAD syntax?) - maybe later!
+ - VIELLEICHT with magnetic- & alignment-errors!
+
+ - SIMU end energy variabel 80Mev-200MeV!
+ - SIMU injection at ~15MeV!!!
+ - SIMU rf-phase rippel!!!
+ - SIMU 180 deg bend!!
