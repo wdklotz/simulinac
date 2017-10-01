@@ -10,11 +10,15 @@
  - DROPPED Monte Carlo für verluste (mit DYNAC?)
 
  - acceptance ellipse? not needed?
- - doublet & triplet lattices? pretest with TRACE3D (Windows & wine on Mac)
+ - doublet & triplet lattices? pre-tests with TRACE3D (Windows & wine on Mac)
  - BMAD vergleich?
  - pyORBIT vergleich (MAC,Windows,Linux), my candidate for PIC!
- - neuen python driver pySTEC (python for simple traking and envelope calculations) schreiben
- - ELEGANT custom cavity?
- - python lattice parser for simulinac & pyOrbit with MAD syntax - maybe later!
+ - neuen python driver simtrack (python for simple traking) schreiben
+ - ELEGANT vergleich & custom cavity?
+ - common python lattice parser for simulinac & pyOrbit (with MAD syntax?) - maybe later!
  - SIMULINAC with magnetic- & alignment-errors!
  - SIMULINAC end energy variabel 80Mev-200MeV!
+ - Cavitychain: phase advance from (i) to (f)
+ - elements with  Position member
+ - generic Display module
+ - Display-Function class
