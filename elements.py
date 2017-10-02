@@ -418,14 +418,14 @@ class RFB(D):
     """
     Base RF Gap Model from pyOrbit (A.Shislo)
     """
-    def __init__(self,parent,
+    def __init__(self,
+                    parent,
                     label      = 'RFB',
                     particle   = PARAMS['sollteilchen']):
-        super().__init__(label=label, particle=particle)
+        super().__init__(label=label, particle=particle, viseo=parent.viseo)
         self.particle = particle
         self.label    = label
         self.parent   = parent
-        self.viseo    = parent.viseo
         self.u0       = parent.u0         # [MV] gap Voltage
         self.phis     = parent.phis       # [radians] soll phase
         self.tr       = parent.tr
@@ -594,8 +594,7 @@ class RFG(D):
                     position   = [0,0,0],
                     mapping    = 'simple',
                     dWf        = FLAGS['dWf']):
-        super().__init__(label=label, particle=particle,position=position)
-        self.viseo   = 0.25
+        super().__init__(label=label, particle=particle,position=position, viseo=0.25)
         self.u0      = U0*dWf             # [MV] gap Voltage
         self.phis    = PhiSoll            # [radians] soll phase
         self.freq    = fRF                # [Hz]  RF frequenz
@@ -619,8 +618,6 @@ class RFG(D):
         # DEBUG_MODULE('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)   # the LINEAR TRANSPORT matrix R
-        self.particlei = particlei
-        self.particlef = particlef
 
         # !!!!!  INSTANCIATE a MAP instead of using the R matrix
         if FLAGS['map']:
@@ -714,8 +711,8 @@ class QFthx(D):
     """
     Thin F-Quad   (express version of QFth)
     """
-    def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(viseo=+0.5, length=length, label=label, particle=particle, position=position)
+    def __init__(self, k0=0., length=0., label='QFT', viseo=+0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(viseo=viseo, length=length, label=label, particle=particle, position=position)
         self.k0     = k0
         self.length = length
         L = self.length
@@ -776,9 +773,8 @@ class QDthx(QFthx):
     """
     Thin D-Quad   (express version of QDth)
     """
-    def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(k0 = -k0, length=length, label=label, particle=particle, position=position)
-        self.viseo = -0.5
+    def __init__(self, k0=0., length=0., label='QDT', viseo=-0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle, position=position)
         self.k0 = k0   # hide parent's member
     def shorten(self,l=0.):
         return QDthx(k0=self.k0,length=l,label=self.label,particle=self.particle,position=self.position)
@@ -788,7 +784,6 @@ class QDth(QFth):
     """
     def __init__(self, k0=0., length=0., label='QDT', viseo=-0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle, position=position)
-        # self.viseo = -0.5
         self.k0    = k0
 ## RF cavity als D*RFG*D
 class RFC(_thin):    

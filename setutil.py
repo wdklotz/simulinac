@@ -66,7 +66,7 @@ FLAGS  = dict(
         map                  = True,             # use maps to track trajectories through RFGap
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
-        express              = False             # use express version of thin quads
+        express              = True              # use express version of thin quads
         )
 PARAMS = dict(
         lichtgeschwindigkeit = 299792458.,       # [m/s] const
