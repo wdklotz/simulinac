@@ -124,7 +124,7 @@ class Lattice(object):
 
     def cell(self,closed=True):
         """
-        Construct the full lattice-cell matrix and extract standard quantities:
+        Construct the full accelerator lattice-cell matrix and extract standard quantities:
             full cell: mcell
             stability?
             betatron tunes: mux, muy 
@@ -250,7 +250,7 @@ class Lattice(object):
                 print('unstable lattice - STOP')
                 sys.exit(1)
         else:
-            # Startwerte fuer transfer line (keine periodischen Randbedingungen!)
+            # Startwerte fuer transferline (keine periodischen Randbedingungen!)
             # alfa, beta und emittance definieren den beam @ entrance
             # NOTE: transfer lattices need not to be stable!
             bax = PARAMS['betax_i']  # twiss beta @ entrance
@@ -435,7 +435,7 @@ class Lattice(object):
 
     def cs_traj(self,steps=10):
         """
-        Track Cos & Sin trajectories
+        Track COS & SIN trajectories
         """
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
             return 0.
@@ -468,18 +468,18 @@ class Lattice(object):
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 s += i_element.length
-                ## cos_like
+                ## COS_like
                 # DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
-                c_0 = i_element.map(c_0)
+                c_0 = i_element.map(c_0)   # map!!!
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
                 cy  = c_0[YKOO]
                 cyp = c_0[YPKOO]
                 cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
-                ## sin_like
+                ## SIN_like
                 # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
-                s_0 = i_element.map(s_0)
+                s_0 = i_element.map(s_0)   # map!!!
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
                 sy  = s_0[YKOO]

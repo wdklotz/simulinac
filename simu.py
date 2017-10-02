@@ -209,9 +209,8 @@ def loesung(filepath):
     if KVprint_flag:
         dictprnt(PARAMS,text='PARAMS',njust=1)
     else:
-        dictprnt(SUMMARY,text='summary')     # summary
-        # plot functions
-        display((sigma,c_like,s_like,lat_plot))
+        dictprnt(SUMMARY,text='summary')         # summary
+        display((sigma,c_like,s_like,lat_plot))  # plot!!!
 
 if __name__ == '__main__':
     import sys

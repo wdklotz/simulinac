@@ -41,10 +41,10 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
-## the mother of all thick lattice elements (a.k.a. matrices)
+## the mother of all lattice elements (a.k.a. matrices)
 class _matrix_(object):
     """
-    Base class for thick matrices
+    Base class for transfer matrices
     """
     # MDIMxMDIM matrices used here
     def __init__(self):
@@ -261,7 +261,7 @@ class QF(D):
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position)
         return self
-## Trace3D defocusing
+## Trace3D defocusing quad
 class QD(QF):       
     """
     Trace3D defocussing quad
@@ -621,6 +621,7 @@ class RFG(D):
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)   # the LINEAR TRANSPORT matrix R
         self.particlei = particlei
         self.particlef = particlef
+
         # !!!!!  INSTANCIATE a MAP instead of using the R matrix
         if FLAGS['map']:
             self.rfb = RFB(self,label='RFB',particle=self.particle)

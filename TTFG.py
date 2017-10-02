@@ -401,7 +401,7 @@ def test0():
     z = 1.e-3
     x=y=1.e-2
     T = tkin
-    # track-point fields:        x   x'  y  y'  z   z'  T  1   s   1
+    # track-point fields:          x   x'  y  y'  z   z'  T  1   s   1
     track = Track(start=np.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
     ti = track.last()
     for i in range(1):
