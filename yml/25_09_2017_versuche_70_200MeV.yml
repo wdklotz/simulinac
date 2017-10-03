@@ -52,7 +52,7 @@ parameters:
     - betay_i:              0.04     # [m] twiss beta @ entrance y
     - alfax_i:              0.0      # [1] twiss alpha x @ entrance
     - alfay_i:              0.0      # [1] twiss alpha y @ entrance
-    - sigmaz_i:             2.5e-3   # [m] longitudinal displacement z @ entrance
+    - sigmaz_i:             5.0e-3   # [m] longitudinal displacement z @ entrance
     # - sigmaz_i:             8.1795e-3   # separatrix? TTFG
     # - sigmaz_i:             8.1330e-3   # separatrix? RFG-RB
     - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ entrance
@@ -91,7 +91,8 @@ elements:
         - sec:      *HE          # is part of section
     - RFGH:  &RFGH          # ID: &alias
         - type:     RFG     # class
-        - Ez:       1.41    # [MV/m] (Ez)av electric field
+        # - Ez:       1.41    # [MV/m] (Ez)av electric field
+        - Ez:       2.31    # [MV/m] (Ez)av electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
@@ -104,7 +105,8 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
+        # - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
+        - Ezpeak:   4.00    # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
         - sec:      *HE     # is part of section
     - M:  &M                # ID: &alias
         - type:    MRK      # MRK class  
@@ -218,6 +220,7 @@ segments:
 lattice:
     - title: 25.09.2017 versuche 70-200MeV        # description -  DON't remove or reposition!
     # - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    # - [5,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    # - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
     
