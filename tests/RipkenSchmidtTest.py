@@ -79,16 +79,15 @@ def t3dmap(koord,particle,l):
     return(xf,xpf,yf,xpf,zf,dp2pf)
     
 m0c2 = PARAMS['proton_mass']
-# c    = PARAMS['lichtgeschwindigkeit']
 tkin0      = 100.
-E0         = m0c2+tkin0       # E-soll 
 soll       = Proton(tkin=tkin0)
+E0         = soll.e          # E-soll
 
 eta        = 1.e-2           #[%] dE/E0=(E-E0)/E0
 E          = (eta+1)*E0
 tkini      = E-m0c2
 particle   = Proton(tkin=tkini)
-l          = 50.e-3
+l          = 50.e-3          #[m]
 
 # x,xp,y,yp,z,dp/p  T3D Kordinaten
 xi  = yi  = 1.e-3
@@ -186,7 +185,7 @@ xpf    = koord[1]
 yf     = koord[2]
 ypf    = koord[3]
 zf     = koord[4]
-dp2pff = koord[5]
+dp2pf  = koord[5]
 row = [[
         '{:9.6e}'.format(xf),
         '{:9.6e}'.format(xpf),
