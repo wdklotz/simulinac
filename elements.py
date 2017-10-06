@@ -712,7 +712,7 @@ class QFthx(D):
     Thin F-Quad   (express version of QFth)
     """
     def __init__(self, k0=0., length=0., label='QFT', viseo=+0.5, particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(viseo=viseo, length=length, label=label, particle=particle, position=position)
+        super().__init__(length=length, label=label,viseo=viseo, particle=particle, position=position)
         self.k0     = k0
         self.length = length
         L = self.length

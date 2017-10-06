@@ -107,12 +107,12 @@ class Particle(object):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
-        self.e0         = mass                     # rest mass [MeV/c**2]
+        self.e0         = mass                     # rest mass [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
         self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         self.gamma_beta = self.gamma * self.beta
-        self.p          = self.gamma_beta * self.e0                 # impulse [Mev/c]
+        self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
         self.brho       = 1.e+6/ PARAMS['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
         self.name       = name
