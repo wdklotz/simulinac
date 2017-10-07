@@ -496,7 +496,7 @@ class RFB(D):
         xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis) # A.Shishlo 4.1.11)
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
-        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1,sf,1])
+        f_track = NP.array([xf,xpf,yf,ypf,zf,zfp,Tf,1.,sf,1.])
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
