@@ -140,13 +140,13 @@ class SIXD(ELM.D):
             sigmaf  = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai,soll)**2))*l
             psigmaf = psigmai
             f_track = np.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
-            f_track[SKOO] += self.length
             return f_track
         ##body
         six_track_i = t3d2six(i_track)
         six_track_f = rps_map(six_track_i,self.length)
         f_track     = six2t3d(six_track_f)
+        f_track[SKOO] += self.length
         return f_track
-    def soll_map(self,i_track):
-        i_track[SKOO] += self.length
-        return i_track
+    def soll_map(self,f_track):
+        f_track[SKOO] += self.length
+        return f_track
