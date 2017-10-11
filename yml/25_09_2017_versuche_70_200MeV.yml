@@ -26,7 +26,7 @@
 flags:
     # - accON:        False           # {True}  acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    # - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
+    - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
@@ -219,8 +219,8 @@ segments:
 ##...........................................................................................
 lattice:
     - title: 25.09.2017 versuche 70-200MeV        # description -  DON't remove or reposition!
-    # - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     # - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
-    - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    # - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
     

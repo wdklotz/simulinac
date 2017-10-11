@@ -23,6 +23,7 @@ from copy import copy
 import numpy as NP
 import warnings
 
+import sixtrack
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
 
@@ -208,11 +209,24 @@ class D(I):
         self.matrix[XKOO,XPKOO] = self.matrix[YKOO,YPKOO] = self.length
         self.matrix[ZKOO,ZPKOO] = self.length/(g*g)
         self.matrix[SKOO,LKOO]  = self.length     #delta-s
+
+        # !!!!!  INSTANCIATE a SIXTRACK MAP instead of using the R matrix
+        if FLAGS['map']:
+            self.sixd = sixtrack.SIXD(self,length=self.length,label=self.label,viseo=self.viseo,particle=self.particle,position=self.position)
+
     def shorten(self,l=0.):
         return D(length=l,label=self.label, particle=self.particle, viseo=self.viseo)
     def adjust_energy(self,tkin):
         self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin), position=self.position)
         return self
+    def map(self,i_track):
+        if FLAGS['map']:
+            # NOTE: mapping with SIXD-map
+            f_track = self.sixd.map(i_track)
+        else:
+            # NOTE: linear mapping with T3D matrix
+            f_track = super().map(i_track)
+        return f_track
 ## Trace3D focussing quad
 class QF(D):     
     """
@@ -328,7 +342,7 @@ class WD(D):
     Trace3d dipole wedge x-plane
     """
     def __init__(self, sector, label='WD', particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(label=label, particle=particle, position=self.position)
+        super().__init__(label=label, particle=particle, position=position)
         m = self.matrix
         self.parent = sector
         self.radius = sector.radius
@@ -1117,13 +1131,13 @@ def test11():
 def test12():
     print('--------------------------------Test12---')
     print('test12 adjust_energy change:')
-    d = D(length=99.);                            print('id >>',d);     print(d.string())
+    d = D(length=99.);                         print('id >>',d);     print(d.string())
     d.adjust_energy(tkin=1000.);               print('id >>',d);     print(d.string())
-    qf = QF(k0=1.5,length=0.3);                   print('id >>',qf);    print(qf.string())
+    qf = QF(k0=1.5,length=0.3);                print('id >>',qf);    print(qf.string())
     qf.adjust_energy(tkin=200.);               print('id >>',qf);    print(qf.string())
-    qd = QD(k0=1.5,length=0.3);                   print('id >>',qd);    print(qd.string())
+    qd = QD(k0=1.5,length=0.3);                print('id >>',qd);    print(qd.string())
     qd.adjust_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
-    rfc = RFC(length=1.23);                       print('id >>',rfc);   print(rfc.string())
+    rfc = RFC(length=1.23);                    print('id >>',rfc);   print(rfc.string())
     rfc.adjust_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
 ## main ----------
 if __name__ == '__main__':

@@ -23,7 +23,6 @@ import numpy as np
 from copy import copy
 
 from setutil import PARAMS,DEBUG,Proton,tblprnt
-from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
 ## DEBUG MODULE
@@ -34,13 +33,24 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 
 
-class SIXD(ELM.D):
+class SIXD(object):
     """
-    Sixtrack drift space
+    Sixtrack drift space mapping
     """
-    def __init__(self,length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
-        super().__init__(length=length, viseo=viseo, label='SIXD', particle=particle, position=position)
+    def __init__(self, parent, length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
+        # super().__init__(label=label,viseo=viseo, particle=particle, position=position)
+        self.parent   = parent
+        self.particle = particle
+        self.length   = length
+        self.label    = label
+        self.viseo    = viseo
+        self.position = position
         self.off_soll = copy(self.particle)
+        # g = self.particle.gamma
+        # self.matrix[ELM.XKOO,ELM.XPKOO] = self.matrix[ELM.YKOO,ELM.YPKOO] = self.length
+        # self.matrix[ELM.ZKOO,ELM.ZPKOO] = self.length/(g*g)
+        # self.matrix[ELM.SKOO,ELM.LKOO]  = self.length     #delta-s
+        # self.matrix = self.parent.matrix
     def shorten(self,l=0.):
         return SIXD(length=l,label=self.label, particle=self.particle, viseo=self.viseo)
     def adjust_energy(self,tkin):
@@ -61,14 +71,14 @@ class SIXD(ELM.D):
         #conversion T3D ==> RipkenSchmidt (six)
         def t3d2six(i_track):
             soll     = self.particle
-            x        = i_track[XKOO]       # [0]
-            xp       = i_track[XPKOO]      # [1]
-            y        = i_track[YKOO]       # [2]
-            yp       = i_track[YPKOO]      # [3]
-            z        = i_track[ZKOO]       # [4] z
-            dp2p     = i_track[ZPKOO]      # [5] dp/p
-            T        = i_track[EKOO]       # [6] summe aller delta-T
-            s        = i_track[SKOO]       # [8] summe aller laengen
+            x        = i_track[ELM.XKOO]       # [0]
+            xp       = i_track[ELM.XPKOO]      # [1]
+            y        = i_track[ELM.YKOO]       # [2]
+            yp       = i_track[ELM.YPKOO]      # [3]
+            z        = i_track[ELM.ZKOO]       # [4] z
+            dp2p     = i_track[ELM.ZPKOO]      # [5] dp/p
+            T        = i_track[ELM.EKOO]       # [6] summe aller delta-T
+            s        = i_track[ELM.SKOO]       # [8] summe aller laengen
 
             E0       = soll.e
             beta0    = soll.beta
@@ -89,15 +99,15 @@ class SIXD(ELM.D):
             return f_track
         # conversion RipkenSchmidt (six) ==> T3D
         def six2t3d(i_track):
-            soll     = self.particle
-            x      = i_track[0]
-            px     = i_track[1]
-            y      = i_track[2]
-            py     = i_track[3]
-            sigma  = i_track[4]
-            psigma = i_track[5]
-            T      = i_track[EKOO]
-            s      = i_track[SKOO]
+            soll   = self.particle
+            x      = i_track[ELM.XKOO]
+            px     = i_track[ELM.XPKOO]
+            y      = i_track[ELM.YKOO]
+            py     = i_track[ELM.YPKOO]
+            sigma  = i_track[ELM.ZKOO]
+            psigma = i_track[ELM.ZPKOO]
+            T      = i_track[ELM.EKOO]
+            s      = i_track[ELM.SKOO]
 
             E0       = soll.e
             beta0    = soll.beta
@@ -118,14 +128,14 @@ class SIXD(ELM.D):
         # Ripken-Schnidt (six) map
         def rps_map(i_track,l):
             soll     = self.particle
-            xi       = i_track[0]
-            pxi      = i_track[1]
-            yi       = i_track[2]
-            pyi      = i_track[3]
-            sigmai   = i_track[4]
-            psigmai  = i_track[5]
-            T        = i_track[EKOO]
-            s        = i_track[SKOO]
+            xi       = i_track[ELM.XKOO]
+            pxi      = i_track[ELM.XPKOO]
+            yi       = i_track[ELM.YKOO]
+            pyi      = i_track[ELM.YPKOO]
+            sigmai   = i_track[ELM.ZKOO]
+            psigmai  = i_track[ELM.ZPKOO]
+            T        = i_track[ELM.EKOO]
+            s        = i_track[ELM.SKOO]
 
             E0       = soll.e
             beta0    = soll.beta
@@ -146,12 +156,15 @@ class SIXD(ELM.D):
             return f_track
         ##body
         f_track     = t3d2six(i_track)
+        DEBUG_MODULE('t3d-->six\n',f_track)
         f_track     = rps_map(f_track,self.length)
+        DEBUG_MODULE('SIXD.map\n',f_track)
         f_track     = six2t3d(f_track)
-        f_track[SKOO] += self.length
+        f_track[ELM.SKOO] += self.length
+        DEBUG_MODULE('six-->t3d\n',f_track)
         return f_track
     def soll_map(self,f_track):
-        f_track[SKOO] += self.length
+        f_track[ELM.SKOO] += self.length
         return f_track
 
 def test0():
@@ -175,7 +188,7 @@ def test0():
 
     tkin0      = 100.            #[MeV]
     l          = 50.e-3          #[m]
-    sxdrift    = SIXD(length=l,particle=Proton(tkin=tkin0))
+    sxdrift    = SIXD(0,length=l,particle=Proton(tkin=tkin0))
     
     # x,xp,y,yp,z,dp/p  T3D Kordinaten
     xi  = yi  = 1.e-3
@@ -194,12 +207,12 @@ def test0():
     print('T3D IN\n'+tblprnt(header_t3d,row))
     
     koord = sxdrift.map(koord0)
-    xf    = koord[0]
-    xpf   = koord[1]
-    yf    = koord[2]
-    ypf   = koord[3]
-    zf    = koord[4]
-    dp2pf = koord[5]
+    xf    = koord[ELM.XKOO]
+    xpf   = koord[ELM.XPKOO]
+    yf    = koord[ELM.YKOO]
+    ypf   = koord[ELM.YPKOO]
+    zf    = koord[ELM.ZKOO]
+    dp2pf = koord[ELM.ZPKOO]
     row = [[
             '{:9.6e}'.format(xf),
             '{:9.6e}'.format(xpf),
