@@ -141,6 +141,10 @@ def instanciate_element(item):
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
+    elif key == 'SIXD':
+        label     = attributes['ID']
+        length    = get_mandatory(attributes,'length',label)
+        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     else:
         print('InputError: Unknown element type encountered: {} - STOP'.format(key))
         sys.exit(1)

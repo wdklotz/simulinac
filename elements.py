@@ -23,7 +23,6 @@ from copy import copy
 import numpy as NP
 import warnings
 
-import sixtrack
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
 
@@ -209,24 +208,11 @@ class D(I):
         self.matrix[XKOO,XPKOO] = self.matrix[YKOO,YPKOO] = self.length
         self.matrix[ZKOO,ZPKOO] = self.length/(g*g)
         self.matrix[SKOO,LKOO]  = self.length     #delta-s
-
-        # !!!!!  INSTANCIATE a SIXTRACK MAP instead of using the R matrix
-        if FLAGS['map']:
-            self.sixd = sixtrack.SIXD(self,length=self.length,label=self.label,viseo=self.viseo,particle=self.particle,position=self.position)
-
     def shorten(self,l=0.):
-        return D(length=l,label=self.label, particle=self.particle, viseo=self.viseo)
+        return D(length=l,label=self.label,particle=self.particle,viseo=self.viseo)
     def adjust_energy(self,tkin):
-        self.__init__(length=self.length, viseo=self.viseo, label=self.label, particle=self.particle(tkin), position=self.position)
+        self.__init__(length=self.length,viseo=self.viseo,label=self.label,particle=self.particle(tkin),position=self.position)
         return self
-    def map(self,i_track):
-        if FLAGS['map']:
-            # NOTE: mapping with SIXD-map
-            f_track = self.sixd.map(i_track)
-        else:
-            # NOTE: linear mapping with T3D matrix
-            f_track = super().map(i_track)
-        return f_track
 ## Trace3D focussing quad
 class QF(D):     
     """
@@ -852,6 +838,128 @@ class RFC(_thin):
                     position      = self.position,
                     dWf           = self.dWf)
         return self
+class SIXD(D):
+    """
+    Drift with Sixtrack mapping
+    """
+    def __init__(self,length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
+        super().__init__(length=length,viseo=viseo,label=label,particle=particle,position=position)
+        self.off_soll = copy(self.particle)
+    def shorten(self,l=0.):
+        return SIXD(length=l,label=self.label,viseo=self.viseo,particle=self.particle,position=self.position)
+    def adjust_energy(self,tkin):
+        self.__init__(length=self.length,label=self.label,viseo=self.viseo,particle=self.particle(tkin),position=self.position)
+        return self
+    def map(self,i_track):
+        def fpsigma(psigma,soll):
+            beta0 = soll.beta
+            E0    = soll.e
+            m0c2  = soll.e0
+            res = (1+beta0**2*psigma)**2-(m0c2/E0)**2
+            res = sqrt(res)/beta0-1.
+            return res
+        def einsplusfpsigma(psigma,soll):
+            return 1.+fpsigma(psigma,soll)
+        #conversion T3D ==> RipkenSchmidt (six)
+        def t3d2six(i_track):
+            soll     = self.particle
+            x        = i_track[XKOO]       # [0]
+            xp       = i_track[XPKOO]      # [1]
+            y        = i_track[YKOO]       # [2]
+            yp       = i_track[YPKOO]      # [3]
+            z        = i_track[ZKOO]       # [4] z
+            dp2p     = i_track[ZPKOO]      # [5] dp/p
+            T        = i_track[EKOO]       # [6] summe aller delta-T
+            s        = i_track[SKOO]       # [8] summe aller laengen
+    
+            E0       = soll.e
+            beta0    = soll.beta
+            p0       = soll.p          # cp-soll [MeV]
+            m0c2     = soll.e0
+            p        = p0/(1.-dp2p)
+            E        = sqrt(p**2+m0c2**2) #E aus dp2p und p0
+            tkin     = E-m0c2
+            particle = self.off_soll(tkin=tkin)
+            gb       = particle.gamma_beta
+            beta     = particle.beta
+    
+            px       = gb*m0c2/E0*xp
+            py       = gb*m0c2/E0*yp
+            sigma    = z
+            try:
+                psigma   = ((beta0/beta/(1.-dp2p))-1.)/beta0**2
+            except:
+                print('(dp2p,beta,beta0)',(dp2p,beta,beta0))
+                print('in t3d2six(): bad psigma')
+                sys.exit(1)
+            f_track  = np.array([x,px,y,py,sigma,psigma,T,1.,s,1.])
+            return f_track
+        # conversion RipkenSchmidt (six) ==> T3D
+        def six2t3d(i_track):
+            soll   = self.particle
+            x      = i_track[XKOO]
+            px     = i_track[XPKOO]
+            y      = i_track[YKOO]
+            py     = i_track[YPKOO]
+            sigma  = i_track[ZKOO]
+            psigma = i_track[ZPKOO]
+            T      = i_track[EKOO]
+            s      = i_track[SKOO]
+    
+            E0       = soll.e
+            beta0    = soll.beta
+            m0c2     = soll.e0
+            eta      = beta0**2*psigma
+            E        = (1.+eta)*E0
+            tkin     = E-m0c2
+            particle = self.off_soll(tkin=tkin)
+            beta     = particle.beta
+            gb       = particle.gamma_beta
+    
+            xp   = px/(gb*m0c2/E0)
+            yp   = py/(gb*m0c2/E0)
+            z    = sigma
+            dp2p = 1.-beta0/beta/(1.+beta0**2*psigma)
+            f_track = np.array([x,xp,y,yp,z,dp2p,T,1.,s,1.])
+            return f_track
+        # Ripken-Schnidt (six) map
+        def rps_map(i_track,l):
+            soll     = self.particle
+            xi       = i_track[XKOO]
+            pxi      = i_track[XPKOO]
+            yi       = i_track[YKOO]
+            pyi      = i_track[YPKOO]
+            sigmai   = i_track[ZKOO]
+            psigmai  = i_track[ZPKOO]
+            T        = i_track[EKOO]
+            s        = i_track[SKOO]
+    
+            E0       = soll.e
+            beta0    = soll.beta
+            m0c2     = soll.e0
+            eta      = beta0**2*psigmai
+            E        = (1.+eta)*E0
+            tkin     = E-m0c2
+            particle = self.off_soll(tkin=tkin)
+            beta     = particle.beta
+    
+            xf       = xi + pxi/einsplusfpsigma(psigmai,soll)*l
+            pxf      = pxi
+            yf       = yi + pyi/einsplusfpsigma(psigmai,soll)*l
+            pyf      = pyi
+            sigmaf  = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai,soll)**2))*l
+            psigmaf = psigmai
+            f_track = np.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
+            return f_track
+        ##body
+        f_track     = t3d2six(i_track)
+        DEBUG_MODULE('t3d-->six\n',f_track)
+        f_track     = rps_map(f_track,self.length)
+        DEBUG_MODULE('SIXD.map\n',f_track)
+        f_track     = six2t3d(f_track)
+        f_track[SKOO] += self.length
+        DEBUG_MODULE('six-->t3d\n',f_track)
+        return f_track
 ## utilities
 class Test(_matrix_):
     def __init__(self,a,b,c,d,e,f,label='test'):
