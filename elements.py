@@ -840,7 +840,7 @@ class RFC(_thin):
         return self
 class SIXD(D):
     """
-    Drift with Sixtrack mapping
+    Drift with Sixtrack mapping (experimental!)
     """
     def __init__(self,length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
         super().__init__(length=length,viseo=viseo,label=label,particle=particle,position=position)
