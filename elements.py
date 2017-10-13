@@ -845,6 +845,7 @@ class SIXD(D):
     def __init__(self,length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
         super().__init__(length=length,viseo=viseo,label=label,particle=particle,position=position)
         self.off_soll = copy(self.particle)
+        # print(self.__dict__)
     def shorten(self,l=0.):
         return SIXD(length=l,label=self.label,viseo=self.viseo,particle=self.particle,position=self.position)
     def adjust_energy(self,tkin):
@@ -860,7 +861,7 @@ class SIXD(D):
             return res
         def einsplusfpsigma(psigma,soll):
             return 1.+fpsigma(psigma,soll)
-        #conversion T3D ==> RipkenSchmidt (six)
+        #conversion T3D ==> Ripken-Schmidt (sixtrack)
         def t3d2six(i_track):
             soll     = self.particle
             x        = i_track[XKOO]       # [0]
@@ -892,9 +893,9 @@ class SIXD(D):
                 print('(dp2p,beta,beta0)',(dp2p,beta,beta0))
                 print('in t3d2six(): bad psigma')
                 sys.exit(1)
-            f_track  = np.array([x,px,y,py,sigma,psigma,T,1.,s,1.])
+            f_track  = NP.array([x,px,y,py,sigma,psigma,T,1.,s,1.])
             return f_track
-        # conversion RipkenSchmidt (six) ==> T3D
+        # conversion Ripken-Schmidt (sixtrack) ==> T3D
         def six2t3d(i_track):
             soll   = self.particle
             x      = i_track[XKOO]
@@ -920,9 +921,9 @@ class SIXD(D):
             yp   = py/(gb*m0c2/E0)
             z    = sigma
             dp2p = 1.-beta0/beta/(1.+beta0**2*psigma)
-            f_track = np.array([x,xp,y,yp,z,dp2p,T,1.,s,1.])
+            f_track = NP.array([x,xp,y,yp,z,dp2p,T,1.,s,1.])
             return f_track
-        # Ripken-Schnidt (six) map
+        # Ripken-Schmidt sixtrack map
         def rps_map(i_track,l):
             soll     = self.particle
             xi       = i_track[XKOO]
@@ -949,7 +950,7 @@ class SIXD(D):
             pyf      = pyi
             sigmaf  = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai,soll)**2))*l
             psigmaf = psigmai
-            f_track = np.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
+            f_track = NP.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
             return f_track
         ##body
         f_track     = t3d2six(i_track)
