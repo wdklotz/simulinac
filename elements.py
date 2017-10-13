@@ -845,7 +845,6 @@ class SIXD(D):
     def __init__(self,length=0.,label="SIXD",viseo=0.,particle=PARAMS['sollteilchen'],position=[0.,0.,0.]):
         super().__init__(length=length,viseo=viseo,label=label,particle=particle,position=position)
         self.off_soll = copy(self.particle)
-        # print(self.__dict__)
     def shorten(self,l=0.):
         return SIXD(length=l,label=self.label,viseo=self.viseo,particle=self.particle,position=self.position)
     def adjust_energy(self,tkin):
@@ -853,11 +852,11 @@ class SIXD(D):
         return self
     def map(self,i_track):
         def fpsigma(psigma,soll):
-            beta0 = soll.beta
-            E0    = soll.e
-            m0c2  = soll.e0
-            res = (1+beta0**2*psigma)**2-(m0c2/E0)**2
-            res = sqrt(res)/beta0-1.
+            beta0    = soll.beta
+            E0       = soll.e
+            m0c2     = soll.e0
+            res      = (1+beta0**2*psigma)**2-(m0c2/E0)**2
+            res      = sqrt(res)/beta0-1.
             return res
         def einsplusfpsigma(psigma,soll):
             return 1.+fpsigma(psigma,soll)
@@ -888,7 +887,7 @@ class SIXD(D):
             py       = gb*m0c2/E0*yp
             sigma    = z
             try:
-                psigma   = ((beta0/beta/(1.-dp2p))-1.)/beta0**2
+                psigma = ((beta0/beta/(1.-dp2p))-1.)/beta0**2
             except:
                 print('(dp2p,beta,beta0)',(dp2p,beta,beta0))
                 print('in t3d2six(): bad psigma')
@@ -897,15 +896,15 @@ class SIXD(D):
             return f_track
         # conversion Ripken-Schmidt (sixtrack) ==> T3D
         def six2t3d(i_track):
-            soll   = self.particle
-            x      = i_track[XKOO]
-            px     = i_track[XPKOO]
-            y      = i_track[YKOO]
-            py     = i_track[YPKOO]
-            sigma  = i_track[ZKOO]
-            psigma = i_track[ZPKOO]
-            T      = i_track[EKOO]
-            s      = i_track[SKOO]
+            soll     = self.particle
+            x        = i_track[XKOO]
+            px       = i_track[XPKOO]
+            y        = i_track[YKOO]
+            py       = i_track[YPKOO]
+            sigma    = i_track[ZKOO]
+            psigma   = i_track[ZPKOO]
+            T        = i_track[EKOO]
+            s        = i_track[SKOO]
     
             E0       = soll.e
             beta0    = soll.beta
@@ -917,11 +916,11 @@ class SIXD(D):
             beta     = particle.beta
             gb       = particle.gamma_beta
     
-            xp   = px/(gb*m0c2/E0)
-            yp   = py/(gb*m0c2/E0)
-            z    = sigma
-            dp2p = 1.-beta0/beta/(1.+beta0**2*psigma)
-            f_track = NP.array([x,xp,y,yp,z,dp2p,T,1.,s,1.])
+            xp       = px/(gb*m0c2/E0)
+            yp       = py/(gb*m0c2/E0)
+            z        = sigma
+            dp2p     = 1.-beta0/beta/(1.+beta0**2*psigma)
+            f_track  = NP.array([x,xp,y,yp,z,dp2p,T,1.,s,1.])
             return f_track
         # Ripken-Schmidt sixtrack map
         def rps_map(i_track,l):
@@ -948,18 +947,19 @@ class SIXD(D):
             pxf      = pxi
             yf       = yi + pyi/einsplusfpsigma(psigmai,soll)*l
             pyf      = pyi
-            sigmaf  = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai,soll)**2))*l
-            psigmaf = psigmai
-            f_track = NP.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
+            sigmaf   = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai,soll)**2))*l
+            psigmaf  = psigmai
+            f_track  = NP.array([xf,pxf,yf,pyf,sigmaf,psigmaf,T,1.,s,1.])
             return f_track
-        ##body
+        ##body map
         f_track     = t3d2six(i_track)
         DEBUG_MODULE('t3d-->six\n',f_track)
         f_track     = rps_map(f_track,self.length)
         DEBUG_MODULE('SIXD.map\n',f_track)
         f_track     = six2t3d(f_track)
-        f_track[SKOO] += self.length
         DEBUG_MODULE('six-->t3d\n',f_track)
+
+        f_track[SKOO] += self.length         # finally adjust total lattice length
         return f_track
 ## utilities
 class Test(_matrix_):
@@ -1248,6 +1248,19 @@ def test12():
     qd.adjust_energy(tkin=200.);               print('id >>',qd);    print(qd.string())
     rfc = RFC(length=1.23);                    print('id >>',rfc);   print(rfc.string())
     rfc.adjust_energy(tkin=200.);              print('id >>',rfc);   print(rfc.string())
+def test13():
+    print('--------------------------------Test13---')
+    particle = Proton(tkin=100.)
+    l =  0.05    #[m]
+    sixd = SIXD(length=l,particle=particle)
+    xi   = yi  = 1.e-2
+    xpi  = ypi = 1.e-2
+    z    = 1.e-3
+    dp2p = 1.e-2
+    i_track = NP.array([xi,xpi,yi,ypi,z,dp2p,0.,1.,0.,1.])
+    f_track = sixd.map(i_track)
+    print(i_track)
+    print(f_track)
 ## main ----------
 if __name__ == '__main__':
     FLAGS['verbose']=3
@@ -1264,3 +1277,4 @@ if __name__ == '__main__':
     # test10()
     # test11()
     # test12()
+    test13()

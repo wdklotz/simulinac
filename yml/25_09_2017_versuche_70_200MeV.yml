@@ -65,15 +65,11 @@ parameters:
 elements:
 ## HE        
     # - D3:        &D3        # ID: &alias
-        # - type:     D       # D class
+    #     - type:     D       # D class
     - D3x:        &D3        # ID: &alias
         - type:     SIXD    # SIXD class
         # - length:   0.04    # [m] 
         - length:   0.08    # [m] 
-        - sec:      *HE     # is part of section
-    - D4:    &D4            # ID: &alias
-        - type:     D       # D class
-        - length:   0.44    # [m] full cavity
         - sec:      *HE     # is part of section
     # - D5:    &D5            # ID: &alias
     #     - type:     D       # D class
