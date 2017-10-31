@@ -169,8 +169,8 @@ def display1(functions):
     vscale=ax_l.axis()[3]*0.7
     viseoz = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseoz[i] = 0.   # stop lattice plotting
-    ax_l.plot(vis_ordinate,viseoz,label='',color='black')
-    ax_l.plot(vis_ordinate,vzero,color='black')
+    ax_l.plot(vis_ordinate[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
+    ax_l.plot(vis_ordinate,vzero,color='green',linestyle='--')
 
     ax_r = ax_l.twinx()
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
