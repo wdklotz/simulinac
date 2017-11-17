@@ -87,7 +87,7 @@ class Lattice(object):
     def get_section(self,sec):
         if not FLAGS['sections']:
             section = self
-            Section.cast2Section(section)             #the whole lattice is one section
+            Section.cast(section)             #the whole lattice is one section
             setction.set_name('LINAC')
         else:
             section = Section(name=sec)
@@ -105,7 +105,7 @@ class Lattice(object):
         sections = []
         if not FLAGS['sections']:
             section = self
-            Section.cast2Section(section)             #the whole lattice is one section
+            Section.cast(section)             #the whole lattice is one section
             section.set_name('LINAC')
             sections.append(section)
         else:
@@ -558,8 +558,11 @@ class Section(Lattice):
     def set_name(self,name):
         self.name = name
     @classmethod
-    def cast2Section(cls,obj):
-        """ Cast 'obj' (must be of class Lattice) to object of class Section. """
+    def cast(cls,obj):
+        """
+        Convert a BaseClass object into a SubClass object ==> der Trick:
+        ==> cast 'obj' (must be of class Lattice) to object of class Section.
+        """
         if not isinstance(obj,Lattice):
             print('ERROR: cast to class Section not possible. -- STOP!')
             sys.exit(1)
@@ -653,7 +656,7 @@ def test2():
     print('-------------------------------------Test2--')
     lattice = Lattice()
     print(type(lattice))
-    Section.cast2Section(lattice)
+    Section.cast(lattice)
     print(type(lattice))
     lattice.set_name('Lattice casted to Section')
     print(lattice.get_name())
