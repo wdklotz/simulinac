@@ -40,6 +40,8 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
         if len(section.seq) == 0: continue
         sec      = section.get_name()
         sec_da   = root_da.createChild(sec)
+        sec_da.setValue('length',section.length)
+        sec_da.setValue('name',sec)
         cavs_da  = sec_da.createChild('Cavities')
         gap_cnt  = 0
         quad_cnt = 0
@@ -62,8 +64,10 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                 par_da = accelm_da.createChild('parameters')
                 if isinstance(node,(ELM.QF,ELM.QD)):
                     quad_cnt += 1
+                    name = '{}:{}'.format(node.label,quad_cnt)
                     accelm_da.setValue('type','QUAD')
-                    accelm_da.setValue('name','{}:{}:{}'.format(node.label,sec,quad_cnt))
+#                     accelm_da.setValue('name','{1}:{0}:{2}'.format(node.label,'',quad_cnt))
+                    accelm_da.setValue('name',name)
 
                     k0 = node.k0
                     if isinstance(node,ELM.QD): k0 = -k0
@@ -75,20 +79,22 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
 
                 elif isinstance(node,ELM.RFG):
                     gap_cnt += 1
+                    name = '{}:{}'.format(node.label,gap_cnt)
                     accelm_da.setValue('type','RFGAP')
-                    accelm_da.setValue('name','{}:{}:{}'.format(node.label,sec,gap_cnt))
+                    accelm_da.setValue('name',name)
                     ttf_da = accelm_da.createChild('TTFs')
 
                     phiSoll = degrees(node.phis)
                     E0L = node.u0*1.e-3
                     E0TL = E0L*node.tr
+                    name = '{}:{}'.format('pillbox',gap_cnt)
 
-                    par_da.setValue('EOL', E0L)
-                    par_da.setValue('EOTL', E0TL)
+                    par_da.setValue('E0L', E0L)
+                    par_da.setValue('E0TL', E0TL)
                     par_da.setValue('EzFile', EzFile)
                     par_da.setValue('aperture', aperture)
                     par_da.setValue('aprt_type', 1)
-                    par_da.setValue('cavity', '{}:{}:{}'.format('pillbox',sec,gap_cnt))
+                    par_da.setValue('cavity', name)
                     par_da.setValue('mode', 0)
                     par_da.setValue('phase', phiSoll)
 
@@ -111,15 +117,16 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                     cavity_da = cavs_da.createChild('Cavity')
                     cavity_da.setValue('ampl', 1.)
                     cavity_da.setValue('frequency', PARAMS['frequenz'])
-                    cavity_da.setValue('name', '{}:{}:{}'.format('pillbox',sec,gap_cnt))
+                    cavity_da.setValue('name', name)
                     cavity_da.setValue('pos', sm)
                 else:
                     pass
 
 #     DEBUG('root_da.makeXmlText()\n',root_da.makeXmlText())
-    root_da.writeToFile('{}{}'.format(file,'.xml'))
+    output = '{}{}'.format(file,'.xml')
+    root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
-    print('Result in file ==> {}{}'.format(file,'.xml'))
+    print('Result in file ==> {}'.format(output))
     print('----------------------------------------------------------')
     return
 
