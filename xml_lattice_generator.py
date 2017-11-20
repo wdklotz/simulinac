@@ -123,7 +123,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                     pass
 
 #     DEBUG('root_da.makeXmlText()\n',root_da.makeXmlText())
-    output = '{}{}'.format(file,'.xml')
+    output = '{}{}'.format('../pyAlceli/lattice','.xml')
     root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
     print('Result in file ==> {}'.format(output))

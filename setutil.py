@@ -255,7 +255,7 @@ def collect_data_for_summary(lattice):
         return new_elements
     ## body
     sections =  PARAMS['sections']                       ## comes from INPUT
-    if not PARAMS['use_sections']: sections = ['*']      ## section wildcart
+    if not FLAGS['sections']: sections = ['*']       ## section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
