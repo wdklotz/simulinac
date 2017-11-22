@@ -41,7 +41,7 @@ def DEBUG(string,arg='',end='\n'):
     """
     Print debug message
     IN:
-        string: text to print 
+        string: text to print
         arg:  values to print
     """
     if isinstance(arg,list):
@@ -101,7 +101,7 @@ PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 # a global dict to keep key-value pairs
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
-class Particle(object):                          
+class Particle(object):
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
@@ -173,23 +173,23 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     gb        = particle.gamma_beta
     beta      = particle.beta
     gamma     = particle.gamma
-    if gap != 0.: 
+    if gap != 0.:
         T = particle.trtf(gap, PARAMS['frequenz'])
     else:
         T = 0.75       # have to take some reasonable value!
-    
+
     # large amplitude oscillations (T.Wangler pp. 175)
     wmax  = sqrt(2.*qE0*T*pow(gb,3)*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
     DWmax = wmax*m0c2       # [MeV] conversion ---> [MeV]
     phi1s = -phis           # [rad]
     phi2s = 2.*phis         # [rad] Naehrung T.Wangler pp.178
     psis  = 3.*fabs(phis)   # [rad] Naehrung T.Wangler pp.178
-    
+
     # small amplitude oscillations (T.Wangler pp.184)
     kl02 = 2.*pi*qE0*T*sin(-phis)/(m0c2*pow(gb,3)*lamb)
     omegal0 = sqrt(kl02)*beta* PARAMS['lichtgeschwindigkeit']
     omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
-    
+
     # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
     Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
     w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
@@ -254,8 +254,8 @@ def collect_data_for_summary(lattice):
                 new_elements.append(itm)
         return new_elements
     ## body
-    sections =  PARAMS['sections']               ## comes from INPUT
-    if len(sections) == 0: sections = ['*']      ## section wildcart
+    sections =  PARAMS['sections']                       ## comes from INPUT
+    if not FLAGS['sections']: sections = ['*']       ## section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
@@ -508,7 +508,7 @@ def objprnt (what,text='',filter=[]):
         print(k.rjust(30),':',v)
     return
 
-def dictprnt(what,text='',filter=[],njust=35): 
+def dictprnt(what,text='',filter=[],njust=35):
     """
     Custom helper to print dictionaries (clever!?)
     """
@@ -526,7 +526,7 @@ def dictprnt(what,text='',filter=[],njust=35):
         else:
             txt += fmt1.format(v)
         return txt
-    
+
     template = '==============================================='
     lt  = len(template)
     lx  = len(text)
@@ -610,8 +610,8 @@ def wille():
 
 def test0():
     print('--------------------------Test0---')
-    dictprnt( PARAMS,text=' PARAMS')    
-    
+    dictprnt( PARAMS,text=' PARAMS')
+
     print('Sollteilchen\n'+ PARAMS['sollteilchen'].string())
     print('Proton(tkin=5.)\n'+Proton(tkin=5.).string())
     print('Electron(tkin=5.)\n'+Electron(tkin=5.).string())

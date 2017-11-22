@@ -146,13 +146,14 @@ def instanciate_element(item):
         length    = get_mandatory(attributes,'length',label)
         instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     else:
-        print('InputError: Unknown element type encountered: {} - STOP'.format(key))
+        print('InputError: Unknown element type encountered: "{}" - STOP'.format(key))
         sys.exit(1)
-    try:     ## sections are not mandatory
-        instance.set_section(sec=attributes['sec'])
+    try:
+        sec = attributes['sec']    #can fail because sections are not mandatory
     except:
         pass
-        # instance.set_section(sec='undef')
+    else:
+        instance.set_section(sec)
     return (label,instance)
 
 def factory(input_file):
@@ -170,7 +171,7 @@ def factory(input_file):
                     nboff_elements = len(elementList)
                     found = True
                     break    #after found == true
-            if found == False: 
+            if found == False:
                 print('InputError: Segment {} not found - STOP'.format(segID))
                 sys.exit(1)
             for element in elementList: #loop over elements in element list
@@ -190,8 +191,8 @@ def factory(input_file):
     #returns ==> {...}
         flags_list = in_data['flags']
         flags = lod2d(flags_list) if flags_list != None else {}
-        if 'accON' in flags: 
-            if flags['accON']: 
+        if 'accON' in flags:
+            if flags['accON']:
                 FLAGS['dWf'] = 1.
                 SUMMARY['accON'] = True
             else:
@@ -207,12 +208,15 @@ def factory(input_file):
         return flags
 # --------
     def read_sections(in_data):
-    #returns ==> [...]
-        try:     ## sections are not mandatory
+        #returns a list of section names
+        sec_list = []
+        use_sections = True
+        try:     ## can fail because sections are not mandatory
             sec_list = in_data['sections'][0]
         except:
-            sec_list = []
+            use_sections = False
         PARAMS['sections'] = sec_list
+        FLAGS['sections']  = use_sections
         return sec_list
 # --------
     def read_parameters(in_data):

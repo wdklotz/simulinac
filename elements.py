@@ -21,7 +21,7 @@ import sys
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
 from copy import copy
 import numpy as NP
-import warnings
+# import warnings
 
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
@@ -36,7 +36,7 @@ DEBUG_MAP    = DEBUG_OFF
 
 ## MDIM
 MDIM=10        # dimension of matrices
-# x        x'        y        y'        z       dp/p0     E        dE        s        l     
+# x        x'        y        y'        z       dp/p0     E        dE        s        l
 XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
 
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
@@ -48,11 +48,11 @@ class _matrix_(object):
     """
     # MDIMxMDIM matrices used here
     def __init__(self):
-        self.matrix=NP.eye(MDIM)    ## MDIMxMDIM unit matrix
-        self.label=''               ## default empty label
-        self.length=0.              ## default zero length!
-        self.slice_min = 0.001      ## minimal slice length
-        self.viseo = 0.
+        self.matrix    = NP.eye(MDIM)    ## MDIMxMDIM unit matrix
+        self.label     = ''              ## default empty label
+        self.length    = 0.              ## default zero length!
+        self.slice_min = 0.001           ## default minimal slice length
+        self.viseo     = 0.              ## default invisible
     def __call__(self,n=MDIM,m=MDIM):
         return self.matrix[:n,:m]   ## return upper left nxm submatrix
     def string(self):
@@ -121,7 +121,7 @@ class _matrix_(object):
             elif rest < 0.:
                 raise RuntimeError('FATAL: negative resting step size when stepping through - STOP')
                 sys.exit(1)
-                
+
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
@@ -155,6 +155,8 @@ class _matrix_(object):
         indicating the lattice part it belongs to.
         """
         self.sec = sec
+    def get_section(self):
+        return self.sec
     def map(self,i_track):
         """
         Linear mapping of trjectory from (i) to (f)
@@ -176,7 +178,7 @@ class _matrix_(object):
         f_track = self.matrix.dot(i_track)
         return f_track
 ## unity matrix (owns its particle instance!)
-class I(_matrix_):     
+class I(_matrix_):
     def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__()
         self.label = label
@@ -184,7 +186,7 @@ class I(_matrix_):
         self.position = position        # [entrance,middle,exit]
         self.particle = copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## marker
-class MRK(I):        
+class MRK(I):
     def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0,0,0], actions=[]):
         super().__init__(label=label, particle=particle, position=position)
         self.actions = actions
@@ -197,7 +199,7 @@ class MRK(I):
         self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, actions=self.actions)
         return self
 ## Trace3D drift space
-class D(I):     
+class D(I):
     """
     Trace3D drift space
     """
@@ -214,7 +216,7 @@ class D(I):
         self.__init__(length=self.length,viseo=self.viseo,label=self.label,particle=self.particle(tkin),position=self.position)
         return self
 ## Trace3D focussing quad
-class QF(D):     
+class QF(D):
     """
     Trace3D focussing quad
     """
@@ -262,7 +264,7 @@ class QF(D):
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position)
         return self
 ## Trace3D defocusing quad
-class QD(QF):       
+class QD(QF):
     """
     Trace3D defocussing quad
     """
@@ -272,7 +274,7 @@ class QD(QF):
     def shorten(self,l=0.):
         return QD(k0=self.k0, length=l, label=self.label, particle=self.particle, position=self.position)
 ## Trace3D sector bending dipole in x-plane
-class SD(D):         
+class SD(D):
     """
     Trace3d sector dipole in x-plane
     """
@@ -311,19 +313,19 @@ class SD(D):
         self.__init__(radius=rf, length=self.length, viseo=self.viseo, label=self.label, particle=self.particle, position=self.position)
         return self
 ## Trace3D rectangular bending dipole in x-plane
-class RD(SD):        
+class RD(SD):
     """
     Trace3D rectangular dipole x-plane
     """
     def __init__(self, radius=0., length=0., label='RB', particle=PARAMS['sollteilchen'],position=[0,0,0]):
-        super().__init__(radius=radius, length=length, label=label, particle=particle, position=self.position)
+        super().__init__(radius=radius, length=length, label=label, particle=particle, position=position)
         wd = WD(self,label='',particle=particle)  # wedge myself...
         rd = wd * (self * wd)
         self.matrix= rd.matrix
     def shorten(self,l=0.):
         return RD(radius=self.radius, length=l, label=self.label, particle=self.particle, position=self.position)
 ## Trace3D wedge of rectangular bending dipole in x-plane
-class WD(D):      
+class WD(D):
     """
     Trace3d dipole wedge x-plane
     """
@@ -389,7 +391,7 @@ class GAP(D):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def _mx_(self,tr,b,g):               # cavity nach Dr.Tiede pp.33 
+    def _mx_(self,tr,b,g):               # cavity nach Dr.Tiede pp.33
         m   = self.matrix
         e0  = self.particle.e0
         cyp = cxp = -pi*self.u0*tr*sin(self.phis)/(e0*self.lamb*g*g*g*b*b*b)  # T.Wrangler pp. 196
@@ -467,9 +469,9 @@ class RFB(D):
         betasi     = particlesi.beta
         gammasi    = particlesi.gamma
         gbsi       = particlesi.gamma_beta
-        
+
         DWs        = self.deltaW
-        Wsf        = Wsi + DWs 
+        Wsf        = Wsi + DWs
         particlesf = copy(particlesi)(tkin=Wsf)
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
@@ -488,7 +490,7 @@ class RFB(D):
 
         condTdP = 1./(m0c2*betasf**2*gammasf)
         zfp = DWf*condTdP   # dT --> dp/p
-        
+
         xf   = xi     # x does not change
         yf   = yi     # y does not change
         Tf   = Ti+DWs
@@ -558,7 +560,7 @@ class RFB(D):
 
         z      = betaf/betai*z                        # z @ (f)
         zpf    = 1./(m0c2*betaf**2*gammaf) * dw       # dW --> dp/p @ (f)
-        
+
         T   = T + WOUT-WIN
 
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
@@ -580,7 +582,7 @@ class RFB(D):
 
         return f_track
 ## Trace3D zero length RF-gap
-class RFG(D):       
+class RFG(D):
     """
     Trace3D zero length Rf-gap
     """
@@ -615,6 +617,7 @@ class RFG(D):
         g           = part_center.gamma                       # gamma @ gap center
         particlei   = self.particle                           # particle @ (i)
         particlef   = particle(particlei.tkin+self.deltaW)    # particle @ (f)
+        self.particlef = particlef
         # DEBUG_MODULE('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)   # the LINEAR TRANSPORT matrix R
@@ -676,7 +679,7 @@ class RFG(D):
     def soll_map(self,i_track):
         f_track = super().soll_map(i_track)
         return f_track
-class _thin(_matrix_): 
+class _thin(_matrix_):
     """
     Base class for thin elements implemented as triplet D*Kick*D
     """
@@ -738,7 +741,7 @@ class QFthx(D):
     def make_slices(self,anz=10):
         slices = [self]
         return slices
-class QFth(_thin):   
+class QFth(_thin):
     """
     Thin F-Quad
     """
@@ -786,7 +789,7 @@ class QDth(QFth):
         super().__init__(k0 = -k0, length=length, label=label, viseo=viseo, particle=particle, position=position)
         self.k0    = k0
 ## RF cavity als D*RFG*D
-class RFC(_thin):    
+class RFC(_thin):
     """
     Rf cavity as product D*RFG*D (experimental!)
     """
@@ -871,7 +874,7 @@ class SIXD(D):
             dp2p     = i_track[ZPKOO]      # [5] dp/p
             T        = i_track[EKOO]       # [6] summe aller delta-T
             s        = i_track[SKOO]       # [8] summe aller laengen
-    
+
             E0       = soll.e
             beta0    = soll.beta
             p0       = soll.p          # cp-soll [MeV]
@@ -882,7 +885,7 @@ class SIXD(D):
             particle = self.off_soll(tkin=tkin)
             gb       = particle.gamma_beta
             beta     = particle.beta
-    
+
             px       = gb*m0c2/E0*xp
             py       = gb*m0c2/E0*yp
             sigma    = z
@@ -905,7 +908,7 @@ class SIXD(D):
             psigma   = i_track[ZPKOO]
             T        = i_track[EKOO]
             s        = i_track[SKOO]
-    
+
             E0       = soll.e
             beta0    = soll.beta
             m0c2     = soll.e0
@@ -915,7 +918,7 @@ class SIXD(D):
             particle = self.off_soll(tkin=tkin)
             beta     = particle.beta
             gb       = particle.gamma_beta
-    
+
             xp       = px/(gb*m0c2/E0)
             yp       = py/(gb*m0c2/E0)
             z        = sigma
@@ -933,7 +936,7 @@ class SIXD(D):
             psigmai  = i_track[ZPKOO]
             T        = i_track[EKOO]
             s        = i_track[SKOO]
-    
+
             E0       = soll.e
             beta0    = soll.beta
             m0c2     = soll.e0
@@ -942,7 +945,7 @@ class SIXD(D):
             tkin     = E-m0c2
             particle = self.off_soll(tkin=tkin)
             beta     = particle.beta
-    
+
             xf       = xi + pxi/einsplusfpsigma(psigmai,soll)*l
             pxf      = pxi
             yf       = yi + pyi/einsplusfpsigma(psigmai,soll)*l

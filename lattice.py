@@ -66,7 +66,7 @@ class Lattice(object):
         si = s0
         sf = si+l
         sm = (sf+si)/2.
-        element.position= [si,sm,sf]
+        element.position = [si,sm,sf]
         self.length += l
         elm_with_position = element
         self.seq.append(elm_with_position)
@@ -79,11 +79,40 @@ class Lattice(object):
         for element in self.seq:
             s0 = element.position[0]
             s1 = element.position[2]
-            printv(3,'{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.
-                format(element.label,id(element),element.length,s0,s1))
+#             DEBUG('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
-            mcell.set_section('<= full lattice map')
+        mcell.set_section('<= full lattice map')
         return mcell.string()
+
+    def get_section(self,sec):
+        if not FLAGS['sections']:
+            section = self
+            Section.cast(section)             #the whole lattice is one section
+            setction.set_name('LINAC')
+        else:
+            section = Section(name=sec)
+            for elm in self.seq:
+                try:
+                    elmsec = elm.get_section()
+                except AttributeError:
+                    print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+                    continue
+                if elmsec == sec:
+                    section.add_element(elm)
+        return section
+
+    def get_sections(self):
+        sections = []
+        if not FLAGS['sections']:
+            section = self
+            Section.cast(section)             #the whole lattice is one section
+            section.set_name('LINAC')
+            sections.append(section)
+        else:
+            for isec in PARAMS['sections']:
+                sec = self.get_section(isec)
+                sections.append(sec)
+        return sections
 
     def set_section(self,sec=''):
         """
@@ -127,11 +156,11 @@ class Lattice(object):
         Construct the full accelerator lattice-cell matrix and extract standard quantities:
             full cell: mcell
             stability?
-            betatron tunes: mux, muy 
+            betatron tunes: mux, muy
             det(M)
             check symplecticity
             twiss prameters beta, alpha, gamma for periodic lattices
-            
+
         """
         mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
         for count,element in enumerate(self.seq):
@@ -185,7 +214,7 @@ class Lattice(object):
         printv(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
         ## Vorgabe emittance @ entrance
-        emix = PARAMS['emitx_i']  
+        emix = PARAMS['emitx_i']
         emiy = PARAMS['emity_i']
 
         ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
@@ -200,7 +229,7 @@ class Lattice(object):
                 m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
                 n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
                 n21  = cell_matrix[YPKOO,YKOO];  n22  = cell_matrix[YPKOO,YPKOO]
-                ## betax,alphax,gammax from transfer matrix 
+                ## betax,alphax,gammax from transfer matrix
                 #  [m11,m12] = [cos(mu) + alpha * sin(mu),       beta * sin(mu)     ]
                 #  [m21,m22] = [     -gamma * sin(mu)    , cos(mu) - alpha * sin(mu)]
                 #  und: beta * gamma - alpha^2 = 1
@@ -208,25 +237,25 @@ class Lattice(object):
                 # print('sin(mux)^2={:4.4f}'.format(sin2mu))
                 sinmu = sqrt(sin2mu)
                 if m12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
-                    sinmu = -sinmu                    
-                bax = m12/sinmu 
-                gmx = -m21/sinmu 
+                    sinmu = -sinmu
+                bax = m12/sinmu
+                gmx = -m21/sinmu
                 alx2 = bax*gmx-1.
                 # print('alfax^2',alx2)
                 alx = 0. if fabs(alx2) < 1.e-9 else sqrt(alx2)
                 print('betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
-                ## betay,alphay,gammay from transfer matrix                 
+                ## betay,alphay,gammay from transfer matrix
                 sin2mu = -((n11-n22)**2/4.+n12*n21)
                 # print('sin(muy)^2={:4.4f}'.format(sin2mu))
                 sinmu = sqrt(sin2mu)
                 if n12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
-                    sinmu = -sinmu                    
+                    sinmu = -sinmu
                 bay = n12/sinmu
                 gmy = -n21/sinmu
                 aly2 = bay*gmy-1.
                 # print('alfay^2',aly2)
                 aly = 0. if fabs(aly2) < 1.e-9 else sqrt(aly2)
-                print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))                
+                print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy])
                 m_cell_beta = self.accel.beta_matrix()
@@ -370,7 +399,7 @@ class Lattice(object):
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
                 except ValueError:
                     warnings.showwarning(
-                            'WARNING: sqrt of negative number!\nResult may have no physical meaning!',
+                            'sqrt of negative number!\nResult may have no physical meaning!',
                             UserWarning,
                             'lattice.py',
                             'sigma_functions()',
@@ -393,7 +422,7 @@ class Lattice(object):
                     )
         return sigma_fun
 
-    def dispersion(self,steps=10,closed=True): 
+    def dispersion(self,steps=10,closed=True):
         """
         Track the dispersion function
         """
@@ -420,7 +449,7 @@ class Lattice(object):
         return traj
 
     def lattice_plot_function(self):
-        fun = []   # is list((s = Ordinate,f = Abszisse))
+        fun = []   # is list((s = Abzisse,f = Ordinate))
         for element in self.seq:
             # DEBUG('position',element.position )
             pos   = element.position
@@ -440,7 +469,7 @@ class Lattice(object):
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
             return 0.
         def SollTest_OFF(arg):
-            return arg        
+            return arg
         soll_test   = SollTest_OFF
 
         gamma       = PARAMS['sollteilchen'].gamma
@@ -515,9 +544,32 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
+
+## Section
+class Section(Lattice):
+    """
+    A Lattice with a name
+    """
+    def __init__(self,name='LINAC'):
+        super().__init__()
+        self.name = name
+    def get_name(self):
+        return self.name
+    def set_name(self,name):
+        self.name = name
+    @classmethod
+    def cast(cls,obj):
+        """
+        Convert a BaseClass object into a SubClass object ==> der Trick:
+        ==> cast 'obj' (must be of class Lattice) to object of class Section.
+        """
+        if not isinstance(obj,Lattice):
+            print('ERROR: cast to class Section not possible. -- STOP!')
+            sys.exit(1)
+        obj.__class__ = Section
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 ## utilities
-def make_wille():  
+def make_wille():
     """
     Wille's test lattice
     """
@@ -530,35 +582,31 @@ def make_wille():
     lb = wille()['dipole_length']
     ld = wille()['drift_length']
     ## elements
-    mqf = ELM.QF(kqf,lqf,'QF')
-    mqd = ELM.QD(kqd,lqd,'QD')
-    mb  = ELM.SD(rhob,lb,'B')
-    mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
-    mw  = ELM.WD(mb)
-    mw1 = ELM.WD(mb1)
-    mbr = ELM.RD(rhob,lb)
-    md  = ELM.D(ld)
+    mqf1 = ELM.QF(kqf,lqf,'QF1')
+    mqf2 = ELM.QF(kqf,lqf,'QF2')
+    mqd1 = ELM.QD(kqd,lqd,'QD1')
+    md1  = ELM.D(ld)
+    md2  = ELM.D(ld)
+    md3  = ELM.D(ld)
+    md4  = ELM.D(ld)
+    mbr1  = ELM.RD(rhob,lb)
+    mbr2  = ELM.RD(rhob,lb)
+#     mb  = ELM.SD(rhob,lb,'B')
+#     mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
+#     mw  = ELM.WD(mb)
+#     mw1 = ELM.WD(mb1)
     ## lattice
     lattice = Lattice()
-    lattice.add_element(mqf)
-    lattice.add_element(md)
-    # lattice.add_element(mw)
-    # lattice.add_element(mb)
-    # lattice.add_element(mw)
-    lattice.add_element(mbr)
-    # lattice.add_element(mw1)
-    # lattice.add_element(mb1)
-    # lattice.add_element(mw1)
-    lattice.add_element(md)
-    lattice.add_element(mqd)
-    lattice.add_element(md)
-    # lattice.add_element(mw)
-    # lattice.add_element(mb)
-    # lattice.add_element(mw)
-    lattice.add_element(mbr)
-    lattice.add_element(md)
-    lattice.add_element(mqf)
-    # lattice.string()
+    lattice.add_element(mqf1)
+    lattice.add_element(md1)
+    lattice.add_element(mbr1)
+    lattice.add_element(md2)
+    lattice.add_element(mqd1)
+    lattice.add_element(md3)
+    lattice.add_element(mbr2)
+    lattice.add_element(md4)
+    lattice.add_element(mqf2)
+#     DEBUG('lattice: ',lattice.string())
     top = Lattice()
     top.concat(lattice)
     # top.concat(top)
@@ -567,16 +615,12 @@ def make_wille():
     # top.concat(top)
     # top.concat(top)
     # top.concat(top)
+#     DEBUG('top: ',top.string())
     return top
-
-def test0():
-    print('-------------------------------------Test0--')
-    lat = make_wille()
-    print(lat.string())
 
 def test1():
     from matplotlib.pyplot import plot,show,legend
-    print('-------------------------------------Test2--')
+    print('-------------------------------------Test1--')
     lattice = make_wille()
     # cell boundaries
     mcell,betax,betay = lattice.cell(closed=True)
@@ -586,22 +630,37 @@ def test1():
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
-    vsbase = -1.
     s  = [x[0] for x in beta_fun]    # s
     xs = [x[1] for x in beta_fun]    # betax
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
-    vs = [x[3]+vsbase for x in beta_fun]  # viseo
-    zero = [vsbase for x in beta_fun]     # viseo base line
+#     vs = [x[3]+vsbase for x in beta_fun]  # viseo
+#     zero = [vsbase for x in beta_fun]     # viseo base line
+    ##-------------------- lattice viseo
+    lat_plot = lattice.lattice_plot_function()
+    vsbase = -1.
+    vis_abzisse  = [x[0] for x in lat_plot]
+    vis_ordinate = [x[1]+vsbase for x in lat_plot]
+    vzero        = [vsbase   for x in lat_plot]      # zero line
 
     plot(s,xs,label='bx/bx0')
     plot(s,ys,label='by/by0')
     plot(s,ds,label='dp/p')
-    plot(s,vs,label='element',color='black')
-    plot(s,zero,color='black')
+    plot(vis_abzisse,vis_ordinate,label='',color='black')
+    plot(vis_abzisse,vzero,color='black')
+#     plot(s,zero,color='black')
     legend(loc='upper left')
     show()
+
+def test2():
+    print('-------------------------------------Test2--')
+    lattice = Lattice()
+    print(type(lattice))
+    Section.cast(lattice)
+    print(type(lattice))
+    lattice.set_name('Lattice casted to Section')
+    print(lattice.get_name())
 ## main ----------
 if __name__ == '__main__':
-    test0()
-    test1()
+#     test1()
+    test2()
