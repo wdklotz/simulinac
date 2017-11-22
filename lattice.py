@@ -399,7 +399,7 @@ class Lattice(object):
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
                 except ValueError:
                     warnings.showwarning(
-                            'WARNING: sqrt of negative number!\nResult may have no physical meaning!',
+                            'sqrt of negative number!\nResult may have no physical meaning!',
                             UserWarning,
                             'lattice.py',
                             'sigma_functions()',
@@ -451,7 +451,7 @@ class Lattice(object):
     def lattice_plot_function(self):
         fun = []   # is list((s = Abzisse,f = Ordinate))
         for element in self.seq:
-            DEBUG('position',element.position )
+            # DEBUG('position',element.position )
             pos   = element.position
             viseo = element.viseo
             si = pos[0]

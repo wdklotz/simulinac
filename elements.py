@@ -21,7 +21,7 @@ import sys
 from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
 from copy import copy
 import numpy as NP
-import warnings
+# import warnings
 
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
@@ -617,6 +617,7 @@ class RFG(D):
         g           = part_center.gamma                       # gamma @ gap center
         particlei   = self.particle                           # particle @ (i)
         particlef   = particle(particlei.tkin+self.deltaW)    # particle @ (f)
+        self.particlef = particlef
         # DEBUG_MODULE('RFG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
         # self.Ks     = 2.*pi/(self.lamb*g*b)                   # T.Wrangler pp.196
         self.matrix = self._mx_(self.tr,b,g,particlei,particlef)   # the LINEAR TRANSPORT matrix R
