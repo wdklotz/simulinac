@@ -38,7 +38,8 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
 
     for section in sections:
         if len(section.seq) == 0: continue
-        sec      = section.get_name()
+        # sec      = section.get_name()
+        sec      = section.name
         sec_da   = root_da.createChild(sec)
         sec_da.setValue('length',section.length)
         sec_da.setValue('name',sec)
@@ -66,7 +67,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                     quad_cnt += 1
                     name = '{}:{}'.format(node.label,quad_cnt)
                     accelm_da.setValue('type','QUAD')
-#                     accelm_da.setValue('name','{1}:{0}:{2}'.format(node.label,'',quad_cnt))
+                    # accelm_da.setValue('name','{1}:{0}:{2}'.format(node.label,'',quad_cnt))
                     accelm_da.setValue('name',name)
 
                     k0 = node.k0

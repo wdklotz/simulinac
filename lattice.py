@@ -84,35 +84,67 @@ class Lattice(object):
         mcell.set_section('<= full lattice map')
         return mcell.string()
 
-    def get_section(self,sec):
-        if not FLAGS['sections']:
-            section = self
-            Section.cast(section)             #the whole lattice is one section
-            setction.set_name('LINAC')
-        else:
-            section = Section(name=sec)
-            for elm in self.seq:
-                try:
-                    elmsec = elm.get_section()
-                except AttributeError:
-                    print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
-                    continue
-                if elmsec == sec:
-                    section.add_element(elm)
-        return section
-
-    def get_sections(self):
-        sections = []
-        if not FLAGS['sections']:
-            section = self
-            Section.cast(section)             #the whole lattice is one section
-            section.set_name('LINAC')
-            sections.append(section)
-        else:
-            for isec in PARAMS['sections']:
-                sec = self.get_section(isec)
-                sections.append(sec)
-        return sections
+    # def get_section(self,sec):
+    #     if not FLAGS['sections']:
+    #         section = self
+    #         Section.cast(section)             #the whole lattice is one section
+    #         setction.set_name('LINAC')
+    #     else:
+    #         section = Section(name=sec)
+    #         for elm in self.seq:
+    #             try:
+    #                 elmsec = elm.get_section()
+    #             except AttributeError:
+    #                 print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+    #                 continue
+    #             if elmsec == sec:
+    #                 section.add_element(elm)
+    #     return section
+    # def get_sections(self):
+    #     sections = []
+    #     if not FLAGS['sections']:
+    #         section = self
+    #         Section.cast(section)             #the whole lattice is one section
+    #         section.set_name('LINAC')
+    #         sections.append(section)
+    #     else:
+    #         for isec in PARAMS['sections']:
+    #             sec = self.get_section(isec)
+    #             sections.append(sec)
+    #     return sections
+    #    
+    # def get_section(self,sec=None):
+    #     if not FLAGS['sections']:
+    #         section = self
+    #         # Section.cast(section)             #the whole lattice is one section
+    #         setction.name = 'LINAC'
+    #         return section
+    #     else:
+    #         # section = Section(name=sec)
+    #         section = Lattice()
+    #         for elm in self.seq:
+    #             try:
+    #                 elmsec = elm.get_section()
+    #             except AttributeError:
+    #                 print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+    #                 continue
+    #             if elmsec == sec:
+    #                 section.add_element(elm)
+    #     section.name = sec
+    #     return section
+    #
+    #   def get_sections(self):
+    #     sections = []
+    #     if not FLAGS['sections']:
+    #         # section = self
+    #         # Section.cast(section)             #the whole lattice is one section
+    #         # section.set_name('LINAC')
+    #         sections.append(self.get_section())
+    #     else:
+    #         for isec in PARAMS['sections']:
+    #             sectn = self.get_section(sec=isec)
+    #             sections.append(sectn)
+    #     return sections
 
     def set_section(self,sec=''):
         """
@@ -545,28 +577,75 @@ class Lattice(object):
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 
-## Section
-class Section(Lattice):
-    """
-    A Lattice with a name
-    """
-    def __init__(self,name='LINAC'):
-        super().__init__()
-        self.name = name
-    def get_name(self):
-        return self.name
-    def set_name(self,name):
-        self.name = name
-    @classmethod
-    def cast(cls,obj):
-        """
-        Convert a BaseClass object into a SubClass object ==> der Trick:
-        ==> cast 'obj' (must be of class Lattice) to object of class Section.
-        """
-        if not isinstance(obj,Lattice):
-            print('ERROR: cast to class Section not possible. -- STOP!')
-            sys.exit(1)
-        obj.__class__ = Section
+## Sections
+# The commented code is legacy. No use to define a new
+# subclass and to cast from base class to subclass
+# although it worked well!
+# 
+# class Section(Lattice):
+#     """
+#     A Lattice with a name
+#     """
+#     def __init__(self,name='LINAC'):
+#         super().__init__()
+#         self.name = name
+#     def get_name(self):
+#         return self.name
+#     def set_name(self,name):
+#         self.name = name
+#     @classmethod
+#     def cast(cls,obj):
+#         """
+#         Convert a BaseClass object into a SubClass object ==> der Trick:
+#         ==> cast 'obj' (must be of class Lattice) to object of class Section.
+#         """
+#         if not isinstance(obj,Lattice):
+#             print('ERROR: cast to class Section not possible. -- STOP!')
+#             sys.exit(1)
+#         obj.__class__ = Section
+
+# To add Sections to the lattice I augment the Lattice class with 2 member-functions 
+# get_section(...) and get_sections(...) and the section 'name' attribute
+# without modifying the orignal Lattice class declaration
+
+def get_section(self,sec=None):
+    if not FLAGS['sections']:
+        section = self       #the whole lattice is one section
+        setction.name = 'LINAC'
+        return section
+    else:
+        section = Lattice()
+        for elm in self.seq:
+            try:
+                elmsec = elm.get_section()
+            except AttributeError:
+                print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+                continue
+            if elmsec == sec:
+                section.add_element(elm)
+    section.name = sec
+    return section
+
+def get_sections(self):
+    sections = []
+    if not FLAGS['sections']:
+        sections.append(self.get_section())
+    else:
+        for isec in PARAMS['sections']:
+            sectn = self.get_section(sec=isec)
+            sections.append(sectn)
+    return sections
+
+@property
+def name(self):               #name attribute getter
+    return self._name
+@name.setter
+def name(self,value):         #name attribute setter
+    self._name=value
+
+Lattice.name         = name                   #add name attribute to class Lattice
+Lattice.get_section  = get_section            #add member fuction to class Lattice
+Lattice.get_sections = get_sections           #add member fuction to class Lattice
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 ## utilities
 def make_wille():
