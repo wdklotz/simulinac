@@ -38,7 +38,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
 
     for section in sections:
         if len(section.seq) == 0: continue
-        # sec      = section.get_name()
+        # sec      = section.get_name()    *legacy*
         sec      = section.name
         sec_da   = root_da.createChild(sec)
         sec_da.setValue('length',section.length)
