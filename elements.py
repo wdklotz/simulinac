@@ -42,7 +42,7 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
 ## the mother of all lattice elements (a.k.a. matrices)
-class _matrix_(object):
+class _Node(object):
     """
     Base class for transfer matrices
     """
@@ -73,7 +73,7 @@ class _matrix_(object):
         return s
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
-        res=_matrix_()
+        res=_Node()
         if (self.label == ''):
             res.label=other.label
         else:
@@ -82,9 +82,9 @@ class _matrix_(object):
         res.matrix=product
         return res
     def reverse(self):
-        raise RuntimeError('_matrix_:reverse not implemented!')
+        raise RuntimeError('_Node:reverse not implemented!')
     def inverse(self):
-        raise RuntimeError('_matrix_:inverse not implemented!')
+        raise RuntimeError('_Node:inverse not implemented!')
         sys.exit(1)
     def trace(self):
         return self.tracex()+self.tracey
@@ -99,7 +99,7 @@ class _matrix_(object):
             res += self.matrix[i,i]
         return res
     def shorten(self,length=0.):    # virtual function to be implemented by child classes
-        raise RuntimeError('FATAL: _matrix_.shorten(): virtual member function called!')
+        raise RuntimeError('FATAL: _Node.shorten(): virtual member function called!')
     def make_slices(self,anz=10):
         mr = I(label=self.label,viseo=self.viseo)  ## very small rest
         slices = []
@@ -178,11 +178,10 @@ class _matrix_(object):
         f_track = self.matrix.dot(i_track)
         return f_track
 ## unity matrix (owns its particle instance!)
-class I(_matrix_):
+class I(_Node):
     def __init__(self, label='I', viseo=0., particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__()
-        self.label = label
-        self.viseo = viseo
+        self.label  = label
         self.position = position        # [entrance,middle,exit]
         self.particle = copy(particle)  # keep a local copy of the particle instance (IMPORTANT!)
 ## marker
@@ -679,7 +678,7 @@ class RFG(D):
     def soll_map(self,i_track):
         f_track = super().soll_map(i_track)
         return f_track
-class _thin(_matrix_):
+class _thin(_Node):
     """
     Base class for thin elements implemented as triplet D*Kick*D
     """
@@ -965,7 +964,7 @@ class SIXD(D):
         f_track[SKOO] += self.length         # finally adjust total lattice length
         return f_track
 ## utilities
-class Test(_matrix_):
+class Test(_Node):
     def __init__(self,a,b,c,d,e,f,label='test'):
         super().__init__()
         self.matrix=NP.array([[ a, b,0.,0.,0.,0.,0.,0.,0.,0.],
@@ -1004,14 +1003,14 @@ def test0():
 def test1():
     print('--------------------------------Test1---')
     print('trivial test 1 ...')
-    i1=_matrix_()
+    i1=_Node()
     i2=i1*i1
     print(i1.string())
     print(i2.string())
 def test2():
     print('--------------------------------Test2---')
     print('trivial test 2 ...')
-    i1=_matrix_()
+    i1=_Node()
     d1=D(10.,'D1')
     print(d1.string())
     print((d1*d1).string())
@@ -1024,7 +1023,7 @@ def test2():
     print((d2*d3).string())
 def test3():
     print('--------------------------------Test3---')
-    print('test product of _matrix_ class ...')
+    print('test product of _Node class ...')
     gradient =1.
     beta     =0.5
     energy   =0.2
@@ -1032,7 +1031,7 @@ def test3():
     k=k0test(gradient=gradient,energy=energy,beta=beta)
     qf=QF(k0=k,length=1.)
     print(qf.string())
-    # test product of _matrix_ class
+    # test product of _Node class
     qd=QD(k0=k,length=1.)
     print(qd.string())
     print((qf*qd).string())

@@ -6,23 +6,23 @@ class Base(object):
 
 class Mixin1(object):
     def set(self,name):
-        self.name=name.upper()
+        self.name=name.upper()+" - Mixin1"
     def get(self):
         return self.name
 
 class Mixin2(object):
     def set(self,name):
-        self.name='{}:{}'.format(name,name)
+        self.name='{}:{}'.format(name,name)+" - Mixin2"
     def get(self):
         return self.name
 
 class Mixin3(object):
     def set(self,name):
-        self.name=('{}:{}'.format(name,name)).upper()
+        self.name=('{}:{}'.format(name,name)).upper()+" - Mixin3"
     def get(self):
         return self.name
 
-class NamedBase(Mixin1,Mixin2,Base):
+class NamedBase(Mixin2,Mixin1,Mixin3,Base):
     def __init__(self):
         super().__init__()
     def who(self):

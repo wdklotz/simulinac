@@ -181,7 +181,7 @@ def factory(input_file):
                 DEBUG_MODULE('elmItem in make_lattice',elmItem)
                 (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
                 DEBUG_MODULE('instance {} {}'.format(label,instance))
-                if isinstance(instance,ELM._matrix_):
+                if isinstance(instance,ELM._Node):
                     lattice.add_element(instance)  # add element instance to lattice
                 elif isinstance(instance,Lattice):
                     lattice.concat(instance)       # concatenate partial with lattice

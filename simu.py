@@ -214,9 +214,10 @@ def loesung(filepath):
 
 if __name__ == '__main__':
     import sys
-    # filepath = 'fodo_with_10cav_per_RF-4.yml'       ## the default input file (YAML syntax)
-    filepath = 'yml/HE_50inj_ttfg_work.yml'
-    filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
+    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
+    # filepath = 'fodo_with_10cav_per_RF-4.yml'
+    # filepath = 'yml/HE_50inj_ttfg_work.yml'
+    # filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
     # filepath = 'yml/25_09_2017_ref_70_200MeV.yml'
 
     if len(sys.argv) == 2:
