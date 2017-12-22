@@ -30,6 +30,7 @@ from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
+from NamedObject import NamedObject
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -39,11 +40,12 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 
 ## Lattice
-class Lattice(object):
+class Lattice(NamedObject,object):
     """
     The Lattice object is a list of elements: ELM.<element>
     """
     def __init__(self):
+        NamedObject.__init__(self)
         self.seq    = []
         self.length = 0.
         self.betax0 = 0.
@@ -81,7 +83,7 @@ class Lattice(object):
             s1 = element.position[2]
             # DEBUG('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
-        mcell.set_section('<= full lattice map')
+        mcell.section = '<= full lattice map'
         return mcell.string()
 
     def set_section(self,sec=''):
@@ -414,7 +416,7 @@ class Lattice(object):
                 s += i_element.length
                 d  = v_0[0,0]
                 dp = v_0[1,0]
-                viseo = i_element.viseo
+                viseo = i_element['viseo']
                 traj.append((s,d,dp))
         return traj
 
@@ -423,7 +425,7 @@ class Lattice(object):
         for element in self.seq:
             # DEBUG('position',element.position )
             pos   = element.position
-            viseo = element.viseo
+            viseo = element['viseo']
             si = pos[0]
             sf = pos[2]
             fun.append((si,0))
@@ -515,7 +517,6 @@ class Lattice(object):
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 
-## Sections
 # The commented code is *legacy*. No use to define a new
 # subclass and to cast from base class to subclass
 # although it worked well!
@@ -575,6 +576,7 @@ class Lattice(object):
 # get_section(...) and get_sections(...) and the section 'name' attribute
 # without modifying the orignal Lattice class declaration
 
+## Sections
 def get_section(self,sec=None):
     if not FLAGS['sections']:
         section = self       #the whole lattice is one section
@@ -584,7 +586,7 @@ def get_section(self,sec=None):
         section = Lattice()
         for elm in self.seq:
             try:
-                elmsec = elm.get_section()
+                elmsec = elm.section
             except AttributeError:
                 print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
                 continue
@@ -603,23 +605,15 @@ def get_sections(self):
             sections.append(sectn)
     return sections
 
-@property
-def name(self):               #name attribute getter
-    return self._name
-@name.setter
-def name(self,value):         #name attribute setter
-    self._name=value
-
-Lattice.name         = name                   #add name attribute to class Lattice
-Lattice.get_section  = get_section            #add member fuction to class Lattice
-Lattice.get_sections = get_sections           #add member fuction to class Lattice
+Lattice.get_section  = get_section      #add member fuction to class Lattice
+Lattice.get_sections = get_sections     #add member fuction to class Lattice
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 ## utilities
 def make_wille():
     """
     Wille's test lattice
     """
-    print("K.Wille's Beispiel auf pp. 112-113")
+    print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
     kqf = wille()['k_quad_f']
     lqf = wille()['length_quad_f']
     kqd = wille()['k_quad_d']
@@ -700,14 +694,12 @@ def test1():
 
 def test2():
     print('-------------------------------------Test2--')
+    print('lattice tags test ...')
     lattice = Lattice()
     print(type(lattice))
-    # Section.cast(lattice)
-    # print(type(lattice))
-    # lattice.set_name('Lattice casted to Section')
-    lattice.name = 'TEST2'
-    # print(lattice.get_name())
-    print(lattice.name)
+    lattice.name = 'NAME'
+    lattice.label = 'LABEL'
+    lattice.section = 'SECTION'
     print(lattice.__dict__)
 if __name__ == '__main__':
     test1()

@@ -153,7 +153,7 @@ def instanciate_element(item):
     except:
         pass
     else:
-        instance.set_section(sec)
+        instance.section = sec
     return (label,instance)
 
 def factory(input_file):
