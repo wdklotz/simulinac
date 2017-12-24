@@ -92,6 +92,7 @@ PARAMS = dict(
         sigmaz_i             = 0.02,             # [m] max long. half-width displacement
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
+        nbof_slices          = 6,                # default number-off slices
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
@@ -231,9 +232,9 @@ def collect_data_for_summary(lattice):
         import itertools
         def predicate(element):
             try:
-                test = (type(element).__name__ == typ and element.sec == sec)
+                test = (type(element).__name__ == typ and element.section == sec)
             except AttributeError:
-                test = (type(element).__name__ == typ)  ## no sec tags? take all!
+                test = (type(element).__name__ == typ)  ## no section tag? take all!
             return not test
         filtered_elements = itertools.filterfalse(predicate,lattice.seq)
         return filtered_elements
@@ -254,7 +255,7 @@ def collect_data_for_summary(lattice):
                 new_elements.append(itm)
         return new_elements
     ## body
-    sections =  PARAMS['sections']                       ## comes from INPUT
+    sections =  PARAMS['sections']                   ## comes from INPUT
     if not FLAGS['sections']: sections = ['*']       ## section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
@@ -280,7 +281,6 @@ def collect_data_for_summary(lattice):
                 Ez      = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 mapping = itm.mapping
-                # length  = itm.length
                 SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
                 SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
