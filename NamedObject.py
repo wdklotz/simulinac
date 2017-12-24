@@ -1,15 +1,7 @@
 class NamedObject:
 	"""
-	Class. An object that has a name and a label
+	A class to give objects tags like name a.k.a. label, section ...
 	"""
-	def __init__(self):
-		"""
-		Object that has tags: name, label, section ...
-		"""
-		self._label   = "no label"
-		self._name    = "no name"
-		self._section = "no section"
-	
 	@property
 	def label(self):
 		return self._label
@@ -20,17 +12,17 @@ class NamedObject:
 
 	@property
 	def name(self):
-		return self._name
+		return self._label
 		
 	@name.setter
 	def name(self, value):
-		self._name = value
+		self._label = value
 	
 	@property
 	def section(self):
 		return self._section
 		
-	@name.setter
+	@section.setter
 	def section(self, value):
 		self._section = value
 	

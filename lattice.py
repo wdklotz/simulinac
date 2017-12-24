@@ -86,16 +86,6 @@ class Lattice(NamedObject,object):
         mcell.section = '<= full lattice map'
         return mcell.string()
 
-    def set_section(self,sec=''):
-        """
-        Setter for section tag (sections are not mandatory!)
-        To distinguish different parts of the lattice, each element can be tagged by a section ID
-        indicating the lattice part it belongs to.
-        """
-        for element in self.seq:
-            element.set_section(sec)
-        return
-
     def stats(self,soll_track):
         """
         Gather lattice statistics
@@ -356,7 +346,7 @@ class Lattice(NamedObject,object):
         for element in self.seq:
             s0 = element.position[0]
             s1 = element.position[2]
-            # objprnt(element.particle ,text='sigma_functions: '+element.label)         # DEBUG
+            # objprnt(element.particle ,text='sigma_functions: '+element.label) # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 # DEBUG_MODULE('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
@@ -381,11 +371,11 @@ class Lattice(NamedObject,object):
                 sigma_fun.append((s,xsquare_av,ysquare_av))
                 KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':i_element.particle.tkin})   # keep current values
                 sigma_i = sigma_f.clone()
-                if isinstance(i_element,ELM.MRK):                        # marker actions
+                if isinstance(i_element,ELM.MRK):     # marker actions
                     i_element.do_actions()
-            if 3.*r > PARAMS['aperture']:    # aperture control
+            if 3.*r > PARAMS['aperture']:             # aperture control
                 saper = min(s0,saper)
-        if saper<1.e6:        # warnings (experimental!)
+        if saper<1.e6:                                # warnings (experimental!)
             warnings.showwarning(
                     '3*sigma out of APERTURE at about s ={:5.1f}[m]\nParticle lost!'.format(saper),
                     UserWarning,
@@ -649,7 +639,7 @@ def make_wille():
 #     DEBUG('lattice: ',lattice.string())
     top = Lattice()
     top.concat(lattice)
-    # top.concat(top)
+    top.concat(top)
     # top.concat(top)
     # top.concat(top)
     # top.concat(top)
@@ -674,8 +664,6 @@ def test1():
     xs = [x[1] for x in beta_fun]    # betax
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
-#     vs = [x[3]+vsbase for x in beta_fun]  # viseo
-#     zero = [vsbase for x in beta_fun]     # viseo base line
     ##-------------------- lattice viseo
     lat_plot = lattice.lattice_plot_function()
     vsbase = -1.
@@ -688,7 +676,6 @@ def test1():
     plot(s,ds,label='dp/p')
     plot(vis_abzisse,vis_ordinate,label='',color='black')
     plot(vis_abzisse,vzero,color='black')
-#     plot(s,zero,color='black')
     legend(loc='upper left')
     show()
 
