@@ -153,7 +153,7 @@ def instanciate_element(item):
     except:
         pass
     else:
-        instance.set_section(sec)
+        instance.section = sec
     return (label,instance)
 
 def factory(input_file):
@@ -180,8 +180,8 @@ def factory(input_file):
                 elmItem = (elementClass,element)
                 DEBUG_MODULE('elmItem in make_lattice',elmItem)
                 (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
-                DEBUG_MODULE('instance {} {}'.format(label,instance))
-                if isinstance(instance,ELM._matrix_):
+                DEBUG_MODULE('instance {} {} {}'.format(label,instance,instance.section))
+                if isinstance(instance,ELM._Node):
                     lattice.add_element(instance)  # add element instance to lattice
                 elif isinstance(instance,Lattice):
                     lattice.concat(instance)       # concatenate partial with lattice
@@ -320,15 +320,10 @@ def factory(input_file):
         radians(PARAMS['soll_phase']),
                 PARAMS['spalt_laenge'],
                 PARAMS['sollteilchen']))
-    PARAMS['emitz_i']  = PARAMS['emitz']   # here zellipse calculated initial values
-    PARAMS['betaz_i']  = PARAMS['betaz']   # here zellipse calculated initial values
-    PARAMS['gammaz_i'] = PARAMS['gammaz']  # here zellipse calculated initial values
-    PARAMS['alfaz_i']  = PARAMS['alphaz']  # here zellipse calculated initial values
-    # delete unused key-values from PARAMS
-    del PARAMS['emitz']
-    del PARAMS['betaz']
-    del PARAMS['gammaz']
-    del PARAMS['alphaz']
+    PARAMS['emitz_i']  = PARAMS['emitz']; del PARAMS['emitz']   # zellipse calculated initial values
+    PARAMS['betaz_i']  = PARAMS['betaz']; del PARAMS['betaz']   # zellipse calculated initial values
+    PARAMS['gammaz_i'] = PARAMS['gammaz'];del PARAMS['gammaz']  # zellipse calculated initial values
+    PARAMS['alfaz_i']  = PARAMS['alphaz'];del PARAMS['alphaz']  # zellipse calculated initial values
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
 
     (latticeList,segments) = expand_reduce(in_data)
@@ -351,7 +346,7 @@ def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
 def test0():
     print('---------------------------------TEST0')
     wfl= []
-    fileobject=open('template.yml','r')
+    fileobject=open('yml/template.yml','r')
     wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
@@ -373,5 +368,6 @@ def test1(input_file):
 ## main ----------
 if __name__ == '__main__':
     test0()
-    test1('fodo_with_10cav_per_RF-4.yml')
+    test1('yml/ref_run.yml')
+    test1('yml/fodo_with_10cav_per_RF-4.yml')
 

@@ -31,3 +31,5 @@
    thin-lens matrices are used the length of the machine is made by drifts!!
  - are the T3D drifts symplectic? T3D drifts are lienear RS drifts are non-linear!
  - TEAPOT spacing of thin-qudrupoles!!!
+ 
+ - refactor: position?
