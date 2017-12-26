@@ -22,8 +22,9 @@ import sys
 from math import sqrt,fabs,acos,asin,pi,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy
+from copy import deepcopy
 import warnings
+import inspect
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,KeepValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
@@ -70,8 +71,8 @@ class Lattice(NamedObject,object):
         sm = (sf+si)/2.
         element.position = [si,sm,sf]
         self.length += l
-        elm_with_position = element
-        self.seq.append(elm_with_position)
+        # DEBUG('add_element: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.2f},'.format(el) for el in element.position)))
+        self.seq.append(element)
 
     def string(self):
         """
@@ -301,7 +302,7 @@ class Lattice(NamedObject,object):
         """
         Concatenate two Lattice pieces
         """
-        seq = copy(lattice_piece.seq)
+        seq = deepcopy(lattice_piece.seq)  # need deepcopy here!
         for element in seq:
             self.add_element(element)
 
@@ -639,19 +640,14 @@ def make_wille():
 #     DEBUG('lattice: ',lattice.string())
     top = Lattice()
     top.concat(lattice)
-    top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-#     DEBUG('top: ',top.string())
+    top.concat(lattice)
     return top
 
 def test1():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test1--')
     lattice = make_wille()
+    # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.2f},'.format(el) for el in element.position)))
     # cell boundaries
     mcell,betax,betay = lattice.cell(closed=True)
     lattice.symplecticity()

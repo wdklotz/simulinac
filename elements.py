@@ -26,6 +26,7 @@ import numpy as NP
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
 from NamedObject import NamedObject
+from ParamsObject import ParamsObject
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -43,13 +44,14 @@ XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
 ## the mother of all lattice elements (a.k.a. matrices)
-class _Node(NamedObject,dict,object):
+class _Node(NamedObject,ParamsObject,object):
     """
     Base class for transfer matrices (owns its particle instance!)
     """
     # MDIMxMDIM matrices used here
     def __init__(self, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         NamedObject.__init__(self)
+        ParamsObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix
         self.particle  = copy(particle)   # keep a local copy of the particle instance (IMPORTANT!)
         self.position  = position         # [entrance,middle,exit]
@@ -324,16 +326,16 @@ class RD(SD):
         super().__init__(radius=radius, length=length, label=label, particle=particle, position=position)
         psi = 0.5*length/radius   # halber Kantenwinkel
         
-        self.wd = _wedge(psi,radius,particle)  # wedge
+        self.wd = _wedge(psi,radius,particle,position)  # wedge
         rd = self.wd * (self * self.wd)
         self.matrix = rd.matrix
     def make_slices(self,anz=PARAMS['nbof_slices']):
         # DEBUG_MODULEll('RD.make_slices: {} {:8.4f}'.format(self.label,self.length))
         sdshort = self.shorten(self.length/anz)
-        slices = [self.wd]
+        slices = [self.wd]          # wedge @ entrance
         for i in range(anz):
             slices.append(sdshort)
-        slices.append(self.wd)                  # the Kick
+        slices.append(self.wd)      # wedge @ exit
         # DEBUG_MODULE('slices',slices)
         return slices
 ## Trace3D wedge of rectangular bending dipole in x-plane
@@ -341,8 +343,8 @@ class _wedge(I):
     """
     Trace3d dipole wedge x-plane
     """
-    def __init__(self, psi, radius, particle):
-        super().__init__(particle=particle)
+    def __init__(self, psi, radius, particle, position):
+        super().__init__(particle=particle, position=position)
         self.label  = 'w'
         ckp = tan(psi)/radius
         m = self.matrix
@@ -717,7 +719,7 @@ class QFth(_thin):
         self['viseo']  = +0.5
         di = D(length=0.5*self.length,particle=self.particle)
         df = di
-        kick = _kick(quad=self, particle=self.particle)    # MDIMxMDIM unit matrix
+        kick = _kick(quad=self, particle=self.particle, position=position)    # MDIMxMDIM unit matrix
         lens = df * (kick * di)     #matrix produkt df*kick*di
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
@@ -731,7 +733,7 @@ class QFth(_thin):
         return self
 ##_kick
 class _kick(I):
-    def __init__(self,quad=None,particle=PARAMS['sollteilchen']):
+    def __init__(self, quad=None, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(label='k',particle=particle)
         m = self.matrix                         # my thin lens quad matrix
         # m[1,0]      = -self.k0*L
