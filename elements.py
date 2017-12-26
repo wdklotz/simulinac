@@ -177,7 +177,7 @@ class _Node(NamedObject,ParamsObject,object):
 class I(_Node):
     def __init__(self, label='I', particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(particle=particle, position=position)
-        self.label    = label
+        self.label = label
 ## marker
 class MRK(I):
     def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0,0,0], actions=[]):
@@ -330,7 +330,7 @@ class RD(SD):
         rd = self.wd * (self * self.wd)
         self.matrix = rd.matrix
     def make_slices(self,anz=PARAMS['nbof_slices']):
-        # DEBUG_MODULEll('RD.make_slices: {} {:8.4f}'.format(self.label,self.length))
+        # DEBUG_MODULE('RD.make_slices: {} {:8.4f}'.format(self.label,self.length))
         sdshort = self.shorten(self.length/anz)
         slices = [self.wd]          # wedge @ entrance
         for i in range(anz):
@@ -691,7 +691,7 @@ class _thin(_Node):
     def __init__(self,particle=PARAMS['sollteilchen'],position=[0,0,0]):
         super().__init__(particle=particle, position=position)
     def make_slices(self,anz=PARAMS['nbof_slices']):  # stepping routine through the triplet
-        # DEBUG_MODULEll('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
+        # DEBUG_MODULE('_thin.make_slices: {} {:8.4f}'.format(self.label,self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]

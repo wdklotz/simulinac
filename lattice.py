@@ -18,13 +18,11 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-# import traceback
 from math import sqrt,fabs,acos,asin,pi,degrees
 from numpy import linalg as LA
 import numpy as NP
 from copy import deepcopy
 import warnings
-import inspect
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,KeepValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
@@ -622,10 +620,6 @@ def make_wille():
     md4  = ELM.D(ld)
     mbr1  = ELM.RD(rhob,lb)
     mbr2  = ELM.RD(rhob,lb)
-#     mb  = ELM.SD(rhob,lb,'B')
-#     mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
-#     mw  = ELM.WD(mb)
-#     mw1 = ELM.WD(mb1)
     ## lattice
     lattice = Lattice()
     lattice.add_element(mqf1)
