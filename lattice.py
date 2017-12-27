@@ -18,13 +18,13 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sqrt,fabs,acos,asin,pi,degrees
+from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import deepcopy
+from copy import copy,deepcopy
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,KeepValues
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
@@ -78,8 +78,8 @@ class Lattice(NamedObject,object):
         """
         mcell = ELM.I(label='')   ##  chain matrices
         for element in self.seq:
-            s0 = element.position[0]
-            s1 = element.position[2]
+#            s0 = element.position[0]
+#            s1 = element.position[2]
             # DEBUG('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,s0,s1))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.section = '<= full lattice map'
@@ -344,7 +344,7 @@ class Lattice(NamedObject,object):
         s     = 0.0
         for element in self.seq:
             s0 = element.position[0]
-            s1 = element.position[2]
+#            s1 = element.position[2]
             # objprnt(element.particle ,text='sigma_functions: '+element.label) # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
@@ -405,7 +405,7 @@ class Lattice(NamedObject,object):
                 s += i_element.length
                 d  = v_0[0,0]
                 dp = v_0[1,0]
-                viseo = i_element['viseo']
+#                viseo = i_element['viseo']
                 traj.append((s,d,dp))
         return traj
 
@@ -569,7 +569,7 @@ class Lattice(NamedObject,object):
 def get_section(self,sec=None):
     if not FLAGS['sections']:
         section = self       #the whole lattice is one section
-        setction.name = 'LINAC'
+        section.name = 'LINAC'
         return section
     else:
         section = Lattice()

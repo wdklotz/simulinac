@@ -218,32 +218,52 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
 
 ## Data For Summary
 SUMMARY = {}
+
 def collect_data_for_summary(lattice):
-    def elements_in_lattice(typ,sec):
+    class Filter:
+        def __init__(self,func):
+            self.func = func
+        def __ror__(self,iterable):
+            for obj in iterable:
+                if self.func(obj):
+                    yield obj
+    class Apply:
+        def __init__(self,func):
+            self.func = func
+        def __ror__(self,iterable):
+            return self.func(iterable)
+
+    def elements_in_lattice():
         '''
-        Filter elements of class <typ> and section <sec> form lattice
+        Filter elements of class <typ> and section <sec> from lattice
         IN:
-            lattice = object [Lattice]
+            lattice = object        [Lattice]
             typ     = element class [string]
-            sec     = section name [string]
+            sec     = section name  [string]
         OUT:
-            iterator of filtered elements
+            list of filtered elements
+
+        NOTE: this functional implementation is taken from:
+            https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
         '''
-        import itertools
         def predicate(element):
             try:
                 test = (type(element).__name__ == typ and element.section == sec)
             except AttributeError:
                 test = (type(element).__name__ == typ)  ## no section tag? take all!
-            return not test
-        filtered_elements = itertools.filterfalse(predicate,lattice.seq)
-        return filtered_elements
+            return test
 
-    def elements_in_section(typ,sec):
+#       NOTE: here I use the INFIX operator '|' like a UNIX pipe
+        List     = Apply(list)
+        Selector = Filter(predicate)
+        return lattice.seq | Selector | List  # the surprising power of functional programming!
+
+
+    def elements_in_section():
         """
-        Get a list of elements of same type in a section
+        Remove duplicate elements of same type in a section
         """
-        elements = list(elements_in_lattice(typ,sec))
+        elements = elements_in_lattice()
         new_elements = []
         seen = set()             ## helper to eliminate duplicate entries
         for itm in elements:
@@ -254,13 +274,14 @@ def collect_data_for_summary(lattice):
                 seen.add(label)
                 new_elements.append(itm)
         return new_elements
+
     ## body
     sections =  PARAMS['sections']                   ## comes from INPUT
     if not FLAGS['sections']: sections = ['*']       ## section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 k0 = itm.k0
                 dBdz = k0*itm.particle.brho
@@ -275,7 +296,7 @@ def collect_data_for_summary(lattice):
     types = ['RFG']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
                 Ez      = itm.u0/gap
@@ -292,7 +313,7 @@ def collect_data_for_summary(lattice):
     types = ['RFC']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
                 Ez      = itm.u0/gap
@@ -310,7 +331,7 @@ def collect_data_for_summary(lattice):
     types = ['TTFG']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
                 Epeak   = itm.Epeak
