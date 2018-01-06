@@ -323,7 +323,7 @@ class RD(SD):
     Trace3D rectangular dipole x-plane
     """
     def __init__(self, radius=0., length=0., label='RD', particle=PARAMS['sollteilchen'],position=[0,0,0]):
-        super().__init__(radius=radius, length=length, label=label, particle=particle, position=position)
+        super().__init__(radius=radius,length=length,label=label,particle=particle,position=position)
         psi = 0.5*length/radius   # halber Kantenwinkel
         
         self.wd = _wedge(psi,radius,particle,position)  # wedge
@@ -418,18 +418,15 @@ class GAP(D):
                     dWf        = self.dWf)
         return self
 ## Basic RF-gap model from A.Shislo
-class _rfb(D):
+class _rfb(object):
     """
     Base RF Gap Model from pyOrbit (A.Shislo)
     """
-    def __init__(self,
-                    parent,
-                    particle   = PARAMS['sollteilchen']):
-        super().__init__(particle=particle)
-        self.label    = 'RFB'
+    def __init__(self,parent):
+        self.label    = '_rfb'
         self.length   = 0.
-        self.particle = particle
         self.parent   = parent
+        self.particle = parent.particle
         self.u0       = parent.u0         # [MV] gap Voltage
         self.phis     = parent.phis       # [radians] soll phase
         self.tr       = parent.tr
@@ -442,7 +439,7 @@ class _rfb(D):
         elif mapping == 'base':
             which_map = self.rfb_map
         else:
-            raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.parent.label))
+            raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.label))
             sys.exit(1)
         return which_map(i_track)
     def lin_map(self,i_track):
@@ -628,7 +625,7 @@ class RFG(D):
 
         # !!!!!  INSTANCIATE a MAP instead of using the R matrix
         if FLAGS['map']:
-            self.rfb = _rfb(self,particle=self.particle)
+            self.rfb = _rfb(self)
 
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / PARAMS['lichtgeschwindigkeit']
@@ -719,7 +716,7 @@ class QFth(_thin):
         self['viseo']  = +0.5
         di = D(length=0.5*self.length,particle=self.particle)
         df = di
-        kick = _kick(quad=self, particle=self.particle, position=position)    # MDIMxMDIM unit matrix
+        kick = _kick(self, particle=self.particle, position=self.position)    # MDIMxMDIM unit matrix
         lens = df * (kick * di)     #matrix produkt df*kick*di
         self.matrix = lens.matrix
         self.triplet = (di,kick,df)
@@ -733,8 +730,9 @@ class QFth(_thin):
         return self
 ##_kick
 class _kick(I):
-    def __init__(self, quad=None, particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(label='k',particle=particle)
+    def __init__(self, quad, particle=PARAMS['sollteilchen'], position=[0,0,0]):
+        super().__init__(particle=particle,position=position)
+        self.label = 'k'
         m = self.matrix                         # my thin lens quad matrix
         # m[1,0]      = -self.k0*L
         # m[3,2]      = -m[1,0]
@@ -786,7 +784,7 @@ class QDthx(QFthx):
     Thin D-Quad   (express version of QDth)
     """
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        super().__init__(k0=-k0,length=length,label=label,particle=particle, position=position)
+        super().__init__(k0=-k0,length=length,label=label,particle=particle,position=position)
         self['viseo'] = -0.5
 ## RF cavity als D*RFG*D
 class RFC(_thin):

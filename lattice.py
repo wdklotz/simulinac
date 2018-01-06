@@ -96,20 +96,18 @@ class Lattice(NamedObject,object):
         tk_i = soll_track.first()[6]
         tk_f = soll_track.last()[6]
         for element in self.seq:
-            if isinstance(element,ELM.QF) \
-            or isinstance(element,ELM.QD):
+            if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
-            if isinstance(element,ELM.RFG) \
-                or isinstance(element,ELM.RFC) \
-                or isinstance(element,TTF.TTFG):
+            if isinstance(element,(ELM.RFG,ELM.RFC,TTF.TTFG)):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
-            if q_counter == 0:
-                q_counter = '0 (no thick quads?)'
-        SUMMARY['nbof quadrupoles*']    = q_counter
-        SUMMARY['nbof cavities*']       = cav_counter
-        SUMMARY['(ttf)min,(ttf)max*']   = (ttfm,ttfx)
+        if q_counter == 0:
+            SUMMARY['nbof quadrupoles*'] = '0 (no thick quads?)'
+        else:
+            SUMMARY['nbof quadrupoles*'] = q_counter
+        SUMMARY['nbof cavities*']        = cav_counter
+        SUMMARY['(ttf)min,(ttf)max*']    = (ttfm,ttfx)
         SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
 
     def cell(self,closed=True):
@@ -594,8 +592,10 @@ def get_sections(self):
             sections.append(sectn)
     return sections
 
-Lattice.get_section  = get_section      #add member fuction to class Lattice
-Lattice.get_sections = get_sections     #add member fuction to class Lattice
+#Lattice.get_section  = get_section                 #add method to class Lattice (the wdk way)
+#Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
+setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
+setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 ## utilities
 def make_wille():
