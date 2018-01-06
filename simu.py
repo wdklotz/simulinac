@@ -17,13 +17,12 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import sqrt,degrees
+from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
-from setutil import PARAMS,FLAGS,SUMMARY,Proton,dictprnt,DEBUG
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
 from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
-from bucket_size import bucket
 from tracks import track_soll
 
 ## DEBUG MODULE
@@ -205,7 +204,7 @@ def loesung(filepath):
     elif not FLAGS['sigma']:
         if not KVprint_flag: print('CALCULATE TWISS')
         twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
-        sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i']),x[3]) for x in twiss]
+        sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i'])) for x in twiss]
     if KVprint_flag:
         dictprnt(PARAMS,text='PARAMS',njust=1)
     else:
@@ -214,11 +213,16 @@ def loesung(filepath):
 
 if __name__ == '__main__':
     import sys
-    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
-    # filepath = 'fodo_with_10cav_per_RF-4.yml'
-    # filepath = 'yml/HE_50inj_ttfg_work.yml'
-    # filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
-    # filepath = 'yml/25_09_2017_ref_70_200MeV.yml'
+#    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
+#    filepath = 'yml/fodo_with_10cav_per_RF-4.yml'
+#    filepath = 'yml/LEBT_fodo_with_RF-2.yml'
+#    filepath = 'yml/LEBT_HEBT_with_RF.yml'
+#    filepath = 'yml/LEBT_HEBT_with_RF_5-200.yml'
+#    filepath = 'yml/LEBT_HEBT_with_RF_5-200.yml'
+    filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
+#    filepath = 'yml/25_09_2017_separatrix_70_200MeV.yml'
+#    filepath = 'yml/test.yml'
+#    filepath = 'yml/LE_HE_15inj-ref.yml'
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]

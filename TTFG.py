@@ -254,16 +254,19 @@ class TTFG(ELM.I):
                     label      = 'TTFG',
                     particle   = PARAMS['sollteilchen'],
                     gap        = PARAMS['spalt_laenge'],
+                    position   = [0,0,0],
                     Ez         = None,                # return of SFdata
                     dWf        = FLAGS['dWf']):
-        super().__init__(label=label,viseo=0.25,particle=particle)
-        if Ez == None: raise RuntimeError('TTFG: missing E(z) table')
-        self.phis   = PhiSoll    # [radians] soll phase
-        self.freq   = fRF        # [Hz]  RF frequenz
-        self.gap    = gap        # [m]
-        self.dWf    = dWf
-        self.lamb   = PARAMS['wellenlänge']
-        self.Ez     = Ez         # the SF-table, a list-of DataPoints
+        super().__init__(particle=particle,position=position)
+        self.phis     = PhiSoll    # [radians] soll phase
+        self.freq     = fRF        # [Hz]  RF frequenz
+        self.label    = label
+        self.gap      = gap        # [m]
+        self.dWf      = dWf
+        self.lamb     = PARAMS['wellenlänge']
+        self.Ez       = Ez         # the SF-table, a list-of DataPoints
+        self['viseo'] = 0.25
+        if self.Ez == None: raise RuntimeError('TTFG: missing E(z) table')
         try:
             self.Epeak  = Ez.Epeak
             self.slices = self._make_slices()

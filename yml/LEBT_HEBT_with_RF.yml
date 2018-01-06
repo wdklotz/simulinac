@@ -91,11 +91,13 @@ elements:                           ## ELEMENT definitions
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *lebt
+        - slices:   0       # 0 or 1 for thick
     - qd1l:   &qd1l           # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *lebt
+        - slices:   0       # 0 or 1 for thick
     - rfgl:  &rfgl          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
@@ -104,6 +106,7 @@ elements:                           ## ELEMENT definitions
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
         - sec:      *lebt
+        - mapping:  simple  # Shishlo's simple map model
     # - rfcl:  &rfcl          # ID
     #     - type:     RFC     # RFC class
     #     - Ez:       *p05    # [V/m] electric field
@@ -130,11 +133,13 @@ elements:                           ## ELEMENT definitions
         - length:   *p03    # [m] 
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *hebt
+        - slices:   0       # 0 or 1 for thick
     - qd1h:   &qd1h         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *hebt
+        - slices:   0       # 0 or 1 for thick
     # - rfgh:  &rfgh          # ID
     #     - type:     RFG     # RFG class
     #     - Ez:       *p05    # [V/m] electric field

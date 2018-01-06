@@ -26,8 +26,8 @@
 flags:
     # - accON:        False           # [True]  acceleration on/off flag
     # - egf:          True            # [False] emittance growth flag
-    # - map:          False           # [True]  use maps to track trajectories through RFGap
-    # - sigma:        False           # [True]  beam sizes by sigma-matrix
+    - map:          False           # [True]  use maps to track trajectories through RFGap
+#    - sigma:        False           # [True]  beam sizes by sigma-matrix
     # - KVprint:      True            # [False] print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # [False] treat lattice as periodic cell sequence(else as transfer line)
     # - verbose:      2               # [0]     print flag (0 = minimal print), try 0,1,2,3
@@ -35,7 +35,7 @@ flags:
 ## SECTION definitions
 ##...........................................................................................
 sections:
-    - [&LE LE,  &HE HE]
+    - [&LE LE,  &HE HE, mrkr]
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
@@ -95,11 +95,13 @@ elements:
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *LE
+        - slices:   0
     - qd1l:   &qd1l         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
         - sec:      *LE
+        - slices:   0
     - rfgl:  &rfgl          # ID
         - type:     RFG     # class
         # - type:     GAP     # class
@@ -108,6 +110,7 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p07    # [m] length
         - sec:      *LE
+        - mapping:  simple
     # - rfcl:  &rfcl          # ID
     #     - type:     RFC     # RFC class
     #     - Ez:       *p05    # [V/m] electric field
@@ -131,11 +134,13 @@ elements:
         - length:   *p03    # [m] 
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *HE
+        - slices:   0
     - qd1h:   &qd1h         # ID
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *p11    # [T/m] quadrupole gradient
         - sec:      *HE
+        - slices:   0
     # - rfgh:  &rfgh          # ID
     #     - type:     RFG     # RFG class
     #     - Ez:       *p05    # [V/m] electric field
@@ -157,7 +162,8 @@ elements:
         - actions:
             - sigma_x
             - sigma_y
-        #     - Tkin  
+        - sec:     mrkr
+
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................

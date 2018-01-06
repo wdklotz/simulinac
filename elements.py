@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sqrt,sinh,cosh,sin,cos,fabs,tan,floor,modf,pi,radians,degrees,ceil
+from math import sqrt,sinh,cosh,sin,cos,tan,modf,pi,radians,ceil
 from copy import copy
 import numpy as NP
 # import warnings
@@ -816,13 +816,13 @@ class RFC(_thin):
         di   = D(length=0.5*length,particle=self.particle)
         df   = D(length=0.5*length,particle=self.particle)
         kick = RFG(
-                    U0=self.u0,
-                    PhiSoll=self.phis,
-                    fRF=self.freq,
-                    label=self.label,
-                    particle=self.particle,
-                    gap=self.gap,
-                    dWf=self.dWf)  ## Trace3D RF gap
+                    U0        = self.u0,
+                    PhiSoll   = self.phis,
+                    fRF       = self.freq,
+                    label     = self.label,
+                    particle  = self.particle,
+                    gap       = self.gap,
+                    dWf       = self.dWf)  ## Trace3D RF gap
         self.tr = kick.tr
         tk_f = self.particle.tkin+kick.deltaW   #tkinetic after acc. gap
         df.adjust_energy(tk_f)                  #update energy for downstream drift after gap
@@ -830,6 +830,7 @@ class RFC(_thin):
         self.matrix = lens.matrix
         # DEBUG_MODULE('RFC matrix\n',self.matrix)
         self.triplet = (di,kick,df)
+        self['viseo'] = 0.33
     def adjust_energy(self,tkin):
         self.__init__(
                     U0            = self.u0,

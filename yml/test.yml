@@ -41,6 +41,7 @@ elements:
         - PhiSync:  *phis     # [deg] synchronous phase
         - fRF:      *f        # [Hz] frequency
         - gap:      *lg       # [m] length
+        - mapping:  simple
     - rfc:  &rfc              # ID
         - type:     RFC       # RFC class
         - Ez:       *qE0      # [V/m] electric field
@@ -67,6 +68,6 @@ segments:
 ##...........................................................................................
 lattice:
     - title: test   # description is mandatory. DON't remove or reposition!
-    - [100,RFG]
-    # - [10,RFC]
+#    - [100,RFG]
+    - [10,RFC]
     

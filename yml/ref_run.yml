@@ -30,18 +30,18 @@ flags:
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
-    # - express:      False           # {True}  use express version of thin quads
+    - express:      False           # {True} use express version of thin quads
     # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
 ##...........................................................................................
 ## SECTION definitions
 ##...........................................................................................
 sections:
-- [&LE LE,  &HE HE]
+    - [&LE LE,  &HE HE]
 ##...........................................................................................
 ## INPUT parameter definitions
 ##...........................................................................................
 parameters:
-    - aperture:             0.01     # [m] aperture = bore radius
+    - aperture:             0.10     # [m] aperture = bore radius
     - Tkin:                 70.0     # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.e+6  # [Hz] frequency
     - ql0:          &p02    0.10     # [m] quad-length
@@ -52,7 +52,7 @@ parameters:
     - betay_i:              0.04     # [m] twiss beta @ entrance y
     - alfax_i:              0.0      # [1] twiss alpha x @ entrance
     - alfay_i:              0.0      # [1] twiss alpha y @ entrance
-    - sigmaz_i:             5.0e-3   # [m] longitudinal displacement z @ entrance
+    - sigmaz_i:             2.5e-3   # [m] longitudinal displacement z @ entrance
     # - sigmaz_i:             8.1795e-3   # separatrix? TTFG
     # - sigmaz_i:             8.1330e-3   # separatrix? RFG-RB
     - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ entrance
@@ -63,23 +63,23 @@ parameters:
 ## ELEMENT definitions
 ##...........................................................................................
 elements:
-## HE
-    # - D3:        &D3        # ID: &alias
-    #     - type:     D       # D class
-    - D3x:        &D3        # ID: &alias
-        - type:     SIXD     # SIXD class
-        # - length:   0.04    # [m]
-        - length:   0.08     # [m]
-        - sec:      *HE      # is part of section
-    # - D5:    &D5            # ID: &alias
-    #     - type:     D       # D class
-    - D5x:    &D5            # ID: &alias
-        - type:     SIXD     # SIXD class
-        - length:   0.022    # [m] half cavity
-        - sec:      *HE      # is part of section
+## HE        
+    - D3:        &D3        # ID: &alias
+        - type:     D       # D class
+        # - length:   0.04    # [m] 
+        - length:   0.08    # [m] 
+        - sec:      *HE     # is part of section
+    - D4:    &D4            # ID: &alias
+        - type:     D       # D class
+        - length:   0.44    # [m] full cavity
+        - sec:      *HE     # is part of section
+    - D5:    &D5            # ID: &alias
+        - type:     D       # D class
+        - length:   0.022   # [m] half cavity
+        - sec:      *HE     # is part of section
     - QFH:   &QFH                # ID: &alias
         - type:     QF           # QF class
-        - length:   *p03         # [m]
+        - length:   *p03         # [m] 
         - B':       &Bgrad   40. # [T/m] quadrupole gradient
         - slices:   1            # if slices == 1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
@@ -91,13 +91,12 @@ elements:
         - sec:      *HE          # is part of section
     - RFGH:  &RFGH          # ID: &alias
         - type:     RFG     # class
-        # - Ez:       1.41    # [MV/m] (Ez)av electric field
-        - Ez:       2.31    # [MV/m] (Ez)av electric field
+        - Ez:       1.41    # [MV/m] (Ez)av electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
-        # - mapping:   simple # Shishlo's simple map model
         - mapping:   base   # Shishlo's base map model
+        # - mapping:   simple # Shishlo's simple map model
         - sec:      *HE     # is part of section
     - TTG:  &TTG            # ID: &alias
         - type:     TTFG    # TTFG class
@@ -105,15 +104,14 @@ elements:
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        # - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
-        - Ezpeak:   4.00    # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
+        - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
         - sec:      *HE     # is part of section
     - M:  &M                # ID: &alias
-        - type:    MRK      # MRK class
+        - type:    MRK      # MRK class  
         - actions:
             - sigma_x
             - sigma_y
-            - Tkin
+            - Tkin  
 ##...........................................................................................
 ## SEGMENT definitions
 ##...........................................................................................
@@ -219,7 +217,6 @@ segments:
 ##...........................................................................................
 lattice:
     - title: 25.09.2017 versuche 70-200MeV        # description -  DON't remove or reposition!
-    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    # - [2,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    # - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
-    # - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+#    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    

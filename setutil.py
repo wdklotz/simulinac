@@ -223,14 +223,14 @@ def collect_data_for_summary(lattice):
     class Filter:
         def __init__(self,func):
             self.func = func
-        def __ror__(self,iterable):
+        def __ror__(self,iterable):     # INFIX "|" operator
             for obj in iterable:
                 if self.func(obj):
                     yield obj
     class Apply:
         def __init__(self,func):
             self.func = func
-        def __ror__(self,iterable):
+        def __ror__(self,iterable):     # INFIX "|" operator
             return self.func(iterable)
 
     def elements_in_lattice():

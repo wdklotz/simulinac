@@ -17,11 +17,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import sys, os
-from math import radians,pi,degrees
+import sys
+from math import radians
 import yaml
 
-from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
+from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,zellipse
 import elements as ELM
 import TTFG as TTF
 from lattice import Lattice
@@ -60,7 +60,7 @@ def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
 def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     lattice = Lattice()
     thinlen = length/slices
-    thinlabel = '({})th'.format(label)
+#    thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
             instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle)
@@ -168,7 +168,7 @@ def factory(input_file):
                 if segID in seg:
                     DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
-                    nboff_elements = len(elementList)
+#                    nboff_elements = len(elementList)
                     found = True
                     break    #after found == true
             if found == False:
@@ -180,7 +180,8 @@ def factory(input_file):
                 elmItem = (elementClass,element)
                 DEBUG_MODULE('elmItem in make_lattice',elmItem)
                 (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
-                DEBUG_MODULE('instance {} {} {}'.format(label,instance,instance.section))
+                section = instance.section if FLAGS['sections'] else '*'
+                DEBUG_MODULE('instance {} {} {}'.format(label,instance,section))
                 if isinstance(instance,ELM._Node):
                     lattice.add_element(instance)  # add element instance to lattice
                 elif isinstance(instance,Lattice):

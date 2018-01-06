@@ -81,11 +81,13 @@ elements:
         - length:   *p03         # [m] 
         - B':       &Bgrad   40. # [T/m] quadrupole gradient
         - sec:      *HE
+        - slices:   0
     - QDH:   &QDH           # ID: &alias
         - type:     QD      # QD class
         - length:   *p02    # [m] length
         - B':       *Bgrad  # [T/m] quadrupole gradient
         - sec:      *HE
+        - slices:   0
     - RFGH:  &RFGH          # ID: &alias
         - type:     RFG     # class
         - Ez:       1.41    # [MV/m] (Ez)av electric field
