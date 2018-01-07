@@ -661,9 +661,9 @@ def test1():
     vis_ordinate = [x[1]+vsbase for x in lat_plot]
     vzero        = [vsbase   for x in lat_plot]      # zero line
 
-    plot(s,xs,label='bx/bx0')
-    plot(s,ys,label='by/by0')
-    plot(s,ds,label='dp/p')
+    plot(s,xs,label='betax')
+    plot(s,ys,label='betay')
+    plot(s,ds,label='disp')
     plot(vis_abzisse,vis_ordinate,label='',color='black')
     plot(vis_abzisse,vzero,color='black')
     legend(loc='upper left')

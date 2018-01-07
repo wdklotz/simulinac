@@ -21,7 +21,6 @@ import sys
 from math import sqrt,sinh,cosh,sin,cos,tan,modf,pi,radians,ceil
 from copy import copy
 import numpy as NP
-# import warnings
 
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
@@ -35,6 +34,8 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_MAP    = DEBUG_OFF
+
+twopi        = 2.*pi
 
 ## MDIM
 MDIM=10        # dimension of matrices
@@ -126,7 +127,6 @@ class _Node(NamedObject,ParamsObject,object):
             elif rest < 0.:
                 raise RuntimeError('FATAL: negative resting step size when stepping through - STOP')
                 sys.exit(1)
-
 
             for i in range(int(step_int_part)):
                 slices.append(mx)
@@ -418,12 +418,12 @@ class GAP(D):
                     dWf        = self.dWf)
         return self
 ## Basic RF-gap model from A.Shislo
-class _rfb(object):
+class _rfg_map(object):
     """
     Base RF Gap Model from pyOrbit (A.Shislo)
     """
     def __init__(self,parent):
-        self.label    = '_rfb'
+        self.label    = 'gmap'
         self.length   = 0.
         self.parent   = parent
         self.particle = parent.particle
@@ -438,13 +438,15 @@ class _rfb(object):
             which_map = self.lin_map
         elif mapping == 'base':
             which_map = self.rfb_map
+        elif mapping == 'dynac':
+            which_map = self.dyc_map
         else:
             raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.label))
             sys.exit(1)
         return which_map(i_track)
     def lin_map(self,i_track):
         """
-        Mapping of track from position (i) to (f) in linear approx. (A.Shislo 4.1)
+        Mapping from position (i) to (f) in linear approx. (A.Shislo 4.1)
         """
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
@@ -509,7 +511,7 @@ class _rfb(object):
         return f_track
     def rfb_map(self,i_track):
         """
-        Mapping of track from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
+        Mapping from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
         """
         # DEBUG_MODULE('i_track:\n',str(i_track))
         x        = i_track[XKOO]       # [0]
@@ -580,6 +582,49 @@ class _rfb(object):
             arrprnt(f,fmt='{:6.3g},',txt='rfb_map: ')
 
         return f_track
+    def dyc_map(self,i_track):
+        """
+        E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
+        """
+        # DEBUG_MODULE('i_track:\n',str(i_track))
+        x        = i_track[XKOO]       # [0]
+        xp       = i_track[XPKOO]      # [1]
+        y        = i_track[YKOO]       # [2]
+        yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4] z
+        zp       = i_track[ZPKOO]      # [5] dp/p
+        T        = i_track[EKOO]       # [6] summe aller delta-T
+        s        = i_track[SKOO]       # [8] summe aller laengen
+        
+        beta        = self.particle.beta
+        c           = PARAMS['lichtgeschwindigkeit']
+        betac       = beta*c
+        gamma       = self.particle.gamma
+        beta_gamma  = self.particle.gamma_beta
+        g2m1        = pow(gamma,2)-1
+        g025        = pow(g2m1,0.25)
+#       Picht transformation
+        RX0     = x*g025
+        RY0     = y*g025
+        RPX0    = xp*g025+0.5*RX0*gamma/g2m1
+        RPY0    = yp*g025+0.5*RY0*gamma/g2m1
+        K1      = pow((math.pi/self.lamb),2)/pow(beta_gamma,3)
+        
+        h  = 1.e-3     # [m] azimutal step size
+        th = h/betac   # [s] time step size
+        z0 = 0.
+        z4 = h+z0
+        z3 = 0.75*h+z0
+        z2 = 0.50*h+z0
+        z1 = 0.25*h+z0
+        t0 = 0.
+        t4 = th+t0
+        t3 = 0.75*th+t0
+        t2 = 0.50*th+t0
+        t1 = 0.26*th+t0
+        
+        
+        
 ## Trace3D zero length RF-gap
 class RFG(D):
     """
@@ -625,7 +670,7 @@ class RFG(D):
 
         # !!!!!  INSTANCIATE a MAP instead of using the R matrix
         if FLAGS['map']:
-            self.rfb = _rfb(self)
+            self.g_map = _rfg_map(self)
 
     def _trtf_(self,beta):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
         teta = pi*self.freq*self.gap / PARAMS['lichtgeschwindigkeit']
@@ -671,8 +716,8 @@ class RFG(D):
         Mapping of track from position (i) to (f)
         """
         if FLAGS['map']:
-            # NOTE: mapping with _rfb-map
-            f_track = self.rfb.map(i_track,self.mapping)
+            # NOTE: mapping with _rfg_map
+            f_track = self.g_map.map(i_track,self.mapping)
         else:
             # NOTE: linear mapping with T3D matrix
             f_track = super().map(i_track)
