@@ -20,11 +20,10 @@ This file is part of the SIMULINAC code
 import sys
 from math import sin,cos,tan,radians,degrees,sqrt
 from math import pi as PI
-from collections import namedtuple
 from copy import copy
 import numpy as np
 
-from setutil import FLAGS,PARAMS,DEBUG,Proton,I0,I1,tblprnt,arrprnt
+from setutil import FLAGS,PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
 from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from Ez0 import SFdata
@@ -34,7 +33,8 @@ def DEBUG_ON(string,arg='',end='\n'):
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
 ## DEBUG__XX
-DEBUG_MODULE   = DEBUG_ON
+DEBUG_TEST0    = DEBUG_ON
+DEBUG_TEST1    = DEBUG_OFF
 DEBUG_MAP      = DEBUG_OFF
 DEBUG_SOLL_MAP = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
@@ -64,7 +64,6 @@ class TTFGslice(object):
     def setSollPhase(self,value): # must be called after instantiation and before usage
         self.phis = value
     def _T(self,poly,k):    # A.Shishlo (4.4.6)
-        a  = poly.a
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
@@ -74,7 +73,6 @@ class TTFGslice(object):
         # DEBUG_MAP('MAP: (T,k)',(t,k))
         return t
     def _Tp(self,poly,k):   # A.Shishlo (4.4.8)
-        a   = poly.a
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
@@ -266,13 +264,12 @@ class TTFG(ELM.I):
         self.lamb     = PARAMS['wellenlänge']
         self.Ez       = Ez         # the SF-table, a list-of DataPoints
         self['viseo'] = 0.25
-        if self.Ez == None: raise RuntimeError('TTFG: missing E(z) table')
-        try:
+        if self.Ez == None: 
+            raise RuntimeError('TTFG: missing E(z) table - STOP')
+            sys.exit(1)
+        else:
             self.Epeak  = Ez.Epeak
             self.slices = self._make_slices()
-        except:
-            raise RuntimeError("can't create object without SF-data! - STOP")
-            sys.exit(1)
     def adjust_energy(self,tkin):
         """
         Adjust energy of all slices for this gap element
@@ -307,7 +304,7 @@ class TTFG(ELM.I):
         zr = -zl
         E0z = 0.
         z = 0.
-        for poly in self.Ez.Ez_poly():
+        for poly in self.Ez.Ez_poly:
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
@@ -395,10 +392,10 @@ def test0():
     ttfg = TTFG(gap=0.048,Ez=SF_tab)
     tkin = 50.
     ttfg.adjust_energy(tkin=tkin)
-    DEBUG_MODULE('MODULE: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
+    DEBUG_TEST0('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     slices = ttfg.slices
     for slice in slices:
-        DEBUG_MODULE('MODULE: slice\n',slice.__dict__)      # for DEBUGGING
+        DEBUG_TEST0('TTFGslice: slice\n',slice.__dict__)      # for DEBUGGING
         pass
 
     z = 1.e-3
@@ -408,10 +405,10 @@ def test0():
     track = Track(start=np.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
     ti = track.last()
     for i in range(1):
-        DEBUG_MODULE('MAP:\n',track.last_str())
+        DEBUG_TEST0('MAP:\n',track.last_str())
         tf = ttfg.map(ti)
         track.append(tf)
-        DEBUG_MODULE('MAP:\n',track.last_str())
+        DEBUG_TEST0('MAP:\n',track.last_str())
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
 def test1():
@@ -425,8 +422,7 @@ def test1():
     ttfg = TTFG(PhiSoll=radians(-20.),gap=0.048,Ez=SF_tab)
     tkin = 150.
     ttfg.adjust_energy(tkin=tkin)
-    DEBUG_MODULE('MODULE: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
-    slices = ttfg.slices
+    DEBUG_TEST1('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     
     von = 0.
     bis = 1.
@@ -441,14 +437,12 @@ def test1():
     trck = Track(start=start)
     ti = trck.last()
     for i in range(anz+1):
-        # DEBUG_MODULE('MODULE:\n',trck.last_str())
         tf = ttfg.map(ti)
         trck.append(tf)
-        # print(trck.last_str())
         z += delta
         start[4] = z
         ti = start
-    print(trck.asTable())
+    DEBUG_TEST1('TRACK:\n',trck.asTable())
 if __name__ == '__main__':
     test0()
     test1()

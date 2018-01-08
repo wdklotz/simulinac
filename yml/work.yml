@@ -26,7 +26,7 @@
 flags:
     # - accON:        False           # {True}  acceleration on/off flag
     - egf:          True            # {False} emittance growth flag
-#    - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
+    - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
@@ -96,7 +96,8 @@ elements:
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
-        - mapping:   simple # Shishlo's simple map model
+        - mapping:   t3d    # T3D linear map model
+        # - mapping:   simple # Shishlo's linear map model
 #        - mapping:   base   # Shishlo's base map model
         - sec:      *HE     # is part of section
     - TTG:  &TTG            # ID: &alias
@@ -219,7 +220,7 @@ segments:
 ##...........................................................................................
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
-    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-#    - [40,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+#    - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [40,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
 #    - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
-#    - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
+    # - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]

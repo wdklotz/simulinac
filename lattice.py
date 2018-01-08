@@ -69,7 +69,7 @@ class Lattice(NamedObject,object):
         sm = (sf+si)/2.
         element.position = [si,sm,sf]
         self.length += l
-        # DEBUG('add_element: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.2f},'.format(el) for el in element.position)))
+        # DEBUG('add_element: ',' [si,sm,sf,]=[{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
         self.seq.append(element)
 
     def string(self):
@@ -410,7 +410,7 @@ class Lattice(NamedObject,object):
     def lattice_plot_function(self):
         fun = []   # is list((s = Abzisse,f = Ordinate))
         for element in self.seq:
-            # DEBUG('position',element.position )
+            # DEBUG((element.__class__,element['viseo'],element.position))
             pos   = element.position
             viseo = element['viseo']
             si = pos[0]
