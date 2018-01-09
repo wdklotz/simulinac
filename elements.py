@@ -417,37 +417,100 @@ class GAP(D):
                     position   = self.position,
                     dWf        = self.dWf)
         return self
-## Basic RF-gap model from A.Shislo
-class _rfg_map(object):
-    """
-    Base RF Gap Model from pyOrbit (A.Shislo)
-    """
-    def __init__(self,parent):
-        self.label    = 'gmap'
-        self.length   = 0.
-        self.parent   = parent
+## zero length RF gap
+class RFG(I):
+    """Zero length RF gap-model (wraps several gap-models)"""
+    def __init__(self,
+            U0         = PARAMS['spalt_spannung'],
+            PhiSoll    = radians(PARAMS['soll_phase']),
+            fRF        = PARAMS['frequenz'],
+            label      = 'RFG',
+            particle   = PARAMS['sollteilchen'],
+            gap        = PARAMS['spalt_laenge'],
+            position   = [0,0,0],
+            mapping    = 't3d',
+            dWf        = FLAGS['dWf']):
+        super().__init__(particle=particle,position=position)
+        self.u0      = U0*dWf             # [MV] gap Voltage
+        self.phis    = PhiSoll            # [radians] soll phase
+        self.freq    = fRF                # [Hz]  RF frequenz
+        self.label   = label
+        self.length  = 0.
+        self.gap     = gap                # [m] rf-gap
+        self.mapping = mapping
+        self.dWf     = dWf
+        self['viseo']= 0.25
+        self.mapset  = frozenset(['t3d','simple','base'])
+        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+        if not self.mapping in self.mapset:
+            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(self.mapping))
+            sys.exit(1)
+        if self.mapping == 't3d':
+            self.gap_model = _T3D_G(self)    # use T3D gap-model
+        elif self.mapping == 'simple':
+            self.gap_model = _PYO_G(self,self.mapping)  # use PyOrbit gap-models
+
+    @property
+    def tr(self):
+        return self.gap_model.tr
+    @property
+    def particlef(self):
+        return self.gap_model.particlef
+    @property
+    def deltaW(self):
+        return self.gap_model.deltaW
+
+    def adjust_energy(self,tkin):
+        self.__init__(
+            U0         = self.u0,
+            PhiSoll    = self.phis,
+            fRF        = self.freq,
+            label      = self.label,
+            particle   = self.particle(tkin),
+            gap        = self.gap,
+            position   = self.position,
+            mapping    = self.mapping,
+            dWf        = self.dWf)
+        return self
+    def shorten(self,l=0.):
+        return self.parent
+    def map(self,i_track):
+        """ Mapping of track from position (i) to (f) """
+        return self.gap_model.map(i_track)
+    def soll_map(self,i_track):
+        return self.gap_model.soll_map(i_track)    
+## PyOrbit RF gap-models
+class _PYO_G(object):
+    """PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes)"""
+    def __init__(self,parent,mapping):
+        def trtf(lamb,gap,beta):
+            """Transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)"""
+            teta = gap/(beta*lamb)
+            ttf = NP.sinc(teta)   # sinc(x) = sin(pi*x)/(pi*x)
+            return ttf       
         self.particle = parent.particle
         self.u0       = parent.u0         # [MV] gap Voltage
         self.phis     = parent.phis       # [radians] soll phase
-        self.tr       = parent.tr
         self.gap      = parent.gap
-        self.deltaW   = parent.deltaW
         self.lamb     = parent.lamb
-    def map(self,i_track,mapping):
-        if mapping == 'simple':
+        self.mapping  = mapping
+        self.tr       = trtf(self.lamb,self.gap,self.particle.beta)
+        self.deltaW   = self.u0*self.tr*cos(self.phis)   # deltaW energy kick nach Trace3D        
+    def map(self,i_track):
+        if self.mapping == 'simple':
             which_map = self.lin_map
-        elif mapping == 'base':
+        elif self.mapping == 'base':
             which_map = self.rfb_map
-        elif mapping == 'dynac':
-            which_map = self.dyc_map
-        else:
-            raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.label))
-            sys.exit(1)
+        # elif mapping == 'dynac':
+        #     which_map = self.dyc_map
+        # else:
+        #     raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.label))
+        #     sys.exit(1)
         return which_map(i_track)
+    def soll_map(self,i_track):
+        return self.map(i_track)
     def lin_map(self,i_track):
-        """
-        Mapping from position (i) to (f) in linear approx. (A.Shislo 4.1)
-        """
+        """Mapping from position (i) to (f) in linear approx. (A.Shislo 4.1)"""
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
@@ -456,16 +519,17 @@ class _rfg_map(object):
         zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
         Ti        = i_track[EKOO]       # [6] summe aller delta-T
         si        = i_track[SKOO]       # [8] summe aller laengen
-
+        
+        particle   = self.particle
         qE0L       = self.u0
-        m0c2       = self.particle.e0
+        m0c2       = particle.e0
         T          = self.tr
         lamb       = self.lamb
         phis       = self.phis
         qE0LT      = qE0L*T
         twopi      = 2.*pi
 
-        particlesi = self.particle
+        particlesi = particle
         Wsi        = particlesi.tkin
         betasi     = particlesi.beta
         gammasi    = particlesi.gamma
@@ -508,11 +572,11 @@ class _rfg_map(object):
                 f[i] =f[i]*1.e3
             arrprnt(f,fmt='{:6.3g},',txt='lin_map: ')
 
+        # parent properties
+        self.particlef = particlesf
         return f_track
     def rfb_map(self,i_track):
-        """
-        Mapping from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)
-        """
+        """Mapping from position (i) to (f) in Base-RF-Gap model approx. (A.Shislo 4.2)"""
         # DEBUG_MODULE('i_track:\n',str(i_track))
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -582,120 +646,57 @@ class _rfg_map(object):
             arrprnt(f,fmt='{:6.3g},',txt='rfb_map: ')
 
         return f_track
-    def dyc_map(self,i_track):
-        """
-        E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
-        """
-        # DEBUG_MODULE('i_track:\n',str(i_track))
-        x        = i_track[XKOO]       # [0]
-        xp       = i_track[XPKOO]      # [1]
-        y        = i_track[YKOO]       # [2]
-        yp       = i_track[YPKOO]      # [3]
-        z        = i_track[ZKOO]       # [4] z
-        zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] summe aller delta-T
-        s        = i_track[SKOO]       # [8] summe aller laengen
-        
-        beta        = self.particle.beta
-        c           = PARAMS['lichtgeschwindigkeit']
-        betac       = beta*c
-        gamma       = self.particle.gamma
-        beta_gamma  = self.particle.gamma_beta
-        g2m1        = pow(gamma,2)-1
-        g025        = pow(g2m1,0.25)
-#       Picht transformation
-        RX0     = x*g025
-        RY0     = y*g025
-        RPX0    = xp*g025+0.5*RX0*gamma/g2m1
-        RPY0    = yp*g025+0.5*RY0*gamma/g2m1
-        K1      = pow((math.pi/self.lamb),2)/pow(beta_gamma,3)
-        
-        h  = 1.e-3     # [m] azimutal step size
-        th = h/betac   # [s] time step size
-        z0 = 0.
-        z4 = h+z0
-        z3 = 0.75*h+z0
-        z2 = 0.50*h+z0
-        z1 = 0.25*h+z0
-        t0 = 0.
-        t4 = th+t0
-        t3 = 0.75*th+t0
-        t2 = 0.50*th+t0
-        t1 = 0.26*th+t0
-
-## zero length RF-gap
-class RFG(I):
-    """Zero length rf-gap model (wraps several gap-models)"""
-    def __init__(self,
-            U0         = PARAMS['spalt_spannung'],
-            PhiSoll    = radians(PARAMS['soll_phase']),
-            fRF        = PARAMS['frequenz'],
-            label      = 'RFG',
-            particle   = PARAMS['sollteilchen'],
-            gap        = PARAMS['spalt_laenge'],
-            position   = [0,0,0],
-            mapping    = 't3d',
-            dWf        = FLAGS['dWf']):
-        super().__init__(particle=particle,position=position)
-        self.u0      = U0*dWf             # [MV] gap Voltage
-        self.phis    = PhiSoll            # [radians] soll phase
-        self.freq    = fRF                # [Hz]  RF frequenz
-        self.label   = label
-        self.length  = 0.
-        self.gap     = gap                # [m] rf-gap
-        self.mapping = mapping
-        self.dWf     = dWf
-        self['viseo']= 0.25
-        self.mapset  = frozenset(['t3d','simple','base','ttf','dync'])
-        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
-        if self.mapping in self.mapset:
-            pass
-        else:
-            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(self.mapping))
-        if self.mapping == 't3d':
-            self.gapmodel = _T3DG(self)    # use T3D gap-model
-    
-    @property
-    def tr(self):
-        return self.gapmodel.tr
-    @property
-    def particlef(self):
-        return self.gapmodel.particlef
-    @property
-    def deltaW(self):
-        return self.gapmodel.deltaW
-
-    def adjust_energy(self,tkin):
-        self.__init__(
-            U0         = self.u0,
-            PhiSoll    = self.phis,
-            fRF        = self.freq,
-            label      = self.label,
-            particle   = self.particle(tkin),
-            gap        = self.gap,
-            position   = self.position,
-            mapping    = self.mapping,
-            dWf        = self.dWf)
-        return self
-    def shorten(self,l=0.):
-        return self.parent
-    def map(self,i_track):
-        """ Mapping of track from position (i) to (f) """
-        return self.gapmodel.map(i_track)
-    def soll_map(self,i_track):
-        return self.gapmodel.soll_map(i_track)    
-class _T3DG(object):
-    """Trace3D zero length Rf-gap model"""
+#     def dyc_map(self,i_track):
+#         """
+#         E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
+#         """
+#         # DEBUG_MODULE('i_track:\n',str(i_track))
+#         x        = i_track[XKOO]       # [0]
+#         xp       = i_track[XPKOO]      # [1]
+#         y        = i_track[YKOO]       # [2]
+#         yp       = i_track[YPKOO]      # [3]
+#         z        = i_track[ZKOO]       # [4] z
+#         zp       = i_track[ZPKOO]      # [5] dp/p
+#         T        = i_track[EKOO]       # [6] summe aller delta-T
+#         s        = i_track[SKOO]       # [8] summe aller laengen
+#         
+#         beta        = self.particle.beta
+#         c           = PARAMS['lichtgeschwindigkeit']
+#         betac       = beta*c
+#         gamma       = self.particle.gamma
+#         beta_gamma  = self.particle.gamma_beta
+#         g2m1        = pow(gamma,2)-1
+#         g025        = pow(g2m1,0.25)
+# #       Picht transformation
+#         RX0     = x*g025
+#         RY0     = y*g025
+#         RPX0    = xp*g025+0.5*RX0*gamma/g2m1
+#         RPY0    = yp*g025+0.5*RY0*gamma/g2m1
+#         K1      = pow((math.pi/self.lamb),2)/pow(beta_gamma,3)
+#         
+#         h  = 1.e-3     # [m] azimutal step size
+#         th = h/betac   # [s] time step size
+#         z0 = 0.
+#         z4 = h+z0
+#         z3 = 0.75*h+z0
+#         z2 = 0.50*h+z0
+#         z1 = 0.25*h+z0
+#         t0 = 0.
+#         t4 = th+t0
+#         t3 = 0.75*th+t0
+#         t2 = 0.50*th+t0
+#         t1 = 0.26*th+t0
+## T3D RF gap-model
+class _T3D_G(object):
+    """Trace3D zero length RF gap-model"""
     def __init__(self,parent):
-        def trtf(freq,gap,beta):
+        def trtf(lamb,gap,beta):
             """Transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)"""
-            teta = pi*freq*gap / PARAMS['lichtgeschwindigkeit']
-            # DEBUG_MODULE('_T3DG: teta , beta>>',teta,beta)
-            teta = teta/beta
-            ttf = sin(teta)/teta
+            teta = gap/(beta*lamb)
+            ttf = NP.sinc(teta)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
         def mx(m,tr,beta,gamma,particlei,particlef,u0,phis,lamb,deltaW):
-            """RF gap nach Trace3D pp.17 (LA-UR-97-886)"""
+            """RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886)"""
             e0 = particlei.e0
             kz = 2.*pi*u0*tr*sin(phis)/(e0*beta*beta*lamb)
             ky = kx = -0.5*kz/(gamma*gamma)
@@ -709,34 +710,30 @@ class _T3DG(object):
             m[XPKOO,XKOO] = kx/bgf;    m[XPKOO,XPKOO] = bgi2bgf
             m[YPKOO,YKOO] = ky/bgf;    m[YPKOO,YPKOO] = bgi2bgf
             m[ZPKOO,ZKOO] = kz/bgf;    m[ZPKOO,ZPKOO] = bgi2bgf
-            #energy kick at acceleration
-            # m[6,7]      = deltaW
-            m[EKOO,DEKOO] = deltaW
+            # energy kick
+            m[EKOO,DEKOO] = deltaW  # m[6,7]      = deltaW
             return
-        matrix   = parent.matrix
-        particle = copy(parent.particle)
-        beta     = particle.beta
-        u0       = parent.u0             # [MV] gap Voltage
-        phis     = parent.phis           # [radians] soll phase
-        freq     = parent.freq           # [Hz]  RF frequenz
-        gap      = parent.gap
-        lamb     = parent.lamb
-        tr       = trtf(freq,gap,beta)   # Panovski
-        deltaW   = u0*tr*cos(phis)       # deltaW energy kick nach Trace3D
-        # DEBUG_MODULE('_T3DG: \n',self.particle.string())
-        # DEBUG_MODULE('_T3DG: U0,phis,tr: {:8.4}, {:8.4}, {:8.4}'.format(self.u0,degrees(self.phis),self.tr))
-        # DEBUG_MODULE('_T3DG: deltaW: {:8.6e}'.format(self.deltaW))
-        tk_center   = deltaW*0.5+particle.tkin          # energy in gap center
-        part_center = particle(tk_center)               # particle @ gap center
-        b           = part_center.beta                  # beta @ gap cemter
-        g           = part_center.gamma                 # gamma @ gap center
-        particlef   = particle(particle.tkin+deltaW)    # particle @ (f)
+        self.matrix = parent.matrix
+        particle    = parent.particle
+        u0          = parent.u0             # [MV] gap Voltage
+        phis        = parent.phis           # [radians] soll phase
+        gap         = parent.gap
+        lamb        = parent.lamb
+        beta        = particle.beta
+        tr          = trtf(lamb,gap,beta)   # Panovski
+        deltaW      = u0*tr*cos(phis)       # deltaW energy kick nach Trace3D
+        tkin        = particle.tkin
+        tk_center   = deltaW*0.5+tkin               # energy in gap center
+        part_center = copy(particle)(tk_center)     # particle @ gap center
+        b           = part_center.beta              # beta @ gap cemter
+        g           = part_center.gamma             # gamma @ gap center
+        particlef   = copy(particle)(tkin+deltaW)   # particle @ (f)
         # DEBUG_MODULE('_T3DG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
-        mx(matrix,tr,b,g,particle,particlef,u0,phis,lamb,deltaW)   # the LINEAR TRANSPORT matrix R
-        self.matrix    = matrix
+        mx(self.matrix,tr,b,g,particle,particlef,u0,phis,lamb,deltaW)
+
+        # parent properties
         self.tr        = tr
         self.particlef = particlef
-        self.lamb      = lamb
         self.deltaW    = deltaW
     def map(self,i_track):
         """Mapping of track from position (i) to (f) with linear T3D matrix"""
@@ -1220,13 +1217,28 @@ def test7():
     print(mb.string())
     print(mr.string())
 def test8():
+    from lattice import Lattice
+    from tracks import track_soll
     print('--------------------------------Test8---')
     print('soll-particle\n'+PARAMS['sollteilchen'].string())
     print('test rf-gap ...')
     rfg = RFG()
     # objprnt(rfg,'RFG',filter='matrix')
     objprnt(rfg,'RFG')
-    print('RFG.particle\n'+rfg.particle.string())
+    lg=Lattice()
+    lg.add_element(rfg)
+    print(track_soll(lg).asTable())
+    print('RFG.particle(i)\n'+rfg.particle.string())
+    print('RFG.particle(f)\n'+rfg.particlef.string())
+
+    rfg = RFG(mapping='simple')
+    objprnt(rfg,'RFG',filter='matrix')
+    # objprnt(rfg,'RFG')
+    lg=Lattice()
+    lg.add_element(rfg)
+    print(track_soll(lg).asTable())
+    print('RFG.particle(i)\n'+rfg.particle.string())
+    print('RFG.particle(f)\n'+rfg.particlef.string())
 
     print('test cavity ...')
     cav = RFC()
