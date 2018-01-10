@@ -21,11 +21,10 @@ import sys
 from math import sin,cos,tan,radians,degrees,sqrt
 from math import pi as PI
 from copy import copy
-import numpy as np
+import numpy as NP
 
 from setutil import FLAGS,PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
-from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
-import elements as ELM
+from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
 def DEBUG_ON(string,arg='',end='\n'):
@@ -33,25 +32,26 @@ def DEBUG_ON(string,arg='',end='\n'):
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
 ## DEBUG__XX
-DEBUG_TEST0    = DEBUG_ON
+DEBUG_TEST0    = DEBUG_OFF
 DEBUG_TEST1    = DEBUG_OFF
 DEBUG_MAP      = DEBUG_OFF
-DEBUG_SOLL_MAP = DEBUG_OFF
+DEBUG_SOLL_MAP = DEBUG_ON
 DEBUG_SLICE    = DEBUG_OFF
 
 twopi          = 2*PI
 
 ## Transition Time Factors RF Gap Model
 class TTFGslice(object):
-    def __init__(self,ttfg,polyval,particle):
-        self.elemnt     = ttfg             # the element this slice is part off
+    def __init__(self,parent,polyval,particle):
+        self.parent     = parent           # the element this slice is part off
+        self.freq       = parent.freq
         self.particle   = copy(particle)   # incoming soll particle
         self.polyval    = polyval # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.V0         = self._V0(self.polyval)
         self.beta       = self.particle.beta
         self.gamma      = self.particle.gamma
         self.gb         = self.particle.gamma_beta
-        self.k          = twopi/(self.elemnt.lamb*self.beta)
+        self.k          = twopi/(self.parent.lamb*self.beta)
         self.Tk         = self._T (self.polyval,self.k)
         self.Tkp        = self._Tp(self.polyval,self.k)
         self.phis       = None  # initialize before using!
@@ -85,30 +85,26 @@ class TTFGslice(object):
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
         v0 = (2*dz+2./3.*b*dz**3)*1.e-2       # [cm] --> [m]
-        v0 = v0*E0*self.elemnt.dWf
+        v0 = v0*E0*self.parent.dWf
         return v0
     def mapSoll(self,i_track):
-        """
-        Mapping of soll track through a slice from position (i) to (f)
-        """
+        """Mapping of soll track through a slice from position (i) to (f)"""
+        DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
         i_track[EKOO] += self.deltaW
-        DEBUG_SOLL_MAP('SOLL_MAP',np.array2string(i_track))
         return i_track
     def adjust_energy(self,tkin):
-        """
-        Adjust energy and -dpendent parameters for this slice
-        """
+        """Adjust energy and -dpendent parameters for this slice"""
         self.particle(tkin)
         self.beta    = self.particle.beta
         self.gamma   = self.particle.gamma
         self.gb      = self.particle.gamma_beta
-        self.k       = twopi/(self.elemnt.lamb*self.beta)
+        self.k       = twopi/(self.parent.lamb*self.beta)
         self.Tk      = self._T (self.polyval,self.k)
         self.Tkp     = self._Tp(self.polyval,self.k)
 
         c     = PARAMS['lichtgeschwindigkeit']
         m0c3  = self.particle.e0*c
-        omeg  = twopi*self.elemnt.freq
+        omeg  = twopi*self.freq
         i0    = 1.
         i1    = 0.
         WIN   = self.particle.tkin
@@ -148,9 +144,7 @@ class TTFGslice(object):
         # Formel 4.3.2 A.Shishlo
         return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
     def map(self,i_track):
-        """
-        Mapping of track through this slice from position (i) to (f)
-        """
+        """Map through this slice from position (i) to (f)"""
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -163,7 +157,7 @@ class TTFGslice(object):
         c          = PARAMS['lichtgeschwindigkeit']
         m0c2       = self.particle.e0
         m0c3       = m0c2*c
-        omeg       = twopi*self.elemnt.freq
+        omeg       = twopi*self.freq
 
         be         = self.particle.beta
         ga         = self.particle.gamma
@@ -210,7 +204,7 @@ class TTFGslice(object):
             yp = gbi/gbf*yp
 
         T = T + self.deltaW       # soll-energy gained
-        f_track = np.array([x,xp,y,yp,zf,zpf,T,1.,s,1.])
+        f_track = NP.array([x,xp,y,yp,zf,zpf,T,1.,s,1.])
 
         if DEBUG_MAP == DEBUG_ON:    # for DEBUGGING
             dbTab1Row = [
@@ -225,7 +219,7 @@ class TTFGslice(object):
                 '{:8.4g}'.format(self.WOUT),
                 '{:8.3f}'.format(self.V0*1.e3),
                 ]
-            self.elemnt.dbTab1Rows.append(dbTab1Row)
+            self.parent.dbTab1Rows.append(dbTab1Row)
 
             dbTab2Row = [
                 '{:8.4g}'.format(x*1.e3),
@@ -240,42 +234,31 @@ class TTFGslice(object):
                 '{:8.4g}'.format(i0-1.),
                 '{:8.4g}'.format(i1),
                 ]
-            self.elemnt.dbTab2Rows.append(dbTab2Row)
+            self.parent.dbTab2Rows.append(dbTab2Row)
         return f_track
-class TTFG(ELM.I):
-    """
-    Transition Time Factors RF Gap Model (A.Shishlo ORNL/TM-2015/247)
-    """
-    def __init__(self,
-                    PhiSoll    = radians(PARAMS['soll_phase']),
-                    fRF        = PARAMS['frequenz'],
-                    label      = 'TTFG',
-                    particle   = PARAMS['sollteilchen'],
-                    gap        = PARAMS['spalt_laenge'],
-                    position   = [0,0,0],
-                    Ez         = None,                # return of SFdata
-                    dWf        = FLAGS['dWf']):
-        super().__init__(particle=particle,position=position)
-        self.phis     = PhiSoll    # [radians] soll phase
-        self.freq     = fRF        # [Hz]  RF frequenz
-        self.label    = label
-        self.gap      = gap        # [m]
-        self.dWf      = dWf
-        self.lamb     = PARAMS['wellenlänge']
-        self.Ez       = Ez         # the SF-table, a list-of DataPoints
-        self['viseo'] = 0.25
-        if self.Ez == None: 
-            raise RuntimeError('TTFG: missing E(z) table - STOP')
-            sys.exit(1)
-        else:
-            self.Epeak  = Ez.Epeak
-            self.slices = self._make_slices()
-    def adjust_energy(self,tkin):
-        """
-        Adjust energy of all slices for this gap element
-        """
-        def adjust_slice_energy(tkin):
-            next_phase = self.phis
+class _TTF_G(object):
+    """Transition Time Factors RF Gap-Model (A.Shishlo ORNL/TM-2015/247)"""
+    def __init__(self,parent):
+        def _make_slices():
+            """Slice the RF gap"""
+            slices = []
+            zl = -self.gap/2.*100.   # [m] --> [cm]
+            zr = -zl
+            E0z = 0.
+            z = 0.
+            for poly in self.Ez.Ez_poly:
+                zil = poly.zl
+                zir = poly.zr
+                if zil < zl or zir > zr: continue
+                slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
+                slices.append(slice)
+                E0z += slice.V0
+                z += (zir-zil)*1.e-2   # [cm] --> [m]
+            # self.E0z = E0z/z           # equivalent av. field  (Ez)av
+            return slices
+        def adjust_slices_energy(phis,tkin):
+            """adjust energy of slices"""
+            next_phase = phis
             next_tkin  = tkin
             Tklist = []         # keep values to get min and max
             for slice in self.slices:
@@ -284,59 +267,50 @@ class TTFG(ELM.I):
                 Tklist.append(slice.Tk)
                 next_phase = slice.PHOUT       # NOTE!: slice OUT becomes next slice IN
                 next_tkin  = slice.WOUT        # NOTE!: slice OUT becomes next slice IN
+                DEBUG_SLICE('SLICE: {}\n'.format(self),self.__dict__)
             deltaW   = next_tkin-tkin          # total energy kick of this gap
-            self.tr  = min(Tklist)
+            self.tr  = min(Tklist)    # @@@@ should calc the average @@@@
             return deltaW
-        # body --------------------------------------------------------------        
-        self.particle(tkin)                     # adjust my particle energy
-        
-        DEBUG_SLICE('SLICE: adjust energy for PARTICLE: {} with tkin {:8.4f} '.format(self.particle,self.particle.tkin))
-        self.deltaW = adjust_slice_energy(tkin) # ajust slices
-        self.matrix[EKOO,DEKOO] = self.deltaW   # set my deltaW in linear map
-        DEBUG_SLICE('SLICE: {}\n'.format(self),self.__dict__)
-        return(self)
-    def _make_slices(self):
-        """
-        Slice the RF gap
-        """
-        slices = []
-        zl = -self.gap/2.*100.   # [m] --> [cm]
-        zr = -zl
-        E0z = 0.
-        z = 0.
-        for poly in self.Ez.Ez_poly:
-            zil = poly.zl
-            zir = poly.zr
-            if zil < zl or zir > zr: continue
-            slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
-            slices.append(slice)
-            E0z += slice.V0
-            z += (zir-zil)*1.e-2   # [cm] --> [m]
-        self.E0z = E0z/z           # equivalent av. field  (Ez)av
-        return slices
-    def make_slices(self,anz=0):   # interface to outside callers (lattice.py)
+
+        self.u0       = parent.u0
+        self.phis     = parent.phis       # [radians] soll phase
+        self.freq     = parent.freq
+        self.label    = parent.label
+        self.gap      = parent.gap        # [m]
+        self.mapping  = parent.mapping
+        self.dWf      = parent.dWf
+        self.lamb     = parent.lamb
+        self.Ez       = parent.Ez
+        self.matrix   = parent.matrix
+        self.particle = parent.particle
+        self.position = parent.position
+        if self.Ez == None:
+            raise RuntimeError('_TTF_G: missing E(z) table - STOP')
+            sys.exit(1)
+        else:
+            self.slices = _make_slices()        # slice the gap
+            self.deltaW = adjust_slices_energy(self.phis,self.particle.tkin)
+            self.matrix[EKOO,DEKOO] = self.deltaW    # set my deltaW in linear map
+
+    # def adjust_energy(self,tkin):
+    #     """Adjust energy of gap"""
+    #     return parent.__init__(U0       = self.u0,
+    #                            PhiSoll  = self.phis,
+    #                            fRF      = self.freq,
+    #                            label    = self.label,
+    #                            particle = self.particle(tkin),
+    #                            gap      = self.gap,
+    #                            position = self.position,
+    #                            mapping  = self.mapping,
+    #                            SFdata   = self.Ez,
+    #                            dWf      = self.dWf)
+    
+    def make_slices(self,anz=0):   # interface to callers (lattice.py)
         res = [self]
         DEBUG_SLICE('SLICE: make_slices: ',res)
         return res
-    def shorten(self,l=0.):        # interface to outside callers (lattice.py)
+    def shorten(self,l=0.):        # interface to callers (lattice.py)
         return self
-    def map(self,i_track):
-        """
-        Mapping of track from position (i) to (f)
-        """
-        if FLAGS['map']:
-            f_track = self._map(i_track)   # NOTE: use mapping with sliced TTFGap
-        else:
-            f_track = super().map(i_track) # NOTE: use linear mapping with unit matrix
-
-        # for DEBUGGING
-        if DEBUG_MAP == DEBUG_ON:
-            f = f_track.copy()
-            for i in range(len(f_track)-4):
-                f[i] =f[i]*1.e3
-            arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
-
-        return f_track
     def _map(self,i_track):  # the wrapper to slice mappings
         self.dbTab1Rows  = []          # for DEBUGGING
         self.dbTab1Headr = []          # for DEBUGGING
@@ -362,7 +336,6 @@ class TTFG(ELM.I):
         DEBUG_MAP('MAP: ttfg-map: track through slices:\n',tblprnt(self.dbTab1Headr,self.dbTab1Rows))
         DEBUG_MAP('MAP: ttfg-map: track through slices:\n',tblprnt(self.dbTab2Headr,self.dbTab2Rows))
 
-
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
             f = f_track.copy()
@@ -371,14 +344,28 @@ class TTFG(ELM.I):
             arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
 
         return f_track
+    def map(self,i_track):
+        """Mapping from position (i) to (f)"""
+        f_track = self._map(i_track)   # NOTE: use mapping with sliced TTFGap
+
+        # for DEBUGGING
+        if DEBUG_MAP == DEBUG_ON:
+            f = f_track.copy()
+            for i in range(len(f_track)-4):
+                f[i] =f[i]*1.e3
+            arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
+        
+        return f_track
     def soll_map(self,i_track):   # the wrapper to slice mappings of soll
         """
         Mapping of soll track from position (i) to (f)
         """
         for cnt,slice in enumerate(self.slices):
-            DEBUG_SOLL_MAP('SOLL_MAP: slice # {} '.format(cnt),end='')  # for DEBUGGING
+            DEBUG_SOLL_MAP('soll_map: slice # {} '.format(cnt),end='')  # for DEBUGGING
             f_track = slice.mapSoll(i_track)
             i_track = f_track
+        # DEBUG('_TTF_G(i)\n'+self.particle.string())
+        # self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
 #todo: class TTFC(ELM._thin):
 def test0():
@@ -402,7 +389,7 @@ def test0():
     x=y=1.e-2
     T = tkin
     # track-point fields:          x   x'  y  y'  z   z'  T  1   s   1
-    track = Track(start=np.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
+    track = Track(start=NP.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
     ti = track.last()
     for i in range(1):
         DEBUG_TEST0('MAP:\n',track.last_str())
@@ -433,7 +420,7 @@ def test1():
     z = von
     T = 0.
     # start            x   x'  y  y'  z   z'  T  1   s   1
-    start = np.array([ x,  xp, y, yp, z,  zp, T, 1., 0., 1.])
+    start = NP.array([ x,  xp, y, yp, z,  zp, T, 1., 0., 1.])
     trck = Track(start=start)
     ti = trck.last()
     for i in range(anz+1):

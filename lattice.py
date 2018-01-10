@@ -25,7 +25,7 @@ from copy import copy,deepcopy
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
-from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF

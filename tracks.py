@@ -21,7 +21,7 @@ import numpy as np
 from copy import copy
 
 from setutil import PARAMS,DEBUG,tblprnt
-from elements import MDIM,XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 
 ## DEBUG MODULE
@@ -29,7 +29,8 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_MODULE = DEBUG_OFF
+DEBUG_MODULE     = DEBUG_OFF
+DEBUG_SOLL_TRACK = DEBUG_ON
 
 ## Track class
 class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
@@ -47,7 +48,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         self.nb_points_per_track +=1
 
     def points(self):
-        return self.track_points.reshape(self.nb_points_per_track,MDIM)
+        return self.track_points.reshape(self.nb_points_per_track,ELM.MDIM)
 
     def point_at(self,n):
         return self.points()[n]
@@ -70,7 +71,7 @@ class Track(object):    #is an ordered list of track-points. A track-point is an
         points = self.points()
         str = ''
         for p in points:
-            str += Track.string(p)
+            str += Track.string(p)+'\n'
         return str
     def string(p):   #single point to string
         s = 'x={:.3e} x\'={:.3e} y={:.3e} y\'={:.3e} z={:.3e} z\'={:.3e}  tk={:.5f} s={:.3f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[EKOO],p[SKOO])
@@ -143,20 +144,19 @@ def track_soll(lattice):
     """
     # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                   1   s   1
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
-      #track of reference particle
+    #track of reference particle
+    print(lattice.seq)
     for element in lattice.seq:
-        # DEBUG_MODULE('\n{}\t(#{}, pos {:.4f}) label \'{}\''.format(element.__class__,id(element),element.position[1],element.label))
+        DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last()                #track: at entrance
-        # DEBUG_MODULE('\t\ti >>',Track.string(ti))
-        element.adjust_energy(ti[EKOO])    #enery adaptation
+        DEBUG_SOLL_TRACK('track_soll(i) ',Track.string(ti))
+        element.adjust_energy(ti[EKOO])       #enery adaptation
         tf = element.soll_map(ti)             #track: at exit
-        # DEBUG_MODULE('\t\tf >>',Track.string(tf))
+        DEBUG_SOLL_TRACK('track_soll(f) ',Track.string(tf))
         soll_track.append(tf)
-        # deltaE = tf[EKOO] - ti[EKOO]
-        # DEBUG_MODULE('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
-    # DEBUG_MODULE('complete track\n{}'.format(soll_track.points_string()))
-    # DEBUG_MODULE('soll track(i)\n{}'.format(soll_track.first_str()))
-    # DEBUG_MODULE('soll track(f)\n{}'.format( soll_track.last_str()))
+    DEBUG_SOLL_TRACK('complete track\n{}'.format(soll_track.points_str()))
+    # DEBUG_SOLL_TRACK('soll track(i)\n{}'.format(soll_track.first_str()))
+    # DEBUG_SOLL_TRACK('soll track(f)\n{}'.format( soll_track.last_str()))
     return soll_track
 
 def track(lattice,bunch):

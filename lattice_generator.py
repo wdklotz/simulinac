@@ -23,7 +23,7 @@ import yaml
 
 from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,zellipse
 import elements as ELM
-import TTFG as TTF
+# import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata
 
@@ -77,6 +77,10 @@ def instanciate_element(item):
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         instance =  ELM.D(length=length,label=label,particle=PARAMS['sollteilchen'])
+    elif key == 'SIXD':
+        label     = attributes['ID']+'#'
+        length    = get_mandatory(attributes,'length',label)
+        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
@@ -99,14 +103,23 @@ def instanciate_element(item):
             instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'RFG':
         label     = attributes['ID']
-        gap       = get_mandatory(attributes,'gap',label)
-        Ez        = get_mandatory(attributes,"Ez",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        U0        = Ez * gap
-        dWf       = FLAGS['dWf']
+        gap       = get_mandatory(attributes,'gap',label)
         mapping   = get_mandatory(attributes,'mapping',label)
-        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
+        dWf       = FLAGS['dWf']
+        if not mapping in PARAMS['mapset']:
+            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
+            sys.exit(1)
+        if mapping == 'ttf':
+            fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
+            Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
+            if fname not in PARAMS:
+                PARAMS[fname] = SFdata(fname,Ezpeak=Ezpeak)
+            instance  =  ELM.RFG(U0=None,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],SFdata=PARAMS[fname],dWf=dWf)
+        else:
+            U0        = gap * get_mandatory(attributes,"Ez",label)
+            instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
     elif key == 'RFC':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -126,25 +139,21 @@ def instanciate_element(item):
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
-    elif key == 'TTFG':
-        label     = attributes['ID']
-        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        fRF       = get_mandatory(attributes,"fRF",label)
-        gap       = get_mandatory(attributes,'gap',label)
-        fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
-        Ez0       = get_mandatory(attributes,"Ezpeak",label)
-        dWf       = FLAGS['dWf']
-        if fname not in PARAMS:
-            PARAMS[fname] = SFdata(fname,Epeak=Ez0)
-        instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
+    # elif key == 'TTFG':
+    #     label     = attributes['ID']
+    #     PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+    #     fRF       = get_mandatory(attributes,"fRF",label)
+    #     gap       = get_mandatory(attributes,'gap',label)
+    #     fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
+    #     Ez0       = get_mandatory(attributes,"Ezpeak",label)
+    #     dWf       = FLAGS['dWf']
+    #     if fname not in PARAMS:
+    #         PARAMS[fname] = SFdata(fname,Epeak=Ez0)
+    #     instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
-    elif key == 'SIXD':
-        label     = attributes['ID']
-        length    = get_mandatory(attributes,'length',label)
-        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     else:
         print('InputError: Unknown element type encountered: "{}" - STOP'.format(key))
         sys.exit(1)

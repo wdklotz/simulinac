@@ -37,6 +37,9 @@ ch.setFormatter(formatter)              ## set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   ## add handler to logger
 
+# x        x'        y        y'        z       dp/p0     E        dE        s        l
+XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
+
 def DEBUG(string,arg='',end='\n'):
     """
     Print debug message
@@ -93,6 +96,7 @@ PARAMS = dict(
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
         nbof_slices          = 6,                # default number-off slices
+        mapset               = frozenset(['t3d','simple','base','ttf']), #gap-models
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
