@@ -29,8 +29,8 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_MODULE     = DEBUG_OFF
-DEBUG_SOLL_TRACK = DEBUG_ON
+DEBUG_TRACK      = DEBUG_OFF
+DEBUG_SOLL_TRACK = DEBUG_OFF
 
 ## Track class
 class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
@@ -144,44 +144,48 @@ def track_soll(lattice):
     """
     # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                   1   s   1
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
-    #track of reference particle
-    print(lattice.seq)
     for element in lattice.seq:
         DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
-        ti = soll_track.last()                #track: at entrance
+        ti = soll_track.last() #track: at entrance
         DEBUG_SOLL_TRACK('track_soll(i) ',Track.string(ti))
-        element.adjust_energy(ti[EKOO])       #enery adaptation
-        tf = element.soll_map(ti)             #track: at exit
+        # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+        element.adjust_energy(ti[EKOO])       """enery adaptation"""
+        # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+        tf = element.soll_map(ti) #track: at exit
         DEBUG_SOLL_TRACK('track_soll(f) ',Track.string(tf))
         soll_track.append(tf)
-    DEBUG_SOLL_TRACK('complete track\n{}'.format(soll_track.points_str()))
-    # DEBUG_SOLL_TRACK('soll track(i)\n{}'.format(soll_track.first_str()))
-    # DEBUG_SOLL_TRACK('soll track(f)\n{}'.format( soll_track.last_str()))
+        # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+    DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+    DEBUG_SOLL_TRACK('track_soll(first) {}'.format(soll_track.first_str()))
+    DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
     return soll_track
 
+#todo: @@@track must be rewritten to include non-linear tracking@@@
 def track(lattice,bunch):
     """
-    Tracks a bunch of particles through the lattice
-    lattice: a list of elements a.k.a. _matrix'es
-    bunch: a list of independent Tracks
+    Tracks a bunch of particles through the lattice using matrices
+    lattice: a list of elements
+    bunch: a list of particle tracks
     """
+    raise UserWarning("track(lattice,bunch) not up-to-date!!!")
     from time import sleep
     print_progress_bar(0, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
     for (count,particle_track) in enumerate(bunch.tracks()):
         ti = particle_track.first()
         for element in lattice.seq:
-            tf = element.matrix.dot(ti)      #track through!
+            tf = element.matrix.dot(ti)      # track with matrix!
             if isinstance(element,ELM.MRK):
-                # if count == 1: DEBUG_MODULE('tf in track({}) >>'.format(count)+Track.string(tf))
+                if count == 1: 
+                    DEBUG_TRACK('track(f)#{}) {}'.format(count,Track.string(tf)))
                 particle_track.append(tf)
-                # deltaE = tf[EKOO] - ti[EKOO]
-                # DEBUG_MODULE('\t\tf >>',Track.string(tf),' deltaE[KeV] >>',deltaE*1.e3)
+                DEBUG_TRACK('track(f)#{} {} dE[KeV] {}'.format(count,Track.string(tf),(tf[EKOO] - ti[EKOO])*1.e3))
             ti = tf
+        DEBUG_TRACK('track: complete track\n{}'.format(soll_track.points_str()))
+        DEBUG_TRACK('track(first) {}'.format(soll_track.first_str()))
+        DEBUG_TRACK('track(last)  {}'.format( soll_track.last_str()))
+
         sleep(1.0e-3)
         print_progress_bar(count, bunch.nb_tracks(), prefix = 'Progress:', suffix = 'Complete', length = 50)
-        # DEBUG_MODULE('complete track\n{}'.format(particle_track.points_str()))
-        # DEBUG_MODULE('FIRST: {}'.format(particle_track.first_str()))
-        # DEBUG_MODULE('{} LAST: {}'.format(count,particle_track.last_str()))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     print("tracks.py: sorry - nothing todo")

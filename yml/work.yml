@@ -26,7 +26,6 @@
 flags:
     # - accON:        False           # {True}  acceleration on/off flag
     - egf:          True            # {False} emittance growth flag
-    - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
@@ -93,9 +92,12 @@ elements:
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
         - gap:      *p15    # [m] length
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        - Ezpeak:   4.00    # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
         # - mapping:   t3d    # T3D linear map model
         # - mapping:   simple # Shishlo's linear map model
-        - mapping:   base   # Shishlo's base map model
+        # - mapping:   base   # Shishlo's base map model
+        - mapping:   ttf    # Shishlo's three point TTF RF gap-model
         - sec:      *HE     # is part of section
     # - TTG:  &TTG            # ID: &alias
     #     - type:     TTFG    # TTFG class

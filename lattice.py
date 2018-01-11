@@ -78,9 +78,7 @@ class Lattice(NamedObject,object):
         """
         mcell = ELM.I(label='')   ##  chain matrices
         for element in self.seq:
-#            s0 = element.position[0]
-#            s1 = element.position[2]
-            # DEBUG('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,s0,s1))
+            DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
             mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.section = '<= full lattice map'
         return mcell.string()
@@ -98,7 +96,8 @@ class Lattice(NamedObject,object):
         for element in self.seq:
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
-            if isinstance(element,(ELM.RFG,ELM.RFC,TTF.TTFG)):
+            # if isinstance(element,(ELM.RFG,ELM.RFC,TTF.TTFG)):
+            if isinstance(element,(ELM.RFG,ELM.RFC)):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
@@ -342,11 +341,8 @@ class Lattice(NamedObject,object):
         s     = 0.0
         for element in self.seq:
             s0 = element.position[0]
-#            s1 = element.position[2]
-            # objprnt(element.particle ,text='sigma_functions: '+element.label) # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
-                # DEBUG_MODULE('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
                 sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
                 if isinstance(i_element,ELM.RFG) and FLAGS['egf']:
                     rf_gap    = i_element
@@ -457,7 +453,7 @@ class Lattice(NamedObject,object):
             for i_element in slices:
                 s += i_element.length
                 ## COS_like
-                # DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
+                # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
                 c_0 = i_element.map(c_0)   # map!!!
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
@@ -466,7 +462,7 @@ class Lattice(NamedObject,object):
                 cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
                 ## SIN_like
-                # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
+                # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
                 s_0 = i_element.map(s_0)   # map!!!
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]

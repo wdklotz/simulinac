@@ -66,7 +66,6 @@ FLAGS  = dict(
         egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
-        map                  = True,             # use maps to track trajectories through RFGap
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = True              # use express version of thin quads
@@ -303,17 +302,21 @@ def collect_data_for_summary(lattice):
             elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
-                Ez      = itm.u0/gap
+                Ezavg   = itm.Ezavg
                 PhiSoll = degrees(itm.phis)
                 mapping = itm.mapping
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  mapping   '.format(sec,typ,itm.label)] = mapping
+                Ezpeak  = itm.Ezpeak
+                SUMMARY['{2} [{1}.{0}]   gap    [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}] Ez-avg[MV/m]'.format(sec,typ,itm.label)] = Ezavg
+                SUMMARY['{2} [{1}.{0}]   phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
+                SUMMARY['{2} [{1}.{0}]Ez-peak[MV/m]'.format(sec,typ,itm.label)] = Ezpeak
 
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
+                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)]      = gap
+                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)]       = Ezavg
+                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)]     = PhiSoll
+                PARAMS['{2}[{1}.{0}]mapping'.format(sec,typ,itm.label)]  = mapping
+                PARAMS['{2}[{1}.{0}](Ez)peak'.format(sec,typ,itm.label)] = Ezpeak
     types = ['RFC']
     for sec in sections:
         for typ in types:
@@ -332,25 +335,7 @@ def collect_data_for_summary(lattice):
                 PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
                 PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
                 PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
-    types = ['TTFG']
-    for sec in sections:
-        for typ in types:
-            elements = elements_in_section()
-            for itm in elements:
-                gap     = itm.gap
-                Epeak   = itm.Epeak
-                PhiSoll = degrees(itm.phis)
-                E0zav   = itm.E0z
-                SUMMARY['{2} [{1}.{0}] gap        [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}] (Ez)peak[MV/m]'.format(sec,typ,itm.label)] = Epeak
-                SUMMARY['{2} [{1}.{0}] (Ez)av  [MV/m]'.format(sec,typ,itm.label)] = E0zav
-                SUMMARY['{2} [{1}.{0}] phis     [deg]'.format(sec,typ,itm.label)] = PhiSoll
 
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Epeak'.format(sec,typ,itm.label)] = Epeak
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
-
-    SUMMARY['track with map']                  =  FLAGS['map']
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
     SUMMARY['emittance growth']                =  FLAGS['egf']
     SUMMARY['ring lattice']                    =  FLAGS['periodic']

@@ -1,7 +1,5 @@
 class NamedObject:
-	"""
-	A class to give objects tags like name a.k.a. label, section ...
-	"""
+	"""Class to give objects tags like name a.k.a. label, section ..."""
 	@property
 	def label(self):
 		return self._label

@@ -35,7 +35,7 @@ def DEBUG_OFF(string,arg='',end='\n'):
 DEBUG_TEST0    = DEBUG_OFF
 DEBUG_TEST1    = DEBUG_OFF
 DEBUG_MAP      = DEBUG_OFF
-DEBUG_SOLL_MAP = DEBUG_ON
+DEBUG_SOLL_MAP = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
 
 twopi          = 2*PI
@@ -90,9 +90,10 @@ class TTFGslice(object):
     def mapSoll(self,i_track):
         """Mapping of soll track through a slice from position (i) to (f)"""
         DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
-        i_track[EKOO] += self.deltaW
-        return i_track
-    def adjust_energy(self,tkin):
+        f_track = copy(i_track)   # make a copy to prevent overwriting i_track
+        f_track[EKOO] += self.deltaW
+        return f_track
+    def adjust_slice_parameters(self,tkin):
         """Adjust energy and -dpendent parameters for this slice"""
         self.particle(tkin)
         self.beta    = self.particle.beta
@@ -109,24 +110,9 @@ class TTFGslice(object):
         i1    = 0.
         WIN   = self.particle.tkin
         PHIN  = self.phis
-        DW    = self.wout_minus_win(
-                                    self.V0,
-                                    i0,
-                                    self.Tk,
-                                    0.,
-                                    PHIN)
+        DW    = self.wout_minus_win(self.V0,i0,self.Tk,0.,PHIN)
         WOUT  = WIN+DW
-        DPHI  = self.phiout_minus_phiin(
-                                        self.V0*omeg/(m0c3*self.gb**3),
-                                        self.gamma,
-                                        0.,
-                                        i0,
-                                        i1,
-                                        self.Tk,
-                                        0.,
-                                        self.Tkp,
-                                        0.,
-                                        PHIN)
+        DPHI  = self.phiout_minus_phiin(self.V0*omeg/(m0c3*self.gb**3), self.gamma,0.,i0,i1,self.Tk,0.,self.Tkp,0.,PHIN)
         PHOUT = PHIN+DPHI
 
         self.WIN      = WIN
@@ -256,20 +242,21 @@ class _TTF_G(object):
                 z += (zir-zil)*1.e-2   # [cm] --> [m]
             # self.E0z = E0z/z           # equivalent av. field  (Ez)av
             return slices
-        def adjust_slices_energy(phis,tkin):
+        def adjust_slice_energy(phis,tkin):
             """adjust energy of slices"""
             next_phase = phis
             next_tkin  = tkin
             Tklist = []         # keep values to get min and max
             for slice in self.slices:
                 slice.setSollPhase(next_phase) # NOTE!: phase  @ slice entrance set here
-                slice.adjust_energy(next_tkin) # NOTE!: energy @ slice entrance set here
+                slice.adjust_slice_parameters(next_tkin) # NOTE!: energy @ slice entrance set here
                 Tklist.append(slice.Tk)
                 next_phase = slice.PHOUT       # NOTE!: slice OUT becomes next slice IN
                 next_tkin  = slice.WOUT        # NOTE!: slice OUT becomes next slice IN
                 DEBUG_SLICE('SLICE: {}\n'.format(self),self.__dict__)
             deltaW   = next_tkin-tkin          # total energy kick of this gap
-            self.tr  = min(Tklist)    # @@@@ should calc the average @@@@
+#todo:  @@@@ TODO should calc the average @@@@
+            self.tr  = min(Tklist)
             return deltaW
 
         self.u0       = parent.u0
@@ -289,22 +276,9 @@ class _TTF_G(object):
             sys.exit(1)
         else:
             self.slices = _make_slices()        # slice the gap
-            self.deltaW = adjust_slices_energy(self.phis,self.particle.tkin)
+            self.deltaW = adjust_slice_energy(self.phis,self.particle.tkin)
             self.matrix[EKOO,DEKOO] = self.deltaW    # set my deltaW in linear map
 
-    # def adjust_energy(self,tkin):
-    #     """Adjust energy of gap"""
-    #     return parent.__init__(U0       = self.u0,
-    #                            PhiSoll  = self.phis,
-    #                            fRF      = self.freq,
-    #                            label    = self.label,
-    #                            particle = self.particle(tkin),
-    #                            gap      = self.gap,
-    #                            position = self.position,
-    #                            mapping  = self.mapping,
-    #                            SFdata   = self.Ez,
-    #                            dWf      = self.dWf)
-    
     def make_slices(self,anz=0):   # interface to callers (lattice.py)
         res = [self]
         DEBUG_SLICE('SLICE: make_slices: ',res)
@@ -322,7 +296,7 @@ class _TTF_G(object):
 
         for cnt,slice in enumerate(self.slices):
             # DEBUG_MAP('MAP: ttfg-map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
-            f_track = slice.map(i_track)
+            f_track = slice.map(i_track)    # map slice with TTF 3-point gap-model
             i_track = f_track
 
                 # relativistic scaling. Is it needed?
@@ -346,7 +320,7 @@ class _TTF_G(object):
         return f_track
     def map(self,i_track):
         """Mapping from position (i) to (f)"""
-        f_track = self._map(i_track)   # NOTE: use mapping with sliced TTFGap
+        f_track = self._map(i_track)   # NOTE: use local map with sliced TTFGap
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
@@ -357,9 +331,7 @@ class _TTF_G(object):
         
         return f_track
     def soll_map(self,i_track):   # the wrapper to slice mappings of soll
-        """
-        Mapping of soll track from position (i) to (f)
-        """
+        """Mapping of soll track from position (i) to (f)"""
         for cnt,slice in enumerate(self.slices):
             DEBUG_SOLL_MAP('soll_map: slice # {} '.format(cnt),end='')  # for DEBUGGING
             f_track = slice.mapSoll(i_track)
@@ -367,7 +339,7 @@ class _TTF_G(object):
         # DEBUG('_TTF_G(i)\n'+self.particle.string())
         # self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
-#todo: class TTFC(ELM._thin):
+#todo: tests must be redone
 def test0():
     from tracks import Track
     

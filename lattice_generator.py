@@ -20,6 +20,7 @@ This file is part of the SIMULINAC code
 import sys
 from math import radians
 import yaml
+import warnings
 
 from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,zellipse
 import elements as ELM
@@ -39,7 +40,12 @@ def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
     except KeyError:
-        print('InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item))
+        warnings.showwarning(
+                'InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item),
+                UserWarning,
+                'lattice_generator.py',
+                'get_mandatory()',
+                )
         sys.exit(1)
     return res
 
@@ -111,15 +117,20 @@ def instanciate_element(item):
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
             sys.exit(1)
-        if mapping == 'ttf':
-            fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
+        if mapping == 'ttf':     # TTF from SF-data
+            fname     = get_mandatory(attributes,"SFdata",label)
             Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
             if fname not in PARAMS:
-                PARAMS[fname] = SFdata(fname,Ezpeak=Ezpeak)
-            instance  =  ELM.RFG(U0=None,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],SFdata=PARAMS[fname],dWf=dWf)
+                PARAMS[fname] = SFdata(fname,Epeak=Ezpeak)
+            instance  =  ELM.RFG(U0=0.,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],SFdata=PARAMS[fname],dWf=dWf)
+            instance['Ezpeak'] = Ezpeak
+            instance['Ezavg']  = ''
         else:
-            U0        = gap * get_mandatory(attributes,"Ez",label)
+            Ez        = get_mandatory(attributes,"Ez",label)
+            U0        = gap * Ez
             instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
+            instance['Ezpeak'] = ''
+            instance['Ezavg']  = Ez
     elif key == 'RFC':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -139,23 +150,17 @@ def instanciate_element(item):
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
-    # elif key == 'TTFG':
-    #     label     = attributes['ID']
-    #     PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-    #     fRF       = get_mandatory(attributes,"fRF",label)
-    #     gap       = get_mandatory(attributes,'gap',label)
-    #     fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
-    #     Ez0       = get_mandatory(attributes,"Ezpeak",label)
-    #     dWf       = FLAGS['dWf']
-    #     if fname not in PARAMS:
-    #         PARAMS[fname] = SFdata(fname,Epeak=Ez0)
-    #     instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
     else:
-        print('InputError: Unknown element type encountered: "{}" - STOP'.format(key))
+        warnings.showwarning(
+                'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
+                UserWarning,
+                'lattice_generator.py',
+                'instanciate_element()',
+                )
         sys.exit(1)
     try:
         sec = attributes['sec']    #can fail because sections are not mandatory
@@ -181,7 +186,12 @@ def factory(input_file):
                     found = True
                     break    #after found == true
             if found == False:
-                print('InputError: Segment {} not found - STOP'.format(segID))
+                warnings.showwarning(
+                        'InputError: Segment {} not found - STOP'.format(segID),
+                        UserWarning,
+                        'lattice_generator.py',
+                        'make_lattice()',
+                        )
                 sys.exit(1)
             for element in elementList: #loop over elements in element list
                 DEBUG_MODULE('element in '+segID,element)
@@ -211,7 +221,6 @@ def factory(input_file):
         if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
         if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
         if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
-        if 'map'         in flags: FLAGS['map']      = SUMMARY['track with map']   = flags['map']
         if 'KVprint'     in flags: FLAGS['KVprint']                                = flags['KVprint']
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
         if 'express'     in flags: FLAGS['express']                                = flags['express']
@@ -315,7 +324,12 @@ def factory(input_file):
         try:
             in_data = yaml.load(fileobject)
         except Exception as inst:
-            print('InputError: {} - STOP'.format(str(inst)))
+            warnings.showwarning(
+                    'InputError: {} - STOP'.format(str(inst)),
+                    UserWarning,
+                    'lattice_generator.py',
+                    'factory()',
+                    )
             sys.exit(1)
     fileobject.close()
 
