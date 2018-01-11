@@ -31,9 +31,7 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-'''
-Cavity E(z,r=0) field profile
-'''
+''' Cavity E(z,r=0) field profile '''
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
@@ -189,9 +187,7 @@ def Sp(poly,k,zintval):
     return sp
 
 class SFdata(object):
-    '''
-    Superfish data  (normiert auf Epeak)
-    '''
+    '''Superfish data  (normiert auf Epeak)'''
     def __init__(self,input_file,Epeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file

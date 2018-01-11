@@ -23,7 +23,7 @@ from math import pi as PI
 from copy import copy
 import numpy as NP
 
-from setutil import FLAGS,PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
+from setutil import PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
@@ -41,7 +41,7 @@ DEBUG_SLICE    = DEBUG_OFF
 twopi          = 2*PI
 
 ## Transition Time Factors RF Gap Model
-class TTFGslice(object):
+class _TTF_Gslice(object):
     def __init__(self,parent,polyval,particle):
         self.parent     = parent           # the element this slice is part off
         self.freq       = parent.freq
@@ -236,7 +236,7 @@ class _TTF_G(object):
                 zil = poly.zl
                 zir = poly.zr
                 if zil < zl or zir > zr: continue
-                slice = TTFGslice(self,poly,self.particle)  # instanciate TTFGslices
+                slice = _TTF_Gslice(self,poly,self.particle)  # instanciate _TTF_Gslices
                 slices.append(slice)
                 E0z += slice.V0
                 z += (zir-zil)*1.e-2   # [cm] --> [m]
@@ -354,7 +354,7 @@ def test0():
     DEBUG_TEST0('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
     slices = ttfg.slices
     for slice in slices:
-        DEBUG_TEST0('TTFGslice: slice\n',slice.__dict__)      # for DEBUGGING
+        DEBUG_TEST0('_TTF_Gslice: slice\n',slice.__dict__)      # for DEBUGGING
         pass
 
     z = 1.e-3

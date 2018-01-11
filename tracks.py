@@ -142,15 +142,16 @@ def track_soll(lattice):
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
     adapted to the energy of the accellerated reference particle.
     """
-    # sollteilchen track-point          x   x'  y   y'  z   z'          Tk                   1   s   1
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     for element in lattice.seq:
         DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last() #track: at entrance
         DEBUG_SOLL_TRACK('track_soll(i) ',Track.string(ti))
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
-        element.adjust_energy(ti[EKOO])       """enery adaptation"""
+        """ energy adjustment """
+        element.adjust_energy(ti[EKOO])
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+        """ element mapping """
         tf = element.soll_map(ti) #track: at exit
         DEBUG_SOLL_TRACK('track_soll(f) ',Track.string(tf))
         soll_track.append(tf)
