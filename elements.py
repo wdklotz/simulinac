@@ -65,6 +65,16 @@ class _Node(NamedObject,ParamsObject,object):
         self['viseo']     = 0             # default - invisible
     def __call__(self,n=MDIM,m=MDIM):
         return self.matrix[:n,:m]   # return upper left nxm submatrix
+    def __mul__(self,other):
+        product=NP.einsum('ij,jk',self.matrix,other.matrix)
+        res=_Node()
+        if (self.label == ''):
+            res.label=other.label
+        else:
+            res.label=self.label+'*'+other.label
+        res.length=self.length+other.length
+        res.matrix=product
+        return res
     def string(self):
         n  = 42
         nx = 300
@@ -81,16 +91,6 @@ class _Node(NamedObject,ParamsObject,object):
                 s+='{:8.4g} '.format(self.matrix[i,j])
             s+='\n'
         return s
-    def __mul__(self,other):
-        product=NP.einsum('ij,jk',self.matrix,other.matrix)
-        res=_Node()
-        if (self.label == ''):
-            res.label=other.label
-        else:
-            res.label=self.label+'*'+other.label
-        res.length=self.length+other.length
-        res.matrix=product
-        return res
     def reverse(self):
         raise RuntimeError('_Node:reverse not implemented!')
     def inverse(self):
@@ -168,8 +168,7 @@ class _Node(NamedObject,ParamsObject,object):
 
         return f_track
     def soll_map(self,i_track):
-        """Linear mapping of soll trjectory from (i) to (f)"""
-        f_track = self.matrix.dot(i_track)
+        f_track = self.map(i_track)
         return f_track
 ## unity matrix
 class I(_Node):
@@ -473,8 +472,7 @@ class RFG(I):
         """ Delegate mapping of track from position (i) to (f) """
         return self.gap_model.map(i_track)
     def soll_map(self,i_track):
-        """ Delegate mapping of soll-track from position (i) to (f) """
-        f_track = self.gap_model.soll_map(i_track)
+        f_track = self.map(i_track)
         return f_track
 ## PyOrbit RF gap-models
 class _PYO_G(object):
@@ -499,8 +497,6 @@ class _PYO_G(object):
         elif self.mapping == 'base':
             which_map = self.base_map
         return which_map(i_track)
-    def soll_map(self,i_track):
-        return self.map(i_track)
     def simple_map(self,i_track):
         """Mapping from position (i) to (f) in linear approx. (A.Shislo 4.1)"""
         xi        = i_track[XKOO]       # [0]
@@ -708,34 +704,31 @@ class _T3D_G(object):
             # energy kick
             m[EKOO,DEKOO] = deltaW  # m[6,7]      = deltaW
             return
-        self.matrix = parent.matrix
-        particle    = parent.particle
-        u0          = parent.u0
-        phis        = parent.phis
-        gap         = parent.gap
-        lamb        = parent.lamb
-        beta        = particle.beta
-        tr          = trtf(lamb,gap,beta)   # Panovski
-        deltaW      = u0*tr*cos(phis)       # deltaW energy kick nach Trace3D
-        tkin        = particle.tkin
-        tk_center   = deltaW*0.5+tkin               # energy in gap center
-        part_center = copy(particle)(tk_center)     # particle @ gap center
-        b           = part_center.beta              # beta @ gap cemter
-        g           = part_center.gamma             # gamma @ gap center
-        particlef   = copy(particle)(tkin+deltaW)   # particle @ (f)
+        self.matrix    = parent.matrix
+        self.particle  = parent.particle
+        u0             = parent.u0
+        phis           = parent.phis
+        gap            = parent.gap
+        lamb           = parent.lamb
+        beta           = self.particle.beta
+        tr             = trtf(lamb,gap,beta)   # Panovski
+        deltaW         = u0*tr*cos(phis)       # deltaW energy kick nach Trace3D
+        tkin           = self.particle.tkin
+        tk_center      = deltaW*0.5+tkin               # energy in gap center
+        part_center    = copy(self.particle)(tk_center)# particle @ gap center
+        b              = part_center.beta              # beta @ gap cemter
+        g              = part_center.gamma             # gamma @ gap center
+        self.particlef = copy(self.particle)(tkin+deltaW)# particle @ (f)
         # DEBUG_MODULE('_T3DG: beta i,c,f {:8.6f},{:8.6f},{:8.6f}'.format(particlei.beta,b,particlef.beta))
-        mx(self.matrix,tr,b,g,particle,particlef,u0,phis,lamb,deltaW)
+        mx(self.matrix,tr,b,g,self.particle,self.particlef,u0,phis,lamb,deltaW)
 
         # parent properties
         self.tr        = tr
-        self.particlef = particlef
         self.deltaW    = deltaW
     def map(self,i_track):
         """Mapping from (i) to (f) with linear T3D matrix"""
         f_track = self.matrix.dot(i_track)
         return f_track
-    def soll_map(self,i_track):
-        return self.map(i_track)
 ## base of _thin Nodes
 class _thin(_Node):
     """Base class for thin elements implemented as triplet D*Kick*D"""

@@ -276,7 +276,7 @@ class _TTF_G(object):
             self.deltaW = adjust_slice_energy(self.phis,self.particle.tkin)
             self.matrix[EKOO,DEKOO] = self.deltaW    # nicht vwergessen! set my deltaW in linear map
 
-    def _map(self,i_track):  # the wrapper to slice mappings
+    def _mapping(self,i_track):  # the wrapper to slice mappings
         self.dbTab1Rows  = []          # for DEBUGGING
         self.dbTab1Headr = []          # for DEBUGGING
         self.dbTab2Rows  = []          # for DEBUGGING
@@ -311,7 +311,8 @@ class _TTF_G(object):
         return f_track
     def map(self,i_track):
         """Mapping from position (i) to (f)"""
-        f_track = self._map(i_track)   # NOTE: use local map with sliced TTFGap
+        f_track = self._mapping(i_track)   # NOTE: use local map with sliced TTFGap
+        self.particlef = copy(self.particle)(f_track[EKOO])
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
@@ -319,16 +320,6 @@ class _TTF_G(object):
             for i in range(len(f_track)-4):
                 f[i] =f[i]*1.e3
             arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
-        
-        return f_track
-    def soll_map(self,i_track):   # the wrapper to slice mappings of soll
-        """Mapping of soll track from position (i) to (f)"""
-        for cnt,slice in enumerate(self.slices):
-            DEBUG_SOLL_MAP('soll_map: slice # {} '.format(cnt),end='')  # for DEBUGGING
-            f_track = slice.mapSoll(i_track)
-            i_track = f_track
-        # DEBUG('_TTF_G(i)\n'+self.particle.string())
-        self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
 #todo: tests must be redone
 def test0():
