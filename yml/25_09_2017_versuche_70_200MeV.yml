@@ -26,8 +26,7 @@
 flags:
     # - accON:        False           # {True}  acceleration on/off flag
     - egf:          True            # {False} emittance growth flag
-    - map:          False           # {True}  use cavity-maps to track trajectories through RF gaps
-    # - sigma:        False           # {True}  beam sizes by sigma-matrix
+    - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
     - express:      False           # {True}  use express version of thin quads
@@ -91,21 +90,16 @@ elements:
         - sec:      *HE          # is part of section
     - RFGH:  &RFGH          # ID: &alias
         - type:     RFG     # class
-        # - Ez:       1.41    # [MV/m] (Ez)av electric field
+        # - Ez:       1.41    # [MV/m] average Ez electric field
         - Ez:       2.31    # [MV/m] (Ez)av electric field
         - PhiSync:  *p06    # [deg] synchronous phase
         - fRF:      *p01    # [Hz] frequency
-        - gap:      *p15    # [m] length
-        # - mapping:   simple # Shishlo's simple map model
+        - gap:      *p15    # [m] effective gap length
+        - mapping:   t3d    # T3D linear map model
+        - mapping:   simple # Shishlo's linear map model
         - mapping:   base   # Shishlo's base map model
-        - sec:      *HE     # is part of section
-    - TTG:  &TTG            # ID: &alias
-        - type:     TTFG    # TTFG class
-        - PhiSync:  *p06    # [deg] synchronous phase
-        - fRF:      *p01    # [Hz] frequency
-        - gap:      *p15    # [m] length
+        # - mapping:   ttf    # Shishlo's three point TTF RF gap-model
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        # - Ezpeak:   2.43    # [MV/m] # corresdponds to (Ez)av = 1.41[MV/m] electric field
         - Ezpeak:   4.00    # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
         - sec:      *HE     # is part of section
     - M:  &M                # ID: &alias
@@ -130,47 +124,6 @@ segments:
     - SEG3H:
         - *D3
         - *QFH
-    - TTGH:
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        - *D5
-        - *TTG
-        - *D5
-        #
-        # - *D5   # 10th cavity makes it unstable!!
-        # - *TTG
-        # - *D5
-        #
     - RFGH:
         - *D5
         - *RFGH
@@ -221,5 +174,3 @@ lattice:
     - title: 25.09.2017 versuche 70-200MeV        # description -  DON't remove or reposition!
     - [130,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
 #    - [40,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-#    - [115,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
-#    - [69,    SEG1H, TTGH, SEG2H, TTGH, SEG3H]
