@@ -31,7 +31,7 @@ def DEBUG_ON(string,arg='',end='\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
-## DEBUG__XX
+## DEBUG__*
 DEBUG_TEST0    = DEBUG_OFF
 DEBUG_TEST1    = DEBUG_OFF
 DEBUG_MAP      = DEBUG_OFF
@@ -275,6 +275,7 @@ class _TTF_G(object):
             self.slices = _make_slices()             # slice the gap
             self.deltaW = adjust_slice_energy(self.phis,self.particle.tkin)
             self.matrix[EKOO,DEKOO] = self.deltaW    # nicht vwergessen! set my deltaW in linear map
+            if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices   # for test0()
 
     def _mapping(self,i_track):  # the wrapper to slice mappings
         self.dbTab1Rows  = []          # for DEBUGGING
@@ -323,6 +324,7 @@ class _TTF_G(object):
         return f_track
 #todo: tests must be redone
 def test0():
+    import elements as ELM
     from tracks import Track
     
     print('-----------------------------------TEST 0----------------')
@@ -330,13 +332,16 @@ def test0():
     Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
     SF_tab = SFdata(input_file,Epeak)
     
-    ttfg = TTFG(gap=0.048,Ez=SF_tab)
+    ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 50.
     ttfg.adjust_energy(tkin=tkin)
-    DEBUG_TEST0('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
-    slices = ttfg.slices
-    for slice in slices:
-        DEBUG_TEST0('_TTF_Gslice: slice\n',slice.__dict__)      # for DEBUGGING
+    if DEBUG_TEST0 == DEBUG_ON:
+        print('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
+        slices = ttfg['slices']
+        for slice in slices:
+            print('_TTF_Gslice: slice\n',slice.__dict__)      # for DEBUGGING
+            pass
+    else:
         pass
 
     z = 1.e-3
@@ -353,6 +358,7 @@ def test0():
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
 def test1():
+    import elements as ELM
     from tracks import Track
     
     print('-----------------------------------TEST 1----------------')
@@ -360,7 +366,7 @@ def test1():
     Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
     SF_tab = SFdata(input_file,Epeak)
     
-    ttfg = TTFG(PhiSoll=radians(-20.),gap=0.048,Ez=SF_tab)
+    ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 150.
     ttfg.adjust_energy(tkin=tkin)
     DEBUG_TEST1('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING

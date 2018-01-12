@@ -343,7 +343,7 @@ class _wedge(I):
 ## zero length RF-gap nach Dr.Tiede & T.Wrangler (simple)
 class GAP(D):
     """Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-       Nicht sehr nuetzlich: produziert keine long. dynamik wie Trace3D RFG!"""
+       Nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!"""
     def __init__(self,
                     U0         = PARAMS['spalt_spannung'],
                     PhiSoll    = radians(PARAMS['soll_phase']),
@@ -729,7 +729,7 @@ class _T3D_G(object):
         """Mapping from (i) to (f) with linear T3D matrix"""
         f_track = self.matrix.dot(i_track)
         return f_track
-## base of _thin Nodes
+## base of thin Nodes
 class _thin(_Node):
     """Base class for thin elements implemented as triplet D*Kick*D"""
     def __init__(self,particle=PARAMS['sollteilchen'],position=[0,0,0]):
