@@ -290,12 +290,10 @@ def collect_data_for_summary(lattice):
                 dBdz = k0*itm.particle.brho
                 length = itm.length
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
-                SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]   B0*    [T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
-                SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,typ,itm.label)] = dBdz
+                SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
+                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
-                PARAMS['{2}[{1}.{0}]dBdZ'.format(sec,typ,itm.label)] = dBdz
-                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
     types = ['RFG']
     for sec in sections:
         for typ in types:
@@ -306,17 +304,12 @@ def collect_data_for_summary(lattice):
                 PhiSoll = degrees(itm.phis)
                 mapping = itm.mapping
                 Ezpeak  = itm.Ezpeak
-                SUMMARY['{2} [{1}.{0}]   gap    [m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}] Ez-avg[MV/m]'.format(sec,typ,itm.label)] = Ezavg
-                SUMMARY['{2} [{1}.{0}]   phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
                 SUMMARY['{2} [{1}.{0}]Ez-peak[MV/m]'.format(sec,typ,itm.label)] = Ezpeak
 
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)]      = gap
-                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)]       = Ezavg
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)]     = PhiSoll
-                PARAMS['{2}[{1}.{0}]mapping'.format(sec,typ,itm.label)]  = mapping
-                PARAMS['{2}[{1}.{0}](Ez)peak'.format(sec,typ,itm.label)] = Ezpeak
     types = ['RFC']
     for sec in sections:
         for typ in types:
@@ -326,15 +319,10 @@ def collect_data_for_summary(lattice):
                 Ez      = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 length  = itm.length
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
-
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
-                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
     SUMMARY['emittance growth']                =  FLAGS['egf']

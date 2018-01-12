@@ -114,28 +114,6 @@ def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1
     # Print New Line on Complete
     if iteration == total:
         print()
-#
-# Sample Usage of print_progress_bar(...)
-#
-#
-# from time import sleep
-#
-# # make a list
-# items = list(range(0, 57))
-# i = 0
-# l = len(items)
-#
-# # Initial call to print 0% progress
-# print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
-# for item in items:
-#     # Do stuff...
-#     sleep(0.1)
-#     # Update Progress Bar
-#     i += 1
-#     print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
-#
-# # Sample Output
-# Progress: |█████████████████████████████████████████████-----| 90.0% Complete
 
 def track_soll(lattice):
     """
@@ -190,3 +168,23 @@ def track(lattice,bunch):
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
     print("tracks.py: sorry - nothing todo")
+#
+# Sample Usage of print_progress_bar(...)
+# from time import sleep
+#
+# # make a list
+# items = list(range(0, 57))
+# i = 0
+# l = len(items)
+#
+# # Initial call to print 0% progress
+# print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+# for item in items:
+#     # Do stuff...
+#     sleep(0.1)
+#     # Update Progress Bar
+#     i += 1
+#     print_progress_bar(i, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+#
+# # Sample Output
+# Progress: |█████████████████████████████████████████████-----| 90.0% Complete
