@@ -33,7 +33,8 @@ DEBUG_TRACK      = DEBUG_OFF
 DEBUG_SOLL_TRACK = DEBUG_OFF
 
 ## Track class
-class Track(object):    #is an ordered list of track-points. A track-point is an array of MDIM coordinates.
+class Track(object):
+    """ Track is an ordered list of track-points. A track-point is an array of MDIM coordinates."""
 
     def __init__(self, particle_number=0, start=None):
         self.track_points = start

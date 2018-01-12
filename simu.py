@@ -214,16 +214,15 @@ def loesung(filepath):
 
 if __name__ == '__main__':
     import sys
-#    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
-#    filepath = 'yml/fodo_with_10cav_per_RF-4.yml'
-#    filepath = 'yml/LEBT_fodo_with_RF-2.yml'
-#    filepath = 'yml/LEBT_HEBT_with_RF.yml'
-#    filepath = 'yml/LEBT_HEBT_with_RF_5-200.yml'
-#    filepath = 'yml/LEBT_HEBT_with_RF_5-200.yml'
-#    filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
-#    filepath = 'yml/25_09_2017_separatrix_70_200MeV.yml'
-#    filepath = 'yml/test.yml'
-#    filepath = 'yml/LE_HE_15inj-ref.yml'
+    filepath = 'yml/test.yml'
+    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
+    filepath = 'yml/fodo_with_10cav_per_RF-4.yml'
+    filepath = 'yml/LEBT_fodo_with_RF-2.yml'
+    filepath = 'yml/LEBT_HEBT_with_RF.yml'
+    filepath = 'yml/LEBT_HEBT_with_RF_5-200.yml'
+    filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
+    filepath = 'yml/25_09_2017_separatrix_70_200MeV.yml'
+    filepath = 'yml/LE_HE_15inj-ref.yml'
     filepath = 'yml/work.yml'
 
     if len(sys.argv) == 2:

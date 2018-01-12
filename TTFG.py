@@ -90,7 +90,7 @@ class _TTF_Gslice(object):
     def mapSoll(self,i_track):
         """Mapping of soll track through a slice from position (i) to (f)"""
         DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
-        f_track = copy(i_track)   # make a copy to prevent overwriting i_track
+        f_track = copy(i_track)   # make a copy to prevent i_track to be overwritten
         f_track[EKOO] += self.deltaW
         return f_track
     def adjust_slice_parameters(self,tkin):
@@ -124,10 +124,10 @@ class _TTF_Gslice(object):
         DEBUG_SLICE('SLICE {}\n'.format(self),self.__dict__)
         return 
     def wout_minus_win(self,conv,i0,tk,sk,phi):
-        # Formel 4.3.1 A.Shishlo
+        """Formel 4.3.1 A.Shishlo"""
         return conv*i0*(tk*cos(phi)-sk*sin(phi))
     def phiout_minus_phiin(self,fac,gamma,r,i0,i1,tk,sk,tkp,skp,phi):
-        # Formel 4.3.2 A.Shishlo
+        """Formel 4.3.2 A.Shishlo"""
         return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
     def map(self,i_track):
         """Map through this slice from position (i) to (f)"""
@@ -238,15 +238,12 @@ class _TTF_G(object):
                 if zil < zl or zir > zr: continue
                 slice = _TTF_Gslice(self,poly,self.particle)  # instanciate _TTF_Gslices
                 slices.append(slice)
-                E0z += slice.V0
-                z += (zir-zil)*1.e-2   # [cm] --> [m]
-            # self.E0z = E0z/z           # equivalent av. field  (Ez)av
             return slices
         def adjust_slice_energy(phis,tkin):
             """adjust energy of slices"""
             next_phase = phis
             next_tkin  = tkin
-            Tklist = []         # keep values to get min and max
+            Tklist = []         # helper to keep values to calculate min and max
             for slice in self.slices:
                 slice.setSollPhase(next_phase) # NOTE!: phase  @ slice entrance set here
                 slice.adjust_slice_parameters(next_tkin) # NOTE!: energy @ slice entrance set here
@@ -260,10 +257,10 @@ class _TTF_G(object):
             return deltaW
 
         self.u0       = parent.u0
-        self.phis     = parent.phis       # [radians] soll phase
+        self.phis     = parent.phis
         self.freq     = parent.freq
         self.label    = parent.label
-        self.gap      = parent.gap        # [m]
+        self.gap      = parent.gap
         self.mapping  = parent.mapping
         self.dWf      = parent.dWf
         self.lamb     = parent.lamb
@@ -275,16 +272,10 @@ class _TTF_G(object):
             raise RuntimeError('_TTF_G: missing E(z) table - STOP')
             sys.exit(1)
         else:
-            self.slices = _make_slices()        # slice the gap
+            self.slices = _make_slices()             # slice the gap
             self.deltaW = adjust_slice_energy(self.phis,self.particle.tkin)
-            self.matrix[EKOO,DEKOO] = self.deltaW    # set my deltaW in linear map
+            self.matrix[EKOO,DEKOO] = self.deltaW    # nicht vwergessen! set my deltaW in linear map
 
-    def make_slices(self,anz=0):   # interface to callers (lattice.py)
-        res = [self]
-        DEBUG_SLICE('SLICE: make_slices: ',res)
-        return res
-    def shorten(self,l=0.):        # interface to callers (lattice.py)
-        return self
     def _map(self,i_track):  # the wrapper to slice mappings
         self.dbTab1Rows  = []          # for DEBUGGING
         self.dbTab1Headr = []          # for DEBUGGING

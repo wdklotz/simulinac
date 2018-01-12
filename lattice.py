@@ -56,9 +56,7 @@ class Lattice(NamedObject,object):
         self.accel  = 0.
 
     def add_element(self,element):
-        """
-        Add element to lattice
-        """
+        """Add element to lattice"""
         if len(self.seq) == 0:
             s0 = 0.
         else:
@@ -73,9 +71,7 @@ class Lattice(NamedObject,object):
         self.seq.append(element)
 
     def string(self):
-        """
-        Log lattice layout to string (could be even better?)
-        """
+        """Log lattice layout to string (could be even better?)"""
         mcell = ELM.I(label='')   ##  chain matrices
         for element in self.seq:
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
@@ -84,9 +80,7 @@ class Lattice(NamedObject,object):
         return mcell.string()
 
     def stats(self,soll_track):
-        """
-        Gather lattice statistics
-        """
+        """Gather lattice statistics"""
         cav_counter = 0
         q_counter   = 0
         ttfm = +1.e+50
@@ -96,7 +90,6 @@ class Lattice(NamedObject,object):
         for element in self.seq:
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
-            # if isinstance(element,(ELM.RFG,ELM.RFC,TTF.TTFG)):
             if isinstance(element,(ELM.RFG,ELM.RFC)):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
@@ -118,7 +111,6 @@ class Lattice(NamedObject,object):
             det(M)
             check symplecticity
             twiss prameters beta, alpha, gamma for periodic lattices
-
         """
         mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
         for count,element in enumerate(self.seq):
@@ -262,9 +254,7 @@ class Lattice(NamedObject,object):
         return (self.accel,self.betax0,self.betay0)
 
     def report(self):
-        """
-        Report lattice layout (may not work!)
-        """
+        """Report lattice layout (may not work!)"""
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
         header = ''
@@ -294,17 +284,13 @@ class Lattice(NamedObject,object):
         return res
 
     def concat(self,lattice_piece):
-        """
-        Concatenate two Lattice pieces
-        """
+        """Concatenate two Lattice pieces"""
         seq = deepcopy(lattice_piece.seq)  # need deepcopy here!
         for element in seq:
             self.add_element(element)
 
     def twiss_functions(self,steps=10):
-        """
-        Track twiss functions with beta-matrix through lattice and scale to sigmas
-        """
+        """Track twiss functions with beta-matrix through lattice and scale to sigmas"""
         beta_fun = []
         bx = self.betax0
         ax = self.alfax0
@@ -329,9 +315,7 @@ class Lattice(NamedObject,object):
         return beta_fun
 
     def sigma_functions(self,steps=10):
-        """
-        Track the sigma-matrix through the lattice
-        """
+        """Track the sigma-matrix through the lattice"""
         sigma_fun = []
         # sigma initial
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
@@ -399,7 +383,6 @@ class Lattice(NamedObject,object):
                 s += i_element.length
                 d  = v_0[0,0]
                 dp = v_0[1,0]
-#                viseo = i_element['viseo']
                 traj.append((s,d,dp))
         return traj
 
@@ -437,7 +420,7 @@ class Lattice(NamedObject,object):
         y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
         sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m] Vorgabe
         dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe --> []
-        # MDIM tracking used here
+        # MDIMxMDIM tracking used here
         s      = 0.
         c_like = []
         s_like = []

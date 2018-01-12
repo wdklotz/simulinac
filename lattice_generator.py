@@ -49,7 +49,8 @@ def get_mandatory(attributes,key,item):
         sys.exit(1)
     return res
 
-def lod2d(l):    ##list of dicts to dict
+def lod2d(l):
+    """Transform list of dicts to dict"""
     return {k:v for d in l for k,v in d.items()}
 
 def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
@@ -66,7 +67,6 @@ def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
 def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     lattice = Lattice()
     thinlen = length/slices
-#    thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
             instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle)
@@ -182,9 +182,8 @@ def factory(input_file):
                 if segID in seg:
                     DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
-#                    nboff_elements = len(elementList)
                     found = True
-                    break    #after found == true
+                    break    #after found
             if found == False:
                 warnings.showwarning(
                         'InputError: Segment {} not found - STOP'.format(segID),
@@ -208,7 +207,7 @@ def factory(input_file):
         return lattice   #the complete lattice
 # --------
     def read_flags(in_data):
-    #returns ==> {...}
+        """returns a dict of flags"""
         flags_list = in_data['flags']
         flags = lod2d(flags_list) if flags_list != None else {}
         if 'accON' in flags:
@@ -227,7 +226,7 @@ def factory(input_file):
         return flags
 # --------
     def read_sections(in_data):
-        #returns a list of section names
+        """returns a list of section names"""
         sec_list = []
         use_sections = True
         try:     ## can fail because sections are not mandatory
@@ -239,7 +238,7 @@ def factory(input_file):
         return sec_list
 # --------
     def read_parameters(in_data):
-    #returns ==> {...}
+        """returns a dict of parameters"""
         parameter_list = in_data['parameters']
         parameters     = lod2d(parameter_list)
         if 'frequency'        in parameters: PARAMS['frequenz']         = parameters['frequency']
@@ -336,7 +335,7 @@ def factory(input_file):
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-    # update PARAMS with overriding initials
+    # nicht vergessesn! update PARAMS with overriding initials
     PARAMS.update(
         zellipse(PARAMS['sigmaz_i'],     ## calculate the long. emittance with def. parameters
                 PARAMS['Ez_feld'],
@@ -354,14 +353,14 @@ def factory(input_file):
     DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
     DEBUG_MODULE('segments in factory()',segments)            # def of all segments
 
-    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# (WICHTIG) set sollteilchen energy
+    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# nicht vergesses! set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
     SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
     DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
-    return lattice    #end of factory(...)
+    return lattice    # end of factory(...)
 
 def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
     return factory(input_file)

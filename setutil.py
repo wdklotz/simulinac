@@ -138,7 +138,7 @@ class Particle(object):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):  # call Particle instance to change its kin. energy
+    def __call__(self,tkin):  # make Particle callable to change its kin. energy
         try:
             self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         except ValueError:
@@ -259,13 +259,10 @@ def collect_data_for_summary(lattice):
 #       NOTE: here I use the INFIX operator '|' like a UNIX pipe
         List     = Apply(list)
         Selector = Filter(predicate)
-        return lattice.seq | Selector | List  # the surprising power of functional programming!
-
+        return lattice.seq | Selector | List
 
     def elements_in_section():
-        """
-        Remove duplicate elements of same type in a section
-        """
+        """Remove duplicate elements of same type in a section"""
         elements = elements_in_lattice()
         new_elements = []
         seen = set()             ## helper to eliminate duplicate entries
@@ -463,9 +460,7 @@ def k0prot(gradient=0.,tkin=0.):
         sys.exit(1)
 
 def scalek0prot(k0=0.,tki=0.,tkf=0.):
-    """
-    scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)
-    """
+    """Scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)"""
     bgi  = Proton(tki).gamma_beta
     bgf  = Proton(tkf).gamma_beta
     k= k0 * bgi/bgf
@@ -487,9 +482,7 @@ def dBdxprot(k0=0.,tkin=0.):
         sys.exit(1)
 
 def objprnt (what,text='',filter=[]):
-    """
-    Custom helper to print objects as dictionary
-    """
+    """Custom helper to print objects as dictionary"""
     template = '============================================'
     lt  = len(template)
     lx  = len(text)
@@ -507,9 +500,7 @@ def objprnt (what,text='',filter=[]):
     return
 
 def dictprnt(what,text='',filter=[],njust=35):
-    """
-    Custom helper to print dictionaries (clever!?)
-    """
+    """Custom helper to print dictionaries (clever!?)"""
     def asstrng(v):
         txt = ''
         fmt0  = '{:8.6g} '
@@ -549,9 +540,7 @@ def dictprnt(what,text='',filter=[],njust=35):
     return
 
 def printv(level,*args):
-    """
-    Multilevel printing using verbose flag
-    """
+    """Multilevel printing with verbose flag"""
     verbose = FLAGS['verbose']
     if verbose >= level and not FLAGS['KVprint']:
         print(*args)
@@ -576,9 +565,7 @@ def tblprnt(headr,records):
     return s
 
 def mxprnt(matrix):
-    """
-    Simple matrix print
-    """
+    """Simple matrix print"""
     s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
     lens = [max(map(len, col)) for col in zip(*s)]
     fmt = ''.join('{{:{}}}'.format(x) for x in lens)
@@ -586,9 +573,7 @@ def mxprnt(matrix):
     return '\n'.join(table)
 
 def arrprnt(array,fmt='{:8.4f}, ',txt=''):
-    """
-    Simple array print
-    """
+    """Simple array print"""
     print(txt,end='')
     for val in array:
         print(fmt.format(val),end='')

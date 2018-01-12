@@ -340,7 +340,7 @@ class _wedge(I):
 ## zero length RF-gap nach Dr.Tiede & T.Wrangler (simple)
 class GAP(D):
     """Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-       NOTE: zu einfach: produziert keine long. dynamik wie Trace3D RFG!"""
+       Nicht sehr nuetzlich: produziert keine long. dynamik wie Trace3D RFG!"""
     def __init__(self,
                     U0         = PARAMS['spalt_spannung'],
                     PhiSoll    = radians(PARAMS['soll_phase']),
@@ -352,12 +352,12 @@ class GAP(D):
                     dWf        = FLAGS['dWf']):
         super().__init__(particle=particle, position=position)
         self.label  = label
-        self.length = 0.
-        self.u0     = U0                       # [MV] gap Voltage
-        self.phis   = PhiSoll                  # [radians] soll phase
-        self.freq   = fRF                      # [Hz]  RF frequenz
+        self.length = 0.           # thin element
+        self.u0     = U0           # [MV] gap Voltage
+        self.phis   = PhiSoll      # [radians] soll phase
+        self.freq   = fRF          # [Hz]  RF frequenz
         self.dWf    = dWf
-        self.gap    = gap
+        self.gap    = gap          # [m] eff. gap-length
         self.lamb   = PARAMS['lichtgeschwindigkeit']/self.freq# [m] RF wellenlaenge
         self.tr     = self._trtf_(self.particle.beta)         # time-transition factor
         self.deltaW = self.u0*self.tr*cos(self.phis)*dWf      # T.Wrangler pp.221
@@ -386,8 +386,8 @@ class GAP(D):
         m[YPKOO,YKOO] = cyp
         m[EKOO,DEKOO] = self.deltaW      # energy kick = acceleration
         return m
-    def shorten(self,l=0.):
-        return self
+    # def shorten(self,l=0.):
+    #     return self
     def adjust_energy(self,tkin):
         self.__init__(U0       = self.u0,
                     PhiSoll    = self.phis,
@@ -461,12 +461,13 @@ class RFG(I):
             dWf        = self.dWf)
         self._params = params
         return self
-    def shorten(self,l=0.):
-        return self.parent
+    # def shorten(self,l=0.):
+    #     return self
     def map(self,i_track):
-        """ Mapping of track from position (i) to (f) """
+        """ Delegate mapping of track from position (i) to (f) """
         return self.gap_model.map(i_track)
     def soll_map(self,i_track):
+        """ Delegate mapping of soll-track from position (i) to (f) """
         f_track = self.gap_model.soll_map(i_track)
         self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
@@ -480,8 +481,8 @@ class _PYO_G(object):
             ttf = NP.sinc(teta)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
         self.particle = parent.particle
-        self.u0       = parent.u0         # [MV] gap Voltage
-        self.phis     = parent.phis       # [radians] soll phase
+        self.u0       = parent.u0
+        self.phis     = parent.phis
         self.gap      = parent.gap
         self.lamb     = parent.lamb
         self.mapping  = mapping
@@ -639,6 +640,7 @@ class _PYO_G(object):
         # parent properties
         self.particlef = particlef
         return f_track
+#todo: dyc_map
 #     def dyc_map(self,i_track):
 #         """
 #         E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
@@ -708,8 +710,8 @@ class _T3D_G(object):
             return
         self.matrix = parent.matrix
         particle    = parent.particle
-        u0          = parent.u0             # [MV] gap Voltage
-        phis        = parent.phis           # [radians] soll phase
+        u0          = parent.u0
+        phis        = parent.phis
         gap         = parent.gap
         lamb        = parent.lamb
         beta        = particle.beta
@@ -736,9 +738,7 @@ class _T3D_G(object):
         return self.map(i_track)
 ## base of _thin Nodes
 class _thin(_Node):
-    """
-    Base class for thin elements implemented as triplet D*Kick*D
-    """
+    """Base class for thin elements implemented as triplet D*Kick*D"""
     def __init__(self,particle=PARAMS['sollteilchen'],position=[0,0,0]):
         super().__init__(particle=particle, position=position)
     def make_slices(self,anz=PARAMS['nbof_slices']):  # stepping routine through the triplet
@@ -759,9 +759,7 @@ class _thin(_Node):
         return slices
 ## thin F-quad
 class QFth(_thin):
-    """
-    Thin F-Quad
-    """
+    """Thin F-Quad"""
     def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(particle=particle,position=position)
         self.label     = label
@@ -784,6 +782,7 @@ class QFth(_thin):
         return self
 ##_kick
 class _kick(I):
+    """Matrix for thin lens quad"""
     def __init__(self, quad, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(particle=particle,position=position)
         self.label = 'k'
@@ -794,17 +793,13 @@ class _kick(I):
         m[YPKOO,YKOO] = -m[XPKOO,XKOO]
 ## thin D-quad
 class QDth(QFth):
-    """
-    Thin D-Quad
-    """
+    """Thin D-Quad"""
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(k0=-k0,length=length,label=label,particle=particle, position=position)
         self['viseo']  = -0.5
 ## thin F-quadx
 class QFthx(D):
-    """
-    Thin F-Quad   (express version of QFth)
-    """
+    """Thin F-Quad   (express version of QFth)"""
     def __init__(self, k0=0., length=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(particle=particle, position=position)
         self.label    = label
@@ -834,9 +829,7 @@ class QFthx(D):
         return slices
 ## thin D-quadx
 class QDthx(QFthx):
-    """
-    Thin D-Quad   (express version of QDth)
-    """
+    """Thin D-Quad   (express version of QDth)"""
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0,0,0]):
         super().__init__(k0=-k0,length=length,label=label,particle=particle,position=position)
         self['viseo'] = -0.5
@@ -844,17 +837,17 @@ class QDthx(QFthx):
 class RFC(_thin):
     """Rf cavity as product D*RFG*D with T3D mapping"""
     def __init__(self,
-                    U0       = PARAMS['spalt_spannung'],
-                    PhiSoll  = radians(PARAMS['soll_phase']),
-                    fRF      = PARAMS['frequenz'],
-                    label    = 'RFC',
-                    particle = PARAMS['sollteilchen'],
-                    gap      = PARAMS['spalt_laenge'],
-                    length   = 0.,
-                    position = [0,0,0],
-                    dWf      = FLAGS['dWf']):
+                U0       = PARAMS['spalt_spannung'],
+                PhiSoll  = radians(PARAMS['soll_phase']),
+                fRF      = PARAMS['frequenz'],
+                label    = 'RFC',
+                particle = PARAMS['sollteilchen'],
+                gap      = PARAMS['spalt_laenge'],
+                length   = 0.,
+                position = [0,0,0],
+                dWf      = FLAGS['dWf']):
         super().__init__(particle=particle,position=position)
-        if length == 0.: length = gap
+        if length == 0.: length = gap  # eff. gap can be different from cavity-length
         self.label  = label
         self.length = length
         self.u0     = U0*dWf
@@ -876,7 +869,7 @@ class RFC(_thin):
         self.tr = kick.tr
         tk_f = self.particle.tkin+kick.deltaW   #tkinetic after acc. gap
         df.adjust_energy(tk_f)                  #update energy for downstream drift after gap
-        lens = df * kick * df         #--->one for three<----
+        lens = df * kick * df #--->one for three<----
         self.matrix = lens.matrix
         self.particlef = copy(self.particle)(tk_f)
         # DEBUG_MODULE('RFC matrix\n',self.matrix)
@@ -1017,7 +1010,7 @@ class SIXD(D):
         f_track     = six2t3d(f_track)
         DEBUG_MODULE('six-->t3d\n',f_track)
 
-        f_track[SKOO] += self.length         # finally adjust total lattice length
+        f_track[SKOO] += self.length         # nicht vergessen! adjust total lattice length
         return f_track
 ## utilities
 class Test(_Node):
