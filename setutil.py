@@ -29,13 +29,13 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 ## Logger
-ch        = logging.StreamHandler()     ## console handler
-ch.setLevel(logging.DEBUG)              ## set handler level
+ch        = logging.StreamHandler()     # console handler
+ch.setLevel(logging.DEBUG)              # set handler level
 formatter = \
     logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
-ch.setFormatter(formatter)              ## set handler's format
+ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
-logger.addHandler(ch)                   ## add handler to logger
+logger.addHandler(ch)                   # add handler to logger
 
 # x        x'        y        y'        z       dp/p0     E        dE        s        l
 XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
@@ -49,12 +49,12 @@ def DEBUG(string,arg='',end='\n'):
     """
     if isinstance(arg,list):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
+        pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
         print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4,width=60)  ## use pprint module
+        pp   = pprint.PrettyPrinter(indent=4,width=60)  # use pprint module
         sarg = pp.pformat(arg)
         print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
     else:
@@ -253,7 +253,7 @@ def collect_data_for_summary(lattice):
             try:
                 test = (type(element).__name__ == typ and element.section == sec)
             except AttributeError:
-                test = (type(element).__name__ == typ)  ## no section tag? take all!
+                test = (type(element).__name__ == typ)  # no section tag? take all!
             return test
 
 #       NOTE: here I use the INFIX operator '|' like a UNIX pipe
@@ -265,7 +265,7 @@ def collect_data_for_summary(lattice):
         """Remove duplicate elements of same type in a section"""
         elements = elements_in_lattice()
         new_elements = []
-        seen = set()             ## helper to eliminate duplicate entries
+        seen = set()             # helper to eliminate duplicate entries
         for itm in elements:
             label = itm.label
             if label in seen:
@@ -276,8 +276,8 @@ def collect_data_for_summary(lattice):
         return new_elements
 
     ## body
-    sections =  PARAMS['sections']                   ## comes from INPUT
-    if not FLAGS['sections']: sections = ['*']       ## section wildcart
+    sections =  PARAMS['sections']                   # comes from INPUT
+    if not FLAGS['sections']: sections = ['*']       # section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
@@ -313,11 +313,11 @@ def collect_data_for_summary(lattice):
             elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
-                Ez      = itm.u0/gap
+                Ezavg   = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 length  = itm.length
                 SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ez
+                SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ezavg
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 

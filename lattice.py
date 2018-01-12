@@ -72,10 +72,10 @@ class Lattice(NamedObject,object):
 
     def string(self):
         """Log lattice layout to string (could be even better?)"""
-        mcell = ELM.I(label='')   ##  chain matrices
+        mcell = ELM.I(label='')   #  chain matrices
         for element in self.seq:
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
-            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
         mcell.section = '<= full lattice map'
         return mcell.string()
 
@@ -112,9 +112,9 @@ class Lattice(NamedObject,object):
             check symplecticity
             twiss prameters beta, alpha, gamma for periodic lattices
         """
-        mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
+        mcell = ELM.I(label=' <==')   #  chain matrices for full cell
         for count,element in enumerate(self.seq):
-            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
         ## Stabilität ?
         unstable = False
@@ -242,7 +242,7 @@ class Lattice(NamedObject,object):
             yip = sqrt(emiy*gmy)
             SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
             SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
-        ## keep twiss values as lattice instance varibles
+        ## keep twiss values as lattice instance variables
         self.betax0 = bax
         self.alfax0 = alx
         self.gammx0 = gmx
@@ -589,7 +589,7 @@ def make_wille():
     rhob = wille()['bending_radius']
     lb = wille()['dipole_length']
     ld = wille()['drift_length']
-    ## elements
+    # elements
     mqf1 = ELM.QF(kqf,lqf,'QF1')
     mqf2 = ELM.QF(kqf,lqf,'QF2')
     mqd1 = ELM.QD(kqd,lqd,'QD1')
@@ -599,7 +599,7 @@ def make_wille():
     md4  = ELM.D(ld)
     mbr1  = ELM.RD(rhob,lb)
     mbr2  = ELM.RD(rhob,lb)
-    ## lattice
+    # lattice
     lattice = Lattice()
     lattice.add_element(mqf1)
     lattice.add_element(md1)
@@ -633,7 +633,7 @@ def test1():
     xs = [x[1] for x in beta_fun]    # betax
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
-    ##-------------------- lattice viseo
+    #-------------------- lattice viseo
     lat_plot = lattice.lattice_plot_function()
     vsbase = -1.
     vis_abzisse  = [x[0] for x in lat_plot]

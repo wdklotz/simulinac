@@ -267,9 +267,9 @@ def factory(input_file):
     def expand_reduce(in_data):
     #--------
         def read_elements(in_data):
-            element_list = in_data['elements']         ## is list of dicts
+            element_list = in_data['elements']         # is list of dicts
             for elm in element_list:
-                for elmID,attList in elm.items():      ## put key as ID in attribute dict
+                for elmID,attList in elm.items():      # put key as ID in attribute dict
                     attList.append(dict(ID=elmID))
             return element_list
     #--------
@@ -337,7 +337,7 @@ def factory(input_file):
     read_parameters(in_data)
     # nicht vergessesn! update PARAMS with overriding initials
     PARAMS.update(
-        zellipse(PARAMS['sigmaz_i'],     ## calculate the long. emittance with def. parameters
+        zellipse(PARAMS['sigmaz_i'],     # calculate the long. emittance with def. parameters
                 PARAMS['Ez_feld'],
                 PARAMS['wellenlänge'],
         radians(PARAMS['soll_phase']),
@@ -362,7 +362,7 @@ def factory(input_file):
     DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
     return lattice    # end of factory(...)
 
-def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
+def parse_yaml_and_fabric(input_file,factory=factory):   # delegates to factory
     return factory(input_file)
 
 ## utilities

@@ -47,7 +47,11 @@ NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #prett
 
 ## the mother of all lattice elements (a.k.a. matrices)
 class _Node(NamedObject,ParamsObject,object):
-    """Base class for transfer matrices (owns its particle instance!)"""
+    """Base class for transfer matrices
+        i)   owns its particle instance (copy)
+        ii)  is a dictionary (ParamsObject base class)
+        iii) owns name-tags (NamedObject base class)
+    """
     # MDIMxMDIM matrices used here
     def __init__(self, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         NamedObject.__init__(self)
@@ -60,16 +64,16 @@ class _Node(NamedObject,ParamsObject,object):
         self['slice_min'] = 0.001         # default - minimal slice length
         self['viseo']     = 0             # default - invisible
     def __call__(self,n=MDIM,m=MDIM):
-        return self.matrix[:n,:m]   ## return upper left nxm submatrix
+        return self.matrix[:n,:m]   # return upper left nxm submatrix
     def string(self):
         n  = 42
         nx = 300
         if len(self.label) > nx:
-            label = self.label[:n]+'.....'+self.label[-n:]   ## when too long keep it short
+            label = self.label[:n]+'.....'+self.label[-n:]   # when too long keep it short
         else:
             label = self.label
         try:
-            s='{} [{}]\n'.format(label,self.sec)         ## sections are not mandatory
+            s='{} [{}]\n'.format(label,self.sec)         # sections are not mandatory
         except AttributeError:
             s='{}\n'.format(label)
         for i in range(MDIM):
@@ -110,11 +114,11 @@ class _Node(NamedObject,ParamsObject,object):
         mr = None  ## ignore the very small rest
         slices = []
 
-        if self.length == 0.:           ## zero length element (like WD or CAV)
+        if self.length == 0.:           # zero length element (like WD or CAV)
             slices.append(self)
 
         else:
-            step = self.length/anz         ## calc step size
+            step = self.length/anz         # calc step size
             if step < self['slice_min']:
                 step  = self['slice_min']
 
@@ -212,7 +216,7 @@ class QF(D):
         super().__init__(particle=particle, position=position)
         self.label    = label
         self.length   = length
-        self.k0       = k0         ## Quad strength [m**-2]
+        self.k0       = k0         # Quad strength [m**-2]
         self.matrix   = self._mx_()
         self['viseo'] = +0.5
     def shorten(self,l=0.):
@@ -426,12 +430,13 @@ class RFG(I):
         self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
         self.Ez      = SFdata
 
-        if self.mapping == 't3d':
-            self.gap_model = _T3D_G(self)                         # use T3D gap-model
-        elif self.mapping == 'simple' or self.mapping == 'base':
-            self.gap_model = _PYO_G(self,self.mapping)            # use PyOrbit gap-models
+        """calc. T3D-matrix and use linear gap-model as default"""
+        self.gap_model = _T3D_G(self)
+        """use replacements"""
+        if self.mapping == 'simple' or self.mapping == 'base':
+            self.gap_model = _PYO_G(self,self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self)                         # use TTF-RF gap-model (A.Shishlo)
+            self.gap_model = _TTF_G(self)              # 3 point TTF-RF gap-model with SF-data (A.Shishlo)
 
     @property
     def tr(self):
@@ -445,6 +450,9 @@ class RFG(I):
     @property
     def Ezavg(self):
         return self['Ezavg']
+    @property
+    def particlef(self):
+        return self.gap_model.particlef
 
     def adjust_energy(self,tkin):
         params = self._params    # params dict
@@ -461,15 +469,12 @@ class RFG(I):
             dWf        = self.dWf)
         self._params = params
         return self
-    # def shorten(self,l=0.):
-    #     return self
     def map(self,i_track):
         """ Delegate mapping of track from position (i) to (f) """
         return self.gap_model.map(i_track)
     def soll_map(self,i_track):
         """ Delegate mapping of soll-track from position (i) to (f) """
         f_track = self.gap_model.soll_map(i_track)
-        self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
 ## PyOrbit RF gap-models
 class _PYO_G(object):
@@ -493,11 +498,6 @@ class _PYO_G(object):
             which_map = self.simple_map
         elif self.mapping == 'base':
             which_map = self.base_map
-        # elif mapping == 'dynac':
-        #     which_map = self.dyc_map
-        # else:
-        #     raise RuntimeError('"map" enabled but wrong "mapping" for {} specified! - STOP'.format(self.label))
-        #     sys.exit(1)
         return which_map(i_track)
     def soll_map(self,i_track):
         return self.map(i_track)
@@ -865,7 +865,7 @@ class RFC(_thin):
                     particle  = self.particle,
                     gap       = self.gap,
                     mapping   = 't3d',
-                    dWf       = self.dWf)  ## Trace3D RF gap
+                    dWf       = self.dWf)  # Trace3D RF gap
         self.tr = kick.tr
         tk_f = self.particle.tkin+kick.deltaW   #tkinetic after acc. gap
         df.adjust_energy(tk_f)                  #update energy for downstream drift after gap
@@ -1028,7 +1028,7 @@ class Test(_Node):
                               [0.,0.,0.,0.,0.,0.,0.,0.,0.,1.],
                               ])
         self.label=label
-def k0test(gradient=0.,beta=0.,energy=0.):   ## helper function for tests
+def k0test(gradient=0.,beta=0.,energy=0.):   # helper function for tests
     """
         quad strength as function of energy and gradient
         gradient in [Tesla/m]
@@ -1391,18 +1391,18 @@ def test14():
 ## main ----------
 if __name__ == '__main__':
     FLAGS['verbose']=3
-    test0()
-    test1()
-    test2()
-    test3()
-    test4()
-    test5()
-    test6()
-    test7()
+    # test0()
+    # test1()
+    # test2()
+    # test3()
+    # test4()
+    # test5()
+    # test6()
+    # test7()
     test8()
-    test9()
-    test10()
-    test11()
-    test12()
-    test13()
-    test14()
+    # test9()
+    # test10()
+    # test11()
+    # test12()
+    # test13()
+    # test14()

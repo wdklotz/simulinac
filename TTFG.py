@@ -328,7 +328,7 @@ class _TTF_G(object):
             f_track = slice.mapSoll(i_track)
             i_track = f_track
         # DEBUG('_TTF_G(i)\n'+self.particle.string())
-        # self.particlef = copy(self.particle)(f_track[EKOO])
+        self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
 #todo: tests must be redone
 def test0():
