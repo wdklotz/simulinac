@@ -25,7 +25,6 @@ import numpy as NP
 from setutil import wille,PARAMS,FLAGS,dictprnt,objprnt,Proton,Electron,DEBUG,MarkerActions
 from setutil import dBdxprot,scalek0prot,k0prot,I0,I1,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
-from NamedObject import NamedObject
 from ParamsObject import ParamsObject
 from TTFG import _TTF_G
 from Ez0 import SFdata
@@ -46,15 +45,13 @@ MDIM=10        # dimension of matrices
 NP.set_printoptions(linewidth=132,formatter={'float':'{:>8.5g}'.format})  #pretty printing
 
 ## the mother of all lattice elements (a.k.a. matrices)
-class _Node(NamedObject,ParamsObject,object):
+class _Node(ParamsObject,object):
     """Base class for transfer matrices
         i)   owns its particle instance (copy)
         ii)  is a dictionary (ParamsObject base class)
-        iii) owns name-tags (NamedObject base class)
     """
     # MDIMxMDIM matrices used here
     def __init__(self, particle=PARAMS['sollteilchen'], position=[0,0,0]):
-        NamedObject.__init__(self)
         ParamsObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix
         self.particle  = copy(particle)   # keep a local copy of the particle instance (IMPORTANT!)

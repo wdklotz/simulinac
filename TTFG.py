@@ -32,8 +32,8 @@ def DEBUG_ON(string,arg='',end='\n'):
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
 ## DEBUG__*
-DEBUG_TEST0    = DEBUG_OFF
-DEBUG_TEST1    = DEBUG_OFF
+DEBUG_TEST0    = DEBUG_ON
+DEBUG_TEST1    = DEBUG_ON
 DEBUG_MAP      = DEBUG_OFF
 DEBUG_SOLL_MAP = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
