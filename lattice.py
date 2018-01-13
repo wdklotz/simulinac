@@ -21,7 +21,7 @@ import sys
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy,deepcopy
+from copy import copy              #deepcopy
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
@@ -283,8 +283,8 @@ class Lattice(object):
 
     def concat(self,lattice_piece):
         """Concatenate two Lattice pieces"""
-        seq = deepcopy(lattice_piece.seq)  # need deepcopy here!
-        for element in seq:
+        for element in lattice_piece.seq:
+            element = copy(element) if element in self.seq else element
             self.add_element(element)
 
     def twiss_functions(self,steps=10):
@@ -610,6 +610,7 @@ def make_wille():
     lattice.add_element(mqf2)
 #     DEBUG('lattice: ',lattice.string())
     top = Lattice()
+    top.concat(lattice)
     top.concat(lattice)
     top.concat(lattice)
     return top

@@ -192,7 +192,7 @@ def factory(input_file):
                         'make_lattice()',
                         )
                 sys.exit(1)
-            for element in elementList: #loop over elements in element list
+            for element in elementList: #loop over all elements
                 DEBUG_MODULE('element in '+segID,element)
                 elementClass = element['type']
                 elmItem = (elementClass,element)

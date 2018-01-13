@@ -53,7 +53,7 @@ class _Node(ParamsObject,object):
     def __init__(self, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         ParamsObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
-        self.particle  = copy(particle)   # local copy of the particle instance (IMPORTANT!)
+        self.particle  = copy(particle)   # local copy of the particle instance !!!IMPORTANT!!!
         self.position  = position         # [entrance,middle,exit]
         self.length    = 0.               # default - thin
         self.label     = ''               # default - unlabeled

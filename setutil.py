@@ -114,7 +114,12 @@ class Particle(object):
         self.e0         = mass                     # rest mass [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
-        self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
+        try:
+            self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
+        except ValueError:
+            print(traceback.format_exc())
+            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f}) - STOP".format(tkin))
+            sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -138,13 +143,8 @@ class Particle(object):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):  # make Particle callable to change its kin. energy
-        try:
-            self._set_self(tkin=tkin,mass=self.e0,name=self.name)
-        except ValueError:
-            print(traceback.format_exc())
-            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f}) - STOP".format(tkin))
-            sys.exit(1)
+    def __call__(self,tkin):  # make callable to change energy
+        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 
 class Proton(Particle):
@@ -619,9 +619,19 @@ def test1():
             )
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
-
+def test2():
+    print('--------------------------Test2---')
+    print('test particle energy adjustment...')
+    p = PARAMS['sollteilchen']
+    print(repr(p)+':')
+    print(p.string())
+    p1 = p(100.)
+    print(repr(p1)+':')
+    print(p1.string())
+    p2 = p(-10.)
 ## Main
 if __name__ == '__main__':
     test0()
     test1()
+    test2()
 
