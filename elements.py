@@ -50,18 +50,17 @@ class _Node(ParamsObject,object):
         i)   owns its particle instance (copy)
         ii)  is a dictionary (ParamsObject base class)
     """
-    # MDIMxMDIM matrices used here
     def __init__(self, particle=PARAMS['sollteilchen'], position=[0,0,0]):
         ParamsObject.__init__(self)
-        self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix
-        self.particle  = copy(particle)   # keep a local copy of the particle instance (IMPORTANT!)
+        self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
+        self.particle  = copy(particle)   # local copy of the particle instance (IMPORTANT!)
         self.position  = position         # [entrance,middle,exit]
-        self.length    = 0.               # default
-        self.label     = ''               # default
+        self.length    = 0.               # default - thin
+        self.label     = ''               # default - unlabeled
         self['slice_min'] = 0.001         # default - minimal slice length
         self['viseo']     = 0             # default - invisible
     def __call__(self,n=MDIM,m=MDIM):
-        return self.matrix[:n,:m]   # return upper left nxm submatrix
+        return self.matrix[:n,:m]   # return upper left n,m submatrix
     def __mul__(self,other):
         product=NP.einsum('ij,jk',self.matrix,other.matrix)
         res=_Node()
@@ -76,11 +75,11 @@ class _Node(ParamsObject,object):
         n  = 42
         nx = 300
         if len(self.label) > nx:
-            label = self.label[:n]+'.....'+self.label[-n:]   # when too long keep it short
+            label = self.label[:n]+'.....'+self.label[-n:] # make short when too long
         else:
             label = self.label
         try:
-            s='{} [{}]\n'.format(label,self.sec)         # sections are not mandatory
+            s='{} [{}]\n'.format(label,self.sec)           # sections are not mandatory
         except AttributeError:
             s='{}\n'.format(label)
         for i in range(MDIM):
@@ -111,11 +110,11 @@ class _Node(ParamsObject,object):
         mr = None  ## ignore the very small rest
         slices = []
 
-        if self.length == 0.:           # zero length element (like WD or CAV)
+        if self.length == 0.:           # nothing todo for zero length element
             slices.append(self)
 
         else:
-            step = self.length/anz         # calc step size
+            step = self.length/anz      # calc step size
             if step < self['slice_min']:
                 step  = self['slice_min']
 

@@ -29,7 +29,6 @@ from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
-from NamedObject import NamedObject
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -39,12 +38,11 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 
 ## Lattice
-class Lattice(NamedObject,object):
+class Lattice(object):
     """
     The Lattice object is a list of elements: ELM.<element>
     """
     def __init__(self):
-        NamedObject.__init__(self)
         self.seq    = []
         self.length = 0.
         self.betax0 = 0.
