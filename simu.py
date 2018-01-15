@@ -26,7 +26,7 @@ from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
 from tracks import track_soll
 
-## DEBUG MODULE
+# DEBUG MODULE
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
@@ -182,7 +182,7 @@ def display1(functions):
 
     show()
 
-##-------------------------START here
+# -------------------------START here
 def loesung(filepath):
     lattice = parse_yaml_and_fabric(filepath)
     ## Energie Konfiguration hier (SUPER WICHTIG)
