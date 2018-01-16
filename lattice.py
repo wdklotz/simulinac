@@ -21,7 +21,7 @@ import sys
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy              #deepcopy
+from copy import copy              # deepcopy?
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
@@ -30,7 +30,7 @@ import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
 
-## DEBUG MODULE
+## DEBUGING
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
