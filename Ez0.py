@@ -194,6 +194,7 @@ class SFdata(object):
         self.Epeak      = Epeak
         self.make_Ez_table()
         self.make_Ez_poly()
+
     def make_Ez_table(self):
         """ read data and normalize """
         Dpoint = namedtuple('DataPoint',['z','R','Ez'])  # data-point structure
@@ -229,6 +230,7 @@ class SFdata(object):
             ep[i] = ep[i]*enorm
             dpoint = Dpoint(zp[i],rp[i],ep[i])
             self._Ez0_tab.append(dpoint)
+
     def make_Ez_poly(self):
         """ Calculate polynom coefficients from SF data """
         def indexer(nbslices,M):
@@ -264,16 +266,24 @@ class SFdata(object):
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             self._poly.append(pval)
-    def Ez0t(self,z,t,omega,phi):
+
+    def Ez0t(self, z, t, omega, phi):
         """E(z,0,t): time dependent field value at location z"""
-        res = Ipoly(z,self.Ez_poly)*cos(omega*t+phi)
+        res = Ipoly(z,self.Ez_poly) * cos(omega*t+phi)
         return res
+
+    def dEz0tdt(self, z, t, omega, phi):
+        """dE(z,0,t)/dt: time derivative of field value at location z"""
+        res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phi)
+        return res
+
     @property
     def Ez_table(self):
+        """List(Dpoint) of SuperFish data points"""
         return self._Ez0_tab
     @property
     def Ez_poly(self):
-        """List of polygon approximations"""
+        """List(Polyval) of polygon approximations"""
         return self._poly
 
 def pre_plt(input_file):

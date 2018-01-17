@@ -117,7 +117,7 @@ def instanciate_element(item):
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
             sys.exit(1)
-        if mapping == 'ttf':     # TTF from SF-data
+        if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
             if fname not in PARAMS:

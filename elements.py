@@ -29,6 +29,7 @@ from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LK
 from ParamsObject import ParamsObject
 from TTFG import _TTF_G
 from Ez0 import SFdata
+from temp1 import _DYN_G
 
 # DEBUGING
 def DEBUG_ON(*args):
@@ -476,7 +477,7 @@ class RFG(I):
         self['viseo']= 0.25
         self.mapset  = PARAMS['mapset']
         self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
-        self.Ez      = SFdata
+        self.SFdata  = SFdata
 
         """ calc. T3D-matrix and use linear gap-model as default """
         self.gap_model = _T3D_G(self)
@@ -485,6 +486,8 @@ class RFG(I):
             self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
             self.gap_model = _TTF_G(self)              # 3 point TTF-RF gap-model with SF-data (A.Shishlo)
+        elif self.mapping == 'dyn':
+            self.gap_model = _DYN_G(self)              # DYNAC gap model with SF-data (E.Tanke, S.Valero)
 
     @property
     def tr(self):
@@ -513,7 +516,7 @@ class RFG(I):
             gap        = self.gap,
             position   = self.position,
             mapping    = self.mapping,
-            SFdata     = self.Ez,
+            SFdata     = self.SFdata,
             dWf        = self.dWf)
         self._params = params
 
@@ -688,46 +691,6 @@ class _PYO_G(object):
         return f_track
 
 #todo: dyc_map
-#     def dyc_map(self, i_track):
-#         """
-#         E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
-#         """
-#         # DEBUG_MODULE('i_track:\n', str(i_track))
-#         x        = i_track[XKOO]       # [0]
-#         xp       = i_track[XPKOO]      # [1]
-#         y        = i_track[YKOO]       # [2]
-#         yp       = i_track[YPKOO]      # [3]
-#         z        = i_track[ZKOO]       # [4] z
-#         zp       = i_track[ZPKOO]      # [5] dp/p
-#         T        = i_track[EKOO]       # [6] summe aller delta-T
-#         s        = i_track[SKOO]       # [8] summe aller laengen
-#
-#         beta        = self.particle.beta
-#         c           = PARAMS['lichtgeschwindigkeit']
-#         betac       = beta*c
-#         gamma       = self.particle.gamma
-#         beta_gamma  = self.particle.gamma_beta
-#         g2m1        = pow(gamma, 2)-1
-#         g025        = pow(g2m1, 0.25)
-# #       Picht transformation
-#         RX0     = x*g025
-#         RY0     = y*g025
-#         RPX0    = xp*g025+0.5*RX0*gamma/g2m1
-#         RPY0    = yp*g025+0.5*RY0*gamma/g2m1
-#         K1      = pow((math.pi/self.lamb),2)/pow(beta_gamma, 3)
-#
-#         h  = 1.e-3     # [m] azimutal step size
-#         th = h/betac   # [s] time step size
-#         z0 = 0.
-#         z4 = h+z0
-#         z3 = 0.75*h+z0
-#         z2 = 0.50*h+z0
-#         z1 = 0.25*h+z0
-#         t0 = 0.
-#         t4 = th+t0
-#         t3 = 0.75*th+t0
-#         t2 = 0.50*th+t0
-#         t1 = 0.26*th+t0
 
 # Trace-3D RF gap-model
 class _T3D_G(object):

@@ -95,7 +95,7 @@ PARAMS = dict(
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
         nbof_slices          = 6,                # default number-off slices
-        mapset               = frozenset(['t3d','simple','base','ttf']), #gap-models
+        mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
