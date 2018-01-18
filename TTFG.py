@@ -129,6 +129,7 @@ class _TTF_G(object):
             arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
 
         return f_track
+
     def map(self, i_track):
         """Mapping from position (i) to (f)"""
         f_track = self._full_gap_map(i_track)   # NOTE: use local map with sliced TTFGap
@@ -143,6 +144,7 @@ class _TTF_G(object):
         return f_track
 
         # Transition Time Factors RF Gap Model
+
 class _TTF_Gslice(object):
     def __init__(self, parent, polyval, particle):
         self.parent     = parent           # the element this slice is part off
@@ -163,8 +165,10 @@ class _TTF_Gslice(object):
         self.PHIN       = None  # initialize before using!
         self.PHOUT      = None  # initialize before using!
         self.deltaPHI   = None  # initialize before using!
+
     def setSollPhase(self, value): # must be called after instantiation and before usage
         self.phis = value
+
     def _T(self, poly, k):    # A.Shishlo (4.4.6)
         b  = poly.b
         dz = poly.dz
@@ -174,6 +178,7 @@ class _TTF_Gslice(object):
         t  = f1*f2
         # DEBUG_MAP('MAP: (T,k)',(t,k))
         return t
+
     def _Tp(self, poly, k):   # A.Shishlo (4.4.8)
         b   = poly.b
         dz  = poly.dz
@@ -182,6 +187,7 @@ class _TTF_Gslice(object):
         tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
+
     def _V0(self, poly):    # A.Shishlo (4.4.3)
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
@@ -189,12 +195,14 @@ class _TTF_Gslice(object):
         v0 = (2*dz+2./3.*b*dz**3)*1.e-2       # [cm] --> [m]
         v0 = v0*E0*self.parent.dWf
         return v0
+
     def mapSoll(self, i_track):
         """Mapping of soll track through a slice from position (i) to (f)"""
         DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
         f_track = copy(i_track)   # make a copy to prevent i_track to be overwritten
         f_track[EKOO] += self.deltaW
         return f_track
+
     def adjust_slice_parameters(self, tkin):
         """Adjust energy and -dpendent parameters for this slice"""
         self.particle(tkin)
@@ -225,12 +233,15 @@ class _TTF_Gslice(object):
         self.deltaPHI = DPHI
         DEBUG_SLICE('SLICE {}\n'.format(self),self.__dict__)
         return 
+
     def wout_minus_win(self, conv, i0, tk, sk, phi):
         """Formel 4.3.1 A.Shishlo"""
         return conv*i0*(tk*cos(phi)-sk*sin(phi))
+
     def phiout_minus_phiin(self, fac, gamma, r, i0, i1, tk, sk, tkp, skp, phi):
         """Formel 4.3.2 A.Shishlo"""
         return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
+
     def _slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
         x        = i_track[XKOO]       # [0]
@@ -359,6 +370,7 @@ def test0():
         DEBUG_TEST0('MAP:\n',track.last_str())
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
+
 def test1():
     import elements as ELM
     from tracks import Track
@@ -392,6 +404,7 @@ def test1():
         start[4] = z
         ti = start
     DEBUG_TEST1('TRACK:\n',trck.asTable())
+
 if __name__ == '__main__':
     test0()
     test1()

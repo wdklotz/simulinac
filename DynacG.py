@@ -36,7 +36,7 @@ class _DYN_G(object):
                 slice = _DYN_Gslice(self, poly, self.particle)  # instanciate _DYN_Gslices
                 slices.append(slice)
             return slices
-        
+
         def adjust_slice_energy():
             pass
 
@@ -57,7 +57,7 @@ class _DYN_G(object):
             # self.deltaW = adjust_slice_energy()
             # self.matrix[EKOO, DEKOO] = self.deltaW
             # if DEBUG_MAP == DEBUG_ON: print(self.slices)
-    
+
     def _full_gap_map(self,i_track):
         for slice in self.slices[1:2]:
             f_track = slice._slice_map(i_track)
@@ -65,7 +65,7 @@ class _DYN_G(object):
 
     def map(self,i_track):
         return self._full_gap_map(i_track)
-        
+
 class _DYN_Gslice(object):
     """
     E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
@@ -79,7 +79,7 @@ class _DYN_Gslice(object):
         self.lamb     = parent.lamb
         self.freq     = parent.freq
         self.phis     = parent.phis
-        
+
     def _slice_map(self, i_track):
         def Integral1(zarr, tarr, h):
             coeff = np.array([7., 32., 12., 32., 7.])
@@ -187,7 +187,7 @@ class _DYN_Gslice(object):
         rp  = np.array([xp,yp])                    # =(x',y')
         R   = r*gbroot                             # =(X,Y)
         Rp  = rp*gbroot+0.5*R*gamma/(gamma**2-1.)  # =(X',Y')
-
+#todo: z,h in cm or m?
         h  = 1.e-2*2.*self.poly.dz    # [m] azimutal step size
         th = h/betac                  # [s] time step size
         z0 = 1.e-2*self.poly.zl       # [m] interval left border
@@ -208,6 +208,8 @@ class _DYN_Gslice(object):
         I2      = Integral2(zarr, tarr, h)
         dgamma  = ((1. + np.dot(R,R)*K1)*I1 + np.dot(R,Rp)*K1*I2)/m0c2
         deltaW  = dgamma * m0c2                                   # delta kin. energy
+#todo: normalize dp/p to impulse @ (f)?
+
         dp2p    = gamma/(gamma+1)*deltaW/W                        # dp/p
         self.parent.deltaW = deltaW                               # parent property
 
@@ -229,7 +231,7 @@ class _DYN_Gslice(object):
         # Picht back-transformation
         xyf  = Rf/gbroot
         xypf = (Rpf - 0.5*Rf*gamma/(gamma**2-1.)) / gbroot
-        
+
         f_track        = i_track
         f_track[XKOO]  = xyf[0]
         f_track[YKOO]  = xyf[1]
@@ -238,7 +240,7 @@ class _DYN_Gslice(object):
         f_track[ZKOO]  = dz0
         f_track[ZPKOO] = dp2p
         f_track[EKOO]  = i_track[EKOO] + deltaW
-
+#todo: zarr in cm or m?
         DEBUG_MAP('_DYN_Gslice:_slice_map():zarr.........[m]: ', zarr)
         DEBUG_MAP('_DYN_Gslice:_slice_map():tarr......[psec]: ', 1.e12*tarr)
         DEBUG_MAP('_DYN_Gslice:_slice_map():K1......[1/m**2]: ',K1)
@@ -266,7 +268,7 @@ class _DYN_Gslice(object):
 def test0():
     import elements as ELM
     # from tracks import Track
-    
+
     print('-----------------------------------TEST 0----------------')
     print('test _DYN_Gslice:_slice_map()...')
     input_file='SF_WDK2g44.TBL'

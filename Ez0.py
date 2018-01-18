@@ -24,14 +24,17 @@ from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
 
+# Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo
+Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
+
 ## DEBUG MODULE
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
-
-''' Cavity E(z,r=0) field profile '''
+DEBUG_TEST2  = DEBUG_OFF
+DEBUG_TEST3  = DEBUG_OFF
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
@@ -40,7 +43,6 @@ def NGauss(x,sig,mu):    # Gauss Normalverteilung
 def Kpoly(z,sigma,mu,E):
     """Calculate polynom coefficients from NG formula"""
     poly = []
-    Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
     anz = len(z)
     for i in range(0,anz-2,2):
         zl  = z[i]
@@ -55,7 +57,7 @@ def Kpoly(z,sigma,mu,E):
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
-        # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
+            # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
         # x   = np.array((zl,z0,zr))
         # y   = np.array((El,E0,Er))
         # coeff = np.polyfit(x,y,2)
@@ -69,11 +71,11 @@ def Kpoly(z,sigma,mu,E):
         # cof = polcof(x,y,2)
         # print('cof =====',cof)
         # print('E0,a,b ',E0,a,b,'\n')
-            # END-USE np.polyfit()
+            # END-USING np.polyfit()
     return poly
 
 def Ipoly(z,poly):
-    """Interpolation using polynomial fit"""
+    """Interpolation using the polynomial fit"""
     ix = -1
     for i in range(len(poly)):
         zl = poly[i].zl
@@ -82,14 +84,14 @@ def Ipoly(z,poly):
             ix = i
             break
     if ix <0:
-        raise RuntimeError('arg out of range! {}'.format(z))
+        raise RuntimeError('Ipoly(): arg out of range! {}'.format(z))
 
-            # USE np.polyfit()
-            # liefert gleiches Resultat wie Langrange 3 Punkt
+    #       USE np.polyfit()
+    # liefert gleiches Resultat wie Langrange 3 Punkt
     # coeff = poly[ix].coeff
     # res   = np.poly1d(coeff)
     # res   = res(z)
-            # END-USE np.poly1d()
+    #       END-USE np.poly1d()
 
     ival = poly[ix]
     z0 = ival.z0
@@ -101,12 +103,13 @@ def Ipoly(z,poly):
     return res
 
 def V0n(poly,n):
-        """ Formel (4.4.3) A.Shishlo """
-        E0 = poly[n].E0                       # [MV/m]
-        b  = poly[n].b
-        dz = poly[n].dz                       # [cm]
-        v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
-        return v0
+    """ Formel (4.4.3) A.Shishlo """
+    E0 = poly[n].E0                       # [MV/m]
+    b  = poly[n].b
+    dz = poly[n].dz                       # [cm]
+    v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
+    return v0
+
 def V0(poly,zintval):
     v0 = []
     zl,zr = zintval
@@ -116,33 +119,39 @@ def V0(poly,zintval):
         if zil < zl or zir > zr: continue
         v0.append(V0n(poly,i))
     return v0
+
 def Tn(poly,k,n):
-        """ Formel (4.4.6) A.Shishlo """
-        b  = poly[n].b
-        dz = poly[n].dz
-        f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-        # DEBUG_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
-        t = f1*f2
-        return t
+    """ Formel (4.4.6) A.Shishlo """
+    a  = poly[n].a
+    b  = poly[n].b
+    dz = poly[n].dz
+    f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+    f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+    DEBUG_MODULE('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+    t = f1*f2
+    return t
+
 def T(poly,k,zintval):
     t = []
     zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
+        dz = poly[i].dz
         if zil < zl or zir > zr: continue
-        # DEBUG_MODULE('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
+        DEBUG_MODULE('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
+
 def Sn(poly,k,n):
-        """ Formel (4.4.7) A.Shihlo """
-        a  = poly[n].a
-        b  = poly[n].b
-        dz = poly[n].dz
-        s = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
-        s = s * (1.-k*dz/tan(k*dz))
-        return s
+    """ Formel (4.4.7) A.Shihlo """
+    a  = poly[n].a
+    b  = poly[n].b
+    dz = poly[n].dz
+    s = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
+    s = s * (1.-k*dz/tan(k*dz))
+    return s
+
 def S(poly,k,zintval):
     s = []
     zl,zr = zintval
@@ -152,13 +161,15 @@ def S(poly,k,zintval):
         if zil < zl or zir > zr: continue
         s.append(Sn(poly,k,i))
     return s
+
 def Tpn(poly,k,n):
-        """ Formel (4.4.8) A.Shishlo """
-        b   = poly[n].b
-        dz  = poly[n].dz
-        tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
-        return tp
+    """ Formel (4.4.8) A.Shishlo """
+    b   = poly[n].b
+    dz  = poly[n].dz
+    tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+    tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
+    return tp
+
 def Tp(poly,k,zintval):
     tp = []
     zl,zr = zintval
@@ -168,14 +179,16 @@ def Tp(poly,k,zintval):
         if zil < zl or zir > zr: continue
         tp.append(Tpn(poly,k,i))
     return tp
+
 def Spn(poly,k,n):
-        """ Formel (4.4.9) A.Shishlo """
-        a   = poly[n].a
-        b   = poly[n].b
-        dz  = poly[n].dz
-        sp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
-        sp = sp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
-        return sp
+    """ Formel (4.4.9) A.Shishlo """
+    a   = poly[n].a
+    b   = poly[n].b
+    dz  = poly[n].dz
+    sp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
+    sp = sp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
+    return sp
+
 def Sp(poly,k,zintval):
     sp = []
     zl,zr = zintval
@@ -187,7 +200,7 @@ def Sp(poly,k,zintval):
     return sp
 
 class SFdata(object):
-    '''Superfish data  (normiert auf Epeak)'''
+    ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf Epeak)'''
     def __init__(self,input_file,Epeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
@@ -247,14 +260,13 @@ class SFdata(object):
             n = int(M/N)
             print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
-                # DEBUG_MODULE('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+                DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
-        Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
         self._poly = []
         anz = 10        # interpolate SF-data with 'anz' polynomials od 2nd order
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
-            # DEBUG_MODULE('(il,i0,ir) ',((il,i0,ir)))
+            DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez_table[il].z
             z0 = self.Ez_table[i0].z
             zr = self.Ez_table[ir].z
@@ -319,6 +331,7 @@ def test0(input_file):
     
 def test1():
     '''Gauss'che Normalverteilung (NG)'''
+    print('----------------------------TEST1---')
     gap = 4.4
     z = np.arange(0.,gap,gap/500.)
     sigma = 1.14
@@ -346,6 +359,7 @@ def test1():
 
 def test2():
     '''Second order polynomial fit with 3 point formula to NG formula'''
+    print('----------------------------TEST2---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
     c        = PARAMS['lichtgeschwindigkeit']
@@ -389,14 +403,15 @@ def test2():
     s   = S(poly,k,zintval)
     tp  = Tp(poly,k,zintval)
     sp  = Sp(poly,k,zintval)
-    DEBUG_MODULE('V0',v0)
-    DEBUG_MODULE('T(k)',t)
-    DEBUG_MODULE("T'(k)",tp)
-    DEBUG_MODULE('S(k)',s)
-    DEBUG_MODULE("S'(k)",sp)
+    DEBUG_TEST2('V0',v0)
+    DEBUG_TEST2('T(k)',t)
+    DEBUG_TEST2("T'(k)",tp)
+    DEBUG_TEST2('S(k)',s)
+    DEBUG_TEST2("S'(k)",sp)
 
 def test3(input_file):
     '''Second order polynomial fit with 3 point formula to SF data'''
+    print('----------------------------TEST3---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
     c        = PARAMS['lichtgeschwindigkeit']
@@ -422,11 +437,11 @@ def test3(input_file):
     s   = S(poly,k,zintval)
     tp  = Tp(poly,k,zintval)
     sp  = Sp(poly,k,zintval)
-    DEBUG_MODULE('V0',v0)
-    DEBUG_MODULE('T(k)',t)
-    DEBUG_MODULE("T'(k)",tp)
-    DEBUG_MODULE('S(k)',s)
-    DEBUG_MODULE("S'(k)",sp)
+    DEBUG_TEST3('V0',v0)
+    DEBUG_TEST3('T(k)',t)
+    DEBUG_TEST3("T'(k)",tp)
+    DEBUG_TEST3('S(k)',s)
+    DEBUG_TEST3("S'(k)",sp)
 
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'
