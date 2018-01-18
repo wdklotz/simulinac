@@ -29,7 +29,7 @@ from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LK
 from ParamsObject import ParamsObject
 from TTFG import _TTF_G
 from Ez0 import SFdata
-from temp1 import _DYN_G
+from DynacG import _DYN_G
 
 # DEBUGING
 def DEBUG_ON(*args):
