@@ -31,7 +31,7 @@ from TTFG import _TTF_G
 from Ez0 import SFdata
 from DynacG import _DYN_G
 
-# DEBUGING
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
@@ -39,7 +39,7 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_MAP    = DEBUG_OFF
 
-twopi        = 2.*pi
+twopi = 2.*pi     # used about everywhere
 
 # MDIM: dimension of matrices
 MDIM = 10
@@ -188,7 +188,7 @@ class _Node(Node, ParamsObject, object):
             f = f_track.copy()
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
-            arrprnt(f, fmt = '{:6.3g},', txt = 'mtx_map: ')
+            arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
 
         return f_track
 
@@ -479,7 +479,7 @@ class RFG(I):
         self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
         self.SFdata  = SFdata
 
-        """ calc. T3D-matrix and use linear gap-model as default """
+        """ calc. Trace3D-matrix and use linear gap-model as default """
         self.gap_model = _T3D_G(self)
         """ use replacements """
         if self.mapping == 'simple' or self.mapping == 'base':
@@ -744,7 +744,7 @@ class _T3D_G(object):
         self.deltaW    = deltaW
 
     def map(self, i_track):
-        """ Mapping from (i) to (f) with linear T3D matrix """
+        """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = self.matrix.dot(i_track)
         return f_track
 
@@ -855,7 +855,7 @@ class QDthx(QFthx):
 
 # RF cavity als D*RFG*D
 class RFC(_thin):
-    """ Rf cavity as product D*RFG*D with T3D mapping """
+    """ Rf cavity as product D*RFG*D with Trace3D mapping """
     def __init__(self,
                 U0       = PARAMS['spalt_spannung'],
                 PhiSoll  = radians(PARAMS['soll_phase']),
@@ -937,7 +937,7 @@ class SIXD(D):
             return 1.+fpsigma(psigma, soll)
 
         def t3d2six(i_track):
-            """ Conversion T3D ==> Ripken-Schmidt (sixtrack) """
+            """ Conversion Trace3D ==> Ripken-Schmidt (sixtrack) """
             soll     = self.particle
             x        = i_track[XKOO]       # [0]
             xp       = i_track[XPKOO]      # [1]
@@ -972,7 +972,7 @@ class SIXD(D):
             return f_track
 
         def six2t3d(i_track):
-            """ Conversion Ripken-Schmidt (sixtrack) ==> T3D """
+            """ Conversion Ripken-Schmidt (sixtrack) ==> Trace3D """
             soll     = self.particle
             x        = i_track[XKOO]
             px       = i_track[XPKOO]
@@ -1243,6 +1243,7 @@ def test8():
     from lattice import Lattice
     from tracks import track_soll
     print('--------------------------------Test8---')
+    """
     print('soll-particle\n'+PARAMS['sollteilchen'].string())
     print('test rf-gap ...')
     rfg = RFG()
@@ -1283,16 +1284,28 @@ def test8():
     print(track_soll(lg).asTable())
     print('RFG.particle(i)\n'+rfg.particle.string())
     print('RFG.particle(f)\n'+rfg.particlef.string())
-
-    print('test cavity ...')
-    cav = RFC()
-    # objprnt(cav, 'RFC', filter = 'matrix')
-    objprnt(cav, 'RFC')
+    """
+    input_file = 'SF_WDK2g44.TBL'
+    Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
+    SF_tab    = SFdata(input_file, Epeak = Epeak)
+    rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
+    # objprnt(rfg, 'RFG', filter = 'matrix')
+    objprnt(rfg, 'RFG')
     lg = Lattice()
-    lg.add_element(cav)
+    lg.add_element(rfg)
     print(track_soll(lg).asTable())
-    print('CAV.particle(i)\n'+cav.particle.string())
-    print('CAV.particle(f)\n'+cav.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.string())
+    print('RFG.particle(f)\n'+rfg.particlef.string())
+
+    # print('test cavity ...')
+    # cav = RFC()
+    # # objprnt(cav, 'RFC', filter = 'matrix')
+    # objprnt(cav, 'RFC')
+    # lg = Lattice()
+    # lg.add_element(cav)
+    # print(track_soll(lg).asTable())
+    # print('CAV.particle(i)\n'+cav.particle.string())
+    # print('CAV.particle(f)\n'+cav.particlef.string())
 
 def test9():
     print('--------------------------------Test9---')

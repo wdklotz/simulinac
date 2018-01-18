@@ -18,6 +18,8 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #todo: update simu_manual.odt
+#todo: update README.md
+import sys
 from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
@@ -26,7 +28,7 @@ from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
 from tracks import track_soll
 
-# DEBUG MODULE
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
@@ -50,12 +52,12 @@ def display0(functions):
     cos_like = functions[1]
     sin_like = functions[2]
     lat_plot = functions[3]
-    ##-------------------- Bahnkoordinate (z)
+    #-------------------- Bahnkoordinate (z)
     z    = [x[0] for x in sigm_fun]    # Ordinate
     bx   = [x[1] for x in sigm_fun]    # envelope (sigma-x)
     by   = [x[2] for x in sigm_fun]    # envelope (sigma-y)
     zero = [0.   for x in sigm_fun]    # zero line
-    ##-------------------- trajectories (tz)
+    #-------------------- trajectories (tz)
     tz  = [x[0] for x in cos_like]   # Ordinate
     cx  = [x[1] for x in cos_like]   # cos-like-x
     cy  = [x[3] for x in cos_like]   # cos-like-y
@@ -65,16 +67,16 @@ def display0(functions):
     sy  = [x[3] for x in sin_like]   # sin-like-x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
-    ##-------------------- lattice viseo
+    #-------------------- lattice viseo
     stop_viseo = 2000                  # stop viseo plot after so many points
     vis_ordinate = [x[0] for x in lat_plot]
     vis_abszisse = [x[1] for x in lat_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
-    ##-------------------- figure frame
+    #-------------------- figure frame
     width=14; height=7.6
     fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    ##-------------------- transverse X
+    #-------------------- transverse X
     splot=subplot(211)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
@@ -86,7 +88,7 @@ def display0(functions):
     plot(vis_ordinate,viseox,label='',color='black')
     plot(vis_ordinate,vzero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    ##-------------------- transverse Y
+    #-------------------- transverse Y
     splot=subplot(212)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
@@ -105,17 +107,17 @@ def display1(functions):
     """
     Plotting with longitudinal motion
     """
-    ##-------------------- unpack
+    #-------------------- unpack
     sigm_fun = functions[0]
     cos_like = functions[1]
     sin_like = functions[2]
     lat_plot = functions[3]
-    ##-------------------- Bahnkoordinate (z)
-    z    = [x[0] for x in sigm_fun]    # Ordinate
-    bx   = [x[1] for x in sigm_fun]    # envelope (sigma-x)
-    by   = [x[2] for x in sigm_fun]    # envelope (sigma-y)
-    zero = [0.   for x in sigm_fun]    # zero line
-    ##-------------------- trajectories (tz)
+    #-------------------- twiss functions
+    z    = [x[0] for x in sigm_fun]  # Ordinate
+    bx   = [x[1] for x in sigm_fun]  # envelope (sigma-x)
+    by   = [x[2] for x in sigm_fun]  # envelope (sigma-y)
+    zero = [0.   for x in sigm_fun]  # zero line
+    #-------------------- trajectories
     tz  = [x[0] for x in cos_like]   # Ordinate
     cx  = [x[1] for x in cos_like]   # cos-like-x
     cy  = [x[3] for x in cos_like]   # cos-like-y
@@ -125,16 +127,16 @@ def display1(functions):
     sy  = [x[3] for x in sin_like]   # sin-like-x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
-    ##-------------------- lattice viseo
+    #-------------------- lattice viseo
     stop_viseo = 2000                  # stop viseo plot after so many points
     vis_ordinate = [x[0] for x in lat_plot]
     vis_abszisse = [x[1] for x in lat_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
-    ##-------------------- figure frame
+    #-------------------- figure frame
     width=14; height=7.6
     fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    ##-------------------- transverse X
+    #-------------------- transverse X
     splot=subplot(311)
     splot.set_title('transverse x')
     plot(z,bx ,label=r'$\sigma$ [m]',color='green')
@@ -146,7 +148,7 @@ def display1(functions):
     plot(vis_ordinate,viseox,label='',color='black')
     plot(vis_ordinate,vzero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    ##-------------------- transverse Y
+    #-------------------- transverse Y
     splot=subplot(312)
     splot.set_title('transverse y')
     plot(z,by ,label=r'$\sigma$ [m]',color='green')
@@ -158,7 +160,7 @@ def display1(functions):
     plot(vis_ordinate,viseoy,label='',color='black')
     plot(vis_ordinate,vzero,color='black')
     legend(loc='lower right',fontsize='x-small')
-    ##-------------------- longitudinal dPhi, dW/W
+    #-------------------- longitudinal dPhi, dW/W
     ax_l=subplot(313)
     ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
@@ -183,17 +185,17 @@ def display1(functions):
     show()
 
 # -------------------------START here
-def loesung(filepath):
+def simulation(filepath):
     lattice = parse_yaml_and_fabric(filepath)
-    ## Energie Konfiguration hier (SUPER WICHTIG)
+    # Energie Konfiguration hier (SUPER WICHTIG)
     soll_track = track_soll(lattice)
+    # sys.exit(9)
     lattice.stats(soll_track)          ## count elements and other statistics
-
-    ## ganzer Beschleuniger, Anfangswerte, Summary, etc...
+    # ganzer Beschleuniger, Anfangswerte, Summary, etc...
     lattice.cell(closed=FLAGS['periodic'])
     collect_data_for_summary(lattice)    ## summary
 
-    ## Grafik & Lösungen
+    # Grafik & Lösungen
     lat_plot = lattice.lattice_plot_function()
     KVprint_flag = FLAGS['KVprint']
     if not KVprint_flag: print('CALCULATE C+S TRAJECTORIES')
@@ -213,7 +215,6 @@ def loesung(filepath):
         display((sigma,c_like,s_like,lat_plot))  # plot!!!
 
 if __name__ == '__main__':
-    import sys
     filepath = 'yml/test.yml'
     filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
     filepath = 'yml/fodo_with_10cav_per_RF-4.yml'
@@ -227,4 +228,4 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
-    loesung(filepath)
+    simulation(filepath)

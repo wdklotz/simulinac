@@ -27,11 +27,11 @@ from setutil import PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
+# DEBUG__*
 def DEBUG_ON(string,arg='',end='\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg='',end='\n'):
     pass
-## DEBUG__*
 DEBUG_TEST0    = DEBUG_ON
 DEBUG_TEST1    = DEBUG_ON
 DEBUG_MAP      = DEBUG_OFF
@@ -127,12 +127,11 @@ class _TTF_G(object):
             for i in range(len(f_track)-4):
                 f[i] =f[i]*1.e3
             arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
-
         return f_track
 
     def map(self, i_track):
         """Mapping from position (i) to (f)"""
-        f_track = self._full_gap_map(i_track)   # NOTE: use local map with sliced TTFGap
+        f_track = self._full_gap_map(i_track)   # full map through sliced TTFGap
         self.particlef = copy(self.particle)(f_track[EKOO])
 
         # for DEBUGGING
@@ -143,21 +142,20 @@ class _TTF_G(object):
             arrprnt(f,fmt='{:6.3g},',txt='ttf_map: ')
         return f_track
 
-        # Transition Time Factors RF Gap Model
-
 class _TTF_Gslice(object):
-    def __init__(self, parent, polyval, particle):
+    """ PyOrbit's Transition Time Factors RF Gap Model """
+    def __init__(self, parent, poly, particle):
         self.parent     = parent           # the element this slice is part off
         self.freq       = parent.freq
         self.particle   = copy(particle)   # incoming soll particle
-        self.polyval    = polyval # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
-        self.V0         = self._V0(self.polyval)
+        self.poly       = poly # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
+        self.V0         = self._V0(self.poly)
         self.beta       = self.particle.beta
         self.gamma      = self.particle.gamma
         self.gb         = self.particle.gamma_beta
         self.k          = twopi/(self.parent.lamb*self.beta)
-        self.Tk         = self._T (self.polyval,self.k)
-        self.Tkp        = self._Tp(self.polyval,self.k)
+        self.Tk         = self._T (self.poly,self.k)
+        self.Tkp        = self._Tp(self.poly,self.k)
         self.phis       = None  # initialize before using!
         self.WIN        = None  # initialize before using!
         self.WOUT       = None  # initialize before using!
@@ -196,12 +194,12 @@ class _TTF_Gslice(object):
         v0 = v0*E0*self.parent.dWf
         return v0
 
-    def mapSoll(self, i_track):
-        """Mapping of soll track through a slice from position (i) to (f)"""
-        DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
-        f_track = copy(i_track)   # make a copy to prevent i_track to be overwritten
-        f_track[EKOO] += self.deltaW
-        return f_track
+    # def mapSoll(self, i_track):
+    #     """Mapping of soll track through a slice from position (i) to (f)"""
+    #     DEBUG_SOLL_MAP('mapSoll',NP.array2string(i_track))
+    #     f_track = copy(i_track)   # make a copy to prevent i_track to be overwritten
+    #     f_track[EKOO] += self.deltaW
+    #     return f_track
 
     def adjust_slice_parameters(self, tkin):
         """Adjust energy and -dpendent parameters for this slice"""
@@ -210,8 +208,8 @@ class _TTF_Gslice(object):
         self.gamma   = self.particle.gamma
         self.gb      = self.particle.gamma_beta
         self.k       = twopi/(self.parent.lamb*self.beta)
-        self.Tk      = self._T (self.polyval,self.k)
-        self.Tkp     = self._Tp(self.polyval,self.k)
+        self.Tk      = self._T (self.poly,self.k)
+        self.Tkp     = self._Tp(self.poly,self.k)
 
         c     = PARAMS['lichtgeschwindigkeit']
         m0c3  = self.particle.e0*c
@@ -269,8 +267,8 @@ class _TTF_Gslice(object):
         ga         = particle.gamma
         gb         = particle.gamma_beta
         k          = omeg/(c*be)
-        Tk         = self._T (self.polyval,k)
-        Tkp        = self._Tp(self.polyval,k)
+        Tk         = self._T (self.poly,k)
+        Tkp        = self._Tp(self.poly,k)
         r          = sqrt(x**2+y**2)                # radial coordinate
         Kbess      = omeg/(c*gb) * r
         i0         = I0(Kbess)                      # bessel function

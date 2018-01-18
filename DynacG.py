@@ -9,14 +9,14 @@ from setutil import DEBUG, arrprnt, PARAMS
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from Ez0 import SFdata, Ipoly
 
+# DEBUG__*
 def DEBUG_ON(string,arg = '',end = '\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg = '',end = '\n'):
     pass
-# DEBUG__*
-DEBUG_MAP      = DEBUG_ON
-DEBUG_GAP      = DEBUG_ON
-DEBUG_TEST0    = DEBUG_ON
+DEBUG_MAP      = DEBUG_OFF
+DEBUG_GAP      = DEBUG_OFF
+DEBUG_TEST0    = DEBUG_OFF
 
 twopi = 2.*math.pi
 
@@ -61,15 +61,16 @@ class _DYN_G(object):
     def _full_gap_map(self,i_track):
         for slice in self.slices[1:2]:
             f_track = slice._slice_map(i_track)
+            i_track = f_track
+        return f_track
+#todo: back to soll_map?: only soll-map aendert particle.tkin
+    def map(self,i_track):
+        f_track =  self._full_gap_map(i_track)
+        self.particlef = copy(self.particle)(f_track[EKOO])
         return f_track
 
-    def map(self,i_track):
-        return self._full_gap_map(i_track)
-
 class _DYN_Gslice(object):
-    """
-    E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f)
-    """
+    """ E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f) """
     def __init__(self, parent, poly, particle):
         self.parent   = parent
 #todo: set particle tkin correct at slice entry!
@@ -168,8 +169,8 @@ class _DYN_Gslice(object):
         s        = i_track[SKOO]       # [8] summe aller laengen
 
         W           = self.particle.tkin
-        beta        = self.particle.beta
         c           = PARAMS['lichtgeschwindigkeit']
+        beta        = self.particle.beta
         betac       = beta*c
         gamma       = self.particle.gamma
         beta_gamma  = self.particle.gamma_beta
@@ -232,7 +233,7 @@ class _DYN_Gslice(object):
         xyf  = Rf/gbroot
         xypf = (Rpf - 0.5*Rf*gamma/(gamma**2-1.)) / gbroot
 
-        f_track        = i_track
+        f_track = np.array([x,xp,y,yp,z,zp,T,1.,s,1.])
         f_track[XKOO]  = xyf[0]
         f_track[YKOO]  = xyf[1]
         f_track[XPKOO] = xypf[0]

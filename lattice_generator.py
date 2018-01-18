@@ -28,14 +28,14 @@ import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
 
-## DEBUG MODULE
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-## parse and generate latttice
+# parse and generate latttice
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -170,7 +170,8 @@ def instanciate_element(item):
         instance.section = sec
     return (label,instance)
 
-def factory(input_file):
+def Factory(input_file):
+    """ Factory creates a lattice from input-file """
 #--------
     def make_lattice(latticeList,segments):
         lattice = Lattice()
@@ -316,7 +317,7 @@ def factory(input_file):
                 for k in segSubList:
                     latticeList.append(k)
         return (latticeList,segments)
-    ## factory body --------
+    # Factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -327,7 +328,7 @@ def factory(input_file):
                     'InputError: {} - STOP'.format(str(inst)),
                     UserWarning,
                     'lattice_generator.py',
-                    'factory()',
+                    'Factory()',
                     )
             sys.exit(1)
     fileobject.close()
@@ -350,8 +351,8 @@ def factory(input_file):
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
 
     (latticeList,segments) = expand_reduce(in_data)
-    DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
-    DEBUG_MODULE('segments in factory()',segments)            # def of all segments
+    DEBUG_MODULE('latticeList in Factory()',latticeList)      # def of all segments in lattice
+    DEBUG_MODULE('segments in Factory()',segments)            # def of all segments
 
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# nicht vergesses! set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
@@ -359,13 +360,13 @@ def factory(input_file):
 
     SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
-    return lattice    # end of factory(...)
+    DEBUG_MODULE('SUMMARY in Factory()',SUMMARY)
+    return lattice    # end of Factory(...)
 
-def parse_yaml_and_fabric(input_file,factory=factory):   # delegates to factory
-    return factory(input_file)
+def parse_yaml_and_fabric(input_file):   # delegates to Factory
+    return Factory(input_file)
 
-## utilities
+# Utilities
 def test0():
     print('---------------------------------TEST0')
     wfl= []
@@ -388,7 +389,7 @@ def test0():
 def test1(input_file):
     print('---------------------------------TEST1')
     lattice = parse_yaml_and_fabric(input_file)
-## main ----------
+
 if __name__ == '__main__':
     test0()
     test1('yml/ref_run.yml')

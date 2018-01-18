@@ -22,23 +22,12 @@ import sys,traceback
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
 
-## DEBUG MODULE
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
-## Logger
-ch        = logging.StreamHandler()     # console handler
-ch.setLevel(logging.DEBUG)              # set handler level
-formatter = \
-    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
-ch.setFormatter(formatter)              # set handler's format
-logger    = logging.getLogger("logger")
-logger.addHandler(ch)                   # add handler to logger
-
-# x        x'        y        y'        z       dp/p0     E        dE        s        l
-XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
 
 def DEBUG(string,arg='',end='\n'):
     """
@@ -60,7 +49,19 @@ def DEBUG(string,arg='',end='\n'):
     else:
         print('DEBUG: {}{}'.format(string,arg),end=end)
 
-## DEFAULTS "FLAGS" & "PARAMS"
+# Logger
+ch        = logging.StreamHandler()     # console handler
+ch.setLevel(logging.DEBUG)              # set handler level
+formatter = \
+    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
+ch.setFormatter(formatter)              # set handler's format
+logger    = logging.getLogger("logger")
+logger.addHandler(ch)                   # add handler to logger
+
+# x        x'        y        y'        z       dp/p0     E        dE        s        l
+XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
+
+# DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
@@ -101,8 +102,8 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-## KeepValues
-# a global dict to keep key-value pairs
+# KeepValues
+# a global dict to keep key-value pairs (used for tracking results)
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):
@@ -155,10 +156,10 @@ class Electron(Particle):
     def __init__(self,tkin= PARAMS['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
 
-## Sollteichen
+# Sollteichen
 PARAMS['sollteilchen'] = Proton()
 
-## Long. Emittance
+# Long. Emittance
 def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
@@ -219,7 +220,7 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     res['Dphimax-']         = phi2s
     return res
 
-## Data For Summary
+# Data For Summary
 SUMMARY = {}
 
 def collect_data_for_summary(lattice):
@@ -275,7 +276,7 @@ def collect_data_for_summary(lattice):
                 new_elements.append(itm)
         return new_elements
 
-    ## body
+    # body
     sections =  PARAMS['sections']                   # comes from INPUT
     if not FLAGS['sections']: sections = ['*']       # section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
@@ -422,7 +423,7 @@ def I1(x):
             sys.exit(1)
     return res
 
-## Marker Actions
+# Marker Actions
 def sigma_x_action():
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KeepValues['z'])] = KeepValues['sigma_x']*1.e3
@@ -441,7 +442,7 @@ MarkerActions = dict(                   # all possible actions for a Marker
             Tkin=Tkin_action
             )
 
-## Utilities
+# Utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
