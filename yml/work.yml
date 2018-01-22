@@ -25,7 +25,7 @@
 ##...........................................................................................
 flags:
     # - accON:        False           # {True}  acceleration on/off flag
-    - egf:          True            # {False} emittance growth flag
+    # - egf:          True            # {False} emittance growth flag
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
@@ -51,10 +51,10 @@ parameters:
     - betay_i:              0.04     # [m] twiss beta @ entrance y
     - alfax_i:              0.0      # [1] twiss alpha x @ entrance
     - alfay_i:              0.0      # [1] twiss alpha y @ entrance
-    - sigmaz_i:             5.0e-3   # [m] longitudinal displacement z @ entrance
+    - sigmaz_i:             1.e-3    # [m] longitudinal displacement z @ entrance
     # - sigmaz_i:             8.1795e-3   # separatrix? TTFG
     # - sigmaz_i:             8.1330e-3   # separatrix? RFG-RB
-    - dp2p_i:               0.2      # [%] longitidinal dp/p spread    @ entrance
+    - dp2p_i:               0.0      # [%] longitidinal dp/p spread    @ entrance
     - phi_sync:     &p06   -20.      # [deg] synchronous phase
     - windings:             30       # [1] quad-coil windings
     - GAP:          &p15    0.048    # [m] RF gap
@@ -86,7 +86,7 @@ elements:
         - slices:   0            # if slices == 1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
     - RFGH:  &RFGH          # ID: &alias
-        - type:     RFG     # class
+        - type:     RFG     # RFG class
         # - Ez:       1.41    # [MV/m] (Ez)av electric field
         - Ez:       2.31    # [MV/m] (Ez)av electric field
         - PhiSync:  *p06    # [deg] synchronous phase
@@ -98,6 +98,14 @@ elements:
         - mapping:   simple # Shishlo's linear map model
         - mapping:   base   # Shishlo's base map model
         - mapping:   ttf    # Shishlo's three point TTF RF gap-model
+        - sec:      *HE     # is part of section
+    - RFCH:  &RFCH          # ID: &alias
+        - type:     RFC     # RFC class
+        - Ez:       2.31    # [MV/m] (Ez)av electric field
+        - PhiSync:  *p06    # [deg] synchronous phase
+        - fRF:      *p01    # [Hz] frequency
+        - gap:      *p15    # [m] gap length
+        - length:   0.044   # [m] cavity length
         - sec:      *HE     # is part of section
     - M:  &M                # ID: &alias
         - type:    MRK      # MRK class
@@ -162,6 +170,16 @@ segments:
         # - *RFGH
         # - *D5
         #
+    - RFCAVH:
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
     - MARK:
         - *M
 ##...........................................................................................
@@ -169,5 +187,6 @@ segments:
 ##...........................................................................................
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps
     # - [4,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]

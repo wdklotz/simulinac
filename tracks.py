@@ -30,12 +30,13 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 DEBUG_TRACK      = DEBUG_OFF
-DEBUG_SOLL_TRACK = DEBUG_ON
-## Track class
+DEBUG_SOLL_TRACK = DEBUG_OFF
+
+# Track class
 class Track(object):
     """ Track is an ordered list of track-points. A track-point is an array of MDIM coordinates."""
 
-    def __init__(self, particle_number=0, start=None):
+    def __init__(self, particle_number = 0, start = None):
         self.track_points = start
         self.particle_number = particle_number
         self.nb_points_per_track = 1
@@ -73,9 +74,11 @@ class Track(object):
         for p in points:
             str += Track.string(p)+'\n'
         return str
+
     def string(p):   #single point to string
         s = 'x={:.3e} x\'={:.3e} y={:.3e} y\'={:.3e} z={:.3e} z\'={:.3e}  tk={:.5f} s={:.3f} '.format(p[XKOO],p[XPKOO],p[YKOO],p[YPKOO],p[ZKOO],p[ZPKOO],p[EKOO],p[SKOO])
         return s
+
     def asTable(self):
         tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
         tblrows =[]
@@ -121,22 +124,25 @@ def track_soll(lattice):
     adapted to the energy of the accellerated reference particle.
     """
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
+
     for element in lattice.seq:
-        # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
+            # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last() #track: at entrance
-        # DEBUG_SOLL_TRACK('track_soll(i) ',Track.string(ti))
-        # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+            # DEBUG_SOLL_TRACK('track_soll(i) ',Track.string(ti))
+            # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
         """ energy adjustment """
         element.adjust_energy(ti[EKOO])
-        # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
-        """ element mapping """
-        tf = element.soll_map(ti) #track: at exit
-        # DEBUG_SOLL_TRACK('track_soll(f) ',Track.string(tf))
+            # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+        """ mapping """
+        tf = element.soll_map(ti)
+            # DEBUG_SOLL_TRACK('track_soll(f) ',Track.string(tf))
         soll_track.append(tf)
-        DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+            # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
+    
     # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
     # DEBUG_SOLL_TRACK('track_soll(first) {}'.format(soll_track.first_str()))
     # DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
+
     return soll_track
 
 #todo: @@@track must be rewritten to include non-linear tracking@@@

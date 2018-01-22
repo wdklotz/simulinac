@@ -158,9 +158,9 @@ class Electron(Particle):
 
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
-
+#todo: ueberarbeiten; sigmaz = 0 macht overflow
 # Long. Emittance
-def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
+def zellipse(sigmaz, qE0, lamb, phis, gap ,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
     Ellipse nach T.Wangler (6.47) pp.185
@@ -497,7 +497,10 @@ def objprnt (what,text='',filter=[]):
     for k,v in sorted(what.__dict__.items()):
         if k in filter:
             continue
-        print(k.rjust(30),':',v)
+        if k == 'matrix':
+            print(k.rjust(30),':\n',v)
+        else:
+            print(k.rjust(30),':',v)
     return
 
 def dictprnt(what,text='',filter=[],njust=35):

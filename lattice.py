@@ -416,8 +416,8 @@ class Lattice(object):
         x2p         = soll_test(sqrt(PARAMS['emitx_i']*self.gammx0)) # x-plane: principal-1 (sin like)
         y1          = soll_test(sqrt(PARAMS['emity_i']*self.betay0))
         y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
-        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m] Vorgabe
-        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe --> []
+        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m]    Vorgabe
+        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe
         # MDIMxMDIM tracking used here
         s      = 0.
         c_like = []
