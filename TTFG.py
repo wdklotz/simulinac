@@ -34,7 +34,6 @@ def DEBUG_OFF(string,arg='',end='\n'):
     pass
 DEBUG_TEST0    = DEBUG_ON
 DEBUG_TEST1    = DEBUG_ON
-DEBUG_MAP      = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
 DEBUG_TTF_G    = DEBUG_OFF
 
@@ -73,20 +72,18 @@ class _TTF_G(object):
                 next_phase = slice.PHOUT       # slice OUT as next slice IN
                 next_tkin  = slice.WOUT        # slice OUT as next slice IN
                 DEBUG_TTF_G('_TTF_G: {}\n'.format(self),self.__dict__)
-            deltaW   = next_tkin-tkin                       # total energy kick as sum over slices
+            deltaW  = next_tkin-tkin                        # total energy kick as sum over slices
             self.tr = NP.sum(NP.array(Tklist))/len(Tklist)  # total ttf as average over slices
             return deltaW
         # _TTF_G
         self.phis     = parent.phis
         self.freq     = parent.freq
         self.gap      = parent.gap
-        self.mapping  = parent.mapping
         self.dWf      = parent.dWf
         self.lamb     = parent.lamb
         self.SFdata   = parent.SFdata
         self.matrix   = parent.matrix
         self.particle = parent.particle
-        self.position = parent.position
         if parent.SFdata == None:
             raise RuntimeError('_TTF_G: missing E(z) table - STOP')
             sys.exit(1)
@@ -94,7 +91,7 @@ class _TTF_G(object):
              # slice the gap
             self.slices = \
                 _make_slices(self, self.gap, self.SFdata, self.particle)
-            # slice enrgies
+            # slice energy dependence
             self.deltaW = \
                 adjust_slice_energy(self.slices, self.phis, self.particle.tkin)
             # update Node matrix with local deltaW
@@ -103,7 +100,7 @@ class _TTF_G(object):
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
 
     def map(self, i_track):
-        """Mapping from position (i) to (f)"""
+        """ Mapping from position (i) to (f )"""
         f_track = self._full_gap_map(self.slices, i_track)   # full map through sliced TTFGap
 
         # parent property
@@ -116,8 +113,8 @@ class _TTF_G(object):
             for i in range(len(f_track)-4):
                 itr[i]  = itr[i]*1.e3
                 ftr[i]  = ftr[i]*1.e3
-            arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
-            arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
+            arrprnt(itr, fmt = '{:6.3g},', txt = 'ttfg_map:i_track:')
+            arrprnt(ftr, fmt = '{:6.3g},', txt = 'ttfg_map:f_track:')
         
         return f_track
 
@@ -129,12 +126,12 @@ class _TTF_G(object):
         self.dbTab1Headr = []          # for DEBUGGING
         self.dbTab2Rows  = []          # for DEBUGGING
         self.dbTab2Headr = []          # for DEBUGGING
-        if DEBUG_MAP == DEBUG_ON:      # for DEBUGGING
+        if DEBUG_TTF_G == DEBUG_ON:      # for DEBUGGING
             self.dbTab1Headr = ['pout','pin','pout-pin','dp=pout-POUT','wout','win','wout-win','WOUT','dw=wout-WOUT','qV0*10^3']
             self.dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','Tk',"Tkp",'i0-1','i1']
 
         for cnt,slice in enumerate(slices):
-            # DEBUG_MAP('_TTF_G:_full_gap_map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
+            # DEBUG_TTF_G('_TTF_G:_full_gap_map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
             f_track = slice._slice_map(i_track)    # map slice with TTF 3-point gap-model
             i_track = f_track
 
@@ -146,18 +143,8 @@ class _TTF_G(object):
                 # z = betaf/betai*z
                 # f_track[ZKOO] = z
 
-        DEBUG_MAP('_TTF_G:_full_gap_map:track through slices:\n',tblprnt(self.dbTab1Headr,self.dbTab1Rows))
-        DEBUG_MAP('_TTF_G:_full_gap_map:track through slices:\n',tblprnt(self.dbTab2Headr,self.dbTab2Rows))
-
-        # for DEBUGGING
-        if DEBUG_MAP == DEBUG_ON:
-            itr = i_track.copy()
-            ftr = f_track.copy()
-            for i in range(len(f_track)-4):
-                itr[i]  = itr[i]*1.e3
-                ftr[i]  = ftr[i]*1.e3
-            arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
-            arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
+        DEBUG_TTF_G('_TTF_G:_full_gap_map:\n',tblprnt(self.dbTab1Headr,self.dbTab1Rows))
+        DEBUG_TTF_G('_TTF_G:_full_gap_map:\n',tblprnt(self.dbTab2Headr,self.dbTab2Rows))
 
         return f_track
 
@@ -166,15 +153,16 @@ class _TTF_Gslice(object):
     def __init__(self, parent, poly, particle):
         self.parent     = parent           # the gap this slice is part off
         self.freq       = parent.freq
+        self.lamb       = parent.lamb
         self.particle   = copy(particle)   # incoming soll particle
         self.poly       = poly # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.V0         = self._V0(self.poly)
         self.beta       = self.particle.beta
         self.gamma      = self.particle.gamma
         self.gb         = self.particle.gamma_beta
-        self.k          = twopi/(self.parent.lamb*self.beta)
-        self.Tk         = self._T (self.poly,self.k)
-        self.Tkp        = self._Tp(self.poly,self.k)
+        self.k          = twopi/(self.lamb*self.beta)
+        self.Tk         = self._T (self.poly, self.k)
+        self.Tkp        = self._Tp(self.poly, self.k)
         self.phis      = None  # initialized in adjust_slice_energy
         self.WIN       = None  # initialized in adjust_slice_parameters
         self.WOUT      = None  # initialized in adjust_slice_parameters
@@ -211,12 +199,12 @@ class _TTF_Gslice(object):
         return v0
 
     def adjust_slice_parameters(self, tkin):
-        """Adjust energy and -dpendent parameters for this slice"""
+        """ Adjust energy-dpendent parameters for this slice """
         self.particle(tkin)
         self.beta    = self.particle.beta
         self.gamma   = self.particle.gamma
         self.gb      = self.particle.gamma_beta
-        self.k       = twopi/(self.parent.lamb*self.beta)
+        self.k       = twopi/(self.lamb*self.beta)
         self.Tk      = self._T (self.poly,self.k)
         self.Tkp     = self._Tp(self.poly,self.k)
 

@@ -5,7 +5,7 @@ import math
 from functools import partial
 
 
-from setutil import DEBUG, arrprnt, PARAMS
+from setutil import DEBUG, arrprnt, PARAMS, tblprnt
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from Ez0 import SFdata, Ipoly
 
@@ -14,72 +14,139 @@ def DEBUG_ON(string,arg = '',end = '\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg = '',end = '\n'):
     pass
-DEBUG_MAP      = DEBUG_OFF
-DEBUG_GAP      = DEBUG_OFF
-DEBUG_TEST0    = DEBUG_OFF
+DEBUG_SLICE    = DEBUG_OFF
+DEBUG_DYN_G    = DEBUG_OFF
+DEBUG_TEST0    = DEBUG_ON
 
 twopi = 2.*math.pi
 
 class _DYN_G(object):
     def __init__(self, parent):
-        def _make_slices():
+        def _make_slices(parent, gap, SFdata, particle):
             """Slice the RF gap"""
             slices = []
-            zl = -self.gap/2.*100.   # [m] --> [cm]
+            zl = -gap/2.*100.   # [m] --> [cm]
             zr = -zl
             E0z = 0.
             z = 0.
-            for poly in self.SFdata.Ez_poly:
+            for poly in SFdata.Ez_poly:
                 zil = poly.zl
                 zir = poly.zr
                 if zil < zl or zir > zr: continue
-                slice = _DYN_Gslice(self, poly, self.particle)  # instanciate _DYN_Gslices
+                # instanciate _DYN_Gslices
+                slice = _DYN_Gslice(parent, poly, particle)
                 slices.append(slice)
             return slices
 
-        def adjust_slice_energy():
-            pass
-
-        self.particle = parent.particle
-        self.gap      = parent.gap
-        self.lamb     = parent.lamb
-        self.freq     = parent.freq
+        def adjust_slice_energy(slices, phis, tkin):
+            next_phase = phis
+            next_tkin  = tkin
+            Tklist = [0]
+            for slice in slices:
+                # setting phase @ slice entrance
+                # slice.phis = next_phase
+                # setting phase,energy @ slice entry
+                slice.adjust_slice_parameters(next_phase, next_tkin)
+                next_phase = slice.PHOUT    # slice OUT as next slice IN
+                next_tkin  = slice.WOUT     # slice OUT as next slice IN
+            deltaW  = next_tkin-tkin        # total energy kick as sum over slices
+            self.tr = np.sum(np.array(Tklist))/len(Tklist)
+            return deltaW
+        # _DYN_G
         self.phis     = parent.phis
+        self.freq     = parent.freq
+        self.gap      = parent.gap
+        self.dWf      = parent.dWf
+        self.lamb     = parent.lamb
         self.SFdata   = parent.SFdata
-        self.deltaW   = None  # initialize before using!
-
+        self.matrix   = parent.matrix
+        self.particle = parent.particle
         if self.SFdata == None:
             raise RuntimeError('_DYN_G: missing E(z) table - STOP!')
             sys.exit(1)
         else:
-            self.slices = _make_slices()
-            DEBUG_GAP('_DYN_G:_make_slices()\n',list(self.slices))
-            # self.deltaW = adjust_slice_energy()
-            # self.matrix[EKOO, DEKOO] = self.deltaW
-            # if DEBUG_MAP == DEBUG_ON: print(self.slices)
+            # slice the gap
+            self.slices = \
+                _make_slices(self, self.gap, self.SFdata, self.particle)
+            DEBUG_DYN_G('_DYN_G:_make_slices()\n',list(self.slices))
+            # self.deltaW = None  # initialize before using!
+            # slice energy dependce
+            self.deltaW = \
+                adjust_slice_energy(self.slices, self.phis, self.particle.tkin)
+            # update Node matrix with local deltaW
+            self.matrix[EKOO, DEKOO] = self.deltaW
 
-    def _full_gap_map(self,i_track):
-        for slice in self.slices[1:2]:
-            f_track = slice._slice_map(i_track)
-            i_track = f_track
-        return f_track
-#todo: back to soll_map?: only soll-map aendert particle.tkin
     def map(self,i_track):
-        f_track =  self._full_gap_map(i_track)
-        self.particlef = copy(self.particle)(f_track[EKOO])
+        """Mapping from position (i) to (f) """
+        f_track =  self._full_gap_map(self.slices, i_track)
+        
+        # parent property
+        self.particlef = copy(self.particle)(self.particle.tkin + self.deltaW)
+
+        # for DEBUGGING
+        if DEBUG_DYN_G == DEBUG_ON:
+            itr = i_track.copy()
+            ftr = f_track.copy()
+            for i in range(len(f_track)-4):
+                itr[i]  = itr[i]*1.e3
+                ftr[i]  = ftr[i]*1.e3
+            arrprnt(itr, fmt = '{:6.4g},', txt = 'dynac_map:i_track:')
+            arrprnt(ftr, fmt = '{:6.4g},', txt = 'dynac_map:f_track:')
+
+        return f_track
+        
+    def soll_map(self, i_track):
+        return self.map(i_track)
+
+    def _full_gap_map(self, slices, i_track):
+        for slice in slices:
+            f_track = slice._slice_map(i_track)   # map slice with DYNAC gap-model
+            i_track = f_track
         return f_track
 
 class _DYN_Gslice(object):
     """ E.Tanke, S.Valero DYNAC gap model mapping from (i) to (f) """
     def __init__(self, parent, poly, particle):
         self.parent   = parent
+        self.freq     = parent.freq
 #todo: set particle tkin correct at slice entry!
         self.particle = copy(particle)
         self.poly     = poly    # the current interval
         self.SFdata   = parent.SFdata
         self.lamb     = parent.lamb
-        self.freq     = parent.freq
-        self.phis     = parent.phis
+        self.phis      = None  # initialized in adjust_slice_parameters
+        self.WIN       = None  # initialized in adjust_slice_parameters
+        self.WOUT      = None  # initialized in adjust_slice_parameters
+        self.deltaW    = None  # initialized in adjust_slice_parameters
+        self.PHIN      = None  # initialized in adjust_slice_parameters
+        self.PHOUT     = None  # initialized in adjust_slice_parameters
+        self.deltaPHI  = None  # initialized in adjust_slice_parameters
+
+    def adjust_slice_parameters(self, phin, tkin):
+        """ Adjust energy-dependent parameters for this slice """
+        self.particle(tkin)
+        self.phis = phin
+        beta      = self.particle.beta
+        lamb      = self.lamb
+        
+        i_track = np.array([0.,0.,0.,0.,0.,0.,0.,1.,0.,1.])
+        f_track = self._slice_map(i_track)
+        
+        WIN   = tkin
+        PHIN  = self.phis
+        DW    = f_track[EKOO]
+        WOUT  = WIN+DW
+        DPHI  = -f_track[ZKOO]*twopi/(beta*lamb)
+        PHOUT = PHIN+DPHI
+        
+        self.WIN      = WIN
+        self.WOUT     = WOUT
+        self.deltaW   = DW
+        self.PHIN     = PHIN
+        self.PHOUT    = PHOUT
+        self.deltaPHI = DPHI
+        DEBUG_SLICE('_DYN_Gslice: {}\n'.format(self),self.__dict__)
+        return
 
     def _slice_map(self, i_track):
         def Integral1(zarr, tarr, h):
@@ -88,7 +155,8 @@ class _DYN_Gslice(object):
             # self.SFdata:Ez0t(self,z,t,omega,phi): time dependent field value at location z
             E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
             for i in range(0,len(coeff)):
-                res = res + coeff[i] * E(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i] * E(z, tarr[i])
             res = res * h / 90.
             return res
 
@@ -98,7 +166,8 @@ class _DYN_Gslice(object):
             # self.SFdata:Ez0t(self,z,t,omega,phi): time dependent field value at location z
             E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
             for i in range(1,len(coeff)):
-                res = res + coeff[i] * E(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i] * E(z, tarr[i])
             res = res * h**2 / 90.
             return res
 #todo: use beta_gamma[i], i=1,4,1
@@ -108,7 +177,8 @@ class _DYN_Gslice(object):
             # self.SFdata:Ez0t(self,z,t,omega,phi): time dependent field value at location z
             E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
             for i in range(1,len(coeff)):
-                res = res + coeff[i]/beta_gamma**3 * E(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i]/beta_gamma**3 * E(z, tarr[i])
             res = res * h**2 / 90.
             return res
 
@@ -119,7 +189,8 @@ class _DYN_Gslice(object):
             # self.SFdata:Ez0t(self,z,t,omega,phi): time dependent field value at location z
             E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
             for i in range(1,len(coeff)):
-                res = res + coeff[i]/beta_gamma**3 * E(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i]/beta_gamma**3 * E(z, tarr[i])
             res = res * h**3 / 90.
             return res
 
@@ -131,7 +202,8 @@ class _DYN_Gslice(object):
             # self.SFdata.dEz0tdt(self,z,t,omega,phi): time derivative of field value at location z"""
             Ep = partial(self.SFdata.dEz0tdt, omega = omega, phi = phis)
             for i in range(0,len(coeff)):
-                res = res + coeff[i] * G1 * Ep(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i] * G1 * Ep(z, tarr[i])
             res = res * h / 90.
             return res
 
@@ -143,7 +215,8 @@ class _DYN_Gslice(object):
             # self.SFdata.dEz0tdt(self,z,t,omega,phi): time derivative of field value at location z"""
             Ep = partial(self.SFdata.dEz0tdt, omega = omega, phi = phis)
             for i in range(1,len(coeff)):
-                res = res + coeff[i] * G1 * Ep(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i] * G1 * Ep(z, tarr[i])
             res = res * h**2 / 90.
             return res
 
@@ -155,7 +228,8 @@ class _DYN_Gslice(object):
             # self.SFdata.dEz0tdt(self,z,t,omega,phi): time derivative of field value at location z"""
             Ep = partial(self.SFdata.dEz0tdt, omega = omega, phi = phis)
             for i in range(1,len(coeff)):
-                res = res + coeff[i] * G1 * Ep(zarr[i], tarr[i])
+                z = 1.e2*zarr[i]        # [m] --> [cm]
+                res = res + coeff[i] * G1 * Ep(z, tarr[i])
             res = res * h**3 / 90.
             return res
 
@@ -188,31 +262,30 @@ class _DYN_Gslice(object):
         rp  = np.array([xp,yp])                    # =(x',y')
         R   = r*gbroot                             # =(X,Y)
         Rp  = rp*gbroot+0.5*R*gamma/(gamma**2-1.)  # =(X',Y')
-#todo: z,h in cm or m?
+
         h  = 1.e-2*2.*self.poly.dz    # [m] azimutal step size
         th = h/betac                  # [s] time step size
+        # z at slice entry!
         z0 = 1.e-2*self.poly.zl       # [m] interval left border
         z4 = h+z0                     # [m] interval right border
         z3 = 0.75*h+z0
         z2 = 0.50*h+z0
         z1 = 0.25*h+z0
-#todo: set correct t0 at slice entry!
-        t0 = 0.
+        # t0 at slice entry!
+        t0 = - z0 / betac             # [s]
         t4 = th+t0
         t3 = 0.75*th+t0
         t2 = 0.50*th+t0
         t1 = 0.26*th+t0
-        zarr = np.array([z0,z1,z2,z3,z4])
-        tarr = np.array([t0,t1,t2,t3,t4])
+        zarr = np.array([z0,z1,z2,z3,z4])   # [m]
+        tarr = np.array([t0,t1,t2,t3,t4])   # [s]
 
         I1      = Integral1(zarr, tarr, h)
         I2      = Integral2(zarr, tarr, h)
         dgamma  = ((1. + np.dot(R,R)*K1)*I1 + np.dot(R,Rp)*K1*I2)/m0c2
         deltaW  = dgamma * m0c2                                   # delta kin. energy
-#todo: normalize dp/p to impulse @ (f)?
-
+#todo: normalize dp/p to W @ (f)?
         dp2p    = gamma/(gamma+1)*deltaW/W                        # dp/p
-        self.parent.deltaW = deltaW                               # parent property
 
         I3     = Integral3(zarr, tarr, h)
         I4     = Integral4(zarr, tarr, h)
@@ -227,7 +300,6 @@ class _DYN_Gslice(object):
         dRp    = R*J1 + Rp*J2
         Rf     = R + dR        # reduzierte Koordinaten @ (f)
         Rpf    = Rp + dRp      # reduzierte Koordinaten @ (f)
-
 #todo: use beta*gamma (f)
         # Picht back-transformation
         xyf  = Rf/gbroot
@@ -240,29 +312,30 @@ class _DYN_Gslice(object):
         f_track[YPKOO] = xypf[1]
         f_track[ZKOO]  = dz0
         f_track[ZPKOO] = dp2p
-        f_track[EKOO]  = i_track[EKOO] + deltaW
-#todo: zarr in cm or m?
-        DEBUG_MAP('_DYN_Gslice:_slice_map():zarr.........[m]: ', zarr)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():tarr......[psec]: ', 1.e12*tarr)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():K1......[1/m**2]: ',K1)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():R............[m]: ', R)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():Rp.........[rad]: ', Rp)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():dR..........[um]: ', dR*1e6)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():dRp.......[urad]: ', dRp*1e6)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():I1..........[MV]: ', I1)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():I2........[MV*m]: ', I2)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():I3........[MV*m]: ', I3)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():I4.....[MV*m**2]: ', I4)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():J1.........[1/m]: ', J1)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():J2............[]: ', J2)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():J3...........[m]: ', J3)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():dgamma..........: ', dgamma)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():deltaW.....[Kev]: ', deltaW*1.e3)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():dtime.....[psec]: ', dtime*1.e12)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():dphase....[mdeg]: ', math.degrees(dphi)*1.e3)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():z ..........[um]: ', dz0*1e6)
-        DEBUG_MAP('_DYN_Gslice:_slice_map():r=(x,y)......[m]: ', xyf)
-        DEBUG_MAP("_DYN_Gslice:_slice_map():rp=(x',y').[rad]: ", xypf)
+        f_track[EKOO]  = T + deltaW
+
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():zarr.........[m]: ', zarr)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():tarr......[psec]: ', 1.e12*tarr)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():K1......[1/m**2]: ',K1)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():R............[m]: ', R)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():Rp.........[rad]: ', Rp)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():dR..........[um]: ', dR*1e6)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():dRp.......[urad]: ', dRp*1e6)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():I1..........[MV]: ', I1)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():I2........[MV*m]: ', I2)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():I3........[MV*m]: ', I3)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():I4.....[MV*m**2]: ', I4)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():J1.........[1/m]: ', J1)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():J2............[]: ', J2)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():J3...........[m]: ', J3)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():dgamma..........: ', dgamma)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():deltaW.....[Kev]: ', deltaW*1.e3)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():dtime.....[psec]: ', dtime*1.e12)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():dphase....[mdeg]: ', math.degrees(dphi)*1.e3)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():z ..........[um]: ', dz0*1e6)
+        DEBUG_SLICE('_DYN_Gslice:_slice_map():r=(x,y)......[m]: ', xyf)
+        DEBUG_SLICE("_DYN_Gslice:_slice_map():rp=(x',y').[rad]: ", xypf)
+        DEBUG_SLICE('============================================================ slice end')
 
         return f_track
 

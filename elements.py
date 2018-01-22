@@ -1312,7 +1312,7 @@ def test8():
     print(solltrack)
     print('RFG.particle(i)\n'+rfg.particle.string())
     print('RFG.particle(f)\n'+rfg.particlef.string())
-    """
+
     input_file = 'SF_WDK2g44.TBL'
     Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
     SF_tab    = SFdata(input_file, Epeak = Epeak)
@@ -1330,11 +1330,12 @@ def test8():
     Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
     SF_tab    = SFdata(input_file, Epeak = Epeak)
     rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
-    # objprnt(rfg, 'RFG', filter = 'matrix')
-    objprnt(rfg, 'RFG')
     lg = Lattice()
     lg.add_element(rfg)
-    print(track_soll(lg).asTable())
+    solltrack = track_soll(lg).asTable()
+    # objprnt(rfg, 'RFG', filter = 'matrix')
+    objprnt(rfg, 'RFG')
+    print(solltrack)
     print('RFG.particle(i)\n'+rfg.particle.string())
     print('RFG.particle(f)\n'+rfg.particlef.string())
     """
@@ -1348,7 +1349,7 @@ def test8():
     print(solltrack)
     print('CAV.particle(i)\n'+cav.particle.string())
     print('CAV.particle(f)\n'+cav.particlef.string())
-
+    """
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling ...')
