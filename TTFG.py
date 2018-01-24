@@ -58,7 +58,7 @@ class _TTF_G(object):
                 slices.append(slice)
             return slices
 
-        def adjust_slice_energy(slices, phis, tkin):
+        def configure_slices(slices, phis, tkin):
             """adjust energy of slices"""
             next_phase = phis
             next_tkin  = tkin
@@ -93,7 +93,7 @@ class _TTF_G(object):
                 _make_slices(self, self.gap, self.SFdata, self.particle)
             # slice energy dependence
             self.deltaW = \
-                adjust_slice_energy(self.slices, self.phis, self.particle.tkin)
+                configure_slices(self.slices, self.phis, self.particle.tkin)
             # update Node matrix with local deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW
             # for test0()
@@ -163,7 +163,7 @@ class _TTF_Gslice(object):
         self.k          = twopi/(self.lamb*self.beta)
         self.Tk         = self._T (self.poly, self.k)
         self.Tkp        = self._Tp(self.poly, self.k)
-        self.phis      = None  # initialized in adjust_slice_energy
+        self.phis      = None  # initialized in configure_slices
         self.WIN       = None  # initialized in adjust_slice_parameters
         self.WOUT      = None  # initialized in adjust_slice_parameters
         self.deltaW    = None  # initialized in adjust_slice_parameters

@@ -156,18 +156,18 @@ class _DYN_Gslice(object):
         self.WIN      = tkin                              # (z0) kin.energy soll
         self.PHIN     = phin                              # (z0) phase soll
         self.deltaW   = I1                                # (z4) delta-kin.energy soll
-        self.deltaT   = I3/self.m0c3                           # (z4) delta-time soll
-        self.deltaP   = self.deltaT*self.omega                 # (z4) delta-phase soll
+        self.deltaT   = I3/self.m0c3                      # (z4) delta-time soll
+        self.deltaP   = self.deltaT*self.omega            # (z4) delta-phase soll
         self.WOUT     = tkin + self.deltaW                # (z4) kin.energy soll
         self.PHOUT    = phin + self.deltaP                # (z4) phase soll
 
         DEBUG_SLICE('_DYN_Gslice: {}\n'.format(self),self.__dict__)
-        # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():zarr.........[m]: ', zarr)
-        # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():tarr......[psec]: ', 1.e12*tarr)
+        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():zarr.........[m]: ', self.zarr)
+        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():tarr......[psec]: ', 1.e12*tarr)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():K1......[1/m**2]: ', K1)
-        # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I1..........[MV]: ', I1)
+        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I1..........[MV]: ', I1)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I2........[MV*m]: ', self.I2)
-        # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I3........[MV*m]: ', I3)
+        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I3........[MV*m]: ', I3)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():I4.....[MV*m**2]: ', self.I4)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():J1.........[1/m]: ', self.J1)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():J2............[]: ', self.J2)

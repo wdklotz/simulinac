@@ -123,9 +123,14 @@ class Particle(object):
             sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
-        self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
-        self.brho       = 1.e+6/ PARAMS['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
+        self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
+        self.brho       = 1.e+6 / PARAMS['lichtgeschwindigkeit'] * self.gamma_beta * self.e0 # [T*m]
         self.name       = name
+        self.m0c2       = self.e0
+        self.m0c3       = self.e0 * PARAMS['lichtgeschwindigkeit']
+        self.betac      = self.v
+        self.E          = self.e
+        self.T          = self.tkin
     def string(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
