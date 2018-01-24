@@ -1,4 +1,4 @@
-#!/Users/klotz/SIMULINAC_env/bin/python
+#!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>

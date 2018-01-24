@@ -1,4 +1,4 @@
-#!/Users/klotz/SIMULINAC_env/bin/python
+#!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -710,8 +710,6 @@ class _PYO_G(object):
         self.deltaW    = DELTAW
         self.particlef = particlef
         return f_track
-
-#todo: dyc_map
 
 # Trace3D RF gap-model
 class _T3D_G(object):
