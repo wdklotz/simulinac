@@ -132,7 +132,7 @@ class _TTF_G(object):
 
         for cnt,slice in enumerate(slices):
             # DEBUG_TTF_G('_TTF_G:_full_gap_map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
-            f_track = slice._slice_map(i_track)    # map slice with TTF 3-point gap-model
+            f_track = slice.slice_map(i_track)    # map slice with TTF 3-point gap-model
             i_track = f_track
 
                 # relativistic scaling. Is it needed?
@@ -237,7 +237,7 @@ class _TTF_Gslice(object):
         """Formel 4.3.2 A.Shishlo"""
         return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
 
-    def _slice_map(self, i_track):
+    def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -372,7 +372,7 @@ def test1():
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'
-    Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
+    Epeak = PARAMS['Ez_feld']
     SF_tab = SFdata(input_file,Epeak)
     
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
