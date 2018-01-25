@@ -226,7 +226,7 @@ class _DYN_Gslice(object):
         lamb    = self.lamb
         m0c2    = particle.m0c2
         m0c3    = particle.m0c3
-        betac   = beta*PARAMS['lichtgeschwindigkeit']
+        betac   = particle.betac
         omega   = self.omega
         gbroot  = math.sqrt(gambeta)
         gb3     = gambeta**3

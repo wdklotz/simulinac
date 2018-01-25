@@ -40,7 +40,7 @@ DEBUG_TTF_G    = DEBUG_OFF
 twopi          = 2*PI
 
 class _TTF_G(object):
-    """Transition Time Factors RF Gap-Model (A.Shishlo ORNL/TM-2015/247)"""
+    """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, parent):
         def _make_slices(parent, gap, SFdata, particle):
             """Slice the RF gap"""
@@ -171,7 +171,7 @@ class _TTF_Gslice(object):
         self.PHOUT     = None  # initialized in adjust_slice_parameters
         self.deltaPHI  = None  # initialized in adjust_slice_parameters
 
-    def _T(self, poly, k):    # A.Shishlo (4.4.6)
+    def _T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
@@ -181,7 +181,7 @@ class _TTF_Gslice(object):
         # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
         return t
 
-    def _Tp(self, poly, k):   # A.Shishlo (4.4.8)
+    def _Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
@@ -190,7 +190,7 @@ class _TTF_Gslice(object):
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
 
-    def _V0(self, poly):    # A.Shishlo (4.4.3)
+    def _V0(self, poly):    # A.Shishlo/J.Holmes (4.4.3)
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
@@ -230,11 +230,11 @@ class _TTF_Gslice(object):
         return 
 
     def wout_minus_win(self, conv, i0, tk, sk, phi):
-        """Formel 4.3.1 A.Shishlo"""
+        """Formel 4.3.1 A.Shishlo/J.Holmes"""
         return conv*i0*(tk*cos(phi)-sk*sin(phi))
 
     def phiout_minus_phiin(self, fac, gamma, r, i0, i1, tk, sk, tkp, skp, phi):
-        """Formel 4.3.2 A.Shishlo"""
+        """Formel 4.3.2 A.Shishlo/J.Holmes"""
         return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
 
     def slice_map(self, i_track):

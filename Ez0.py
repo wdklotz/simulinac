@@ -24,7 +24,7 @@ from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
 
-# Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo
+# Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 
 ## DEBUG MODULE
@@ -103,7 +103,7 @@ def Ipoly(z,poly):
     return res
 
 def V0n(poly,n):
-    """ Formel (4.4.3) A.Shishlo """
+    """ Formel (4.4.3) A.Shishlo/J.Holmes """
     E0 = poly[n].E0                       # [MV/m]
     b  = poly[n].b
     dz = poly[n].dz                       # [cm]
@@ -121,7 +121,7 @@ def V0(poly,zintval):
     return v0
 
 def Tn(poly,k,n):
-    """ Formel (4.4.6) A.Shishlo """
+    """ Formel (4.4.6) A.Shishlo/J.Holmes """
     a  = poly[n].a
     b  = poly[n].b
     dz = poly[n].dz
@@ -163,7 +163,7 @@ def S(poly,k,zintval):
     return s
 
 def Tpn(poly,k,n):
-    """ Formel (4.4.8) A.Shishlo """
+    """ Formel (4.4.8) A.Shishlo/J.Holmes """
     b   = poly[n].b
     dz  = poly[n].dz
     tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
@@ -181,7 +181,7 @@ def Tp(poly,k,zintval):
     return tp
 
 def Spn(poly,k,n):
-    """ Formel (4.4.9) A.Shishlo """
+    """ Formel (4.4.9) A.Shishlo/J.Holmes """
     a   = poly[n].a
     b   = poly[n].b
     dz  = poly[n].dz

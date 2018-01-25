@@ -495,7 +495,7 @@ class RFG(I):
         if self.mapping == 'simple' or self.mapping == 'base':
             self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self)              # 3 point TTF-RF gap-model with SF-data (A.Shishlo)
+            self.gap_model = _TTF_G(self)              # 3 point TTF-RF gap-model with SF-data (A.Shishlo/J.Holmes)
         elif self.mapping == 'dyn':
             self.gap_model = _DYN_G(self)              # DYNAC gap model with SF-data (E.Tanke, S.Valero)
 
@@ -609,7 +609,7 @@ class _PYO_G(object):
         condPdT = m0c2*betasi**2*gammasi
         DWi = condPdT*zpi  # dp/p --> dT
 
-        # THE MAP (a 2x2 matrix which is always linear!) A.Shishlo (4.1.6-10)
+        # THE MAP (a 2x2 matrix which is always linear!) A.Shishlo/J.Holmes (4.1.6-10)
         zf  = m11*zi + m12*DWi
         DWf = m21*zi + m22*DWi
 
@@ -620,7 +620,7 @@ class _PYO_G(object):
         yf   = yi     # y does not change
         Tf   = Ti + DWs
         sf   = si     # because self.length always 0
-        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis) # A.Shishlo 4.1.11)
+        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
         f_track = NP.array([xf, xpf, yf, ypf, zf, zfp, Tf, 1., sf, 1.])
@@ -665,12 +665,12 @@ class _PYO_G(object):
         # soll
         WIN       = particle.tkin                     # energy (i)
         DELTAW    = qE0LT*cos(phis)                   # energy kick
-        WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo
+        WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # particle
         phin   = -z * twopi/(betai*lamb) + phis       # phase (i)
         deltaW = qE0LT*i0*cos(phin)                   # energy kick
         win    = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT
-        wout   = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo
+        wout   = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw     = wout - WOUT                          # d(deltaW)
 
         DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
@@ -680,14 +680,14 @@ class _PYO_G(object):
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
 
-        z      = betaf/betai*z                        # z (f) (4.2.5) A.Shishlo
+        z      = betaf/betai*z                        # z (f) (4.2.5) A.Shishlo/J.Holmes
         zpf    = gammaf/(gammaf+1.) * dw/WOUT         # dW --> dp/p (f)
 
         T   = T + DELTAW                              # soll energy summation
 
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
         if r > 0.:
-            xp  = gbi/gbf*xp - x/r*commonf*sin(phin)  # Formel 4.2.6 A.Shishlo
+            xp  = gbi/gbf*xp - x/r*commonf*sin(phin)  # Formel 4.2.6 A.Shishlo/J.Holmes
             yp  = gbi/gbf*yp - y/r*commonf*sin(phin)
         elif r == 0.:
             xp  = gbi/gbf*xp
