@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
 	You should have received a copy of the GNU General Public License
 	along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-class ParamsObject(object):
+class DictObject(object):
 	"""
 	Class. An object that has key:value parameters
 	"""
@@ -30,7 +30,7 @@ class ParamsObject(object):
 	def __setitem__(self,k,v):
 		self._params[k] = v
 
-class Aclass(ParamsObject,object):
+class Aclass(DictObject,object):
 	pass
 
 class Bclass(Aclass):
@@ -38,7 +38,7 @@ class Bclass(Aclass):
 	
 ## main ----------
 if __name__ == '__main__':
-	o = ParamsObject()
+	o = DictObject()
 	o["name"]="my name is wdk"
 	print(o["name"])	
 

@@ -26,7 +26,7 @@ from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
 from setutil import collect_data_for_summary
 from lattice_generator import parse_yaml_and_fabric
-from tracks import track_soll
+from tracker import track_soll
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -34,6 +34,7 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
+DEBUG_BUCKET = DEBUG_OFF
 
 def display(functions):
     print('PREPARE DISPLAY')
@@ -41,7 +42,9 @@ def display(functions):
         display0(functions)
     else:
         display1(functions)
-        # bucket()             # separatrix
+        if DEBUG_BUCKET == DEBUG_ON:
+            from bucket_size import bucket
+            bucket()     # separatrix
 
 def display0(functions):
     """

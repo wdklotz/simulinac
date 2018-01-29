@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, MarkerActions
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from ParamsObject import ParamsObject
+from Dictionary import DictObject
 from TTFG import _TTF_G
 from Ez0 import SFdata
 from DynacG import _DYN_G
@@ -65,13 +65,13 @@ class Node(ABC):
         pass
 
 # The mother of all lattice elements (a.k.a. matrices)
-class _Node(Node, ParamsObject, object):
+class _Node(DictObject, object):
     """ Base class for transfer matrices
         i)   owns its particle instance (copy)
-        ii)  is a dictionary (ParamsObject base class)
+        ii)  is a dictionary (DictObject base class)
     """
     def __init__(self, particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
-        ParamsObject.__init__(self)
+        DictObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
         self.particle  = copy(particle)   # local copy of the particle instance !!!IMPORTANT!!!
         self.position  = position         # [entrance, middle, exit]
@@ -1266,17 +1266,17 @@ def test7():
 
 def test8():
     from lattice import Lattice
-    from tracks import track_soll
+    from tracker import track_soll
     print('--------------------------------Test8---')
     print('soll-particle\n'+PARAMS['sollteilchen'].string())
     print('test rf-gap ...')
-    """
+
     gap = GAP()
     lg = Lattice()
-    lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
-    # objprnt(rfg, 'RFG', filter = 'matrix')
-    objprnt(rfg, 'RFG')
+    lg.add_element(gap)
+    solltrack = track_soll(lg).as_table()
+    # objprnt(rfg, 'GAP', filter = 'matrix')
+    objprnt(gap, 'GAP')
     print(solltrack)
     print('GAP.particle(i)\n'+gap.particle.string())
     print('GAP.particle(f)\n'+gap.particlef.string())
@@ -1284,7 +1284,7 @@ def test8():
     rfg = RFG()
     lg = Lattice()
     lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
@@ -1294,7 +1294,7 @@ def test8():
     rfg = RFG(mapping = 'simple')
     lg = Lattice()
     lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
@@ -1304,7 +1304,7 @@ def test8():
     rfg =  RFG(mapping = 'base')
     lg = Lattice()
     lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
@@ -1317,37 +1317,37 @@ def test8():
     rfg = RFG(mapping = 'ttf', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
     lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
     print('RFG.particle(i)\n'+rfg.particle.string())
     print('RFG.particle(f)\n'+rfg.particlef.string())
-    """
+
     input_file = 'SF_WDK2g44.TBL'
     Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
     SF_tab    = SFdata(input_file, Epeak = Epeak)
     rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
     lg.add_element(rfg)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
     print('RFG.particle(i)\n'+rfg.particle.string())
     print('RFG.particle(f)\n'+rfg.particlef.string())
-    """
+
     print('test cavity ...')
     cav = RFC()
     lg = Lattice()
     lg.add_element(cav)
-    solltrack = track_soll(lg).asTable()
+    solltrack = track_soll(lg).as_table()
     # objprnt(cav, 'RFC', filter = 'matrix')
     objprnt(cav, 'RFC')
     print(solltrack)
     print('CAV.particle(i)\n'+cav.particle.string())
     print('CAV.particle(f)\n'+cav.particlef.string())
-    """
+
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling ...')

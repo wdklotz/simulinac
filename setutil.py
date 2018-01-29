@@ -21,6 +21,7 @@ import sys,traceback
 
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
+from enum import IntEnum
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -58,8 +59,21 @@ ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   # add handler to logger
 
-# x        x'        y        y'        z       dp/p0     E        dE        s        l
+# x        x'        y        y'        z       z'=dp/p   T        dT        S        dS
 XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
+class K(IntEnum):                                # enum.IntEnum since Python 3.4
+    """ Koordanaten Indizees """
+    x  = XKOO
+    xp = XPKOO
+    y  = YKOO
+    yp = YPKOO
+    z  = ZKOO
+    zp = ZPKOO
+    T  = EKOO
+    dT = DEKOO
+    S  = SKOO
+    dS = LKOO
+
 
 # DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
@@ -102,8 +116,7 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-# KeepValues
-# a global dict to keep key-value pairs (used for tracking results)
+""" KeepValues: a global dict to keep key-value pairs (used for tracking results) """
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):
@@ -117,10 +130,10 @@ class Particle(object):
         self.gamma      = self.e/self.e0
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
-        except ValueError:
-            print(traceback.format_exc())
-            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f}) - STOP".format(tkin))
-            sys.exit(1)
+        except ValueError as vex:
+            # print(traceback.format_exc())
+            # print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
+            raise vex
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -428,6 +441,13 @@ def I1(x):
             sys.exit(1)
     return res
 
+def sigmas(alfa,beta,epsi):
+    """ calculates sigmas from twiss-alpha, -beta and -emittance """
+    gamma  = (1.+ alfa**2)/beta
+    sigma  = sqrt(epsi*beta)
+    sigmap = sqrt(epsi*gamma)
+    return sigma,sigmap
+
 # Marker Actions
 def sigma_x_action():
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_x']*1.e3))
@@ -442,9 +462,9 @@ def Tkin_action():
     PARAMS['Tkin({:0=6.2f})'.format(KeepValues['z'])] = KeepValues['Tkin']
 
 MarkerActions = dict(                   # all possible actions for a Marker
-            sigma_x=sigma_x_action,
-            sigma_y=sigma_y_action,
-            Tkin=Tkin_action
+            sigma_x   = sigma_x_action,
+            sigma_y   = sigma_y_action,
+            Tkin      = Tkin_action
             )
 
 # Utilities

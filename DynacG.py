@@ -216,9 +216,9 @@ class _DYN_Gslice(object):
         T        = i_track[EKOO]       # [6] summe aller delta-T
         s        = i_track[SKOO]       # [8] summe aller laengen
         # particle kin.energy and phase at entrance (z0)
-        win  = (zp * (self.GAMMA+1.)/self.GAMMA +1.) * self.WIN      # (z0) W
-        pin  = - z*twopi/(self.BETA*self.lamb) + self.PHIN           # (z0) phase
-        particle = copy(self.particle)(win)                          # (z0) particle
+        win      = (zp * (self.GAMMA+1.)/self.GAMMA +1.) * self.WIN      # (z0) W
+        pin      = - z*twopi/(self.BETA*self.lamb) + self.PHIN           # (z0) phase
+        particle = copy(self.particle)(win)                              # (z0) particle
         # aliases
         gamma   = particle.gamma
         beta    = particle.beta

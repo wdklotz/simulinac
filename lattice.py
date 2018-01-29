@@ -25,7 +25,7 @@ from copy import copy              # deepcopy?
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
-from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
@@ -321,15 +321,17 @@ class Lattice(object):
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
         saper = 1.e6  # aperture control
         s     = 0.0
-        for element in self.seq:
+        for element in self.seq:                    # loop elements
             s0 = element.position[0]
             slices = element.make_slices(anz=steps)
-            for i_element in slices:
-                sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
-                if isinstance(i_element,ELM.RFG) and FLAGS['egf']:
-                    rf_gap    = i_element
-                    delta_phi = PARAMS['Dphi0']
-                    sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
+            for slice in slices:                    # loop slices
+
+                # R-MAP: SIGMA' = R * SIGMA * R.tranposed
+                sigma_f = sigma_i.RSRt(slice)
+                
+                # add EG
+                if isinstance(slice,ELM.RFG) and FLAGS['egf']:
+                    sigma_f = sigma_f.apply_eg_corr(rf_gap=slice, sigma_i=sigma_i, delta_phi=PARAMS['Dphi0'])
                 sigf = sigma_f.matrix
                 try:
                     xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
@@ -341,18 +343,26 @@ class Lattice(object):
                             'lattice.py',
                             'sigma_functions()',
                             )
-                r = sqrt(xsquare_av**2+ysquare_av**2)
-                s += i_element.length
+                s += slice.length
                 sigma_fun.append((s,xsquare_av,ysquare_av))
-                KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':i_element.particle.tkin})   # keep current values
                 sigma_i = sigma_f.clone()
-                if isinstance(i_element,ELM.MRK):     # marker actions
-                    i_element.do_actions()
-            if 3.*r > PARAMS['aperture']:             # aperture control
+
+                # KEEPVALUES update
+                # KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
+
+                # MARKER ACTIONS
+                if isinstance(slice,ELM.MRK):
+                    slice.do_actions()
+
+                # APERTURE control
+                r = sqrt(xsquare_av**2 + ysquare_av**2)
+
+            if 3.*r > PARAMS['aperture']:
                 saper = min(s0,saper)
+        
         if saper<1.e6:                                # warnings (experimental!)
             warnings.showwarning(
-                    '3*sigma out of APERTURE at about s ={:5.1f}[m]\nParticle lost!'.format(saper),
+                    '3*sigma out of APERTURE at about s ={:5.1f}[m]'.format(saper),
                     UserWarning,
                     'lattice.py',
                     'sigma_functions()',

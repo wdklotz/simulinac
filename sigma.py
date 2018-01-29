@@ -78,7 +78,7 @@ class Sigma(object):
         new = Sigma()
         new.matrix = self.matrix.copy()
         return new
-    def apply_eg_corr(self,rf_gap,sigma_i,delta_phi,ksi=(0.,0.)):
+    def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         """
         Apply emmittance growth correction after passage through RF gap 
         ref: Appendix F Trace3D manual
