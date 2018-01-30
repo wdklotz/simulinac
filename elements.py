@@ -21,7 +21,7 @@ import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
 from copy import copy
 import numpy as NP
-from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, MarkerActions
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt
@@ -47,22 +47,22 @@ MDIM = 10
 
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})  # pretty printing
 
-class Node(ABC):
-    """ Lattice Node interface: virtual functions that must be implemented by all child classes """
-    def __init__(self):
-        super().__init__()
-
-    @abstractmethod
-    def map(self, i_track):
-        pass
-
-    @abstractmethod
-    def soll_map(self, i_track):
-        pass
-
-    @abstractmethod
-    def adjust_energy(self, tkin):
-        pass
+# class Node(ABC):
+#     """ Lattice Node interface: virtual functions that must be implemented by all child classes """
+#     def __init__(self):
+#         super().__init__()
+# 
+#     @abstractmethod
+#     def map(self, i_track):
+#         pass
+# 
+#     @abstractmethod
+#     def soll_map(self, i_track):
+#         pass
+# 
+#     @abstractmethod
+#     def adjust_energy(self, tkin):
+#         pass
 
 # The mother of all lattice elements (a.k.a. matrices)
 class _Node(DictObject, object):

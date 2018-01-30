@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from trackPlot import poincarePlot
+from string import Template
 
 from lattice_generator import Factory
 import elements as ELM
@@ -41,7 +42,6 @@ DEBUG_TEST0       = DEBUG_ON
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     nbsections = bunch.nbsections        # poincare sections per track
     psec = poincare_section
-    txt = ''
     if psec == 0:
         txt = '{} initial'.format(text)
     elif psec == (nbsections-1):
@@ -78,14 +78,7 @@ def print_progress_bar (iteration, total, prefix = '', suffix1 = '', suffix2 = '
     if iteration == total:
         print()
 
-class Progress():
-    def __init__(self):
-        self.line = ''
-    def refresh(self,value):
-        self.line = value
-    def display(self):
-        print('\r{}'.format(self.line),end='')
-progress = Progress()
+progress = Template('$tx1 $tx2 $tx3')
 
 def track(lattice,bunch):
     """
@@ -95,28 +88,38 @@ def track(lattice,bunch):
     """
     from time import sleep
 
-    loss_counter = 0
-
     if DEBUG_TRACK == DEBUG_ON: dictprnt(bunch._params,'bunch',filter='tracklist')
     
+    invalid_tracks = []
+    valid_tracks   = []
+    losses         = 0
+
     for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
+        invalid = False
         ti = ptrack.first()
+
         for element in lattice.seq:                        # loop elements
             try:
-                tf = element.map(ti)      # map!
-            except ValueError:
-                loss_counter += 1
+                tf = element.map(ti)                       # map!
+            except ValueError as ex:
+                invalid_tracks.append(ptrack)
+                losses = len(invalid_tracks)
+                invalid = True
                 break
             ti = tf
-
-            # take a poincare section at MRK elements
+            # take a poincare section at MRK elements only
             if isinstance(element,ELM.MRK):
                 ptrack.append(tf)
 
-        if (tcount+1)%25 == 0: 
-            progress.refresh('(start soll track) - (start track) - progress: {}/{} tracks done'.format(tcount+1,bunch.nbtracks))
-            progress.display()
+        if not invalid : valid_tracks.append(ptrack)
+        # showing some track-loop cycles progress
+        if (tcount+1)%25 == 0:
+            prog = progress.substitute(tx1='(soll-track)', tx2='(track)', tx3='{}/{}/{} done/lost/initial'.format(tcount+1,losses,bunch.nbtracks))
+            print('\r{}'.format(prog), end='')
 
+    # keep valid tracks in the bunch
+    bunch.tracks = valid_tracks
+    return bunch
 
 def track_soll(lattice):
     """
@@ -143,7 +146,8 @@ def track_soll(lattice):
     # DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
     return soll_track
 
-def tracker(filepath, particlesPerBunch, show, save):
+def tracker(filepath, particlesPerBunch, show, save, skip):
+    """ prepare and launch tracking """
     #make lattice with time
     t0 = time.clock()
     lattice = Factory(filepath)
@@ -170,31 +174,25 @@ def tracker(filepath, particlesPerBunch, show, save):
     bunch['sigma-xp'] = sigmas_x[1]
     bunch['sigma-y']  = sigmas_y[0]
     bunch['sigma-yp'] = sigmas_y[1]
-    bunch['sigma-z']  = 0.e-3
-    bunch['sigma-zp'] = 0.e-3
+    bunch['sigma-z']  = 1.e-3
+    bunch['sigma-zp'] = 1.e-3
     bunch['tkin']     = 70.
     bunch.populate_phase_space()
 
-    # track and show final with time
-    progress.refresh('(start soll track)')
-    progress.display()
+    # launch tracking and show final with time
+    prog = progress.substitute(tx1='(soll-track)', tx2='', tx3='')
+    print('\r{}'.format(prog), end='')
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-
-    progress.refresh('(start soll track) - (start track)')
-    progress.display()
+    prog = progress.substitute(tx1='(soll-track)', tx2='(track)', tx3='')
+    print('\r{}'.format(prog), end='')
     track(lattice,bunch) # track bunch
     t4 = time.clock()
-
-    sections = [i for i in range(bunch.nbsections)]
-    minmax = 1.e4*sigmas_x[0],1.e4*sigmas_x[1]
-    for i in sections:
-        if i != 0 and i != sections[-1] and i%20 != 0: continue
-        fig = scatterPlot(bunch=bunch, poincare_section=i, ordinate=K.x, abzisse=K.xp, text="x-x'", minmax=minmax)
-        if save:
-            plt.savefig('figures/poincare_section{}.png'.format(i))
-    if show: plt.show()
+    # make 2D projections
+    # track_plane(bunch, K.x, K.xp, show, save)
+    # track_plane(bunch, K.x, K.y, show, save)
+    track_plane(bunch, K.z, K.zp, show, save, skip)
     t5 = time.clock()
 
     print()
@@ -205,6 +203,20 @@ def tracker(filepath, particlesPerBunch, show, save):
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
 
+def track_plane(bunch, ordinate, abzisse, show, save, skip):
+    """ 2D phase space projections of poincare sections """
+    symbol    = ("x","x'","y","y'","z","z'")
+    sigmas    = (bunch['sigma-x'],bunch['sigma-xp'],bunch['sigma-y'],bunch['sigma-yp'],bunch['sigma-z'],bunch['sigma-zp'])
+    text      = '{}-{}'.format(symbol[ordinate],symbol[abzisse])
+    minmax    = (10.e3*sigmas[ordinate],10.e3*sigmas[abzisse])
+    sections  = [i for i in range(bunch.nbsections)]
+    for i in sections:
+        if i != 0 and i != sections[-1] and i%skip != 0: continue   # skip sections, keep first and last
+        fig = scatterPlot(bunch=bunch, poincare_section=i, ordinate=ordinate, abzisse=abzisse, text=text, minmax=minmax)
+        if save:
+            plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
+    if show: plt.show()
+    
 def test0(filepath):
     print('-----------------------------------------Test0---')
     lattice = Factory(filepath)
@@ -216,7 +228,7 @@ def test0(filepath):
 def test1(filepath):
     print('-----------------------------------------Test1---')
     print('tracker() with lattice-file {}'.format(filepath))
-    tracker(filepath, particlesPerBunch = 1000, show=True, save=False)
+    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=1)
     
 if __name__ == '__main__':
     filepath = 'yml/work.yml'    ## the default input file (YAML syntax)

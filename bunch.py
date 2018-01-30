@@ -173,28 +173,30 @@ def Gauss1D(params):
     sigzp      = params['sigma-zp']
     nbtracks   = params['nbtracks']
     coord_mask = params['coord_mask']
-    tkin     = params['tkin']
-    X        = sigx  * np.random.randn(nbtracks)    # gauss distribution X
-    XP       = sigxp * np.random.randn(nbtracks)
-    Y        = sigy  * np.random.randn(nbtracks)
-    YP       = sigyp * np.random.randn(nbtracks)
-    Z        = sigz  * np.random.randn(nbtracks)
-    ZP       = sigzp * np.random.randn(nbtracks)
+    tkin       = params['tkin']
+
+    X          = sigx  * np.random.randn(nbtracks)    # gauss distribution X
+    XP         = sigxp * np.random.randn(nbtracks)
+    Y          = sigy  * np.random.randn(nbtracks)
+    YP         = sigyp * np.random.randn(nbtracks)
+    Z          = sigz  * np.random.randn(nbtracks)
+    ZP         = sigzp * np.random.randn(nbtracks)
+
     tracklist=[]                                    # all tracks in a bunch
     for i in range(nbtracks):
         start=np.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
         # initial setting for each coordinate
-        if coord_mask[0]:
+        if coord_mask[K.x]:
             start[K.x]  = X[i]
-        if coord_mask[1]:
+        if coord_mask[K.xp]:
             start[K.xp] = XP[i]
-        if coord_mask[2]:
+        if coord_mask[K.y]:
             start[K.y]  = Y[i]
-        if coord_mask[3]:
+        if coord_mask[K.yp]:
             start[K.yp] = YP[i]
-        if coord_mask[4]:
+        if coord_mask[K.z]:
             start[K.z]  = Z[i]
-        if coord_mask[5]:
+        if coord_mask[K.zp]:
             start[K.zp] = ZP[i]
         tracklist.append(Track(track_number=i, start=start))
     return tracklist
@@ -213,11 +215,15 @@ class Bunch(DictObject,object):
     def nbtracks(self):        # nbof tracks per bunch
         return self['nbtracks']
     @nbtracks.setter
-    def nbtracks(self,value):
+    def nbtracks(self, value):
         self['nbtracks'] = value
     @property
     def tracks(self):            # all tracks
         return self.tracklist
+    @tracks.setter
+    def tracks(self, value):
+        self.tracklist = value
+        self.nbtracks  = len(value)
     @property
     def last(self):              # last track
         return self.tracklist[-1]
@@ -241,6 +247,7 @@ class Bunch(DictObject,object):
         self['disttype'] = value
 
     def populate_phase_space(self):
+        """ create the distribution """
         self.tracklist = self.disttype(self)
 
 def test0():
