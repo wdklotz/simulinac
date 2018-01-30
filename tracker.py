@@ -114,7 +114,7 @@ def track(lattice,bunch):
         if not invalid : valid_tracks.append(ptrack)
         # showing some track-loop cycles progress
         if (tcount+1)%25 == 0:
-            prog = progress.substitute(tx1='(soll-track)', tx2='(track)', tx3='{}/{}/{} done/lost/initial'.format(tcount+1,losses,bunch.nbtracks))
+            prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='{}/{}/{} done/lost/initial'.format(tcount+1,losses,bunch.nbtracks))
             print('\r{}'.format(prog), end='')
 
     # keep valid tracks in the bunch
@@ -185,7 +185,7 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    prog = progress.substitute(tx1='(soll-track)', tx2='(track)', tx3='')
+    prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='')
     print('\r{}'.format(prog), end='')
     track(lattice,bunch) # track bunch
     t4 = time.clock()
@@ -228,7 +228,7 @@ def test0(filepath):
 def test1(filepath):
     print('-----------------------------------------Test1---')
     print('tracker() with lattice-file {}'.format(filepath))
-    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=1)
+    tracker(filepath, particlesPerBunch = 3000, show=False, save=True, skip=1)
     
 if __name__ == '__main__':
     filepath = 'yml/work.yml'    ## the default input file (YAML syntax)
