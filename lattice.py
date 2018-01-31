@@ -336,7 +336,7 @@ class Lattice(object):
                 try:
                     xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
-                except ValueError:
+                except ValueError as ex:
                     warnings.showwarning(
                             'sqrt of negative number!\nResult may have no physical meaning!',
                             UserWarning,
@@ -561,8 +561,8 @@ def get_section(self,sec=None):
         for elm in self.seq:
             try:
                 elmsec = elm.section
-            except AttributeError:
-                print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+            except AttributeError as ex:
+                print('WARNING: element {} w/o section attribute!'.format(elm.label))
                 continue
             if elmsec == sec:
                 section.add_element(elm)

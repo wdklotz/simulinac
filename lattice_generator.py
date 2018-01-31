@@ -323,9 +323,9 @@ def Factory(input_file):
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject)
-        except Exception as inst:
+        except Exception as ex:
             warnings.showwarning(
-                    'InputError: {} - STOP'.format(str(inst)),
+                    'InputError: {} - STOP'.format(str(ex)),
                     UserWarning,
                     'lattice_generator.py',
                     'Factory()',

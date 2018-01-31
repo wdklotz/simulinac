@@ -58,27 +58,6 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
 
-# def print_progress_bar (iteration, total, prefix = '', suffix1 = '', suffix2 = '', decimals = 1, length = 100, fill = '=', lost = 0):
-#     """
-#     Call in a loop to create terminal progress bar
-#     @params:
-#         iteration   - Required  : current iteration (Int)
-#         total       - Required  : total iterations (Int)
-#         prefix      - Optional  : prefix string (Str)
-#         suffix      - Optional  : suffix string (Str)
-#         decimals    - Optional  : positive number of decimals in percent complete (Int)
-#         length      - Optional  : character length of bar (Int)
-#     """
-#     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-#     filledLength = int(length * iteration // total)
-#     bar = fill * filledLength + '-' * (length - filledLength)
-#     # Writing '\r' will move the cursor back to the beginning of the line.
-#     # print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
-#     print('\r%s |%s| %s%% %s %s %i' % (prefix, bar, percent, suffix1, suffix2, lost), end = '')
-#     # Print new line on Complete
-#     if iteration == total:
-#         print()
-
 progress = Template('$tx1 $tx2 $tx3')
 
 def track(lattice,bunch):

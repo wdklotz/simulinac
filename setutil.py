@@ -130,10 +130,9 @@ class Particle(object):
         self.gamma      = self.e/self.e0
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
-        except ValueError as vex:
-            # print(traceback.format_exc())
+        except ValueError as ex:
             # print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
-            raise vex
+            raise ex
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -398,8 +397,7 @@ def I0(x):
         try:
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I0,x )',(res,x))
-        except OverflowError:
-            print(traceback.format_exc())
+        except OverflowError as ex:
             print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res
@@ -435,8 +433,7 @@ def I1(x):
         try:
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I1,x )',(res,x))
-        except OverflowError:
-            print(traceback.format_exc())
+        except OverflowError as ex:
             print('Bessel-function I1 overflow: (arg = {6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res

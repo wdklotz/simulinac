@@ -989,7 +989,7 @@ class SIXD(D):
             sigma    = z
             try:
                 psigma = ((beta0/beta/(1.-dp2p))-1.)/beta0**2
-            except Exception:
+            except Exception as ex:
                 print('(dp2p, beta, beta0)', (dp2p, beta, beta0))
                 print('in t3d2six(): bad psigma')
                 sys.exit(1)
