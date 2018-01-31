@@ -22,6 +22,7 @@ import numpy as np
 from copy import copy
 import math
 from functools import partial
+import warnings
 
 
 from setutil import DEBUG, arrprnt, PARAMS, tblprnt
@@ -251,8 +252,10 @@ class _DYN_Gslice(object):
         # delta time
         dtime  = ((1. + np.dot(R,R)*K1)*I3 + np.dot(R,Rp)*K1*I4)/m0c3
         dphi   = dtime * omega                     # (z4) delta-phase
-        # dz     = - beta*lamb/twopi*dphi          # z = distance from soll
-        # dz     = - betac * dtime
+        dz1     = - beta*lamb/twopi*dphi           # z = distance from soll
+        dz2     = - betac * dtime                  # z = distance from soll
+        if abs(dz1-dz2) > 1.e-15:
+            warnings.warn('|delta-z difference| too large - should be equal')
         DEBUG_OFF('(deltaW[KeV], dphi[mdeg]) ',(deltaW*1.e3, math.degrees(dphi)*1.e3))
         # mapping of reduced coordinates
         dR     = R*J2 + Rp*J3  # delta-radius
@@ -267,7 +270,7 @@ class _DYN_Gslice(object):
         pout = pin + dphi
         dp   = pout - self.PHOUT
         zf   = -beta*self.lamb/twopi*dp     # z out
-        # new delta-p/p coordinate
+        # new delta-p/p coordinate 
         wout = win + deltaW
         dw   = wout - self.WOUT
         zpf  = gamma/(gamma+1.)*dw/wout     # delta-p/p out

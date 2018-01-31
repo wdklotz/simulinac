@@ -58,7 +58,7 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
 
-progress = Template('$tx1 $tx2 $tx3')
+progress = Template('$tx1 $tx2 $tx3 $tx4')
 
 def track(lattice,bunch):
     """
@@ -73,7 +73,11 @@ def track(lattice,bunch):
     invalid_tracks = []
     valid_tracks   = []
     losses         = 0
-
+    # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # good
+    # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # better
+    zeuge          = ('\u2598','\u259D','\u2597','\u2596') # best
+    tx4            = '{}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
+    
     for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
         invalid = False
         ti = ptrack.first()
@@ -92,10 +96,12 @@ def track(lattice,bunch):
                 ptrack.append(tf)
 
         if not invalid : valid_tracks.append(ptrack)
-        # showing some track-loop cycles progress
+        # showing track-loop progress
         if (tcount+1)%25 == 0:
-            prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='{}/{}/{} done/lost/initial'.format(tcount+1,losses,bunch.nbtracks))
-            print('\r{}'.format(prog), end='')
+            tx4 = '{}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
+        tx3 = zeuge[tcount%4]
+        prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3=tx3, tx4=tx4)
+        print('\r{}'.format(prog), end='')
 
     # keep valid tracks in the bunch
     bunch.tracks = valid_tracks
@@ -160,12 +166,12 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     bunch.populate_phase_space()
 
     # launch tracking and show final with time
-    prog = progress.substitute(tx1='(soll-track)', tx2='', tx3='')
+    prog = progress.substitute(tx1='(soll-track)', tx2='', tx3='', tx4='')
     print('\r{}'.format(prog), end='')
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='')
+    prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='', tx4='')
     print('\r{}'.format(prog), end='')
     track(lattice,bunch) # track bunch
     t4 = time.clock()
@@ -208,7 +214,7 @@ def test0(filepath):
 def test1(filepath):
     print('-----------------------------------------Test1---')
     print('tracker() with lattice-file {}'.format(filepath))
-    tracker(filepath, particlesPerBunch = 3000, show=False, save=True, skip=1)
+    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=10)
     
 if __name__ == '__main__':
     filepath = 'yml/work.yml'    ## the default input file (YAML syntax)
