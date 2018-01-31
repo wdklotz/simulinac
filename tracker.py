@@ -40,6 +40,7 @@ DEBUG_SOLL_TRACK  = DEBUG_OFF
 DEBUG_TEST0       = DEBUG_ON
 
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
+    """ prepare the plot of a Poincaré section """
     nbsections = bunch.nbsections        # poincare sections per track
     psec = poincare_section
     if psec == 0:
@@ -57,26 +58,26 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
 
-def print_progress_bar (iteration, total, prefix = '', suffix1 = '', suffix2 = '', decimals = 1, length = 100, fill = '=', lost = 0):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    # Writing '\r' will move the cursor back to the beginning of the line.
-    # print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
-    print('\r%s |%s| %s%% %s %s %i' % (prefix, bar, percent, suffix1, suffix2, lost), end = '')
-    # Print new line on Complete
-    if iteration == total:
-        print()
+# def print_progress_bar (iteration, total, prefix = '', suffix1 = '', suffix2 = '', decimals = 1, length = 100, fill = '=', lost = 0):
+#     """
+#     Call in a loop to create terminal progress bar
+#     @params:
+#         iteration   - Required  : current iteration (Int)
+#         total       - Required  : total iterations (Int)
+#         prefix      - Optional  : prefix string (Str)
+#         suffix      - Optional  : suffix string (Str)
+#         decimals    - Optional  : positive number of decimals in percent complete (Int)
+#         length      - Optional  : character length of bar (Int)
+#     """
+#     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+#     filledLength = int(length * iteration // total)
+#     bar = fill * filledLength + '-' * (length - filledLength)
+#     # Writing '\r' will move the cursor back to the beginning of the line.
+#     # print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+#     print('\r%s |%s| %s%% %s %s %i' % (prefix, bar, percent, suffix1, suffix2, lost), end = '')
+#     # Print new line on Complete
+#     if iteration == total:
+#         print()
 
 progress = Template('$tx1 $tx2 $tx3')
 
@@ -204,7 +205,7 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
 
 def track_plane(bunch, ordinate, abzisse, show, save, skip):
-    """ 2D phase space projections of poincare sections """
+    """ 2D phase space projections of Poincaré sections """
     symbol    = ("x","x'","y","y'","z","z'")
     sigmas    = (bunch['sigma-x'],bunch['sigma-xp'],bunch['sigma-y'],bunch['sigma-yp'],bunch['sigma-z'],bunch['sigma-zp'])
     text      = '{}-{}'.format(symbol[ordinate],symbol[abzisse])

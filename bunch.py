@@ -92,19 +92,17 @@ class Tpoint(object):
         self.point = point
     @property
     def T(self):
-        return self.point[EKOO]
+        return self.point[K.T]
     @T.setter
     def T(self,value):
-        self.point[6] = value
+        self.point[K.T] = value
     
 class Track(object):
-    """ A Track is an ordered list of track-points. 
-        A track-point is an np.array of MDIM coordinates.
-    """
+    """ A Track is an ordered list of track-points (Tpoint). """
     def __init__(self, track_number = 0, start = None):
         self.track_number = track_number
         if start.all() == None:
-            self._points = []           # evevery track point is a poincare section
+            self._points = []           # every track point is a point in a Poincaré section
         else:
             self._points = [start]
             self.points_per_track = 1
