@@ -54,7 +54,6 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
     
-# def process_single_track(ptrack, lattice):
 def process_single_track(arg):
     ptrack = arg[0]
     lattice = arg[1]
@@ -114,7 +113,7 @@ def track(lattice,bunch,smp=False):
                 tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
             tx3  = zeuge[tcount%4]
             print('\r{}'.format(progress.substitute(tx1='(soll-track)', tx2='(bunch)', tx3=tx3, tx4=tx4)), end='')
-        # keep valid tracks in the bunch
+    # keep valid tracks in the bunch
     bunch.tracks = valid_tracks
     return bunch
 
