@@ -17,13 +17,12 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-# import matplotlib.mlab as mlab
-# import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 from trackPlot import poincarePlot
 from string import Template
+from joblib import Parallel, delayed
 
 from lattice_generator import Factory
 import elements as ELM
@@ -54,8 +53,27 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     boxtext = '{} {} particles'.format(txt, bunch.nbtracks)
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
+    
+# def process_single_track(ptrack, lattice):
+def process_single_track(arg):
+    ptrack = arg[0]
+    lattice = arg[1]
+    invalid = False
+    ti = ptrack.first()
 
-def track(lattice,bunch):
+    for element in lattice.seq:                  # loop elements
+        try:
+            tf = element.map(ti)                 # map!
+        except ValueError as ex:
+            invalid = True
+            break
+        ti = tf
+        # take a poincare section at MRK elements only
+        if isinstance(element,ELM.MRK) and not invalid:
+            ptrack.append(tf)
+    return (ptrack,invalid)
+
+def track(lattice,bunch,smp=False):
     """
     Tracks a bunch of particles through the lattice using maps
     - lattice is a list of elements
@@ -71,41 +89,39 @@ def track(lattice,bunch):
     # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # good
     # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # better
     zeuge          = ('\u2598','\u259D','\u2597','\u2596') # best
-    tx4            = '{}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
-    
-    for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
-        invalid = False
-        ti = ptrack.first()
+    tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
-        for element in lattice.seq:                        # loop elements
-            try:
-                tf = element.map(ti)                       # map!
-            except ValueError as ex:
+    if(smp):
+        arg = [(x,lattice) for x in bunch.tracks]
+        print()
+        r = Parallel(n_jobs=8, verbose=5)(map(delayed(process_single_track),arg))
+        trck,invalid = zip(*r)
+        for i,t in enumerate(trck):
+            if invalid[i]:
+                invalid_tracks.append(t)
+            else:
+                valid_tracks.append(t)
+    else:
+        for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
+            invalid = process_single_track((ptrack, lattice))[1]
+            if invalid:
                 invalid_tracks.append(ptrack)
+            else:
+                valid_tracks.append(ptrack)
+            # showing track-loop progress
+            if (tcount+1)%25 == 0:
                 losses = len(invalid_tracks)
-                invalid = True
-                break
-            ti = tf
-            # take a poincare section at MRK elements only
-            if isinstance(element,ELM.MRK):
-                ptrack.append(tf)
-
-        if not invalid : valid_tracks.append(ptrack)
-        # showing track-loop progress
-        if (tcount+1)%25 == 0:
-            tx4 = '{}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
-        tx3 = zeuge[tcount%4]
-        prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3=tx3, tx4=tx4)
-        print('\r{}'.format(prog), end='')
-
-    # keep valid tracks in the bunch
+                tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
+            tx3  = zeuge[tcount%4]
+            print('\r{}'.format(progress.substitute(tx1='(soll-track)', tx2='(bunch)', tx3=tx3, tx4=tx4)), end='')
+        # keep valid tracks in the bunch
     bunch.tracks = valid_tracks
     return bunch
 
 def track_soll(lattice):
     """
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
-    adapted to the energy of the accellerated reference particle.
+    adapted to the energy of the accelerated reference particle.
     """
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     for element in lattice.seq:
@@ -166,7 +182,7 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    prog = progress.substitute(tx1='(soll-track)', tx2='(tracks)', tx3='', tx4='')
+    prog = progress.substitute(tx1='(soll-track)', tx2='(bunch)', tx3='', tx4='')
     print('\r{}'.format(prog), end='')
     track(lattice,bunch) # track bunch
     t4 = time.clock()
@@ -209,13 +225,13 @@ def test0(filepath):
 def test1(filepath):
     print('-----------------------------------------Test1---')
     print('tracker() with lattice-file {}'.format(filepath))
-    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=10)
+    tracker(filepath, particlesPerBunch = 1000, show=True, save=False, skip=10)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     progress = Template('$tx1 $tx2 $tx3 $tx4')
-    filepath = 'yml/work.yml'    ## the default input file (YAML syntax)
+    filepath = 'yml/work.yml'
     # test0(filepath)
     test1(filepath)
