@@ -35,9 +35,6 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_TRACK       = DEBUG_OFF
-DEBUG_SOLL_TRACK  = DEBUG_OFF
-DEBUG_TEST0       = DEBUG_ON
 
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     """ prepare the plot of a Poincaré section """
@@ -57,8 +54,6 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     boxtext = '{} {} particles'.format(txt, bunch.nbtracks)
     poincarePlot(x, y, boxtext, minmax, projections = (1,1))
     return fig
-
-progress = Template('$tx1 $tx2 $tx3 $tx4')
 
 def track(lattice,bunch):
     """
@@ -176,9 +171,9 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     track(lattice,bunch) # track bunch
     t4 = time.clock()
     # make 2D projections
-    # track_plane(bunch, K.x, K.xp, show, save)
-    # track_plane(bunch, K.x, K.y, show, save)
-    track_plane(bunch, K.z, K.zp, show, save, skip)
+    # project_onto_plane(bunch, K.x, K.xp, show, save)
+    # project_onto_plane(bunch, K.x, K.y, show, save)
+    project_onto_plane(bunch, K.z, K.zp, show, save, skip)
     t5 = time.clock()
 
     print()
@@ -189,7 +184,7 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
 
-def track_plane(bunch, ordinate, abzisse, show, save, skip):
+def project_onto_plane(bunch, ordinate, abzisse, show, save, skip):
     """ 2D phase space projections of Poincaré sections """
     symbol    = ("x","x'","y","y'","z","z'")
     sigmas    = (bunch['sigma-x'],bunch['sigma-xp'],bunch['sigma-y'],bunch['sigma-yp'],bunch['sigma-z'],bunch['sigma-zp'])
@@ -217,6 +212,10 @@ def test1(filepath):
     tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=10)
     
 if __name__ == '__main__':
+    DEBUG_TRACK       = DEBUG_OFF
+    DEBUG_SOLL_TRACK  = DEBUG_OFF
+    DEBUG_TEST0       = DEBUG_ON
+    progress = Template('$tx1 $tx2 $tx3 $tx4')
     filepath = 'yml/work.yml'    ## the default input file (YAML syntax)
     # test0(filepath)
     test1(filepath)
