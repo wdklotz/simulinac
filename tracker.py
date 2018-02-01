@@ -20,7 +20,6 @@ This file is part of the SIMULINAC code
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from trackPlot import poincarePlot
 from string import Template
 from joblib import Parallel, delayed
 
@@ -28,12 +27,17 @@ from lattice_generator import Factory
 import elements as ELM
 from setutil import DEBUG, PARAMS, dictprnt, sigmas, K
 from bunch import Track, Bunch, Gauss1D
+from trackPlot import poincarePlot
 
 # DEBUGGING
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
+
+def progress(tx):
+    res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
+    print('\r{}'.format(res), end="")
 
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     """ prepare the plot of a Poincaré section """
@@ -55,11 +59,12 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     return fig
     
 def process_single_track(arg):
-    ptrack = arg[0]
+    """ successive mappings of a track through the lattice """
+    ptrack  = arg[0]
     lattice = arg[1]
     invalid = False
-    ti = ptrack.first()
 
+    ti = ptrack.first()
     for element in lattice.seq:                  # loop elements
         try:
             tf = element.map(ti)                 # map!
@@ -77,21 +82,20 @@ def track(lattice,bunch,smp=False):
     Tracks a bunch of particles through the lattice using maps
     - lattice is a list of elements
     - bunch   is a list of particle tracks
+    - smp flag False means do not use multipocessing
     """
-    from time import sleep
-
     if DEBUG_TRACK == DEBUG_ON: dictprnt(bunch._params,'bunch',filter='tracklist')
     
     invalid_tracks = []
     valid_tracks   = []
     losses         = 0
-    # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # good
-    # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # better
-    zeuge          = ('\u2598','\u259D','\u2597','\u2596') # best
+    # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # |/-\
+    # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # box symbols
+    zeuge          = ('\u2598','\u259D','\u2597','\u2596') # jumpng spot
     tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
     if(smp):
-        arg = [(x,lattice) for x in bunch.tracks]
+        arg = [(ptrack,lattice) for ptrack in bunch.tracks]
         print()
         r = Parallel(n_jobs=8, verbose=5)(map(delayed(process_single_track),arg))
         trck,invalid = zip(*r)
@@ -111,8 +115,7 @@ def track(lattice,bunch,smp=False):
             if (tcount+1)%25 == 0:
                 losses = len(invalid_tracks)
                 tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
-            tx3  = zeuge[tcount%4]
-            print('\r{}'.format(progress.substitute(tx1='(soll-track)', tx2='(bunch)', tx3=tx3, tx4=tx4)), end='')
+            progress(('(soll-track)','(bunch)',zeuge[tcount%4],tx4))
     # keep valid tracks in the bunch
     bunch.tracks = valid_tracks
     return bunch
@@ -176,13 +179,11 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     bunch.populate_phase_space()
 
     # launch tracking and show final with time
-    prog = progress.substitute(tx1='(soll-track)', tx2='', tx3='', tx4='')
-    print('\r{}'.format(prog), end='')
+    progress(('(soll-track)','','',''))
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    prog = progress.substitute(tx1='(soll-track)', tx2='(bunch)', tx3='', tx4='')
-    print('\r{}'.format(prog), end='')
+    progress(('(soll-track)','(bunch)','',''))
     track(lattice,bunch) # track bunch
     t4 = time.clock()
     # make 2D projections
@@ -223,14 +224,15 @@ def test0(filepath):
 
 def test1(filepath):
     print('-----------------------------------------Test1---')
-    print('tracker() with lattice-file {}'.format(filepath))
+    print('tracker() with lattice-file {}\n'.format(filepath))
     tracker(filepath, particlesPerBunch = 1000, show=True, save=False, skip=10)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
-    progress = Template('$tx1 $tx2 $tx3 $tx4')
+
+    template = Template('$tx1 $tx2 $tx3 $tx4')
     filepath = 'yml/work.yml'
     # test0(filepath)
     test1(filepath)
