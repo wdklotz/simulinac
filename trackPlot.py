@@ -42,10 +42,11 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-def poincarePlot(x, y, whazit, max, projections=(0,0)):
+def poincarePlot(good, bad, whazit, max, projections=(0,0)):
     """ a scatter plot with projection histograms """
     from matplotlib.ticker import NullFormatter
 
+    x, y = good
     ax = plt.subplot()
     if projections == (0,0):
         # the scatter plot
@@ -77,9 +78,11 @@ def poincarePlot(x, y, whazit, max, projections=(0,0)):
         rect_histx   = [left, bottom_h, width, 0.2]
         rect_histy   = [left_h, bottom, 0.2, height]
         
+        xi, yi = bad              # bad are lost tracks
         # the scatter plot:
         axScatter = plt.axes(rect_scatter)
         axScatter.scatter(x, y, s=1)
+        axScatter.scatter(xi, yi, s=1, color='r')
 
         # set tick label size
         axScatter.tick_params(labelsize='xx-small')

@@ -54,8 +54,17 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     for t in bunch.tracks:                     # loop tracks
         x.append(t.point_at(psec)[ordinate]*1.e3)
         y.append(t.point_at(psec)[abzisse]*1.e3)
+    good   = (x,y)
+
+    xi=[]; yi=[]
+    for t in bunch.invalid_tracks:             # loop invalid tracks
+        if psec < t.nbpoints:
+            xi.append(t.point_at(psec)[ordinate]*1.e3)
+            yi.append(t.point_at(psec)[abzisse]*1.e3)
+    bad = (xi,yi)
+
     boxtext = '{} {} particles'.format(txt, bunch.nbtracks)
-    poincarePlot(x, y, boxtext, minmax, projections = (1,1))
+    poincarePlot(good, bad, boxtext, minmax, projections = (1,1))
     return fig
     
 def process_single_track(arg):
@@ -116,8 +125,10 @@ def track(lattice,bunch,smp=False):
                 losses = len(invalid_tracks)
                 tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
             progress(('(soll-track)','(bunch)',zeuge[tcount%4],tx4))
-    # keep valid tracks in the bunch
-    bunch.tracks = valid_tracks
+    # keep valid/invalid tracks in the bunch
+    bunch.tracks         = valid_tracks
+    bunch.invalid_tracks = invalid_tracks
+    print('\ndone: good tracks {}, bad tracks {}'.format(bunch.nbtracks,  bunch.nbinvalid_tracks))
     return bunch
 
 def track_soll(lattice):
@@ -187,8 +198,8 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     track(lattice,bunch) # track bunch
     t4 = time.clock()
     # make 2D projections
-    # project_onto_plane(bunch, K.x, K.xp, show, save)
-    # project_onto_plane(bunch, K.x, K.y, show, save)
+    # project_onto_plane(bunch, K.x, K.xp, show, save, skip)
+    # project_onto_plane(bunch, K.x, K.y, show, save, skip)
     project_onto_plane(bunch, K.z, K.zp, show, save, skip)
     t5 = time.clock()
 
@@ -225,7 +236,7 @@ def test0(filepath):
 def test1(filepath):
     print('-----------------------------------------Test1---')
     print('tracker() with lattice-file {}\n'.format(filepath))
-    tracker(filepath, particlesPerBunch = 1000, show=True, save=False, skip=10)
+    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=1)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF

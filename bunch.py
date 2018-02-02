@@ -216,12 +216,22 @@ class Bunch(DictObject,object):
     def nbtracks(self, value):
         self['nbtracks'] = value
     @property
-    def tracks(self):            # all tracks
+    def tracks(self):                  # all tracks
         return self.tracklist
     @tracks.setter
     def tracks(self, value):
         self.tracklist = value
-        self.nbtracks  = len(value)
+        self['nbtracks']  = len(value)
+    @property
+    def nbinvalid_tracks(self):
+        return self['nbinvalid_tracks']
+    @property
+    def invalid_tracks(self):          # all invalid tracks
+        return self.invalid_tracklist
+    @invalid_tracks.setter
+    def invalid_tracks(self, value):
+        self.invalid_tracklist = value
+        self['nbinvalid_tracks']  = len(value)
     @property
     def last(self):              # last track
         return self.tracklist[-1]
