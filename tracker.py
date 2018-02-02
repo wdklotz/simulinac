@@ -99,7 +99,7 @@ def track(lattice,bunch,smp=False):
     valid_tracks   = []
     losses         = 0
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
-    tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
+    tx4            = ' {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
     if(smp):
         arg = [(ptrack,lattice) for ptrack in bunch.tracks]
@@ -121,8 +121,8 @@ def track(lattice,bunch,smp=False):
             # showing track-loop progress
             if (tcount+1)%25 == 0:
                 losses = len(invalid_tracks)
-                tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
-            progress(('(soll-track)','(bunch)',zeuge[tcount%4],tx4))
+                tx4    = ' {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
+            progress(('(track design)', '(track bunch)', zeuge[tcount%4], tx4))
     # keep valid/invalid tracks in the bunch
     bunch.tracks         = valid_tracks
     bunch.invalid_tracks = invalid_tracks
@@ -194,11 +194,11 @@ def tracker(options):
     bunch.populate_phase_space()
 
     # launch tracking and show final with time
-    progress(('(soll-track)','','',''))
+    progress(('(track design)', '', '', ''))
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    progress(('(soll-track)','(bunch)','',''))
+    progress(('(track design)', '(track bunch)', '', ''))
     track(lattice,bunch) # track bunch
     t4 = time.clock()
     # make 2D projections
