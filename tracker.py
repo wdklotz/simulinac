@@ -98,9 +98,7 @@ def track(lattice,bunch,smp=False):
     invalid_tracks = []
     valid_tracks   = []
     losses         = 0
-    # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # |/-\
-    # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # box symbols
-    zeuge          = ('\u2598','\u259D','\u2597','\u2596') # jumpng spot
+    zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
     tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
     if(smp):
@@ -156,7 +154,13 @@ def track_soll(lattice):
     # DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
     return soll_track
 
-def tracker(filepath, particlesPerBunch, show, save, skip):
+# def tracker(filepath, particlesPerBunch, show, save, skip):
+def tracker(options):
+    filepath          = options['filepath']
+    particlesPerBunch = options['particlesPerBunch']
+    show              = options['show']
+    save              = options['save']
+    skip              = options['skip']
     """ prepare and launch tracking """
     #make lattice with time
     t0 = time.clock()
@@ -233,17 +237,24 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n'+sollTrack.asTable())
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(sollTrack.first_str(),sollTrack.last_str()))
 
-def test1(filepath):
+# def test1(filepath):
+def test1(options):
     print('-----------------------------------------Test1---')
-    print('tracker() with lattice-file {}\n'.format(filepath))
-    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=1)
+    print('tracker() with lattice-file {}\n'.format(options['filepath']))
+    tracker(options)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
 
+    options = dict( filepath = 'yml/work.yml',
+                    particlesPerBunch = 1000,
+                    show    = True,
+                    save    = False,
+                    skip    = 3
+                    )
     template = Template('$tx1 $tx2 $tx3 $tx4')
-    filepath = 'yml/work.yml'
+    # filepath = 'yml/work.yml'
     # test0(filepath)
-    test1(filepath)
+    test1(options)
