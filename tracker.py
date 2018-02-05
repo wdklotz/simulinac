@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from string import Template
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
 
 from lattice_generator import Factory
 import elements as ELM
@@ -104,15 +104,16 @@ def track(lattice,bunch,smp=False):
     tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
     if(smp):
-        arg = [(ptrack,lattice) for ptrack in bunch.tracks]
-        print()
-        r = Parallel(n_jobs=8, verbose=5)(map(delayed(process_single_track),arg))
-        trck,invalid = zip(*r)
-        for i,t in enumerate(trck):
-            if invalid[i]:
-                invalid_tracks.append(t)
-            else:
-                valid_tracks.append(t)
+        pass
+        # arg = [(ptrack,lattice) for ptrack in bunch.tracks]
+        # print()
+        # r = Parallel(n_jobs=8, verbose=5)(map(delayed(process_single_track),arg))
+        # trck,invalid = zip(*r)
+        # for i,t in enumerate(trck):
+        #     if invalid[i]:
+        #         invalid_tracks.append(t)
+        #     else:
+        #         valid_tracks.append(t)
     else:
         for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
             invalid = process_single_track((ptrack, lattice))[1]
@@ -138,7 +139,7 @@ def track_soll(lattice):
     """
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     for element in lattice.seq:
-        DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
+        # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last() #track: at entrance
         # DEBUG_SOLL_TRACK('track_soll(i) ', soll_track.point_str(ti))
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))

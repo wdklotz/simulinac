@@ -31,22 +31,25 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-
+DEBUG_GEN = DEBUG_ON
 DEBUG_OFF(dir())
 
-def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFile=None, aperture=None):
+def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None):
     input   = '{}{}{}'.format(dir,file,ext)
     lattice = factory(input)
 
     root_da  = XmlDataAdaptor(name='Alceli')
     sections = lattice.get_sections()       #sections is a [Section,...]
+    DEBUG_GEN(sections)
 
     for section in sections:
         if len(section.seq) == 0: continue
         # sec      = section.get_name()    *legacy*
         sec      = section.name
+        DEBUG_GEN(sec)
         sec_da   = root_da.createChild(sec)
         sec_da.setValue('length',section.length)
+        DEBUG_GEN(section.length)
         sec_da.setValue('name',sec)
         cavs_da  = sec_da.createChild('Cavities')
         gap_cnt  = 0
@@ -90,7 +93,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                     accelm_da.setValue('name',name)
                     ttf_da = accelm_da.createChild('TTFs')
 
-                    phiSoll = degrees(node.phis)
+                    phiSoll = degrees(node.phis)+180.
                     E0L = node.u0*1.e-3
                     E0TL = E0L*node.tr
                     name = '{}:{}'.format('pillbox',gap_cnt)
@@ -140,5 +143,5 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
 if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
     aperture = PARAMS['quad_bore_radius']
-    file = 'ref_run'
+    file = 'work'
     generator(EzFile = EzFile, aperture = aperture, file = file)
