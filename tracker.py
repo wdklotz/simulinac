@@ -25,7 +25,7 @@ from string import Template
 
 from lattice_generator import Factory
 import elements as ELM
-from setutil import DEBUG, PARAMS, dictprnt, sigmas, K
+from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS
 from bunch import Track, Bunch, Gauss1D
 from trackPlot import poincarePlot
 
@@ -64,7 +64,7 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     bad = (xi,yi)
 
     boxtext = '{} {} particles'.format(txt, bunch.nbtracks)
-    poincarePlot(good, bad, boxtext, minmax, projections = (1,1))
+    poincarePlot(good, boxtext, minmax, bad = bad, projections = (1,1))
     return fig
     
 def process_single_track(arg):
@@ -98,10 +98,8 @@ def track(lattice,bunch,smp=False):
     invalid_tracks = []
     valid_tracks   = []
     losses         = 0
-    # zeuge        = ('\u256D','\u256E','\u256F','\u2570') # |/-\
-    # zeuge        = ('\u2502','\u2571','\u2501','\u2572') # box symbols
-    zeuge          = ('\u2598','\u259D','\u2597','\u2596') # jumpng spot
-    tx4            = '- tracks {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
+    zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
+    tx4            = ' {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
     if(smp):
         pass
@@ -124,8 +122,8 @@ def track(lattice,bunch,smp=False):
             # showing track-loop progress
             if (tcount+1)%25 == 0:
                 losses = len(invalid_tracks)
-                tx4    = '- tracks {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
-            progress(('(soll-track)','(bunch)',zeuge[tcount%4],tx4))
+                tx4    = ' {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
+            progress(('(track design)', '(track bunch)', zeuge[tcount%4], tx4))
     # keep valid/invalid tracks in the bunch
     bunch.tracks         = valid_tracks
     bunch.invalid_tracks = invalid_tracks
@@ -157,12 +155,22 @@ def track_soll(lattice):
     # DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
     return soll_track
 
-def tracker(filepath, particlesPerBunch, show, save, skip):
+def tracker(options):
     """ prepare and launch tracking """
+    filepath          = options['filepath']
+    particlesPerBunch = options['particlesPerBunch']
+    show              = options['show']
+    save              = options['save']
+    skip              = options['skip']
+
     #make lattice with time
     t0 = time.clock()
     lattice = Factory(filepath)
     t1 = time.clock()
+
+    options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
+    dictprnt(options,'Tracker Options')
+    print()
 
     # bunch-configuration
     alfax_i   = PARAMS['alfax_i'] 
@@ -191,11 +199,11 @@ def tracker(filepath, particlesPerBunch, show, save, skip):
     bunch.populate_phase_space()
 
     # launch tracking and show final with time
-    progress(('(soll-track)','','',''))
+    progress(('(track design)', '', '', ''))
     t2 = time.clock()
     track_soll(lattice)  # track soll
     t3 = time.clock()
-    progress(('(soll-track)','(bunch)','',''))
+    progress(('(track design)', '(track bunch)', '', ''))
     track(lattice,bunch) # track bunch
     t4 = time.clock()
     # make 2D projections
@@ -234,17 +242,23 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n'+sollTrack.asTable())
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(sollTrack.first_str(),sollTrack.last_str()))
 
-def test1(filepath):
+# def test1(filepath):
+def test1(options):
     print('-----------------------------------------Test1---')
-    print('tracker() with lattice-file {}\n'.format(filepath))
-    tracker(filepath, particlesPerBunch = 3000, show=True, save=False, skip=1)
+    tracker(options)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
 
+    options = dict( filepath = 'yml/work.yml',
+                    particlesPerBunch = 10000,
+                    show    = True,
+                    save    = False,
+                    skip    = 4
+                    )
     template = Template('$tx1 $tx2 $tx3 $tx4')
-    filepath = 'yml/work.yml'
+    # filepath = 'yml/work.yml'
     # test0(filepath)
-    test1(filepath)
+    test1(options)

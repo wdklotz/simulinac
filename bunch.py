@@ -210,13 +210,13 @@ class Bunch(DictObject,object):
         DictObject.__init__(self)
 
     @property
-    def nbtracks(self):        # nbof tracks per bunch
+    def nbtracks(self):          # nbof tracks per bunch
         return self['nbtracks']
     @nbtracks.setter
     def nbtracks(self, value):
         self['nbtracks'] = value
     @property
-    def tracks(self):                  # all tracks
+    def tracks(self):            # all tracks
         return self.tracklist
     @tracks.setter
     def tracks(self, value):
@@ -226,7 +226,7 @@ class Bunch(DictObject,object):
     def nbinvalid_tracks(self):
         return self['nbinvalid_tracks']
     @property
-    def invalid_tracks(self):          # all invalid tracks
+    def invalid_tracks(self):    # all invalid tracks
         return self.invalid_tracklist
     @invalid_tracks.setter
     def invalid_tracks(self, value):
@@ -289,7 +289,8 @@ def test1():
     figures.append(fig1)
 
     fig2 = plt.figure('test1:figure 2')
-    poincarePlot(x, xp, 'x-x\'', (0.1,0.1), projections=(1,1))
+    good = (x, xp)
+    poincarePlot(good, 'x-x\'', (0.1,0.1), projections=(1,1))
     figures.append(fig2)
 
 if __name__ == '__main__':
