@@ -19,6 +19,7 @@ This file is part of the SIMULINAC code
 """
 import sys
 from math import degrees
+import warnings
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
 from setutil import FLAGS,PARAMS,DEBUG
@@ -31,15 +32,16 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
+DEBUG_GEN = DEBUG_ON
 
-DEBUG_OFF(dir())
+DEBUG_GEN(dir())
 
 def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFile=None, aperture=None):
     input   = '{}{}{}'.format(dir,file,ext)
     lattice = factory(input)
 
     root_da  = XmlDataAdaptor(name='Alceli')
-    sections = lattice.get_sections()       #sections is a [Section,...]
+    sections = lattice.get_sections()       #sections is [Section,...]
 
     for section in sections:
         if len(section.seq) == 0: continue
@@ -51,6 +53,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
         cavs_da  = sec_da.createChild('Cavities')
         gap_cnt  = 0
         quad_cnt = 0
+
         for node in section.seq:
             if isinstance(node,(ELM.QFth, ELM.QFthx, ELM.QDth ,ELM.QDthx)):
                 raise RuntimeError('thin QUADs not implememted in pyOrbit. Use thick QUADs only! -- STOP!')
@@ -59,7 +62,7 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                 raise RuntimeError('GAP,RFC,TTFG not compatible with pyOrbit. Use RFG only! -- STOP!')
                 sys.exit(1)
             elif isinstance(node,(ELM.SD, ELM.RD)):
-                pass
+                warnings.warn('SD,RD are ignored in generation of pyOrbit lattice')
             elif isinstance(node,(ELM.QF,ELM.QD,ELM.RFG)):
                 s0 = node.position[0]  #from
                 sm = node.position[1]  #middle position
@@ -68,11 +71,11 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                 accelm_da.setValue('length',node.length)
                 accelm_da.setValue('pos',sm)
                 par_da = accelm_da.createChild('parameters')
+
                 if isinstance(node,(ELM.QF,ELM.QD)):
                     quad_cnt += 1
                     name = '{}:{}'.format(node.label,quad_cnt)
                     accelm_da.setValue('type','QUAD')
-                    # accelm_da.setValue('name','{1}:{0}:{2}'.format(node.label,'',quad_cnt))
                     accelm_da.setValue('name',name)
 
                     k0 = node.k0
@@ -90,8 +93,8 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                     accelm_da.setValue('name',name)
                     ttf_da = accelm_da.createChild('TTFs')
 
-                    phiSoll = degrees(node.phis)
-                    E0L = node.u0*1.e-3
+                    phiSoll = degrees(node.phis) + 180.     # pyOrbit's soll phase ~135 [deg]!
+                    E0L  = node.u0*1.e-3                    # pyOrbit [Gev]
                     E0TL = E0L*node.tr
                     name = '{}:{}'.format('pillbox',gap_cnt)
 
@@ -128,17 +131,16 @@ def generator(dir='yml/', file='25_09_2017_versuche_70_200MeV', ext='.yml', EzFi
                 else:
                     pass
 
-    DEBUG_OFF('root_da.makeXmlText()\n',root_da.makeXmlText())
-    # output = '{}{}'.format('../pyAlceli/lattice','.xml')
+    DEBUG_GEN('root_da.makeXmlText()\n',root_da.makeXmlText())
     output = '{}{}'.format('../lattice','.xml')
     root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
-    print('Result in file ==> {}'.format(output))
-    print('----------------------------------------------------------')
+    print('Input from file ==> {}'.format(input))
+    print('Result in  file ==> {}'.format(output))
     return
 
 if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
     aperture = PARAMS['quad_bore_radius']
-    file = 'ref_run'
+    file = 'work'
     generator(EzFile = EzFile, aperture = aperture, file = file)

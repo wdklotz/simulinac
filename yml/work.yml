@@ -193,5 +193,6 @@ segments:
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
+    - [3,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs for pyOrbit lattice generation
+    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
     # - [10,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]

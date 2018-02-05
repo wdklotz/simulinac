@@ -25,7 +25,7 @@ from joblib import Parallel, delayed
 
 from lattice_generator import Factory
 import elements as ELM
-from setutil import DEBUG, PARAMS, dictprnt, sigmas, K
+from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS
 from bunch import Track, Bunch, Gauss1D
 from trackPlot import poincarePlot
 
@@ -64,7 +64,7 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     bad = (xi,yi)
 
     boxtext = '{} {} particles'.format(txt, bunch.nbtracks)
-    poincarePlot(good, bad, boxtext, minmax, projections = (1,1))
+    poincarePlot(good, boxtext, minmax, bad = bad, projections = (1,1))
     return fig
     
 def process_single_track(arg):
@@ -136,7 +136,7 @@ def track_soll(lattice):
     """
     soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     for element in lattice.seq:
-        DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
+        # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last() #track: at entrance
         # DEBUG_SOLL_TRACK('track_soll(i) ', soll_track.point_str(ti))
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
@@ -154,18 +154,22 @@ def track_soll(lattice):
     # DEBUG_SOLL_TRACK('track_soll(last)  {}'.format( soll_track.last_str()))
     return soll_track
 
-# def tracker(filepath, particlesPerBunch, show, save, skip):
 def tracker(options):
+    """ prepare and launch tracking """
     filepath          = options['filepath']
     particlesPerBunch = options['particlesPerBunch']
     show              = options['show']
     save              = options['save']
     skip              = options['skip']
-    """ prepare and launch tracking """
+
     #make lattice with time
     t0 = time.clock()
     lattice = Factory(filepath)
     t1 = time.clock()
+
+    options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
+    dictprnt(options,'Tracker Options')
+    print()
 
     # bunch-configuration
     alfax_i   = PARAMS['alfax_i'] 
@@ -240,7 +244,6 @@ def test0(filepath):
 # def test1(filepath):
 def test1(options):
     print('-----------------------------------------Test1---')
-    print('tracker() with lattice-file {}\n'.format(options['filepath']))
     tracker(options)
     
 if __name__ == '__main__':
@@ -249,10 +252,10 @@ if __name__ == '__main__':
     DEBUG_TEST0       = DEBUG_ON
 
     options = dict( filepath = 'yml/work.yml',
-                    particlesPerBunch = 1000,
+                    particlesPerBunch = 10000,
                     show    = True,
                     save    = False,
-                    skip    = 3
+                    skip    = 4
                     )
     template = Template('$tx1 $tx2 $tx3 $tx4')
     # filepath = 'yml/work.yml'

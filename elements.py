@@ -247,7 +247,7 @@ class D(I):
         m = self.matrix
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
-        m[ZKOO, ZPKOO] = self.length/(g*g)
+        m[ZKOO, ZPKOO] = self.length/(g*g)  # koppelt z,z'
         m[SKOO, LKOO]  = self.length        # delta-s
 
     def shorten(self, length):
@@ -515,6 +515,12 @@ class RFG(I):
         self._params = params
 
     @property
+    def Ezpeak(self):
+        return self['Ezpeak']
+    @property
+    def Ezavg(self):
+        return self['Ezavg']
+    @property
     def tr(self):
         """ delegate to gap-model """
         return self.gap_model.tr
@@ -526,14 +532,6 @@ class RFG(I):
     def particlef(self):
         """ delegate to gap-model """
         return self.gap_model.particlef
-
-    @property
-    def Ezpeak(self):
-        return self['Ezpeak']
-    @property
-    def Ezavg(self):
-        return self['Ezavg']
-
     def map(self, i_track):
         """ delegate to gap-model """
         return self.gap_model.map(i_track)
@@ -650,7 +648,7 @@ class _PYO_G(object):
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
         T        = i_track[EKOO]       # [6] summe aller delta-T
-        s        = i_track[SKOO]       # [8] summe aller laengen
+        S        = i_track[SKOO]       # [8] summe aller laengen
 
         qE0LT  = qE0L*tr
         m0c2   = particle.e0
@@ -693,7 +691,7 @@ class _PYO_G(object):
             xp  = gbi/gbf*xp
             yp  = gbi/gbf*yp
 
-        f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., s, 1.])
+        f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
         self.matrix[EKOO, DEKOO] = DELTAW             # refresh Node-matrix with local deltaW
 
         # for DEBUGGING
@@ -731,7 +729,7 @@ class _T3D_G(object):
             bgi2bgf = bgi/bgf
             m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
             m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-            m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf
+            m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
             # energy kick
             m[EKOO, DEKOO] = deltaW     # local deltaW to Node matrix
             return

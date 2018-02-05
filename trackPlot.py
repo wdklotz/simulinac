@@ -42,7 +42,7 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-def poincarePlot(good, bad, whazit, max, projections=(0,0)):
+def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
     """ a scatter plot with projection histograms """
     from matplotlib.ticker import NullFormatter
 

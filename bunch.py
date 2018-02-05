@@ -289,7 +289,8 @@ def test1():
     figures.append(fig1)
 
     fig2 = plt.figure('test1:figure 2')
-    poincarePlot(x, xp, 'x-x\'', (0.1,0.1), projections=(1,1))
+    good = (x, xp)
+    poincarePlot(good, 'x-x\'', (0.1,0.1), projections=(1,1))
     figures.append(fig2)
 
 if __name__ == '__main__':
