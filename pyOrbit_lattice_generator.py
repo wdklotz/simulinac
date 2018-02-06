@@ -28,13 +28,29 @@ from lattice import Lattice
 import elements as ELM
 
 # DEBUG
+import pprint
+import inspect
+PP = pprint.PrettyPrinter(indent=4).pprint
+def lineno():
+   # return (inspect.getframeinfo(inspect.currentframe()).filename,inspect.currentframe().f_lineno)
+   return inspect.currentframe().f_back.f_lineno
+def DEBUG(line,arg):
+    if isinstance(arg,str):
+        print('DEBUG[{}]: '.format(line)+arg)
+    elif isinstance(arg,(tuple,list,dict)):
+        print('DEBUG[{}]: '.format(line))
+        for i in arg:
+            PP(i)
+    else:
+        print('DEBUG[{}]: '.format(line)+repr(arg))
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_GEN = DEBUG_ON
 
-DEBUG_GEN(dir())
+DEBUG_GEN    = DEBUG_ON
+
+DEBUG_GEN(lineno(),dir())
 
 def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None):
     input   = '{}{}{}'.format(dir,file,ext)
@@ -47,10 +63,9 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
         if len(section.seq) == 0: continue
         # sec      = section.get_name()    *legacy*
         sec      = section.name
-        DEBUG_GEN(sec)
         sec_da   = root_da.createChild(sec)
         sec_da.setValue('length',section.length)
-        DEBUG_GEN(section.length)
+        DEBUG_GEN(lineno(),'section: {}, length: {}'.format(sec,section.length))
         sec_da.setValue('name',sec)
         cavs_da  = sec_da.createChild('Cavities')
         gap_cnt  = 0
@@ -99,7 +114,6 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
                     E0L  = node.u0*1.e-3                    # pyOrbit [Gev]
                     E0TL = E0L*node.tr
                     name = '{}:{}'.format('pillbox',gap_cnt)
-
                     par_da.setValue('E0L', E0L)
                     par_da.setValue('E0TL', E0TL)
                     par_da.setValue('EzFile', EzFile)
@@ -133,7 +147,7 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
                 else:
                     pass
 
-    DEBUG_GEN('root_da.makeXmlText()\n',root_da.makeXmlText())
+    DEBUG_GEN(lineno(),'root_da.makeXmlText()\n'+root_da.makeXmlText())
     output = '{}{}'.format('../lattice','.xml')
     root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
