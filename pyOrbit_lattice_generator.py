@@ -110,7 +110,8 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
                     accelm_da.setValue('name',name)
                     ttf_da = accelm_da.createChild('TTFs')
 
-                    phiSoll = degrees(node.phis) + 180.     # pyOrbit's soll phase ~135 [deg]!
+                    # phiSoll = degrees(node.phis) + 180.     # pyOrbit's soll phase ~135 [deg]!
+                    phiSoll = degrees(node.phis)
                     E0L  = node.u0*1.e-3                    # pyOrbit [Gev]
                     E0TL = E0L*node.tr
                     name = '{}:{}'.format('pillbox',gap_cnt)
@@ -148,7 +149,7 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
                     pass
 
     DEBUG_GEN(lineno(),'root_da.makeXmlText()\n'+root_da.makeXmlText())
-    output = '{}{}'.format('../lattice','.xml')
+    output = '{}{}'.format('../pyAlceli/lattice','.xml')
     root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
     print('Input from file ==> {}'.format(input))
