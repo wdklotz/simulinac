@@ -159,5 +159,6 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
 if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
     aperture = PARAMS['quad_bore_radius']
-    file = 'work'
+    file = 'orbit'
+    # file = 'work'
     generator(EzFile = EzFile, aperture = aperture, file = file)

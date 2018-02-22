@@ -227,6 +227,7 @@ if __name__ == '__main__':
     filepath = 'yml/25_09_2017_versuche_70_200MeV.yml'
     # filepath = 'yml/25_09_2017_separatrix_70_200MeV.yml'
     filepath = 'yml/LE_HE_15inj-ref.yml'
+    filepath = 'yml/orbit.yml'
     filepath = 'yml/work.yml'
 
     if len(sys.argv) == 2:
