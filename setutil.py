@@ -46,14 +46,14 @@ def DEBUG(string,arg='',end='\n'):
         pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
  
-        print('DEBUG: {} typ(list) {}{}'.format(string,sarg,end))
+        print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4,width=60)  # use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(dict) {}{}'.format(string,sarg,end))
+        print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
     else:
-        print('DEBUG: {}{}{}'.format(string,arg,end))
+        print('DEBUG: {}{}'.format(string,arg),end=end)
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
@@ -609,9 +609,9 @@ def mxprnt(matrix):
 
 def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     """Simple array print"""
-    print(txt),
+    print(txt,end='')
     for val in array:
-        print(fmt.format(val)),
+        print(fmt.format(val),end='')
     print('')
 
 def wille():
