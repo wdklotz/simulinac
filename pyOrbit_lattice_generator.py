@@ -17,6 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import os
 import sys
 from math import degrees
 import warnings
@@ -52,8 +53,11 @@ DEBUG_GEN    = DEBUG_ON
 
 DEBUG_GEN(lineno(),dir())
 
-def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None):
-    input   = '{}{}{}'.format(dir,file,ext)
+
+def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
+    input   = '{}/{}.{}'.format(dir,file,ext)
+    output  = '{}/{}.{}'.format('.','lattice','xml')
+
     lattice = factory(input)
 
     root_da  = XmlDataAdaptor(name='Alceli')
@@ -112,8 +116,9 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
 
                     # phiSoll = degrees(node.phis) + 180.     # pyOrbit's soll phase ~135 [deg]!
                     phiSoll = degrees(node.phis)
-                    E0L  = node.u0*1.e-3                    # pyOrbit [Gev]
-                    E0TL = E0L*node.tr
+                    E0L  = node.u0*1.e-3                      # pyOrbit [Gev]
+                    # E0TL = E0L*node.tr
+                    E0TL = E0L*0.8575
                     name = '{}:{}'.format('pillbox',gap_cnt)
                     par_da.setValue('E0L', E0L)
                     par_da.setValue('E0TL', E0TL)
@@ -149,7 +154,6 @@ def generator(dir='yml/', file='ref_run', ext='.yml', EzFile=None, aperture=None
                     pass
 
     DEBUG_GEN(lineno(),'root_da.makeXmlText()\n'+root_da.makeXmlText())
-    output = '{}{}'.format('../pyAlceli/lattice','.xml')
     root_da.writeToFile(output)
     print('----------------------------XmlGenerator for pyOrbit -----')
     print('Input from file ==> {}'.format(input))

@@ -17,7 +17,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+# Python 2 and 3 print compatability
+from __future__ import print_function
+
 import sys,traceback
+# py_major = sys.version_info.major
 
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
@@ -41,14 +45,15 @@ def DEBUG(string,arg='',end='\n'):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
+ 
+        print('DEBUG: {} typ(list) {}{}'.format(string,sarg,end))
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4,width=60)  # use pprint module
         sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
+        print('DEBUG: {} typ(dict) {}{}'.format(string,sarg,end))
     else:
-        print('DEBUG: {}{}'.format(string,arg),end=end)
+        print('DEBUG: {}{}{}'.format(string,arg,end))
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
@@ -95,17 +100,21 @@ PARAMS = dict(
         cavity_laenge        = 0.08,             # [m] default
         soll_phase           = -30.,             # [deg] default
         frequenz             = 814.e6,           # [Hz] default
-        injection_energy     = 50.,              # [MeV] default
+        # injection_energy     = 50.,              # [MeV] default
+        injection_energy     = 70.,              # [MeV] default
         qf_gradient          = 16.0,             # [T/m] default
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore_radius     = 0.02,             # Vorgabe quadrupole bore radius [m]
         n_coil               = 30,               # nbof coil windings
-        emitx_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-        emity_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-        betax_i              = 0.780,            # [m] Vorgabe twiss betax @ entrance
-        betay_i              = 2.373,            # [m] Vorgabe twiss betax @ entrance
-        alfax_i              = 0.0,              # Vorgabe twiss alphax @ entrance
-        alfay_i              = 0.0,              # Vorgabe twiss alphaxy @ entrance
+        emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
+        emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
+        emitz_i              = 0.2e-6,           # [m*rad] Vorgabe emittance entrance
+        betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
+        betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
+        betaz_i              = 0.01,             # [m] Vorgabe twiss beta entrance
+        alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
+        alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
+        alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
         sigmaz_i             = 0.02,             # [m] max long. half-width displacement
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
@@ -600,9 +609,9 @@ def mxprnt(matrix):
 
 def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     """Simple array print"""
-    print(txt,end='')
+    print(txt),
     for val in array:
-        print(fmt.format(val),end='')
+        print(fmt.format(val)),
     print('')
 
 def wille():
