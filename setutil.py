@@ -1,4 +1,4 @@
-#!/Users/klotz/SIMULINAC_env/bin/python
+#!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -17,25 +17,22 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+# Python 2 and 3 print compatability
+from __future__ import print_function
+
 import sys,traceback
+# py_major = sys.version_info.major
 
 from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
 import logging, pprint
+from enum import IntEnum
 
-## DEBUG MODULE
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
-## Logger
-ch        = logging.StreamHandler()     ## console handler
-ch.setLevel(logging.DEBUG)              ## set handler level
-formatter = \
-    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
-ch.setFormatter(formatter)              ## set handler's format
-logger    = logging.getLogger("logger")
-logger.addHandler(ch)                   ## add handler to logger
 
 def DEBUG(string,arg='',end='\n'):
     """
@@ -46,24 +43,49 @@ def DEBUG(string,arg='',end='\n'):
     """
     if isinstance(arg,list):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4)  ## use pprint module
+        pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
+ 
         print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4,width=60)  ## use pprint module
+        pp   = pprint.PrettyPrinter(indent=4,width=60)  # use pprint module
         sarg = pp.pformat(arg)
         print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
     else:
         print('DEBUG: {}{}'.format(string,arg),end=end)
 
-## DEFAULTS "FLAGS" & "PARAMS"
+# Logger
+ch        = logging.StreamHandler()     # console handler
+ch.setLevel(logging.DEBUG)              # set handler level
+formatter = \
+    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
+ch.setFormatter(formatter)              # set handler's format
+logger    = logging.getLogger("logger")
+logger.addHandler(ch)                   # add handler to logger
+
+# x        x'        y        y'        z       z'=dp/p   T        dT        S        dS
+XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
+class K(IntEnum):                                # enum.IntEnum since Python 3.4
+    """ Koordanaten Indizees """
+    x  = XKOO
+    xp = XPKOO
+    y  = YKOO
+    yp = YPKOO
+    z  = ZKOO
+    zp = ZPKOO
+    T  = EKOO
+    dT = DEKOO
+    S  = SKOO
+    dS = LKOO
+
+
+# DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
-        map                  = True,             # use maps to track trajectories through RFGap
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = True              # use express version of thin quads
@@ -78,27 +100,32 @@ PARAMS = dict(
         cavity_laenge        = 0.08,             # [m] default
         soll_phase           = -30.,             # [deg] default
         frequenz             = 814.e6,           # [Hz] default
-        injection_energy     = 50.,              # [MeV] default
+        # injection_energy     = 50.,              # [MeV] default
+        injection_energy     = 70.,              # [MeV] default
         qf_gradient          = 16.0,             # [T/m] default
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore_radius     = 0.02,             # Vorgabe quadrupole bore radius [m]
         n_coil               = 30,               # nbof coil windings
-        emitx_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-        emity_i              = 1.e-6,            # [m*rad] Vorgabe emittance @ entrance
-        betax_i              = 0.780,            # [m] Vorgabe twiss betax @ entrance
-        betay_i              = 2.373,            # [m] Vorgabe twiss betax @ entrance
-        alfax_i              = 0.0,              # Vorgabe twiss alphax @ entrance
-        alfay_i              = 0.0,              # Vorgabe twiss alphaxy @ entrance
+        emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
+        emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
+        emitz_i              = 0.2e-6,           # [m*rad] Vorgabe emittance entrance
+        betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
+        betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
+        betaz_i              = 0.01,             # [m] Vorgabe twiss beta entrance
+        alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
+        alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
+        alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
         sigmaz_i             = 0.02,             # [m] max long. half-width displacement
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         aperture             = 0.011,            # aperture = bore radius
+        nbof_slices          = 6,                # default number-off slices
+        mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
 PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
 
-## KeepValues
-# a global dict to keep key-value pairs
+""" KeepValues: a global dict to keep key-value pairs (used for tracking results) """
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):
@@ -110,12 +137,21 @@ class Particle(object):
         self.e0         = mass                     # rest mass [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
-        self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
+        try:
+            self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
+        except ValueError as ex:
+            # print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
+            raise ex
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
-        self.v          = self.beta* PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
-        self.brho       = 1.e+6/ PARAMS['lichtgeschwindigkeit']*self.gamma_beta*self.e0 # [T*m]
+        self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
+        self.brho       = 1.e+6 / PARAMS['lichtgeschwindigkeit'] * self.gamma_beta * self.e0 # [T*m]
         self.name       = name
+        self.m0c2       = self.e0
+        self.m0c3       = self.e0 * PARAMS['lichtgeschwindigkeit']
+        self.betac      = self.v
+        self.E          = self.e
+        self.T          = self.tkin
     def string(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
@@ -134,13 +170,8 @@ class Particle(object):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):  # call Particle instance to change its kin. energy
-        try:
-            self._set_self(tkin=tkin,mass=self.e0,name=self.name)
-        except ValueError:
-            print(traceback.format_exc())
-            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f}) - STOP".format(tkin))
-            sys.exit(1)
+    def __call__(self,tkin):  # make callable to change energy
+        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 
 class Proton(Particle):
@@ -151,11 +182,11 @@ class Electron(Particle):
     def __init__(self,tkin= PARAMS['injection_energy']):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
 
-## Sollteichen
+# Sollteichen
 PARAMS['sollteilchen'] = Proton()
-
-## Long. Emittance
-def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
+#todo: ueberarbeiten; sigmaz = 0 macht overflow
+# Long. Emittance
+def zellipse(sigmaz, qE0, lamb, phis, gap ,particle):
     """
     Helper to calculate longitudinal phase space ellipse parameters
     Ellipse nach T.Wangler (6.47) pp.185
@@ -215,36 +246,53 @@ def zellipse(sigmaz,qE0,lamb,phis,gap,particle):
     res['Dphimax-']         = phi2s
     return res
 
-## Data For Summary
+# Data For Summary
 SUMMARY = {}
+
 def collect_data_for_summary(lattice):
-    def elements_in_lattice(typ,sec):
+    class Filter:
+        def __init__(self,func):
+            self.func = func
+        def __ror__(self,iterable):     # INFIX "|" operator
+            for obj in iterable:
+                if self.func(obj):
+                    yield obj
+    class Apply:
+        def __init__(self,func):
+            self.func = func
+        def __ror__(self,iterable):     # INFIX "|" operator
+            return self.func(iterable)
+
+    def elements_in_lattice():
         '''
-        Filter elements of class <typ> and section <sec> form lattice
+        Filter elements of class <typ> and section <sec> from lattice
         IN:
-            lattice = object [Lattice]
+            lattice = object        [Lattice]
             typ     = element class [string]
-            sec     = section name [string]
+            sec     = section name  [string]
         OUT:
-            iterator of filtered elements
+            list of filtered elements
+
+        NOTE: this functional implementation is taken from:
+            https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
         '''
-        import itertools
         def predicate(element):
             try:
-                test = (type(element).__name__ == typ and element.sec == sec)
+                test = (type(element).__name__ == typ and element.section == sec)
             except AttributeError:
-                test = (type(element).__name__ == typ)  ## no sec tags? take all!
-            return not test
-        filtered_elements = itertools.filterfalse(predicate,lattice.seq)
-        return filtered_elements
+                test = (type(element).__name__ == typ)  # no section tag? take all!
+            return test
 
-    def elements_in_section(typ,sec):
-        """
-        Get a list of elements of same type in a section
-        """
-        elements = list(elements_in_lattice(typ,sec))
+#       NOTE: here I use the INFIX operator '|' like a UNIX pipe
+        List     = Apply(list)
+        Selector = Filter(predicate)
+        return lattice.seq | Selector | List
+
+    def elements_in_section():
+        """Remove duplicate elements of same type in a section"""
+        elements = elements_in_lattice()
         new_elements = []
-        seen = set()             ## helper to eliminate duplicate entries
+        seen = set()             # helper to eliminate duplicate entries
         for itm in elements:
             label = itm.label
             if label in seen:
@@ -253,79 +301,53 @@ def collect_data_for_summary(lattice):
                 seen.add(label)
                 new_elements.append(itm)
         return new_elements
-    ## body
-    sections =  PARAMS['sections']                       ## comes from INPUT
-    if not FLAGS['sections']: sections = ['*']       ## section wildcart
+
+    # body
+    sections =  PARAMS['sections']                   # comes from INPUT
+    if not FLAGS['sections']: sections = ['*']       # section wildcart
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 k0 = itm.k0
                 dBdz = k0*itm.particle.brho
                 length = itm.length
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
-                SUMMARY['{2} [{1}.{0}]   dBdz [T/m]'.format(sec,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]   B0*    [T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
-                SUMMARY['{2} [{1}.{0}]   length [m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,typ,itm.label)] = dBdz
+                SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
+                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
-                PARAMS['{2}[{1}.{0}]dBdZ'.format(sec,typ,itm.label)] = dBdz
-                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
     types = ['RFG']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
-                Ez      = itm.u0/gap
+                Ezavg   = itm.Ezavg
                 PhiSoll = degrees(itm.phis)
                 mapping = itm.mapping
-                # length  = itm.length
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  mapping   '.format(sec,typ,itm.label)] = mapping
+                Ezpeak  = itm.Ezpeak
+                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}] Ez-avg[MV/m]'.format(sec,typ,itm.label)] = Ezavg
+                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
+                SUMMARY['{2} [{1}.{0}]Ez-peak[MV/m]'.format(sec,typ,itm.label)] = Ezpeak
 
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
     types = ['RFC']
     for sec in sections:
         for typ in types:
-            elements = elements_in_section(typ,sec)
+            elements = elements_in_section()
             for itm in elements:
                 gap     = itm.gap
-                Ez      = itm.u0/gap
+                Ezavg   = itm.u0/gap
                 PhiSoll = degrees(itm.phis)
                 length  = itm.length
-                SUMMARY['{2} [{1}.{0}]  gap    [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  Ez  [MV/m]'.format(sec,typ,itm.label)] = Ez
-                SUMMARY['{2} [{1}.{0}]  phis [deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]  length [m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ezavg
+                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Ez'.format(sec,typ,itm.label)] = Ez
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
-                PARAMS['{2}[{1}.{0}]length'.format(sec,typ,itm.label)] = length
-    types = ['TTFG']
-    for sec in sections:
-        for typ in types:
-            elements = elements_in_section(typ,sec)
-            for itm in elements:
-                gap     = itm.gap
-                Epeak   = itm.Epeak
-                PhiSoll = degrees(itm.phis)
-                E0zav   = itm.E0z
-                SUMMARY['{2} [{1}.{0}] gap        [m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}] (Ez)peak[MV/m]'.format(sec,typ,itm.label)] = Epeak
-                SUMMARY['{2} [{1}.{0}] (Ez)av  [MV/m]'.format(sec,typ,itm.label)] = E0zav
-                SUMMARY['{2} [{1}.{0}] phis     [deg]'.format(sec,typ,itm.label)] = PhiSoll
-
-                PARAMS['{2}[{1}.{0}]gap'.format(sec,typ,itm.label)] = gap
-                PARAMS['{2}[{1}.{0}]Epeak'.format(sec,typ,itm.label)] = Epeak
-                PARAMS['{2}[{1}.{0}]phis'.format(sec,typ,itm.label)] = PhiSoll
-
-    SUMMARY['track with map']                  =  FLAGS['map']
     SUMMARY['sigma tracking']                  =  FLAGS['sigma']
     SUMMARY['emittance growth']                =  FLAGS['egf']
     SUMMARY['ring lattice']                    =  FLAGS['periodic']
@@ -384,8 +406,7 @@ def I0(x):
         try:
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I0,x )',(res,x))
-        except OverflowError:
-            print(traceback.format_exc())
+        except OverflowError as ex:
             print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res
@@ -421,13 +442,19 @@ def I1(x):
         try:
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I1,x )',(res,x))
-        except OverflowError:
-            print(traceback.format_exc())
+        except OverflowError as ex:
             print('Bessel-function I1 overflow: (arg = {6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res
 
-## Marker Actions
+def sigmas(alfa,beta,epsi):
+    """ calculates sigmas from twiss-alpha, -beta and -emittance """
+    gamma  = (1.+ alfa**2)/beta
+    sigma  = sqrt(epsi*beta)
+    sigmap = sqrt(epsi*gamma)
+    return sigma,sigmap
+
+# Marker Actions
 def sigma_x_action():
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KeepValues['z'])] = KeepValues['sigma_x']*1.e3
@@ -441,12 +468,12 @@ def Tkin_action():
     PARAMS['Tkin({:0=6.2f})'.format(KeepValues['z'])] = KeepValues['Tkin']
 
 MarkerActions = dict(                   # all possible actions for a Marker
-            sigma_x=sigma_x_action,
-            sigma_y=sigma_y_action,
-            Tkin=Tkin_action
+            sigma_x   = sigma_x_action,
+            sigma_y   = sigma_y_action,
+            Tkin      = Tkin_action
             )
 
-## Utilities
+# Utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -465,9 +492,7 @@ def k0prot(gradient=0.,tkin=0.):
         sys.exit(1)
 
 def scalek0prot(k0=0.,tki=0.,tkf=0.):
-    """
-    scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)
-    """
+    """Scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)"""
     bgi  = Proton(tki).gamma_beta
     bgf  = Proton(tkf).gamma_beta
     k= k0 * bgi/bgf
@@ -489,9 +514,7 @@ def dBdxprot(k0=0.,tkin=0.):
         sys.exit(1)
 
 def objprnt (what,text='',filter=[]):
-    """
-    Custom helper to print objects as dictionary
-    """
+    """Custom helper to print objects as dictionary"""
     template = '============================================'
     lt  = len(template)
     lx  = len(text)
@@ -505,13 +528,14 @@ def objprnt (what,text='',filter=[]):
     for k,v in sorted(what.__dict__.items()):
         if k in filter:
             continue
-        print(k.rjust(30),':',v)
+        if k == 'matrix':
+            print(k.rjust(30),':\n',v)
+        else:
+            print(k.rjust(30),':',v)
     return
 
 def dictprnt(what,text='',filter=[],njust=35):
-    """
-    Custom helper to print dictionaries (clever!?)
-    """
+    """Custom helper to print dictionaries (clever!?)"""
     def asstrng(v):
         txt = ''
         fmt0  = '{:8.6g} '
@@ -551,9 +575,7 @@ def dictprnt(what,text='',filter=[],njust=35):
     return
 
 def printv(level,*args):
-    """
-    Multilevel printing using verbose flag
-    """
+    """Multilevel printing with verbose flag"""
     verbose = FLAGS['verbose']
     if verbose >= level and not FLAGS['KVprint']:
         print(*args)
@@ -578,9 +600,7 @@ def tblprnt(headr,records):
     return s
 
 def mxprnt(matrix):
-    """
-    Simple matrix print
-    """
+    """Simple matrix print"""
     s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
     lens = [max(map(len, col)) for col in zip(*s)]
     fmt = ''.join('{{:{}}}'.format(x) for x in lens)
@@ -588,9 +608,7 @@ def mxprnt(matrix):
     return '\n'.join(table)
 
 def arrprnt(array,fmt='{:8.4f}, ',txt=''):
-    """
-    Simple array print
-    """
+    """Simple array print"""
     print(txt,end='')
     for val in array:
         print(fmt.format(val),end='')
@@ -636,9 +654,19 @@ def test1():
             )
     for k,v in result.items():
         print('{}\t{:g}'.format(k,v))
-
+def test2():
+    print('--------------------------Test2---')
+    print('test particle energy adjustment...')
+    p = PARAMS['sollteilchen']
+    print(repr(p)+':')
+    print(p.string())
+    p1 = p(100.)
+    print(repr(p1)+':')
+    print(p1.string())
+    p2 = p(-10.)
 ## Main
 if __name__ == '__main__':
     test0()
     test1()
+    test2()
 

@@ -1,30 +1,22 @@
-import sys
-sys.path.insert(0,'..')
+import inspect
 
-from math import pi,sqrt,fabs,log
-from setutil import PARAMS
+class Aclass(object):
+    def __init__(self,magic='?'):
+        self.name  = "Aclass"
+        self.label = "Aclass"
+        self.magic = magic
+        
 
-c      = PARAMS['lichtgeschwindigkeit']
-f0     = PARAMS['frequenz']
+class Bclass(Aclass):
+    """ Documentation of Bclass """
+    def __init__(self):
+        super().__init__('abacadraba')
+        # super().__init__()
+        self.name = "Bclass"
 
-print('\nCutoff @ {:8.4f} [MHz] and bore R'.format(f0*1.e-6))
 
-R     = 0.02     #bore radius
-omega = 2.405 * c / R
-f     = omega / 2. / pi
-rhole = R
+b=Bclass()
 
-print('(R[mm],f[MHz])',(R*1.e3,f*1.e-6))
-
-f     = f0
-omega = 2.* pi * f
-R     = 2.405 * c / omega
-rc    = R       #cutoff
-
-print('(R[mm],f[MHz])',(R*1.e3,f*1.e-6))
-
-kz2 = (2.405/rc)**2 - (2.405/rhole)**2
-kz  = sqrt(fabs(kz2))
-z2z0 = log(100.)/kz    #daempfung 1/100 = 1%
-print('propagation factor |kz|',kz)
-print('penetration distance [mm] fuer E/E0=1%',z2z0*1.e3)
+print('{}\n'.format(b))
+print(''.join('{}\n'.format(el) for el in inspect.getmembers(b)))
+print('MRO:\n'+''.join('{}\n'.format(el) for el in Bclass.__mro__))

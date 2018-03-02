@@ -6,7 +6,7 @@
  - DONE elements with  Position member
 
  - DROPPED test with electrons why?
- - DROPPED ELEGANT vergleich? have it on Windows - is it runniung?
+ - DROPPED ELEGANT vergleich? have it on Windows - is it running?
  - DROPPED DYNAC vergleich (Linux)
  - DROPPED Monte Carlo für verluste (mit DYNAC?)
  - DROPPED Cavitychain: phase advance from (i) to (f); kann man vergessen siehe helper5.py
@@ -27,7 +27,11 @@
  - SIMU injection at ~15MeV!!!
  - SIMU rf-phase rippel!!!
  - SIMU 180 deg bend!!
- - Ripken-Schmidt DRIFT  & QUADS DESY_95_063 anstelle von T3D drifts? wichtig, weil wenn
-   thin-lens matrices are used the length of the machine is made by drifts!!
+ - Ripken-Schmidt DRIFT & QUADS DESY_95_063 anstelle von T3D drifts? wichtig, denn
+   thin-lens matrices make most of the length of the machine!!
  - are the T3D drifts symplectic? T3D drifts are lienear RS drifts are non-linear!
  - TEAPOT spacing of thin-qudrupoles!!!
+ - refactor: position
+ - refactor map invocation
+ - check dwf with new element classes
+ - Tanke/Valero gap-model!

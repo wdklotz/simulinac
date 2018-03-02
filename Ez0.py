@@ -1,4 +1,4 @@
-#!/Users/klotz/SIMULINAC_env/bin/python
+#!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -19,10 +19,13 @@ This file is part of the SIMULINAC code
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from math import sin,cos,tan,pi,exp,fabs,pow,fmod
+from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
+
+# Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
+Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 
 ## DEBUG MODULE
 def DEBUG_ON(*args):
@@ -30,21 +33,16 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
-
-'''
-Cavity E(z,r=0) field profile
-'''
+DEBUG_TEST2  = DEBUG_OFF
+DEBUG_TEST3  = DEBUG_OFF
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
 
 def Kpoly(z,sigma,mu,E):
-    """
-    Calculate polynom coefficients from NG formula
-    """
+    """Calculate polynom coefficients from NG formula"""
     poly = []
-    Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
     anz = len(z)
     for i in range(0,anz-2,2):
         zl  = z[i]
@@ -59,7 +57,7 @@ def Kpoly(z,sigma,mu,E):
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
-        # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
+            # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
         # x   = np.array((zl,z0,zr))
         # y   = np.array((El,E0,Er))
         # coeff = np.polyfit(x,y,2)
@@ -73,13 +71,11 @@ def Kpoly(z,sigma,mu,E):
         # cof = polcof(x,y,2)
         # print('cof =====',cof)
         # print('E0,a,b ',E0,a,b,'\n')
-            # END-USE np.polyfit()
+            # END-USING np.polyfit()
     return poly
 
 def Ipoly(z,poly):
-    """
-    interpolate with polynomial fit
-    """
+    """Interpolation using the polynomial fit"""
     ix = -1
     for i in range(len(poly)):
         zl = poly[i].zl
@@ -88,14 +84,14 @@ def Ipoly(z,poly):
             ix = i
             break
     if ix <0:
-        raise RuntimeError('arg out of range! {}'.format(z))
+        raise RuntimeError('Ipoly(): arg out of range! {}'.format(z))
 
-            # USE np.polyfit()
-            # liefert gleiches Resultat wie Langrange 3 Punkt
+    #       USE np.polyfit()
+    # liefert gleiches Resultat wie Langrange 3 Punkt
     # coeff = poly[ix].coeff
     # res   = np.poly1d(coeff)
     # res   = res(z)
-            # END-USE np.poly1d()
+    #       END-USE np.poly1d()
 
     ival = poly[ix]
     z0 = ival.z0
@@ -107,104 +103,113 @@ def Ipoly(z,poly):
     return res
 
 def V0n(poly,n):
-        E0 = poly[n].E0                       # [MV/m]
-        b  = poly[n].b
-        dz = poly[n].dz                       # [cm]
-        v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
-        return v0
-def V0(poly,zl2zr):
+    """ Formel (4.4.3) A.Shishlo/J.Holmes """
+    E0 = poly[n].E0                       # [MV/m]
+    b  = poly[n].b
+    dz = poly[n].dz                       # [cm]
+    v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
+    return v0
+
+def V0(poly,zintval):
     v0 = []
-    zl,zr = zl2zr
+    zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
-        dz  = zir-zil
         if zil < zl or zir > zr: continue
         v0.append(V0n(poly,i))
     return v0
+
 def Tn(poly,k,n):
-        a  = poly[n].a
-        b  = poly[n].b
-        dz = poly[n].dz
-        f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-        # DEBUG_MODULE('Tk: (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
-        t = f1*f2
-        return t
-def T(poly,k,zl2zr):
+    """ Formel (4.4.6) A.Shishlo/J.Holmes """
+    a  = poly[n].a
+    b  = poly[n].b
+    dz = poly[n].dz
+    f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+    f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+    DEBUG_MODULE('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+    t = f1*f2
+    return t
+
+def T(poly,k,zintval):
     t = []
-    zl,zr = zl2zr
+    zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
-        dz  = zir-zil
+        dz = poly[i].dz
         if zil < zl or zir > zr: continue
-        # DEBUG_MODULE('Tk: (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
+        DEBUG_MODULE('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
+
 def Sn(poly,k,n):
-        a  = poly[n].a
-        b  = poly[n].b
-        dz = poly[n].dz
-        s = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
-        s = s * (1.-k*dz/tan(k*dz))
-        return s
-def S(poly,k,zl2zr):
+    """ Formel (4.4.7) A.Shihlo """
+    a  = poly[n].a
+    b  = poly[n].b
+    dz = poly[n].dz
+    s = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
+    s = s * (1.-k*dz/tan(k*dz))
+    return s
+
+def S(poly,k,zintval):
     s = []
-    zl,zr = zl2zr
+    zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
-        dz  = zir-zil
         if zil < zl or zir > zr: continue
         s.append(Sn(poly,k,i))
     return s
+
 def Tpn(poly,k,n):
-        a   = poly[n].a
-        b   = poly[n].b
-        dz  = poly[n].dz
-        tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
-        tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
-        return tp
-def Tp(poly,k,zl2zr):
+    """ Formel (4.4.8) A.Shishlo/J.Holmes """
+    b   = poly[n].b
+    dz  = poly[n].dz
+    tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
+    tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
+    return tp
+
+def Tp(poly,k,zintval):
     tp = []
-    zl,zr = zl2zr
+    zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
-        dz  = zir-zil
         if zil < zl or zir > zr: continue
         tp.append(Tpn(poly,k,i))
     return tp
+
 def Spn(poly,k,n):
-        a   = poly[n].a
-        b   = poly[n].b
-        dz  = poly[n].dz
-        sp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
-        sp = sp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
-        return sp
-def Sp(poly,k,zl2zr):
+    """ Formel (4.4.9) A.Shishlo/J.Holmes """
+    a   = poly[n].a
+    b   = poly[n].b
+    dz  = poly[n].dz
+    sp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
+    sp = sp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
+    return sp
+
+def Sp(poly,k,zintval):
     sp = []
-    zl,zr = zl2zr
+    zl,zr = zintval
     for i in range(len(poly)):
         zil = poly[i].zl
         zir = poly[i].zr
-        dz  = zir-zil
         if zil < zl or zir > zr: continue
         sp.append(Spn(poly,k,i))
     return sp
 
 class SFdata(object):
-    '''
-    Superfish data class  (normiert auf max(E-Feld) = Epeak)
-    '''
+    ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf Epeak)'''
     def __init__(self,input_file,Epeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
         self.Epeak      = Epeak
         self.make_Ez_table()
         self.make_Ez_poly()
+
     def make_Ez_table(self):
+        """ read data and normalize """
         Dpoint = namedtuple('DataPoint',['z','R','Ez'])  # data-point structure
         zp = []
         rp = []
@@ -233,17 +238,14 @@ class SFdata(object):
         ep =eprev+ep
         emax = max(ep)
         enorm = self.Epeak/emax
-        self.Ez0_tab = []
+        self._Ez0_tab = []
         for i in range(len(zp)):   # normalize and pack
             ep[i] = ep[i]*enorm
             dpoint = Dpoint(zp[i],rp[i],ep[i])
-            self.Ez0_tab.append(dpoint)
-    def Ez_table(self):
-        return self.Ez0_tab
+            self._Ez0_tab.append(dpoint)
+
     def make_Ez_poly(self):
-        """
-        Calculate polynom coefficients from SF data
-        """
+        """ Calculate polynom coefficients from SF data """
         def indexer(nbslices,M):
             """
                 nbslices = nboff slices
@@ -258,29 +260,46 @@ class SFdata(object):
             n = int(M/N)
             print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
-                # DEBUG_MODULE('(i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+                DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
-        Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
-        self.poly = []
+        self._poly = []
         anz = 10        # interpolate SF-data with 'anz' polynomials od 2nd order
-        for (il,i0,ir) in indexer(anz,len(self.Ez0_tab)):
-            # DEBUG_MODULE('(il,i0,ir) ',((il,i0,ir)))
-            zl = self.Ez0_tab[il].z
-            z0 = self.Ez0_tab[i0].z
-            zr = self.Ez0_tab[ir].z
-            El = self.Ez0_tab[il].Ez
-            E0 = self.Ez0_tab[i0].Ez
-            Er = self.Ez0_tab[ir].Ez
+        for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
+            DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
+            zl = self.Ez_table[il].z
+            z0 = self.Ez_table[i0].z
+            zr = self.Ez_table[ir].z
+            El = self.Ez_table[il].Ez
+            E0 = self.Ez_table[i0].Ez
+            Er = self.Ez_table[ir].Ez
             dz = z0-zl
             b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
-            self.poly.append(pval)
+            self._poly.append(pval)
+
+    def Ez0t(self, z, t, omega, phi):
+        """E(z,0,t): time dependent field value at location z"""
+        res = Ipoly(z,self.Ez_poly) * cos(omega*t+phi)
+        return res
+
+    def dEz0tdt(self, z, t, omega, phi):
+        """dE(z,0,t)/dt: time derivative of field value at location z"""
+        res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phi)
+        return res
+
+    @property
+    def Ez_table(self):
+        """List(Dpoint) of SuperFish data points"""
+        return self._Ez0_tab
+    @property
     def Ez_poly(self):
-        return self.poly
+        """List(Polyval) of polygon approximations"""
+        return self._poly
 
 def pre_plt(input_file):
+    """ prepare plot """
     ax  = plt.subplot(111)
     ax.set_ylabel('Ez0 [MV/m]')
     ax.set_xlabel('z [cm]')
@@ -288,10 +307,12 @@ def pre_plt(input_file):
     return ax
 
 def post_plt(ax):
+    """ finish plot """
     plt.legend(loc='lower right',fontsize='x-small')
     plt.show()
 
 def displayLR(table,legend):
+    """ display left (L) and right (R) table data """
     zp   = [+float(x[0]) for x in table]
     Ezp  = [+float(x[2]) for x in table]
     zn   = [-float(x[0]) for x in reversed(table)]
@@ -304,13 +325,13 @@ def display(table,legend):
     plt.plot(z,Ez,label=legend)
 
 def test0(input_file):
-    Ez0_tab = SFdata(input_file).Ez_table()
-    display(Ez0_tab,'SF')
+    """SuperFish (SF) data"""
+    Ez0_tab = SFdata(input_file).Ez_table
+    display(Ez0_tab,'SF-raw')
     
 def test1():
-    '''
-    Gauss'che Normalverteilung
-    '''
+    '''Gauss'che Normalverteilung (NG)'''
+    print('----------------------------TEST1---')
     gap = 4.4
     z = np.arange(0.,gap,gap/500.)
     sigma = 1.14
@@ -322,7 +343,7 @@ def test1():
     # display(EzZ_tab,'Z')
             # END-EXPERIMENTAL
 
-            # OVERAP?
+            # Overlap?
     # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
     # Ez2_tab = []
     # for i in range(len(z)):
@@ -334,12 +355,11 @@ def test1():
     #     format(sigm,cavlen,cavlen/sigm))
     # for x in Ez0_tab:
     #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
-            # END-OVERAP?
+            # END-Overlap?
 
 def test2():
-    '''
-    Second order polynomial fit with Lagrange 3 point formula to NG formula
-    '''
+    '''Second order polynomial fit with 3 point formula to NG formula'''
+    print('----------------------------TEST2---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
     c        = PARAMS['lichtgeschwindigkeit']
@@ -364,7 +384,7 @@ def test2():
     Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
     display(Ez0_tab,'NG-poly')
 
-            # OVERAP?
+            # Overlap?
     # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
     # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
     # display(Ez1_tab,'poly1')
@@ -374,25 +394,24 @@ def test2():
     #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
     #     Ez2_tab.append((x,0.,Ez2))
     # display(Ez2_tab,'poly2')
-            # END-OVERAP?
+            # END-Overlap?
 
     # TTF calculations
-    zl2zr = (zl,zr)
-    v0  = V0(poly,zl2zr)
-    t   = T(poly,k,zl2zr)
-    s   = S(poly,k,zl2zr)
-    tp  = Tp(poly,k,zl2zr)
-    sp  = Sp(poly,k,zl2zr)
-    DEBUG_MODULE('V0',v0)
-    DEBUG_MODULE('T(k)',t)
-    DEBUG_MODULE("T'(k)",tp)
-    DEBUG_MODULE('S(k)',s)
-    DEBUG_MODULE("S'(k)",sp)
+    zintval = (zl,zr)
+    v0  = V0(poly,zintval)
+    t   = T(poly,k,zintval)
+    s   = S(poly,k,zintval)
+    tp  = Tp(poly,k,zintval)
+    sp  = Sp(poly,k,zintval)
+    DEBUG_TEST2('V0',v0)
+    DEBUG_TEST2('T(k)',t)
+    DEBUG_TEST2("T'(k)",tp)
+    DEBUG_TEST2('S(k)',s)
+    DEBUG_TEST2("S'(k)",sp)
 
 def test3(input_file):
-    '''
-    Second order polynomial fit with Lagrange 3 point formula to SF data
-    '''
+    '''Second order polynomial fit with 3 point formula to SF data'''
+    print('----------------------------TEST3---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
     c        = PARAMS['lichtgeschwindigkeit']
@@ -401,28 +420,28 @@ def test3(input_file):
     gap = 4.8
     zl  = -gap/2.
     zr  = +gap/2.
-    zl2zr = (zl,zr)
+    zintval = (zl,zr)
 
     gap_data = SFdata(input_file,Epeak=1.)
-    poly = gap_data.Ez_poly()
-    display(gap_data.Ez_table(),'slice')
+    poly     = gap_data.Ez_poly
+    display(gap_data.Ez_table,'SF-slice')
 
-    zstep = (zr-zl)/500.
-    z = np.arange(zl,zr,zstep)
+    zstep  = (zr-zl)/500.
+    z      = np.arange(zl,zr,zstep)
     Ez_tab = [(x,0.,Ipoly(x, poly)) for x in z]
     display(Ez_tab,'SF-poly')
 
     # TTF calculations
-    v0  = V0(poly,zl2zr)
-    t   = T(poly,k,zl2zr)
-    s   = S(poly,k,zl2zr)
-    tp  = Tp(poly,k,zl2zr)
-    sp  = Sp(poly,k,zl2zr)
-    DEBUG_MODULE('V0',v0)
-    DEBUG_MODULE('T(k)',t)
-    DEBUG_MODULE("T'(k)",tp)
-    DEBUG_MODULE('S(k)',s)
-    DEBUG_MODULE("S'(k)",sp)
+    v0  = V0(poly,zintval)
+    t   = T(poly,k,zintval)
+    s   = S(poly,k,zintval)
+    tp  = Tp(poly,k,zintval)
+    sp  = Sp(poly,k,zintval)
+    DEBUG_TEST3('V0',v0)
+    DEBUG_TEST3('T(k)',t)
+    DEBUG_TEST3("T'(k)",tp)
+    DEBUG_TEST3('S(k)',s)
+    DEBUG_TEST3("S'(k)",sp)
 
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'

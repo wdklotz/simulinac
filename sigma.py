@@ -78,7 +78,7 @@ class Sigma(object):
         new = Sigma()
         new.matrix = self.matrix.copy()
         return new
-    def apply_eg_corr(self,rf_gap,sigma_i,delta_phi,ksi=(0.,0.)):
+    def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         """
         Apply emmittance growth correction after passage through RF gap 
         ref: Appendix F Trace3D manual
@@ -109,13 +109,15 @@ class Sigma(object):
         T             = rf_gap.tr
         m0c2          = rf_gap.particle.e0
         lamb          = rf_gap.lamb
-        gamma_beta_av = (rf_gap.particlei.gamma_beta+rf_gap.particlef.gamma_beta)/2.
-        gamma_beta_f  = rf_gap.particlef.gamma_beta
+        particlei     = rf_gap.particle
+        particlef     = rf_gap.particlef
+        gamma_beta_f  = particlef.gamma_beta
+        gamma_beta_av = (particlei.gamma_beta+gamma_beta_f)/2.
         kx            = -pi*E0L*T/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
         cfactor1      = kx**2*(g(Phis,delta_phi)-(sin(Phis)*f(delta_phi))**2)
         ksix          = ksi[0]
         ksiy          = ksi[1]
-        gamma_av      = (rf_gap.particlei.gamma+rf_gap.particlef.gamma)/2.
+        gamma_av      = (particlei.gamma+particlef.gamma)/2.
         kz            = -2.*kx*gamma_av**2*(1.+(delta_phi**2)/12.)
         cfactor2      = (kz*delta_phi)**2*((cos(Phis)**2)/8.+delta_phi*sin(Phis)/576.)
         delta_xp2_av  = cfactor1*(sigma_i.matrix[0,0]+ksix**2)

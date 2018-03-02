@@ -17,33 +17,40 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import sys, os
-from math import radians,pi,degrees
+import sys
+from math import radians
 import yaml
+import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,Proton,DEBUG,objprnt,dictprnt,zellipse
+from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,zellipse
 import elements as ELM
-import TTFG as TTF
+# import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata
 
-## DEBUG MODULE
+# DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-## parse and generate latttice
+# parse and generate latttice
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
     except KeyError:
-        print('InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item))
+        warnings.showwarning(
+                'InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item),
+                UserWarning,
+                'lattice_generator.py',
+                'get_mandatory()',
+                )
         sys.exit(1)
     return res
 
-def lod2d(l):    ##list of dicts to dict
+def lod2d(l):
+    """Transform list of dicts to dict"""
     return {k:v for d in l for k,v in d.items()}
 
 def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
@@ -60,7 +67,6 @@ def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
 def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
     lattice = Lattice()
     thinlen = length/slices
-    thinlabel = '({})th'.format(label)
     for nb in range(slices):
         if FLAGS['express']:
             instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle)
@@ -77,6 +83,10 @@ def instanciate_element(item):
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         instance =  ELM.D(length=length,label=label,particle=PARAMS['sollteilchen'])
+    elif key == 'SIXD':
+        label     = attributes['ID']+'#'
+        length    = get_mandatory(attributes,'length',label)
+        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
@@ -99,14 +109,28 @@ def instanciate_element(item):
             instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
     elif key == 'RFG':
         label     = attributes['ID']
-        gap       = get_mandatory(attributes,'gap',label)
-        Ez        = get_mandatory(attributes,"Ez",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        U0        = Ez * gap
-        dWf       = FLAGS['dWf']
+        gap       = get_mandatory(attributes,'gap',label)
         mapping   = get_mandatory(attributes,'mapping',label)
-        instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
+        dWf       = FLAGS['dWf']
+        if not mapping in PARAMS['mapset']:
+            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
+            sys.exit(1)
+        if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
+            fname     = get_mandatory(attributes,"SFdata",label)
+            Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
+            if fname not in PARAMS:
+                PARAMS[fname] = SFdata(fname,Epeak=Ezpeak)
+            instance  =  ELM.RFG(U0=0.,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],SFdata=PARAMS[fname],dWf=dWf)
+            instance['Ezpeak'] = Ezpeak
+            instance['Ezavg']  = ''
+        else:
+            Ez        = get_mandatory(attributes,"Ez",label)
+            U0        = gap * Ez
+            instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
+            instance['Ezpeak'] = ''
+            instance['Ezavg']  = Ez
     elif key == 'RFC':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -126,37 +150,28 @@ def instanciate_element(item):
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
         instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
-    elif key == 'TTFG':
-        label     = attributes['ID']
-        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        fRF       = get_mandatory(attributes,"fRF",label)
-        gap       = get_mandatory(attributes,'gap',label)
-        fname     = get_mandatory(attributes,"SFdata",label)     # file name of SF-Data
-        Ez0       = get_mandatory(attributes,"Ezpeak",label)
-        dWf       = FLAGS['dWf']
-        if fname not in PARAMS:
-            PARAMS[fname] = SFdata(fname,Epeak=Ez0)
-        instance = TTF.TTFG(PhiSoll=PhiSoll,fRF=fRF,label=label,particle=PARAMS['sollteilchen'],gap=gap,Ez=PARAMS[fname],dWf=dWf)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
-    elif key == 'SIXD':
-        label     = attributes['ID']
-        length    = get_mandatory(attributes,'length',label)
-        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
     else:
-        print('InputError: Unknown element type encountered: "{}" - STOP'.format(key))
+        warnings.showwarning(
+                'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
+                UserWarning,
+                'lattice_generator.py',
+                'instanciate_element()',
+                )
         sys.exit(1)
     try:
         sec = attributes['sec']    #can fail because sections are not mandatory
     except:
         pass
     else:
-        instance.set_section(sec)
+        instance.section = sec
     return (label,instance)
 
-def factory(input_file):
+def Factory(input_file):
+    """ Factory creates a lattice from input-file """
 #--------
     def make_lattice(latticeList,segments):
         lattice = Lattice()
@@ -168,27 +183,32 @@ def factory(input_file):
                 if segID in seg:
                     DEBUG_MODULE('found '+segID,seg)
                     elementList = seg[segID]
-                    nboff_elements = len(elementList)
                     found = True
-                    break    #after found == true
+                    break    #after found
             if found == False:
-                print('InputError: Segment {} not found - STOP'.format(segID))
+                warnings.showwarning(
+                        'InputError: Segment {} not found - STOP'.format(segID),
+                        UserWarning,
+                        'lattice_generator.py',
+                        'make_lattice()',
+                        )
                 sys.exit(1)
-            for element in elementList: #loop over elements in element list
+            for element in elementList: #loop over all elements
                 DEBUG_MODULE('element in '+segID,element)
                 elementClass = element['type']
                 elmItem = (elementClass,element)
                 DEBUG_MODULE('elmItem in make_lattice',elmItem)
                 (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
-                DEBUG_MODULE('instance {} {}'.format(label,instance))
-                if isinstance(instance,ELM._matrix_):
+                section = instance.section if FLAGS['sections'] else '*'
+                DEBUG_MODULE('instance {} {} {}'.format(label,instance,section))
+                if isinstance(instance,ELM._Node):
                     lattice.add_element(instance)  # add element instance to lattice
                 elif isinstance(instance,Lattice):
                     lattice.concat(instance)       # concatenate partial with lattice
         return lattice   #the complete lattice
 # --------
     def read_flags(in_data):
-    #returns ==> {...}
+        """returns a dict of flags"""
         flags_list = in_data['flags']
         flags = lod2d(flags_list) if flags_list != None else {}
         if 'accON' in flags:
@@ -201,14 +221,13 @@ def factory(input_file):
         if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
         if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
         if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
-        if 'map'         in flags: FLAGS['map']      = SUMMARY['track with map']   = flags['map']
         if 'KVprint'     in flags: FLAGS['KVprint']                                = flags['KVprint']
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
         if 'express'     in flags: FLAGS['express']                                = flags['express']
         return flags
 # --------
     def read_sections(in_data):
-        #returns a list of section names
+        """returns a list of section names"""
         sec_list = []
         use_sections = True
         try:     ## can fail because sections are not mandatory
@@ -220,7 +239,7 @@ def factory(input_file):
         return sec_list
 # --------
     def read_parameters(in_data):
-    #returns ==> {...}
+        """returns a dict of parameters"""
         parameter_list = in_data['parameters']
         parameters     = lod2d(parameter_list)
         if 'frequency'        in parameters: PARAMS['frequenz']         = parameters['frequency']
@@ -249,9 +268,9 @@ def factory(input_file):
     def expand_reduce(in_data):
     #--------
         def read_elements(in_data):
-            element_list = in_data['elements']         ## is list of dicts
+            element_list = in_data['elements']         # is list of dicts
             for elm in element_list:
-                for elmID,attList in elm.items():      ## put key as ID in attribute dict
+                for elmID,attList in elm.items():      # put key as ID in attribute dict
                     attList.append(dict(ID=elmID))
             return element_list
     #--------
@@ -298,60 +317,60 @@ def factory(input_file):
                 for k in segSubList:
                     latticeList.append(k)
         return (latticeList,segments)
-    ## factory body --------
+    # Factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject)
-        except Exception as inst:
-            print('InputError: {} - STOP'.format(str(inst)))
+        except Exception as ex:
+            warnings.showwarning(
+                    'InputError: {} - STOP'.format(str(ex)),
+                    UserWarning,
+                    'lattice_generator.py',
+                    'Factory()',
+                    )
             sys.exit(1)
     fileobject.close()
 
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-    # update PARAMS with overriding initials
+    # nicht vergessesn! update PARAMS with overriding initials
     PARAMS.update(
-        zellipse(PARAMS['sigmaz_i'],     ## calculate the long. emittance with def. parameters
+        zellipse(PARAMS['sigmaz_i'],     # calculate the long. emittance with def. parameters
                 PARAMS['Ez_feld'],
                 PARAMS['wellenlänge'],
         radians(PARAMS['soll_phase']),
                 PARAMS['spalt_laenge'],
                 PARAMS['sollteilchen']))
-    PARAMS['emitz_i']  = PARAMS['emitz']   # here zellipse calculated initial values
-    PARAMS['betaz_i']  = PARAMS['betaz']   # here zellipse calculated initial values
-    PARAMS['gammaz_i'] = PARAMS['gammaz']  # here zellipse calculated initial values
-    PARAMS['alfaz_i']  = PARAMS['alphaz']  # here zellipse calculated initial values
-    # delete unused key-values from PARAMS
-    del PARAMS['emitz']
-    del PARAMS['betaz']
-    del PARAMS['gammaz']
-    del PARAMS['alphaz']
+    PARAMS['emitz_i']  = PARAMS['emitz']; del PARAMS['emitz']   # zellipse calculated initial values
+    PARAMS['betaz_i']  = PARAMS['betaz']; del PARAMS['betaz']   # zellipse calculated initial values
+    PARAMS['gammaz_i'] = PARAMS['gammaz'];del PARAMS['gammaz']  # zellipse calculated initial values
+    PARAMS['alfaz_i']  = PARAMS['alphaz'];del PARAMS['alphaz']  # zellipse calculated initial values
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
 
     (latticeList,segments) = expand_reduce(in_data)
-    DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
-    DEBUG_MODULE('segments in factory()',segments)            # def of all segments
+    DEBUG_MODULE('latticeList in Factory()',latticeList)      # def of all segments in lattice
+    DEBUG_MODULE('segments in Factory()',segments)            # def of all segments
 
-    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# (WICHTIG) set sollteilchen energy
+    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# nicht vergesses! set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
     SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
-    return lattice    #end of factory(...)
+    DEBUG_MODULE('SUMMARY in Factory()',SUMMARY)
+    return lattice    # end of Factory(...)
 
-def parse_yaml_and_fabric(input_file,factory=factory):   ## delegates to factory
-    return factory(input_file)
+def parse_yaml_and_fabric(input_file):   # delegates to Factory
+    return Factory(input_file)
 
-## utilities
+# Utilities
 def test0():
     print('---------------------------------TEST0')
     wfl= []
-    fileobject=open('template.yml','r')
+    fileobject=open('yml/template.yml','r')
     wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
@@ -370,8 +389,9 @@ def test0():
 def test1(input_file):
     print('---------------------------------TEST1')
     lattice = parse_yaml_and_fabric(input_file)
-## main ----------
+
 if __name__ == '__main__':
     test0()
-    test1('fodo_with_10cav_per_RF-4.yml')
+    test1('yml/ref_run.yml')
+    test1('yml/fodo_with_10cav_per_RF-4.yml')
 

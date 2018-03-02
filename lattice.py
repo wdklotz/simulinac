@@ -18,20 +18,19 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-# import traceback
-from math import sqrt,fabs,acos,asin,pi,degrees
+from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy
+from copy import copy              # deepcopy?
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,objprnt,printv,DEBUG,mxprnt,KeepValues
-from elements import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
 
-## DEBUG MODULE
+## DEBUGING
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
@@ -55,9 +54,7 @@ class Lattice(object):
         self.accel  = 0.
 
     def add_element(self,element):
-        """
-        Add element to lattice
-        """
+        """Add element to lattice"""
         if len(self.seq) == 0:
             s0 = 0.
         else:
@@ -68,66 +65,20 @@ class Lattice(object):
         sm = (sf+si)/2.
         element.position = [si,sm,sf]
         self.length += l
-        elm_with_position = element
-        self.seq.append(elm_with_position)
+        # DEBUG('add_element: ',' [si,sm,sf,]=[{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
+        self.seq.append(element)
 
     def string(self):
-        """
-        Log lattice layout to string (could be even better?)
-        """
-        mcell = ELM.I(label='')   ##  chain matrices
+        """Log lattice layout to string (could be even better?)"""
+        mcell = ELM.I(label='')   #  chain matrices
         for element in self.seq:
-            s0 = element.position[0]
-            s1 = element.position[2]
-#             DEBUG('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,s0,s1))
-            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
-        mcell.set_section('<= full lattice map')
+            DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
+            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+        mcell.section = '<= full lattice map'
         return mcell.string()
 
-    def get_section(self,sec):
-        if not FLAGS['sections']:
-            section = self
-            Section.cast(section)             #the whole lattice is one section
-            setction.set_name('LINAC')
-        else:
-            section = Section(name=sec)
-            for elm in self.seq:
-                try:
-                    elmsec = elm.get_section()
-                except AttributeError:
-                    print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
-                    continue
-                if elmsec == sec:
-                    section.add_element(elm)
-        return section
-
-    def get_sections(self):
-        sections = []
-        if not FLAGS['sections']:
-            section = self
-            Section.cast(section)             #the whole lattice is one section
-            section.set_name('LINAC')
-            sections.append(section)
-        else:
-            for isec in PARAMS['sections']:
-                sec = self.get_section(isec)
-                sections.append(sec)
-        return sections
-
-    def set_section(self,sec=''):
-        """
-        Setter for section tag (sections are not mandatory!)
-        To distinguish different parts of the lattice, each element can be tagged by a section ID
-        indicating the lattice part it belongs to.
-        """
-        for element in self.seq:
-            element.set_section(sec)
-        return
-
     def stats(self,soll_track):
-        """
-        Gather lattice statistics
-        """
+        """Gather lattice statistics"""
         cav_counter = 0
         q_counter   = 0
         ttfm = +1.e+50
@@ -135,20 +86,18 @@ class Lattice(object):
         tk_i = soll_track.first()[6]
         tk_f = soll_track.last()[6]
         for element in self.seq:
-            if isinstance(element,ELM.QF) \
-            or isinstance(element,ELM.QD):
+            if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
-            if isinstance(element,ELM.RFG) \
-                or isinstance(element,ELM.RFC) \
-                or isinstance(element,TTF.TTFG):
+            if isinstance(element,(ELM.RFG,ELM.RFC)):
                 cav_counter += 1
                 ttfm = min(element.tr,ttfm)
                 ttfx = max(element.tr,ttfx)
-            if q_counter == 0:
-                q_counter = '0 (no thick quads?)'
-        SUMMARY['nbof quadrupoles*']    = q_counter
-        SUMMARY['nbof cavities*']       = cav_counter
-        SUMMARY['(ttf)min,(ttf)max*']   = (ttfm,ttfx)
+        if q_counter == 0:
+            SUMMARY['nbof quadrupoles*'] = '0 (no thick quads?)'
+        else:
+            SUMMARY['nbof quadrupoles*'] = q_counter
+        SUMMARY['nbof cavities*']        = cav_counter
+        SUMMARY['(ttf)min,(ttf)max*']    = (ttfm,ttfx)
         SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
 
     def cell(self,closed=True):
@@ -160,11 +109,10 @@ class Lattice(object):
             det(M)
             check symplecticity
             twiss prameters beta, alpha, gamma for periodic lattices
-
         """
-        mcell = ELM.I(label=' <==')   ##  chain matrices for full cell
+        mcell = ELM.I(label=' <==')   #  chain matrices for full cell
         for count,element in enumerate(self.seq):
-            mcell = element * mcell   ## Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
 
         ## Stabilität ?
         unstable = False
@@ -292,7 +240,7 @@ class Lattice(object):
             yip = sqrt(emiy*gmy)
             SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
             SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
-        ## keep twiss values as lattice instance varibles
+        ## keep twiss values as lattice instance variables
         self.betax0 = bax
         self.alfax0 = alx
         self.gammx0 = gmx
@@ -304,9 +252,7 @@ class Lattice(object):
         return (self.accel,self.betax0,self.betay0)
 
     def report(self):
-        """
-        Report lattice layout (may not work!)
-        """
+        """Report lattice layout (may not work!)"""
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
         header = ''
@@ -336,17 +282,13 @@ class Lattice(object):
         return res
 
     def concat(self,lattice_piece):
-        """
-        Concatenate two Lattice pieces
-        """
-        seq = copy(lattice_piece.seq)
-        for element in seq:
+        """Concatenate two Lattice pieces"""
+        for element in lattice_piece.seq:
+            element = copy(element) if element in self.seq else element
             self.add_element(element)
 
     def twiss_functions(self,steps=10):
-        """
-        Track twiss functions with beta-matrix through lattice and scale to sigmas
-        """
+        """Track twiss functions with beta-matrix through lattice and scale to sigmas"""
         beta_fun = []
         bx = self.betax0
         ax = self.alfax0
@@ -371,9 +313,7 @@ class Lattice(object):
         return beta_fun
 
     def sigma_functions(self,steps=10):
-        """
-        Track the sigma-matrix through the lattice
-        """
+        """Track the sigma-matrix through the lattice"""
         sigma_fun = []
         # sigma initial
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
@@ -381,41 +321,48 @@ class Lattice(object):
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
         saper = 1.e6  # aperture control
         s     = 0.0
-        for element in self.seq:
+        for element in self.seq:                    # loop elements
             s0 = element.position[0]
-            s1 = element.position[2]
-            # objprnt(element.particle ,text='sigma_functions: '+element.label)         # DEBUG
             slices = element.make_slices(anz=steps)
-            for i_element in slices:
-                # DEBUG_MODULE('{} {} {}'.format(i_element.__class__.__name__,'s0,s1',(s0,s1)))
-                sigma_f = sigma_i.RSRt(i_element)        # map: sigma_f = R*sigma_i*RT
-                if isinstance(i_element,ELM.RFG) and FLAGS['egf']:
-                    rf_gap    = i_element
-                    delta_phi = PARAMS['Dphi0']
-                    sigma_f   = sigma_f.apply_eg_corr(rf_gap,sigma_i,delta_phi)
+            for slice in slices:                    # loop slices
+
+                # R-MAP: SIGMA' = R * SIGMA * R.tranposed
+                sigma_f = sigma_i.RSRt(slice)
+                
+                # add EG
+                if isinstance(slice,ELM.RFG) and FLAGS['egf']:
+                    sigma_f = sigma_f.apply_eg_corr(rf_gap=slice, sigma_i=sigma_i, delta_phi=PARAMS['Dphi0'])
                 sigf = sigma_f.matrix
                 try:
                     xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
                     ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
-                except ValueError:
+                except ValueError as ex:
                     warnings.showwarning(
-                            'WARNING: sqrt of negative number!\nResult may have no physical meaning!',
+                            'sqrt of negative number!\nResult may have no physical meaning!',
                             UserWarning,
                             'lattice.py',
                             'sigma_functions()',
                             )
-                r = sqrt(xsquare_av**2+ysquare_av**2)
-                s += i_element.length
+                s += slice.length
                 sigma_fun.append((s,xsquare_av,ysquare_av))
-                KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':i_element.particle.tkin})   # keep current values
                 sigma_i = sigma_f.clone()
-                if isinstance(i_element,ELM.MRK):                        # marker actions
-                    i_element.do_actions()
-            if 3.*r > PARAMS['aperture']:    # aperture control
+
+                # KEEPVALUES update
+                # KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
+
+                # MARKER ACTIONS
+                if isinstance(slice,ELM.MRK):
+                    slice.do_actions()
+
+                # APERTURE control
+                r = sqrt(xsquare_av**2 + ysquare_av**2)
+
+            if 3.*r > PARAMS['aperture']:
                 saper = min(s0,saper)
-        if saper<1.e6:        # warnings (experimental!)
+        
+        if saper<1.e6:                                # warnings (experimental!)
             warnings.showwarning(
-                    '3*sigma out of APERTURE at about s ={:5.1f}[m]\nParticle lost!'.format(saper),
+                    '3*sigma out of APERTURE at about s ={:5.1f}[m]'.format(saper),
                     UserWarning,
                     'lattice.py',
                     'sigma_functions()',
@@ -444,16 +391,15 @@ class Lattice(object):
                 s += i_element.length
                 d  = v_0[0,0]
                 dp = v_0[1,0]
-                viseo = i_element.viseo
                 traj.append((s,d,dp))
         return traj
 
     def lattice_plot_function(self):
         fun = []   # is list((s = Abzisse,f = Ordinate))
         for element in self.seq:
-            DEBUG('position',element.position )
+            # DEBUG((element.__class__,element['viseo'],element.position))
             pos   = element.position
-            viseo = element.viseo
+            viseo = element['viseo']
             si = pos[0]
             sf = pos[2]
             fun.append((si,0))
@@ -480,9 +426,9 @@ class Lattice(object):
         x2p         = soll_test(sqrt(PARAMS['emitx_i']*self.gammx0)) # x-plane: principal-1 (sin like)
         y1          = soll_test(sqrt(PARAMS['emity_i']*self.betay0))
         y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
-        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m] Vorgabe
-        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe --> []
-        # MDIM tracking used here
+        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m]    Vorgabe
+        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe
+        # MDIMxMDIM tracking used here
         s      = 0.
         c_like = []
         s_like = []
@@ -498,7 +444,7 @@ class Lattice(object):
             for i_element in slices:
                 s += i_element.length
                 ## COS_like
-                # DEBUG_MODULE('cs_traj calls {}.map() for C'.format(i_element))
+                # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
                 c_0 = i_element.map(c_0)   # map!!!
                 cx  = c_0[XKOO]
                 cxp = c_0[XPKOO]
@@ -507,7 +453,7 @@ class Lattice(object):
                 cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
                 cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
                 ## SIN_like
-                # DEBUG_MODULE('cs_traj calls {}.map() for S'.format(i_element))
+                # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
                 s_0 = i_element.map(s_0)   # map!!!
                 sx  = s_0[XKOO]
                 sxp = s_0[XPKOO]
@@ -545,35 +491,105 @@ class Lattice(object):
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
 
-## Section
-class Section(Lattice):
-    """
-    A Lattice with a name
-    """
-    def __init__(self,name='LINAC'):
-        super().__init__()
-        self.name = name
-    def get_name(self):
-        return self.name
-    def set_name(self,name):
-        self.name = name
-    @classmethod
-    def cast(cls,obj):
-        """
-        Convert a BaseClass object into a SubClass object ==> der Trick:
-        ==> cast 'obj' (must be of class Lattice) to object of class Section.
-        """
-        if not isinstance(obj,Lattice):
-            print('ERROR: cast to class Section not possible. -- STOP!')
-            sys.exit(1)
-        obj.__class__ = Section
+# The commented code is *legacy*. No use to define a new
+# subclass and to cast from base class to subclass
+# although it worked well!
+# 
+    # def get_section(self,sec):    *legacy*
+    #     if not FLAGS['sections']:
+    #         section = self
+    #         Section.cast(section)             #the whole lattice is one section
+    #         setction.set_name('LINAC')
+    #     else:
+    #         section = Section(name=sec)
+    #         for elm in self.seq:
+    #             try:
+    #                 elmsec = elm.get_section()
+    #             except AttributeError:
+    #                 print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+    #                 continue
+    #             if elmsec == sec:
+    #                 section.add_element(elm)
+    #     return section
+    # def get_sections(self):
+    #     sections = []
+    #     if not FLAGS['sections']:
+    #         section = self
+    #         Section.cast(section)             #the whole lattice is one section
+    #         section.set_name('LINAC')
+    #         sections.append(section)
+    #     else:
+    #         for isec in PARAMS['sections']:
+    #             sec = self.get_section(isec)
+    #             sections.append(sec)
+    #     return sections
+    #    
+# class Section(Lattice):
+#     """
+#     A Lattice with a name
+#     """
+#     def __init__(self,name='LINAC'):
+#         super().__init__()
+#         self.name = name
+#     def get_name(self):
+#         return self.name
+#     def set_name(self,name):
+#         self.name = name
+#     @classmethod
+#     def cast(cls,obj):
+#         """
+#         Convert a BaseClass object into a SubClass object ==> der Trick:
+#         ==> cast 'obj' (must be of class Lattice) to object of class Section.
+#         """
+#         if not isinstance(obj,Lattice):
+#             print('ERROR: cast to class Section not possible. -- STOP!')
+#             sys.exit(1)
+#         obj.__class__ = Section
+
+# To add Sections to the lattice I augment the Lattice class with 2 member-functions 
+# get_section(...) and get_sections(...) and the section 'name' attribute
+# without modifying the orignal Lattice class declaration
+
+## Sections
+def get_section(self,sec=None):
+    if not FLAGS['sections']:
+        section = self       #the whole lattice is one section
+        section.name = 'LINAC'
+        return section
+    else:
+        section = Lattice()
+        for elm in self.seq:
+            try:
+                elmsec = elm.section
+            except AttributeError as ex:
+                print('WARNING: element {} w/o section attribute!'.format(elm.label))
+                continue
+            if elmsec == sec:
+                section.add_element(elm)
+    section.name = sec
+    return section
+
+def get_sections(self):
+    sections = []
+    if not FLAGS['sections']:
+        sections.append(self.get_section())
+    else:
+        for isec in PARAMS['sections']:
+            sectn = self.get_section(sec=isec)
+            sections.append(sectn)
+    return sections
+
+#Lattice.get_section  = get_section                 #add method to class Lattice (the wdk way)
+#Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
+setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
+setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 ## utilities
 def make_wille():
     """
     Wille's test lattice
     """
-    print("K.Wille's Beispiel auf pp. 112-113")
+    print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
     kqf = wille()['k_quad_f']
     lqf = wille()['length_quad_f']
     kqd = wille()['k_quad_d']
@@ -581,7 +597,7 @@ def make_wille():
     rhob = wille()['bending_radius']
     lb = wille()['dipole_length']
     ld = wille()['drift_length']
-    ## elements
+    # elements
     mqf1 = ELM.QF(kqf,lqf,'QF1')
     mqf2 = ELM.QF(kqf,lqf,'QF2')
     mqd1 = ELM.QD(kqd,lqd,'QD1')
@@ -591,11 +607,7 @@ def make_wille():
     md4  = ELM.D(ld)
     mbr1  = ELM.RD(rhob,lb)
     mbr2  = ELM.RD(rhob,lb)
-#     mb  = ELM.SD(rhob,lb,'B')
-#     mb1 = ELM.SD(rhob,lb*0.5,'B1')  ## 1/2 sector dip.
-#     mw  = ELM.WD(mb)
-#     mw1 = ELM.WD(mb1)
-    ## lattice
+    # lattice
     lattice = Lattice()
     lattice.add_element(mqf1)
     lattice.add_element(md1)
@@ -609,19 +621,15 @@ def make_wille():
 #     DEBUG('lattice: ',lattice.string())
     top = Lattice()
     top.concat(lattice)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-    # top.concat(top)
-#     DEBUG('top: ',top.string())
+    top.concat(lattice)
+    top.concat(lattice)
     return top
 
 def test1():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test1--')
     lattice = make_wille()
+    # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.2f},'.format(el) for el in element.position)))
     # cell boundaries
     mcell,betax,betay = lattice.cell(closed=True)
     lattice.symplecticity()
@@ -634,33 +642,30 @@ def test1():
     xs = [x[1] for x in beta_fun]    # betax
     ys = [x[2] for x in beta_fun]    # betay
     ds = [x[1] for x in disp]        # dispersion
-#     vs = [x[3]+vsbase for x in beta_fun]  # viseo
-#     zero = [vsbase for x in beta_fun]     # viseo base line
-    ##-------------------- lattice viseo
+    #-------------------- lattice viseo
     lat_plot = lattice.lattice_plot_function()
     vsbase = -1.
     vis_abzisse  = [x[0] for x in lat_plot]
     vis_ordinate = [x[1]+vsbase for x in lat_plot]
     vzero        = [vsbase   for x in lat_plot]      # zero line
 
-    plot(s,xs,label='bx/bx0')
-    plot(s,ys,label='by/by0')
-    plot(s,ds,label='dp/p')
+    plot(s,xs,label='betax')
+    plot(s,ys,label='betay')
+    plot(s,ds,label='disp')
     plot(vis_abzisse,vis_ordinate,label='',color='black')
     plot(vis_abzisse,vzero,color='black')
-#     plot(s,zero,color='black')
     legend(loc='upper left')
     show()
 
 def test2():
     print('-------------------------------------Test2--')
+    print('lattice tags test ...')
     lattice = Lattice()
     print(type(lattice))
-    Section.cast(lattice)
-    print(type(lattice))
-    lattice.set_name('Lattice casted to Section')
-    print(lattice.get_name())
-## main ----------
+    lattice.name = 'NAME'
+    lattice.label = 'LABEL'
+    lattice.section = 'SECTION'
+    print(lattice.__dict__)
 if __name__ == '__main__':
-#     test1()
+    test1()
     test2()

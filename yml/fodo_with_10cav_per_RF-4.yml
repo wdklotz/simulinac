@@ -65,10 +65,12 @@ elements:                           ## ELEMENT definitions
         - type:     QF      # QF class
         - length:   *p03    # [m] 
         - B':       *p04    # [T/m] quadrupole gradient
+        - slices:   0       # 0 or 1 means use thick
     - qd1:   &qd1           # ID
         - type:     QD      # QD class
         - length:   *p03    # [m] length
         - B':       *p04    # [T/m] quadrupole gradient
+        - slices:   0       # 0 or 1 means use thick
     - rfg:  &rfg            # ID
         - type:     RFG     # RFG class
         - Ez:       *p05    # [V/m] electric field
@@ -121,6 +123,6 @@ segments:                           ## SEGMENT definitions
 ##...........................................................................................
 lattice:                            ## LATTICE definition
     - title: FODO 07.02.2017    # description is mandatory. DON't remove or reposition!
-    # - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
-    - [10, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+    - [198, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
+#    - [10, SEG1,RFCAV,SEG2,RFCAV,SEG3,MARK]
     # - [1, SEG1,SEG4,SEG2,SEG4,SEG3,MARK]
