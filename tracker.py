@@ -36,8 +36,9 @@ def DEBUG_OFF(*args):
     pass
 
 def progress(tx):
+    pass
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
-    print('\r{}'.format(res), end="")
+    print('{}'.format(res), end="\r")
 
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     """ prepare the plot of a Poincaré section """
@@ -54,7 +55,7 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     for t in bunch.tracks:                     # loop tracks
         x.append(t.point_at(psec)[ordinate]*1.e3)
         y.append(t.point_at(psec)[abzisse]*1.e3)
-    good   = (x,y)
+    good = (x,y)
 
     xi=[]; yi=[]
     for t in bunch.invalid_tracks:             # loop invalid tracks
@@ -253,7 +254,7 @@ if __name__ == '__main__':
     DEBUG_TEST0       = DEBUG_ON
 
     options = dict( filepath = 'yml/work.yml',
-                    particlesPerBunch = 10000,
+                    particlesPerBunch = 3000,
                     show    = True,
                     save    = False,
                     skip    = 4

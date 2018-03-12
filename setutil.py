@@ -664,7 +664,7 @@ def test2():
     print(repr(p1)+':')
     print(p1.string())
     p2 = p(-10.)
-## Main
+
 if __name__ == '__main__':
     test0()
     test1()
