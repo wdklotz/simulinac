@@ -14,7 +14,7 @@ This file is part of the SIMULINAC code
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
+    You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #todo: update simu_manual.odt

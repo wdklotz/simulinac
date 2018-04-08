@@ -252,7 +252,7 @@ if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
-
+    
     options = dict( filepath = 'yml/work.yml',
                     particlesPerBunch = 3000,
                     show    = True,

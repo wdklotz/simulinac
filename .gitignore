@@ -3,6 +3,7 @@
 *.pyc
 .project
 .settings/
+.vscode/
 .pydevproject
 __pycache__
 fodo_test_with_madx
