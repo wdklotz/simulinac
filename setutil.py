@@ -99,7 +99,7 @@ PARAMS = dict(
         spalt_laenge         = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
         soll_phase           = -30.,             # [deg] default
-        frequenz             = 814.e6,           # [Hz] default
+        frequenz             = 816.e6,           # [Hz] default
         # injection_energy     = 50.,              # [MeV] default
         injection_energy     = 70.,              # [MeV] default
         qf_gradient          = 16.0,             # [T/m] default
@@ -220,7 +220,6 @@ def zellipse(sigmaz, qE0, lamb, phis, gap ,particle):
     kl02 = 2.*pi*qE0*T*sin(-phis)/(m0c2*pow(gb,3)*lamb)
     omegal0 = sqrt(kl02)*beta* PARAMS['lichtgeschwindigkeit']
     omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
-
     # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
     Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
     w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
@@ -231,19 +230,19 @@ def zellipse(sigmaz, qE0, lamb, phis, gap ,particle):
     alphaz = 0.                   # always!
 
     res =  dict(
-            Dphi0           = Dphi0,
-            DWmax           = DWmax,
-            Dphimax         = psis,
-            omegal0         = omegal0,
-            w0              = w0,
-            emitz           = emitz,
-            gammaz          = gammaz,
-            betaz           = betaz,
-            DW              = DW,
-            alphaz          = alphaz )
-    res['omegal0/omega']    = omegal0_div_omega
-    res['Dphimax+']         = phi1s
-    res['Dphimax-']         = phi2s
+            zel_Dphi0           = Dphi0,
+            zel_DWmax           = DWmax,
+            zel_Dphimax         = psis,
+            zel_omegal0         = omegal0,
+            zel_w0              = w0,
+            zel_emitz           = emitz,
+            zel_gammaz          = gammaz,
+            zel_betaz           = betaz,
+            zel_DW              = DW,
+            zel_alphaz          = alphaz )
+    res['zel_omegal0/omega']    = omegal0_div_omega
+    res['zel_Dphimax+']         = phi1s
+    res['zel_Dphimax-']         = phi2s
     return res
 
 # Data For Summary
@@ -365,15 +364,15 @@ def collect_data_for_summary(lattice):
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
     SUMMARY['(dp/p)i [%]']                     =  PARAMS['dp2p_i']
-    SUMMARY['(DW)i* [KeV]']                    =  PARAMS['DW']*1.e3
-    SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['Dphi0'])
-    SUMMARY['(DW)max* [KeV]']                  =  PARAMS['DWmax']*1.e3        # energy acceptance
-    SUMMARY['max bunch length* [deg]']         =  degrees(PARAMS['Dphimax'])  # phase acceptance
     SUMMARY['(betaz)i* [KeV/rad]']             =  PARAMS['betaz_i']*1.e3
-    SUMMARY['(gammaz)i* [rad/KeV]']            =  PARAMS['gammaz_i']*1.e-3
-    SUMMARY['(sync.freq)i* [MHz]']             =  PARAMS['omegal0']*1.e-6
-    SUMMARY['(sync.freq)i/rf_freq* [%]']       =  PARAMS['omegal0/omega']*1.e2
     SUMMARY['aperture [m]']                    =  PARAMS['aperture']
+    SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['zel_Dphi0'])
+    SUMMARY['max bunch length* [deg]']         =  degrees(PARAMS['zel_Dphimax'])  # phase acceptance
+    SUMMARY['(DW)max* [KeV]']                  =  PARAMS['zel_DWmax']*1.e3        # energy acceptance
+    SUMMARY['(DW)i* [KeV]']                    =  PARAMS['zel_DW']*1.e3
+    SUMMARY['(gammaz)i* [rad/KeV]']            =  PARAMS['zel_gammaz']*1.e-3
+    SUMMARY['(sync.freq)i* [MHz]']             =  PARAMS['zel_omegal0']*1.e-6
+    SUMMARY['(sync.freq)i/rf_freq* [%]']       =  PARAMS['zel_omegal0/omega']*1.e2
     return
 
 def I0(x):

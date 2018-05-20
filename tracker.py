@@ -23,7 +23,7 @@ import time
 from string import Template
 # from joblib import Parallel, delayed
 
-from lattice_generator import Factory
+from lattice_generator import factory
 import elements as ELM
 from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS
 from bunch import Track, Bunch, Gauss1D

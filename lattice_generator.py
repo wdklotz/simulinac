@@ -170,8 +170,8 @@ def instanciate_element(item):
         instance.section = sec
     return (label,instance)
 
-def Factory(input_file):
-    """ Factory creates a lattice from input-file """
+def factory(input_file):
+    """ factory creates a lattice from input-file """
 #--------
     def make_lattice(latticeList,segments):
         lattice = Lattice()
@@ -317,7 +317,7 @@ def Factory(input_file):
                 for k in segSubList:
                     latticeList.append(k)
         return (latticeList,segments)
-    # Factory body --------
+    # factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -328,7 +328,7 @@ def Factory(input_file):
                     'InputError: {} - STOP'.format(str(ex)),
                     UserWarning,
                     'lattice_generator.py',
-                    'Factory()',
+                    'factory()',
                     )
             sys.exit(1)
     fileobject.close()
@@ -336,23 +336,20 @@ def Factory(input_file):
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-    # nicht vergessesn! update PARAMS with overriding initials
-    PARAMS.update(
-        zellipse(PARAMS['sigmaz_i'],     # calculate the long. emittance with def. parameters
-                PARAMS['Ez_feld'],
-                PARAMS['wellenlänge'],
-        radians(PARAMS['soll_phase']),
-                PARAMS['spalt_laenge'],
-                PARAMS['sollteilchen']))
-    PARAMS['emitz_i']  = PARAMS['emitz']; del PARAMS['emitz']   # zellipse calculated initial values
-    PARAMS['betaz_i']  = PARAMS['betaz']; del PARAMS['betaz']   # zellipse calculated initial values
-    PARAMS['gammaz_i'] = PARAMS['gammaz'];del PARAMS['gammaz']  # zellipse calculated initial values
-    PARAMS['alfaz_i']  = PARAMS['alphaz'];del PARAMS['alphaz']  # zellipse calculated initial values
+
+    # calculate long. parameters from def. parameters
+    long_params = zellipse(PARAMS['sigmaz_i'],PARAMS['Ez_feld'],PARAMS['wellenlänge'],radians(PARAMS['soll_phase']),PARAMS['spalt_laenge'],PARAMS['sollteilchen'])
+    PARAMS.update(long_params)
+    # ACHTUNG!!! override some longitudinal initial twiss parameters
+    # PARAMS['emitz_i']  = PARAMS['zel_emitz']
+    # PARAMS['betaz_i']  = PARAMS['zel_betaz']
+    # PARAMS['gammaz_i'] = PARAMS['zel_gammaz']
+    # PARAMS['alfaz_i']  = PARAMS['zel_alphaz']
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
 
     (latticeList,segments) = expand_reduce(in_data)
-    DEBUG_MODULE('latticeList in Factory()',latticeList)      # def of all segments in lattice
-    DEBUG_MODULE('segments in Factory()',segments)            # def of all segments
+    DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
+    DEBUG_MODULE('segments in factory()',segments)            # def of all segments
 
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# nicht vergesses! set sollteilchen energy
     lattice = make_lattice(latticeList,segments)
@@ -360,11 +357,11 @@ def Factory(input_file):
 
     SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEBUG_MODULE('SUMMARY in Factory()',SUMMARY)
-    return lattice    # end of Factory(...)
+    DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
+    return lattice    # end of factory(...)
 
-def parse_yaml_and_fabric(input_file):   # delegates to Factory
-    return Factory(input_file)
+def parse_yaml_and_fabric(input_file):   # delegates to factory
+    return factory(input_file)
 
 # Utilities
 def test0():

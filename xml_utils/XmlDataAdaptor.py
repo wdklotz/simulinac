@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 XmlDataAdaptor is a DataAdaptor that specifically supports (reading/writing)
 (from/to) XML. XmlDataAdaptor uses xml.dom.minidom package. In particular,

@@ -24,7 +24,7 @@ import warnings
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
 from setutil import FLAGS,PARAMS,DEBUG
-from lattice_generator import Factory as factory
+from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
 
@@ -49,8 +49,7 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
-DEBUG_GEN    = DEBUG_ON
-
+DEBUG_GEN    = DEBUG_OFF
 DEBUG_GEN(lineno(),dir())
 
 
@@ -60,9 +59,19 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
 
     lattice = factory(input)
 
-    root_da  = XmlDataAdaptor(name='Alceli')
-    sections = lattice.get_sections()       #sections is [Section,...]
+    root_da   = XmlDataAdaptor(name='Alceli')
+    sections  = lattice.get_sections()       #sections is [section-1,...,section-N]
 
+    # transfer a selection of PARAMS to xml-lattice
+    exclude_keys = ['mapset','sollteilchen','sections','wellenlänge','elementarladung','electron_mass','n_coil','Ez_feld','zel_Dphi0','zel_DWmax','zel_Dphimax','zel_omegal0','zel_w0','zel_DW','zel_Dphimax+','zel_Dphimax-','zel_omegal0/omega','zel_alphaz','zel_betaz','zel_gammaz','zel_emitz']
+    parameters = PARAMS.copy()
+    for key in exclude_keys:
+        del parameters[key]
+    params_dict_da = root_da.createChild('PARAMS')
+    for key in parameters:
+        params_dict_da.setValue(key,PARAMS[key])
+
+    # loop over sections
     for section in sections:
         if len(section.seq) == 0: continue
         # sec      = section.get_name()    *legacy*
@@ -164,5 +173,5 @@ if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
     aperture = PARAMS['quad_bore_radius']
     file = 'orbit'
-    # file = 'work'
+    file = 'work'
     generator(EzFile = EzFile, aperture = aperture, file = file)
