@@ -53,25 +53,25 @@ def lod2d(l):
     """Transform list of dicts to dict"""
     return {k:v for d in l for k,v in d.items()}
 
-def replace_QF_with_QFth_lattice(slices,k0,length,label,particle):
+def replace_QF_with_QFth_lattice(slices,k0,length,label,particle,aperture):
     lattice = Lattice()
     thinlen = length/slices
     for nb in range(slices):
         if FLAGS['express']:
-            instance = ELM.QFthx(k0=k0,length=thinlen,label=label,particle=particle)
+            instance = ELM.QFthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         else:
-            instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle)
+            instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
 
-def replace_QD_with_QDth_lattice(slices,k0,length,label,particle):
+def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
     lattice = Lattice()
     thinlen = length/slices
     for nb in range(slices):
         if FLAGS['express']:
-            instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle)
+            instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         else:
-            instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle)
+            instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
 
@@ -82,37 +82,42 @@ def instanciate_element(item):
     if key == 'D':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
-        instance =  ELM.D(length=length,label=label,particle=PARAMS['sollteilchen'])
+        instance =  ELM.D(length=length,label=label)
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
-        instance  = ELM.SIXD(length=length,label=label,particle=PARAMS['sollteilchen'])
+        instance  = ELM.SIXD(length=length,label=label)
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
         slices   = get_mandatory(attributes,'slices',label)
+        aperture = get_mandatory(attributes,'aperture',label)
         if slices > 1:
-            instance = replace_QF_with_QFth_lattice(slices,kq,length,label,PARAMS['sollteilchen'])
+            instance = replace_QF_with_QFth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
         elif slices <= 1:
-            instance = ELM.QF(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
+            instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
+            pass
     elif key == 'QD':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
         kq       = dBdz/PARAMS['sollteilchen'].brho
         slices   = get_mandatory(attributes,'slices',label)
+        aperture = get_mandatory(attributes,'aperture',label)
         if slices > 1:
-            instance = replace_QD_with_QDth_lattice(slices,kq,length,label,PARAMS['sollteilchen'])
+            instance = replace_QD_with_QDth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
         elif slices <= 1:
-            instance = ELM.QD(k0=kq,length=length,label=label,particle=PARAMS['sollteilchen'])
+            instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
+            pass
     elif key == 'RFG':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         gap       = get_mandatory(attributes,'gap',label)
         mapping   = get_mandatory(attributes,'mapping',label)
+        aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
@@ -122,13 +127,13 @@ def instanciate_element(item):
             Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,Epeak=Ezpeak)
-            instance  =  ELM.RFG(U0=0.,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],SFdata=PARAMS[fname],dWf=dWf)
+            instance  =  ELM.RFG(U0=0.,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,SFdata=PARAMS[fname],dWf=dWf,aperture=aperture)
             instance['Ezpeak'] = Ezpeak
             instance['Ezavg']  = ''
         else:
             Ez        = get_mandatory(attributes,"Ez",label)
             U0        = gap * Ez
-            instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,particle=PARAMS['sollteilchen'],dWf=dWf)
+            instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
             instance['Ezpeak'] = ''
             instance['Ezavg']  = Ez
     elif key == 'RFC':
@@ -140,7 +145,8 @@ def instanciate_element(item):
         fRF       = get_mandatory(attributes,"fRF",label)
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
-        instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,particle=PARAMS['sollteilchen'],dWf=dWf)
+        aperture  = get_mandatory(attributes,'aperture',label)
+        instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -149,7 +155,8 @@ def instanciate_element(item):
         fRF       = get_mandatory(attributes,"fRF",label)
         U0        = Ez * gap
         dWf       = FLAGS['dWf']
-        instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,particle=PARAMS['sollteilchen'],dWf=dWf)
+        aperture  = get_mandatory(attributes,'aperture',label)
+        instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
@@ -224,6 +231,7 @@ def factory(input_file):
         if 'KVprint'     in flags: FLAGS['KVprint']                                = flags['KVprint']
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
         if 'express'     in flags: FLAGS['express']                                = flags['express']
+        if 'aperture'    in flags: FLAGS['aperture']                               = flags['aperture']
         return flags
 # --------
     def read_sections(in_data):
@@ -259,7 +267,6 @@ def factory(input_file):
         if 'gap'              in parameters: PARAMS['spalt_laenge']     = parameters['gap']
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
-        if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture']
         if 'windings'         in parameters: PARAMS['n_coil']           = parameters['windings']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
@@ -355,7 +362,6 @@ def factory(input_file):
     lattice = make_lattice(latticeList,segments)
     DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
-    SUMMARY['aperture [m]']       = PARAMS['aperture']
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
     DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
     return lattice    # end of factory(...)
@@ -389,6 +395,7 @@ def test1(input_file):
 
 if __name__ == '__main__':
     test0()
-    test1('yml/ref_run.yml')
-    test1('yml/fodo_with_10cav_per_RF-4.yml')
+    # test1('yml/ref_run.yml')
+    # test1('yml/fodo_with_10cav_per_RF-4.yml')
+    test1('yml/work.yml')
 

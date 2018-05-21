@@ -355,18 +355,18 @@ class Lattice(object):
                     slice.do_actions()
 
                 # APERTURE control
-                r = sqrt(xsquare_av**2 + ysquare_av**2)
+        #         r = sqrt(xsquare_av**2 + ysquare_av**2)
 
-            if 3.*r > PARAMS['aperture']:
-                saper = min(s0,saper)
-        
-        if saper<1.e6:                                # warnings (experimental!)
-            warnings.showwarning(
-                    '3*sigma out of APERTURE at about s ={:5.1f}[m]'.format(saper),
-                    UserWarning,
-                    'lattice.py',
-                    'sigma_functions()',
-                    )
+       ##        if 3.*r > PARAMS['aperture']:
+        #         saper = min(s0,saper)
+        # 
+        # if saper<1.e6:                                # warnings (experimental!)
+        #     warnings.showwarning(
+        #             '3*sigma out of APERTURE at about s ={:5.1f}[m]'.format(saper),
+        #             UserWarning,
+        #             'lattice.py',
+        #             'sigma_functions()',
+        #             )
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):

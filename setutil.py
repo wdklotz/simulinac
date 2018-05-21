@@ -88,7 +88,8 @@ FLAGS  = dict(
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
-        express              = True              # use express version of thin quads
+        express              = True,             # use express version of thin quads
+        aperture             = True              # use aperture check for quads and rf-gaps
         )
 PARAMS = dict(
         lichtgeschwindigkeit = 299792458.,       # [m/s] const
@@ -104,7 +105,7 @@ PARAMS = dict(
         injection_energy     = 70.,              # [MeV] default
         qf_gradient          = 16.0,             # [T/m] default
         qd_gradient          = 16.0,             # [T/m] default
-        quad_bore_radius     = 0.02,             # Vorgabe quadrupole bore radius [m]
+        quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         n_coil               = 30,               # nbof coil windings
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
@@ -117,7 +118,6 @@ PARAMS = dict(
         alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
         sigmaz_i             = 0.02,             # [m] max long. half-width displacement
         dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
-        aperture             = 0.011,            # aperture = bore radius
         nbof_slices          = 6,                # default number-off slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
@@ -309,25 +309,29 @@ def collect_data_for_summary(lattice):
         for typ in types:
             elements = elements_in_section()
             for itm in elements:
-                k0 = itm.k0
-                dBdz = k0*itm.particle.brho
-                length = itm.length
+                k0       = itm.k0
+                dBdz     = k0*itm.particle.brho
+                length   = itm.length
+                aperture = itm.aperture
                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
                 SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*PARAMS['quad_bore_radius']
+                SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*aperture
                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
 
     types = ['RFG']
     for sec in sections:
         for typ in types:
             elements = elements_in_section()
             for itm in elements:
-                gap     = itm.gap
-                Ezavg   = itm.Ezavg
-                PhiSoll = degrees(itm.phis)
-                mapping = itm.mapping
-                Ezpeak  = itm.Ezpeak
+                gap      = itm.gap
+                Ezavg    = itm.Ezavg
+                PhiSoll  = degrees(itm.phis)
+                mapping  = itm.mapping
+                Ezpeak   = itm.Ezpeak
+                aperture = itm.aperture
                 SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
                 SUMMARY['{2} [{1}.{0}] Ez-avg[MV/m]'.format(sec,typ,itm.label)] = Ezavg
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
@@ -338,11 +342,13 @@ def collect_data_for_summary(lattice):
         for typ in types:
             elements = elements_in_section()
             for itm in elements:
-                gap     = itm.gap
-                Ezavg   = itm.u0/gap
-                PhiSoll = degrees(itm.phis)
-                length  = itm.length
+                gap      = itm.gap
+                Ezavg    = itm.u0/gap
+                PhiSoll  = degrees(itm.phis)
+                length   = itm.length
+                aperture = itm.aperture
                 SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
                 SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ezavg
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
@@ -351,9 +357,9 @@ def collect_data_for_summary(lattice):
     SUMMARY['emittance growth']                =  FLAGS['egf']
     SUMMARY['ring lattice']                    =  FLAGS['periodic']
     SUMMARY['express']                         =  FLAGS['express']
+    SUMMARY['use aperture']                    =  FLAGS['aperture']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
-    SUMMARY['quad bore radius [m]']            =  PARAMS['quad_bore_radius']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
     SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6
@@ -365,7 +371,6 @@ def collect_data_for_summary(lattice):
     SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
     SUMMARY['(dp/p)i [%]']                     =  PARAMS['dp2p_i']
     SUMMARY['(betaz)i* [KeV/rad]']             =  PARAMS['betaz_i']*1.e3
-    SUMMARY['aperture [m]']                    =  PARAMS['aperture']
     SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['zel_Dphi0'])
     SUMMARY['max bunch length* [deg]']         =  degrees(PARAMS['zel_Dphimax'])  # phase acceptance
     SUMMARY['(DW)max* [KeV]']                  =  PARAMS['zel_DWmax']*1.e3        # energy acceptance

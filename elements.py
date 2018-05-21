@@ -51,15 +51,15 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})  
 #     """ Lattice Node interface: virtual functions that must be implemented by all child classes """
 #     def __init__(self):
 #         super().__init__()
-# 
+#
 #     @abstractmethod
 #     def map(self, i_track):
 #         pass
-# 
+#
 #     @abstractmethod
 #     def soll_map(self, i_track):
 #         pass
-# 
+#
 #     @abstractmethod
 #     def adjust_energy(self, tkin):
 #         pass
@@ -85,7 +85,7 @@ class _Node(DictObject, object):
     @property
     def deltaW(self):
         return self._deltaW
-    
+
     @property
     def particlef(self):
         return copy(self.particle)(self.particle.tkin + self.deltaW)
@@ -259,16 +259,17 @@ class D(I):
 # Trace3D focussing quad
 class QF(D):
     """ Trace3D focussing quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QF', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, k0 = 0., length = 0., label = 'QF', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length
+        self.aperture = aperture
         self.k0       = k0         # Quad strength [m**-2]
         self.matrix   = self._mx_()
         self['viseo'] = +0.5
 
     def shorten(self, length):
-        res = QF(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position)
+        res = QF(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
         # DEBUG_MODULE('QF: ', self.__dict__)
         # DEBUG_MODULE('QF.shorten: ', ret.__dict__)
         return res
@@ -310,17 +311,17 @@ class QF(D):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position)
+        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
 
 # Trace3D defocusing quad
 class QD(QF):
     """ Trace3D defocussing quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QD', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
-        super().__init__(k0 = k0, length = length, label = label, particle = particle, position = position)
+    def __init__(self, k0 = 0., length = 0., label = 'QD', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+        super().__init__(k0 = k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
     def shorten(self, length):
-        return QD(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position)
+        return QD(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
 
 # Trace3D x-plane sector bending dipole
 class SD(D):
@@ -412,14 +413,16 @@ class GAP(I):
                     particle   = PARAMS['sollteilchen'],
                     gap        = PARAMS['spalt_laenge'],
                     position   = [0, 0, 0],
+                    aperture   = 0.,
                     dWf        = FLAGS['dWf']):
         super().__init__(particle = particle, position = position)
-        self.label  = label
-        self.u0     = U0           # [MV] gap Voltage
-        self.phis   = PhiSoll      # [radians] soll phase
-        self.freq   = fRF          # [Hz]  RF frequenz
-        self.gap    = gap          # [m] eff. gap-length
-        self.dWf    = dWf
+        self.label    = label
+        self.u0       = U0           # [MV] gap Voltage
+        self.phis     = PhiSoll      # [radians] soll phase
+        self.freq     = fRF          # [Hz]  RF frequenz
+        self.gap      = gap          # [m] eff. gap-length
+        self.aperture = aperture     # [m]
+        self.dWf      = dWf
 
         self['viseo']  = 0.25
 
@@ -435,7 +438,7 @@ class GAP(I):
         matrix       = self.matrix
         m0c2         = self.particle.e0
         self._mx_(matrix, m0c2, u0, tr, PhiSoll, lamb, bg) # transport matrix
-    
+
     def _trtf_(self, beta, lamb, gap):  # tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65)
         teta = gap / (beta*lamb)
         res = NP.sinc(teta)/teta
@@ -458,7 +461,8 @@ class GAP(I):
                     particle   = self.particle(tkin),
                     gap        = self.gap,
                     position   = self.position,
-                    dWf        = self.dWf)
+                    dWf        = self.dWf,
+                    aperture   = self.aperture)
 
 # Zero length RF gap
 class RFG(I):
@@ -471,18 +475,20 @@ class RFG(I):
             particle   = PARAMS['sollteilchen'],
             gap        = PARAMS['spalt_laenge'],
             position   = [0, 0, 0],
+            aperture   = 0.,
             mapping    = 't3d',
             SFdata     = None,  # return of SFdata (SuperFish data)
             dWf        = FLAGS['dWf']):
         super().__init__(particle = particle, position = position)
-        self.u0      = U0*dWf             # [MV] gap Voltage
-        self.phis    = PhiSoll            # [radians] soll phase
-        self.freq    = fRF                # [Hz]  RF frequenz
-        self.label   = label
-        self.gap     = gap                # [m] rf-gap
-        self.mapping = mapping            # map model
-        self.SFdata  = SFdata             # SuperFish data
-        self.dWf     = dWf
+        self.u0       = U0*dWf             # [MV] gap Voltage
+        self.phis     = PhiSoll            # [radians] soll phase
+        self.freq     = fRF                # [Hz]  RF frequenz
+        self.label    = label
+        self.gap      = gap                # [m] rf-gap
+        self.aperture = aperture          # [m]
+        self.mapping  = mapping            # map model
+        self.SFdata   = SFdata             # SuperFish data
+        self.dWf      = dWf
 
         self['viseo']= 0.25
 
@@ -511,7 +517,8 @@ class RFG(I):
             position   = self.position,
             mapping    = self.mapping,
             SFdata     = self.SFdata,
-            dWf        = self.dWf)
+            dWf        = self.dWf,
+            aperture   = self.aperture)
         self._params = params
 
     @property
@@ -566,7 +573,7 @@ class _PYO_G(object):
         elif self.mapping == 'base':
             which_map = self.base_map
         return which_map(i_track, self.lamb, self.particle, self.u0, self.tr, self.phis)
-        
+
     def soll_map(self, i_track):
         return self.map(i_track)
 
@@ -623,7 +630,7 @@ class _PYO_G(object):
 
         f_track = NP.array([xf, xpf, yf, ypf, zf, zfp, Tf, 1., sf, 1.])
         self.matrix[EKOO, DEKOO] = deltaW             # refresh Node-matrix with local deltaW
-        
+
         # for DEBUGGING
         if DEBUG_PYO_G == DEBUG_ON:
             itr = i_track.copy()
@@ -655,7 +662,7 @@ class _PYO_G(object):
         betai  = particle.beta
         gammai = particle.gamma
         gbi    = particle.gamma_beta
-        
+
         r      = sqrt(x**2+y**2)                      # radial coordinate
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
@@ -672,7 +679,7 @@ class _PYO_G(object):
         dw     = wout - WOUT                          # d(deltaW)
 
         DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
-        
+
         particlef = copy(particle)(tkin = WOUT)       # soll particle (f)
         betaf     = particlef.beta
         gammaf    = particlef.gamma
@@ -754,7 +761,7 @@ class _T3D_G(object):
         self.tr        = tr
         self.deltaW    = deltaW
         self.particlef = particlef
-        
+
         # the matrix
         mx(self.matrix, tr, b, g, particle, particlef, u0, phis, lamb, deltaW)
 
@@ -762,7 +769,7 @@ class _T3D_G(object):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = self.matrix.dot(i_track)
         return f_track
-    
+
     def soll_map(self, i_track):
         return self.map(i_track)
 
@@ -792,13 +799,14 @@ class _thin(_Node):
 #Tthin F-quad
 class QFth(_thin):
     """ Thin F-Quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QFT', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, k0 = 0., length = 0., label = 'QFT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
         super().__init__(particle = particle, position = position)
         self.label     = label
         self.length    = length
         self.k0        = k0
+        self.aperture  = aperture
         self['viseo']  = +0.5
-        di = D(length = 0.5*self.length, particle = self.particle)
+        di = D(length  = 0.5*self.length, particle = self.particle)
         df = di
         kick = _kick(self, particle = self.particle, position = self.position)
         lens = df * (kick * di)     # matrix produkt df*kick*di
@@ -811,7 +819,7 @@ class QFth(_thin):
         cpf = self.particle.gamma_beta
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
-        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position)
+        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
 
 # Kick
 class _kick(I):
@@ -828,18 +836,19 @@ class _kick(I):
 # Thin D-quad
 class QDth(QFth):
     """ Thin D-Quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
-        super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position)
+    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+        super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo']  = -0.5
 
 # Thin F-quadx
 class QFthx(D):
     """ Thin F-Quad   (express version of QFth) """
-    def __init__(self, k0 = 0., length = 0., label = 'QFT', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, k0 = 0., length = 0., label = 'QFT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length
         self.k0       = k0
+        self.aperture = aperture
         self['viseo'] = +0.5
         L = self.length
         m = self.matrix                # thin lens quad matrix (by hand calculation)
@@ -858,7 +867,7 @@ class QFthx(D):
         cpf = self.particle.gamma_beta
         ki  = self.k0
         kf  = ki*cpi/cpf               # scale quad strength with new impulse
-        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position)
+        self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
 
     def make_slices(self, anz = PARAMS['nbof_slices']):
         slices = [self]
@@ -867,8 +876,8 @@ class QFthx(D):
 # Thin D-quadx
 class QDthx(QFthx):
     """ Thin D-Quad   (express version of QDth) """
-    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
-        super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position)
+    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+        super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
 # RF cavity as D*RFG*D
@@ -883,16 +892,18 @@ class RFC(_thin):
                 gap      = PARAMS['spalt_laenge'],
                 length   = 0.,
                 position = [0, 0, 0],
+                aperture = 0.,
                 dWf      = FLAGS['dWf']):
         super().__init__(particle = particle, position = position)
         if length == 0.: length = gap  # eff. gap can be different from cavity-length
-        self.label  = label
-        self.length = length
-        self.u0     = U0*dWf
-        self.phis   = PhiSoll
-        self.freq   = fRF
-        self.gap    = gap
-        self.dWf    = dWf
+        self.label    = label
+        self.length   = length
+        self.aperture = aperture
+        self.u0       = U0*dWf
+        self.phis     = PhiSoll
+        self.freq     = fRF
+        self.gap      = gap
+        self.dWf      = dWf
 
         di   = D(length = 0.5*length, particle = self.particle)
         df   = D(length = 0.5*length, particle = self.particle)
@@ -918,7 +929,7 @@ class RFC(_thin):
     @property
     def particlef(self):
         return self._particlef
-        
+
     def adjust_energy(self, tkin):
         self.__init__(
                     U0            = self.u0,
@@ -929,7 +940,8 @@ class RFC(_thin):
                     gap           = self.gap,
                     length        = self.length,
                     position      = self.position,
-                    dWf           = self.dWf)
+                    dWf           = self.dWf,
+                    aperture      = self.aperture)
 
 # SixTrack drift map
 class SIXD(D):

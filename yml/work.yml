@@ -29,7 +29,8 @@ flags:
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
-    - express:      False           # {True}  use express version of thin quads
+   - express:      False           # {True}  use express version of thin quads
+   # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -39,11 +40,11 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - aperture:             0.01        # [m] aperture = bore radius
     - Tkin:                 70.0        # [MeV] energy @ entrance (injection)
     - frequency:    &p01    816.e+6     # [Hz] frequency
     - ql0:          &p02    0.10        # [m] quad-length
     - ql:           &p03    0.05        # [m] 1/2 quad-length
+    - quad_bore:    &p04    0.02        # [m] quad bore radius
     - emity_i:      &emy    2.e-6       # [m*rad] transverse emittance @ entrance x
     - emitx_i:              *emy        # [m*rad] transverse emittance @ entrance y
     # - betax_i:      &bex    7.084       # [m] twiss beta @ entrance x
@@ -77,6 +78,7 @@ elements:
     - QFH:   &QFH                # ID: &alias
         - type:     QF           # QF class
         - length:   *p03         # [m]
+        - aperture: *p04         # [m] quad bore
         - B':       &Bgrad   40. # [T/m] quadrupole gradient
         # - B':       &Bgrad   30. # [T/m] quadrupole gradient
         # - B':       &Bgrad   38.8 # [T/m] quadrupole gradient  (zero RF)
@@ -86,6 +88,7 @@ elements:
     - QDH:   &QDH                # ID: &alias
         - type:     QD           # QD class
         - length:   *p02         # [m] length
+        - aperture: *p04         # [m] quad bore
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
@@ -99,6 +102,7 @@ elements:
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
+        - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - Ezpeak:   4.00         # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
         - mapping:   t3d         # Trace 3D linear map model
@@ -113,6 +117,7 @@ elements:
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
+        - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
     - M:  &M                     # ID: &alias
@@ -200,5 +205,6 @@ segments:
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]     # cavities
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
+    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
     # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
