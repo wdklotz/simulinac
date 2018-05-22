@@ -533,15 +533,15 @@ class RFG(I):
         self.mapset  = PARAMS['mapset']
         self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
 
-        """ calc. Trace3D-matrix and use linear gap-model as default """
-        self.gap_model = _T3D_G(self)
-        """ use replacements """
-        if self.mapping == 'simple' or self.mapping == 'base':
+        """ switch gap model """
+        if self.mapping == 't3d':
+            self.gap_model = _T3D_G(self)               # Trace3D-matrix and use linear gap-model
+        elif self.mapping == 'simple' or self.mapping == 'base':
             self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self)              # 3 point TTF-RF gap-model with SF-data (A.Shishlo/J.Holmes)
+            self.gap_model = _TTF_G(self)               # 3 point TTF-RF gap-model with SF-data (A.Shishlo/J.Holmes)
         elif self.mapping == 'dyn':
-            self.gap_model = _DYN_G(self)              # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            self.gap_model = _DYN_G(self)               # DYNAC gap model with SF-data (E.Tanke, S.Valero)
 
     def adjust_energy(self, tkin):
         params = self._params    # params dict
@@ -679,7 +679,7 @@ class _PYO_G(object):
             arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
 
-        # parent properties
+        # the parent delegates reading these properties from here
         self.deltaw    = deltaW
         self.particlef = copy(particle)(particle.tkin + deltaW)
         return f_track
@@ -749,7 +749,7 @@ class _PYO_G(object):
             arrprnt(itr, fmt = '{:6.3g},', txt = 'base_map:i_track:')
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'base_map:f_track:')
 
-        # parent properties
+        # the parent delegates reading these properties from here
         self.deltaW    = DELTAW
         self.particlef = particlef
         return f_track
@@ -779,7 +779,7 @@ class _T3D_G(object):
             m[EKOO, DEKOO] = deltaW     # local deltaW to Node matrix
             return
 
-        self.matrix    = parent.matrix
+        matrix         = parent.matrix
         particle       = parent.particle
         u0             = parent.u0
         phis           = parent.phis
@@ -795,13 +795,14 @@ class _T3D_G(object):
         g              = part_center.gamma           # gamma @ gap center
         particlef      = copy(particle)(tkin+deltaW) # particle @ (f)
 
-        # parent properties
+        # the matrix
+        mx(matrix, tr, b, g, particle, particlef, u0, phis, lamb, deltaW)
+
+        # the parent delegates reading these properties from here
+        self.matrix    = matrix
         self.tr        = tr
         self.deltaW    = deltaW
         self.particlef = particlef
-
-        # the matrix
-        mx(self.matrix, tr, b, g, particle, particlef, u0, phis, lamb, deltaW)
 
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
@@ -836,7 +837,7 @@ class _thin(_Node):
         # DEBUG_MODULE('slices', slices)
         return slices
 
-#Tthin F-quad
+# Thin F-quad
 class QFth(_thin):
     """ Thin F-Quad """
     def __init__(self, 

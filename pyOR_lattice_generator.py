@@ -105,13 +105,13 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
                 if isinstance(node,(ELM.QF,ELM.QD)):
                     quad_cnt += 1
                     name = '{}:{}'.format(node.label,quad_cnt)
-                    accelm_da.setValue('type','QUAD')
-                    accelm_da.setValue('name',name)
-
                     k0 = node.k0
                     if isinstance(node,ELM.QD): k0 = -k0
                     Bgrad = k0*node.particle.brho
                     aperture = node.aperture
+
+                    accelm_da.setValue('type','QUAD')
+                    accelm_da.setValue('name',name)
 
                     par_da.setValue('field', Bgrad)
                     par_da.setValue('aperture', aperture)
@@ -120,17 +120,18 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
                 elif isinstance(node,ELM.RFG):
                     gap_cnt += 1
                     name = '{}:{}'.format(node.label,gap_cnt)
-                    accelm_da.setValue('type','RFGAP')
-                    accelm_da.setValue('name',name)
                     ttf_da = accelm_da.createChild('TTFs')
 
-                    # phiSoll = degrees(node.phis) + 180.     # pyOrbit's soll phase ~135 [deg]!
+                    # phiSoll = degrees(node.phis) + 180. # pyOrbit's soll phase ~135 [deg]!
                     phiSoll = degrees(node.phis)
-                    E0L  = node.u0*1.e-3                      # pyOrbit [Gev]
-                    # E0TL = E0L*node.tr
-                    E0TL = E0L*0.8575
+                    E0L  = node.u0*1.e-3          # pyOrbit [Gev]
+                    E0TL = E0L*node.tr            # use this when energy is adjusted
+                    E0TL = E0L*0.8575             # some reasonable(?) average
                     aperture = node.aperture
                     name = '{}:{}'.format('pillbox',gap_cnt)
+                    accelm_da.setValue('type','RFGAP')
+                    accelm_da.setValue('name',name)
+
                     par_da.setValue('E0L', E0L)
                     par_da.setValue('E0TL', E0TL)
                     par_da.setValue('EzFile', EzFile)

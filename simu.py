@@ -219,7 +219,7 @@ def simulation(filepath):
 
 if __name__ == '__main__':
     filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
-    # filepath = 'yml/work.yml'
+    filepath = 'yml/work.yml'
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
