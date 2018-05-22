@@ -319,17 +319,17 @@ class Lattice(object):
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
                         emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
                         emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
-        saper = 1.e6  # aperture control
-        s     = 0.0
+        s = 0.0                                     # longitudinal position counter
         for element in self.seq:                    # loop elements
             s0 = element.position[0]
             slices = element.make_slices(anz=steps)
+            warned = False                          # flag to control aperture warnings/element
             for slice in slices:                    # loop slices
 
                 # R-MAP: SIGMA' = R * SIGMA * R.tranposed
                 sigma_f = sigma_i.RSRt(slice)
                 
-                # add EG
+                # add emmitance grow
                 if isinstance(slice,ELM.RFG) and FLAGS['egf']:
                     sigma_f = sigma_f.apply_eg_corr(rf_gap=slice, sigma_i=sigma_i, delta_phi=PARAMS['Dphi0'])
                 sigf = sigma_f.matrix
@@ -355,18 +355,19 @@ class Lattice(object):
                     slice.do_actions()
 
                 # APERTURE control
-        #         r = sqrt(xsquare_av**2 + ysquare_av**2)
-
-       ##        if 3.*r > PARAMS['aperture']:
-        #         saper = min(s0,saper)
-        # 
-        # if saper<1.e6:                                # warnings (experimental!)
-        #     warnings.showwarning(
-        #             '3*sigma out of APERTURE at about s ={:5.1f}[m]'.format(saper),
-        #             UserWarning,
-        #             'lattice.py',
-        #             'sigma_functions()',
-        #             )
+                if FLAGS['aperture']:
+                    # nsig = nboff beam sigmas to stay clear of aperture
+                    nsig = 4
+                    limr = nsig*sqrt(xsquare_av**2 + ysquare_av**2)
+                    if isinstance(element,(ELM.QF, ELM.QD, ELM.RFG, ELM.GAP, ELM.RFC, ELM.QFth, ELM.QDth, ELM.QFthx, ELM.QDthx)):
+                        aper = element.aperture
+                        if limr > aper and not warned:
+                            warned = True
+                            warnings.showwarning(
+                                'out {}*sigma at z ={:5.1f}[m]'.format(nsig,s),
+                                UserWarning,
+                                'lattice.py',
+                                'sigma_functions()')
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):

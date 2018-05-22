@@ -353,10 +353,10 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
-    SUMMARY['sigma tracking']                  =  FLAGS['sigma']
-    SUMMARY['emittance growth']                =  FLAGS['egf']
-    SUMMARY['ring lattice']                    =  FLAGS['periodic']
-    SUMMARY['express']                         =  FLAGS['express']
+    SUMMARY['use sigma tracking']              =  FLAGS['sigma']
+    SUMMARY['use emittance growth']            =  FLAGS['egf']
+    SUMMARY['use ring lattice']                =  FLAGS['periodic']
+    SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['aperture']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6

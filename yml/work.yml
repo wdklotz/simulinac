@@ -29,8 +29,8 @@ flags:
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
-   - express:      False           # {True}  use express version of thin quads
-   # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
+    - express:      False           # {True}  use express version of thin quads
+    # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -206,5 +206,5 @@ lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]     # cavities
     # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
-    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
-    - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
+    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps

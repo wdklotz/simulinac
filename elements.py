@@ -70,7 +70,9 @@ class _Node(DictObject, object):
         i)   owns its particle instance (copy)
         ii)  is a dictionary (DictObject base class)
     """
-    def __init__(self, particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         DictObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
         self.particle  = copy(particle)   # local copy of the particle instance !!!IMPORTANT!!!
@@ -218,14 +220,21 @@ class _Node(DictObject, object):
 # Unity matrix map (is same as _Node)
 class I(_Node):
     """ Unity matrix """
-    def __init__(self, label = 'I', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self,
+                label = 'I', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
         self.label = label
 
 # Marker
 class MRK(I):
     """ Marker element """
-    def __init__(self, label = 'MRK', particle = PARAMS['sollteilchen'], position = [0, 0, 0], actions = []):
+    def __init__(self, 
+                label = 'MRK', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], 
+                actions = []):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.actions  = actions
@@ -240,7 +249,11 @@ class MRK(I):
 # Trace3D drift space
 class D(I):
     """ Trace3D drift space """
-    def __init__(self, length = 0., label = 'D', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                length = 0., 
+                label = 'D', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length
@@ -259,7 +272,13 @@ class D(I):
 # Trace3D focussing quad
 class QF(D):
     """ Trace3D focussing quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QF', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+    def __init__(self, 
+                k0 = 0., 
+                length = 0., 
+                label = 'QF', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], 
+                aperture = 0.):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length
@@ -316,7 +335,13 @@ class QF(D):
 # Trace3D defocusing quad
 class QD(QF):
     """ Trace3D defocussing quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QD', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+    def __init__(self, 
+                k0 = 0., 
+                length = 0., 
+                label = 'QD', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], 
+                aperture = 0.):
         super().__init__(k0 = k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
@@ -326,7 +351,12 @@ class QD(QF):
 # Trace3D x-plane sector bending dipole
 class SD(D):
     """ Trace3d sector dipole in x-plane """
-    def __init__(self, radius = 0., length = 0., label = 'SD', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                radius = 0., 
+                length = 0., 
+                label = 'SD', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
         self.label  = label
         self.length = length
@@ -369,7 +399,12 @@ class SD(D):
 # Trace3D x-plane rectangular bending dipole
 class RD(SD):
     """ Trace3D rectangular dipole x-plane """
-    def __init__(self, radius = 0., length = 0., label = 'RD', particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                radius = 0., 
+                length = 0., 
+                label = 'RD', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(radius = radius, length = length, label = label, particle = particle, position = position)
         psi = 0.5*length/radius   # halber Kantenwinkel
 
@@ -390,7 +425,10 @@ class RD(SD):
 # Trace3D x-plane wedge of rectangular bending dipole
 class _wedge(I):
     """ Trace3d dipole wedge x-plane """
-    def __init__(self, psi, radius, particle, position):
+    def __init__(self, 
+                psi, 
+                radius, 
+                particle, position):
         super().__init__(particle = particle, position = position)
         self.label  = 'w'
         ckp = tan(psi)/radius
@@ -776,7 +814,9 @@ class _T3D_G(object):
 # Base of thin Nodes
 class _thin(_Node):
     """ Base class for thin elements implemented as triplet D*Kick*D """
-    def __init__(self, particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
 
     def make_slices(self, anz = PARAMS['nbof_slices']):  # stepping routine through the triplet
@@ -799,7 +839,13 @@ class _thin(_Node):
 #Tthin F-quad
 class QFth(_thin):
     """ Thin F-Quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QFT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+    def __init__(self, 
+                k0 = 0., 
+                length = 0., 
+                label = 'QFT', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], 
+                aperture = 0.):
         super().__init__(particle = particle, position = position)
         self.label     = label
         self.length    = length
@@ -824,7 +870,10 @@ class QFth(_thin):
 # Kick
 class _kick(I):
     """ Matrix for thin lens quad """
-    def __init__(self, quad, particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
+    def __init__(self, 
+                quad, 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
         self.label = 'k'
         m = self.matrix
@@ -836,7 +885,13 @@ class _kick(I):
 # Thin D-quad
 class QDth(QFth):
     """ Thin D-Quad """
-    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+    def __init__(self, 
+                k0 = 0., 
+                length = 0., 
+                label = 'QDT', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], 
+                aperture = 0.):
         super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo']  = -0.5
 
@@ -876,7 +931,12 @@ class QFthx(D):
 # Thin D-quadx
 class QDthx(QFthx):
     """ Thin D-Quad   (express version of QDth) """
-    def __init__(self, k0 = 0., length = 0., label = 'QDT', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = 0.):
+    def __init__(self, 
+                k0 = 0., 
+                length = 0., 
+                label = 'QDT', 
+                particle = PARAMS['sollteilchen'], 
+                position = [0, 0, 0], aperture = 0.):
         super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
@@ -946,7 +1006,11 @@ class RFC(_thin):
 # SixTrack drift map
 class SIXD(D):
     """ Drift with Sixtrack mapping (experimental!) """
-    def __init__(self, length = 0., label = "D#", particle = PARAMS['sollteilchen'], position = [0., 0., 0.]):
+    def __init__(self, 
+                length = 0., 
+                label = "D#", 
+                particle = PARAMS['sollteilchen'], 
+                position = [0., 0., 0.]):
         super().__init__(length = length, particle = particle, position = position)
         self.label    = label
         self.length   = length
