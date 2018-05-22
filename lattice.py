@@ -356,8 +356,7 @@ class Lattice(object):
 
                 # APERTURE control
                 if FLAGS['aperture']:
-                    # nsig = nboff beam sigmas to stay clear of aperture
-                    nsig = 4
+                    nsig = PARAMS['n_sigma']
                     limr = nsig*sqrt(xsquare_av**2 + ysquare_av**2)
                     if isinstance(element,(ELM.QF, ELM.QD, ELM.RFG, ELM.GAP, ELM.RFC, ELM.QFth, ELM.QDth, ELM.QFthx, ELM.QDthx)):
                         aper = element.aperture

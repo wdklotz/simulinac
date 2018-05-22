@@ -88,7 +88,7 @@ FLAGS  = dict(
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
-        express              = True,             # use express version of thin quads
+        express              = False,             # use express version of thin quads
         aperture             = True              # use aperture check for quads and rf-gaps
         )
 PARAMS = dict(
@@ -107,6 +107,7 @@ PARAMS = dict(
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         n_coil               = 30,               # nbof coil windings
+        n_sigma              = 3,                # nboff beam sigmas to stay clear of aperture
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emitz_i              = 0.2e-6,           # [m*rad] Vorgabe emittance entrance
@@ -360,6 +361,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['use aperture']                    =  FLAGS['aperture']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
+    SUMMARY['(N)sigma']                         =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
     SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6

@@ -29,7 +29,7 @@ flags:
     # - sigma:        False           # {True}  beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
-    - express:      False           # {True}  use express version of thin quads
+    # - express:      True            # {False} use express version of thin quads
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................

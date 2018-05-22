@@ -967,6 +967,7 @@ class RFC(_thin):
 
         di   = D(length = 0.5*length, particle = self.particle)
         df   = D(length = 0.5*length, particle = self.particle)
+        # Trace3D RF gap
         kick = RFG(U0        = self.u0,
                     PhiSoll   = self.phis,
                     fRF       = self.freq,
@@ -974,7 +975,8 @@ class RFC(_thin):
                     particle  = self.particle,
                     gap       = self.gap,
                     mapping   = 't3d',
-                    dWf       = self.dWf)  # Trace3D RF gap
+                    dWf       = self.dWf,
+                    aperture  = self.aperture)
         self.tr         = kick.tr
         tk_f            = self.particle.tkin+kick.deltaW   # tkin after acc. gap
         # update energy for downstream drift after gap
