@@ -53,7 +53,7 @@ DEBUG_GEN    = DEBUG_OFF
 DEBUG_GEN(lineno(),dir())
 
 
-def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
+def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
     input   = '{}/{}.{}'.format(dir,file,ext)
     output  = '{}/{}.{}'.format('.','lattice','xml')
 
@@ -111,6 +111,7 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
                     k0 = node.k0
                     if isinstance(node,ELM.QD): k0 = -k0
                     Bgrad = k0*node.particle.brho
+                    aperture = node.aperture
 
                     par_da.setValue('field', Bgrad)
                     par_da.setValue('aperture', aperture)
@@ -128,6 +129,7 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
                     E0L  = node.u0*1.e-3                      # pyOrbit [Gev]
                     # E0TL = E0L*node.tr
                     E0TL = E0L*0.8575
+                    aperture = node.aperture
                     name = '{}:{}'.format('pillbox',gap_cnt)
                     par_da.setValue('E0L', E0L)
                     par_da.setValue('E0TL', E0TL)
@@ -171,7 +173,7 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None, aperture=None):
 
 if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
-    aperture = PARAMS['quad_bore_radius']
+    # aperture = PARAMS['quad_bore_radius']
     file = 'orbit'
-    # file = 'work'
-    generator(EzFile = EzFile, aperture = aperture, file = file)
+    file = 'work'
+    generator(EzFile = EzFile, file = file)
