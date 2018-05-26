@@ -199,14 +199,26 @@ def Sp(poly,k,zintval):
         sp.append(Spn(poly,k,i))
     return sp
 
+def EzAvg(poly):
+    z = 0.
+    res = 0.
+    for n in range(len(poly)):
+        dz = poly[n].dz      # [cm]
+        v0 = V0n(poly,n)
+        z = z + dz*1.e-2     # [m]
+        res = res + v0       # [MV]
+    res = res/z              # EzAvg [MV/m]
+    return res
+
 class SFdata(object):
-    ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf Epeak)'''
-    def __init__(self,input_file,Epeak=1.):
+    ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf EzPeak)'''
+    def __init__(self,input_file,EzPeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
-        self.Epeak      = Epeak
+        self.EzPeak     = EzPeak
         self.make_Ez_table()
         self.make_Ez_poly()
+        self.EzAvg = EzAvg(self._poly)
 
     def make_Ez_table(self):
         """ read data and normalize """
@@ -237,7 +249,7 @@ class SFdata(object):
         eprev = [x for x in reversed(ep[1:])]
         ep =eprev+ep
         emax = max(ep)
-        enorm = self.Epeak/emax
+        enorm = self.EzPeak/emax
         self._Ez0_tab = []
         for i in range(len(zp)):   # normalize and pack
             ep[i] = ep[i]*enorm
@@ -297,7 +309,7 @@ class SFdata(object):
     def Ez_poly(self):
         """List(Polyval) of polygon approximations"""
         return self._poly
-
+        
 def pre_plt(input_file):
     """ prepare plot """
     ax  = plt.subplot(111)
@@ -422,7 +434,7 @@ def test3(input_file):
     zr  = +gap/2.
     zintval = (zl,zr)
 
-    gap_data = SFdata(input_file,Epeak=1.)
+    gap_data = SFdata(input_file,EzPeak=1.)
     poly     = gap_data.Ez_poly
     display(gap_data.Ez_table,'SF-slice')
 

@@ -22,11 +22,11 @@ from math import radians
 import yaml
 import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,zellipse
+from setutil import PARAMS,FLAGS,SUMMARY,DEBUG
 import elements as ELM
 # import TTFG as TTF
 from lattice import Lattice
-from Ez0 import SFdata
+from Ez0 import SFdata,V0
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -124,39 +124,39 @@ def instanciate_element(item):
             sys.exit(1)
         if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
-            Ezpeak    = get_mandatory(attributes,"Ezpeak",label)
+            EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
-                PARAMS[fname] = SFdata(fname,Epeak=Ezpeak)
-            instance  =  ELM.RFG(U0=0.,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,SFdata=PARAMS[fname],dWf=dWf,aperture=aperture)
-            instance['Ezpeak'] = Ezpeak
-            instance['Ezavg']  = ''
+                PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
+            EzAvg = PARAMS[fname].EzAvg
+            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,SFdata=PARAMS[fname],dWf=dWf,aperture=aperture)
+            instance['EzPeak'] = EzPeak
+            pass
         else:
-            Ez        = get_mandatory(attributes,"Ez",label)
-            U0        = gap * Ez
-            instance  =  ELM.RFG(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
-            instance['Ezpeak'] = ''
-            instance['Ezavg']  = Ez
+            EzAvg     = get_mandatory(attributes,"EzAvg",label)
+            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
+            instance['EzPeak'] = None
+            pass
     elif key == 'RFC':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
         length    = get_mandatory(attributes,'length',label)
-        Ez        = get_mandatory(attributes,"Ez",label)
+        EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        U0        = Ez * gap
+        # U0        = EzAvg * gap
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
-        instance  =  ELM.RFC(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
+        instance  =  ELM.RFC(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
-        Ez        = get_mandatory(attributes,"Ez",label)
+        EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        U0        = Ez * gap
+        # U0        = EzAvg * gap
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
-        instance  =  ELM.GAP(U0=U0,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
+        instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
@@ -260,7 +260,7 @@ def factory(input_file):
         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
-        if 'Ez'               in parameters: PARAMS['Ez_feld']          = parameters['Ez']
+        if 'EzAvg'            in parameters: PARAMS['EzAvg']            = parameters['EzAvg']
         if 'phi_sync'         in parameters: PARAMS['soll_phase']       = parameters['phi_sync']
         if 'sigmaz_i'         in parameters: PARAMS['sigmaz_i']         = parameters['sigmaz_i']
         if 'dp2p_i'           in parameters: PARAMS['dp2p_i']           = parameters['dp2p_i']
@@ -269,7 +269,7 @@ def factory(input_file):
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
         if 'windings'         in parameters: PARAMS['n_coil']           = parameters['windings']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-        PARAMS['spalt_spannung'] = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
+        PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['spalt_laenge']
         return parameters
 # --------
     def expand_reduce(in_data):
@@ -345,8 +345,8 @@ def factory(input_file):
     read_parameters(in_data)
 
     # calculate long. parameters from def. parameters
-    long_params = zellipse(PARAMS['sigmaz_i'],PARAMS['Ez_feld'],PARAMS['wellenlänge'],radians(PARAMS['soll_phase']),PARAMS['spalt_laenge'],PARAMS['sollteilchen'])
-    PARAMS.update(long_params)
+    # long_params = w0(PARAMS['sigmaz_i'],PARAMS['EzAvg'],PARAMS['wellenlänge'],radians(PARAMS['soll_phase']),PARAMS['spalt_laenge'],PARAMS['sollteilchen'])
+    # PARAMS.update(long_params)
     # ACHTUNG!!! override some longitudinal initial twiss parameters
     # PARAMS['emitz_i']  = PARAMS['zel_emitz']
     # PARAMS['betaz_i']  = PARAMS['zel_betaz']
@@ -395,7 +395,5 @@ def test1(input_file):
 
 if __name__ == '__main__':
     test0()
-    # test1('yml/ref_run.yml')
-    # test1('yml/fodo_with_10cav_per_RF-4.yml')
-    test1('yml/work.yml')
+    test1('yml/test_lg.yml')
 

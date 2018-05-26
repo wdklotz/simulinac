@@ -96,7 +96,7 @@ PARAMS = dict(
         elementarladung      = 1.602176565e-19,  # [coulomb] const
         proton_mass          = 938.272,          # [MeV/c**2] const
         electron_mass        = 0.5109989,        # [MeV/c**2] const
-        Ez_feld              = 1.00,             # [MV/m] default
+        EzAvg                = 1.00,             # [MV/m] default average E-field on axis
         spalt_laenge         = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
         soll_phase           = -30.,             # [deg] default
@@ -124,7 +124,7 @@ PARAMS = dict(
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
-PARAMS['spalt_spannung']  = PARAMS['Ez_feld']*PARAMS['spalt_laenge']
+PARAMS['spalt_spannung']  = PARAMS['EzAvg']*PARAMS['spalt_laenge']
 
 """ KeepValues: a global dict to keep key-value pairs (used for tracking results) """
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
@@ -141,8 +141,9 @@ class Particle(object):
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:
-            # print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
-            raise ex
+            print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
+            # raise ex
+            sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -185,66 +186,69 @@ class Electron(Particle):
 
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
-#todo: ueberarbeiten; sigmaz = 0 macht overflow
-# Long. Emittance
-def zellipse(sigmaz, qE0, lamb, phis, gap ,particle):
+
+## Long. Emittance
+def w0(node):
     """
-    Helper to calculate longitudinal phase space ellipse parameters
-    Ellipse nach T.Wangler (6.47) pp.185
-    (w/w0)**2 + (dphi/dhi0)**2 = 1 entspricht gammaz*w0**2 + betaz*Dphi0**2 = emittz, alphaz=0
-    IN:
-        sigmaz:   max half-width long. displacement [m]
-        qE0:      gap field strength [MV/m]
-        lamb:     wavelength [m]
-        phis:     syncronous phase [rad]
-        gap:      cavity gap [m]
-        particle: Particle object
+    Helper to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
+        (w/w0)**2 + (dphi/dphi0)**2 = 1 
+        emitz_i = w0*dphi0 = Ellipsenflaeche/pi
+    IN
+        node: the 1st rf-gap at the linac entrance
     """
-    # NOTE: zellipse should be an atrtribute of RF cavities (I am not sure!?)
-    m0c2      = particle.e0
-    gb        = particle.gamma_beta
-    beta      = particle.beta
-    gamma     = particle.gamma
-    if gap != 0.:
-        T = particle.trtf(gap, PARAMS['frequenz'])
+
+    if node is not None:
+        emitz_i   = PARAMS['emitz_i']
+        E0T       = node.EzAvg*node.tr
+        particle  = node.particle
+        phis      = node.phis
+        lamb      = node.lamb
+        freq      = node.freq
+        m0c2      = particle.e0
+        gb        = particle.gamma_beta
+        beta      = particle.beta
+        gamma     = particle.gamma
+    
+        # large amplitude oscillations (T.Wangler pp. 175)
+        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
+        DWmax = wmax*m0c2       # [MeV]
+        phi_1 = -phis           # [rad]
+        phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
+        psi   = 3.*fabs(phis)   # [rad]
+    
+        # small amplitude oscillations (T.Wangler pp.184)
+        oml0zuom = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
+        omega0l = oml0zuom*2.*pi*freq   # [Hz]
+        # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
+        # Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
+        # w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
+        # DW     = w0*m0c2              # conversion --> [MeV]
+        # emitz  = Dphi0*DW             # [rad*MeV]
+        # gammaz = pow(Dphi0,2)/emitz   # [rad/MeV]
+        # betaz  = pow(DW,2)/emitz      # [MeV/rad]
+        # alphaz = 0.                   # always!
+        
+        w0x   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
+        dphi0 = sqrt(emitz_i/w0x)
+        res =  dict(
+                zwmax      = wmax,        # separatrix: max w
+                zphi_1     = phi_1,       # separatrix: max pos. phase
+                zphi_2     = phi_2,       # separatrix: max neg. phase
+                zpsi       = psi,         # separatrix: bunch length [rad]
+                zomega0l   = omega0l,     # synchrotron oscillation [Hz]
+                zw0        = w0x*dphi0,   # ellipse w crossing
+                zdphi0     = dphi0)       # ellipse dphi crossing [rad]
     else:
-        T = 0.75       # have to take some reasonable value!
-
-    # large amplitude oscillations (T.Wangler pp. 175)
-    wmax  = sqrt(2.*qE0*T*pow(gb,3)*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
-    DWmax = wmax*m0c2       # [MeV] conversion ---> [MeV]
-    phi1s = -phis           # [rad]
-    phi2s = 2.*phis         # [rad] Naehrung T.Wangler pp.178
-    psis  = 3.*fabs(phis)   # [rad] Naehrung T.Wangler pp.178
-
-    # small amplitude oscillations (T.Wangler pp.184)
-    kl02 = 2.*pi*qE0*T*sin(-phis)/(m0c2*pow(gb,3)*lamb)
-    omegal0 = sqrt(kl02)*beta* PARAMS['lichtgeschwindigkeit']
-    omegal0_div_omega = sqrt(qE0*T*lamb*sin(-phis)/(2.*pi*m0c2*pow(gamma,3)*beta))
-    # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
-    Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
-    w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
-    DW     = w0*m0c2              # conversion --> [MeV]
-    emitz  = Dphi0*DW             # [rad*MeV]
-    gammaz = pow(Dphi0,2)/emitz   # [rad/MeV]
-    betaz  = pow(DW,2)/emitz      # [MeV/rad]
-    alphaz = 0.                   # always!
-
-    res =  dict(
-            zel_Dphi0           = Dphi0,
-            zel_DWmax           = DWmax,
-            zel_Dphimax         = psis,
-            zel_omegal0         = omegal0,
-            zel_w0              = w0,
-            zel_emitz           = emitz,
-            zel_gammaz          = gammaz,
-            zel_betaz           = betaz,
-            zel_DW              = DW,
-            zel_alphaz          = alphaz )
-    res['zel_omegal0/omega']    = omegal0_div_omega
-    res['zel_Dphimax+']         = phi1s
-    res['zel_Dphimax-']         = phi2s
-    return res
+        res =  dict(
+                zwmax      = 'undefined',
+                zphi_1     = 'undefined',
+                zphi_2     = 'undefined',
+                zpsi       = 'undefined',
+                zomega0l   = 'undefined',
+                zw0        = 'undefined',
+                zdphi0     = 'undefined')
+    PARAMS.update(res)
+    return res  
 
 # Data For Summary
 SUMMARY = {}
@@ -326,17 +330,17 @@ def collect_data_for_summary(lattice):
             elements = elements_in_section()
             for itm in elements:
                 gap      = itm.gap
-                Ezavg    = itm.Ezavg
+                EzAvg    = itm.EzAvg
                 PhiSoll  = degrees(itm.phis)
                 mapping  = itm.mapping
-                Ezpeak   = itm.Ezpeak
+                EzPeak   = itm.EzPeak
                 aperture = itm.aperture
                 SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}] Ez-avg[MV/m]'.format(sec,typ,itm.label)] = Ezavg
+                SUMMARY['{2} [{1}.{0}]  EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
-                SUMMARY['{2} [{1}.{0}]Ez-peak[MV/m]'.format(sec,typ,itm.label)] = Ezpeak
+                SUMMARY['{2} [{1}.{0}] EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
 
     types = ['RFC']
     for sec in sections:
@@ -344,13 +348,13 @@ def collect_data_for_summary(lattice):
             elements = elements_in_section()
             for itm in elements:
                 gap      = itm.gap
-                Ezavg    = itm.u0/gap
+                EzAvg    = itm.EzAvg
                 PhiSoll  = degrees(itm.phis)
                 length   = itm.length
                 aperture = itm.aperture
                 SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
                 SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}]     Ez[MV/m]'.format(sec,typ,itm.label)] = Ezavg
+                SUMMARY['{2} [{1}.{0}]  EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
                 SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
 
@@ -360,26 +364,22 @@ def collect_data_for_summary(lattice):
     SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['aperture']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
+    SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
+    SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
-    SUMMARY['(N)sigma']                         =  PARAMS['n_sigma']
+    SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
     SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6
-    SUMMARY['(emitz)i* [rad*KeV]']             =  PARAMS['emitz_i']*1.e3
-    SUMMARY['(sigmax)i* [mm]']                 =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
-    SUMMARY['(sigmay)i* [mm]']                 =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
-    SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
-    SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-    SUMMARY['(sigmaz)i [mm]']                  =  PARAMS['sigmaz_i']*1.e3
-    SUMMARY['(dp/p)i [%]']                     =  PARAMS['dp2p_i']
-    SUMMARY['(betaz)i* [KeV/rad]']             =  PARAMS['betaz_i']*1.e3
-    SUMMARY['(Dphi)i* [deg]']                  =  degrees(PARAMS['zel_Dphi0'])
-    SUMMARY['max bunch length* [deg]']         =  degrees(PARAMS['zel_Dphimax'])  # phase acceptance
-    SUMMARY['(DW)max* [KeV]']                  =  PARAMS['zel_DWmax']*1.e3        # energy acceptance
-    SUMMARY['(DW)i* [KeV]']                    =  PARAMS['zel_DW']*1.e3
-    SUMMARY['(gammaz)i* [rad/KeV]']            =  PARAMS['zel_gammaz']*1.e-3
-    SUMMARY['(sync.freq)i* [MHz]']             =  PARAMS['zel_omegal0']*1.e-6
-    SUMMARY['(sync.freq)i/rf_freq* [%]']       =  PARAMS['zel_omegal0/omega']*1.e2
+    SUMMARY['(emitz)i    [mrad]']              =  '{:8.2e} in {{w,dphi}} coordinates'.format(PARAMS['emitz_i']*1.e3)
+    SUMMARY['(sigmax)i*   [mm]']               =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigmay)i*   [mm]']               =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
+    SUMMARY['separatrix:        w(dphi=0)*']   =  '{:8.2e}'.format(PARAMS['zwmax'])
+    SUMMARY['separatrix: +dphi(w=0)* [deg]']   =  degrees(PARAMS['zphi_1'])
+    SUMMARY['separatrix: -dphi(w=0)* [deg]']   =  degrees(PARAMS['zphi_2'])
+    SUMMARY['separatrix:        psi* [deg]']   =  degrees(PARAMS['zpsi'])
+    SUMMARY['(emitz)i: w0(dphi=0)*']           =  PARAMS['zw0']
+    SUMMARY['(emitz)i: dphi0(w=0)* [deg]']     =  degrees(PARAMS['zdphi0'])
     return
 
 def I0(x):
@@ -647,19 +647,20 @@ def test0():
     records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
     print('\n'+tblprnt(headr,records))
 
-def test1():
-    print('--------------------------Test1---')
-    print('test zellipse(): the helper to calculate longitudinal phase space parameters')
-    result = zellipse(
-            PARAMS['sigmaz_i'],
-            PARAMS['Ez_feld'],
-            PARAMS['wellenlänge'],
-            radians(PARAMS['soll_phase']),
-            PARAMS['spalt_laenge'],
-            PARAMS['sollteilchen']
-            )
-    for k,v in result.items():
-        print('{}\t{:g}'.format(k,v))
+# def test1():
+#     print('--------------------------Test1---')
+#     print('test w0(): the helper to calculate longitudinal phase space parameters')
+#     
+#     result = w0(
+#             PARAMS['sigmaz_i'],
+#             PARAMS['EzAvg'],
+#             PARAMS['wellenlänge'],
+#             radians(PARAMS['soll_phase']),
+#             PARAMS['spalt_laenge'],
+#             PARAMS['sollteilchen']
+#             )
+#     for k,v in result.items():
+#         print('{}\t{:g}'.format(k,v))
 def test2():
     print('--------------------------Test2---')
     print('test particle energy adjustment...')
@@ -673,6 +674,6 @@ def test2():
 
 if __name__ == '__main__':
     test0()
-    test1()
+    # test1()
     test2()
 

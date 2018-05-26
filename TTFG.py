@@ -73,8 +73,8 @@ class _TTF_G(object):
                 next_tkin  = slice.WOUT        # slice OUT as next slice IN
                 DEBUG_TTF_G('_TTF_G: {}\n'.format(self),self.__dict__)
             deltaW  = next_tkin-tkin                        # total energy kick as sum over slices
-            self.tr = NP.sum(NP.array(Tklist))/len(Tklist)  # total ttf as average over slices
-            return deltaW
+            tr      = NP.sum(NP.array(Tklist))/len(Tklist)  # total ttf as average over slices
+            return deltaW,tr
         # _TTF_G
         self.phis     = parent.phis
         self.freq     = parent.freq
@@ -92,7 +92,7 @@ class _TTF_G(object):
             self.slices = \
                 _make_slices(self, self.gap, self.SFdata, self.particle)
             # slice energy dependence
-            self.deltaW = \
+            self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
             # update Node matrix with local deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW
@@ -333,12 +333,12 @@ class _TTF_Gslice(object):
 
 def test0():
     import elements as ELM
-    from tracks import Track
+    from bunch import Track
     
     print('-----------------------------------TEST 0----------------')
     input_file='SF_WDK2g44.TBL'
-    Epeak = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav fuer INTG(NG(von 0 bis 2.2*sigma)
-    SF_tab = SFdata(input_file,Epeak)
+    EzPeak = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg fuer INTG(NG(von 0 bis 2.2*sigma)
+    SF_tab = SFdata(input_file,EzPeak)
     
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 50.
@@ -368,12 +368,12 @@ def test0():
 
 def test1():
     import elements as ELM
-    from tracks import Track
+    from bunch import Track
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'
-    Epeak = PARAMS['Ez_feld']
-    SF_tab = SFdata(input_file,Epeak)
+    EzPeak = PARAMS['EzAvg']
+    SF_tab = SFdata(input_file,EzPeak)
     
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 150.
@@ -398,7 +398,7 @@ def test1():
         z += delta
         start[4] = z
         ti = tf
-    DEBUG_TEST1('TRACK:\n',trck.asTable())
+    DEBUG_TEST1('TRACK:\n',trck.as_table())
 
 if __name__ == '__main__':
     test0()

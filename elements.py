@@ -444,7 +444,7 @@ class GAP(I):
     """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
        Nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! """
     def __init__(self,
-                    U0         = PARAMS['spalt_spannung'],
+                    EzAvg      = PARAMS['EzAvg'],
                     PhiSoll    = radians(PARAMS['soll_phase']),
                     fRF        = PARAMS['frequenz'],
                     label      = 'GAP',
@@ -455,7 +455,7 @@ class GAP(I):
                     dWf        = FLAGS['dWf']):
         super().__init__(particle = particle, position = position)
         self.label    = label
-        self.u0       = U0           # [MV] gap Voltage
+        self.EzAvg    = EzAvg*dWf    # [MV/m] av. gap field strength
         self.phis     = PhiSoll      # [radians] soll phase
         self.freq     = fRF          # [Hz]  RF frequenz
         self.gap      = gap          # [m] eff. gap-length
@@ -467,23 +467,23 @@ class GAP(I):
         lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
         beta         = self.particle.beta                    # beta Einstein
         tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
-        u0           = U0*dWf                                # [MV] gap Voltage
-        self._deltaW = u0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
+        U0           = self.EzAvg*self.gap                   # Spaltspannung
+        self._deltaW = U0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
         tkin         = self.particle.tkin
         tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
         part_center  = copy(self.particle)(tk_center)        # particle @ gap center
         bg           = part_center.gamma_beta                # beta*gamma @ gap center
         matrix       = self.matrix
         m0c2         = self.particle.e0
-        self._mx_(matrix, m0c2, u0, tr, PhiSoll, lamb, bg) # transport matrix
+        self._mx_(matrix, m0c2, U0, tr, PhiSoll, lamb, bg) # transport matrix
 
     def _trtf_(self, beta, lamb, gap):  # tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65)
         teta = gap / (beta*lamb)
         res = NP.sinc(teta)/teta
         return res
 
-    def _mx_(self, m, m0c2, u0, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
-        cyp = cxp = -pi*u0*tr*sin(phis)/(m0c2*lamb*bg**3)
+    def _mx_(self, m, m0c2, U0, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
+        cyp = cxp = -pi*U0*tr*sin(phis)/(m0c2*lamb*bg**3)
         # m[1, 0]      = cxp
         # m[3, 2]      = cyp
         # m[6, 7]      = self.deltaW
@@ -492,7 +492,7 @@ class GAP(I):
         m[EKOO, DEKOO] = self.deltaW      # energy kick
 
     def adjust_energy(self, tkin):
-        self.__init__(U0       = self.u0,
+        self.__init__(EzAvg    = self.EzAvg,
                     PhiSoll    = self.phis,
                     fRF        = self.freq,
                     label      = self.label,
@@ -506,7 +506,7 @@ class GAP(I):
 class RFG(I):
     """ Zero length RF gap-model (wraps several gap-models) """
     def __init__(self,
-            U0         = PARAMS['spalt_spannung'],
+            EzAvg      = PARAMS['EzAvg'],
             PhiSoll    = radians(PARAMS['soll_phase']),
             fRF        = PARAMS['frequenz'],
             label      = 'RFG',
@@ -518,12 +518,12 @@ class RFG(I):
             SFdata     = None,  # return of SFdata (SuperFish data)
             dWf        = FLAGS['dWf']):
         super().__init__(particle = particle, position = position)
-        self.u0       = U0*dWf             # [MV] gap Voltage
+        self.EzAvg    = EzAvg*dWf          # [MV/m] average gap field
         self.phis     = PhiSoll            # [radians] soll phase
         self.freq     = fRF                # [Hz]  RF frequenz
         self.label    = label
         self.gap      = gap                # [m] rf-gap
-        self.aperture = aperture          # [m]
+        self.aperture = aperture           # [m]
         self.mapping  = mapping            # map model
         self.SFdata   = SFdata             # SuperFish data
         self.dWf      = dWf
@@ -546,25 +546,27 @@ class RFG(I):
     def adjust_energy(self, tkin):
         params = self._params    # params dict
         self.__init__(
-            U0         = self.u0,
+            EzAvg      = self.EzAvg,
             PhiSoll    = self.phis,
             fRF        = self.freq,
             label      = self.label,
             particle   = self.particle(tkin),
             gap        = self.gap,
             position   = self.position,
+            aperture   = self.aperture,
             mapping    = self.mapping,
             SFdata     = self.SFdata,
-            dWf        = self.dWf,
-            aperture   = self.aperture)
+            dWf        = self.dWf)
         self._params = params
 
     @property
-    def Ezpeak(self):
-        return self['Ezpeak']
+    def EzPeak(self):
+        return self['EzPeak']
     @property
-    def Ezavg(self):
-        return self['Ezavg']
+    def EzAvg(self):
+        return self['EzAvg']
+    def EzAvg(self,value):
+        self.EzAvg = value
     @property
     def tr(self):
         """ delegate to gap-model """
@@ -598,19 +600,17 @@ class _PYO_G(object):
         self.matrix   = parent.matrix
         self.particle = parent.particle
         self.mapping  = mapping
-        beta          = self.particle.beta
-        self.u0       = parent.u0
         self.phis     = parent.phis
-        gap           = parent.gap
         self.lamb     = parent.lamb
-        self.tr       = trtf(self.lamb, gap, beta)
+        self.tr       = trtf(parent.lamb, parent.gap, parent.particle.beta)
+        self.U0       = parent.EzAvg*parent.gap
 
     def map(self, i_track):
         if self.mapping == 'simple':
             which_map = self.simple_map
         elif self.mapping == 'base':
             which_map = self.base_map
-        return which_map(i_track, self.lamb, self.particle, self.u0, self.tr, self.phis)
+        return which_map(i_track, self.lamb, self.particle, self.U0, self.tr, self.phis)
 
     def soll_map(self, i_track):
         return self.map(i_track)
@@ -764,10 +764,10 @@ class _T3D_G(object):
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
 
-        def mx(m, tr, beta, gamma, particlei, particlef, u0, phis, lamb, deltaW):
+        def mx(m, tr, beta, gamma, particlei, particlef, U0, phis, lamb, deltaW):
             """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
             e0 = particlei.e0
-            kz = 2.*pi*u0*tr*sin(phis)/(e0*beta*beta*lamb)
+            kz = 2.*pi*U0*tr*sin(phis)/(e0*beta*beta*lamb)
             ky = kx = -0.5*kz/(gamma*gamma)
             bgi = particlei.gamma_beta
             bgf = particlef.gamma_beta
@@ -781,22 +781,23 @@ class _T3D_G(object):
 
         matrix         = parent.matrix
         particle       = parent.particle
-        u0             = parent.u0
+        EzAvg          = parent.EzAvg
         phis           = parent.phis
         gap            = parent.gap
         lamb           = parent.lamb
         beta           = particle.beta
         tr             = trtf(lamb, gap, beta)       # Panovski
-        deltaW         = u0*tr*cos(phis)             # deltaW energy kick nach Trace3D
+        deltaW         = EzAvg*gap*tr*cos(phis)      # deltaW energy kick nach Trace3D
         tkin           = particle.tkin
         tk_center      = deltaW*0.5+tkin             # energy in gap center
         part_center    = copy(particle)(tk_center)   # particle @ gap center
         b              = part_center.beta            # beta @ gap cemter
         g              = part_center.gamma           # gamma @ gap center
         particlef      = copy(particle)(tkin+deltaW) # particle @ (f)
+        U0             = EzAvg*gap
 
         # the matrix
-        mx(matrix, tr, b, g, particle, particlef, u0, phis, lamb, deltaW)
+        mx(matrix, tr, b, g, particle, particlef, U0, phis, lamb, deltaW)
 
         # the parent delegates reading these properties from here
         self.matrix    = matrix
@@ -945,7 +946,7 @@ class QDthx(QFthx):
 class RFC(_thin):
     """ Rf cavity as product D*RFG*D with Trace3D mapping """
     def __init__(self,
-                U0       = PARAMS['spalt_spannung'],
+                EzAvg    = PARAMS['EzAvg'],
                 PhiSoll  = radians(PARAMS['soll_phase']),
                 fRF      = PARAMS['frequenz'],
                 label    = 'RFC',
@@ -960,16 +961,16 @@ class RFC(_thin):
         self.label    = label
         self.length   = length
         self.aperture = aperture
-        self.u0       = U0*dWf
+        self.EzAvg    = EzAvg*dWf
         self.phis     = PhiSoll
         self.freq     = fRF
         self.gap      = gap
         self.dWf      = dWf
-
+        
         di   = D(length = 0.5*length, particle = self.particle)
         df   = D(length = 0.5*length, particle = self.particle)
         # Trace3D RF gap
-        kick = RFG(U0        = self.u0,
+        kick = RFG( EzAvg     = self.EzAvg,
                     PhiSoll   = self.phis,
                     fRF       = self.freq,
                     label     = self.label,
@@ -990,12 +991,15 @@ class RFC(_thin):
         self['viseo']   = 0.33
 
     @property
+    def lamb(self):
+        return PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+    @property
     def particlef(self):
         return self._particlef
 
     def adjust_energy(self, tkin):
         self.__init__(
-                    U0            = self.u0,
+                    EzAvg         = self.EzAvg,
                     PhiSoll       = self.phis,
                     fRF           = self.freq,
                     label         = self.label,
@@ -1143,7 +1147,7 @@ class SIXD(D):
         f_track[SKOO] += self.length         # nicht vergessen! adjust total lattice length
         return f_track
 
-# Utilities
+# Utilities 
 class Test(_Node):
     def __init__(self, a, b, c, d, e, f, label = 'test'):
         super().__init__()
@@ -1389,8 +1393,8 @@ def test8():
     print('RFG.particle(f)\n'+rfg.particlef.string())
 
     input_file = 'SF_WDK2g44.TBL'
-    Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
-    SF_tab    = SFdata(input_file, Epeak = Epeak)
+    EzPeak     = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg
+    SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'ttf', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
     lg.add_element(rfg)
@@ -1402,8 +1406,8 @@ def test8():
     print('RFG.particle(f)\n'+rfg.particlef.string())
 
     input_file = 'SF_WDK2g44.TBL'
-    Epeak     = PARAMS['Ez_feld']*1.8055 # [Mv/m] Epeak/Eav
-    SF_tab    = SFdata(input_file, Epeak = Epeak)
+    EzPeak     = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg
+    SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
     lg.add_element(rfg)
@@ -1447,7 +1451,7 @@ def test9():
     mqf = QF(k0 = kq, length = len)
     mqd = QD(k0 = kq, length = len)
     cavity = RFC(
-        U0 = PARAMS['spalt_spannung'],
+        EzAvg = PARAMS['EzAvg'],
         PhiSoll = radians(PARAMS['soll_phase']),
         fRF = PARAMS['frequenz'])
     print('======================== adjust_energy QF')

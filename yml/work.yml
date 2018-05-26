@@ -98,13 +98,13 @@ elements:
     #     - sec:      *HE
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
-        - Ez:       2.31         # [MV/m] (Ez)av electric field
+        - EzAvg:    2.31         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        - Ezpeak:   4.00         # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
+        - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.3[MV/m] electric field
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
         # - mapping:   base        # Shishlo/Holmes base map model
@@ -113,7 +113,7 @@ elements:
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
         - type:     RFC          # RFC class
-        - Ez:       2.31         # [MV/m] (Ez)av electric field
+        - EzAvg:    2.31         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
@@ -204,7 +204,7 @@ segments:
 
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
-    # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]     # cavities
+    - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]     # cavities
     # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
     # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps

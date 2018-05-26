@@ -490,6 +490,17 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
+    
+    @property
+    def first_gap(self):
+        node = None
+        for elm in self.seq:
+            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
+                node = elm
+                break
+            else:
+                continue
+        return node
 
 # The commented code is *legacy*. No use to define a new
 # subclass and to cast from base class to subclass
@@ -546,10 +557,8 @@ class Lattice(object):
 #             sys.exit(1)
 #         obj.__class__ = Section
 
-# To add Sections to the lattice I augment the Lattice class with 2 member-functions 
-# get_section(...) and get_sections(...) and the section 'name' attribute
-# without modifying the orignal Lattice class declaration
-
+# To add Sections to the lattice I augment the Lattice class with member-functions 
+# using the built-in 'setattr(..)'
 ## Sections
 def get_section(self,sec=None):
     if not FLAGS['sections']:
@@ -583,7 +592,7 @@ def get_sections(self):
 #Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
 setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
 setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
-#-----------*-----------*-----------*-----------*-----------*-----------*-----------*
+
 ## utilities
 def make_wille():
     """

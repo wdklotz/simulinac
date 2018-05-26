@@ -66,15 +66,16 @@ class _DYN_G(object):
         def configure_slices(slices, phis, tkin):
             next_phase = phis
             next_tkin  = tkin
-            Tklist = [0]
+            Tklist = []
             for slice in slices:
                 # setting phase and energy @ slice entrance
                 slice.adjust_slice_parameters(next_phase, next_tkin)
+                Tklist.append(slice.Tk)
                 next_phase = slice.PHOUT
                 next_tkin  = slice.WOUT
             deltaW  = next_tkin-tkin        # total energy kick as sum over slices
-            self.tr = np.sum(np.array(Tklist))/len(Tklist)
-            return deltaW
+            tr      = np.sum(np.array(Tklist))/len(Tklist)
+            return deltaW,tr
 
         # _DYN_G attributes
         self.phis     = parent.phis
@@ -94,7 +95,7 @@ class _DYN_G(object):
                 make_slices(self, self.gap, self.SFdata, self.particle)
             DEBUG_DYN_G('_DYN_G:make_slices()\n',list(self.slices))
             # configure slices
-            self.deltaW = \
+            self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
             # update Node matrix with local deltaW
             self.matrix[EKOO, DEKOO] = self.deltaW
@@ -134,6 +135,8 @@ class _DYN_Gslice(object):
         self.particle = copy(particle)  # soll particle (copy)
         self.poly     = poly            # the current interval
         self.SFdata   = parent.SFdata   # reference to superfish data
+#todo: calculate Tk correctly
+        self.Tk       = 0.85
 
     def time_array(self,betac,h,zarr):
         """ create arrival times azimutal positions 
