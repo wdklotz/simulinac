@@ -24,7 +24,6 @@ import warnings
 
 from setutil import PARAMS,FLAGS,SUMMARY,DEBUG
 import elements as ELM
-# import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata,V0
 
@@ -133,7 +132,7 @@ def instanciate_element(item):
             pass
         else:
             EzAvg     = get_mandatory(attributes,"EzAvg",label)
-            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
+            instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
             instance['EzPeak'] = None
             pass
     elif key == 'RFC':
@@ -143,7 +142,6 @@ def instanciate_element(item):
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        # U0        = EzAvg * gap
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.RFC(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
@@ -153,7 +151,6 @@ def instanciate_element(item):
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        # U0        = EzAvg * gap
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
@@ -256,14 +253,13 @@ def factory(input_file):
         if 'Tkin'             in parameters: PARAMS['injection_energy'] = parameters['Tkin']
         if 'emitx_i'          in parameters: PARAMS['emitx_i']          = parameters['emitx_i']
         if 'emity_i'          in parameters: PARAMS['emity_i']          = parameters['emity_i']
+        if 'emitw_i'          in parameters: PARAMS['emitw_i']          = parameters['emitw_i']
         if 'betax_i'          in parameters: PARAMS['betax_i']          = parameters['betax_i']
         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
         if 'EzAvg'            in parameters: PARAMS['EzAvg']            = parameters['EzAvg']
-        if 'phi_sync'         in parameters: PARAMS['soll_phase']       = parameters['phi_sync']
-        if 'sigmaz_i'         in parameters: PARAMS['sigmaz_i']         = parameters['sigmaz_i']
-        if 'dp2p_i'           in parameters: PARAMS['dp2p_i']           = parameters['dp2p_i']
+        if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
         if 'gap'              in parameters: PARAMS['spalt_laenge']     = parameters['gap']
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
@@ -344,14 +340,6 @@ def factory(input_file):
     read_sections(in_data)
     read_parameters(in_data)
 
-    # calculate long. parameters from def. parameters
-    # long_params = w0(PARAMS['sigmaz_i'],PARAMS['EzAvg'],PARAMS['wellenlänge'],radians(PARAMS['soll_phase']),PARAMS['spalt_laenge'],PARAMS['sollteilchen'])
-    # PARAMS.update(long_params)
-    # ACHTUNG!!! override some longitudinal initial twiss parameters
-    # PARAMS['emitz_i']  = PARAMS['zel_emitz']
-    # PARAMS['betaz_i']  = PARAMS['zel_betaz']
-    # PARAMS['gammaz_i'] = PARAMS['zel_gammaz']
-    # PARAMS['alfaz_i']  = PARAMS['zel_alphaz']
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
 
     (latticeList,segments) = expand_reduce(in_data)

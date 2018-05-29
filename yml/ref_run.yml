@@ -13,7 +13,8 @@
 
 # You should have received a copy of the GNU General Public License
 # along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
-#
+
+#..........................................................................................
 # Input file for FODO linac simulator
 # Input file follows YAML syntax (http:\\http://yaml.org/)
 #
@@ -34,6 +35,7 @@ flags:
     # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
+
 sections:
 - [&LE LE,  &HE HE]
 #...........................................................................................
@@ -45,18 +47,17 @@ parameters:
     - ql0:          &p02    0.10        # [m] quad-length
     - ql:           &p03    0.05        # [m] 1/2 quad-length
     - quad_bore:    &p04    0.02        # [m] quad bore radius
-    - emity_i:      &emy    2.e-6       # [m*rad] transverse emittance @ entrance x
-    - emitx_i:              *emy        # [m*rad] transverse emittance @ entrance y
+    - emity_i:      &emy    2.e-6       # [m*rad] {x,x'} emittance @ entrance
+    - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
+    - emitw_i:              0.3e-6      # [rad] {w,Dphi} emittance @ entrance
     # - betax_i:      &bex    7.084       # [m] twiss beta @ entrance x
     - betax_i:      &bex    2.800       # [m] twiss beta @ entrance x
     # - betay_i:              0.04        # [m] twiss beta @ entrance y (zero RF)
     - betay_i:              0.202       # [m] twiss beta @ entrance y (zero RF)
     - alfax_i:              0.0         # [1] twiss alpha x @ entrance
     - alfay_i:              0.0         # [1] twiss alpha y @ entrance
-    - sigmaz_i:             1.e-3       # [m] longitudinal displacement z @ entrance
+    # - sigmaz_i:             1.e-3       # [m] longitudinal displacement z @ entrance
     # - sigmaz_i:             8.1795e-3   # separatrix? TTFG
-    # - sigmaz_i:             8.1330e-3   # separatrix? RFG-RB
-    - dp2p_i:               0.1         # [%] longitidinal dp/p spread    @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
     - GAP:          &p15    0.048       # [m] RF gap
@@ -92,20 +93,20 @@ elements:
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    # - RFGH:    &RFGH
-    #     - type:     D
-    #     - length:   0.0
-    #     - sec:      *HE
+    # - RFGH:    &RFGH           # replacement of RFG by D
+    #     - type:     D          # replacement of RFG by D
+    #     - length:   0.0        # replacement of RFG by D
+    #     - sec:      *HE        # replacement of RFG by D
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
-        - Ez:       2.31         # [MV/m] (Ez)av electric field
+        - EzAvg:    2.87         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        - Ezpeak:   4.00         # [MV/m] # corresdponds to (Ez)av = 2.3[MV/m] electric field
-        - mapping:   t3d         # Trace 3D linear map model
+        - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
+        # - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
         - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
@@ -113,7 +114,7 @@ elements:
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
         - type:     RFC          # RFC class
-        - Ez:       2.31         # [MV/m] (Ez)av electric field
+        - EzAvg:    2.31         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
@@ -127,7 +128,7 @@ elements:
             - sigma_x
             - sigma_y
             - Tkin
-    - F:  &Folie                 # ID: &alias
+    - F:  &Foil                  # ID: &alias
         - type:    MRK           # MRK class
         - sec:     *HE
 #...........................................................................................
@@ -198,7 +199,7 @@ segments:
         - *RFCH
         - *RFCH
     - MARK:
-        - *Folie
+        - *Foil
 #...........................................................................................
 ## LATTICE definition
 

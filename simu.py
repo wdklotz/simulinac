@@ -24,7 +24,7 @@ from math import sqrt
 from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
-from setutil import collect_data_for_summary, w0
+from setutil import collect_data_for_summary, waccept
 from lattice_generator import parse_yaml_and_fabric
 from tracker import track_soll
 
@@ -191,7 +191,7 @@ def display1(functions):
 def simulation(filepath):
     lattice = parse_yaml_and_fabric(filepath)
     # calculate longitudinal paramters at entrance
-    w0(lattice.first_gap)
+    waccept(lattice.first_gap)
     # Energie Konfiguration hier (SUPER WICHTIG)
     soll_track = track_soll(lattice)
     # sys.exit(9)

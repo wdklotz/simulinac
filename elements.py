@@ -216,6 +216,7 @@ class _Node(DictObject, object):
 
     def adjust_energy(self, tkin):
         pass
+        return self
 
 # Unity matrix map (is same as _Node)
 class I(_Node):
@@ -245,6 +246,7 @@ class MRK(I):
 
     def adjust_energy(self, tkin):
         self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, actions = self.actions)
+        return self
 
 # Trace3D drift space
 class D(I):
@@ -268,6 +270,7 @@ class D(I):
 
     def adjust_energy(self, tkin):
         self.__init__(length = self.length, label = self.label, particle = self.particle(tkin), position = self.position)
+        return self
 
 # Trace3D focussing quad
 class QF(D):
@@ -331,6 +334,7 @@ class QF(D):
         cpf = self.particle.gamma_beta
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        return self
 
 # Trace3D defocusing quad
 class QD(QF):
@@ -395,6 +399,7 @@ class SD(D):
         cpf = self.particle.gamma_beta
         rf = ri*cpf/cpi  # scale bending radius with new impulse
         self.__init__(radius = rf, length = self.length, label = self.label, particle = self.particle, position = self.position)
+        return self
 
 # Trace3D x-plane rectangular bending dipole
 class RD(SD):
@@ -445,7 +450,7 @@ class GAP(I):
        Nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! """
     def __init__(self,
                     EzAvg      = PARAMS['EzAvg'],
-                    PhiSoll    = radians(PARAMS['soll_phase']),
+                    PhiSoll    = radians(PARAMS['phisoll']),
                     fRF        = PARAMS['frequenz'],
                     label      = 'GAP',
                     particle   = PARAMS['sollteilchen'],
@@ -501,13 +506,14 @@ class GAP(I):
                     position   = self.position,
                     dWf        = self.dWf,
                     aperture   = self.aperture)
+        return self
 
 # Zero length RF gap
 class RFG(I):
     """ Zero length RF gap-model (wraps several gap-models) """
     def __init__(self,
             EzAvg      = PARAMS['EzAvg'],
-            PhiSoll    = radians(PARAMS['soll_phase']),
+            PhiSoll    = radians(PARAMS['phisoll']),
             fRF        = PARAMS['frequenz'],
             label      = 'RFG',
             particle   = PARAMS['sollteilchen'],
@@ -558,6 +564,7 @@ class RFG(I):
             SFdata     = self.SFdata,
             dWf        = self.dWf)
         self._params = params
+        return self
 
     @property
     def EzPeak(self):
@@ -868,6 +875,7 @@ class QFth(_thin):
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        return self
 
 # Kick
 class _kick(I):
@@ -925,6 +933,7 @@ class QFthx(D):
         ki  = self.k0
         kf  = ki*cpi/cpf               # scale quad strength with new impulse
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        return self
 
     def make_slices(self, anz = PARAMS['nbof_slices']):
         slices = [self]
@@ -947,7 +956,7 @@ class RFC(_thin):
     """ Rf cavity as product D*RFG*D with Trace3D mapping """
     def __init__(self,
                 EzAvg    = PARAMS['EzAvg'],
-                PhiSoll  = radians(PARAMS['soll_phase']),
+                PhiSoll  = radians(PARAMS['phisoll']),
                 fRF      = PARAMS['frequenz'],
                 label    = 'RFC',
                 particle = PARAMS['sollteilchen'],
@@ -1009,6 +1018,7 @@ class RFC(_thin):
                     position      = self.position,
                     dWf           = self.dWf,
                     aperture      = self.aperture)
+        return self
 
 # SixTrack drift map
 class SIXD(D):
@@ -1029,6 +1039,7 @@ class SIXD(D):
 
     def adjust_energy(self, tkin):
         self.__init__(length = self.length, label = self.label, particle = self.particle(tkin), position = self.position)
+        return self
 
     def map(self, i_track):
         def fpsigma(psigma, soll):
@@ -1452,7 +1463,7 @@ def test9():
     mqd = QD(k0 = kq, length = len)
     cavity = RFC(
         EzAvg = PARAMS['EzAvg'],
-        PhiSoll = radians(PARAMS['soll_phase']),
+        PhiSoll = radians(PARAMS['phisoll']),
         fRF = PARAMS['frequenz'])
     print('======================== adjust_energy QF')
     tki = PARAMS['injection_energy']    # [MeV]  kin. energy
@@ -1574,18 +1585,18 @@ def test14():
 # main ----------
 if __name__ == '__main__':
     FLAGS['verbose'] = 3
-    # test0()
-    # test1()
-    # test2()
-    # test3()
-    # test4()
-    # test5()
-    # test6()
-    # test7()
+    test0()
+    test1()
+    test2()
+    test3()
+    test4()
+    test5()
+    test6()
+    test7()
     test8()
-    # test9()
-    # test10()
-    # test11()
-    # test12()
-    # test13()
-    # test14()
+    test9()
+    test10()
+    test11()
+    test12()
+    test13()
+    test14()

@@ -45,7 +45,7 @@ def DEBUG(string,arg='',end='\n'):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
- 
+
         print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
@@ -88,7 +88,7 @@ FLAGS  = dict(
         KVprint              = False,            # print a dictionary of Key-Value pairs, no display
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
-        express              = False,             # use express version of thin quads
+        express              = False,            # use express version of thin quads
         aperture             = True              # use aperture check for quads and rf-gaps
         )
 PARAMS = dict(
@@ -99,7 +99,7 @@ PARAMS = dict(
         EzAvg                = 1.00,             # [MV/m] default average E-field on axis
         spalt_laenge         = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
-        soll_phase           = -30.,             # [deg] default
+        phisoll              = -30.,             # [deg] default
         frequenz             = 816.e6,           # [Hz] default
         # injection_energy     = 50.,              # [MeV] default
         injection_energy     = 70.,              # [MeV] default
@@ -110,21 +110,21 @@ PARAMS = dict(
         n_sigma              = 3,                # nboff beam sigmas to stay clear of aperture
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
-        emitz_i              = 0.2e-6,           # [m*rad] Vorgabe emittance entrance
+        emitw_i              = 0.2e-6,           # [rad] Vorgabe emittance entrance
         betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
         betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
         betaz_i              = 0.01,             # [m] Vorgabe twiss beta entrance
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
-        sigmaz_i             = 0.02,             # [m] max long. half-width displacement
-        dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
+        # sigmaz_i             = 0.02,             # [m] max long. half-width displacement
+        # dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         nbof_slices          = 6,                # default number-off slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
-PARAMS['spalt_spannung']  = PARAMS['EzAvg']*PARAMS['spalt_laenge']
+# PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
+# PARAMS['spalt_spannung']  = PARAMS['EzAvg']*PARAMS['spalt_laenge']
 
 """ KeepValues: a global dict to keep key-value pairs (used for tracking results) """
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
@@ -188,67 +188,75 @@ class Electron(Particle):
 PARAMS['sollteilchen'] = Proton()
 
 ## Long. Emittance
-def w0(node):
+def waccept(node):
     """
     Helper to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
-        (w/w0)**2 + (dphi/dphi0)**2 = 1 
-        emitz_i = w0*dphi0 = Ellipsenflaeche/pi
+        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
+        emitw = w0*Dphi0 = ellipse_area/pi
     IN
         node: the 1st rf-gap at the linac entrance
     """
 
     if node is not None:
-        emitz_i   = PARAMS['emitz_i']
-        E0T       = node.EzAvg*node.tr
+        emitw     = PARAMS['emitw_i']    # [rad]
+        E0T       = node.EzAvg*node.tr   # [MV/m]
         particle  = node.particle
-        phis      = node.phis
-        lamb      = node.lamb
-        freq      = node.freq
-        m0c2      = particle.e0
+        phis      = node.phis            # [rad]
+        lamb      = node.lamb            # [m]
+        freq      = node.freq            # [Hz]
+        m0c2      = particle.e0          # [MeV]
         gb        = particle.gamma_beta
         beta      = particle.beta
         gamma     = particle.gamma
-    
+
         # large amplitude oscillations (T.Wangler pp. 175)
         wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
-        DWmax = wmax*m0c2       # [MeV]
+        dWmax = wmax*m0c2       # [MeV]
         phi_1 = -phis           # [rad]
         phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
         psi   = 3.*fabs(phis)   # [rad]
-    
+
         # small amplitude oscillations (T.Wangler pp.184)
         oml0zuom = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
-        omega0l = oml0zuom*2.*pi*freq   # [Hz]
-        # Dphi0 = (phi0 - phis) maximum half-width phase dispersion see T.Wangler
-        # Dphi0  = +(2.*pi*sigmaz)/(beta*lamb)     # [rad]  conv. z --> phi
-        # w0     = sqrt(qE0*T*pow(gb,3)*lamb*sin(-phis)*pow(Dphi0,2)/(2.*pi*m0c2))
-        # DW     = w0*m0c2              # conversion --> [MeV]
-        # emitz  = Dphi0*DW             # [rad*MeV]
-        # gammaz = pow(Dphi0,2)/emitz   # [rad/MeV]
-        # betaz  = pow(DW,2)/emitz      # [MeV/rad]
-        # alphaz = 0.                   # always!
-        
-        w0x   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
-        dphi0 = sqrt(emitz_i/w0x)
+        omegal0  = oml0zuom*2.*pi*freq   # [Hz]
+        # {Dphi,w}-space   NOTE: emitw = w0root*Dphi0**2  [rad]
+        w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
+        Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
+        w0       = w0root*Dphi0             # w-intersect (== delta-gamma == normalized energy deviation)
+        # {z,dp/p}-space
+        z0       = -Dphi0*beta*lamb/(2.*pi)             # z [m]
+        Dp2p0    = w0/(gamma+1.)                        # delta-p/p
+        emitz    = emitw*beta*lamb/((gamma+1.)*2.*pi) # emittance [m]
+        # long. twiss @ entrance
+        gammaz_i = emitz/z0**2
+        betaz_i  = 1./gammaz_i         # [m]
         res =  dict(
-                zwmax      = wmax,        # separatrix: max w
-                zphi_1     = phi_1,       # separatrix: max pos. phase
-                zphi_2     = phi_2,       # separatrix: max neg. phase
-                zpsi       = psi,         # separatrix: bunch length [rad]
-                zomega0l   = omega0l,     # synchrotron oscillation [Hz]
-                zw0        = w0x*dphi0,   # ellipse w crossing
-                zdphi0     = dphi0)       # ellipse dphi crossing [rad]
+                betaz    = betaz_i,     # twiss beta [m]
+                gammaz   = gammaz_i,    # twiss gamma [1/m]
+                emitz    = emitz,       # emittance in {z,dp/p} space [m]
+                Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                z0       = z0,          # ellipse z-int    (1/2 axis) [m]
+                DWx      = dWmax,       # separatrix: max W in [MeV]
+                wx       = wmax,        # separatrix: max w
+                phi_1    = phi_1,       # separatrix: max pos. phase
+                phi_2    = phi_2,       # separatrix: max neg. phase
+                psi      = psi,         # separatrix: bunch length [rad]
+                omgl0    = omegal0)     # synchrotron oscillation [Hz]
     else:
         res =  dict(
-                zwmax      = 'undefined',
-                zphi_1     = 'undefined',
-                zphi_2     = 'undefined',
-                zpsi       = 'undefined',
-                zomega0l   = 'undefined',
-                zw0        = 'undefined',
-                zdphi0     = 'undefined')
+                zbeta    = 'undefined',
+                zgamma   = 'undefined',
+                emitz    = 'undefined',
+                Dp2p0    = 'undefined',
+                z0       = 'undefined',
+                DWx      = 'undefined',
+                wx       = 'undefined',
+                phi_1    = 'undefined',
+                phi_2    = 'undefined',
+                psi      = 'undefined',
+                omgl0    = 'undefined')
     PARAMS.update(res)
-    return res  
+    return res
 
 # Data For Summary
 SUMMARY = {}
@@ -369,17 +377,17 @@ def collect_data_for_summary(lattice):
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-    SUMMARY['(emitx)i [mrad*mm]']              =  PARAMS['emitx_i']*1.e6
-    SUMMARY['(emity)i [mrad*mm]']              =  PARAMS['emity_i']*1.e6
-    SUMMARY['(emitz)i    [mrad]']              =  '{:8.2e} in {{w,dphi}} coordinates'.format(PARAMS['emitz_i']*1.e3)
-    SUMMARY['(sigmax)i*   [mm]']               =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
-    SUMMARY['(sigmay)i*   [mm]']               =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
-    SUMMARY['separatrix:        w(dphi=0)*']   =  '{:8.2e}'.format(PARAMS['zwmax'])
-    SUMMARY['separatrix: +dphi(w=0)* [deg]']   =  degrees(PARAMS['zphi_1'])
-    SUMMARY['separatrix: -dphi(w=0)* [deg]']   =  degrees(PARAMS['zphi_2'])
-    SUMMARY['separatrix:        psi* [deg]']   =  degrees(PARAMS['zpsi'])
-    SUMMARY['(emitz)i: w0(dphi=0)*']           =  PARAMS['zw0']
-    SUMMARY['(emitz)i: dphi0(w=0)* [deg]']     =  degrees(PARAMS['zdphi0'])
+    SUMMARY['(sigx)i*    [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigy)i*    [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
+    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, =>w(=dGamma) = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
+    SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
+    SUMMARY["epsi: {x,x'}[mrad*mm]"]           =  PARAMS['emitx_i']*1.e6
+    SUMMARY["epsi: {y,y'}[mrad*mm]"]           =  PARAMS['emity_i']*1.e6
+    SUMMARY['epsi: {dphi,w} [mrad]']           =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
+    SUMMARY['epsi: {z,dp/p}*  [mm]']           =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
+    SUMMARY['(dp/p)i*   [%]']                  =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
+    SUMMARY['(z0)i*      [cm]']                =  '{:8.2e}'.format(degrees(PARAMS['z0']*1.e2))
+    SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
     return
 
 def I0(x):
@@ -647,21 +655,7 @@ def test0():
     records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
     print('\n'+tblprnt(headr,records))
 
-# def test1():
-#     print('--------------------------Test1---')
-#     print('test w0(): the helper to calculate longitudinal phase space parameters')
-#     
-#     result = w0(
-#             PARAMS['sigmaz_i'],
-#             PARAMS['EzAvg'],
-#             PARAMS['wellenlänge'],
-#             radians(PARAMS['soll_phase']),
-#             PARAMS['spalt_laenge'],
-#             PARAMS['sollteilchen']
-#             )
-#     for k,v in result.items():
-#         print('{}\t{:g}'.format(k,v))
-def test2():
+def test1():
     print('--------------------------Test2---')
     print('test particle energy adjustment...')
     p = PARAMS['sollteilchen']
@@ -674,6 +668,5 @@ def test2():
 
 if __name__ == '__main__':
     test0()
-    # test1()
-    test2()
+    test1()
 

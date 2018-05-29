@@ -21,7 +21,7 @@ import sys
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy              # deepcopy?
+from copy import copy              # deepcopy needed?
 import warnings
 
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
@@ -162,8 +162,8 @@ class Lattice(object):
         printv(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
         ## Vorgabe emittance @ entrance
-        emix = PARAMS['emitx_i']
-        emiy = PARAMS['emity_i']
+        emitx = PARAMS['emitx_i']
+        emity = PARAMS['emity_i']
 
         ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
         if closed:
@@ -215,12 +215,12 @@ class Lattice(object):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
                 printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
                 ## keep variables for later use
-                PARAMS['sigx_i'] = sqrt(bax*emix)
-                PARAMS['sigy_i'] = sqrt(bay*emiy)
+                PARAMS['sigx_i'] = sqrt(bax*emitx)
+                PARAMS['sigy_i'] = sqrt(bay*emity)
                 SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
                 SUMMARY['(sigy)i [mm]'] = 1000.*PARAMS['sigy_i']
-                xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence
-                yip = sqrt(emiy*gmy)
+                xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence
+                yip = sqrt(emity*gmy)
                 SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
                 SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
             else:
@@ -236,8 +236,8 @@ class Lattice(object):
             aly = PARAMS["alfay_i"]
             gmx = (1.+alx*alx)/bax  # twiss gamma @ entrance
             gmy = (1.+aly*aly)/bay
-            xip = sqrt(emix*gmx)   # 1 sigma x' particle divergence @ entrance
-            yip = sqrt(emiy*gmy)
+            xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence @ entrance
+            yip = sqrt(emity*gmy)
             SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
             SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
         ## keep twiss values as lattice instance variables
@@ -318,7 +318,7 @@ class Lattice(object):
         # sigma initial
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
                         emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
-                        emitz=PARAMS['emitz_i'], betaz=PARAMS['betaz_i'],alphaz=0.)
+                        emitz=PARAMS['emitz'],   betaz=PARAMS['betaz'],alphaz=0.)
         s = 0.0                                     # longitudinal position counter
         for element in self.seq:                    # loop elements
             s0 = element.position[0]
@@ -426,14 +426,15 @@ class Lattice(object):
         x2p         = soll_test(sqrt(PARAMS['emitx_i']*self.gammx0)) # x-plane: principal-1 (sin like)
         y1          = soll_test(sqrt(PARAMS['emity_i']*self.betay0))
         y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
-        sigmaz_i    = soll_test(PARAMS['sigmaz_i'])                  # z[m]    Vorgabe
-        dp2p_i      = soll_test(PARAMS['dp2p_i']*1.e-2)              # dp/p[%] Vorgabe
+        sigmaz_i    = soll_test(PARAMS['z0'])      # z0[m] from waccept
+        dp2p_i      = soll_test(PARAMS['Dp2p0'])   # dp/p0 from waccept
         # MDIMxMDIM tracking used here
         s      = 0.
         c_like = []
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
+#todo:C,S in z ????        
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
         s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i  ; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
         for element in self.seq:
@@ -498,43 +499,41 @@ class Lattice(object):
             if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
                 node = elm
                 break
-            else:
-                continue
         return node
 
 # The commented code is *legacy*. No use to define a new
 # subclass and to cast from base class to subclass
 # although it worked well!
 # 
-    # def get_section(self,sec):    *legacy*
-    #     if not FLAGS['sections']:
-    #         section = self
-    #         Section.cast(section)             #the whole lattice is one section
-    #         setction.set_name('LINAC')
-    #     else:
-    #         section = Section(name=sec)
-    #         for elm in self.seq:
-    #             try:
-    #                 elmsec = elm.get_section()
-    #             except AttributeError:
-    #                 print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
-    #                 continue
-    #             if elmsec == sec:
-    #                 section.add_element(elm)
-    #     return section
-    # def get_sections(self):
-    #     sections = []
-    #     if not FLAGS['sections']:
-    #         section = self
-    #         Section.cast(section)             #the whole lattice is one section
-    #         section.set_name('LINAC')
-    #         sections.append(section)
-    #     else:
-    #         for isec in PARAMS['sections']:
-    #             sec = self.get_section(isec)
-    #             sections.append(sec)
-    #     return sections
-    #    
+#     def get_section(self,sec):    *legacy*
+#         if not FLAGS['sections']:
+#             section = self
+#             Section.cast(section)             #the whole lattice is one section
+#             setction.set_name('LINAC')
+#         else:
+#             section = Section(name=sec)
+#             for elm in self.seq:
+#                 try:
+#                     elmsec = elm.get_section()
+#                 except AttributeError:
+#                     print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
+#                     continue
+#                 if elmsec == sec:
+#                     section.add_element(elm)
+#         return section
+#     def get_sections(self):
+#         sections = []
+#         if not FLAGS['sections']:
+#             section = self
+#             Section.cast(section)             #the whole lattice is one section
+#             section.set_name('LINAC')
+#             sections.append(section)
+#         else:
+#             for isec in PARAMS['sections']:
+#                 sec = self.get_section(isec)
+#                 sections.append(sec)
+#         return sections
+#        
 # class Section(Lattice):
 #     """
 #     A Lattice with a name
@@ -590,8 +589,10 @@ def get_sections(self):
 
 #Lattice.get_section  = get_section                 #add method to class Lattice (the wdk way)
 #Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
+
 setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
 setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
+
 
 ## utilities
 def make_wille():

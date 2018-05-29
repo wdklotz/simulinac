@@ -24,7 +24,8 @@ from collections import namedtuple
 
 from setutil import PARAMS,DEBUG,Proton
 
-# Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
+# Polyval: 
+# polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 
 ## DEBUG MODULE
@@ -53,7 +54,7 @@ def Kpoly(z,sigma,mu,E):
         E0  = E*NGauss(z0,sigma,mu)
         Er  = E*NGauss(zr,sigma,mu)
         b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
-        a = (Er-El)/(2*E0*dz)           # getetstet mit Bleistift u. Papier
+        a = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
@@ -200,15 +201,17 @@ def Sp(poly,k,zintval):
     return sp
 
 def EzAvg(poly):
-    z = 0.
-    res = 0.
-    for n in range(len(poly)):
-        dz = poly[n].dz      # [cm]
-        v0 = V0n(poly,n)
-        z = z + dz*1.e-2     # [m]
-        res = res + v0       # [MV]
-    res = res/z              # EzAvg [MV/m]
-    return res
+    """ Average E-field in gap """
+    sum = 0.
+    N   = len(poly)
+    for n in range(N):
+        dz  = poly[n].dz      # [cm]
+        v0  = V0n(poly,n)     # [MV]
+        Eav = v0/(dz*1.e-2)   # [Mv/m]
+        sum = sum + Eav
+        pass
+    Eav = sum/N               # EzAvg [MV/m]
+    return Eav
 
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf EzPeak)'''
