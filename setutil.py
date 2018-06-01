@@ -23,9 +23,11 @@ from __future__ import print_function
 import sys,traceback
 # py_major = sys.version_info.major
 
-from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp
+from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp,atan
 import logging, pprint
 from enum import IntEnum
+from matplotlib.patches import Ellipse
+import matplotlib.pyplot as plt
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -89,7 +91,10 @@ FLAGS  = dict(
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = False,            # use express version of thin quads
-        aperture             = True              # use aperture check for quads and rf-gaps
+        aperture             = True ,            # use aperture check for quads and rf-gaps
+        bucket               = False,            # plot bucket 
+        csTrak               = True,             # plot CS trajectories
+        ellipse              = False             # plot CS twiss ellipses
         )
 PARAMS = dict(
         lichtgeschwindigkeit = 299792458.,       # [m/s] const
@@ -197,7 +202,7 @@ def waccept(node):
         node: the 1st rf-gap at the linac entrance
     """
 
-    if node is not None:
+    if node is not None and FLAGS['dWf']:
         emitw     = PARAMS['emitw_i']    # [rad]
         E0T       = node.EzAvg*node.tr   # [MV/m]
         particle  = node.particle
@@ -217,8 +222,8 @@ def waccept(node):
         psi   = 3.*fabs(phis)   # [rad]
 
         # small amplitude oscillations (T.Wangler pp.184)
-        oml0zuom = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
-        omegal0  = oml0zuom*2.*pi*freq   # [Hz]
+        omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
+        omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
         # {Dphi,w}-space   NOTE: emitw = w0root*Dphi0**2  [rad]
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
         Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
@@ -241,20 +246,20 @@ def waccept(node):
                 phi_1    = phi_1,       # separatrix: max pos. phase
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
-                omgl0    = omegal0)     # synchrotron oscillation [Hz]
+                omgl0    = omgl0)     # synchrotron oscillation [Hz]
     else:
         res =  dict(
-                zbeta    = 'undefined',
-                zgamma   = 'undefined',
-                emitz    = 'undefined',
-                Dp2p0    = 'undefined',
-                z0       = 'undefined',
-                DWx      = 'undefined',
-                wx       = 'undefined',
-                phi_1    = 'undefined',
-                phi_2    = 'undefined',
-                psi      = 'undefined',
-                omgl0    = 'undefined')
+                betaz    = 0.,
+                gammaz   = 'undefined',
+                emitz    = 0.,
+                Dp2p0    = 0.,
+                z0       = 0.,
+                DWx      = 0.,
+                wx       = 0.,
+                phi_1    = 0.,
+                phi_2    = 0.,
+                psi      = 0.,
+                omgl0    = 0.)
     PARAMS.update(res)
     return res
 
@@ -377,18 +382,40 @@ def collect_data_for_summary(lattice):
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-    SUMMARY['(sigx)i*    [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3  # enveloppe @ entrance
+    SUMMARY['(sigx)i*    [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3
     SUMMARY['(sigy)i*    [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
     SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, =>w(=dGamma) = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
     SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-    SUMMARY["epsi: {x,x'}[mrad*mm]"]           =  PARAMS['emitx_i']*1.e6
-    SUMMARY["epsi: {y,y'}[mrad*mm]"]           =  PARAMS['emity_i']*1.e6
-    SUMMARY['epsi: {dphi,w} [mrad]']           =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
-    SUMMARY['epsi: {z,dp/p}*  [mm]']           =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
+    SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
+    SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
+    SUMMARY['emit{dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
+    SUMMARY['emit{z,dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
     SUMMARY['(dp/p)i*   [%]']                  =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
     SUMMARY['(z0)i*      [cm]']                =  '{:8.2e}'.format(degrees(PARAMS['z0']*1.e2))
     SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
     return
+
+# def elli(alfa,beta,emit,color):
+#     gamma = (1.+alfa**2)/beta
+#     width = sqrt(emit*beta)
+#     height = sqrt(emit*gamma)
+#     phi = 0.5*atan(2*alfa/(gamma-beta))
+#     xy = (0,0)
+#     angle = degrees(phi)
+#     a = plt.subplot(111)
+#     elli = Ellipse(xy,width,height,angle,fill=False,color=color)
+#     a.add_artist(elli)
+#     return (width,height)
+    
+def elli(xy,alfa,beta,emit):
+    """ convert twiss parameters to plot parameters """
+    gamma = (1.+alfa**2)/beta
+    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
+    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
+    # return plot prameters as  (origin,width,height,tilt)
+    return (xy,a,b,tilt)
 
 def I0(x):
     """
@@ -656,6 +683,24 @@ def test0():
     print('\n'+tblprnt(headr,records))
 
 def test1():
+    print('--------------------------Test1---')
+    args = elli((0,0),0.5,100.,1.e-6)
+    ells = [Ellipse(*args,fill=False,color='red')]
+
+    # fig, ax = plt.subplots(subplot_kw={'aspect': 'equal'})
+    fig, ax = plt.subplots()
+    for e in ells:
+        ax.add_artist(e)
+        e.set_clip_box(ax.bbox)
+    
+    width  = args[1]
+    height = args[2]
+    scale = 0.7
+    ax.set_xlim(-width*scale, width*scale)
+    ax.set_ylim(-height*scale, height*scale)
+    plt.show()
+    
+def test2():
     print('--------------------------Test2---')
     print('test particle energy adjustment...')
     p = PARAMS['sollteilchen']
@@ -669,4 +714,5 @@ def test1():
 if __name__ == '__main__':
     test0()
     test1()
+    test2()
 

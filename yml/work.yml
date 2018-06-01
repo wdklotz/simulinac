@@ -25,14 +25,17 @@
 ## RUN configuration
 
 flags:
-    # - accON:        False           # {True}  acceleration on/off flag
+    - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    # - sigma:        False           # {True}  beam sizes by sigma-matrix
+    - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVprint:      True            # {False} print a dictionary of Key-Value pairs, no display
-    # - periodic:     True            # {False} treat lattice as periodic cell sequence(else as transfer line)
+    # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
-    # - verbose:      2               # {0}     print flag (0 = minimal print), try 0,1,2,3
+    - csTrak:         False           # {True} plot CS trajectories
+    - bucket:         True            # {False} plot the bucket
+    # - ellipse:        True            # {False} plot the twiss ellipses
+    - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
 
@@ -51,10 +54,10 @@ parameters:
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
     - betax_i:      &bex    2.800       # [m] twiss beta @ entrance x
-    # - betay_i:              *bex        # [m] twiss beta @ entrance y (zero RF)
-    - betay_i:              0.028       # [m] twiss beta @ entrance y (zero RF)
-    - alfax_i:              0.0         # [1] twiss alpha x @ entrance
-    - alfay_i:              0.0         # [1] twiss alpha y @ entrance
+    - betay_i:              *bex        # [m] twiss beta @ entrance y (zero RF)
+    # - betay_i:              0.28        # [m] twiss beta @ entrance y (zero RF)
+    - alfax_i:              -3.        # [1] twiss alpha x @ entrance
+    - alfay_i:              3.         # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
     - GAP:          &p15    0.048       # [m] RF gap
@@ -77,8 +80,8 @@ elements:
         - type:     QF           # QF class
         - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
-        - B':       &Bgrad   40. # [T/m] quadrupole gradient
-        # - B':       &Bgrad   30. # [T/m] quadrupole gradient
+        # - B':       &Bgrad   40. # [T/m] quadrupole gradient
+        - B':       &Bgrad   30. # [T/m] quadrupole gradient
         # - B':       &Bgrad   38.8 # [T/m] quadrupole gradient  (zero RF)
         # - B':       &Bgrad   34.5 # [T/m] quadrupole gradient  (zero RF)
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
@@ -90,10 +93,10 @@ elements:
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    # - RFGH:    &RFGH           # replacement of RFG by D
-    #     - type:     D          # replacement of RFG by D
-    #     - length:   0.0        # replacement of RFG by D
-    #     - sec:      *HE        # replacement of RFG by D
+    - RFGHx:    &RFGHx           # replacement of RFG by D
+        - type:     D            # replacement of RFG by D
+        - length:   0.0          # replacement of RFG by D
+        - sec:      *HE          # replacement of RFG by D
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    2.87         # [MV/m] average E-field on axis
@@ -202,7 +205,8 @@ segments:
 
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
-    # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]     # cavities
-    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
-    # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
+    # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
+    # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]    # gaps
+    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    # - [10,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs

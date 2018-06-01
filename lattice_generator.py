@@ -229,6 +229,9 @@ def factory(input_file):
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
         if 'express'     in flags: FLAGS['express']                                = flags['express']
         if 'aperture'    in flags: FLAGS['aperture']                               = flags['aperture']
+        if 'bucket'      in flags: FLAGS['bucket']                                 = flags['bucket']
+        if 'csTrak'      in flags: FLAGS['csTrak']                                 = flags['csTrak']
+        if 'ellipse'     in flags: FLAGS['ellipse']                                = flags['ellipse']
         return flags
 # --------
     def read_sections(in_data):

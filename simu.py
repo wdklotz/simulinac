@@ -19,36 +19,50 @@ This file is part of the SIMULINAC code
 """
 #todo: update simu_manual.odt
 #todo: update README.md
+#todo: improve flow control with FLAGS
 import sys
 from math import sqrt
-from matplotlib.pyplot import plot,show,legend,figure,subplot,axis
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
-from setutil import collect_data_for_summary, waccept
+from setutil import collect_data_for_summary, waccept, elli
 from lattice_generator import parse_yaml_and_fabric
 from tracker import track_soll
+
+import bucket_size
 
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_MODULE = DEBUG_OFF
-DEBUG_BUCKET = DEBUG_OFF
+DEBUG_MODULE  = DEBUG_OFF
 
 def display(functions):
-    print('PREPARE DISPLAY')
-    if FLAGS['dWf'] == 0:
-        display0(functions)
-    else:
-        display1(functions)
-        if DEBUG_BUCKET == DEBUG_ON:
-            from bucket_size import bucket
-            bucket()     # separatrix
+    figures = []
+    plots   = []
+    if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
+        plots.append(display0) # CS tracks {x,y}
+    elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
+        plots.append(display1) # CS tracks {x,y,z}
+        if FLAGS['bucket']:
+            plots.append(bucket) # separatrix
+    if FLAGS['ellipse']:
+        plots.append(display2) # ellipses
 
-def display0(functions):
+    # all plots and their figures
+    if len(plots) != 0:
+        print('PREPARE DISPLAY')
+        [plot(figures,functions) for plot in plots]
+        [plt.show(fig) for fig in figures]
+
+def bucket(figures,dummy):
+    bucket_size.bucket(figures)
+    
+def display0(figures,functions):
     """
-    Plotting w/o longitudinal motion
+    Plot w/o longitudinal motion
     """
     #----------*----------*   # unpack
     sigm_fun = functions[0]
@@ -77,38 +91,38 @@ def display0(functions):
     vzero        = [0.   for x in lat_plot]      # zero line
     #-------------------- figure frame
     width=14; height=7.6
-    fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
-    figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
+    fig = plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #-------------------- transverse X
-    splot=subplot(211)
+    splot=plt.subplot(211)
     splot.set_title('transverse x')
-    plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
-    plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
-    vscale=axis()[3]*0.1
+    plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
+    plt.plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
+    vscale=plt.axis()[3]*0.1
     viseox = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    plot(vis_ordinate,viseox,label='',color='black')
-    plot(vis_ordinate,vzero,color='black')
-    legend(loc='lower right',fontsize='x-small')
+    plt.plot(vis_ordinate,viseox,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y
-    splot=subplot(212)
+    splot=plt.subplot(212)
     splot.set_title('transverse y')
-    plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
-    plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
-    vscale=axis()[3]*0.1
+    plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
+    plt.plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
+    vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    plot(vis_ordinate,viseoy,label='',color='black')
-    plot(vis_ordinate,vzero,color='black')
-    legend(loc='lower right',fontsize='x-small')
+    plt.plot(vis_ordinate,viseoy,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
 
-    show()
+    figures.append(fig)
 
-def display1(functions):
+def display1(figures,functions):
     """
-    Plotting with longitudinal motion
+    Plot with longitudinal motion
     """
     #-------------------- unpack
     sigm_fun = functions[0]
@@ -137,40 +151,40 @@ def display1(functions):
     vzero        = [0.   for x in lat_plot]      # zero line
     #-------------------- figure frame
     width=14; height=7.6
-    fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
-    figure(fighdr,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
+    fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
     #-------------------- transverse X
-    splot=subplot(311)
+    splot=plt.subplot(311)
     splot.set_title('transverse x')
-    plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plot(tz,cx,label='C [m]',color='blue',linestyle=':')
-    plot(tz,sx,label='S [m]',color='red' ,linestyle=':')
-    vscale=axis()[3]*0.4
+    plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cx,label='C [m]',color='blue',linestyle=':')
+    plt.plot(tz,sx,label='S [m]',color='red' ,linestyle=':')
+    vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    plot(vis_ordinate,viseox,label='',color='black')
-    plot(vis_ordinate,vzero,color='black')
-    legend(loc='lower right',fontsize='x-small')
+    plt.plot(vis_ordinate,viseox,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y
-    splot=subplot(312)
+    splot=plt.subplot(312)
     splot.set_title('transverse y')
-    plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plot(tz,cy,label='C [m]',color='blue',linestyle=':')
-    plot(tz,sy,label='S [m]',color='red' ,linestyle=':')
-    vscale=axis()[3]*0.4
+    plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cy,label='C [m]',color='blue',linestyle=':')
+    plt.plot(tz,sy,label='S [m]',color='red' ,linestyle=':')
+    vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    plot(vis_ordinate,viseoy,label='',color='black')
-    plot(vis_ordinate,vzero,color='black')
-    legend(loc='lower right',fontsize='x-small')
+    plt.plot(vis_ordinate,viseoy,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- longitudinal dPhi, dW/W
-    ax_l=subplot(313)
+    ax_l=plt.subplot(313)
     ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(tz,cz,color='green',linestyle=':')
-    ax_l.plot(tz,sz,color='green')
+    # ax_l.plot(tz,sz,color='green')
     vscale=ax_l.axis()[3]*0.7
     viseoz = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseoz[i] = 0.   # stop lattice plotting
@@ -181,12 +195,42 @@ def display1(functions):
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(tz,cdw,color='red',linestyle=':')
+    # ax_r.plot(tz,cdw,color='red',linestyle=':')
     ax_r.plot(tz,sdw,color='red')
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
 
-    show()
+    figures.append(fig)
 
+def display2(figures,dummy):
+    """ display x- and y-phase-space ellipses """
+    xy = (0,0)
+    ellix = elli(xy,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+    elliy = elli(xy,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+
+    ells = [Ellipse(*ellix,color='green',fill=False),Ellipse(*elliy,color='red',fill=False)]
+
+    fig, ax = plt.subplots()
+    fig.suptitle('transverse phase-space {[m],[rad]}')
+    fig.legend(ells,("{x,x'}","{y,y'}"),loc=1)
+
+    for e in ells:
+        ax.add_artist(e)
+        e.set_clip_box(ax.bbox)
+
+    x1 = sqrt(PARAMS['emitx_i']*PARAMS['betax_i'])
+    x2 = sqrt(PARAMS['emity_i']*PARAMS['betay_i'])
+    xmax = max(x1,x2)
+    gammax = (1.+PARAMS['alfax_i']**2)/PARAMS['betax_i']
+    gammay = (1.+PARAMS['alfay_i']**2)/PARAMS['betay_i']
+    y1 = sqrt(PARAMS['emitx_i']*gammax)
+    y2 = sqrt(PARAMS['emity_i']*gammay)
+    ymax = max(y1,y2)
+    scale = 0.6
+    plt.xlim(-xmax*scale, xmax*scale)
+    plt.ylim(-ymax*scale, ymax*scale)    
+
+    figures.append(fig)
+        
 # -------------------------START here
 def simulation(filepath):
     lattice = parse_yaml_and_fabric(filepath)
@@ -226,3 +270,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
     simulation(filepath)
+    

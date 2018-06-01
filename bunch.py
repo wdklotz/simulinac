@@ -21,7 +21,7 @@ import numpy as np
 from math import sqrt
 import matplotlib.pyplot as plt
 
-from setutil import DEBUG, Particle, tblprnt, K, sigmas
+from setutil import DEBUG, Particle, tblprnt, K, sigmas, PARAMS
 from trackPlot import histPlot, poincarePlot
 from Dictionary import DictObject
 
@@ -31,61 +31,57 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
-"""
-class EmittanceContour(object):
-    generates a bunch on the emittance border
-    def twiss_conjugate(self, x, alfa, beta, epsi):
+class EmitContour(object):
+    """
+        Generates a bunch with particles of same emittance
+    """
+    def emittanceContourPoint(self, x, alfa, beta, emit):
         gamma = (1.+ alfa**2)/beta
         a = beta
         b = 2.*alfa*x
-        c = gamma*x**2-epsi
+        c = gamma*x**2-emit
         d = (b**2-4.*a*c)
         d = sqrt(d)
-        xp1 = (-b+d)/(2.*a)
-        xp2 = (-b-d)/(2.*a)
-        return (xp1,xp2)
+        y = (-b+d)/(2.*a)   
+        p1 = (x,y)     # upper half-plane
+        p2 = (-x,-y)   # upper half-plane 
+        return (p1,p2)
 
-    def __init__(self,nbofTracks,args):
-        sigx,sigxp = sigmas(CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
-        if args['random']:
-            Xrand = sigx*(2.*np.random.random_sample((nbofTracks,))-1.)
+    def __init__(self,nTracks,random=False):
+        sigx,sigxp = sigmas(PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+        if random:
+            Xrand = sigx*(2.*np.random.random_sample((nTracks,))-1.)
         else:
-            Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nbofTracks)
-        X=[]; XP=[]
+            Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
+        self.X=[]; self.XP=[]
         for x in Xrand:
-            xp1,xp2 = self.twiss_conjugate  (x,CONF['alfax_i'],CONF['betax_i'],CONF['emitx_i'])
-            X.append(x)
-            XP.append(xp1)
-            X.append(x)
-            XP.append(xp2)
-        sigy,sigyp = sigmas(CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
-        if args['random']:
-            Yrand = sigy*(2.*np.random.random_sample((nbofTracks,))-1.)
+            points = self.emittanceContourPoint(x,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+            self.X.append( points[0][0])
+            self.XP.append(points[0][1])
+            self.X.append( points[1][0])
+            self.XP.append(points[1][1])
+        sigy,sigyp = sigmas(PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+        if random:
+            Yrand = sigy*(2.*np.random.random_sample((nTracks,))-1.)
         else:
-            Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nbofTracks)
-        Y=[]; YP=[]
+            Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
+        self.Y=[]; self.YP=[]
         for y in Yrand:
-            yp1,yp2 = self.twiss_conjugate  (y,CONF['alfay_i'],CONF['betay_i'],CONF['emity_i'])
-            Y.append(y)
-            YP.append(yp1)
-            Y.append(y)
-            YP.append(yp2)
-        tk_in = Particle.soll.tkin  #energy at entrance
-        # DEBUG('X >>', X)
-        # DEBUG('XP >>',XP)
-        # DEBUG('Y >>', Y)
-        # DEBUG('YP >>',YP)
-        self.tracklist=[]           #all Tracks in a bunch
-        for i in range(2*nbofTracks):
-            start=np.array([ 0., 0., 0., 0., 0., 0., tk_in, 1., 0., 1.])
-            start[K,x]  = X[i]
-            start[K.xp] = XP[i]
-            start[K.y]  = Y[i]
-            start[K.yp] = YP[i]
-            self.tracklist.append(Track(particle_number=i,start=start))
-            # DEBUG(self.tracklist[-1].first_str())
-            # DEBUG(self.tracklist[-1].last_str())
-"""
+            points = self.emittanceContourPoint(y,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+            self.Y.append( points[0][0])
+            self.YP.append(points[0][1])
+            self.Y.append( points[1][0])
+            self.YP.append(points[1][1])
+        tkin = PARAMS['sollteilchen'].tkin  #energy at entrance
+        self.tracklist=[]
+        for i in range(2*nTracks):
+            start=np.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+            start[K.x]  = self.X[i]
+            start[K.xp] = self.XP[i]
+            start[K.y]  = self.Y[i]
+            start[K.yp] = self.YP[i]
+            self.tracklist.append(Track(track_number=i,start=start))
+
 class Tpoint(object):
     """ A track point is an np.array of 10 coordinates, i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=s, 1) """
     def __init__(self, point = np.array([0,0,0,0,0,0,0,1,0,1])):
@@ -293,8 +289,20 @@ def test1():
     poincarePlot(good, 'x-x\'', (0.1,0.1), projections=(1,1))
     figures.append(fig2)
 
+def test2(filepath):
+    print('-----------------------------------------Test2---')
+    from lattice_generator import parse_yaml_and_fabric
+    N = 200
+    lattice = parse_yaml_and_fabric(filepath)
+    contour = EmitContour(N)
+    fig = plt.figure('test2:figure')
+    plt.scatter(contour.X,contour.XP,s=0.1)
+    plt.scatter(contour.Y,contour.YP,color='red',s=0.1)
+    figures.append(fig)
+
 if __name__ == '__main__':
     figures = []
     test0()
     test1()
+    test2('yml/work.yml')
     [plt.show(fig) for fig in figures]
