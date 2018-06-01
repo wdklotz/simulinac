@@ -34,7 +34,7 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - ellipse:        True          # {False} plot the twiss ellipses
+    # - ellipse:        True          # {False} plot the twiss ellipses
     - verbose:        2             # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions

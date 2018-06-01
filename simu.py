@@ -27,7 +27,7 @@ from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
 from setutil import collect_data_for_summary, waccept, elli
-from lattice_generator import parse_yaml_and_fabric
+from lattice_generator import parse_and_fabric
 from tracker import track_soll
 
 import bucket_size
@@ -236,7 +236,7 @@ def display2(figures,dummy):
 #                            |----------------------- |
 def simulation(filepath):
     # parse input file and create a lattice
-    lattice = parse_yaml_and_fabric(filepath)
+    lattice = parse_and_fabric(filepath)
 
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
@@ -269,7 +269,8 @@ def simulation(filepath):
         display(functions)
 
 if __name__ == '__main__':
-    filepath = 'yml/ref_run.yml'# the default input file (YAML syntax)
+    # the default input file (YAML syntax)
+    filepath = 'yml/ref_run.yml'
     filepath = 'yml/work.yml'
 
     if len(sys.argv) == 2:

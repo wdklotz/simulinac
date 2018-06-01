@@ -358,7 +358,7 @@ def factory(input_file):
     DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
     return lattice    # end of factory(...)
 
-def parse_yaml_and_fabric(input_file):   # delegates to factory
+def parse_and_fabric(input_file):   # delegates to factory
     return factory(input_file)
 
 # utilities
@@ -383,7 +383,7 @@ def test0():
 
 def test1(input_file):
     print('---------------------------------TEST1')
-    lattice = parse_yaml_and_fabric(input_file)
+    lattice = parse_and_fabric(input_file)
 
 if __name__ == '__main__':
     test0()
