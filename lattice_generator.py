@@ -225,7 +225,7 @@ def factory(input_file):
         if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
         if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
         if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
-        if 'KVprint'     in flags: FLAGS['KVprint']                                = flags['KVprint']
+        if 'KVout'       in flags: FLAGS['KVout']                                  = flags['KVout']
         if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
         if 'express'     in flags: FLAGS['express']                                = flags['express']
         if 'aperture'    in flags: FLAGS['aperture']                               = flags['aperture']
@@ -235,7 +235,7 @@ def factory(input_file):
         return flags
 # --------
     def read_sections(in_data):
-        """returns a list of section names"""
+        """ returns a list of section names """
         sec_list = []
         use_sections = True
         try:     ## can fail because sections are not mandatory
@@ -247,7 +247,7 @@ def factory(input_file):
         return sec_list
 # --------
     def read_parameters(in_data):
-        """returns a dict of parameters"""
+        """ returns a dict of parameters """
         parameter_list = in_data['parameters']
         parameters     = lod2d(parameter_list)
         if 'frequency'        in parameters: PARAMS['frequenz']         = parameters['frequency']
@@ -323,7 +323,8 @@ def factory(input_file):
                 for k in segSubList:
                     latticeList.append(k)
         return (latticeList,segments)
-    # factory body --------
+
+    ## factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -360,7 +361,7 @@ def factory(input_file):
 def parse_yaml_and_fabric(input_file):   # delegates to factory
     return factory(input_file)
 
-# Utilities
+# utilities
 def test0():
     print('---------------------------------TEST0')
     wfl= []

@@ -87,7 +87,7 @@ FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
-        KVprint              = False,            # print a dictionary of Key-Value pairs, no display
+        KVout                = False,            # print a dictionary of Key-Value pairs, no display
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = False,            # use express version of thin quads
@@ -106,8 +106,7 @@ PARAMS = dict(
         cavity_laenge        = 0.08,             # [m] default
         phisoll              = -30.,             # [deg] default
         frequenz             = 816.e6,           # [Hz] default
-        # injection_energy     = 50.,              # [MeV] default
-        injection_energy     = 70.,              # [MeV] default
+        injection_energy     = 50.,              # [MeV] default
         qf_gradient          = 16.0,             # [T/m] default
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
@@ -122,14 +121,10 @@ PARAMS = dict(
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
-        # sigmaz_i             = 0.02,             # [m] max long. half-width displacement
-        # dp2p_i               = 0.2,              # [%] longitidinal dp/p spread @ inj
         nbof_slices          = 6,                # default number-off slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-# PARAMS['sigmaz_i']        = PARAMS['wellenlänge']/36.  # sigma-z is 1/36-th of wavelength (i.e.10 deg per default)
-# PARAMS['spalt_spannung']  = PARAMS['EzAvg']*PARAMS['spalt_laenge']
 
 """ KeepValues: a global dict to keep key-value pairs (used for tracking results) """
 KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
@@ -236,6 +231,7 @@ def waccept(node):
         gammaz_i = emitz/z0**2
         betaz_i  = 1./gammaz_i         # [m]
         res =  dict(
+                emitw    = emitw,
                 betaz    = betaz_i,     # twiss beta [m]
                 gammaz   = gammaz_i,    # twiss gamma [1/m]
                 emitz    = emitz,       # emittance in {z,dp/p} space [m]
@@ -249,6 +245,7 @@ def waccept(node):
                 omgl0    = omgl0)     # synchrotron oscillation [Hz]
     else:
         res =  dict(
+                emitw    = 0.,
                 betaz    = 0.,
                 gammaz   = 'undefined',
                 emitz    = 0.,
@@ -263,7 +260,7 @@ def waccept(node):
     PARAMS.update(res)
     return res
 
-# Data For Summary
+# dictionary for summary
 SUMMARY = {}
 
 def collect_data_for_summary(lattice):
@@ -388,25 +385,13 @@ def collect_data_for_summary(lattice):
     SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-    SUMMARY['emit{dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
+    SUMMARY['emit{dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw']*1.e3)
     SUMMARY['emit{z,dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
     SUMMARY['(dp/p)i*   [%]']                  =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
-    SUMMARY['(z0)i*      [cm]']                =  '{:8.2e}'.format(degrees(PARAMS['z0']*1.e2))
+    SUMMARY['(z)i*      [cm]']                 =  '{:8.2e}'.format(degrees(PARAMS['z0']*1.e2))
     SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
     return
 
-# def elli(alfa,beta,emit,color):
-#     gamma = (1.+alfa**2)/beta
-#     width = sqrt(emit*beta)
-#     height = sqrt(emit*gamma)
-#     phi = 0.5*atan(2*alfa/(gamma-beta))
-#     xy = (0,0)
-#     angle = degrees(phi)
-#     a = plt.subplot(111)
-#     elli = Ellipse(xy,width,height,angle,fill=False,color=color)
-#     a.add_artist(elli)
-#     return (width,height)
-    
 def elli(xy,alfa,beta,emit):
     """ convert twiss parameters to plot parameters """
     gamma = (1.+alfa**2)/beta
@@ -495,7 +480,7 @@ def sigmas(alfa,beta,epsi):
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
 
-# Marker Actions
+# marker actions
 def sigma_x_action():
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KeepValues['z'])] = KeepValues['sigma_x']*1.e3
@@ -514,7 +499,7 @@ MarkerActions = dict(                   # all possible actions for a Marker
             Tkin      = Tkin_action
             )
 
-# Utilities
+# utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -618,7 +603,7 @@ def dictprnt(what,text='',filter=[],njust=35):
 def printv(level,*args):
     """Multilevel printing with verbose flag"""
     verbose = FLAGS['verbose']
-    if verbose >= level and not FLAGS['KVprint']:
+    if verbose >= level and not FLAGS['KVout']:
         print(*args)
 
 def tblprnt(headr,records):

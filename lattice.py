@@ -40,7 +40,7 @@ DEBUG_MODULE = DEBUG_OFF
 ## Lattice
 class Lattice(object):
     """
-    The Lattice object is a list of elements: ELM.<element>
+    The Lattice object is a list of elements: ELM.<element> in self.seq
     """
     def __init__(self):
         self.seq    = []
@@ -54,7 +54,7 @@ class Lattice(object):
         self.accel  = 0.
 
     def add_element(self,element):
-        """Add element to lattice"""
+        """ add element to lattice """
         if len(self.seq) == 0:
             s0 = 0.
         else:
@@ -69,7 +69,7 @@ class Lattice(object):
         self.seq.append(element)
 
     def string(self):
-        """Log lattice layout to string (could be even better?)"""
+        """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
         for element in self.seq:
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
@@ -78,7 +78,7 @@ class Lattice(object):
         return mcell.string()
 
     def stats(self,soll_track):
-        """Gather lattice statistics"""
+        """ gather lattice statistics """
         cav_counter = 0
         q_counter   = 0
         ttfm = +1.e+50
@@ -102,7 +102,7 @@ class Lattice(object):
 
     def cell(self,closed=True):
         """
-        Construct the full accelerator lattice-cell matrix and extract standard quantities:
+        construct the full accelerator lattice-cell matrix and extract standard quantities:
             full cell: mcell
             stability?
             betatron tunes: mux, muy
@@ -252,7 +252,7 @@ class Lattice(object):
         return (self.accel,self.betax0,self.betay0)
 
     def report(self):
-        """Report lattice layout (may not work!)"""
+        """ report lattice layout (may not work!) """
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
         header = ''
@@ -287,8 +287,35 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
-    def twiss_functions(self,steps=10):
-        """Track twiss functions with beta-matrix through lattice and scale to sigmas"""
+    def sigmas(self,steps = 10):
+        def envelopes(steps = 10):
+            """ calc. beamsize from beta-matrix """
+            twiss = self.twiss_functions(steps = steps)
+            sigma_fun = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i'])) for x in twiss]
+            return sigma_fun
+
+        if FLAGS['sigma']:
+            if FLAGS['dWf'] == 0:
+                warnings.showwarning(
+                    'sigma-envelopes use 6x6 matrices - will be replaced by twiss-envelopes',
+                    UserWarning,
+                    'lattice.py',
+                    'sigmas()')
+                if not FLAGS['KVout']: 
+                    print('CALCULATE TWISS ENVELOPES')
+                    sigma_fun = envelopes(steps = steps)
+            else:
+                if not FLAGS['KVout']: 
+                    print('CALCULATE SIGMA')
+                    sigma_fun = self.sigma_functions(steps = steps)
+        else:
+            if not FLAGS['KVout']: 
+                print('CALCULATE TWISS ENVELOPES')
+                sigma_fun = envelopes(steps = steps)
+        return sigma_fun
+
+    def twiss_functions(self,steps = 10):
+        """ track twiss functions with beta-matrix through lattice and scale to sigmas """
         beta_fun = []
         bx = self.betax0
         ax = self.alfax0
@@ -312,8 +339,8 @@ class Lattice(object):
                 beta_fun.append((s,betax,betay))
         return beta_fun
 
-    def sigma_functions(self,steps=10):
-        """Track the sigma-matrix through the lattice"""
+    def sigma_functions(self,steps = 10):
+        """ track the sigma-matrix through the lattice """
         sigma_fun = []
         # sigma initial
         sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
@@ -370,9 +397,7 @@ class Lattice(object):
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):
-        """
-        Track the dispersion function
-        """
+        """ track the dispersion function """
         traj = []
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         v_0.shape = (ELM.MDIM,1)   # column vector with MDIM rows, 1 column
@@ -409,15 +434,14 @@ class Lattice(object):
         return fun
 
     def cs_traj(self,steps=10):
-        """
-        Track COS & SIN trajectories
-        """
+        """ track cos- & sin-trajectories """
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
             return 0.
         def SollTest_OFF(arg):
             return arg
         soll_test   = SollTest_OFF
 
+        print('CALCULATE C+S TRAJECTORIES')
         gamma       = PARAMS['sollteilchen'].gamma
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
@@ -467,9 +491,7 @@ class Lattice(object):
         return (c_like,s_like)
 
     def symplecticity(self):
-        """
-        Test symplecticity
-        """
+        """ test symplecticity """
         s = NP.array([
                     [ 0.,1., 0.,0., 0.,0.,0.,0.,0.,0.],    #x
                     [-1.,0., 0.,0., 0.,0.,0.,0.,0.,0.],    #x'

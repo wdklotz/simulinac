@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 #todo: update simu_manual.odt
 #todo: update README.md
-#todo: improve flow control with FLAGS
+#todo: revise flow control with FLAGS (partly done)
 import sys
 from math import sqrt
 import matplotlib.pyplot as plt
@@ -62,7 +62,7 @@ def bucket(figures,dummy):
     
 def display0(figures,functions):
     """
-    Plot w/o longitudinal motion
+    CS-Tracks w/o longitudinal motion
     """
     #----------*----------*   # unpack
     sigm_fun = functions[0]
@@ -122,7 +122,7 @@ def display0(figures,functions):
 
 def display1(figures,functions):
     """
-    Plot with longitudinal motion
+    CS-Tracks with longitudinal motion
     """
     #-------------------- unpack
     sigm_fun = functions[0]
@@ -231,40 +231,45 @@ def display2(figures,dummy):
 
     figures.append(fig)
         
-# -------------------------START here
+#                            |----------------------- |
+# -------------------------  | everything starts here |
+#                            |----------------------- |
 def simulation(filepath):
+    # parse input file and create a lattice
     lattice = parse_yaml_and_fabric(filepath)
+
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
-    # Energie Konfiguration hier (SUPER WICHTIG)
-    soll_track = track_soll(lattice)
-    # sys.exit(9)
-    lattice.stats(soll_track)          ## count elements and other statistics
-    # ganzer Beschleuniger, Anfangswerte, Summary, etc...
-    lattice.cell(closed=FLAGS['periodic'])
-    collect_data_for_summary(lattice)    ## summary
 
-    # Grafik & Lösungen
+    # configure elements with increasing energy
+    soll_track = track_soll(lattice)
+
+    # count elements and make other statistics
+    lattice.stats(soll_track)
+
+    # ganzer Beschleuniger, Anfangswerte, Summary, etc...
+    lattice.cell(closed = FLAGS['periodic'])
+
+    # make summary
+    collect_data_for_summary(lattice)
+
+    # grafics & results
     lat_plot = lattice.lattice_plot_function()
-    KVprint_flag = FLAGS['KVprint']
-    if not KVprint_flag: print('CALCULATE C+S TRAJECTORIES')
-    resolution = 23
-    (c_like,s_like) = lattice.cs_traj(steps=resolution)       # calc sin- and cos-like trajectories
-    if FLAGS['sigma']:
-        if not KVprint_flag: print('CALCULATE SIGMA')
-        sigma = lattice.sigma_functions(steps=resolution)     # calc. beamsize from sigma-matrix
-    elif not FLAGS['sigma']:
-        if not KVprint_flag: print('CALCULATE TWISS')
-        twiss = lattice.twiss_functions(steps=resolution)     # calc. beamsize from beta-matrix
-        sigma = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i'])) for x in twiss]
-    if KVprint_flag:
+    kv_only  = FLAGS['KVout']
+    steps    = 23
+    if kv_only: 
         dictprnt(PARAMS,text='PARAMS',njust=1)
     else:
-        dictprnt(SUMMARY,text='summary')         # summary
-        display((sigma,c_like,s_like,lat_plot))  # plot!!!
+        (c_like,s_like) = lattice.cs_traj(steps = steps) # calc sin- and cos-like trajectories
+        sigma_fun       = lattice.sigmas(steps = steps)
+        functions       = (sigma_fun,c_like,s_like,lat_plot)
+        # show summary
+        dictprnt(SUMMARY,text='summary')
+        # call plot dispatcher
+        display(functions)
 
 if __name__ == '__main__':
-    filepath = 'yml/ref_run.yml'     ## the default input file (YAML syntax)
+    filepath = 'yml/ref_run.yml'# the default input file (YAML syntax)
     filepath = 'yml/work.yml'
 
     if len(sys.argv) == 2:
