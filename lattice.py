@@ -324,7 +324,7 @@ class Lattice(object):
         ay = self.alfay0
         gy = self.gammy0
         v_beta0 = NP.array([bx,ax,gx,by,ay,gy])
-        v_beta = v_beta0
+        # v_beta = v_beta0
         s = 0.0
         for element in self.seq:
             # particle = element.particle                                      # DEBUG
@@ -332,11 +332,12 @@ class Lattice(object):
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 m_beta = i_element.beta_matrix()
-                v_beta = m_beta.dot(v_beta)
+                v_beta = m_beta.dot(v_beta0)
                 s += i_element.length
                 betax  = v_beta[0]
                 betay  = v_beta[3]
                 beta_fun.append((s,betax,betay))
+                v_beta0 = v_beta
         return beta_fun
 
     def sigma_functions(self,steps = 10):
@@ -446,10 +447,10 @@ class Lattice(object):
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
-        x1          = soll_test(sqrt(PARAMS['emitx_i']*self.betax0)) # x-plane: principal-1 (cos like)
-        x2p         = soll_test(sqrt(PARAMS['emitx_i']*self.gammx0)) # x-plane: principal-1 (sin like)
-        y1          = soll_test(sqrt(PARAMS['emity_i']*self.betay0))
-        y2p         = soll_test(sqrt(PARAMS['emity_i']*self.gammy0))
+        x1          = soll_test(sqrt(PARAMS['emitx_i']/self.gammx0)) # x-plane: principal-1 (cos like)
+        x2p         = soll_test(sqrt(PARAMS['emitx_i']/self.betax0)) # x-plane: principal-1 (sin like)
+        y1          = soll_test(sqrt(PARAMS['emity_i']/self.gammy0))
+        y2p         = soll_test(sqrt(PARAMS['emity_i']/self.betay0))
         sigmaz_i    = soll_test(PARAMS['z0'])      # z0[m] from waccept
         dp2p_i      = soll_test(PARAMS['Dp2p0'])   # dp/p0 from waccept
         # MDIMxMDIM tracking used here

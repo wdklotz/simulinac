@@ -207,7 +207,7 @@ def display2(figures,dummy):
     ellix = elli(xy,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
     elliy = elli(xy,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
 
-    ells = [Ellipse(*ellix,color='green',fill=False),Ellipse(*elliy,color='red',fill=False)]
+    ells = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]
 
     fig, ax = plt.subplots()
     fig.suptitle('transverse phase-space {[m],[rad]}')

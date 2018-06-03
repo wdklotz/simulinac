@@ -34,7 +34,7 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    # - ellipse:        True          # {False} plot the twiss ellipses
+    - ellipse:        True          # {False} plot the twiss ellipses
     - verbose:        2             # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -57,7 +57,9 @@ parameters:
     - betay_i:              *bex        # [m] twiss beta @ entrance y (zero RF)
     # - betay_i:              0.28        # [m] twiss beta @ entrance y (zero RF)
     - alfax_i:              -3.        # [1] twiss alpha x @ entrance
-    - alfay_i:              3.         # [1] twiss alpha y @ entrance
+    # - alfay_i:              3.         # [1] twiss alpha y @ entrance
+    # - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfay_i:              0.          # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
     - GAP:          &p15    0.048       # [m] RF gap
@@ -93,11 +95,11 @@ elements:
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    - RFGHx:    &RFGHx           # replacement of RFG by D
+    - RFGHx:    &RFGH           # replacement of RFG by D
         - type:     D            # replacement of RFG by D
         - length:   0.0          # replacement of RFG by D
         - sec:      *HE          # replacement of RFG by D
-    - RFGH:  &RFGH               # ID: &alias
+    - RFGH:  &RFGHx               # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    2.87         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
