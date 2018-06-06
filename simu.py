@@ -25,8 +25,8 @@ from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
-from setutil import collect_data_for_summary, waccept, elli
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG, FIGURES
+from setutil import collect_data_for_summary, waccept, ellisxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
 
@@ -39,8 +39,8 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE  = DEBUG_OFF
 
-def display(functions):
-    figures = []
+def display(*args):
+    # functions = args[0]
     plots   = []
     if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
         plots.append(display0) # CS tracks {x,y}
@@ -51,19 +51,22 @@ def display(functions):
     if FLAGS['ellipse']:
         plots.append(display2) # ellipses
 
-    # all plots and their figures
+    # all plots 
     if len(plots) != 0:
         print('PREPARE DISPLAY')
-        [plot(figures,functions) for plot in plots]
-        [plt.show(fig) for fig in figures]
+        [plot(*args) for plot in plots]
 
-def bucket(figures,dummy):
-    bucket_size.bucket(figures)
+    # all figures
+    [plt.show(fig) for fig in FIGURES]
+
+def bucket(*dummy):
+    bucket_size.bucket()
     
-def display0(figures,functions):
+def display0(*args):
     """
     CS-Tracks w/o longitudinal motion
     """
+    functions = args[0]
     #----------*----------*   # unpack
     sigm_fun = functions[0]
     cos_like = functions[1]
@@ -118,12 +121,13 @@ def display0(figures,functions):
     plt.plot(vis_ordinate,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 
-    figures.append(fig)
+    FIGURES.append(fig)
 
-def display1(figures,functions):
+def display1(*args):
     """
     CS-Tracks with longitudinal motion
     """
+    functions = args[0]
     #-------------------- unpack
     sigm_fun = functions[0]
     cos_like = functions[1]
@@ -199,38 +203,11 @@ def display1(figures,functions):
     ax_r.plot(tz,sdw,color='red')
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
 
-    figures.append(fig)
+    FIGURES.append(fig)
 
-def display2(figures,dummy):
-    """ display x- and y-phase-space ellipses """
-    xy = (0,0)
-    ellix = elli(xy,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
-    elliy = elli(xy,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+def display2(*dummy):
+    ellisxy_action(*dummy,on_injection=True)
 
-    ells = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]
-
-    fig, ax = plt.subplots()
-    fig.suptitle('transverse phase-space {[m],[rad]}')
-    fig.legend(ells,("{x,x'}","{y,y'}"),loc=1)
-
-    for e in ells:
-        ax.add_artist(e)
-        e.set_clip_box(ax.bbox)
-
-    x1 = sqrt(PARAMS['emitx_i']*PARAMS['betax_i'])
-    x2 = sqrt(PARAMS['emity_i']*PARAMS['betay_i'])
-    xmax = max(x1,x2)
-    gammax = (1.+PARAMS['alfax_i']**2)/PARAMS['betax_i']
-    gammay = (1.+PARAMS['alfay_i']**2)/PARAMS['betay_i']
-    y1 = sqrt(PARAMS['emitx_i']*gammax)
-    y2 = sqrt(PARAMS['emity_i']*gammay)
-    ymax = max(y1,y2)
-    scale = 0.6
-    plt.xlim(-xmax*scale, xmax*scale)
-    plt.ylim(-ymax*scale, ymax*scale)    
-
-    figures.append(fig)
-        
 #                            |----------------------- |
 # -------------------------  | everything starts here |
 #                            |----------------------- |
@@ -250,6 +227,12 @@ def simulation(filepath):
     # ganzer Beschleuniger, Anfangswerte, Summary, etc...
     lattice.cell(closed = FLAGS['periodic'])
 
+    # calculate twiss functions for every node w/o slicing
+    lattice.twiss_functions()
+    
+    # do actions on markers
+    lattice.marker_actions()
+    
     # make summary
     collect_data_for_summary(lattice)
 

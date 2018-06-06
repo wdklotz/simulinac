@@ -34,8 +34,8 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - ellipse:        True          # {False} plot the twiss ellipses
-    - verbose:        2             # {0} print flag (0 = minimal print), try 0,1,2,3
+    - ellipse:      True            # {False} plot the twiss ellipses
+    - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
 
@@ -56,9 +56,9 @@ parameters:
     - betax_i:      &bex    2.800       # [m] twiss beta @ entrance x
     - betay_i:              *bex        # [m] twiss beta @ entrance y (zero RF)
     # - betay_i:              0.28        # [m] twiss beta @ entrance y (zero RF)
-    - alfax_i:              -3.        # [1] twiss alpha x @ entrance
+    # - alfax_i:              -3.        # [1] twiss alpha x @ entrance
     # - alfay_i:              3.         # [1] twiss alpha y @ entrance
-    # - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfax_i:              0.          # [1] twiss alpha x @ entrance
     - alfay_i:              0.          # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
@@ -123,13 +123,14 @@ elements:
         - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
-    - M:  &M                     # ID: &alias
+    - M:  &Mrkr                  # ID: &alias
         - type:    MRK           # MRK class
         - sec:     *HE
         - actions:
-            - sigma_x
-            - sigma_y
-            - Tkin
+            # - sigma_x
+            # - sigma_y
+            # - Tkin
+            - show_elli          # transverse twiss ellipses 
     - F:  &Foil                  # ID: &alias
         - type:    MRK           # MRK class
         - sec:     *HE
@@ -201,14 +202,12 @@ segments:
         - *RFCH
         - *RFCH
     - MARK:
-        - *Foil
+        - *Mrkr
 #...........................................................................................
 ## LATTICE definition
 
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
-    # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]    # gaps
-    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
-    # - [10,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    - [ 5,    SEG1H, MARK, RFGH, SEG2H, RFGH, SEG3H]
+    - [75,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]

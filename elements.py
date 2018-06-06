@@ -23,7 +23,7 @@ from copy import copy
 import numpy as NP
 # from abc import ABC, abstractmethod
 
-from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, MarkerActions
+from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, MRKACTIONS
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from Dictionary import DictObject
@@ -85,9 +85,13 @@ class _Node(DictObject, object):
         self['viseo']     = 0             # default - invisible
 
     @property
+    def twiss(self):
+        return self['twiss']
+    def twiss(self,value):
+        self['twiss'] = value
+    @property
     def deltaW(self):
         return self._deltaW
-
     @property
     def particlef(self):
         return copy(self.particle)(self.particle.tkin + self.deltaW)
@@ -239,10 +243,11 @@ class MRK(I):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.actions  = actions
-
-    def do_actions(self):                # do actions attached to the marker
+        
+    def do_actions(self):
+        """ do actions attached to the marker """
         for action in self.actions:
-            MarkerActions[action]()
+            MRKACTIONS[action](self)
 
     def adjust_energy(self, tkin):
         self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, actions = self.actions)

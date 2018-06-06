@@ -24,8 +24,9 @@ import numpy as NP
 from copy import copy              # deepcopy needed?
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KeepValues
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KEEP
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import objprnt
 import elements as ELM
 from sigma import Sigma
 import TTFG as TTF
@@ -63,8 +64,9 @@ class Lattice(object):
         si = s0
         sf = si+l
         sm = (sf+si)/2.
-        element.position = [si,sm,sf]
-        self.length += l
+        position = (si,sm,sf)
+        element.position = position 
+        self.length = sf
         # DEBUG('add_element: ',' [si,sm,sf,]=[{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
         self.seq.append(element)
 
@@ -297,7 +299,7 @@ class Lattice(object):
         if FLAGS['sigma']:
             if FLAGS['dWf'] == 0:
                 warnings.showwarning(
-                    'sigma-envelopes use 6x6 matrices - will be replaced by twiss-envelopes',
+                    'no acceleration - sigma-envelopes need 6x6 matrices - will use twiss-envelopes',
                     UserWarning,
                     'lattice.py',
                     'sigmas()')
@@ -314,8 +316,17 @@ class Lattice(object):
                 sigma_fun = envelopes(steps = steps)
         return sigma_fun
 
-    def twiss_functions(self,steps = 10):
-        """ track twiss functions with beta-matrix through lattice and scale to sigmas """
+    def marker_actions(self):
+        """ do MARKER actions """
+        for node in self.seq:
+            if isinstance(node, ELM.MRK):
+                node.do_actions()
+        
+    def twiss_functions(self,steps = 1):
+        """ 
+          track twiss functions with beta-matrix through lattice
+          steps = 1 (default): element will not be sliced
+        """
         beta_fun = []
         bx = self.betax0
         ax = self.alfax0
@@ -323,21 +334,33 @@ class Lattice(object):
         by = self.betay0
         ay = self.alfay0
         gy = self.gammy0
-        v_beta0 = NP.array([bx,ax,gx,by,ay,gy])
-        # v_beta = v_beta0
-        s = 0.0
+        v0 = NP.array([bx,ax,gx,by,ay,gy])
         for element in self.seq:
             # particle = element.particle                                      # DEBUG
             # objprnt(particle,text='twiss_functions: '+element.label)         # DEBUG
-            slices = element.make_slices(anz=steps)
-            for i_element in slices:
-                m_beta = i_element.beta_matrix()
-                v_beta = m_beta.dot(v_beta0)
-                s += i_element.length
-                betax  = v_beta[0]
-                betay  = v_beta[3]
-                beta_fun.append((s,betax,betay))
-                v_beta0 = v_beta
+            if steps <= 1:
+                m_beta = element.beta_matrix()
+                v = m_beta.dot(v0)
+                bx = v[0]
+                ax = v[1]
+                by = v[3]
+                ay = v[4]
+                twiss = (ax,bx,ay,by)
+                element['twiss'] = twiss
+                v0 = v
+                # DEBUG_OFF('node {} twiss {}'.format(element.label,element['twiss']))
+
+            elif steps > 1:
+                s      = element.position[0]
+                slices = element.make_slices(anz=steps)
+                for i_element in slices:
+                    m_beta = i_element.beta_matrix()
+                    v = m_beta.dot(v0)
+                    s += i_element.length
+                    bx  = v[0]
+                    by  = v[3]
+                    beta_fun.append((s,bx,by))
+                    v0 = v
         return beta_fun
 
     def sigma_functions(self,steps = 10):
@@ -376,11 +399,11 @@ class Lattice(object):
                 sigma_i = sigma_f.clone()
 
                 # KEEPVALUES update
-                # KeepValues.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
+                # KEEP.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
 
                 # MARKER ACTIONS
-                if isinstance(slice,ELM.MRK):
-                    slice.do_actions()
+                # if isinstance(slice,ELM.MRK):
+                #     slice.do_actions()
 
                 # APERTURE control
                 if FLAGS['aperture']:

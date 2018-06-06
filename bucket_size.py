@@ -17,12 +17,12 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import PARAMS,Proton
+from setutil import PARAMS,Proton,FIGURES
 from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
 
-def display_bucket(figures,functions,phis,tkin,gap,EzAvg,freq,name):
+def display_bucket(functions,phis,tkin,gap,EzAvg,freq,name):
     # frame
     # width=7; height=7
     # figsize = (width,height)
@@ -49,9 +49,9 @@ def display_bucket(figures,functions,phis,tkin,gap,EzAvg,freq,name):
     plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
     # figure title
     plt.title('longitudinal bucket')
-    figures.append(fig)
+    FIGURES.append(fig)
 
-def bucket(figures):
+def bucket():
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
     phis = radians(PARAMS['phisoll'])           # KNOB: soll phase
 
@@ -88,11 +88,8 @@ def bucket(figures):
             w = sqrt(w2)*m0c2*1.e3
             function.append([degrees(phi),w,-w])
         functions.append(function)
-    display_bucket(figures,functions,degrees(phis),tkin,gap,EzAvg,freq,particle.name)
+    display_bucket(functions,degrees(phis),tkin,gap,EzAvg,freq,particle.name)
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    # figures = []
-    # bucket(figures)
-    # [plt.show(fig) for fig in figures]
     print("bucket_size.py: sorry - nothing todo")

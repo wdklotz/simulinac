@@ -126,8 +126,15 @@ PARAMS = dict(
         )
 PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 
-""" KeepValues: a global dict to keep key-value pairs (used for tracking results) """
-KeepValues = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
+""" 
+ (global) KEEP: dict to keep tracking results
+"""
+KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
+
+"""
+ (global) FIGURES: list of figure plots
+"""
+FIGURES = []
 
 class Particle(object):
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
@@ -260,7 +267,14 @@ def waccept(node):
     PARAMS.update(res)
     return res
 
-# dictionary for summary
+def sigmas(alfa,beta,epsi):
+    """ calculates sigmas from twiss-alpha, -beta and -emittance """
+    gamma  = (1.+ alfa**2)/beta
+    sigma  = sqrt(epsi*beta)
+    sigmap = sqrt(epsi*gamma)
+    return sigma,sigmap
+
+# (global) SUMMARY: dictionary for summary
 SUMMARY = {}
 
 def collect_data_for_summary(lattice):
@@ -392,16 +406,6 @@ def collect_data_for_summary(lattice):
     SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
     return
 
-def elli(xy,alfa,beta,emit):
-    """ convert twiss parameters to plot parameters """
-    gamma = (1.+alfa**2)/beta
-    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
-    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
-    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
-    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
-    # return plot prameters as  (origin,width,height,tilt)
-    return (xy,a,b,tilt)
-
 def I0(x):
     """
     Modified Bessel function I of integer order 0
@@ -473,30 +477,86 @@ def I1(x):
             sys.exit(1)
     return res
 
-def sigmas(alfa,beta,epsi):
-    """ calculates sigmas from twiss-alpha, -beta and -emittance """
-    gamma  = (1.+ alfa**2)/beta
-    sigma  = sqrt(epsi*beta)
-    sigmap = sqrt(epsi*gamma)
-    return sigma,sigmap
+def ellicp(xy,alfa,beta,emit):
+    """ convert twiss parameters to plot parameters """
+    gamma = (1.+alfa**2)/beta
+    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
+    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
+    # return plot prameters as  (origin,width,height,tilt)
+    return (xy,a,b,tilt)
 
 # marker actions
-def sigma_x_action():
-    # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_x']*1.e3))
-    SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KeepValues['z'])] = KeepValues['sigma_x']*1.e3
-    PARAMS['sigma-x({:0=6.2f})'.format(KeepValues['z'])] = KeepValues['sigma_x']*1.e3
-def sigma_y_action():
-    # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KeepValues['z'],KeepValues['sigma_y']*1.e3))
-    SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KeepValues['z'])] = KeepValues['sigma_y']*1.e3
-    PARAMS['sigma-y({:0=6.2f})'.format(KeepValues['z'])] = KeepValues['sigma_y']*1.e3
-def Tkin_action():
-    SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KeepValues['z'])] = KeepValues['Tkin']
-    PARAMS['Tkin({:0=6.2f})'.format(KeepValues['z'])] = KeepValues['Tkin']
+def ellisxy_action(*args,on_injection=False):
+    """ display x- and y-phase-space ellipses """
+    if on_injection:
+        s = 0.0
+        ax = PARAMS['alfax_i']
+        bx = PARAMS['betax_i']
+        ay = PARAMS['alfay_i']
+        by = PARAMS['betax_i']
+        
+    else:
+        node  = args[0]
+        s     = node.position[2]
+        twiss = node['twiss']
+        # DEBUG_ON('node,s,twiss',(node.label,s,twiss))
+    
+        ax = twiss[0]
+        bx = twiss[1]
+        ay = twiss[2]
+        by = twiss[3]
+    
+    xy = (0,0)
+    ellix = ellicp(xy,ax,bx,PARAMS['emitx_i'])
+    elliy = ellicp(xy,ay,by,PARAMS['emity_i'])
 
-MarkerActions = dict(                   # all possible actions for a Marker
-            sigma_x   = sigma_x_action,
-            sigma_y   = sigma_y_action,
-            Tkin      = Tkin_action
+    ells = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]
+
+    fig, ax = plt.subplots()
+    fig.suptitle('phase-space {{[m],[rad]}} @ s={:6.2f}[m]'.format(s))
+    fig.legend(ells,("{x,x'}","{y,y'}"),loc=1)
+
+    for e in ells:
+        ax.add_artist(e)
+        e.set_clip_box(ax.bbox)
+
+    x1 = sqrt(PARAMS['emitx_i']*PARAMS['betax_i'])
+    x2 = sqrt(PARAMS['emity_i']*PARAMS['betay_i'])
+    xmax = max(x1,x2)
+    gammax = (1.+PARAMS['alfax_i']**2)/PARAMS['betax_i']
+    gammay = (1.+PARAMS['alfay_i']**2)/PARAMS['betay_i']
+    y1 = sqrt(PARAMS['emitx_i']*gammax)
+    y2 = sqrt(PARAMS['emity_i']*gammay)
+    ymax = max(y1,y2)
+    # scale = 0.6
+    scale = 2.0
+    plt.xlim(-xmax*scale, xmax*scale)
+    plt.ylim(-ymax*scale, ymax*scale)    
+
+    FIGURES.append(fig)
+        
+def sigma_x_action():
+    # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
+    SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
+    PARAMS['sigma-x({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
+def sigma_y_action():
+    # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_y']*1.e3))
+    SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
+    PARAMS['sigma-y({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
+def tkin_action():
+    SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
+    PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
+
+"""
+ (global) MRKACTIONS: dictionary of possible actions attached to a marker
+"""
+MRKACTIONS = dict(
+            sigma_x     = sigma_x_action,
+            sigma_y     = sigma_y_action,
+            Tkin        = tkin_action,
+            show_elli   = ellisxy_action
             )
 
 # utilities
@@ -669,7 +729,7 @@ def test0():
 
 def test1():
     print('--------------------------Test1---')
-    args = elli((0,0),0.5,100.,1.e-6)
+    args = ellicp((0,0),0.5,100.,1.e-6)
     ells = [Ellipse(*args,fill=False,color='red')]
 
     # fig, ax = plt.subplots(subplot_kw={'aspect': 'equal'})

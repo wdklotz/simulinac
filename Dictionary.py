@@ -30,13 +30,13 @@ class DictObject(object):
 	def __setitem__(self,k,v):
 		self._params[k] = v
 
+## main ----------
 class Aclass(DictObject,object):
 	pass
 
 class Bclass(Aclass):
 	pass
 	
-## main ----------
 if __name__ == '__main__':
 	o = DictObject()
 	o["name"]="my name is wdk"
