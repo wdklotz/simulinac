@@ -474,16 +474,6 @@ def I1(x):
             sys.exit(1)
     return res
 
-def ellicp(xy,alfa,beta,emit):
-    """ convert twiss parameters to plot parameters """
-    gamma = (1.+alfa**2)/beta
-    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
-    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
-    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
-    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
-    # return plot prameters as  (origin,width,height,tilt)
-    return (xy,a,b,tilt)
-
 class SCTainer(object):
     """
     A (singleton) container for objects
@@ -504,16 +494,25 @@ class SCTainer(object):
     def len(self):
         return len(SCTainer.instance)
 
+def ellicp(xy,alfa,beta,emit):
+    """ convert twiss parameters to plot parameters """
+    gamma = (1.+alfa**2)/beta
+    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
+    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
+    # return plot prameters as  (origin,width,height,tilt)
+    return (xy,a,b,tilt)
+
 # marker actions
 def ellisxy_action(*args,on_injection=False):
     """ display x- and y-phase-space ellipses """
-    figtainer = SCTainer()
     if on_injection:
         s = 0.0
         ax = PARAMS['alfax_i']
         bx = PARAMS['betax_i']
         ay = PARAMS['alfay_i']
-        by = PARAMS['betax_i']
+        by = PARAMS['betay_i']
         
     else:
         node  = args[0]
@@ -526,9 +525,9 @@ def ellisxy_action(*args,on_injection=False):
         ay = twiss[2]
         by = twiss[3]
     
-    xy = (0,0)
-    ellix = ellicp(xy,ax,bx,PARAMS['emitx_i'])
-    elliy = ellicp(xy,ay,by,PARAMS['emity_i'])
+    org = (0,0)
+    ellix = ellicp(org,ax,bx,PARAMS['emitx_i'])
+    elliy = ellicp(org,ay,by,PARAMS['emity_i'])
 
     ells = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]
 

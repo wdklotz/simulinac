@@ -55,7 +55,7 @@ def bucket():
     phis = radians(PARAMS['phisoll'])           # KNOB: soll phase
 
     # Wertebereiche
-    Dphi  = 1e-4                   # step size phase
+    Dphi  = 1e-4                  # step size phase
     phi_2 = PARAMS['phi_2']       # stable phase lower limit
     psi   = PARAMS['psi']
     anz   = int(psi/Dphi)

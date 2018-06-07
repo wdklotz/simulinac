@@ -25,7 +25,7 @@
 ## RUN configuration
 
 flags:
-    - accON:        False           # {True} acceleration on/off flag
+    # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -34,8 +34,8 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - ellipse:        True          # {False} plot the twiss ellipses
-    - verbose:        2             # {0} print flag (0 = minimal print), try 0,1,2,3
+    - pspace:         True            # {False} plot the twiss ellipses at entrance
+    - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
 
@@ -53,14 +53,16 @@ parameters:
     - emity_i:      &emy    2.e-6       # [m*rad] {x,x'} emittance @ entrance
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
-    - betax_i:      &bex    2.800       # [m] twiss beta @ entrance x
-    - betay_i:              *bex        # [m] twiss beta @ entrance y (zero RF)
-    # - betay_i:              0.28        # [m] twiss beta @ entrance y (zero RF)
-    - alfax_i:              -3.        # [1] twiss alpha x @ entrance
-    - alfay_i:              3.         # [1] twiss alpha y @ entrance
+    - betax_i:              2.285       # [m] matched twiss beta @ entrance x
+    - betay_i:              0.328       # [m] matched twiss beta @ entrance y
+    # - betay_i:              0.420       # [m] matched twiss beta @ entrance y
+    - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfay_i:              0.          # [1] twiss alpha y @ entrance
+    # - alfax_i:             -3.         # [1] twiss alpha x @ entrance
+    # - alfay_i:              3.         # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
-    - GAP:          &p15    0.048       # [m] RF gap
+    - gap:          &p15    0.048       # [m] RF gap
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -108,7 +110,7 @@ elements:
         - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        # - mapping:   base        # Shishlo/Holmes base map model
+        - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
@@ -121,13 +123,14 @@ elements:
         - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
-    - M:  &M                     # ID: &alias
+    - M:  &Mrkr                  # ID: &alias
         - type:    MRK           # MRK class
         - sec:     *HE
         - actions:
-            - sigma_x
-            - sigma_y
-            - Tkin
+            # - sigma_x
+            # - sigma_y
+            # - Tkin
+            - show_elli          # transverse twiss ellipses 
     - F:  &Foil                  # ID: &alias
         - type:    MRK           # MRK class
         - sec:     *HE
@@ -199,14 +202,15 @@ segments:
         - *RFCH
         - *RFCH
     - MARK:
-        - *Foil
+        - *Mrkr
 #...........................................................................................
 ## LATTICE definition
 
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]   # gaps
-    # - [1,    SEG1H, RFGH, SEG2H, RFGH, SEG3H, MARK]    # gaps
-    # - [80,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
-    # - [10,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]   # gaps, w/o MARKs
+    # - [80,    SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
+    # - [ 25,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    # - [ 5,    SEG1H, MARK, RFGH, SEG2H, MARK, RFGH, SEG3H]
+    - [ 5,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    - [75,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]

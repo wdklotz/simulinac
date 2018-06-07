@@ -39,28 +39,6 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE  = DEBUG_OFF
 
-# def display(*args):
-#     # functions = args[0]
-#     plots   = []
-#     if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
-#         plots.append(display0) # CS tracks {x,y}
-#     elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
-#         plots.append(display1) # CS tracks {x,y,z}
-#         if FLAGS['bucket']:
-#             plots.append(bucket) # separatrix
-#     if FLAGS['pspace']:
-#         plots.append(display2)   # pspace
-# 
-#     # standard plots 
-#     if len(plots) != 0:
-#         print('PREPARE DISPLAY')
-#         [plot(*args) for plot in plots]
-# 
-#     # markers plots
-#     lattice = args[1]
-#     lattice.marker_actions()
-#     plt.show()
-
 def bucket(*dummy):
     bucket_size.bucket()
     
@@ -211,7 +189,6 @@ def display2(*dummy):
 #                            |----------------------- |
 def simulation(filepath):
     def display(*args):
-        # functions = args[0]
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
             plots.append(display0) # CS tracks {x,y}
