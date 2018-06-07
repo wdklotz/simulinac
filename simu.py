@@ -25,7 +25,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG, FIGURES
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
 from setutil import collect_data_for_summary, waccept, ellisxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
@@ -39,25 +39,27 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE  = DEBUG_OFF
 
-def display(*args):
-    # functions = args[0]
-    plots   = []
-    if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
-        plots.append(display0) # CS tracks {x,y}
-    elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
-        plots.append(display1) # CS tracks {x,y,z}
-        if FLAGS['bucket']:
-            plots.append(bucket) # separatrix
-    if FLAGS['ellipse']:
-        plots.append(display2) # ellipses
-
-    # all plots 
-    if len(plots) != 0:
-        print('PREPARE DISPLAY')
-        [plot(*args) for plot in plots]
-
-    # all figures
-    [plt.show(fig) for fig in FIGURES]
+# def display(*args):
+#     # functions = args[0]
+#     plots   = []
+#     if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
+#         plots.append(display0) # CS tracks {x,y}
+#     elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
+#         plots.append(display1) # CS tracks {x,y,z}
+#         if FLAGS['bucket']:
+#             plots.append(bucket) # separatrix
+#     if FLAGS['pspace']:
+#         plots.append(display2)   # pspace
+# 
+#     # standard plots 
+#     if len(plots) != 0:
+#         print('PREPARE DISPLAY')
+#         [plot(*args) for plot in plots]
+# 
+#     # markers plots
+#     lattice = args[1]
+#     lattice.marker_actions()
+#     plt.show()
 
 def bucket(*dummy):
     bucket_size.bucket()
@@ -120,9 +122,7 @@ def display0(*args):
     plt.plot(vis_ordinate,viseoy,label='',color='black')
     plt.plot(vis_ordinate,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
-
-    FIGURES.append(fig)
-
+    
 def display1(*args):
     """
     CS-Tracks with longitudinal motion
@@ -203,8 +203,6 @@ def display1(*args):
     ax_r.plot(tz,sdw,color='red')
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
 
-    FIGURES.append(fig)
-
 def display2(*dummy):
     ellisxy_action(*dummy,on_injection=True)
 
@@ -212,6 +210,27 @@ def display2(*dummy):
 # -------------------------  | everything starts here |
 #                            |----------------------- |
 def simulation(filepath):
+    def display(*args):
+        # functions = args[0]
+        plots   = []
+        if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
+            plots.append(display0) # CS tracks {x,y}
+        elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
+            plots.append(display1) # CS tracks {x,y,z}
+            if FLAGS['bucket']:
+                plots.append(bucket) # separatrix
+        if FLAGS['pspace']:
+            plots.append(display2)   # pspace
+    
+        # standard plots 
+        if len(plots) != 0:
+            print('PREPARE DISPLAY')
+            [plot(*args) for plot in plots]
+    
+        # markers plots
+        lattice.marker_actions()
+        plt.show()
+
     # parse input file and create a lattice
     lattice = parse_and_fabric(filepath)
 
@@ -230,9 +249,6 @@ def simulation(filepath):
     # calculate twiss functions for every node w/o slicing
     lattice.twiss_functions()
     
-    # do actions on markers
-    lattice.marker_actions()
-    
     # make summary
     collect_data_for_summary(lattice)
 
@@ -248,9 +264,9 @@ def simulation(filepath):
         functions       = (sigma_fun,c_like,s_like,lat_plot)
         # show summary
         dictprnt(SUMMARY,text='summary')
-        # call plot dispatcher
+        # plots
         display(functions)
-
+    
 if __name__ == '__main__':
     # the default input file (YAML syntax)
     filepath = 'yml/ref_run.yml'

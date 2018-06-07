@@ -23,11 +23,13 @@ from __future__ import print_function
 import sys,traceback
 # py_major = sys.version_info.major
 
-from math import pi,sqrt,sin,cos,radians,degrees,pow,fabs,exp,atan
+from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 import logging, pprint
 from enum import IntEnum
-from matplotlib.patches import Ellipse
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+# from matplotlib.figure import Figure
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -94,7 +96,7 @@ FLAGS  = dict(
         aperture             = True ,            # use aperture check for quads and rf-gaps
         bucket               = False,            # plot bucket 
         csTrak               = True,             # plot CS trajectories
-        ellipse              = False             # plot CS twiss ellipses
+        pspace               = False             # plot CS twiss ellipses at entrance
         )
 PARAMS = dict(
         lichtgeschwindigkeit = 299792458.,       # [m/s] const
@@ -130,11 +132,6 @@ PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
  (global) KEEP: dict to keep tracking results
 """
 KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
-
-"""
- (global) FIGURES: list of figure plots
-"""
-FIGURES = []
 
 class Particle(object):
     # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
@@ -487,9 +484,30 @@ def ellicp(xy,alfa,beta,emit):
     # return plot prameters as  (origin,width,height,tilt)
     return (xy,a,b,tilt)
 
+class SCTainer(object):
+    """
+    A (singleton) container for objects
+    """
+    class _singleton_(object):
+        def __init__(self):
+            self.objects = []
+    instance = None
+    def __init__(self):
+        if not SCTainer.instance:
+            SCTainer.instance = self._singleton_()
+    def object(self,n):
+        return SCTainer.instance.objects[n]
+    def objects(self):
+        return SCTainer.instance.objects
+    def append(self,obj):
+        SCTainer.instance.objects.append(obj)
+    def len(self):
+        return len(SCTainer.instance)
+
 # marker actions
 def ellisxy_action(*args,on_injection=False):
     """ display x- and y-phase-space ellipses """
+    figtainer = SCTainer()
     if on_injection:
         s = 0.0
         ax = PARAMS['alfax_i']
@@ -533,10 +551,8 @@ def ellisxy_action(*args,on_injection=False):
     # scale = 0.6
     scale = 2.0
     plt.xlim(-xmax*scale, xmax*scale)
-    plt.ylim(-ymax*scale, ymax*scale)    
-
-    FIGURES.append(fig)
-        
+    plt.ylim(-ymax*scale, ymax*scale)   
+    
 def sigma_x_action():
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3

@@ -25,7 +25,7 @@
 ## RUN configuration
 
 flags:
-    - accON:        False           # {True} acceleration on/off flag
+    # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -34,7 +34,7 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - ellipse:      True            # {False} plot the twiss ellipses
+    - pspace:         True            # {False} plot the twiss ellipses at entrance
     - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -95,11 +95,11 @@ elements:
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    - RFGHx:    &RFGH           # replacement of RFG by D
+    - RFGHx:    &RFGHx           # replacement of RFG by D
         - type:     D            # replacement of RFG by D
         - length:   0.0          # replacement of RFG by D
         - sec:      *HE          # replacement of RFG by D
-    - RFGH:  &RFGHx               # ID: &alias
+    - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    2.87         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
@@ -209,5 +209,6 @@ segments:
 lattice:
     - title:   1.0.0        # description -  DON't remove or reposition!
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [ 5,    SEG1H, MARK, RFGH, SEG2H, RFGH, SEG3H]
-    - [75,    SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    # - [80,    SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
+    - [ 5,    SEG1H, MARK, RFGH, SEG2H, MARK, RFGH, SEG3H]
+    - [75,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]

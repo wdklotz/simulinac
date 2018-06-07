@@ -231,7 +231,7 @@ def factory(input_file):
         if 'aperture'    in flags: FLAGS['aperture']                               = flags['aperture']
         if 'bucket'      in flags: FLAGS['bucket']                                 = flags['bucket']
         if 'csTrak'      in flags: FLAGS['csTrak']                                 = flags['csTrak']
-        if 'ellipse'     in flags: FLAGS['ellipse']                                = flags['ellipse']
+        if 'pspace'      in flags: FLAGS['pspace']                                 = flags['pspace']
         return flags
 # --------
     def read_sections(in_data):

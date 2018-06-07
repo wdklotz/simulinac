@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from setutil import PARAMS,Proton,FIGURES
+from setutil import PARAMS,Proton
 from matplotlib import pyplot as plt
 from math import cos,pi,sqrt,sin,degrees,radians
 from elements import RFG
@@ -49,7 +49,6 @@ def display_bucket(functions,phis,tkin,gap,EzAvg,freq,name):
     plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
     # figure title
     plt.title('longitudinal bucket')
-    FIGURES.append(fig)
 
 def bucket():
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
