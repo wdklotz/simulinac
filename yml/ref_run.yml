@@ -54,10 +54,10 @@ parameters:
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
     - betax_i:              2.285       # [m] matched twiss beta @ entrance x
-    - betay_i:              0.328       # [m] matched twiss beta @ entrance y
+    # - betay_i:              0.328       # [m] matched twiss beta @ entrance y
     - alfax_i:              0.          # [1] twiss alpha x @ entrance
     - alfay_i:              0.          # [1] twiss alpha y @ entrance
-    # - betay_i:              0.420       # [m] matched twiss beta @ entrance y
+    - betay_i:              2.285       # [m] unmatched twiss beta @ entrance y
     # - alfax_i:             -3.         # [1] twiss alpha x @ entrance
     # - alfay_i:              3.         # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
