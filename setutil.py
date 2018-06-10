@@ -497,15 +497,14 @@ class SCTainer(object):
 def ellicp(xy,alfa,beta,emit):
     """ convert twiss parameters to plot parameters """
     gamma = (1.+alfa**2)/beta
-    H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
-    a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
-    b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
-    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
-    # return plot prameters as  (origin,width,height,tilt)
+    tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))  # see CERN's Formelsammlung
+    a = sqrt(emit*beta)
+    b = sqrt(emit/beta)
+    # return matplot.patches.Ellipse(origin=xy,width=a,height=b,angle=tilt) arguments
     return (xy,a,b,tilt)
 
 # marker actions
-def ellisxy_action(*args,on_injection=False):
+def elli_sxy_action(*args,on_injection=False):
     """ display x- and y-phase-space ellipses """
     if on_injection:
         s = 0.0
@@ -552,26 +551,26 @@ def ellisxy_action(*args,on_injection=False):
     plt.xlim(-xmax*scale, xmax*scale)
     plt.ylim(-ymax*scale, ymax*scale)   
     
-def sigma_x_action():
+def sigma_x_action(*args):
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
     PARAMS['sigma-x({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
-def sigma_y_action():
+def sigma_y_action(*args):
     # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_y']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
     PARAMS['sigma-y({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
-def tkin_action():
+def tkin_action(*args):
     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
 
 """
- (global) MRKACTIONS: dictionary of possible actions attached to a marker
+ (global) ACTIONS: dictionary of possible actions attached to a marker
 """
-MRKACTIONS = dict(
+ACTIONS = dict(
             sigma_x     = sigma_x_action,
             sigma_y     = sigma_y_action,
             Tkin        = tkin_action,
-            show_elli   = ellisxy_action
+            show_elli   = elli_sxy_action
             )
 
 # utilities

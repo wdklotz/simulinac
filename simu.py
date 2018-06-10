@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
-from setutil import collect_data_for_summary, waccept, ellisxy_action
+from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
 
@@ -182,7 +182,7 @@ def display1(*args):
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
 
 def display2(*dummy):
-    ellisxy_action(*dummy,on_injection=True)
+    elli_sxy_action(*dummy,on_injection=True)
 
 #                            |----------------------- |
 # -------------------------  | everything starts here |
