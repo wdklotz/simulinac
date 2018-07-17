@@ -24,12 +24,11 @@ import numpy as NP
 from copy import copy              # deepcopy needed?
 import warnings
 
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,KEEP
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import objprnt
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, K6
 import elements as ELM
-from sigma import Sigma
 import TTFG as TTF
+from sigma import Sigma
 
 ## DEBUGING
 def DEBUG_ON(*args):
@@ -143,7 +142,7 @@ class Lattice(object):
             # if verbose:
             printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
         ## full accelerator
-        self.accel = mcell    # the full cell becomes instance variable
+        self.accel = mcell    # the full cell: isinstance(self.accel,Lattice)==True
         # if verbose:
         printv(0,'Full Accelerator Matrix (f)<==(i)')
         printv(0,self.accel.string())
@@ -251,7 +250,7 @@ class Lattice(object):
         self.gammy0 = gmy
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
-        return (self.accel,self.betax0,self.betay0)
+        return(self)
 
     def report(self):
         """ report lattice layout (may not work!) """
@@ -289,11 +288,17 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
+    def marker_actions(self):
+        """ do MARKER actions """
+        for node in self.seq:
+            if isinstance(node, ELM.MRK):
+                node.do_actions()
+        
     def sigmas(self,steps = 10):
-        def envelopes(steps = 10):
+        def envelopes(function, steps = 10):
             """ calc. beamsize from beta-matrix """
-            twiss = self.twiss_functions(steps = steps)
-            sigma_fun = [(x[0],sqrt(x[1]*PARAMS['emitx_i']),sqrt(x[2]*PARAMS['emity_i'])) for x in twiss]
+            beta_fun  = function(steps = steps)
+            sigma_fun = [(x[K6.s],sqrt(x[K6.bx]*PARAMS['emitx_i']),sqrt(x[K6.by]*PARAMS['emity_i'])) for x in beta_fun]
             return sigma_fun
 
         if FLAGS['sigma']:
@@ -303,143 +308,96 @@ class Lattice(object):
                     UserWarning,
                     'lattice.py',
                     'sigmas()')
-                if not FLAGS['KVout']: 
-                    print('CALCULATE TWISS ENVELOPES')
-                    sigma_fun = envelopes(steps = steps)
+                mess = 'CALCULATE TWISS ENVELOPES'
+                function = self.twiss_functions
             else:
-                if not FLAGS['KVout']: 
-                    print('CALCULATE SIGMA')
-                    sigma_fun = self.sigma_functions(steps = steps)
+                mess = 'CALCULATE SIGMA'
+                function = self.sigma_functions
         else:
-            if not FLAGS['KVout']: 
-                print('CALCULATE TWISS ENVELOPES')
-                sigma_fun = envelopes(steps = steps)
+            mess = 'CALCULATE TWISS ENVELOPES'
+            function = self.twiss_functions
+
+        if not FLAGS['KVout']: 
+            print(mess)
+            sigma_fun = envelopes(function, steps = steps)
         return sigma_fun
 
-    def marker_actions(self):
-        """ do MARKER actions """
-        for node in self.seq:
-            if isinstance(node, ELM.MRK):
-                node.do_actions()
-        
     def twiss_functions(self,steps = 1):
         """ 
           track twiss functions with beta-matrix through lattice
-          steps = 1 (default): element will not be sliced
+          steps = 1 (default): elements will not be sliced
         """
+        # initials
+        bx       = self.betax0
+        ax       = self.alfax0
+        gx       = self.gammx0
+        by       = self.betay0
+        ay       = self.alfay0
+        gy       = self.gammy0
+        v0       = NP.array([bx,ax,gx,by,ay,gy])
+        # twiss ftn's for whole lattice
         beta_fun = []
-        bx = self.betax0
-        ax = self.alfax0
-        gx = self.gammx0
-        by = self.betay0
-        ay = self.alfay0
-        gy = self.gammy0
-        v0 = NP.array([bx,ax,gx,by,ay,gy])
-        for element in self.seq:
-            # particle = element.particle                                      # DEBUG
-            # objprnt(particle,text='twiss_functions: '+element.label)         # DEBUG
-            if steps <= 1:
-                m_beta = element.beta_matrix()
-                v = m_beta.dot(v0)
-                bx = v[0]
-                ax = v[1]
-                by = v[3]
-                ay = v[4]
-                twiss = (ax,bx,ay,by)
-                element['twiss'] = twiss
-                v0 = v
-                # DEBUG_OFF('node {} twiss {}'.format(element.label,element['twiss']))
-
-            elif steps > 1:
-                s      = element.position[0]
-                slices = element.make_slices(anz=steps)
-                for i_element in slices:
-                    m_beta = i_element.beta_matrix()
-                    v = m_beta.dot(v0)
-                    s += i_element.length
-                    bx  = v[0]
-                    by  = v[3]
-                    beta_fun.append((s,bx,by))
-                    v0 = v
+        for node in self.seq:
+            # twiss ftn's for a single node
+            ftn = node.twiss_functions(steps = steps, v0 = v0) 
+            # prep plot list of ftn's
+            for v,s in ftn:
+                flist = v.tolist()
+                flist.append(s)
+                beta_fun.append(flist)
+            v0 = v   # loop back
         return beta_fun
 
-    def sigma_functions(self,steps = 10):
-        """ track the sigma-matrix through the lattice """
+    def sigma_functions(self, steps = 1):
+        """ track the sigma-matrix through the lattice and extract twiss functions """
+        # initials
+        bx       = self.betax0
+        ax       = self.alfax0
+        gx       = self.gammx0
+        by       = self.betay0
+        ay       = self.alfay0
+        gy       = self.gammy0
+        v0       = NP.array([bx,ax,gx,by,ay,gy])
+        sg0      = Sigma(v0)
+        # sigma ftn's for whole lattice
         sigma_fun = []
-        # sigma initial
-        sigma_i = Sigma(emitx=PARAMS['emitx_i'], betax=self.betax0,    alphax=self.alfax0,
-                        emity=PARAMS['emity_i'], betay=self.betay0,    alphay=self.alfay0,
-                        emitz=PARAMS['emitz'],   betaz=PARAMS['betaz'],alphaz=0.)
-        s = 0.0                                     # longitudinal position counter
-        for element in self.seq:                    # loop elements
-            s0 = element.position[0]
-            slices = element.make_slices(anz=steps)
-            warned = False                          # flag to control aperture warnings/element
-            for slice in slices:                    # loop slices
-
-                # R-MAP: SIGMA' = R * SIGMA * R.tranposed
-                sigma_f = sigma_i.RSRt(slice)
-                
-                # add emmitance grow
-                if isinstance(slice,ELM.RFG) and FLAGS['egf']:
-                    sigma_f = sigma_f.apply_eg_corr(rf_gap=slice, sigma_i=sigma_i, delta_phi=PARAMS['Dphi0'])
-                sigf = sigma_f.matrix
-                try:
-                    xsquare_av = sqrt(sigf[0,0])   # sigmax = <x*x>**1/2 [m]
-                    ysquare_av = sqrt(sigf[2,2])   # sigmay = <y*y>**1/2 [m]
-                except ValueError as ex:
-                    warnings.showwarning(
-                            'sqrt of negative number!\nResult may have no physical meaning!',
-                            UserWarning,
-                            'lattice.py',
-                            'sigma_functions()',
-                            )
-                s += slice.length
-                sigma_fun.append((s,xsquare_av,ysquare_av))
-                sigma_i = sigma_f.clone()
-
-                # KEEPVALUES update
-                # KEEP.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
-
-                # MARKER ACTIONS
-                # if isinstance(slice,ELM.MRK):
-                #     slice.do_actions()
-
-                # APERTURE control
-                if FLAGS['aperture']:
-                    nsig = PARAMS['n_sigma']
-                    limr = nsig*sqrt(xsquare_av**2 + ysquare_av**2)
-                    if isinstance(element,(ELM.QF, ELM.QD, ELM.RFG, ELM.GAP, ELM.RFC, ELM.QFth, ELM.QDth, ELM.QFthx, ELM.QDthx)):
-                        aper = element.aperture
-                        if limr > aper and not warned:
-                            warned = True
-                            warnings.showwarning(
-                                'out {}*sigma at z ={:5.1f}[m]'.format(nsig,s),
-                                UserWarning,
-                                'lattice.py',
-                                'sigma_functions()')
+        for node in self.seq:
+            # sigma-matrices for a single node
+            sigmas = node.sigma_beam(steps = steps, sg0 = sg0) 
+            # prep plot list of ftn's
+            for sg,s in sigmas:
+                v = sg.twiss()      # twiss from sigma-matrix
+                flist = v.tolist()
+                flist.append(s)
+                sigma_fun.append(flist)
+            sg0 = sg        # loop back
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):
         """ track the dispersion function """
         traj = []
-        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
-        v_0.shape = (ELM.MDIM,1)   # column vector with MDIM rows, 1 column
+        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])    # column vector with MDIM rows, 1 column
+        # v_0.shape = (ELM.MDIM,1)
         if closed == True:
             m_cell = self.accel
             m11 = m_cell.matrix[0,0]
             m15 = m_cell.matrix[0,5]
             d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            v_0[0,0] = d0
+            # v_0[0,0] = d0
+            v_0[0] = d0
         s = 0.0
+        # traj = [(s,v_0[0,0],v_0[1,0])]
+        traj = [(s,v_0[0],v_0[1])]
         for element in self.seq:
-            slices = element.make_slices(anz=steps)
+            slices = element.make_slices(anz = steps)
             for i_element in slices:
                 m_beta = i_element.matrix
                 v_0 = m_beta.dot(v_0)
                 s += i_element.length
-                d  = v_0[0,0]
-                dp = v_0[1,0]
+                # d  = v_0[0,0]
+                # dp = v_0[1,0]
+                d  = v_0[0]
+                dp = v_0[1]
                 traj.append((s,d,dp))
         return traj
 
@@ -602,9 +560,9 @@ class Lattice(object):
 #             sys.exit(1)
 #         obj.__class__ = Section
 
+## Sections
 # To add Sections to the lattice I augment the Lattice class with member-functions 
 # using the built-in 'setattr(..)'
-## Sections
 def get_section(self,sec=None):
     if not FLAGS['sections']:
         section = self       #the whole lattice is one section
@@ -685,19 +643,23 @@ def test1():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test1--')
     lattice = make_wille()
-    # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.2f},'.format(el) for el in element.position)))
+    # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
     # cell boundaries
-    mcell,betax,betay = lattice.cell(closed=True)
+    full_cell = lattice.cell(closed=True)
+    mcell = full_cell.accel
+    betax = full_cell.betax0
+    betay = full_cell.betay0
     lattice.symplecticity()
     # twiss functions
-    beta_fun = lattice.twiss_functions(steps=100)
+    beta_fun = lattice.twiss_functions(steps=5)
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
-    s  = [x[0] for x in beta_fun]    # s
-    xs = [x[1] for x in beta_fun]    # betax
-    ys = [x[2] for x in beta_fun]    # betay
-    ds = [x[1] for x in disp]        # dispersion
+    s  = [x[K6.s]  for x in beta_fun] # abzisse s
+    xs = [x[K6.bx] for x in beta_fun]    # betax(s)
+    ys = [x[K6.by] for x in beta_fun]    # betay(s)
+    sd = [x[0] for x in disp]            # abzisse s
+    ds = [x[1] for x in disp]            # dispersion(s)
     #-------------------- lattice viseo
     lat_plot = lattice.lattice_plot_function()
     vsbase = -1.
@@ -707,7 +669,7 @@ def test1():
 
     plot(s,xs,label='betax')
     plot(s,ys,label='betay')
-    plot(s,ds,label='disp')
+    plot(sd,ds,label='disp')
     plot(vis_abzisse,vis_ordinate,label='',color='black')
     plot(vis_abzisse,vzero,color='black')
     legend(loc='upper left')

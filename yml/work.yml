@@ -34,8 +34,8 @@ flags:
     # - aperture:     False           # {True}  use aperture check for quads and rf-gaps
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - pspace:         True            # {False} plot the twiss ellipses at entrance
-    - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # - pspace:       True            # {False} plot the twiss ellipses at entrance
+    # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
 
@@ -54,10 +54,10 @@ parameters:
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
     - betax_i:              2.285       # [m] matched twiss beta @ entrance x
-    # - betay_i:              0.328       # [m] matched twiss beta @ entrance y
+    - betay_i:              0.328       # [m] matched twiss beta @ entrance y
     - alfax_i:              0.          # [1] twiss alpha x @ entrance
     - alfay_i:              0.          # [1] twiss alpha y @ entrance
-    - betay_i:              2.285       # [m] unmatched twiss beta @ entrance y
+    # - betay_i:              2.285       # [m] unmatched twiss beta @ entrance y
     # - alfax_i:             -3.         # [1] twiss alpha x @ entrance
     # - alfay_i:              3.         # [1] twiss alpha y @ entrance
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
@@ -110,7 +110,7 @@ elements:
         - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
@@ -125,14 +125,16 @@ elements:
         - sec:      *HE          # is part of section
     - M:  &Mrkr                  # ID: &alias
         - type:    MRK           # MRK class
-        - sec:     *HE
         - actions:
-            # - sigma_x
-            # - sigma_y
-            # - Tkin
-            - show_elli          # transverse twiss ellipses 
-    - F:  &Foil                  # ID: &alias
+            # - sigma_x          # action hoeizontal sigma
+            # - sigma_y          # action vertical sigma
+            # - Tkin             # action kinetic energy
+            - show_elli          # action twiss ellipses 
+        - sec:     *HE
+    - A:  &Apr                   # ID: &alias
         - type:    MRK           # MRK class
+        - actions:
+            - check_aperture     # action aperture check
         - sec:     *HE
 #...........................................................................................
 ## SEGMENT definitions
@@ -211,6 +213,6 @@ lattice:
     # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,    SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
     # - [ 25,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
-    - [ 5,    SEG1H, MARK, RFGH, SEG2H, MARK, RFGH, SEG3H]
-    # - [ 5,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    # - [ 5,    SEG1H, MARK, RFGH, SEG2H, MARK, RFGH, SEG3H, MARK]
+    - [ 5,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
     - [75,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]

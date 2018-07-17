@@ -71,7 +71,7 @@ logger.addHandler(ch)                   # add handler to logger
 # x        x'        y        y'        z       z'=dp/p   T        dT        S        dS
 XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
 class K(IntEnum):                                # enum.IntEnum since Python 3.4
-    """ Koordanaten Indizees """
+    """ Koordinaten for track points (1x10)"""
     x  = XKOO
     xp = XPKOO
     y  = YKOO
@@ -83,6 +83,15 @@ class K(IntEnum):                                # enum.IntEnum since Python 3.4
     S  = SKOO
     dS = LKOO
 
+class K6(IntEnum):
+    """ Koordinaten for twiss funtions (1x4) """
+    bx = 0      # twiss-beta
+    ax = 1      # twiss-alpha
+    gx = 2      # twiss-gamma
+    by = 3
+    ay = 4
+    gy = 5
+    s  = 6      # abzisse for twiss functions
 
 # DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
@@ -94,7 +103,7 @@ FLAGS  = dict(
         verbose              = 0,                # print flag default = 0
         express              = False,            # use express version of thin quads
         aperture             = True ,            # use aperture check for quads and rf-gaps
-        bucket               = False,            # plot bucket 
+        bucket               = False,            # plot bucket
         csTrak               = True,             # plot CS trajectories
         pspace               = False             # plot CS twiss ellipses at entrance
         )
@@ -126,9 +135,7 @@ PARAMS = dict(
         nbof_slices          = 6,                # default number-off slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
-PARAMS['wellenlänge']     = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-
-""" 
+"""
  (global) KEEP: dict to keep tracking results
 """
 KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
@@ -190,6 +197,12 @@ class Electron(Particle):
 
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
+PARAMS['wellenlänge'] = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
+PARAMS['emitz_i'] = \
+         PARAMS['sollteilchen'].beta   \
+        *PARAMS['wellenlänge']   \
+        /((PARAMS['sollteilchen'].gamma+1.)*2.*pi)   \
+        *PARAMS['emitw_i']
 
 ## Long. Emittance
 def waccept(node):
@@ -226,11 +239,11 @@ def waccept(node):
         # {Dphi,w}-space   NOTE: emitw = w0root*Dphi0**2  [rad]
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
         Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
-        w0       = w0root*Dphi0             # w-intersect (== delta-gamma == normalized energy deviation)
+        w0       = w0root*Dphi0           # w-intersect (== delta-gamma == normalized energy deviation)
         # {z,dp/p}-space
         z0       = -Dphi0*beta*lamb/(2.*pi)             # z [m]
         Dp2p0    = w0/(gamma+1.)                        # delta-p/p
-        emitz    = emitw*beta*lamb/((gamma+1.)*2.*pi) # emittance [m]
+        emitz    = emitw*beta*lamb/((gamma+1.)*2.*pi)   # emittance [m]
         # long. twiss @ entrance
         gammaz_i = emitz/z0**2
         betaz_i  = 1./gammaz_i         # [m]
@@ -240,13 +253,14 @@ def waccept(node):
                 gammaz   = gammaz_i,    # twiss gamma [1/m]
                 emitz    = emitz,       # emittance in {z,dp/p} space [m]
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
                 DWx      = dWmax,       # separatrix: max W in [MeV]
                 wx       = wmax,        # separatrix: max w
                 phi_1    = phi_1,       # separatrix: max pos. phase
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
-                omgl0    = omgl0)     # synchrotron oscillation [Hz]
+                omgl0    = omgl0)       # synchrotron oscillation [Hz]
     else:
         res =  dict(
                 emitw    = 0.,
@@ -254,6 +268,7 @@ def waccept(node):
                 gammaz   = 'undefined',
                 emitz    = 0.,
                 Dp2p0    = 0.,
+                Dphi0    = 0.,
                 z0       = 0.,
                 DWx      = 0.,
                 wx       = 0.,
@@ -504,7 +519,7 @@ def ellicp(xy,alfa,beta,emit):
     return (xy,a,b,tilt)
 
 # marker actions
-def elli_sxy_action(*args,on_injection=False):
+def elli_sxy_action(on_injection=False):
     """ display x- and y-phase-space ellipses """
     if on_injection:
         s = 0.0
@@ -512,18 +527,16 @@ def elli_sxy_action(*args,on_injection=False):
         bx = PARAMS['betax_i']
         ay = PARAMS['alfay_i']
         by = PARAMS['betay_i']
-        
+
     else:
         node  = args[0]
-        s     = node.position[2]
-        twiss = node['twiss']
-        # DEBUG_ON('node,s,twiss',(node.label,s,twiss))
-    
-        ax = twiss[0]
-        bx = twiss[1]
-        ay = twiss[2]
-        by = twiss[3]
-    
+        twiss,s = node['twiss']
+
+        ax = twiss[K6.ax]
+        bx = twiss[K6.bx]
+        ay = twiss[K6.ay]
+        by = twiss[K6.by]
+
     org = (0,0)
     ellix = ellicp(org,ax,bx,PARAMS['emitx_i'])
     elliy = ellicp(org,ay,by,PARAMS['emity_i'])
@@ -549,8 +562,8 @@ def elli_sxy_action(*args,on_injection=False):
     # scale = 0.6
     scale = 2.0
     plt.xlim(-xmax*scale, xmax*scale)
-    plt.ylim(-ymax*scale, ymax*scale)   
-    
+    plt.ylim(-ymax*scale, ymax*scale)
+
 def sigma_x_action(*args):
     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
@@ -751,14 +764,14 @@ def test1():
     for e in ells:
         ax.add_artist(e)
         e.set_clip_box(ax.bbox)
-    
+
     width  = args[1]
     height = args[2]
     scale = 0.7
     ax.set_xlim(-width*scale, width*scale)
     ax.set_ylim(-height*scale, height*scale)
     plt.show()
-    
+
 def test2():
     print('--------------------------Test2---')
     print('test particle energy adjustment...')

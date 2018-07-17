@@ -19,13 +19,13 @@ This file is part of the SIMULINAC code
 """
 import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
-from copy import copy
+from copy import copy, deepcopy
 import numpy as NP
 # from abc import ABC, abstractmethod
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, ACTIONS
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, K6
 from Dictionary import DictObject
 from TTFG import _TTF_G
 from Ez0 import SFdata
@@ -195,6 +195,110 @@ class _Node(DictObject, object):
             [0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
             ])
         return m_beta
+
+    def twiss_functions(self, steps = 1, v0 = None):
+        """
+        track the twiss functions through a node
+            twiss vector: v0 = NP.array([betax,alphax,gammax,b..y,a..y,g..y])
+        """            
+        si   = self.position[0]     # entrance
+        functions = [(v0,si)]
+        if self.length == 0.:
+            pass
+        elif steps == 1:
+            sf = self.position[2]
+            m_beta = self.beta_matrix()
+            v = m_beta.dot(v0)
+            functions.append((v,sf))  # vector at exit
+        elif steps > 1:
+            s = si
+            slices = self.make_slices(anz = steps)
+            for slice in slices:
+                m_beta = slice.beta_matrix()
+                v = m_beta.dot(v0)
+                s += slice.length
+                functions.append((v,s))  # vector at slices
+                v0 = v     # loop back
+        else:
+            print('something went wrong with steps in  "_Node.twiss_functions()"')
+            sys.exit(1)
+        # averages
+        av = []
+        for f,s in functions:
+            vc = f.tolist()
+            av.append(vc)
+        avarr = NP.array(av)
+        avm = NP.mean(avarr,axis=0)
+        # average twiss-vector in the middle
+        sm = self.position[1]
+        twiss = (avm,sm)
+        self['twiss'] = twiss
+        ax = avm[K6.ax]
+        bx = avm[K6.bx]
+        ay = avm[K6.ay]
+        by = avm[K6.by]
+        emix = PARAMS['emitx_i']
+        emiy = PARAMS['emity_i']
+        # avarage twiss-sigmas in the middle
+        sigxy = (*sigmas(ax,bx,emix),*sigmas(ay,by,emiy))
+        self['sigxy'] = sigxy
+        return functions
+
+    def sigma_beam(self,steps = 1, sg0 = None):
+        """ 
+        track the sigma-beam-matrix through node
+            twiss vector:      v0  = NP.array([betax,alphax,gammax,b..y,a..y,g..y])
+            sigma-beam-matrix: sg0 = SIGMA(v0)
+        """
+        si     = self.position[0]       # entrance
+        sigmas = [(sg0,si)]
+        s      = si
+        slices = self.make_slices(anz = steps)
+        for slice in slices:
+            # next_SIGMA = R * SIGMA * R_transposed
+            sgf = sg0.RSRt(slice)
+            # emmitance grow ?
+            if isinstance(slice,RFG) and FLAGS['egf']:
+                sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg0, delta_phi=PARAMS['Dphi0'])
+            s += slice.length
+            sigmas.append((sgf,s))
+            sg0 = sgf    # loop back
+
+        # averages
+        av = []
+        for sig,s in sigmas:
+            v = sig.sigv().tolist()
+            av.append(v)
+        avarr = NP.array(av)
+        avm = NP.mean(avarr,axis=0)
+        # sgxm, sgym are mean values of sigmas over slices
+        sgxm  = avm[0]
+        sgxpm = avm[1]
+        sgym  = avm[2]
+        sgypm = avm[3]
+        sigxy = (sgxm,sgxpm,sgym,sgypm)
+        self['sigxy'] = sigxy
+
+        return sigmas
+
+        # KEEPVALUES update
+        # KEEP.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
+
+        # APERTURE control
+        # if FLAGS['aperture']:
+        #     nsig       = PARAMS['n_sigma']
+        #     x2av = self['sigxy'][0]
+        #     y2av = self['sigxy'][2]
+        #     rsquare_av = sqrt(x2av**2 + y2av**2)
+        #     limr = nsig*rsquare_av
+        #     if isinstance(self,(ELM.QF, ELM.QD, ELM.RFG, ELM.GAP, ELM.RFC, ELM.QFth, ELM.QDth, ELM.QFthx, ELM.QDthx)):
+        #         aper = element.aperture
+        #         if limr > aper:
+        #             warnings.showwarning(
+        #                 'out {}*sigma at z ={:5.1f}[m]'.format(nsig,s),
+        #                 UserWarning,
+        #                 'lattice.py',
+        #                 'sigma_beam()')
 
     def map(self, i_track):
         """ Linear mapping of trjectory from (i) to (f) """

@@ -181,14 +181,14 @@ def display1(*args):
     ax_r.plot(tz,sdw,color='red')
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
 
-def display2(*dummy):
-    elli_sxy_action(*dummy,on_injection=True)
+def display2(*args):
+    elli_sxy_action(on_injection=True)
 
 #                            |----------------------- |
 # -------------------------  | everything starts here |
 #                            |----------------------- |
 def simulation(filepath):
-    def display(*args):
+    def display(functions):
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
             plots.append(display0) # CS tracks {x,y}
@@ -202,7 +202,7 @@ def simulation(filepath):
         # standard plots 
         if len(plots) != 0:
             print('PREPARE DISPLAY')
-            [plot(*args) for plot in plots]
+            [plot(functions) for plot in plots]
     
         # markers plots
         lattice.marker_actions()
@@ -214,34 +214,32 @@ def simulation(filepath):
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
 
-    # configure elements with increasing energy
+    # configure elements for energy increase
     soll_track = track_soll(lattice)
 
     # count elements and make other statistics
     lattice.stats(soll_track)
 
-    # ganzer Beschleuniger, Anfangswerte, Summary, etc...
+    # full acellerator: initial values, etc...
     lattice.cell(closed = FLAGS['periodic'])
 
-    # calculate twiss functions for every node w/o slicing
-    lattice.twiss_functions()
-    
-    # make summary
-    collect_data_for_summary(lattice)
-
-    # grafics & results
-    lat_plot = lattice.lattice_plot_function()
-    kv_only  = FLAGS['KVout']
-    steps    = 23
+    kv_only = FLAGS['KVout']
     if kv_only: 
         dictprnt(PARAMS,text='PARAMS',njust=1)
     else:
-        (c_like,s_like) = lattice.cs_traj(steps = steps) # calc sin- and cos-like trajectories
-        sigma_fun       = lattice.sigmas(steps = steps)
-        functions       = (sigma_fun,c_like,s_like,lat_plot)
+        steps = 23
+        # collect results
+        collect_data_for_summary(lattice)
         # show summary
         dictprnt(SUMMARY,text='summary')
-        # plots
+        # generate lattice plot
+        lat_plot = lattice.lattice_plot_function()
+        # track sin- and cos-like trajectories
+        (c_like,s_like) = lattice.cs_traj(steps = steps)
+        # calculate lattice functions
+        sigma_fun = lattice.sigmas(steps = steps)
+        functions = (sigma_fun,c_like,s_like,lat_plot)
+        # make plots of functions
         display(functions)
     
 if __name__ == '__main__':
