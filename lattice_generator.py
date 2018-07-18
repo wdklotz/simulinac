@@ -263,12 +263,12 @@ def factory(input_file):
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
         if 'EzAvg'            in parameters: PARAMS['EzAvg']            = parameters['EzAvg']
         if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
-        if 'gap'              in parameters: PARAMS['spalt_laenge']     = parameters['gap']
+        if 'gap'              in parameters: PARAMS['gap']              = parameters['gap']
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
         if 'windings'         in parameters: PARAMS['n_coil']           = parameters['windings']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-        PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['spalt_laenge']
+        PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters
 # --------
     def expand_reduce(in_data):

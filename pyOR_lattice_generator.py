@@ -63,7 +63,7 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
     sections  = lattice.get_sections()       #sections is [section-1,...,section-N]
 
     # transfer a selection of PARAMS to xml-lattice
-    exclude_keys = ['mapset','sollteilchen','sections','wellenlänge','elementarladung','electron_mass','n_coil','Ez_feld','zel_Dphi0','zel_DWmax','zel_Dphimax','zel_omegal0','zel_w0','zel_DW','zel_Dphimax+','zel_Dphimax-','zel_omegal0/omega','zel_alphaz','zel_betaz','zel_gammaz','zel_emitz']
+    exclude_keys = ['mapset','sollteilchen','sections','wellenlänge','elementarladung','electron_mass','n_coil']
     parameters = PARAMS.copy()
     for key in exclude_keys:
         del parameters[key]
@@ -124,9 +124,9 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
 
                     # phiSoll = degrees(node.phis) + 180. # pyOrbit's soll phase ~135 [deg]!
                     phiSoll = degrees(node.phis)
-                    E0L  = node.u0*1.e-3          # pyOrbit [Gev]
-                    E0TL = E0L*node.tr            # use this when energy is adjusted
-                    E0TL = E0L*0.8575             # some reasonable(?) average
+                    E0L  = node.EzAvg*node.gap*1.e-3   # pyOrbit [Gev]
+                    E0TL = E0L*node.tr                 # use this when energy is adjusted
+                    E0TL = E0L*0.8575                  # some reasonable(?) average
                     aperture = node.aperture
                     name = '{}:{}'.format('pillbox',gap_cnt)
                     accelm_da.setValue('type','RFGAP')

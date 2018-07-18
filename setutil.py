@@ -112,8 +112,8 @@ PARAMS = dict(
         elementarladung      = 1.602176565e-19,  # [coulomb] const
         proton_mass          = 938.272,          # [MeV/c**2] const
         electron_mass        = 0.5109989,        # [MeV/c**2] const
-        EzAvg                = 1.00,             # [MV/m] default average E-field on axis
-        spalt_laenge         = 0.022,            # [m] default
+        EzAvg                = 2.87,             # [MV/m] default average E-field on axis
+        gap                  = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
         phisoll              = -30.,             # [deg] default
         frequenz             = 816.e6,           # [Hz] default
@@ -132,7 +132,7 @@ PARAMS = dict(
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
-        nbof_slices          = 6,                # default number-off slices
+        nbof_slices          = 10,               # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
 """

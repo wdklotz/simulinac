@@ -38,7 +38,7 @@ class Sigma(object):
     """ Utility class for handling of sigma-matrix """
     def __init__(self, v0):
 
-        self.matrix = NP.zeros((DIM,DIM))      ## sigma matrix (6x6)
+        self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
         self._emitx = PARAMS['emitx_i']
         self._emity = PARAMS['emity_i']
         self._emitz = PARAMS['emitz_i']
@@ -106,14 +106,13 @@ class Sigma(object):
     def RSRt(self,R):
         """
         Map this sigma through element R
-            R isinstance off ELM._matrix!
+            R instanceof ELM._matrix!
         """
-        # r = R.__call__(): get upper element matrix (instanceof NP.ndarray)
-        r   = R(DIM,DIM)
-        rt  = NP.transpose(r)
+        # R(DIM,DIM) = R.__call__(DIM,DIM): upper element matrix (instanceof NP.ndarray)
+        r    = NP.matrix(R(DIM,DIM))
         sgf  = deepcopy(self)        # IMPORTANT!!!
         sgmx = sgf.matrix
-        sgf.matrix = NP.dot(r,NP.dot(sgmx,rt))  ## R*S*Rtr
+        sgf.matrix = r*sgmx*r.T     # NP matrix multiplication
         return sgf
 
     def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
@@ -211,13 +210,13 @@ def test1():
     s1 = sigma_i.matrix
     sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
     s2 = sigma_f.matrix
-    DEBUG('{sigma}\n',mxprnt(s1))
-    DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2))
+    DEBUG('{sigma}\n',mxprnt(s1.A))
+    DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2.A))
 
     sigma_fc = deepcopy(sigma_f)
     sigma_fc.apply_eg_corr(R,sigma_f,radians(25.),ksi=(0.01,0.01))
     s3 = sigma_fc.matrix
-    DEBUG('{sigma_f}_corrected minus {sigma_f}_uncorrected\n',mxprnt(s3-s2))
+    DEBUG('{sigma_f}_corrected minus {sigma_f}_uncorrected\n',mxprnt((s3-s2).A))
 # main ----------
 if __name__ == '__main__':
     test0()    

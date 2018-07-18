@@ -563,7 +563,7 @@ class GAP(I):
                     fRF        = PARAMS['frequenz'],
                     label      = 'GAP',
                     particle   = PARAMS['sollteilchen'],
-                    gap        = PARAMS['spalt_laenge'],
+                    gap        = PARAMS['gap'],
                     position   = [0, 0, 0],
                     aperture   = 0.,
                     dWf        = FLAGS['dWf']):
@@ -626,7 +626,7 @@ class RFG(I):
             fRF        = PARAMS['frequenz'],
             label      = 'RFG',
             particle   = PARAMS['sollteilchen'],
-            gap        = PARAMS['spalt_laenge'],
+            gap        = PARAMS['gap'],
             position   = [0, 0, 0],
             aperture   = 0.,
             mapping    = 't3d',
@@ -1070,7 +1070,7 @@ class RFC(_thin):
                 fRF      = PARAMS['frequenz'],
                 label    = 'RFC',
                 particle = PARAMS['sollteilchen'],
-                gap      = PARAMS['spalt_laenge'],
+                gap      = PARAMS['gap'],
                 length   = 0.,
                 position = [0, 0, 0],
                 aperture = 0.,
@@ -1438,7 +1438,7 @@ def test6():
     mqd = QD(kqd, lqd, 'QD')
     mb = RD(rhob, lb, 'B')
     md = D(ld)
-    rfc = RFC(length = 4*PARAMS['spalt_laenge'])
+    rfc = RFC(length = 4*PARAMS['gap'])
 
     steps = 13
 

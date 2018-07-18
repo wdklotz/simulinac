@@ -42,7 +42,7 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE  = DEBUG_OFF
 
-def bucket(*dummy):
+def bucket(*args):
     bucket_size.bucket()
     
 def display0(*args):

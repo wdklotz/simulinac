@@ -377,16 +377,13 @@ class Lattice(object):
         """ track the dispersion function """
         traj = []
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])    # column vector with MDIM rows, 1 column
-        # v_0.shape = (ELM.MDIM,1)
         if closed == True:
             m_cell = self.accel
             m11 = m_cell.matrix[0,0]
             m15 = m_cell.matrix[0,5]
             d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
-            # v_0[0,0] = d0
             v_0[0] = d0
         s = 0.0
-        # traj = [(s,v_0[0,0],v_0[1,0])]
         traj = [(s,v_0[0],v_0[1])]
         for element in self.seq:
             slices = element.make_slices(anz = steps)
@@ -394,8 +391,6 @@ class Lattice(object):
                 m_beta = i_element.matrix
                 v_0 = m_beta.dot(v_0)
                 s += i_element.length
-                # d  = v_0[0,0]
-                # dp = v_0[1,0]
                 d  = v_0[0]
                 dp = v_0[1]
                 traj.append((s,d,dp))
@@ -654,7 +649,7 @@ def test1():
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
-    s  = [x[K6.s]  for x in beta_fun] # abzisse s
+    s  = [x[K6.s]  for x in beta_fun]    # abzisse s
     xs = [x[K6.bx] for x in beta_fun]    # betax(s)
     ys = [x[K6.by] for x in beta_fun]    # betay(s)
     sd = [x[0] for x in disp]            # abzisse s
