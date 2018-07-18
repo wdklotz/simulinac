@@ -225,8 +225,8 @@ class _Node(DictObject, object):
         # averages
         av = []
         for f,s in functions:
-            vc = f.tolist()
-            av.append(vc)
+            v = f.tolist()
+            av.append(v)
         avarr = NP.array(av)
         avm = NP.mean(avarr,axis=0)
         # average twiss-vector in the middle
@@ -706,6 +706,7 @@ class RFG(I):
 
 # PyOrbit RF gap-models
 class _PYO_G(object):
+#todo: use T3D gap matrix instead of unit matrix for linear run
     """ PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) """
     def __init__(self, parent, mapping):
         def trtf(lamb, gap, beta):

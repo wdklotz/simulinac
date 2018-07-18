@@ -407,7 +407,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(sigx)i*    [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3
     SUMMARY['(sigy)i*    [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
-    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, =>w(=dGamma) = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
+    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, => w{{a.k.a.Dgamma}} = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
     SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6

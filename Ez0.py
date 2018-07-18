@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
 
@@ -58,10 +58,10 @@ def Kpoly(z,sigma,mu,E):
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
-            # USING np.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
-        # x   = np.array((zl,z0,zr))
-        # y   = np.array((El,E0,Er))
-        # coeff = np.polyfit(x,y,2)
+            # USING NP.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
+        # x   = NP.array((zl,z0,zr))
+        # y   = NP.array((El,E0,Er))
+        # coeff = NP.polyfit(x,y,2)
         # b   = coeff[0]
         # a   = coeff[1]
         # E0  = coeff[2]
@@ -72,7 +72,7 @@ def Kpoly(z,sigma,mu,E):
         # cof = polcof(x,y,2)
         # print('cof =====',cof)
         # print('E0,a,b ',E0,a,b,'\n')
-            # END-USING np.polyfit()
+            # END-USING NP.polyfit()
     return poly
 
 def Ipoly(z,poly):
@@ -87,12 +87,12 @@ def Ipoly(z,poly):
     if ix <0:
         raise RuntimeError('Ipoly(): arg out of range! {}'.format(z))
 
-    #       USE np.polyfit()
+    #       USE NP.polyfit()
     # liefert gleiches Resultat wie Langrange 3 Punkt
     # coeff = poly[ix].coeff
-    # res   = np.poly1d(coeff)
+    # res   = NP.poly1d(coeff)
     # res   = res(z)
-    #       END-USE np.poly1d()
+    #       END-USE NP.poly1d()
 
     ival = poly[ix]
     z0 = ival.z0
@@ -348,7 +348,7 @@ def test1():
     '''Gauss'che Normalverteilung (NG)'''
     print('----------------------------TEST1---')
     gap = 4.4
-    z = np.arange(0.,gap,gap/500.)
+    z = NP.arange(0.,gap,gap/500.)
     sigma = 1.14
     Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
     displayLR(Ez0_tab,'NG')
@@ -389,13 +389,13 @@ def test2():
     # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
     E0    = 1.           # top of NGauss   (best fit with SF)
 
-    z = np.linspace(zl,zr,2*anz+1)
+    z = NP.linspace(zl,zr,2*anz+1)
     Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
     # display(Ez0_tab,'slice')
     poly  = Kpoly(z,sigma,0.,E0*1.)
 
     zstep = (zr-zl)/500.
-    z = np.arange(zl,zr,zstep)
+    z = NP.arange(zl,zr,zstep)
     Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
     display(Ez0_tab,'NG-poly')
 
@@ -442,7 +442,7 @@ def test3(input_file):
     display(gap_data.Ez_table,'SF-slice')
 
     zstep  = (zr-zl)/500.
-    z      = np.arange(zl,zr,zstep)
+    z      = NP.arange(zl,zr,zstep)
     Ez_tab = [(x,0.,Ipoly(x, poly)) for x in z]
     display(Ez_tab,'SF-poly')
 

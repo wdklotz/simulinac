@@ -21,7 +21,7 @@ import sys
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 import numpy as NP
-from copy import copy              # deepcopy needed?
+from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
@@ -37,6 +37,7 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
+#todo: cos-like, sin-like traj in z ???      
 ## Lattice
 class Lattice(object):
     """
@@ -301,19 +302,18 @@ class Lattice(object):
             sigma_fun = [(x[K6.s],sqrt(x[K6.bx]*PARAMS['emitx_i']),sqrt(x[K6.by]*PARAMS['emity_i'])) for x in beta_fun]
             return sigma_fun
 
-        if FLAGS['sigma']:
-            if FLAGS['dWf'] == 0:
-                warnings.showwarning(
-                    'no acceleration - sigma-envelopes need 6x6 matrices - will use twiss-envelopes',
-                    UserWarning,
-                    'lattice.py',
-                    'sigmas()')
-                mess = 'CALCULATE TWISS ENVELOPES'
-                function = self.twiss_functions
-            else:
-                mess = 'CALCULATE SIGMA'
-                function = self.sigma_functions
-        else:
+        if FLAGS['sigma'] and FLAGS['dWf'] == 0:
+            warnings.showwarning(
+                'no acceleration - sigma-envelopes need 6x6 matrices - will use twiss-envelopes',
+                UserWarning,
+                'lattice.py',
+                'sigmas()')
+            mess = 'CALCULATE TWISS ENVELOPES'
+            function = self.twiss_functions
+        elif FLAGS['sigma'] and FLAGS['dWf'] != 0:
+            mess = 'CALCULATE SIGMA'
+            function = self.sigma_functions
+        elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
             function = self.twiss_functions
 
@@ -440,7 +440,6 @@ class Lattice(object):
         s_like = []
         c_0 = NP.zeros(ELM.MDIM)
         s_0 = NP.zeros(ELM.MDIM)
-#todo:C,S in z ????        
         c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
         s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i  ; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
         for element in self.seq:

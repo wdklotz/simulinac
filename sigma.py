@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from math import pi,radians,degrees,sin,cos,sqrt
-import numpy as np
+import numpy as NP
 from copy import copy,deepcopy
 
 from setutil import Proton, DEBUG, mxprnt, PARAMS, K6
@@ -33,11 +33,12 @@ def DEBUG_OFF(*args):
 DEBUG_MODULE = DEBUG_OFF
 
 #todo: add longitudinal phase space
+#todo: check eg_corr again - still with global delta-phi
 class Sigma(object):
     """ Utility class for handling of sigma-matrix """
     def __init__(self, v0):
 
-        self.matrix = np.zeros((DIM,DIM))      ## sigma matrix (6x6)
+        self.matrix = NP.zeros((DIM,DIM))      ## sigma matrix (6x6)
         self._emitx = PARAMS['emitx_i']
         self._emity = PARAMS['emity_i']
         self._emitz = PARAMS['emitz_i']
@@ -83,7 +84,7 @@ class Sigma(object):
         ax = -matrix[0,1]/emitx
         ay = -matrix[2,3]/emity
         # alphaz = -matrix[4,5]/emitz
-        return np.array([bx,ax,gx,by,ay,gy])
+        return NP.array([bx,ax,gx,by,ay,gy])
     
     def sigv(self):
         """ extract envelopes from  sigma-matrix """
@@ -92,7 +93,7 @@ class Sigma(object):
         sgxp  = sqrt(matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
         sgy   = sqrt(matrix[2,2])
         sgyp  = sqrt(matrix[3,3])
-        return np.array([sgx,sgxp,sgy,sgyp])
+        return NP.array([sgx,sgxp,sgy,sgyp])
 
     def string(self):
         str = 'SIGMA:'
@@ -107,15 +108,14 @@ class Sigma(object):
         Map this sigma through element R
             R isinstance off ELM._matrix!
         """
-        # r = R.__call__(): get upper element matrix (instanceof np.ndarray)
+        # r = R.__call__(): get upper element matrix (instanceof NP.ndarray)
         r   = R(DIM,DIM)
-        rt  = np.transpose(r)
+        rt  = NP.transpose(r)
         sgf  = deepcopy(self)        # IMPORTANT!!!
         sgmx = sgf.matrix
-        sgf.matrix = np.dot(r,np.dot(sgmx,rt))  ## R*S*Rtr
+        sgf.matrix = NP.dot(r,NP.dot(sgmx,rt))  ## R*S*Rtr
         return sgf
 
-#todo: check eg_corr again - still with global delta-phi
     def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         """
         Apply emmittance growth correction after passage through RF gap 
@@ -164,23 +164,23 @@ class Sigma(object):
         self.matrix[1,1] += delta_xp2_av
         self.matrix[3,3] += delta_yp2_av
         self.matrix[5,5] += delta_dp2_av
-        # DEBUG_MODULE('Phis',degrees(Phis))
-        # DEBUG_MODULE('delta_phi',degrees(delta_phi))
-        # DEBUG_MODULE('E0L',E0L)
-        # DEBUG_MODULE('T',T)
-        # DEBUG_MODULE('m0c2',m0c2)
-        # DEBUG_MODULE('lamb',lamb)
-        # DEBUG_MODULE('gamma_beta_av',gamma_beta_av)
-        # DEBUG_MODULE('gamma_beta_f',gamma_beta_f)
-        # DEBUG_MODULE('gamma_av',gamma_av)
-        # DEBUG_MODULE('kx',kx)
-        # DEBUG_MODULE('kz',kz)
-        # DEBUG_MODULE('cfactor1',cfactor1)
-        # DEBUG_MODULE('cfactor2',cfactor2)
-        # DEBUG_MODULE('ksi',ksi)
-        # DEBUG_MODULE('delta_xp2_av',delta_xp2_av)
-        # DEBUG_MODULE('delta_yp2_av',delta_yp2_av)
-        # DEBUG_MODULE('delta_dp2_av',delta_dp2_av)
+        DEBUG_MODULE('Phis ',degrees(Phis))
+        DEBUG_MODULE('delta_phi ',degrees(delta_phi))
+        DEBUG_MODULE('E0L ',E0L)
+        DEBUG_MODULE('T ',T)
+        DEBUG_MODULE('m0c2 ',m0c2)
+        DEBUG_MODULE('lamb ',lamb)
+        DEBUG_MODULE('gamma_beta_av ',gamma_beta_av)
+        DEBUG_MODULE('gamma_beta_f ',gamma_beta_f)
+        DEBUG_MODULE('gamma_av ',gamma_av)
+        DEBUG_MODULE('kx ',kx)
+        DEBUG_MODULE('kz ',kz)
+        DEBUG_MODULE('cfactor1 ',cfactor1)
+        DEBUG_MODULE('cfactor2 ',cfactor2)
+        DEBUG_MODULE('ksi ',ksi)
+        DEBUG_MODULE('delta_xp2_av ',delta_xp2_av)
+        DEBUG_MODULE('delta_yp2_av ',delta_yp2_av)
+        DEBUG_MODULE('delta_dp2_av ',delta_dp2_av)
         return self
 def test0():
     print('-----------------------------Test0--')
@@ -190,7 +190,7 @@ def test0():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    v0       = np.array([bx,ax,gx,by,ay,gy])
+    v0       = NP.array([bx,ax,gx,by,ay,gy])
     sg0      = Sigma(v0)
     print(sg0.string())
 def test1():
@@ -206,7 +206,7 @@ def test1():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    v0       = np.array([bx,ax,gx,by,ay,gy])
+    v0       = NP.array([bx,ax,gx,by,ay,gy])
     sigma_i  = Sigma(v0)
     s1 = sigma_i.matrix
     sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
@@ -221,4 +221,5 @@ def test1():
 # main ----------
 if __name__ == '__main__':
     test0()    
+    DEBUG_MODULE = DEBUG_ON
     test1()

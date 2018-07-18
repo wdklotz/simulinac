@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import numpy as np
+import numpy as NP
 import matplotlib.pyplot as plt
 import time
 from string import Template
@@ -136,7 +136,7 @@ def track_soll(lattice):
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
     adapted to the energy of the accelerated reference particle.
     """
-    soll_track = Track(start=np.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
+    soll_track = Track(start=NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     for element in lattice.seq:
         # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
         ti = soll_track.last() #track: at entrance

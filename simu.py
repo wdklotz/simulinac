@@ -19,7 +19,10 @@ This file is part of the SIMULINAC code
 """
 #todo: update simu_manual.odt
 #todo: update README.md
-#todo: revise flow control with FLAGS (partly done)
+#todo: revise flow control with FLAGS (partly done): global STATE variable?
+#todo: each element should have its private steps parameter
+#todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix
+#todo: finish aperture checks for losses
 import sys
 from math import sqrt
 import matplotlib.pyplot as plt
@@ -227,7 +230,7 @@ def simulation(filepath):
     if kv_only: 
         dictprnt(PARAMS,text='PARAMS',njust=1)
     else:
-        steps = 23
+        steps = 10
         # collect results
         collect_data_for_summary(lattice)
         # show summary
@@ -236,11 +239,10 @@ def simulation(filepath):
         lat_plot = lattice.lattice_plot_function()
         # track sin- and cos-like trajectories
         (c_like,s_like) = lattice.cs_traj(steps = steps)
-        # calculate lattice functions
+        # calculate envelope functions
         sigma_fun = lattice.sigmas(steps = steps)
-        functions = (sigma_fun,c_like,s_like,lat_plot)
         # make plots of functions
-        display(functions)
+        display((sigma_fun,c_like,s_like,lat_plot))
     
 if __name__ == '__main__':
     # the default input file (YAML syntax)

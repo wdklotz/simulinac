@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import numpy as np
+import numpy as NP
 import matplotlib.pyplot as plt
 
 # DEBUGGING
@@ -103,7 +103,7 @@ def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
             binwidthx = xmax/100.
             limx = (int(xmax/binwidthx) + 1) * binwidthx
             axScatter.set_xlim((-limx, limx))
-            binsx = np.arange(-limx, limx + binwidthx, binwidthx)
+            binsx = NP.arange(-limx, limx + binwidthx, binwidthx)
             axHistx.hist(x, bins=binsx, color='black')
             axHistx.set_xlim(axScatter.get_xlim())
 
@@ -117,7 +117,7 @@ def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
             binwidthy = ymax/100.
             limy = (int(ymax/binwidthy) + 1) * binwidthy
             axScatter.set_ylim((-limy, limy))
-            binsy = np.arange(-limy, limy + binwidthy, binwidthy)
+            binsy = NP.arange(-limy, limy + binwidthy, binwidthy)
             axHisty.hist(y, bins=binsy, orientation='horizontal', color='black')
             axHisty.set_ylim(axScatter.get_ylim())
 

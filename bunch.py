@@ -17,7 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import numpy as np
+import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
 
@@ -50,9 +50,9 @@ class EmitContour(object):
     def __init__(self,nTracks,random=False):
         sigx,sigxp = sigmas(PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
         if random:
-            Xrand = sigx*(2.*np.random.random_sample((nTracks,))-1.)
+            Xrand = sigx*(2.*NP.random.random_sample((nTracks,))-1.)
         else:
-            Xrand = np.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
+            Xrand = NP.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
         self.X=[]; self.XP=[]
         for x in Xrand:
             points = self.emittanceContourPoint(x,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
@@ -62,9 +62,9 @@ class EmitContour(object):
             self.XP.append(points[1][1])
         sigy,sigyp = sigmas(PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
         if random:
-            Yrand = sigy*(2.*np.random.random_sample((nTracks,))-1.)
+            Yrand = sigy*(2.*NP.random.random_sample((nTracks,))-1.)
         else:
-            Yrand = np.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
+            Yrand = NP.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
         self.Y=[]; self.YP=[]
         for y in Yrand:
             points = self.emittanceContourPoint(y,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
@@ -75,7 +75,7 @@ class EmitContour(object):
         tkin = PARAMS['sollteilchen'].tkin  #energy at entrance
         self.tracklist=[]
         for i in range(2*nTracks):
-            start=np.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+            start=NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
             start[K.x]  = self.X[i]
             start[K.xp] = self.XP[i]
             start[K.y]  = self.Y[i]
@@ -83,8 +83,8 @@ class EmitContour(object):
             self.tracklist.append(Track(track_number=i,start=start))
 
 class Tpoint(object):
-    """ A track point is an np.array of 10 coordinates, i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=s, 1) """
-    def __init__(self, point = np.array([0,0,0,0,0,0,0,1,0,1])):
+    """ A track point is an NP.array of 10 coordinates, i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=s, 1) """
+    def __init__(self, point = NP.array([0,0,0,0,0,0,0,1,0,1])):
         self.point = point
     @property
     def T(self):
@@ -169,16 +169,16 @@ def Gauss1D(params):
     coord_mask = params['coord_mask']
     tkin       = params['tkin']
 
-    X          = sigx  * np.random.randn(nbtracks)    # gauss distribution X
-    XP         = sigxp * np.random.randn(nbtracks)
-    Y          = sigy  * np.random.randn(nbtracks)
-    YP         = sigyp * np.random.randn(nbtracks)
-    Z          = sigz  * np.random.randn(nbtracks)
-    ZP         = sigzp * np.random.randn(nbtracks)
+    X          = sigx  * NP.random.randn(nbtracks)    # gauss distribution X
+    XP         = sigxp * NP.random.randn(nbtracks)
+    Y          = sigy  * NP.random.randn(nbtracks)
+    YP         = sigyp * NP.random.randn(nbtracks)
+    Z          = sigz  * NP.random.randn(nbtracks)
+    ZP         = sigzp * NP.random.randn(nbtracks)
 
     tracklist=[]                                    # all tracks in a bunch
     for i in range(nbtracks):
-        start=np.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+        start=NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
         # initial setting for each coordinate
         if coord_mask[K.x]:
             start[K.x]  = X[i]
@@ -199,7 +199,7 @@ class Bunch(DictObject,object):
     """ A Bunch is a dictionary.
         A Bunch is a list of Tracks (self.tracklist)
         A Track is a list of TPoints.
-        A TPoint is an np.array of 10 coordinates
+        A TPoint is an NP.array of 10 coordinates
             i.e. (x, x', y, y', z, z', T, 1, S, 1)
     """
     def __init__(self):
@@ -259,8 +259,8 @@ def test0():
     mu    = 0     # mean of distribution
     sigma = 1     # standard deviation of distribution
     print('-----------------------------------------Test0---')
-    # np.random.randn returns a sample (or samples) from the “standard normal” distribution.
-    x   = mu + sigma * np.random.randn(4000)
+    # NP.random.randn returns a sample (or samples) from the “standard normal” distribution.
+    x   = mu + sigma * NP.random.randn(4000)
     fig = plt.figure('test0: figure')
     histPlot(x,mu,sigma)
     figures.append(fig)
@@ -272,8 +272,8 @@ def test1():
     betax = 1.
     emitx = 1.e-3
     sigma, sigmap = sigmas(alfax, betax, emitx)
-    x      = sigma  * np.random.randn(N)
-    xp     = sigmap * np.random.randn(N)
+    x      = sigma  * NP.random.randn(N)
+    xp     = sigmap * NP.random.randn(N)
     DEBUG_OFF('x: ', x)
     DEBUG_OFF('x\':',xp)
 
