@@ -235,7 +235,7 @@ class Bunch(DictObject,object):
     def first(self):             # first track
         return self.tracklist[0]
     @property
-    def nbsections(self):        # nbof poincare sections
+    def nbmkrs(self):        # nbof poincare sections
         return self.last.nbpoints
     @property
     def coord_mask(self):        # mask initial track coordinates

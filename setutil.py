@@ -198,11 +198,11 @@ class Electron(Particle):
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
 PARAMS['wellenlänge'] = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-PARAMS['emitz_i'] = \
-         PARAMS['sollteilchen'].beta   \
-        *PARAMS['wellenlänge']   \
-        /((PARAMS['sollteilchen'].gamma+1.)*2.*pi)   \
-        *PARAMS['emitw_i']
+# PARAMS['emitz_i'] = \
+#          PARAMS['sollteilchen'].beta   \
+#         *PARAMS['wellenlänge']   \
+#         /((PARAMS['sollteilchen'].gamma+1.)*2.*pi)   \
+#         *PARAMS['emitw_i']
 
 ## Long. Emittance
 def waccept(node):
@@ -249,9 +249,9 @@ def waccept(node):
         betaz_i  = 1./gammaz_i         # [m]
         res =  dict(
                 emitw    = emitw,
-                betaz    = betaz_i,     # twiss beta [m]
+                betaz_i    = betaz_i,   # twiss beta [m]
                 gammaz   = gammaz_i,    # twiss gamma [1/m]
-                emitz    = emitz,       # emittance in {z,dp/p} space [m]
+                emitz_i    = emitz,     # emittance in {z,dp/p} space [m]
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
                 Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
@@ -264,9 +264,9 @@ def waccept(node):
     else:
         res =  dict(
                 emitw    = 0.,
-                betaz    = 0.,
+                betaz_i  = 0.,
                 gammaz   = 'undefined',
-                emitz    = 0.,
+                emitz_i  = 0.,
                 Dp2p0    = 0.,
                 Dphi0    = 0.,
                 z0       = 0.,
@@ -575,6 +575,8 @@ def sigma_y_action(*args):
 def tkin_action(*args):
     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
+def poincare_action(*args):
+    pass
 
 """
  (global) ACTIONS: dictionary of possible actions attached to a marker
@@ -583,7 +585,8 @@ ACTIONS = dict(
             sigma_x     = sigma_x_action,
             sigma_y     = sigma_y_action,
             Tkin        = tkin_action,
-            show_elli   = elli_sxy_action
+            show_elli   = elli_sxy_action,
+            poincare    = poincare_action
             )
 
 # utilities

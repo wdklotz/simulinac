@@ -305,6 +305,7 @@ def factory(input_file):
                 segments.append({segID:elements})
             DEBUG_MODULE("segments",segments)
             return segments
+    #--------
         elemement_def = read_elements(in_data)
         segment_def   = read_segments(in_data)
         lattice_def   = read_lattice(in_data)

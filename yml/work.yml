@@ -22,7 +22,7 @@
 #   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 #..........................................................................................
-## RUN configuration
+## RUN configurationgenerator
 
 flags:
     # - accON:        False           # {True} acceleration on/off flag
@@ -136,6 +136,11 @@ elements:
         - actions:
             - check_aperture     # action aperture check
         - sec:     *HE
+    - F:  &Foil                  # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            - poincare           # action aperture check
+        - sec:     *HE
 #...........................................................................................
 ## SEGMENT definitions
 
@@ -204,7 +209,7 @@ segments:
         - *RFCH
         - *RFCH
     - MARK:
-        - *Mrkr
+        - *Foil
 #...........................................................................................
 ## LATTICE definition
 
@@ -214,5 +219,8 @@ lattice:
     # - [80,    SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
     # - [ 25,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
     # - [ 5,    SEG1H, MARK, RFGH, SEG2H, MARK, RFGH, SEG3H, MARK]
-    - [ 5,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
-    - [75,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    # - [ 5,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    # - [75,    SEG1H,       RFGH, SEG2H,       RFGH, SEG3H]
+    # - [ 1, MARK]
+    - [75,       SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [ 1, MARK]

@@ -26,7 +26,7 @@ from math import sqrt
 
 from lattice_generator import factory
 import elements as ELM
-from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS
+from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS, waccept
 from bunch import Track, Bunch, Gauss1D
 from trackPlot import poincarePlot
 
@@ -43,11 +43,11 @@ def progress(tx):
 
 def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     """ prepare the plot of a Poincaré section """
-    nbsections = bunch.nbsections        # poincare sections per track
+    nbmkrs = bunch.nbmkrs        # poincare markers per track
     psec = poincare_section
     if psec == 0:
         txt = '{} initial'.format(text)
-    elif psec == (nbsections-1):
+    elif psec == (nbmkrs-1):
         txt ='{} final'.format(text)
     else:
         txt ='{} marker {}'.format(text, psec)
@@ -69,13 +69,11 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(good, boxtext, minmax, bad = bad, projections = (1,1))
     return fig
     
-def process_single_track(arg):
+def track_track(track,lattice):
     """ successive mappings of a track through the lattice """
-    ptrack  = arg[0]
-    lattice = arg[1]
     invalid = False
 
-    ti = ptrack.first()
+    ti = track.first()
     for element in lattice.seq:                  # loop elements
         try:
             tf = element.map(ti)                 # map!
@@ -83,10 +81,11 @@ def process_single_track(arg):
             invalid = True
             break
         ti = tf
-        # take a poincare section at MRK elements only
+        # take a poincare section at MRK elements with poincare action only
         if isinstance(element,ELM.MRK) and not invalid:
-            ptrack.append(tf)
-    return (ptrack,invalid)
+            if 'poincare' in element.actions:
+                track.append(tf)
+    return (track,invalid)
 
 def track(lattice,bunch,smp=False):
     """
@@ -107,7 +106,7 @@ def track(lattice,bunch,smp=False):
         pass
         # arg = [(ptrack,lattice) for ptrack in bunch.tracks]
         # print()
-        # r = Parallel(n_jobs=8, verbose=5)(map(delayed(process_single_track),arg))
+        # r = Parallel(n_jobs=8, verbose=5)(map(delayed(track_track),arg))
         # trck,invalid = zip(*r)
         # for i,t in enumerate(trck):
         #     if invalid[i]:
@@ -116,7 +115,7 @@ def track(lattice,bunch,smp=False):
         #         valid_tracks.append(t)
     else:
         for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
-            invalid = process_single_track((ptrack, lattice))[1]
+            invalid = track_track(ptrack, lattice)[1]
             if invalid:
                 invalid_tracks.append(ptrack)
             else:
@@ -165,28 +164,34 @@ def tracker(options):
     save              = options['save']
     skip              = options['skip']
 
-    #make lattice with time
+    #make lattice
     t0 = time.clock()
     lattice = factory(filepath)
     t1 = time.clock()
 
-    options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
-    dictprnt(options,'Tracker Options')
-    print()
-
-    # bunch-configuration
+    # bunch-configuration from PARAMS
     alfax_i   = PARAMS['alfax_i'] 
     betax_i   = PARAMS['betax_i']
     emitx_i   = PARAMS['emitx_i']
     alfay_i   = PARAMS['alfay_i']
     betay_i   = PARAMS['betay_i']
     emity_i   = PARAMS['emity_i']
-    sigmaz_i  = sqrt(PARAMS['emitz_i']*PARAMS['betaz_i'])   # Dz in [m]
-    sigmazp_i = PARAMS['emitz_i']/sigmaz_i                  # Dp/p -n [-]
+    # calculate longitudinal paramters at entrance
+    waccept(lattice.first_gap)
+    alfaz_i   = 0.
+    betaz_i   = PARAMS['betaz_i']
+    emitz_i   = PARAMS['emitz_i']
 
     sigmas_x  = sigmas(alfax_i, betax_i, emitx_i)
     sigmas_y  = sigmas(alfay_i, betay_i, emity_i)
+    sigmas_z  = sigmas(      0.,betaz_i, emitz_i)
 
+    options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
+    options["sigma(x,x')_i"] = sigmas_x
+    options["sigma(y,y')_i"] = sigmas_y
+    options["sigma(z,z')_i"] = sigmas_z
+    dictprnt(options,'Tracker Options'); print()
+    
     bunch = Bunch()
     bunch.nbtracks    = particlesPerBunch
     bunch.coord_mask  = (1,1,1,1,1,1)
@@ -195,8 +200,8 @@ def tracker(options):
     bunch['sigma-xp'] = sigmas_x[1]
     bunch['sigma-y']  = sigmas_y[0]
     bunch['sigma-yp'] = sigmas_y[1]
-    bunch['sigma-z']  = 1.e-3
-    bunch['sigma-zp'] = 1.e-3
+    bunch['sigma-z']  = sigmas_z[0]
+    bunch['sigma-zp'] = sigmas_z[1]
     bunch['tkin']     = 70.
     bunch.populate_phase_space()
 
@@ -228,9 +233,10 @@ def project_onto_plane(bunch, ordinate, abzisse, show, save, skip):
     sigmas    = (bunch['sigma-x'],bunch['sigma-xp'],bunch['sigma-y'],bunch['sigma-yp'],bunch['sigma-z'],bunch['sigma-zp'])
     text      = '{}-{}'.format(symbol[ordinate],symbol[abzisse])
     minmax    = (10.e3*sigmas[ordinate],10.e3*sigmas[abzisse])
-    sections  = [i for i in range(bunch.nbsections)]
-    for i in sections:
-        if i != 0 and i != sections[-1] and i%skip != 0: continue   # skip sections, keep first and last
+    nbmkrs  = [i for i in range(bunch.nbmkrs)]
+    # print('nbmkrs',nbmkrs)
+    for i in nbmkrs:
+        if i != 0 and i != nbmkrs[-1] and i%skip != 0: continue   # skip nbmkrs, keep first and last
         fig = scatterPlot(bunch=bunch, poincare_section=i, ordinate=ordinate, abzisse=abzisse, text=text, minmax=minmax)
         if save:
             plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
@@ -245,7 +251,7 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(sollTrack.first_str(),sollTrack.last_str()))
 
 # def test1(filepath):
-def test1(options):
+def track_bunch(options):
     print('-----------------------------------------Test1---')
     tracker(options)
     
@@ -255,12 +261,12 @@ if __name__ == '__main__':
     DEBUG_TEST0       = DEBUG_ON
     
     options = dict( filepath = 'yml/work.yml',
-                    particlesPerBunch = 3000,
+                    particlesPerBunch = 10000,
                     show    = True,
                     save    = False,
-                    skip    = 4
+                    skip    = 1
                     )
     template = Template('$tx1 $tx2 $tx3 $tx4')
     # filepath = 'yml/work.yml'
     # test0(filepath)
-    test1(options)
+    track_bunch(options)
