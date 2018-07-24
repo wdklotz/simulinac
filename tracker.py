@@ -21,6 +21,7 @@ import numpy as NP
 import matplotlib.pyplot as plt
 import time
 from string import Template
+from math import sqrt
 # from joblib import Parallel, delayed
 
 from lattice_generator import factory
@@ -166,7 +167,7 @@ def tracker(options):
 
     #make lattice with time
     t0 = time.clock()
-    lattice = Factory(filepath)
+    lattice = factory(filepath)
     t1 = time.clock()
 
     options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
@@ -180,8 +181,8 @@ def tracker(options):
     alfay_i   = PARAMS['alfay_i']
     betay_i   = PARAMS['betay_i']
     emity_i   = PARAMS['emity_i']
-    sigmaz_i  = PARAMS['sigmaz_i']
-    sigmazp_i = PARAMS['dp2p_i']
+    sigmaz_i  = sqrt(PARAMS['emitz_i']*PARAMS['betaz_i'])   # Dz in [m]
+    sigmazp_i = PARAMS['emitz_i']/sigmaz_i                  # Dp/p -n [-]
 
     sigmas_x  = sigmas(alfax_i, betax_i, emitx_i)
     sigmas_y  = sigmas(alfay_i, betay_i, emity_i)
@@ -237,7 +238,7 @@ def project_onto_plane(bunch, ordinate, abzisse, show, save, skip):
     
 def test0(filepath):
     print('-----------------------------------------Test0---')
-    lattice = Factory(filepath)
+    lattice = factory(filepath)
     # dictprnt(PARAMS, 'PARAMS')
     sollTrack = track_soll(lattice)
     DEBUG_TEST0('sollTrack:\n'+sollTrack.asTable())
