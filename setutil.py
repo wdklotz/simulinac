@@ -241,17 +241,17 @@ def waccept(node):
         Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
         w0       = w0root*Dphi0           # w-intersect (== delta-gamma == normalized energy deviation)
         # {z,dp/p}-space
-        z0       = -Dphi0*beta*lamb/(2.*pi)             # z [m]
-        Dp2p0    = w0/(gamma+1.)                        # delta-p/p
-        emitz    = emitw*beta*lamb/((gamma+1.)*2.*pi)   # emittance [m]
+        z0       = -Dphi0*beta*lamb/(2.*pi)                  # z [m]
+        Dp2p0    = w0/(gamma-1./gamma)                       # delta-p/p
+        emitz    = -z0*Dp2p0                                 # emittance {z,Dp/p} [m]
         # long. twiss @ entrance
         gammaz_i = emitz/z0**2
         betaz_i  = 1./gammaz_i         # [m]
         res =  dict(
-                emitw    = emitw,
-                betaz_i    = betaz_i,   # twiss beta [m]
-                gammaz   = gammaz_i,    # twiss gamma [1/m]
-                emitz_i    = emitz,     # emittance in {z,dp/p} space [m]
+                emitw_i  = emitw,
+                betaz_i  = betaz_i,   # twiss beta [m]
+                gammaz_i = gammaz_i,    # twiss gamma [1/m]
+                emitz_i  = emitz,       # emittance in {z,dp/p} space [m]
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
                 Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
@@ -405,16 +405,16 @@ def collect_data_for_summary(lattice):
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-    SUMMARY['(sigx)i*    [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3
-    SUMMARY['(sigy)i*    [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
+    SUMMARY['(sigx )i*   [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3
+    SUMMARY['(sigy )i*   [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
     SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, => w{{a.k.a.Dgamma}} = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
     SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-    SUMMARY['emit{dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw']*1.e3)
-    SUMMARY['emit{z,dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-    SUMMARY['(dp/p)i*   [%]']                  =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
-    SUMMARY['(z)i*      [cm]']                 =  '{:8.2e}'.format(degrees(PARAMS['z0']*1.e2))
+    SUMMARY['emit{Dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
+    SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz_i']*1.e3)
+    SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
+    SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(PARAMS['z0']*1.e2)
     SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
     return
 

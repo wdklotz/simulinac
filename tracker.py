@@ -261,7 +261,7 @@ if __name__ == '__main__':
     DEBUG_TEST0       = DEBUG_ON
     
     options = dict( filepath = 'yml/work.yml',
-                    particlesPerBunch = 10000,
+                    particlesPerBunch = 1000,
                     show    = True,
                     save    = False,
                     skip    = 1
