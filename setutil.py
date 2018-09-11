@@ -198,11 +198,6 @@ class Electron(Particle):
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
 PARAMS['wellenlänge'] = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-# PARAMS['emitz_i'] = \
-#          PARAMS['sollteilchen'].beta   \
-#         *PARAMS['wellenlänge']   \
-#         /((PARAMS['sollteilchen'].gamma+1.)*2.*pi)   \
-#         *PARAMS['emitw_i']
 
 ## Long. Emittance
 def waccept(node):
@@ -213,6 +208,21 @@ def waccept(node):
     IN
         node: the 1st rf-gap at the linac entrance
     """
+
+    res =  dict(
+            emitw    = 0.,
+            betaz_i  = 0.,
+            gammaz   = 'undefined',
+            emitz_i  = 0.,
+            Dp2p0    = 0.,
+            Dphi0    = 0.,
+            z0       = 0.,
+            DWx      = 0.,
+            wx       = 0.,
+            phi_1    = 0.,
+            phi_2    = 0.,
+            psi      = 0.,
+            omgl0    = 0.)
 
     if node is not None and FLAGS['dWf']:
         emitw     = PARAMS['emitw_i']    # [rad]
@@ -242,14 +252,14 @@ def waccept(node):
         w0       = w0root*Dphi0           # w-intersect (== delta-gamma == normalized energy deviation)
         # {z,dp/p}-space
         z0       = -Dphi0*beta*lamb/(2.*pi)                  # z [m]
-        Dp2p0    = w0/(gamma-1./gamma)                       # delta-p/p
+        Dp2p0    = w0*lamb/(2.*pi*gb)                        # delta-p/p
         emitz    = -z0*Dp2p0                                 # emittance {z,Dp/p} [m]
         # long. twiss @ entrance
         gammaz_i = emitz/z0**2
         betaz_i  = 1./gammaz_i         # [m]
         res =  dict(
                 emitw_i  = emitw,
-                betaz_i  = betaz_i,   # twiss beta [m]
+                betaz_i  = betaz_i,     # twiss beta [m]
                 gammaz_i = gammaz_i,    # twiss gamma [1/m]
                 emitz_i  = emitz,       # emittance in {z,dp/p} space [m]
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
@@ -261,21 +271,6 @@ def waccept(node):
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
                 omgl0    = omgl0)       # synchrotron oscillation [Hz]
-    else:
-        res =  dict(
-                emitw    = 0.,
-                betaz_i  = 0.,
-                gammaz   = 'undefined',
-                emitz_i  = 0.,
-                Dp2p0    = 0.,
-                Dphi0    = 0.,
-                z0       = 0.,
-                DWx      = 0.,
-                wx       = 0.,
-                phi_1    = 0.,
-                phi_2    = 0.,
-                psi      = 0.,
-                omgl0    = 0.)
     PARAMS.update(res)
     return res
 

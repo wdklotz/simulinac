@@ -55,7 +55,7 @@ class Sigma(object):
         self._emitz = value
     
     def _beam(self,v0):
-        """ calc the beam's sigma-matrix """
+        """ calc sigma-matrix from twiss parameters """
         self.matrix[0,0] = self._emitx*v0[K6.bx]
         self.matrix[2,2] = self._emity*v0[K6.by]
         # self.matrix[4,4] = self._emitz*v0[K6.bz]
@@ -69,7 +69,7 @@ class Sigma(object):
         # self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*v0[K6.az]
     
     def twiss(self):
-        """ extract twiss parameters from sigma-matrix """
+        """ calc twiss parameters from sigma-matrix """
         emitx  = self._emitx
         emity  = self._emity
         # emitz  = self._emitz
@@ -87,7 +87,7 @@ class Sigma(object):
         return NP.array([bx,ax,gx,by,ay,gy])
     
     def sigv(self):
-        """ extract envelopes from  sigma-matrix """
+        """ calc envelopes from sigma-matrix """
         matrix = self.matrix
         sgx   = sqrt(matrix[0,0])   # sigmax  = <x*x>**1/2   [m]
         sgxp  = sqrt(matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
@@ -105,7 +105,7 @@ class Sigma(object):
 
     def RSRt(self,R):
         """
-        Map this sigma through element R
+        Map this sigma-matrix through element R
             R instanceof ELM._matrix!
         """
         # R(DIM,DIM) = R.__call__(DIM,DIM): upper element matrix (instanceof NP.ndarray)
@@ -183,6 +183,7 @@ class Sigma(object):
         return self
 def test0():
     print('-----------------------------Test0--')
+    PARAMS['emitz_i'] = 0.0     # use this for test
     bx       = PARAMS['betax_i']
     ax       = PARAMS['alfax_i']
     gx       = (1+ax**2)/bx

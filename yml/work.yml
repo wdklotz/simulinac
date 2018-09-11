@@ -27,7 +27,7 @@
 flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
@@ -66,6 +66,7 @@ parameters:
     - phi_sync:     &p06   -20.         # [deg] synchronous phase
     - windings:             30          # [1] quad-coil windings
     - gap:          &p15    0.048       # [m] RF gap
+    - n_sigma:              10          # [m] sigma aperture
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -217,8 +218,8 @@ segments:
 ## LATTICE definition
 
 lattice:
-    - title:   1.0.0        # description -  DON't remove or reposition!
-    # - [80,    SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    # - [80,    SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
-    - [75,       SEG1H, RFGH, SEG2H, RFGH, SEG3H]
-    - [ 1, MARK]
+    - title:   1.x.x        # description -  DON't remove or reposition!
+    # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
+    - [75,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [ 1,   MARK]

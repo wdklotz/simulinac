@@ -296,8 +296,9 @@ class Lattice(object):
                 node.do_actions()
         
     def sigmas(self,steps = 10):
+        """ dispatch to different envelope functions """
         def envelopes(function, steps = 10):
-            """ calc. beamsize from beta-matrix """
+            """ calc. envelopes using function """
             beta_fun  = function(steps = steps)
             sigma_fun = [(x[K6.s],sqrt(x[K6.bx]*PARAMS['emitx_i']),sqrt(x[K6.by]*PARAMS['emity_i'])) for x in beta_fun]
             return sigma_fun
@@ -309,13 +310,13 @@ class Lattice(object):
                 'lattice.py',
                 'sigmas()')
             mess = 'CALCULATE TWISS ENVELOPES'
-            function = self.twiss_functions
+            function = self.twiss_functions # use beta-matrix
         elif FLAGS['sigma'] and FLAGS['dWf'] != 0:
             mess = 'CALCULATE SIGMA'
-            function = self.sigma_functions
+            function = self.sigma_functions # use sigma-matrix
         elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
-            function = self.twiss_functions
+            function = self.twiss_functions # use beta-matrix
 
         if not FLAGS['KVout']: 
             print(mess)

@@ -75,7 +75,7 @@ class _Node(DictObject, object):
                 position = [0, 0, 0]):
         DictObject.__init__(self)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
-        self.particle  = copy(particle)   # local copy of the particle instance !!!IMPORTANT!!!
+        self.particle  = copy(particle)   # !!!IMPORTANT!!! local copy of the particle instance
         self.position  = position         # [entrance, middle, exit]
         self.length    = 0.               # default - thin
         self.label     = ''               # default - unlabeled
@@ -94,7 +94,7 @@ class _Node(DictObject, object):
         return self._deltaW
     @property
     def particlef(self):
-        return copy(self.particle)(self.particle.tkin + self.deltaW)
+        return copy(self.particle)(self.particle.tkin + self.deltaW) # !!!IMPORTANT!!!
 
     def __call__(self, n = MDIM, m = MDIM):
         return self.matrix[:n, :m]   # return upper left n, m submatrix
@@ -306,7 +306,7 @@ class _Node(DictObject, object):
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
-            f = f_track.copy()
+            f = f_track.copy()      # !!!IMPORTANT!!!
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
@@ -585,7 +585,7 @@ class GAP(I):
         self._deltaW = U0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
         tkin         = self.particle.tkin
         tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
-        part_center  = copy(self.particle)(tk_center)        # particle @ gap center
+        part_center  = copy(self.particle)(tk_center)        # !!!IMPORTANT!!! particle @ gap center
         bg           = part_center.gamma_beta                # beta*gamma @ gap center
         matrix       = self.matrix
         m0c2         = self.particle.e0
@@ -757,7 +757,7 @@ class _PYO_G(object):
 
         DWs        = deltaW
         Wsf        = Wsi + DWs
-        particlesf = copy(particle)(tkin = Wsf)
+        particlesf = copy(particle)(tkin = Wsf)     # !!!IMPORTANT!!!
         betasf     = particlesf.beta
         gammasf    = particlesf.gamma
         gbsf       = particlesf.gamma_beta
@@ -798,7 +798,7 @@ class _PYO_G(object):
 
         # the parent delegates reading these properties from here
         self.deltaw    = deltaW
-        self.particlef = copy(particle)(particle.tkin + deltaW)
+        self.particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
         return f_track
 
     def base_map(self, i_track, lamb, particle, qE0L, tr, phis):
@@ -835,7 +835,7 @@ class _PYO_G(object):
 
         DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
 
-        particlef = copy(particle)(tkin = WOUT)       # soll particle (f)
+        particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! soll particle (f)
         betaf     = particlef.beta
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
@@ -907,10 +907,10 @@ class _T3D_G(object):
         deltaW         = EzAvg*gap*tr*cos(phis)      # deltaW energy kick nach Trace3D
         tkin           = particle.tkin
         tk_center      = deltaW*0.5+tkin             # energy in gap center
-        part_center    = copy(particle)(tk_center)   # particle @ gap center
+        part_center    = copy(particle)(tk_center)   # !!!IMPORTANT!!! particle @ gap center
         b              = part_center.beta            # beta @ gap cemter
         g              = part_center.gamma           # gamma @ gap center
-        particlef      = copy(particle)(tkin+deltaW) # particle @ (f)
+        particlef      = copy(particle)(tkin+deltaW) # !!!IMPORTANT!!! particle @ (f)
         U0             = EzAvg*gap
 
         # the matrix
@@ -1105,7 +1105,7 @@ class RFC(_thin):
         # ---> one for three <----
         lens            = df * kick * df
         self.matrix     = lens.matrix
-        self._particlef = copy(self.particle)(tk_f)
+        self._particlef = copy(self.particle)(tk_f)     # !!!IMPORTANT!!!
         self.triplet    = (di, kick, df)
         self['viseo']   = 0.33
 
@@ -1142,7 +1142,7 @@ class SIXD(D):
         self.label    = label
         self.length   = length
         self['viseo'] = 0.
-        self.off_soll = copy(self.particle)
+        self.off_soll = copy(self.particle)     # !!!IMPORTANT!!!
 
     def shorten(self, length):
         return SIXD(length = length, label = self.label, particle = self.particle, position = self.position)

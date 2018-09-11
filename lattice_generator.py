@@ -267,6 +267,7 @@ def factory(input_file):
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
         if 'windings'         in parameters: PARAMS['n_coil']           = parameters['windings']
+        if 'n_sigma'          in parameters: PARAMS['n_sigma']          = parameters['n_sigma']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters
@@ -351,7 +352,7 @@ def factory(input_file):
     DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
     DEBUG_MODULE('segments in factory()',segments)            # def of all segments
 
-    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])# nicht vergesses! set sollteilchen energy
+    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])   # __call__ sollteilchen energy
     lattice = make_lattice(latticeList,segments)
     DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
