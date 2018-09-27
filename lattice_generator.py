@@ -78,14 +78,17 @@ def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
+    aperture   = PARAMS['aperture']    # default aperture
     if key == 'D':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
-        instance =  ELM.D(length=length,label=label)
+        if 'aperture' in attributes: aperture = attributes['aperture']
+        instance =  ELM.D(length=length,label=label,aperture=aperture)
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
-        instance  = ELM.SIXD(length=length,label=label)
+        if 'aperture' in attributes: aperture = attributes['aperture']
+        instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
@@ -116,7 +119,7 @@ def instanciate_element(item):
         fRF       = get_mandatory(attributes,"fRF",label)
         gap       = get_mandatory(attributes,'gap',label)
         mapping   = get_mandatory(attributes,'mapping',label)
-        aperture  = get_mandatory(attributes,'aperture',label)
+        if 'aperture' in attributes: aperture = attributes['aperture']
         dWf       = FLAGS['dWf']
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
@@ -143,7 +146,7 @@ def instanciate_element(item):
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         dWf       = FLAGS['dWf']
-        aperture  = get_mandatory(attributes,'aperture',label)
+        if 'aperture' in attributes: aperture = attributes['aperture']
         instance  =  ELM.RFC(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
     elif key == 'GAP':
         label     = attributes['ID']
@@ -152,7 +155,7 @@ def instanciate_element(item):
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         dWf       = FLAGS['dWf']
-        aperture  = get_mandatory(attributes,'aperture',label)
+        if 'aperture' in attributes: aperture = attributes['aperture']
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
     elif key == 'MRK':
         label     = attributes['ID']
@@ -225,13 +228,13 @@ def factory(input_file):
         if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
         if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
         if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
-        if 'KVout'       in flags: FLAGS['KVout']                                  = flags['KVout']
-        if 'verbose'     in flags: FLAGS['verbose']                                = flags['verbose']
-        if 'express'     in flags: FLAGS['express']                                = flags['express']
-        if 'aperture'    in flags: FLAGS['aperture']                               = flags['aperture']
-        if 'bucket'      in flags: FLAGS['bucket']                                 = flags['bucket']
-        if 'csTrak'      in flags: FLAGS['csTrak']                                 = flags['csTrak']
-        if 'pspace'      in flags: FLAGS['pspace']                                 = flags['pspace']
+        if 'KVout'       in flags: FLAGS['KVout']    = flags['KVout']
+        if 'verbose'     in flags: FLAGS['verbose']  = flags['verbose']
+        if 'express'     in flags: FLAGS['express']  = flags['express']
+        if 'useaper'     in flags: FLAGS['useaper']  = flags['useaper']
+        if 'bucket'      in flags: FLAGS['bucket']   = flags['bucket']
+        if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
+        if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
         return flags
 # --------
     def read_sections(in_data):
@@ -268,6 +271,7 @@ def factory(input_file):
         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
         if 'windings'         in parameters: PARAMS['n_coil']           = parameters['windings']
         if 'n_sigma'          in parameters: PARAMS['n_sigma']          = parameters['n_sigma']
+        if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture'] 
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters

@@ -102,7 +102,7 @@ FLAGS  = dict(
         dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = False,            # use express version of thin quads
-        aperture             = True ,            # use aperture check for quads and rf-gaps
+        useaper              = False,            # use aperture check for quads and rf-gaps
         bucket               = False,            # plot bucket
         csTrak               = True,             # plot CS trajectories
         pspace               = False             # plot CS twiss ellipses at entrance
@@ -121,6 +121,7 @@ PARAMS = dict(
         qf_gradient          = 16.0,             # [T/m] default
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
+        aperture             = None,             # default aperture = no aperture
         n_coil               = 30,               # nbof coil windings
         n_sigma              = 3,                # nboff beam sigmas to stay clear of aperture
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
@@ -393,7 +394,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['use emittance growth']            =  FLAGS['egf']
     SUMMARY['use ring lattice']                =  FLAGS['periodic']
     SUMMARY['use express']                     =  FLAGS['express']
-    SUMMARY['use aperture']                    =  FLAGS['aperture']
+    SUMMARY['use aperture']                    =  FLAGS['useaper']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
     SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']

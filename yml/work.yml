@@ -31,7 +31,7 @@ flags:
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
-    - aperture:     False           # {True}  use aperture check for quads and rf-gaps
+    # - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
     - pspace:       True            # {False} plot the twiss ellipses at entrance
@@ -67,6 +67,7 @@ parameters:
     - windings:             30          # [1] quad-coil windings
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              10          # [m] sigma aperture
+    # - aperture:             10.e-3      # [m] global aperture setting (default = None)
 #...........................................................................................
 ## ELEMENT definitions
 
