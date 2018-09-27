@@ -1349,7 +1349,6 @@ def test3():
 
 def test4():
     print('--------------------------------Test4---')
-
     def doit(elm, anz):
         elm_slices = elm.make_slices(anz = anz)
         print(''.join('{}\n'.format(el) for el in elm_slices))
@@ -1358,6 +1357,7 @@ def test4():
             elmx = elmx*slice
         print(elmx.string())
         print(elm.string())
+
     print('test slicing of elements ...')
     gradient = 1.
     beta     = 0.5

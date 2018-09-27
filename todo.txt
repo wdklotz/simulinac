@@ -35,3 +35,4 @@
  - Auswertung Bunch tracking
  - BMAD vergleich!
  - DYNAC with Python from ESS
+ - track whole bunch (all particles) through element then go to next element instead of reverse. this will avoid recalculation of map for each particle. i think i already do that.
