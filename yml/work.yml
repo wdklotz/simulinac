@@ -31,7 +31,7 @@ flags:
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
-    - useaper:      True            # {False} use aperture check for lattice elements
+    # - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
     - pspace:       True            # {False} plot the twiss ellipses at entrance
@@ -50,12 +50,12 @@ parameters:
     - ql0:          &p02    0.10        # [m] quad-length
     - ql:           &p03    0.05        # [m] 1/2 quad-length
     - quad_bore:    &p04    0.011       # [m] quad bore radius
-    - emity_i:      &emy    50.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
     - betax_i:              2.285       # [m] matched twiss beta @ entrance x
     - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
-    - emitw_i:              1.2e-6      # [rad] {Dphi,w'} emittance @ entrance
+    - emitw_i:              3.1e-4      # [rad] {Dphi,w'} emittance @ entrance
     - betax_i:              2.285       # [m] matched twiss beta @ entrance x
     - betay_i:              0.328       # [m] matched twiss beta @ entrance y
     - alfax_i:              0.          # [1] twiss alpha x @ entrance
@@ -117,8 +117,8 @@ elements:
         - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        - mapping:   base        # Shishlo/Holmes base map model
-        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        # - mapping:   base        # Shishlo/Holmes base map model
+        - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias

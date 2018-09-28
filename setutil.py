@@ -28,6 +28,7 @@ import logging, pprint
 from enum import IntEnum
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+import warnings
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # from matplotlib.figure import Figure
 
@@ -238,7 +239,8 @@ def waccept(node):
         gamma     = particle.gamma
 
         # large amplitude oscillations (T.Wangler pp. 175)
-        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*(phis*cos(phis)-sin(phis)))  # T.Wangler (6.28)
+        factor_phis = phis*cos(phis)-sin(phis)
+        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis)     # T.Wangler (6.28)
         dWmax = wmax*m0c2       # [MeV]
         phi_1 = -phis           # [rad]
         phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
@@ -251,6 +253,14 @@ def waccept(node):
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
         Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
         w0       = w0root*Dphi0           # w-intersect (== delta-gamma == normalized energy deviation)
+        # longitudinal acceptance check
+        if wmax <= w0:
+            si,sm,sf = node.position
+            warnings.showwarning(
+                'out of longitudinal aperture @ s={:.1f} [m]'.format(si),
+                UserWarning,'setutil.py',
+                'waccept()')
+
         # {z,dp/p}-space
         z0       = -Dphi0*beta*lamb/(2.*pi)                  # z [m]
         Dp2p0    = w0*lamb/(2.*pi*gb)                        # delta-p/p
