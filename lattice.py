@@ -386,6 +386,20 @@ class Lattice(object):
                 flist.append(s)
                 sigma_fun.append(flist)
             sg0 = sg        # loop back
+
+            # aperture check
+            if FLAGS['useaper']:
+                if node.__class__.__name__ == 'D': continue
+                apperture = None
+                if hasattr(node,'aperture'): aperture = node.aperture
+                if aperture != None:
+                    sigx, sigxp, sigy, sigyp = node['sigxy']
+                    si,sm,sf                 = node.position
+                    if(aperture < sigx or aperture < sigy):
+                        warnings.showwarning(
+                            'aperture hit @ s={:.1f} [m]'.format(sm),
+                            UserWarning,'lattice.py',
+                            'sigma_functions()')
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):
