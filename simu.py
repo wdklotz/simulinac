@@ -114,6 +114,7 @@ def display1(*args):
     cos_like = functions[1]
     sin_like = functions[2]
     lat_plot = functions[3]
+    ape_plot = functions[4]
     #-------------------- twiss functions
     z    = [x[0] for x in sigm_fun]  # Ordinate
     bx   = [x[1] for x in sigm_fun]  # envelope (sigma-x)
@@ -133,36 +134,47 @@ def display1(*args):
     stop_viseo = 2000                  # stop viseo plot after so many points
     vis_ordinate = [x[0] for x in lat_plot]
     vis_abszisse = [x[1] for x in lat_plot]
+    ape_ordinate = [x[0] for x in ape_plot]
+    ape_abszisse = [x[1] for x in ape_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
     #-------------------- figure frame
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
-    #-------------------- transverse X
+    #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
     plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx,label='C [m]',color='blue',linestyle=':')
     plt.plot(tz,sx,label='S [m]',color='red' ,linestyle=':')
+    # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
     plt.plot(vis_ordinate,viseox,label='',color='black')
     plt.plot(vis_ordinate,vzero,color='black')
+    # apertures
+    if FLAGS['useaper']:
+        plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
     plt.legend(loc='lower right',fontsize='x-small')
-    #-------------------- transverse Y
+    #-------------------- transverse Y tracks
     splot=plt.subplot(312)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy,label='C [m]',color='blue',linestyle=':')
     plt.plot(tz,sy,label='S [m]',color='red' ,linestyle=':')
+    # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_abszisse]
     for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
     plt.plot(vis_ordinate,viseoy,label='',color='black')
     plt.plot(vis_ordinate,vzero,color='black')
+    # apertures
+    if FLAGS['useaper']:
+        plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
     plt.legend(loc='lower right',fontsize='x-small')
-    #-------------------- longitudinal dPhi, dW/W
+    #-------------------- longitudinal tracks dPhi, dW/W
+    # ax_l = left abszisse
     ax_l=plt.subplot(313)
     ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
@@ -170,12 +182,7 @@ def display1(*args):
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(tz,cz,color='green',linestyle=':')
     # ax_l.plot(tz,sz,color='green')
-    vscale=ax_l.axis()[3]*0.7
-    viseoz = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseoz[i] = 0.   # stop lattice plotting
-    ax_l.plot(vis_ordinate[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
-    ax_l.plot(vis_ordinate,vzero,color='green',linestyle='--')
-
+    # ax_r = right abszisse
     ax_r = ax_l.twinx()
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
@@ -183,6 +190,12 @@ def display1(*args):
     # ax_r.plot(tz,cdw,color='red',linestyle=':')
     ax_r.plot(tz,sdw,color='red')
     ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
+    # lattice elements
+    vscale=ax_l.axis()[3]*0.7
+    viseoz = [x*vscale for x in vis_abszisse]
+    for i in range(stop_viseo,len(vis_ordinate)): viseoz[i] = 0.   # stop lattice plotting
+    ax_l.plot(vis_ordinate[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
+    ax_l.plot(vis_ordinate,vzero,color='green',linestyle='--')
 
 def display2(*args):
     elli_sxy_action(on_injection=True)
@@ -236,13 +249,13 @@ def simulation(filepath):
         # show summary
         dictprnt(SUMMARY,text='summary')
         # generate lattice plot
-        lat_plot = lattice.lattice_plot_function()
+        lat_plot, ape_plot = lattice.lattice_plot_functions()
         # track sin- and cos-like trajectories
         (c_like,s_like) = lattice.cs_traj(steps = steps)
         # calculate envelope functions
         sigma_fun = lattice.sigmas(steps = steps)
         # make plots of functions
-        display((sigma_fun,c_like,s_like,lat_plot))
+        display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
 if __name__ == '__main__':
     # the default input file (YAML syntax)

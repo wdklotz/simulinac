@@ -341,12 +341,26 @@ class Lattice(object):
         for node in self.seq:
             # twiss ftn's for a single node
             ftn = node.twiss_functions(steps = steps, v0 = v0) 
-            # prep plot list of ftn's
+            # prepare plot list of ftn's
             for v,s in ftn:
                 flist = v.tolist()
                 flist.append(s)
                 beta_fun.append(flist)
             v0 = v   # loop back
+
+            # aperture check
+            if FLAGS['useaper']:
+                if node.__class__.__name__ == 'D': continue
+                apperture = None
+                if hasattr(node,'aperture'): aperture = node.aperture
+                if aperture != None:
+                    sigx, sigxp, sigy, sigyp = node['sigxy']
+                    si,sm,sf                 = node.position
+                    if(aperture < sigx or aperture < sigy):
+                        warnings.showwarning(
+                            'aperture hit @ s={:.1f} [m]'.format(sm),
+                            UserWarning,'lattice.py',
+                            'twiss_functions()')
         return beta_fun
 
     def sigma_functions(self, steps = 1):
@@ -397,19 +411,27 @@ class Lattice(object):
                 traj.append((s,d,dp))
         return traj
 
-    def lattice_plot_function(self):
+    def lattice_plot_functions(self):
         fun = []   # is list((s = Abzisse,f = Ordinate))
+        ape = []
         for element in self.seq:
             # DEBUG((element.__class__,element['viseo'],element.position))
             pos   = element.position
+            # element plot
             viseo = element['viseo']
-            si = pos[0]
-            sf = pos[2]
+            si, sm, sf = pos
             fun.append((si,0))
             fun.append((si,viseo))
             fun.append((sf,viseo))
             fun.append((sf,0))
-        return fun
+
+            # aperture plot
+            aperture = None
+            if hasattr(element, 'aperture'): 
+                aperture = element.aperture
+            if element.__class__.__name__ == 'D': continue
+            ape.append((sm,aperture))
+        return fun,ape
 
     def cs_traj(self,steps=10):
         """ track cos- & sin-trajectories """
@@ -656,7 +678,7 @@ def test1():
     sd = [x[0] for x in disp]            # abzisse s
     ds = [x[1] for x in disp]            # dispersion(s)
     #-------------------- lattice viseo
-    lat_plot = lattice.lattice_plot_function()
+    lat_plot, ape_plot = lattice.lattice_plot_functions()
     vsbase = -1.
     vis_abzisse  = [x[0] for x in lat_plot]
     vis_ordinate = [x[1]+vsbase for x in lat_plot]
