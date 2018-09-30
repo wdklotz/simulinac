@@ -121,11 +121,12 @@ class Bunch(DictObject,object):
     #     """ create the distribution """
     #     self.tracklist = self.disttype(self)
 
-class EmitContour(object):
+
+def EmitContour(nTracks,random=False):
     """
         Generates a bunch with particles of same emittance
     """
-    def emittanceContourPoint(self, x, alfa, beta, emit):
+    def emittanceContourPoint(x, alfa, beta, emit):
         gamma = (1.+ alfa**2)/beta
         a = beta
         b = 2.*alfa*x
@@ -136,42 +137,41 @@ class EmitContour(object):
         p2 = (-x,-y)   # upper half-plane 
         return (p1,p2)
 
-    def __init__(self,nTracks,random=False):
-        sigx,sigxp = sigmas(PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
-        if random:
-            Xrand = sigx*(2.*NP.random.random_sample((nTracks,))-1.)
-        else:
-            Xrand = NP.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
-        self.X=[]; self.XP=[]
-        for x in Xrand:
-            points = self.emittanceContourPoint(x,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
-            self.X.append( points[0][0])
-            self.XP.append(points[0][1])
-            self.X.append( points[1][0])
-            self.XP.append(points[1][1])
-        sigy,sigyp = sigmas(PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
-        if random:
-            Yrand = sigy*(2.*NP.random.random_sample((nTracks,))-1.)
-        else:
-            Yrand = NP.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
-        self.Y=[]; self.YP=[]
-        for y in Yrand:
-            points = self.emittanceContourPoint(y,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
-            self.Y.append( points[0][0])
-            self.YP.append(points[0][1])
-            self.Y.append( points[1][0])
-            self.YP.append(points[1][1])
-        tkin = PARAMS['sollteilchen'].tkin  #energy at entrance
-        track = Track()
-        for i in range(2*nTracks):
-            start       = NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
-            start[K.x]  = self.X[i]
-            start[K.xp] = self.XP[i]
-            start[K.y]  = self.Y[i]
-            start[K.yp] = self.YP[i]
-            point = Tpoint(start)
-            track.addpoint(point)
-        self.track = track
+    sigx,sigxp = sigmas(PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+    if random:
+        Xrand = sigx*(2.*NP.random.random_sample((nTracks,))-1.)
+    else:
+        Xrand = NP.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
+    X=[]; XP=[]
+    for x in Xrand:
+        points = emittanceContourPoint(x,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+        X.append( points[0][0])
+        XP.append(points[0][1])
+        X.append( points[1][0])
+        XP.append(points[1][1])
+    sigy,sigyp = sigmas(PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+    if random:
+        Yrand = sigy*(2.*NP.random.random_sample((nTracks,))-1.)
+    else:
+        Yrand = NP.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
+    Y=[]; YP=[]
+    for y in Yrand:
+        points = emittanceContourPoint(y,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+        Y.append( points[0][0])
+        YP.append(points[0][1])
+        Y.append( points[1][0])
+        YP.append(points[1][1])
+    tkin = PARAMS['sollteilchen'].tkin  #energy at entrance
+    track = Track()
+    for i in range(2*nTracks):
+        start       = NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+        start[K.x]  = X[i]
+        start[K.xp] = XP[i]
+        start[K.y]  = Y[i]
+        start[K.yp] = YP[i]
+        point = Tpoint(start)
+        track.addpoint(point)
+        return track
 
 def Gauss1D(params):
     """ generates a bunch with 1D gaussian distribution """
@@ -292,8 +292,7 @@ def test3(filepath):
     from lattice_generator import parse_and_fabric
     N = 200
     lattice = parse_and_fabric(filepath)
-    contour = EmitContour(N, random=True)
-    track   = contour.track
+    track = EmitContour(N, random=True)
     X  = [x()[K.x] for n,x in iter(track)]
     XP = [x()[K.xp] for n,x in iter(track)]
     Y  = [x()[K.y] for n,x in iter(track)]
