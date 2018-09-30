@@ -27,7 +27,7 @@ from math import sqrt
 from lattice_generator import factory
 import elements as ELM
 from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS, waccept
-from bunch import Track, Bunch, Gauss1D
+from bunch import Track, Bunch, Gauss1D, Tpoint
 from trackPlot import poincarePlot
 
 # DEBUGGING
@@ -69,66 +69,76 @@ def scatterPlot(bunch, poincare_section, ordinate, abzisse, text, minmax):
     poincarePlot(good, boxtext, minmax, bad = bad, projections = (1,1))
     return fig
     
-def track_track(track,lattice):
-    """ successive mappings of a track through the lattice """
-    invalid = False
+# def track_track(track,lattice):
+#     """ successive mappings of a track through the lattice """
+#     invalid = False
+# 
+#     ti = track.first()
+#     for element in lattice.seq:                  # loop elements
+#         try:
+#             tf = element.map(ti)                 # map!
+#         except ValueError as ex:
+#             invalid = True
+#             break
+#         ti = tf
+#         # take a poincare section at MRK elements with poincare action only
+#         if isinstance(element,ELM.MRK) and not invalid:
+#             if 'poincare' in element.actions:
+#                 track.append(tf)
+#     return (track,invalid)
 
-    ti = track.first()
-    for element in lattice.seq:                  # loop elements
-        try:
-            tf = element.map(ti)                 # map!
-        except ValueError as ex:
-            invalid = True
-            break
-        ti = tf
-        # take a poincare section at MRK elements with poincare action only
-        if isinstance(element,ELM.MRK) and not invalid:
-            if 'poincare' in element.actions:
-                track.append(tf)
-    return (track,invalid)
-
-def track(lattice,bunch,smp=False):
+def track_node(node,particle):
+    """
+    Tracks a particle through a node
+    """
+    lost = False
+    track = particle['track']
+    n,last_point = track.getpoints()[-1]
+    try:
+        new_point = node.map(last_point)
+    except ValueError as ex:
+        lost = True
+    track.addpoint(new_point)
+    return lost
+    
+    
+def track(lattice,bunch):
     """
     Tracks a bunch of particles through the lattice using maps
-    - lattice is a list of elements
-    - bunch   is a list of particle tracks
-    - smp flag False means do not use multipocessing
-    """
-    if DEBUG_TRACK == DEBUG_ON: dictprnt(bunch._params,'bunch',filter='tracklist')
+    - lattice is a list of elements (class _Node)
+    - bunch (class Bunch) is a list of particles (class Particle)
+    - each particle in a bunch has a track=paticle['track']
+    - track (class Track) is a list of points (class Tpoint)
     
-    invalid_tracks = []
-    valid_tracks   = []
+    Input: lattice , bunch
+    """
+    # if DEBUG_TRACK == DEBUG_ON: dictprnt(bunch._params,'bunch',filter='tracklist')
+    
     losses         = 0
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
     tx4            = ' {}/{}/{} done/lost/initial'.format(0,0,bunch.nbtracks)
 
-    if(smp):
-        pass
-        # arg = [(ptrack,lattice) for ptrack in bunch.tracks]
-        # print()
-        # r = Parallel(n_jobs=8, verbose=5)(map(delayed(track_track),arg))
-        # trck,invalid = zip(*r)
-        # for i,t in enumerate(trck):
-        #     if invalid[i]:
-        #         invalid_tracks.append(t)
-        #     else:
-        #         valid_tracks.append(t)
-    else:
-        for (tcount, ptrack) in enumerate(bunch.tracks):       # loop tracks
-            invalid = track_track(ptrack, lattice)[1]
-            if invalid:
-                invalid_tracks.append(ptrack)
+    lost_particles = []
+    live_particles = []
+    
+    for node in iter(lattice):
+        pcount = 0
+        for pnumber, particle in iter(bunch):    # loop particles in bunch
+            pcount += 1
+            lost = track_node(node,particle)
+            if lost:
+                lost_particles.append(pnumber)
             else:
-                valid_tracks.append(ptrack)
+                live_particles.append(pnumber)
             # showing track-loop progress
-            if (tcount+1)%25 == 0:
-                losses = len(invalid_tracks)
+            if (pcount+1)%25 == 0:
+                losses = len(lost_particles)
                 tx4    = ' {}/{}/{} done/lost/initial'.format(tcount+1, losses, bunch.nbtracks)
             progress(('(track design)', '(track bunch)', zeuge[tcount%4], tx4))
-    # keep valid/invalid tracks in the bunch
-    bunch.tracks         = valid_tracks
-    bunch.invalid_tracks = invalid_tracks
-    print('\ndone: good tracks {}, bad tracks {}'.format(bunch.nbtracks,  bunch.nbinvalid_tracks))
+    # log valid/invalid tracks in the bunch
+    bunch.setlost(lost_particles)
+    bunch.setlive(live_particles)
+    print('\ndone: live particles {}, lost paricles {}'.format(len(live_particles),len(lost_particles)))
     return bunch
 
 def track_soll(lattice):
@@ -136,19 +146,20 @@ def track_soll(lattice):
     Tracks the reference particle through the lattice and redefines the lattice element parameters to
     adapted to the energy of the accelerated reference particle.
     """
-    soll_track = Track(start=NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
-    for element in lattice.seq:
+    soll_track = Track()
+    soll_track.addpoint(NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
+    for node in iter(lattice):
         # DEBUG_SOLL_TRACK(element,' pos {:.4f} label "{}"'.format(element.position[1],element.label))
-        ti = soll_track.last() #track: at entrance
+        n,pi = soll_track.getpoints()[-1]     # point: at entrance
         # DEBUG_SOLL_TRACK('track_soll(i) ', soll_track.point_str(ti))
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
         """ energy adjustment """
-        element.adjust_energy(ti[K.T])
+        element.adjust_energy(pi[K.T])
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
         """ mapping with soll map """
-        tf = element.soll_map(ti)
+        pf = element.soll_map(pi)
         # DEBUG_SOLL_TRACK('track_soll(f) ',soll_track.point_str(tf))
-        soll_track.append(tf)
+        soll_track.addpoint(pf)
         # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
     
     # DEBUG_SOLL_TRACK('track_soll: complete track\n{}'.format(soll_track.points_str()))
@@ -191,7 +202,8 @@ def tracker(options):
     options["sigma(y,y')_i"] = sigmas_y
     options["sigma(z,z')_i"] = sigmas_z
     dictprnt(options,'Tracker Options'); print()
-    
+
+#todo: need new bunch factory
     bunch = Bunch()
     bunch.nbtracks    = particlesPerBunch
     bunch.coord_mask  = (1,1,1,1,1,1)

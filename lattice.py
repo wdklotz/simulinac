@@ -53,6 +53,9 @@ class Lattice(object):
         self.alfay0 = 0.
         self.gammy0 = 0.
         self.accel  = 0.
+    
+    def __getitem__(self,n):
+        return self.seq[n]
 
     def add_element(self,element):
         """ add element to lattice """

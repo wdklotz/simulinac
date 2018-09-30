@@ -110,6 +110,10 @@ class Bunch(DictObject,object):
         else:
             last, p = self.particles[-1]
         self.particles.append((last+1,particle))
+    def setlost(self,value):
+        self.lost = value
+    def setlive(self,value):
+        self.live = value
     # @property
     # def distfactory(self):  # distribution factory
     #     return self['disttype']
@@ -171,7 +175,7 @@ def EmitContour(nTracks,random=False):
         start[K.yp] = YP[i]
         point = Tpoint(start)
         track.addpoint(point)
-        return track
+    return track
 
 def Gauss1D(params):
     """ generates a bunch with 1D gaussian distribution """
@@ -297,7 +301,7 @@ def test3(filepath):
     XP = [x()[K.xp] for n,x in iter(track)]
     Y  = [x()[K.y] for n,x in iter(track)]
     YP = [x()[K.yp] for n,x in iter(track)]
-    fig = plt.figure('test2:figure')
+    fig = plt.figure('test3:figure')
     plt.scatter(X,XP,s=0.1)
     plt.scatter(Y,YP,color='red',s=0.1)
     figures.append(fig)
