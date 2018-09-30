@@ -28,6 +28,7 @@ import logging, pprint
 from enum import IntEnum
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+from Dictionary import DictObject
 import warnings
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # from matplotlib.figure import Figure
@@ -142,8 +143,13 @@ PARAMS = dict(
 """
 KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
-class Particle(object):
+class Particle(DictObject,object):
+    """
+        A particle is a class
+        A particle is also a dictionary
+    """
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
+        DictObject.__init__(self)
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
