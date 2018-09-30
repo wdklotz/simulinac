@@ -143,7 +143,6 @@ PARAMS = dict(
 KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Particle(object):
-    # soll = None  # class member: reference particle a.k.a. soll Teilchen - deactivated, caused serious error
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
@@ -217,6 +216,7 @@ def waccept(node):
             gammaz   = 'undefined',
             emitz_i  = 0.,
             Dp2p0    = 0.,
+            Dp2pmx   = 0.,
             Dphi0    = 0.,
             z0       = 0.,
             DWx      = 0.,
@@ -237,11 +237,15 @@ def waccept(node):
         gb        = particle.gamma_beta
         beta      = particle.beta
         gamma     = particle.gamma
+        tkin      = particle.tkin
 
         # large amplitude oscillations (T.Wangler pp. 175)
+        # NOTE: w == Dgamma == normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
-        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis)     # T.Wangler (6.28)
-        dWmax = wmax*m0c2       # [MeV]
+        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis) # T.Wangler (6.28) wmax on sepratrix
+        DWmax = wmax*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
+        # Dp2pmx= gamma/(gamma+1)*DWmax/tkin 
+        Dp2pmx = gamma/(gamma*gamma-1)*wmax # Dp/p on separatrix [%]
         phi_1 = -phis           # [rad]
         phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
         psi   = 3.*fabs(phis)   # [rad]
@@ -249,22 +253,25 @@ def waccept(node):
         # small amplitude oscillations (T.Wangler pp.184)
         omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
         omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
-        # {Dphi,w}-space   NOTE: emitw = w0root*Dphi0**2  [rad]
+        # {Dphi,w}-space   
+        # NOTE: emitw = Dphi0*w0 = w0root*Dphi0**2  [rad]
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
         Dphi0    = sqrt(emitw/w0root)     # delta-phase-intersect
-        w0       = w0root*Dphi0           # w-intersect (== delta-gamma == normalized energy deviation)
-        # longitudinal acceptance check
+        w0       = w0root*Dphi0           # w-intersect 
+
+        # longitudinal acceptance check (always done)
         if wmax <= w0:
             si,sm,sf = node.position
             warnings.showwarning(
-                'out of longitudinal aperture @ s={:.1f} [m]'.format(si),
+                'out of energy acceptance @ s={:.1f} [m]'.format(si),
                 UserWarning,'setutil.py',
                 'waccept()')
 
         # {z,dp/p}-space
-        z0       = -Dphi0*beta*lamb/(2.*pi)                  # z [m]
-        Dp2p0    = w0*lamb/(2.*pi*gb)                        # delta-p/p
-        emitz    = -z0*Dp2p0                                 # emittance {z,Dp/p} [m]
+        z0       = -Dphi0*beta*lamb/(2.*pi)        # z [m]
+        Dp2p0    = w0/(beta*beta*gamma)            # delta-p/p
+        emitz    = -z0*Dp2p0                       # emittance {z,Dp/p} [m]
+
         # long. twiss @ entrance
         gammaz_i = emitz/z0**2
         betaz_i  = 1./gammaz_i         # [m]
@@ -274,15 +281,17 @@ def waccept(node):
                 gammaz_i = gammaz_i,    # twiss gamma [1/m]
                 emitz_i  = emitz,       # emittance in {z,dp/p} space [m]
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                Dp2pmx   = Dp2pmx,      # max D/p on separatrix
                 Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
-                DWx      = dWmax,       # separatrix: max W in [MeV]
+                DWx      = DWmax,       # separatrix: max W in [MeV]
                 wx       = wmax,        # separatrix: max w
                 phi_1    = phi_1,       # separatrix: max pos. phase
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
                 omgl0    = omgl0)       # synchrotron oscillation [Hz]
     PARAMS.update(res)
+
     return res
 
 def sigmas(alfa,beta,epsi):
@@ -422,6 +431,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
     SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(PARAMS['z0']*1.e2)
     SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
+    SUMMARY['Dp/p-max on separatrix [%]']      =  PARAMS['Dp2pmx']*100.
     return
 
 def I0(x):

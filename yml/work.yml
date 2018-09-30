@@ -31,10 +31,10 @@ flags:
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
-    # - useaper:      True            # {False} use aperture check for lattice elements
+    - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    - pspace:       True            # {False} plot the twiss ellipses at entrance
+    # - pspace:       True            # {False} plot the twiss ellipses at entrance
     # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -52,10 +52,8 @@ parameters:
     - quad_bore:    &p04    0.011       # [m] quad bore radius
     - emity_i:      &emy    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
-    - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
-    - betax_i:              2.285       # [m] matched twiss beta @ entrance x
-    - emitw_i:              0.3e-6      # [rad] {Dphi,w'} emittance @ entrance
-    - emitw_i:              3.1e-4      # [rad] {Dphi,w'} emittance @ entrance
+    # - emitw_i:              12.5995e-5     # [rad] {Dphi,w} emittance @ entrance
+    - emitw_i:              12.5995e-6     # [rad] {Dphi,w} emittance @ entrance
     - betax_i:              2.285       # [m] matched twiss beta @ entrance x
     - betay_i:              0.328       # [m] matched twiss beta @ entrance y
     - alfax_i:              0.          # [1] twiss alpha x @ entrance
@@ -107,18 +105,20 @@ elements:
         - sec:      *HE          # replacement of RFG by D
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
-        - EzAvg:    2.87         # [MV/m] average E-field on axis
+        # - EzAvg:    2.87         # [MV/m] average E-field on axis
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
         - PhiSync:  *p06         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3         # 
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
+        # - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        # - mapping:   base        # Shishlo/Holmes base map model
-        - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
@@ -224,5 +224,5 @@ lattice:
     - title:   1.x.x        # description -  DON't remove or reposition!
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
-    - [75,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     - [ 1,   MARK]
