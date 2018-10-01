@@ -45,13 +45,14 @@ class Tpoint(object):
         return s
     
 
-class Track(DictObject,object):
+# class Track(DictObject,object):
+class Track(object):
     """
         A Track is a dictionary
         A Track is a container (tuple) of positions (Tpoint). 
     """
     def __init__(self):
-        DictObject.__init__(self)
+        # DictObject.__init__(self)
         self.points = []
     def __getitem__(self,n):        # iterator over points in Track
         return self.points[n]
@@ -90,6 +91,7 @@ class Track(DictObject,object):
         return str
 
 class Bunch(DictObject,object):
+# class Bunch(object):
     """
         A Bunch is a dictionary.
         A Bunch is a container (tuple) of particles
@@ -97,8 +99,9 @@ class Bunch(DictObject,object):
     def __init__(self):
         DictObject.__init__(self)
         self.particles = []
-    def __getitem__(self,n):            # iterator over particles in bunch
-        return self.particles[n]
+    def __iter__(self):            # iterator over particles in bunch
+        for particle in self.particles:
+            yield particle
 
     def getparticles(self):             # particles in bunch
         return self.particles
@@ -114,17 +117,65 @@ class Bunch(DictObject,object):
         self.lost = value
     def setlive(self,value):
         self.live = value
-    # @property
-    # def distfactory(self):  # distribution factory
-    #     return self['disttype']
-    # @distfactory.setter
-    # def distfactory(self,value):
-    #     self['disttype'] = value
 
-   ##   def populate_phase_space(self):
-    #     """ create the distribution """
-    #     self.tracklist = self.disttype(self)
+class BunchFactory(DictObject,object):
+    """
+    BunchFactory is a dictionary
+    """
+    def __init__(self, distribution):
+        DictObject.__init__(self)
+        self.distribution = distribution
 
+    def __call__(self):
+        bunch = Bunch()
+        bunch._params = self._params
+        initialtracklist = self.distribution(self)
+        for i in range(self['nbparticles']):
+            particle = Proton()
+            bunch.addparticle(particle)
+            particle['track'] = initialtracklist[i]
+        return bunch
+
+def Gauss1D(params):
+    """ generates a bunch with 1D gaussian distribution """
+    sigx       = params['sigx']
+    sigxp      = params['sigxp']
+    sigy       = params['sigy']
+    sigyp      = params['sigyp']
+    sigz       = params['sigz']
+    sigzp      = params['sigzp']
+    nbtracks   = params['nbparticles']
+    coord_mask = params['coord_mask']
+    tkin       = params['tkin']
+
+    X          = sigx  * NP.random.randn(nbtracks)    # gauss distribution X
+    XP         = sigxp * NP.random.randn(nbtracks)
+    Y          = sigy  * NP.random.randn(nbtracks)
+    YP         = sigyp * NP.random.randn(nbtracks)
+    Z          = sigz  * NP.random.randn(nbtracks)
+    ZP         = sigzp * NP.random.randn(nbtracks)
+
+    tracklist=[]        # all tracks in a bunch
+    for i in range(nbtracks):
+        start=NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+        # initial setting for each coordinate
+        if coord_mask[K.x]:
+            start[K.x]  = X[i]
+        if coord_mask[K.xp]:
+            start[K.xp] = XP[i]
+        if coord_mask[K.y]:
+            start[K.y]  = Y[i]
+        if coord_mask[K.yp]:
+            start[K.yp] = YP[i]
+        if coord_mask[K.z]:
+            start[K.z]  = Z[i]
+        if coord_mask[K.zp]:
+            start[K.zp] = ZP[i]
+        track = Track()
+        tp = Tpoint(point=start)
+        track.addpoint(tp)
+        tracklist.append(track)
+    return tracklist
 
 def EmitContour(nTracks,random=False):
     """
@@ -176,47 +227,6 @@ def EmitContour(nTracks,random=False):
         point = Tpoint(start)
         track.addpoint(point)
     return track
-
-def Gauss1D(params):
-    """ generates a bunch with 1D gaussian distribution """
-    sigx       = params['sigx']
-    sigxp      = params['sigxp']
-    sigy       = params['sigy']
-    sigyp      = params['sigyp']
-    sigz       = params['sigz']
-    sigzp      = params['sigzp']
-    nbtracks   = params['nbtracks']
-    coord_mask = params['coord_mask']
-    tkin       = params['tkin']
-
-    X          = sigx  * NP.random.randn(nbtracks)    # gauss distribution X
-    XP         = sigxp * NP.random.randn(nbtracks)
-    Y          = sigy  * NP.random.randn(nbtracks)
-    YP         = sigyp * NP.random.randn(nbtracks)
-    Z          = sigz  * NP.random.randn(nbtracks)
-    ZP         = sigzp * NP.random.randn(nbtracks)
-
-    tracklist=[]        # all tracks in a bunch
-    for i in range(nbtracks):
-        start=NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
-        # initial setting for each coordinate
-        if coord_mask[K.x]:
-            start[K.x]  = X[i]
-        if coord_mask[K.xp]:
-            start[K.xp] = XP[i]
-        if coord_mask[K.y]:
-            start[K.y]  = Y[i]
-        if coord_mask[K.yp]:
-            start[K.yp] = YP[i]
-        if coord_mask[K.z]:
-            start[K.z]  = Z[i]
-        if coord_mask[K.zp]:
-            start[K.zp] = ZP[i]
-        track = Track()
-        tp = Tpoint(point=start)
-        track.addpoint(tp)
-        tracklist.append(track)
-    return tracklist
 
 def test0():
     print('-----------------------------------------Test0---')
@@ -309,15 +319,15 @@ def test3(filepath):
 def test4():
     print('-----------------------------------------Test4---')
     params = dict(
-    sigx       = 6,
-    sigxp      = 1,
-    sigy       = 1,
-    sigyp      = 6,
-    sigz       = 3,
-    sigzp      = 10,
-    nbtracks   = 30000,
-    coord_mask = NP.array([1,1,1,1,1,1,0,1,0,1]),
-    tkin       = 70
+    sigx        = 6,
+    sigxp       = 1,
+    sigy        = 1,
+    sigyp       = 6,
+    sigz        = 3,
+    sigzp       = 10,
+    nbparticles = 30000,
+    coord_mask  = NP.array([1,1,1,1,1,1,0,1,0,1]),
+    tkin        = 70
     )
     
     tracklist = Gauss1D(params)

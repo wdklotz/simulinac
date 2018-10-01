@@ -224,5 +224,5 @@ lattice:
     - title:   1.x.x        # description -  DON't remove or reposition!
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
-    - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [10,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     - [ 1,   MARK]

@@ -156,6 +156,7 @@ class Particle(DictObject,object):
         self.e0         = mass                     # rest mass [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
+        self.lost       = False
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:

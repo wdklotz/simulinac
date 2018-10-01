@@ -42,7 +42,7 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
+def poincarePlot(good, box, max, bad=([],[]), projections=(0,0)):
     """ a scatter plot with projection histograms """
     from matplotlib.ticker import NullFormatter
 
@@ -58,7 +58,7 @@ def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
 
         # place a text box in upper left in axes coords
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
-        ax.text(0.05, 0.95, whazit, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+        ax.text(0.05, 0.95, box, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
 
         (xmax,ymax) = max
         plt.xlim([-xmax,xmax])
@@ -89,7 +89,7 @@ def poincarePlot(good, whazit, max, bad=([],[]), projections=(0,0)):
 
         # place a text box in upper left in axes coords
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # these are matplotlib.patch.Patch properties
-        axScatter.text(0.05, 0.95, whazit, transform=axScatter.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+        axScatter.text(0.05, 0.95, box, transform=axScatter.transAxes, fontsize=10, verticalalignment='top', bbox=props)
 
         (prx,pry)   = projections
         (xmax,ymax) = max
