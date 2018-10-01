@@ -38,13 +38,13 @@ def DEBUG_OFF(*args):
 
 def scatterPlot(bunch, ordinate, abszisse, text, minmax):
     """ prepare the plot of a Poincaré section """
-    txt = '{} initial'.format(text)
+    txt = '{} final'.format(text)
     x=[]; y=[]
-    fig = plt.figure(1)
+    fig = plt.figure(-1)
     for nparticle,particle in iter(bunch):
         track = particle['track']
-        ntp, tp = track[0]
-        point = tp()
+        ntp, tpoint = track[-1]
+        point = tpoint()
         x.append(point[ordinate]*1.e3)
         y.append(point[abszisse]*1.e3)
 
@@ -90,7 +90,6 @@ def track_node(node,particle):
     track.addpoint(Tpoint(point=new_point))
     return lost
     
-    
 def track(lattice,bunch):
     """
     Tracks a bunch of particles through the lattice using maps
@@ -135,12 +134,12 @@ def track_soll(lattice):
     tpoint = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     soll_track.addpoint(tpoint)
     for node in iter(lattice):
-        n,pi = soll_track.getpoints()[-1]   # n,point at entrance
+        n,pi = soll_track.getpoints()[-1]   # n,Tpoint at entrance
         """ energy adjustment """
         node.adjust_energy(pi()[K.T])
         """ mapping with soll map """
         pf = node.soll_map(pi())
-        tpoint = Tpoint(pf)                  # n+1,point at exit
+        tpoint = Tpoint(pf)                  # n+1,Tpoint at exit
         soll_track.addpoint(tpoint)
     return soll_track
 
@@ -221,7 +220,7 @@ def test0(filepath):
 
 # def test1(filepath):
 def track_bunch(options):
-    print('-----------------------------------------Test1---')
+    print('-----------------------------------------track_bunch---')
     tracker(options)
     
 if __name__ == '__main__':
@@ -237,5 +236,6 @@ if __name__ == '__main__':
                     )
     template = Template('$tx1 $tx2 $tx3 $tx4')
     filepath = 'yml/work.yml'
+
     # test0(filepath)
     track_bunch(options)

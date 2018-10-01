@@ -45,16 +45,14 @@ class Tpoint(object):
         return s
     
 
-# class Track(DictObject,object):
 class Track(object):
     """
         A Track is a dictionary
         A Track is a container (tuple) of positions (Tpoint). 
     """
     def __init__(self):
-        # DictObject.__init__(self)
         self.points = []
-    def __getitem__(self,n):        # iterator over points in Track
+    def __getitem__(self,n):        # evaluation of self[key] for Tpoints in Track
         return self.points[n]
 
     def getpoints(self):            # points in Track
@@ -99,7 +97,7 @@ class Bunch(DictObject,object):
     def __init__(self):
         DictObject.__init__(self)
         self.particles = []
-    def __iter__(self):            # iterator over particles in bunch
+    def __iter__(self): # have to use __iter__() to not override __getitem__() in DictObject
         for particle in self.particles:
             yield particle
 
@@ -128,7 +126,7 @@ class BunchFactory(DictObject,object):
 
     def __call__(self):
         bunch = Bunch()
-        bunch._params = self._params
+        bunch._params = self._params   # copy self._params to bunch
         initialtracklist = self.distribution(self)
         for i in range(self['nbparticles']):
             particle = Proton()
@@ -172,8 +170,8 @@ def Gauss1D(params):
         if coord_mask[K.zp]:
             start[K.zp] = ZP[i]
         track = Track()
-        tp = Tpoint(point=start)
-        track.addpoint(tp)
+        tpoint = Tpoint(point=start)
+        track.addpoint(tpoint)
         tracklist.append(track)
     return tracklist
 
