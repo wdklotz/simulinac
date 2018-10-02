@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import time
 from string import Template
 from math import sqrt
-# from joblib import Parallel, delayed
 
 from lattice_generator import factory
 import elements as ELM
@@ -48,6 +47,7 @@ def scatterPlot(bunch, ordinate, abszisse, text, minmax):
         x.append(point[ordinate]*1.e3)
         y.append(point[abszisse]*1.e3)
 
+#todo: invalid tracks
     # xi=[]; yi=[]
     # for t in bunch.invalid_tracks:             # loop invalid tracks
     #     if psec < t.nbpoints:
@@ -76,6 +76,7 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
+#todo: needs aperture check here
 def track_node(node,particle):
     """
     Tracks a particle through a node
@@ -127,8 +128,8 @@ def track(lattice,bunch):
 
 def track_soll(lattice):
     """
-    Tracks the reference particle through the lattice and redefines the lattice element parameters
-    according to the energy of the accelerated reference particle.
+    Tracks the reference particle through the lattice and redefines the lattice 
+    element parameters according to the energy of the accelerated reference particle.
     """
     soll_track = Track()
     tpoint = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
@@ -169,7 +170,7 @@ def tracker(options):
     sigmas_x  = sigmas(alfax_i, betax_i, emitx_i)
     sigmas_y  = sigmas(alfay_i, betay_i, emity_i)
     sigmas_z  = sigmas(      0.,betaz_i, emitz_i)
-    options['tkin [MeV'] = PARAMS['sollteilchen'].tkin
+    options['tkin [MeV]'] = PARAMS['sollteilchen'].tkin
     options["sigma(x,x')_i"] = sigmas_x
     options["sigma(y,y')_i"] = sigmas_y
     options["sigma(z,z')_i"] = sigmas_z
@@ -186,16 +187,14 @@ def tracker(options):
     bunchfactory['nbparticles'] = particlesPerBunch
     bunchfactory['tkin']        = PARAMS['injection_energy']
     bunch = bunchfactory()
-
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
     t2 = time.clock()
-    track_soll(lattice)  # track soll
+    track_soll(lattice)  # <----- track soll
     t3 = time.clock()
     progress(('(track design)', '(track bunch)', '', ''))
-    track(lattice,bunch) # track bunch
+    track(lattice,bunch) # <----- track bunch
     t4 = time.clock()
-
     # make 2D projections
     projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False)
     t5 = time.clock()

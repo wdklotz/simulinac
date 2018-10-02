@@ -396,7 +396,8 @@ class _DYN_Gslice(object):
             res = res + coeff[i] * G1 * Ep(z, tarr[i])
         res = res * h**3 / 90.
         return res
-        
+
+#todo: broken        
 def test0():
     import elements as ELM
     print('-----------------------------------TEST 0----------------')

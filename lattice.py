@@ -82,14 +82,17 @@ class Lattice(object):
         mcell.section = '<= full lattice map'
         return mcell.string()
 
+#todo: broken
     def stats(self,soll_track):
         """ gather lattice statistics """
         cav_counter = 0
         q_counter   = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
-        tk_i = soll_track.first()[6]
-        tk_f = soll_track.last()[6]
+        # tk_i = soll_track.first()[6]
+        # tk_f = soll_track.last()[6]
+        tk_i = soll_track.getpoints()[0][1]()[6]
+        tk_f = soll_track.getpoints()[-1][1]()[6]
         for element in self.seq:
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1

@@ -331,6 +331,7 @@ class _TTF_Gslice(object):
             self.parent.dbTab2Rows.append(dbTab2Row)
         return f_track
 
+#todo: broken
 def test0():
     import elements as ELM
     from bunch import Track
@@ -366,6 +367,7 @@ def test0():
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
 
+#todo: broken
 def test1():
     import elements as ELM
     from bunch import Track

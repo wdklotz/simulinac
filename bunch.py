@@ -67,7 +67,6 @@ class Track(object):
         self.points.append((last+1,point))
     def as_table(self):
         tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
-        # tblheadr = ['x',"x'",'y',"y'",'z',"z'",'tkin','s']
         tblrows =[]
         for n,point in iter(self):
             tblrow = [
@@ -89,7 +88,6 @@ class Track(object):
         return str
 
 class Bunch(DictObject,object):
-# class Bunch(object):
     """
         A Bunch is a dictionary.
         A Bunch is a container (tuple) of particles
