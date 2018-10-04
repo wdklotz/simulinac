@@ -24,6 +24,8 @@ This file is part of the SIMULINAC code
 #todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix
 #todo: finish aperture checks for losses
 import sys
+import os
+# import subprocess
 from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -258,11 +260,14 @@ def simulation(filepath):
         display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
 if __name__ == '__main__':
-    # the default input file (YAML syntax)
-    filepath = 'yml/ref_run.yml'
-    filepath = 'yml/work.yml'
+    template_file = 'yml/worktmpl.yml'
+    input_file    = 'yml/simuIN.yml'
+    preproc_file  = 'yml/ppdef.sh'
+    command = "{} {} > {}".format(preproc_file,template_file, input_file)
+    print('m4->script: ',preproc_file,' template: ',template_file,' input: ',input_file)
+    os.system(command)
 
     if len(sys.argv) == 2:
-        filepath = sys.argv[1]
-    simulation(filepath)
+        input_file = sys.argv[1]
+    simulation(input_file)
     

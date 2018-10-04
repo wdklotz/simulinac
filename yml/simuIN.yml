@@ -1,0 +1,236 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+#..........................................................................................
+## RUN configurationgenerator
+
+flags:
+    # - accON:        False           # {True} acceleration on/off flag
+    # - egf:          True            # {False} emittance growth flag
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # - periodic:     True            # {False} treat lattice as ring
+    # - express:      True            # {False} use express version of thin quads
+    # - useaper:      True            # {False} use aperture check for lattice elements
+    # - csTrak:       False           # {True} plot CS trajectories
+    # - bucket:       True            # {False} plot the bucket
+    # - pspace:       True            # {False} plot the twiss ellipses at entrance
+    # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
+#...........................................................................................
+## SECTION definitions
+
+sections:
+- [&LE LE,  &HE HE]
+#...........................................................................................
+## INPUT parameter definitions
+
+parameters:
+    - Tkin:                 70.       # [MeV] energy @ entrance (injection)
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
+    - emitw_i:      &emw    12.6e-6      # [rad] {Dphi,w} emittance @ entrance
+    - betax_i:      &btx    2.285      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    0.328      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    -20.      # [deg] synchronous phase
+    # - Tkin:                 70.         # [MeV] energy @ entrance (injection)
+    # - emitw_i:              15.5995e-5  # [rad] {Dphi,w} emittance @ entrance
+    # - emitw_i:              12.5995e-5  # [rad] {Dphi,w} emittance @ entrance
+    # - emitw_i:              12.5995e-6  # [rad] {Dphi,w} emittance @ entrance
+    # - emity_i:      &emy    1.e-6       # [m*rad] {x,x'} emittance @ entrance
+    # - emitx_i:              *emy        # [m*rad] {y,y'} emittance @ entrance
+    # - betax_i:              2.285       # [m] matched twiss beta @ entrance x
+    # - betay_i:              0.328       # [m] matched twiss beta @ entrance y
+    # - betay_i:              2.285       # [m] unmatched twiss beta @ entrance y
+    # - alfax_i:             -3.        # [1] twiss alpha x @ entrance
+    # - alfay_i:              3.        # [1] twiss alpha y @ entrance
+    # - phi_sync:     &phs    -20.        # [deg] synchronous phase
+    - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfay_i:              0.          # [1] twiss alpha y @ entrance
+    - frequency:    &p01    816.e+6     # [Hz] frequency
+    - ql0:          &p02    0.10        # [m] quad-length
+    - ql:           &p03    0.05        # [m] 1/2 quad-length
+    - quad_bore:    &p04    0.011       # [m] quad bore radius
+    - windings:             30          # [1] quad-coil windings
+    - gap:          &p15    0.048       # [m] RF gap
+    - n_sigma:              10          # [m] sigma aperture
+    # - aperture:             *p04        # [m] global aperture setting (default = None)
+    - aperture:             15.e-3        # [m] global aperture setting (default = None)
+#...........................................................................................
+## ELEMENT definitions
+
+elements:
+# HE
+    - D3:        &D3             # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.08         # [m]
+        - sec:      *HE          # is part of section
+    - D5:    &D5                 # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.022        # [m] half cavity
+        - sec:      *HE          # is part of section
+    - QFH:   &QFH                # ID: &alias
+        - type:     QF           # QF class
+        - length:   *p03         # [m]
+        - aperture: *p04         # [m] quad bore
+        # - B':       &Bgrad   40. # [T/m] quadrupole gradient
+        - B':       &Bgrad   30. # [T/m] quadrupole gradient
+        # - B':       &Bgrad   38.8 # [T/m] quadrupole gradient  (zero RF)
+        # - B':       &Bgrad   34.5 # [T/m] quadrupole gradient  (zero RF)
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *HE          # is part of section
+    - QDH:   &QDH                # ID: &alias
+        - type:     QD           # QD class
+        - length:   *p02         # [m] length
+        - aperture: *p04         # [m] quad bore
+        - B':       *Bgrad       # [T/m] quadrupole gradient
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *HE          # is part of section
+    - RFGHx:    &RFGHx           # replacement of RFG by D
+        - type:     D            # replacement of RFG by D
+        - length:   0.0          # replacement of RFG by D
+        - sec:      *HE          # replacement of RFG by D
+    - RFGH:  &RFGH               # ID: &alias
+        - type:     RFG          # RFG class
+        # - EzAvg:    2.87         # [MV/m] average E-field on axis
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        # - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        - PhiSync:  *phs         # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      *p15         # [m] length
+        # - aperture: *p04         # [m] quad bore
+        - aperture: 10.e-3         #
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        # - mapping:   t3d         # Trace 3D linear map model
+        # - mapping:   simple      # Shishlo/Holmes linear map model
+        - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        # - mapping:   dyn         # Tanke/Valero RF gap-model
+        - sec:      *HE          # is part of section
+    - RFCH:  &RFCH               # ID: &alias
+        - type:     RFC          # RFC class
+        - EzAvg:    2.31         # [MV/m] average E-field on axis
+        - PhiSync:  *phs         # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      *p15         # [m] gap length
+        - aperture: *p04         # [m] quad bore
+        - length:   0.044        # [m] cavity length
+        - sec:      *HE          # is part of section
+    - M:  &Mrkr                  # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            # - sigma_x          # action hoeizontal sigma
+            # - sigma_y          # action vertical sigma
+            # - Tkin             # action kinetic energy
+            - show_elli          # action twiss ellipses
+        - sec:     *HE
+    - A:  &Apr                   # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            - check_aperture     # action aperture check
+        - sec:     *HE
+    - F:  &Foil                  # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            - poincare           # action aperture check
+        - sec:     *HE
+#...........................................................................................
+## SEGMENT definitions
+
+segments:
+# LE            # empty section
+# HE            # high energy section
+    - SEG1H:
+        - *QFH
+        - *D3
+    - SEG2H:
+        - *D3
+        - *QDH
+        - *D3
+    - SEG3H:
+        - *D3
+        - *QFH
+    - RFGH:
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        - *D5
+        - *RFGH
+        - *D5
+        #
+        # - *D5     # 10th cavity makes it unstable!!
+        # - *RFGH
+        # - *D5
+        #
+    - RFCAVH:
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+    - MARK:
+        - *Foil
+#...........................................................................................
+## LATTICE definition
+
+lattice:
+    - title:   1.x.x        # description -  DON't remove or reposition!
+    # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
+    - [70,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [ 1,   MARK]

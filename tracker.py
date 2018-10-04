@@ -17,6 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import os
 import numpy as NP
 import matplotlib.pyplot as plt
 import time
@@ -73,6 +74,7 @@ def projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False
     if show: plt.show()
 
 def progress(tx):
+    template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
@@ -146,8 +148,8 @@ def track_soll(lattice):
 
 def tracker(options):
     """ prepare and launch tracking """
-    filepath          = options['filepath']
-    particlesPerBunch = options['particlesPerBunch']
+    filepath          = options['input_file']
+    particles_per_bunch = options['particles_per_bunch']
     show              = options['show']
     save              = options['save']
     skip              = options['skip']
@@ -184,7 +186,7 @@ def tracker(options):
     bunchfactory['sigz']        = sigmas_z[0]
     bunchfactory['sigzp']       = sigmas_z[1]
     bunchfactory['coord_mask']  = (1,1,1,1,1,1)
-    bunchfactory['nbparticles'] = particlesPerBunch
+    bunchfactory['nbparticles'] = particles_per_bunch
     bunchfactory['tkin']        = PARAMS['injection_energy']
     bunch = bunchfactory()
     # launch tracking and show final with time
@@ -227,14 +229,19 @@ if __name__ == '__main__':
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     
-    options = dict( filepath = 'yml/work.yml',
-                    particlesPerBunch = 3000,
+    template_file = 'yml/worktmpl.yml'
+    input_file    = 'yml/trackIN.yml'
+    preproc_file  = 'yml/ppdef.sh'
+    command = "{} {} > {}".format(preproc_file,template_file, input_file)
+    print('m4->script: ',preproc_file,' template: ',template_file,' input: ',input_file)
+    os.system(command)
+
+    # test0(input_file)
+
+    options = dict( input_file = input_file,
+                    particles_per_bunch = 3000,
                     show    = True,
                     save    = False,
                     skip    = 1
                     )
-    template = Template('$tx1 $tx2 $tx3 $tx4')
-    filepath = 'yml/work.yml'
-
-    # test0(filepath)
     track_bunch(options)
