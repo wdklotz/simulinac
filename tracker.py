@@ -166,16 +166,24 @@ def tracker(options):
     emity_i   = PARAMS['emity_i']
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
-    alfaz_i   = 0.
-    betaz_i   = PARAMS['betaz_i']
-    emitz_i   = PARAMS['emitz_i']
+    alfaz   = 0.
+    betaz   = PARAMS['betaz']
+    betaw   = PARAMS['betaw']
+    emitz   = PARAMS['emitz']
     sigmas_x  = sigmas(alfax_i, betax_i, emitx_i)
     sigmas_y  = sigmas(alfay_i, betay_i, emity_i)
-    sigmas_z  = sigmas(      0.,betaz_i, emitz_i)
+    sigmas_z  = sigmas(      0.,betaz, emitz)
     options['tkin [MeV]'] = PARAMS['sollteilchen'].tkin
     options["sigma(x,x')_i"] = sigmas_x
     options["sigma(y,y')_i"] = sigmas_y
     options["sigma(z,z')_i"] = sigmas_z
+    options['betax_i'] = betax_i
+    options['betay_i'] = betay_i
+    options['betaz_i'] = betaz
+    options['betaw_i'] = betaw
+    options['emitx_i'] = emitx_i
+    options['emity_i'] = emity_i
+    options['emitz_i'] = emitz
     dictprnt(options,'Tracker Options'); print()
     # bunch factory
     bunchfactory = BunchFactory(Gauss1D)
@@ -229,11 +237,11 @@ if __name__ == '__main__':
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     
-    template_file = 'yml/worktmpl.yml'
-    input_file    = 'yml/trackIN.yml'
-    preproc_file  = 'yml/ppdef.sh'
-    command = "{} {} > {}".format(preproc_file,template_file, input_file)
-    print('m4->script: ',preproc_file,' template: ',template_file,' input: ',input_file)
+    template_file = 'yml/worktmpl.yml'          # template for m4
+    input_file    = 'yml/trackIN.yml'           # input for tracker.py
+    macros_file   = 'yml/macros.sh'              # macro definitions
+    command = "{} {} > {}".format(macros_file,template_file, input_file)
+    print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
     os.system(command)
 
     # test0(input_file)

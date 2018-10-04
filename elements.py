@@ -383,14 +383,10 @@ class D(I):
 
 # Trace3D focussing quad
 class QF(D):
-    """ Trace3D focussing quad """
-    def __init__(self, 
-                k0 = 0., 
-                length = 0., 
-                label = 'QF', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0], 
-                aperture = PARAMS['aperture']):
+    """ 
+    Trace3D focussing quad 
+    """
+    def __init__(self, k0 = 0., length = 0., label = 'QF', particle = PARAMS['sollteilchen'], position = [0, 0, 0], aperture = PARAMS['aperture']):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length

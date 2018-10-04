@@ -46,8 +46,8 @@ sections:
 
 parameters:
     - Tkin:                 50.       # [MeV] energy @ entrance (injection)
-    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
+    - emitx_i:      &emx    1.e-4      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-4      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    12.6e-6      # [rad] {Dphi,w} emittance @ entrance
     - betax_i:      &btx    2.285      # [m] twiss beta @ entrance x
     - betay_i:      &bty    0.328      # [m] twiss beta @ entrance y

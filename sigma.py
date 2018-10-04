@@ -41,7 +41,7 @@ class Sigma(object):
         self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
         self._emitx = PARAMS['emitx_i']
         self._emity = PARAMS['emity_i']
-        self._emitz = PARAMS['emitz_i']
+        self._emitz = PARAMS['emitz']
         self._beam(v0)
         
     @property
