@@ -89,7 +89,7 @@ class Track(object):
 
 class Bunch(object):
     """
-        A Bunch is a container (tuple) of particles
+        A Bunch is a container (list) of particles
     """
     def __init__(self):
         self._particles = []
@@ -101,15 +101,9 @@ class Bunch(object):
     def nbofparticles(self):            # nbof particles in bunch
         return len(self._particles)
     def addparticle(self,particle):     # add particle to bunch
-        if self.nbofparticles() == 0:
-            last = 0
-        else:
-            last, p = self._particles[-1]
-        self._particles.append((last+1,particle))
-    def setlost(self,value):
-        self._lost = value
-    def setlive(self,value):
-        self._live = value
+        self._particles.append(particle)
+    def removeparticle(self,particle):
+        self._particles.remove(particle)
 
 class BunchFactory(object):
     """
@@ -136,7 +130,7 @@ class BunchFactory(object):
             print('{} distributions implemented!'.format(self.distribution.__name__))
             sys.exit(1)
         for i in range(self.numberofparticles):
-            particle = Proton()
+            particle = Proton(tkin= PARAMS['injection_energy'])
             bunch.addparticle(particle)
             particle['track'] = initialtracklist[i]
         return bunch
@@ -269,11 +263,11 @@ def test0():
     for n,point in iter(track):
         print(n,point())
     # link track with particle
-    for n,particle in iter(bunch):
+    for particle in iter(bunch):
         particle['track'] = track
     # show
     particles = bunch.getparticles()
-    n, last = particles[-1]
+    last = particles[-1]
     print('last particle track: ', last['track'])
     print("last['track'].__dict__; ",last['track'].__dict__)
     

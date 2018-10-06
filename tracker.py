@@ -22,13 +22,13 @@ import numpy as NP
 import matplotlib.pyplot as plt
 import time
 from string import Template
-from math import sqrt
+from math import sqrt, degrees, radians
 
 from lattice_generator import factory
 import elements as ELM
 from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS, waccept
 from setutil import WConverter
-from bunch import BunchFactory, Gauss1D, Track, Tpoint
+from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from trackPlot import poincarePlot
 
 # DEBUGGING
@@ -38,40 +38,65 @@ def DEBUG_OFF(*args):
     pass
 
 #todo: show invalid tracks
-def scatterPlot(bunch, ordinate, abszisse, text, minmax=(1.,1.)):
+def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     """ 
     Prepare the Poincaré section plot 
     """
-    
+    live_bunch, lost_bunch = live_lost_bunches
     txt = ('{} initial'.format(text),'{} final'.format(text))
-    initial = 0
-    final   = -1
-    for loc in (initial,final): # figures
-        x=[]; y=[]
-        fig = plt.figure(loc)
-        box = '{} {} particles'.format(txt[loc],bunch.nbofparticles())
-        for nd, particle in iter(bunch): # particles
-            track = particle['track']
-            nd, tpoint = track.getpoints()[loc]
-            point = tpoint()
-            x.append(point[ordinate])
-            y.append(point[abszisse])
-        xmax = max(x)
-        xmin = min(x)
-        ymax = max(y)
-        ymin = min(y)
-        minmax = (xmax-xmin,ymax-ymin)
-        # plt.scatter(x,y,s=1)   # bare scatter plot
-        poincarePlot((x,y), box, max = minmax, projections = (1,1))
+    initial = 0; final   = -1
+    x=[]; y=[]; xlost=[]; ylost=[]
+    loc = initial                   # INITIAL
+    fig = plt.figure(loc)
+    nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
+    box = '{} {} particles'.format(txt[loc],nbprt)
+    for particle in iter(live_bunch): # particles
+        track = particle['track']
+        nd, tpoint = track.getpoints()[loc]
+        point = tpoint()
+        x.append(point[ordinate])
+        y.append(point[abszisse])
+    for particle in iter(lost_bunch):
+        track = particle['track']
+        nd, tpoint = track.getpoints()[loc]
+        point = tpoint()
+        xlost.append(point[ordinate])
+        ylost.append(point[abszisse])
+    xmax = max(x)
+    xmin = min(x)
+    ymax = max(y)
+    ymin = min(y)
+    minmax = (xmax-xmin,ymax-ymin)
+    # plt.scatter(x,y,s=1)   # bare scatter plot
+    poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
+
+    x=[]; y=[]
+    loc = final                     # FINAL
+    fig = plt.figure(loc)
+    nbprt = live_bunch.nbofparticles()
+    box = '{} {} particles'.format(txt[loc],nbprt)
+    for particle in iter(live_bunch): # particles
+        track = particle['track']
+        nd, tpoint = track.getpoints()[loc]
+        point = tpoint()
+        x.append(point[ordinate])
+        y.append(point[abszisse])
+    xmax = max(x)
+    xmin = min(x)
+    ymax = max(y)
+    ymin = min(y)
+    minmax = (xmax-xmin,ymax-ymin)
+    # plt.scatter(x,y,s=1)   # bare scatter plot
+    poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
     
-def projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False):
+def projection(live_lost_bunches, ordinate= K.z, abszisse= K.zp, show= True, save= False):
     """ 
     2D phase space projections of Poincaré sections 
     """
-    symbol = ("x","x'","y","y'","z","z'")
+    symbol = ("x","x'","y","y'","z","Dp/2")
     text   = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
-    fig    = scatterPlot(bunch, ordinate=ordinate, abszisse=abszisse, text=text)
+    fig    = scatterPlot(live_lost_bunches, ordinate=ordinate, abszisse=abszisse, text=text)
     if save: plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
     if show: plt.show()
 
@@ -80,19 +105,30 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
-#todo: needs aperture check here
+#todo: aperture check
 def track_node(node,particle):
     """
     Tracks a particle through a node
     """
-    lost = False
     track = particle['track']
     nb,last_point = track.getpoints()[-1]
     try:
         new_point = node.map(last_point())
     except ValueError as ex:
         lost = True
-    track.addpoint(Tpoint(point=new_point))
+    # check Dp2p-acceptance
+    if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
+        lost = False
+    else:
+        lost = True
+    # check z-acceptance
+    if abs(new_point[K.z]) < PARAMS['zAcceptance']:
+        lost = False
+    else:
+        lost = True
+    if not lost:
+        track.addpoint(Tpoint(point=new_point))
+    particle.lost = lost
     return lost
     
 def track(lattice,bunch):
@@ -108,33 +144,35 @@ def track(lattice,bunch):
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
     tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbofparticles())
 
-    ncnt   = 0
+    ndcnt  = 0
     lnode  = len(lattice.seq)
     lmod   = int(lnode*0.05)
-    lost   = 0
+    nlost  = 0
     nbpart = bunch.nbofparticles()
-    for node in iter(lattice):
-        pass
+    lbunch = Bunch()
     for node in iter(lattice):              # nodes
-        ncnt +=1
-        for nd, particle in iter(bunch):    # particles
-            if not particle.lost: 
-                failure = track_node(node,particle)
-                if failure:
-                    particle.lost = True
-                    lost += 1
-                    continue
-                # showing track-loop progress
-                if (ncnt+1)%lmod == 0:
-                    tx4    = ' {}% done {}/{} lost/initial'.format(int(ncnt/lnode*100), lost, nbpart)
-                    # tx = ('(track design)', '(track bunch)', zeuge[ncnt%4], tx4)
-                    tx = ('(track design)', '(track bunch)', '', tx4)
-                    progress(tx)
-            else:
-                continue
-    live = nbpart - lost
-    print('\ndone: live particles {}, lost particles {}'.format(live,lost))
-    return bunch
+        ndcnt +=1
+        for particle in iter(bunch):    # particles
+            # if not particle.lost: 
+                # # failure = track_node(node,particle)
+                # if failure:
+                #     particle.lost = True
+                #     lost += 1
+                #     continue
+            lost = track_node(node,particle)
+            if lost:
+                lbunch.addparticle(particle)
+                bunch.removeparticle(particle)
+                nlost += 1
+            # showing track-loop progress
+            if (ndcnt+1)%lmod == 0:
+                tx4    = ' {}% done {}/{} lost/initial'.format(int(ndcnt/lnode*100), nlost, nbpart)
+                # tx = ('(track design)', '(track bunch)', zeuge[ndcnt%4], tx4)
+                tx = ('(track design)', '(track bunch)', '', tx4)
+                progress(tx)
+    live = nbpart - lbunch.nbofparticles()
+    print('\ndone: live particles {}, lost particles {}'.format(live,nlost))
+    return (bunch,lbunch)
 
 def track_soll(lattice):
     """
@@ -156,7 +194,8 @@ def track_soll(lattice):
 
 def tracker(options):
     """ prepare and launch tracking """
-    print('-----------------------------------------track_bunch---')
+    npart    = options['particles_per_bunch']
+    print('-----------------------track_bunch with {} particles---'.format(npart))
 
     # !!FIRST!! make lattice
     t0       = time.clock()
@@ -168,8 +207,7 @@ def tracker(options):
     conv     = WConverter(tkin)
     t1       = time.clock()
 
-    # pull options
-    npart    = options['particles_per_bunch']
+    # pull more options
     show     = options['show']
     save     = options['save']
     skip     = options['skip']
@@ -190,11 +228,14 @@ def tracker(options):
     betaz,alfaz,gammaz,emitz = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
+    Dp2pmx     = PARAMS['Dp2pmx']
+    Dp2p0      = PARAMS['Dp2p0']
     # {Dphi(x)w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw,alfaw,gammaw,emitw = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
+    wmx         = PARAMS['wmx']
 
     # gather for print
     parameter_log = {}
@@ -209,8 +250,12 @@ def tracker(options):
     parameter_log['betaz_i..[m/rad]'] = betaz
     parameter_log['emitx_i......[m]'] = emitx_i
     parameter_log['emity_i......[m]'] = emity_i
-    parameter_log['emitw_i....[rad]'] = emitw
+    parameter_log['emitw_i....[rad]'] = (emitw, wmx)
     parameter_log['emitz_i......[m]'] = emitz
+    parameter_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    parameter_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
+    parameter_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
+    
     dictprnt(parameter_log,'Tracker Options'); print()
 
     # bunch factory
@@ -228,11 +273,11 @@ def tracker(options):
     track_soll(lattice)  # <----- track soll
     t3 = time.clock()
     progress(('(track design)', '(track bunch)', '', ''))
-    track(lattice,bunch) # <----- track bunch
+    live_lost_bunches = track(lattice,bunch) # <----- track bunch
     t4 = time.clock()
 
     # make 2D projections
-    projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False)
+    projection(live_lost_bunches, ordinate = K.z, abszisse = K.zp, show = True, save = False)
     t5 = time.clock()
     # finish up
     print()
@@ -266,12 +311,11 @@ if __name__ == '__main__':
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
     os.system(command)
 
-    # test0(input_file)
-
     options = dict( input_file = input_file,
-                    particles_per_bunch = 5000,
+                    particles_per_bunch = 3000,
                     show    = True,
                     save    = False,
                     skip    = 1
                     )
+    # test0(input_file)
     tracker(options)

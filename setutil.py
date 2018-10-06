@@ -334,9 +334,9 @@ def waccept(node):
         DWmx = wmx*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
         # NOTE: Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
         Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
-        phi_1 = -phis           # [rad]
-        phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
-        psi   = 3.*fabs(phis)   # [rad]
+        phi_1 = -phis              # [rad]
+        phi_2 = 2.*phis            # [rad] Naehrung T.Wangler pp.178
+        psi   = 3.*fabs(phis)      # [rad]
 
         # small amplitude oscillations (T.Wangler pp.184)
         omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
@@ -364,6 +364,8 @@ def waccept(node):
         # betaz    = emitz/Dp2p0**2                  # beta [m]
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
         gammaz = 1./betaz
+        Dp2pAcceptance = Dp2pmx
+        zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
                 # {Dphi(x)w}
                 betaw    = betaw,       # beta twiss [rad]
@@ -382,6 +384,8 @@ def waccept(node):
                 Dp2pmx   = Dp2pmx,      # max D/p on separatrix
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
+                Dp2pAcceptance = Dp2pAcceptance,
+                zAcceptance    = zAcceptance,
                 # {Dphi(x)DW}
                 DWmx      = DWmx)       # separatrix: max W in [MeV]
 
@@ -398,6 +402,8 @@ def waccept(node):
     PARAMS['omgl0']   = omgl0
     PARAMS['Dp2pmx']  = Dp2pmx
     PARAMS['w0']      = w0
+    PARAMS['Dp2pAcceptance'] = Dp2pAcceptance
+    PARAMS['zAcceptance']    = zAcceptance
     
     # now we can calculate the Twiss objects at injection
     alfaw = 0. # always for longitudinal

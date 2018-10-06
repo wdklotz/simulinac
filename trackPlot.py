@@ -42,7 +42,7 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-def poincarePlot(xyvalues, box, max, projections=(0,0)):
+def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
     """ 
     Scatter plot with projection histograms 
     IN:
@@ -53,12 +53,14 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
     """
     from matplotlib.ticker import NullFormatter
 
-    x, y = xyvalues
+    x1, y1 = xyvalues1
+    x2, y2 = xyvalues2
     ax = plt.subplot()
     if projections == (0,0):
         # the scatter plot
-        # ax.scatter(x,y,s=40,color=['b','g','r','c','m','y'])
-        ax.scatter(x,y,s=1)
+        ax.scatter(x1,y1,s=1)
+        if xyvalues2 != (0,0):
+            ax.scatter(x2,y2,s=1,c='r')
 
         # set tick label size
         ax.tick_params(labelsize='xx-small')
@@ -71,6 +73,7 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
         plt.xlim([-xmax,xmax])
         plt.ylim([-ymax,ymax])
         plt.autoscale(enable=False,axis='both')
+        return
     
     elif projections != (0,0):
         nullfmt = NullFormatter()         # no labels
@@ -87,7 +90,9 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
         
         # the scatter plot
         axScatter = plt.axes(rect_scatter)
-        axScatter.scatter(x, y, s=1)
+        axScatter.scatter(x1, y1, s=1)
+        if xyvalues2 != (0,0):
+            axScatter.scatter(x2, y2, s=1, c='r')
         
         # set tick label size
         axScatter.tick_params(labelsize='xx-small')
@@ -109,7 +114,7 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
             limx = (int(xmax/binwidthx) + 1) * binwidthx
             axScatter.set_xlim((-limx, limx))
             binsx = NP.arange(-limx, limx + binwidthx, binwidthx)
-            axHistx.hist(x, bins=binsx, color='black')
+            axHistx.hist(x1, bins=binsx, color='black')
             # axHistx.set_xlim(axScatter.get_xlim())
 
         if pry == 1:
@@ -123,7 +128,7 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
             limy = (int(ymax/binwidthy) + 1) * binwidthy
             axScatter.set_ylim((-limy, limy))
             binsy = NP.arange(-limy, limy + binwidthy, binwidthy)
-            axHisty.hist(y, bins=binsy, orientation='horizontal', color='black')
+            axHisty.hist(y1, bins=binsy, orientation='horizontal', color='black')
             # axHisty.set_ylim(axScatter.get_ylim())
 
     return
