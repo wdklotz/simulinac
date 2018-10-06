@@ -85,6 +85,7 @@ def poincarePlot(xyvalues, box, max, projections=(0,0)):
         rect_histx   = [left, bottom_h, width, 0.2]
         rect_histy   = [left_h, bottom, 0.2, height]
         
+        # the scatter plot
         axScatter = plt.axes(rect_scatter)
         axScatter.scatter(x, y, s=1)
         
