@@ -39,7 +39,9 @@ def DEBUG_OFF(*args):
 
 #todo: show invalid tracks
 def scatterPlot(bunch, ordinate, abszisse, text, minmax=(1.,1.)):
-    """ prepare the plot of a Poincaré section """
+    """ 
+    Prepare the Poincaré section plot 
+    """
     
     txt = ('{} initial'.format(text),'{} final'.format(text))
     initial = 0
@@ -59,7 +61,7 @@ def scatterPlot(bunch, ordinate, abszisse, text, minmax=(1.,1.)):
         ymax = max(y)
         ymin = min(y)
         minmax = (xmax-xmin,ymax-ymin)
-        # plt.scatter(x,y,s=1)
+        # plt.scatter(x,y,s=1)   # bare scatter plot
         poincarePlot((x,y), box, max = minmax, projections = (1,1))
     return
     
@@ -67,13 +69,9 @@ def projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False
     """ 
     2D phase space projections of Poincaré sections 
     """
-    symbol    = ("x","x'","y","y'","z","z'")
-#todo: correct calc of minmax
-    # sigmas    = (bunch['sigx'],bunch['sigxp'],bunch['sigy'],bunch['sigyp'],bunch['sigz'],bunch['sigzp'])
-    text      = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
-    # minmax    = (10.e3*sigmas[ordinate],10.e3*sigmas[abszisse])
-    
-    fig = scatterPlot(bunch, ordinate=ordinate, abszisse=abszisse, text=text)
+    symbol = ("x","x'","y","y'","z","z'")
+    text   = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
+    fig    = scatterPlot(bunch, ordinate=ordinate, abszisse=abszisse, text=text)
     if save: plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
     if show: plt.show()
 
@@ -158,23 +156,26 @@ def track_soll(lattice):
 
 def tracker(options):
     """ prepare and launch tracking """
-    filepath          = options['input_file']
-    npart             = options['particles_per_bunch']
-    show              = options['show']
-    save              = options['save']
-    skip              = options['skip']
-    tkin              = PARAMS['sollteilchen'].tkin
-    conv              = WConverter(tkin)
+    print('-----------------------------------------track_bunch---')
 
-    #make lattice
-    t0 = time.clock()
-    lattice = factory(filepath)
+    # !!FIRST!! make lattice
+    t0       = time.clock()
+    filepath = options['input_file']
+    lattice  = factory(filepath)
     # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
-    t1 = time.clock()
+    tkin     = PARAMS['sollteilchen'].tkin
+    conv     = WConverter(tkin)
+    t1       = time.clock()
+
+    # pull options
+    npart    = options['particles_per_bunch']
+    show     = options['show']
+    save     = options['save']
+    skip     = options['skip']
 
     # bunch-configuration from PARAMS
-    # {x(x)xp}
+    # {x(x)xp}   standard units
     twx = PARAMS['twiss_x_i']
     betax_i,alfax_i,gammax_i,emitx_i = twx()
     sigma_x   = twx.sigmaH()
@@ -184,29 +185,32 @@ def tracker(options):
     betay_i,alfay_i,gammay_i,emity_i = twy()
     sigma_y   = twy.sigmaH()
     sigma_yp  = twy.sigmaV()
-    # {Dphi(x)w}
-    tww = PARAMS['twiss_w_i']
-    betaw,alfaw,gammaw,emitw = tww()
-    sigma_Dphi  = tww.sigmaH()
-    sigma_w     = tww.sigmaV()
-    # {z(x)Dp2p}
+    # {z(x)Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
     betaz,alfaz,gammaz,emitz = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
-#todo: working
+    # {Dphi(x)w}  T.Wangler units
+    tww = PARAMS['twiss_w_i']
+    betaw,alfaw,gammaw,emitw = tww()
+    sigma_Dphi  = tww.sigmaH()
+    sigma_w     = tww.sigmaV()
+
     # gather for print
     parameter_log = {}
-    parameter_log['tkin [MeV]'] = tkin
-    parameter_log["sigma(x,x')_i"] = (sigma_x,sigma_xp)
-    parameter_log["sigma(y,y')_i"] = (sigma_y,sigma_yp)
-    parameter_log["sigma(Dphi,w)_i"] = (sigma_Dphi,sigma_w)
-    parameter_log['betax_i'] = betax_i
-    parameter_log['betay_i'] = betay_i
-    parameter_log['betaw_i'] = betaw
-    parameter_log['emitx_i'] = emitx_i
-    parameter_log['emity_i'] = emity_i
-    parameter_log['emitw_i'] = emitw
+    parameter_log['tkin.......[MeV]'] = tkin
+    parameter_log["sigma(x,x')_i.....([m,rad])"] = (sigma_x,sigma_xp)
+    parameter_log["sigma(y,y')_i.....([m,rad])"] = (sigma_y,sigma_yp)
+    parameter_log["sigma(Dphi,w)_i....([rad,])"] = (sigma_Dphi,sigma_w)
+    parameter_log["sigma(z,Dp2p)_i......([m,])"] = (sigma_z,sigma_Dp2p)
+    parameter_log['betax_i......[m]'] = betax_i
+    parameter_log['betay_i......[m]'] = betay_i
+    parameter_log['betaw_i....[rad]'] = betaw
+    parameter_log['betaz_i..[m/rad]'] = betaz
+    parameter_log['emitx_i......[m]'] = emitx_i
+    parameter_log['emity_i......[m]'] = emity_i
+    parameter_log['emitw_i....[rad]'] = emitw
+    parameter_log['emitz_i......[m]'] = emitz
     dictprnt(parameter_log,'Tracker Options'); print()
 
     # bunch factory
@@ -249,17 +253,14 @@ def test0(filepath):
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 
-# def track_bunch(options):
-#     print('-----------------------------------------track_bunch---')
-#     tracker(options)
-    
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     
-    template_file = 'yml/worktmpl.yml'          # template for m4
-    input_file    = 'yml/trackIN.yml'           # input for tracker.py
+    # launch m4 to fill macros in template file
+    template_file = 'yml/worktmpl.yml'           # template file
+    input_file    = 'yml/trackIN.yml'            # input file
     macros_file   = 'yml/macros.sh'              # macro definitions
     command = "{} {} > {}".format(macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
@@ -268,7 +269,7 @@ if __name__ == '__main__':
     # test0(input_file)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 1000,
+                    particles_per_bunch = 5000,
                     show    = True,
                     save    = False,
                     skip    = 1

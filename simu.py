@@ -260,8 +260,10 @@ def simulation(filepath):
         display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
 if __name__ == '__main__':
-    template_file = 'yml/worktmpl.yml'     # template for m4
-    input_file    = 'yml/simuIN.yml'       # input for simu.py
+
+    # launch m4 to fill macros in template file
+    template_file = 'yml/worktmpl.yml'      # template file
+    input_file    = 'yml/simuIN.yml'        # input file
     macros_file   = 'yml/macros.sh'         # macro definitions
     command = "{} {} > {}".format(macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)

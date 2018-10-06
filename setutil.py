@@ -332,8 +332,7 @@ def waccept(node):
         factor_phis = phis*cos(phis)-sin(phis)
         wmx  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis) # T.Wangler (6.28) wmx on sepratrix
         DWmx = wmx*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
-        # Dp2pmx= gamma/(gamma+1)*DWmx/tkin 
-        # Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
+        # NOTE: Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
         Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
         phi_1 = -phis           # [rad]
         phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
@@ -343,7 +342,7 @@ def waccept(node):
         omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
         omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
         # {Dphi,w}-space   
-        # NOTE: emitw = Dphi0*w0 = w0root*Dphi0**2  [rad]
+        # NOTE: emitw_i = Dphi0*w0 = w0root*Dphi0**2  [rad]
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
         Dphi0    = sqrt(emitw_i/w0root)     # delta-phase-intersect
         w0       = w0root*Dphi0             # w-intersect 
@@ -359,16 +358,11 @@ def waccept(node):
                 'waccept()')
 
         # {z,dp/p}-space
-        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
-        # z0    = conv.DphiToz(Dphi0)
         # z0       = -Dphi0*beta*lamb/(2.*pi)        # z [m]
-        # Dp2p0 = conv.wToDp2p(w0)
         # Dp2p0    = w0/(beta*beta*gamma)            # delta-p/p
-        # emitz = conv.emitwToemitz(emitw_i)
         # emitz    = -z0*Dp2p0                       # emittance {z,Dp/p} [m]
-        # long. twiss @ entrance
-        # gammaz = emitz/z0**2
-        # betaz  = 1./gammaz         # [m]
+        # betaz    = emitz/Dp2p0**2                  # beta [m]
+        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
         gammaz = 1./betaz
         res =  dict(
                 # {Dphi(x)w}
@@ -406,7 +400,7 @@ def waccept(node):
     PARAMS['w0']      = w0
     
     # now we can calculate the Twiss objects at injection
-    alfaw = 0. # always
+    alfaw = 0. # always for longitudinal
     twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
     twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
     tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])

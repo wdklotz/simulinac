@@ -7,12 +7,13 @@
 #PHISY = synchronous phase
 
 TKIN=70.
-EMITW=12.6e-6
+##EMITW=12.6e-6
 ##EMITW=12.6e-5
+EMITW=10.6e-5
 ##EMITX=1.e-6
 ##EMITY=1.e-6
-EMITX=1.e-6
-EMITY=1.e-6
+EMITX=2.e-6
+EMITY=2.e-6
 BETAX=2.285
 BETAY=0.328
 PHISY=-20.
