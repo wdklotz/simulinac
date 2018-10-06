@@ -17,13 +17,13 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
 import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
 
-from setutil import DEBUG, Proton, tblprnt, K, sigmas, PARAMS
+from setutil import DEBUG, Proton, tblprnt, K, sigmas, PARAMS, Twiss
 from trackPlot import histPlot, poincarePlot
-from Dictionary import DictObject
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -87,92 +87,109 @@ class Track(object):
             str += p.as_str()+'\n'
         return str
 
-class Bunch(DictObject,object):
+class Bunch(object):
     """
-        A Bunch is a dictionary.
         A Bunch is a container (tuple) of particles
     """
     def __init__(self):
-        DictObject.__init__(self)
-        self.particles = []
-    def __iter__(self): # have to use __iter__() to not override __getitem__() in DictObject
-        for particle in self.particles:
+        self._particles = []
+    def __iter__(self):
+        for particle in self._particles:
             yield particle
-
     def getparticles(self):             # particles in bunch
-        return self.particles
+        return self._particles
     def nbofparticles(self):            # nbof particles in bunch
-        return len(self.particles)
+        return len(self._particles)
     def addparticle(self,particle):     # add particle to bunch
         if self.nbofparticles() == 0:
             last = 0
         else:
-            last, p = self.particles[-1]
-        self.particles.append((last+1,particle))
+            last, p = self._particles[-1]
+        self._particles.append((last+1,particle))
     def setlost(self,value):
-        self.lost = value
+        self._lost = value
     def setlive(self,value):
-        self.live = value
+        self._live = value
 
-class BunchFactory(DictObject,object):
+class BunchFactory(object):
     """
-    BunchFactory is a dictionary
+    BunchFactory creates a multiparticle bunch
     """
-    def __init__(self, distribution):
-        DictObject.__init__(self)
-        self.distribution = distribution
+    def __init__(self):
+        pass
+    def setDistribution(self,value):
+        self.distribution = value
+    def setTwiss(self,value):
+        self.twiss = value
+    def setNumberOfParticles(self,value):
+        self.numberofparticles = value
+    def setReferenceEnergy(self, value):
+        self.tk = value
+    def setMask(self,value):
+        self.mask = value
 
     def __call__(self):
         bunch = Bunch()
-        bunch._params = self._params   # copy self._params to bunch
-        initialtracklist = self.distribution(self)
-        for i in range(self['nbparticles']):
+        if self.distribution.__name__ == 'Gauss1D':
+            initialtracklist = self.distribution(*self.twiss,self.numberofparticles,self.mask,self.tk)
+        else:
+            print('{} distributions implemented!'.format(self.distribution.__name__))
+            sys.exit(1)
+        for i in range(self.numberofparticles):
             particle = Proton()
             bunch.addparticle(particle)
             particle['track'] = initialtracklist[i]
         return bunch
 
-def Gauss1D(params):
-    """ generates a bunch with 1D gaussian distribution """
-    sigx       = params['sigx']
-    sigxp      = params['sigxp']
-    sigy       = params['sigy']
-    sigyp      = params['sigyp']
-    sigz       = params['sigz']
-    sigzp      = params['sigzp']
-    nbtracks   = params['nbparticles']
-    coord_mask = params['coord_mask']
-    tkin       = params['tkin']
+def Gauss1D(twx,twy,twz,npart,mask,tk):
+    """ 
+    Generates a bunch with 1D gaussian distribution 
+    IN:
+        twx   = Twiss object
+        twy   = Twiss object
+        twz   = Twiss object
+        npart = integer
+        mask  = tuple*6  (bool,...,bool)
+        tk    = float
+    Out:
+        list of Track objects with one initial Tpoint object each
+    """
+    sigx  = twx.sigmaH()
+    sigxp = twx.sigmaV()
+    sigy  = twy.sigmaH()
+    sigyp = twy.sigmaV()
+    sigz  = twz.sigmaH()
+    sigzp = twz.sigmaV()
 
-    X          = sigx  * NP.random.randn(nbtracks)    # gauss distribution X
-    XP         = sigxp * NP.random.randn(nbtracks)
-    Y          = sigy  * NP.random.randn(nbtracks)
-    YP         = sigyp * NP.random.randn(nbtracks)
-    Z          = sigz  * NP.random.randn(nbtracks)
-    ZP         = sigzp * NP.random.randn(nbtracks)
+    X          = sigx  * NP.random.randn(npart)
+    XP         = sigxp * NP.random.randn(npart)
+    Y          = sigy  * NP.random.randn(npart)
+    YP         = sigyp * NP.random.randn(npart)
+    Z          = sigz  * NP.random.randn(npart)
+    ZP         = sigzp * NP.random.randn(npart)
 
     tracklist=[]        # all tracks in a bunch
-    for i in range(nbtracks):
-        start=NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+    for i in range(npart):
+        start=NP.array([ 0., 0., 0., 0., 0., 0., tk, 1., 0., 1.])
         # initial setting for each coordinate
-        if coord_mask[K.x]:
+        if mask[K.x]:
             start[K.x]  = X[i]
-        if coord_mask[K.xp]:
+        if mask[K.xp]:
             start[K.xp] = XP[i]
-        if coord_mask[K.y]:
+        if mask[K.y]:
             start[K.y]  = Y[i]
-        if coord_mask[K.yp]:
+        if mask[K.yp]:
             start[K.yp] = YP[i]
-        if coord_mask[K.z]:
+        if mask[K.z]:
             start[K.z]  = Z[i]
-        if coord_mask[K.zp]:
+        if mask[K.zp]:
             start[K.zp] = ZP[i]
-        track = Track()
         tpoint = Tpoint(point=start)
+        track  = Track()
         track.addpoint(tpoint)
         tracklist.append(track)
     return tracklist
-
+        
 def EmitContour(nTracks,random=False):
     """
         Generates a bunch with particles of same emittance
@@ -314,19 +331,21 @@ def test3(filepath):
 
 def test4():
     print('-----------------------------------------Test4---')
-    params = dict(
-    sigx        = 6,
-    sigxp       = 1,
-    sigy        = 1,
-    sigyp       = 6,
-    sigz        = 3,
-    sigzp       = 10,
-    nbparticles = 30000,
-    coord_mask  = NP.array([1,1,1,1,1,1,0,1,0,1]),
-    tkin        = 70
-    )
+    twx = Twiss(3.,0.,1.e-6)
+    twy = Twiss(3.,0.,1.e-6)
+    twz = Twiss(3.,0.,1.e-6)
     
-    tracklist = Gauss1D(params)
+    sigx        = twx.sigmaH()
+    sigxp       = twx.sigmaV()
+    sigy        = twy.sigmaH()
+    sigyp       = twy.sigmaV()
+    sigz        = twz.sigmaH()
+    sigzp       = twz.sigmaV()
+    nbparticles = 30000
+    coord_mask  = NP.array([1,1,1,1,1,1,0,1,0,1])
+    tkin        = 70
+
+    tracklist = Gauss1D(twx,twy,twz,nbparticles,coord_mask,tkin)
     xaxis = []
     yaxis = []
     for track in tracklist:
@@ -344,6 +363,6 @@ if __name__ == '__main__':
     test0()
     test1()
     test2()
-    test3('yml/work.yml')
+    test3('yml/trackIN.yml')
     test4()
     [plt.show(fig) for fig in figures]

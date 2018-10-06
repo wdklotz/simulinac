@@ -27,6 +27,7 @@ from math import sqrt
 from lattice_generator import factory
 import elements as ELM
 from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS, waccept
+from setutil import WConverter
 from bunch import BunchFactory, Gauss1D, Track, Tpoint
 from trackPlot import poincarePlot
 
@@ -36,40 +37,43 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
-def scatterPlot(bunch, ordinate, abszisse, text, minmax):
+#todo: show invalid tracks
+def scatterPlot(bunch, ordinate, abszisse, text, minmax=(1.,1.)):
     """ prepare the plot of a Poincaré section """
-    txt = '{} final'.format(text)
-    x=[]; y=[]
-    fig = plt.figure(-1)
-    for nparticle,particle in iter(bunch):
-        track = particle['track']
-        ntp, tpoint = track[-1]
-        point = tpoint()
-        x.append(point[ordinate]*1.e3)
-        y.append(point[abszisse]*1.e3)
-
-#todo: invalid tracks
-    # xi=[]; yi=[]
-    # for t in bunch.invalid_tracks:             # loop invalid tracks
-    #     if psec < t.nbpoints:
-    #         xi.append(t.point_at(psec)[ordinate]*1.e3)
-    #         yi.append(t.point_at(psec)[abszisse]*1.e3)
-    # bad = (xi,yi)
-
-    box = '{} {} particles'.format(txt, bunch.nbofparticles())
-    poincarePlot((x,y), box, max = minmax, projections = (1,1))
-    return fig
+    
+    txt = ('{} initial'.format(text),'{} final'.format(text))
+    initial = 0
+    final   = -1
+    for loc in (initial,final): # figures
+        x=[]; y=[]
+        fig = plt.figure(loc)
+        box = '{} {} particles'.format(txt[loc],bunch.nbofparticles())
+        for nd, particle in iter(bunch): # particles
+            track = particle['track']
+            nd, tpoint = track.getpoints()[loc]
+            point = tpoint()
+            x.append(point[ordinate])
+            y.append(point[abszisse])
+        xmax = max(x)
+        xmin = min(x)
+        ymax = max(y)
+        ymin = min(y)
+        minmax = (xmax-xmin,ymax-ymin)
+        # plt.scatter(x,y,s=1)
+        poincarePlot((x,y), box, max = minmax, projections = (1,1))
+    return
     
 def projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False):
     """ 
     2D phase space projections of Poincaré sections 
     """
     symbol    = ("x","x'","y","y'","z","z'")
-    sigmas    = (bunch['sigx'],bunch['sigxp'],bunch['sigy'],bunch['sigyp'],bunch['sigz'],bunch['sigzp'])
+#todo: correct calc of minmax
+    # sigmas    = (bunch['sigx'],bunch['sigxp'],bunch['sigy'],bunch['sigyp'],bunch['sigz'],bunch['sigzp'])
     text      = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
-    minmax    = (10.e3*sigmas[ordinate],10.e3*sigmas[abszisse])
+    # minmax    = (10.e3*sigmas[ordinate],10.e3*sigmas[abszisse])
     
-    fig = scatterPlot(bunch, ordinate=ordinate, abszisse=abszisse, text=text, minmax=minmax)
+    fig = scatterPlot(bunch, ordinate=ordinate, abszisse=abszisse, text=text)
     if save: plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
     if show: plt.show()
 
@@ -85,7 +89,7 @@ def track_node(node,particle):
     """
     lost = False
     track = particle['track']
-    n,last_point = track.getpoints()[-1]
+    nb,last_point = track.getpoints()[-1]
     try:
         new_point = node.map(last_point())
     except ValueError as ex:
@@ -112,18 +116,24 @@ def track(lattice,bunch):
     lost   = 0
     nbpart = bunch.nbofparticles()
     for node in iter(lattice):
-        ncnt += 1
-        for pnumber, particle in iter(bunch):    # loop particles in bunch
-            if particle.lost: continue
-            if track_node(node,particle):
-                particle.lost = True
-                lost += 1
-            # showing track-loop progress
-            if (ncnt+1)%lmod == 0:
-                tx4    = ' {}% done {}/{} lost/initial'.format(int(ncnt/lnode*100), lost, nbpart)
-                # tx = ('(track design)', '(track bunch)', zeuge[ncnt%4], tx4)
-                tx = ('(track design)', '(track bunch)', '', tx4)
-                progress(tx)
+        pass
+    for node in iter(lattice):              # nodes
+        ncnt +=1
+        for nd, particle in iter(bunch):    # particles
+            if not particle.lost: 
+                failure = track_node(node,particle)
+                if failure:
+                    particle.lost = True
+                    lost += 1
+                    continue
+                # showing track-loop progress
+                if (ncnt+1)%lmod == 0:
+                    tx4    = ' {}% done {}/{} lost/initial'.format(int(ncnt/lnode*100), lost, nbpart)
+                    # tx = ('(track design)', '(track bunch)', zeuge[ncnt%4], tx4)
+                    tx = ('(track design)', '(track bunch)', '', tx4)
+                    progress(tx)
+            else:
+                continue
     live = nbpart - lost
     print('\ndone: live particles {}, lost particles {}'.format(live,lost))
     return bunch
@@ -149,54 +159,65 @@ def track_soll(lattice):
 def tracker(options):
     """ prepare and launch tracking """
     filepath          = options['input_file']
-    particles_per_bunch = options['particles_per_bunch']
+    npart             = options['particles_per_bunch']
     show              = options['show']
     save              = options['save']
     skip              = options['skip']
+    tkin              = PARAMS['sollteilchen'].tkin
+    conv              = WConverter(tkin)
+
     #make lattice
     t0 = time.clock()
     lattice = factory(filepath)
-    t1 = time.clock()
-    # bunch-configuration from PARAMS
-    alfax_i   = PARAMS['alfax_i'] 
-    betax_i   = PARAMS['betax_i']
-    emitx_i   = PARAMS['emitx_i']
-    alfay_i   = PARAMS['alfay_i']
-    betay_i   = PARAMS['betay_i']
-    emity_i   = PARAMS['emity_i']
-    # calculate longitudinal paramters at entrance
+    # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
-    alfaz   = 0.
-    betaz   = PARAMS['betaz']
-    betaw   = PARAMS['betaw']
-    emitz   = PARAMS['emitz']
-    sigmas_x  = sigmas(alfax_i, betax_i, emitx_i)
-    sigmas_y  = sigmas(alfay_i, betay_i, emity_i)
-    sigmas_z  = sigmas(      0.,betaz, emitz)
-    options['tkin [MeV]'] = PARAMS['sollteilchen'].tkin
-    options["sigma(x,x')_i"] = sigmas_x
-    options["sigma(y,y')_i"] = sigmas_y
-    options["sigma(z,z')_i"] = sigmas_z
-    options['betax_i'] = betax_i
-    options['betay_i'] = betay_i
-    options['betaz_i'] = betaz
-    options['betaw_i'] = betaw
-    options['emitx_i'] = emitx_i
-    options['emity_i'] = emity_i
-    options['emitz_i'] = emitz
-    dictprnt(options,'Tracker Options'); print()
+    t1 = time.clock()
+
+    # bunch-configuration from PARAMS
+    # {x(x)xp}
+    twx = PARAMS['twiss_x_i']
+    betax_i,alfax_i,gammax_i,emitx_i = twx()
+    sigma_x   = twx.sigmaH()
+    sigma_xp  = twx.sigmaV()
+    # {y(x)yp}
+    twy = PARAMS['twiss_y_i']
+    betay_i,alfay_i,gammay_i,emity_i = twy()
+    sigma_y   = twy.sigmaH()
+    sigma_yp  = twy.sigmaV()
+    # {Dphi(x)w}
+    tww = PARAMS['twiss_w_i']
+    betaw,alfaw,gammaw,emitw = tww()
+    sigma_Dphi  = tww.sigmaH()
+    sigma_w     = tww.sigmaV()
+    # {z(x)Dp2p}
+    twz = PARAMS['twiss_z_i']
+    betaz,alfaz,gammaz,emitz = twz()
+    sigma_z    = twz.sigmaH()
+    sigma_Dp2p = twz.sigmaV()
+#todo: working
+    # gather for print
+    parameter_log = {}
+    parameter_log['tkin [MeV]'] = tkin
+    parameter_log["sigma(x,x')_i"] = (sigma_x,sigma_xp)
+    parameter_log["sigma(y,y')_i"] = (sigma_y,sigma_yp)
+    parameter_log["sigma(Dphi,w)_i"] = (sigma_Dphi,sigma_w)
+    parameter_log['betax_i'] = betax_i
+    parameter_log['betay_i'] = betay_i
+    parameter_log['betaw_i'] = betaw
+    parameter_log['emitx_i'] = emitx_i
+    parameter_log['emity_i'] = emity_i
+    parameter_log['emitw_i'] = emitw
+    dictprnt(parameter_log,'Tracker Options'); print()
+
     # bunch factory
-    bunchfactory = BunchFactory(Gauss1D)
-    bunchfactory['sigx']        = sigmas_x[0]
-    bunchfactory['sigxp']       = sigmas_x[1]
-    bunchfactory['sigy']        = sigmas_y[0]
-    bunchfactory['sigyp']       = sigmas_y[1]
-    bunchfactory['sigz']        = sigmas_z[0]
-    bunchfactory['sigzp']       = sigmas_z[1]
-    bunchfactory['coord_mask']  = (1,1,1,1,1,1)
-    bunchfactory['nbparticles'] = particles_per_bunch
-    bunchfactory['tkin']        = PARAMS['injection_energy']
+    bunchfactory = BunchFactory()
+    bunchfactory.setDistribution(Gauss1D)
+    bunchfactory.setTwiss((twx,twy,twz))
+    bunchfactory.setMask(NP.array((1,1,1,1,1,1)))
+    bunchfactory.setNumberOfParticles(npart)
+    bunchfactory.setReferenceEnergy(PARAMS['injection_energy'])
     bunch = bunchfactory()
+
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
     t2 = time.clock()
@@ -205,6 +226,7 @@ def tracker(options):
     progress(('(track design)', '(track bunch)', '', ''))
     track(lattice,bunch) # <----- track bunch
     t4 = time.clock()
+
     # make 2D projections
     projection(bunch, ordinate = K.z, abszisse = K.zp, show = True, save = False)
     t5 = time.clock()
@@ -227,10 +249,9 @@ def test0(filepath):
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 
-# def test1(filepath):
-def track_bunch(options):
-    print('-----------------------------------------track_bunch---')
-    tracker(options)
+# def track_bunch(options):
+#     print('-----------------------------------------track_bunch---')
+#     tracker(options)
     
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
@@ -247,9 +268,9 @@ if __name__ == '__main__':
     # test0(input_file)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 3000,
+                    particles_per_bunch = 1000,
                     show    = True,
                     save    = False,
                     skip    = 1
                     )
-    track_bunch(options)
+    tracker(options)

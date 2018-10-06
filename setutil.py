@@ -22,7 +22,7 @@ from __future__ import print_function
 
 import sys,traceback
 # py_major = sys.version_info.major
-
+import scipy.constants as C
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 import logging, pprint
 from enum import IntEnum
@@ -131,10 +131,10 @@ PARAMS = dict(
         emitw_i              = 0.2e-6,           # [rad] Vorgabe emittance entrance
         betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
         betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
-        betaz_i              = 0.01,             # [m] Vorgabe twiss beta entrance
+        betaw_i              = 0.01,             # [m] Vorgabe twiss beta entrance
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
-        alfaz_i              = 0.0,              # Vorgabe twiss alpha entrance
+        alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
         nbof_slices          = 10,               # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         )
@@ -144,30 +144,34 @@ PARAMS = dict(
 KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
 
 class Twiss(object):
-    def __init__(self, beta, alpha, epsi):
-        self.epsi = epsi
-        self.beta = beta
-        self. alpha = alpha
+    def __init__(self, beta, alfa, epsi):
+        self.epsi  = epsi
+        self.beta  = beta
+        self. alfa = alfa
         if beta >= 0.:
-            self.gamma = (1.+self.aplha**2)/self.beta
+            self.gamma = (1.+self.alfa**2)/self.beta
         else:
             self.gamma = None
-    def beta(self):
-        return self.beta
-    def alpha(self):
-        return self.alpha
-    def gamma(self):
-        return self.gamma
-    def epsi(self):
-        return self.epsi
+    def __call__(self):
+        return (self.beta,self.alfa,self.gamma,self.epsi)   # (beta,alfa,gamma,epsi)
     def y1(self):
+        # intersection point(x1,0)
         return (sqrt(self.epsi/self.gamma), 0.)
-    def y2(seld):
-        return (sqrt(self.epsi*self.beta),-self.alpha*sqrt(self.epsi/self.beta))
+    def y2(self):
+        # maximum point (xmax,x')
+        return (sqrt(self.epsi*self.beta),-self.alfa*sqrt(self.epsi/self.beta))
     def y3(self): 
-        return (-alpha*sqrt(self.epsi/self.gamma), sqrt(self.epsi*self.gamma))
+        # maximum point (x,x'max)
+        return (-self.alfa*sqrt(self.epsi/self.gamma), sqrt(self.epsi*self.gamma))
     def y4(self):
+        # intersection point (0,x4')
         return (0., sqrt(self.epsi/self.beta))
+    def sigmaH(self):
+        (x,y) = self.y2()
+        return x
+    def sigmaV(self):
+        (x,y) = self.y3()
+        return y
     
         
 class Particle(DictObject,object):
@@ -234,6 +238,72 @@ class Electron(Particle):
 PARAMS['sollteilchen'] = Proton()
 PARAMS['wellenlänge'] = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 
+class WConverter(object):
+    """
+    Converter to switch between different longitudinal phase space coordinates
+    """
+    def __init__(self,tk,freq=PARAMS['frequenz']):
+        self.pi             = C.pi
+        self.lamb           = C.c/freq           # [m]
+        self.m0c2,unit,prec = C.physical_constants['proton mass energy equivalent in MeV']
+        self.gamma          = 1. + tk/self.m0c2
+        self.beta           = sqrt(1.-1./(self.gamma*self.gamma))
+        self.b              = self.beta
+        self.g              = self.gamma
+        self.gb             = self.g*self.b
+        self.g2             = self.g**2
+        self.bl             = self.b*self.lamb
+        self.twopi          = 2.*self.pi
+
+    def DphiToz(self,Dphi):
+        """ dela-phi [rad] to z [m] """
+        z = -self.bl/self.twopi*Dphi
+        return z    # [m]
+    def zToDphi(self,z):
+        """ z [m] to delta-phi [rad] """
+        Dphi = -self.twopi/self.bl*z
+        return Dphi    # [rad]
+
+    def wToDp2p(self,w):
+        """ w=DW/m0c2(a.k.a. Dgamma) [] to Dp2p [] """
+        Dp2p = self.g/(self.g2-1.)*w
+        return Dp2p # []
+    def Dp2pTow(self,Dp2p):
+        """ Dp2p [] to w=DW/m0c2(a.k.a. Dgamma) [] """
+        w = (self.g2-1.)/self.g*Dp2p
+        return w # []
+
+    def emitwToemitz(self,emitw):
+        """ emittance[w(x)Dphi] [rad] to emittance[z(x)Dp2p] [m] """
+        emitz = self.lamb/(self.twopi*self.gb)*emitw
+        return emitz # [m]
+    def emitzToemitw(self,emitz):
+        """ emittance[z(x)Dp2p] [m] to emittance[w(x)Dphi] [rad] """
+        emitw = (self.twopi*self.gb)/self.lamb*emitz
+        return emitw # [rad]
+
+    def betawTobetaz(self,betaw):
+        """ beta[w(x)Dphi] [rad] to beta[z(x)Dp2p] [m] """
+        betaz = (self.bl)/(self.twopi)*(self.g2-1.)/self.g*betaw
+        return betaz # [m]
+    def betazTobetaw(self,betaz):
+        """ beta[z(x)Dp2p] [m] to beta[w(x)Dphi] [rad] """
+        betaw = (self.twopi)/(self.bl)*self.g/(self.g2-1.)*betaz
+        return betaw # [rad]
+    
+    def wtoz(self,args):
+        # conversion {Dpi(x)w} to {z(x)Dp2p}
+        """ 
+        IN: args is tuple = (Delta-phi, w (== dT/m0c2), emittance-w, beta-w)
+        OUT:     is tuple = (z, Dp2p, emittance-z, beta=z)
+        """
+        Dphi, w, emitw, betaw = args
+        z = self.DphiToz(Dphi)
+        Dp2p = self.wToDp2p(w)
+        emitz = self.emitwToemitz(emitw)
+        betaz = self.betawTobetaz(betaw)
+        return (z,Dp2p,emitz,betaz)
+
 ## Long. Emittance
 def waccept(node):
     """
@@ -243,24 +313,6 @@ def waccept(node):
     IN
         node: the 1st rf-gap at the linac entrance
     """
-
-    res =  dict(
-                betaw    = 0.,    # beta twiss [rad]
-                gammaw   = None,  # gamma twiss [1/rad]
-                betaz    = 0,     # twiss beta [m]
-                gammaz   = None,  # twiss gamma [1/m]
-                emitz    = 0.,    # emittance in {z,dp/p} space [m]
-                Dp2p0    = 0.,    # ellipse dp/p-int (1/2 axis)
-                Dp2pmx   = 0.,    # max D/p on separatrix
-                Dphi0    = 0.,    # ellipse dphi-int (1/2 axis)
-                z0       = 0.,    # ellipse z-int    (1/2 axis) [m]
-                DWx      = 0.,    # separatrix: max W in [MeV]
-                wx       = 0.,    # separatrix: max w
-                phi_1    = 0.,    # separatrix: max pos. phase
-                phi_2    = 0.,    # separatrix: max neg. phase
-                psi      = 0.,    # separatrix: bunch length [rad]
-                omgl0    = 0.)    # synchrotron oscillation [Hz]
-
     if node is not None and FLAGS['dWf']:
         emitw_i   = PARAMS['emitw_i']    # [rad]
         E0T       = node.EzAvg*node.tr   # [MV/m]
@@ -273,14 +325,16 @@ def waccept(node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
+        conv      = WConverter(tkin)
 
         # large amplitude oscillations (T.Wangler pp. 175)
         # NOTE: w == Dgamma == normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
-        wmax  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis) # T.Wangler (6.28) wmax on sepratrix
-        DWmax = wmax*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
-        # Dp2pmx= gamma/(gamma+1)*DWmax/tkin 
-        Dp2pmx = gamma/(gamma*gamma-1)*wmax # Dp/p on separatrix [%]
+        wmx  = sqrt(2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis) # T.Wangler (6.28) wmx on sepratrix
+        DWmx = wmx*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
+        # Dp2pmx= gamma/(gamma+1)*DWmx/tkin 
+        # Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
+        Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
         phi_1 = -phis           # [rad]
         phi_2 = 2.*phis         # [rad] Naehrung T.Wangler pp.178
         psi   = 3.*fabs(phis)   # [rad]
@@ -297,7 +351,7 @@ def waccept(node):
         gammaw   = 1./betaw                 # gamma twiss
 
         # longitudinal acceptance check (always done)
-        if wmax <= w0:
+        if wmx <= w0:
             si,sm,sf = node.position
             warnings.showwarning(
                 'out of energy acceptance @ s={:.1f} [m]'.format(si),
@@ -305,35 +359,43 @@ def waccept(node):
                 'waccept()')
 
         # {z,dp/p}-space
-        z0       = -Dphi0*beta*lamb/(2.*pi)        # z [m]
-        Dp2p0    = w0/(beta*beta*gamma)            # delta-p/p
-        emitz    = -z0*Dp2p0                       # emittance {z,Dp/p} [m]
-
+        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
+        # z0    = conv.DphiToz(Dphi0)
+        # z0       = -Dphi0*beta*lamb/(2.*pi)        # z [m]
+        # Dp2p0 = conv.wToDp2p(w0)
+        # Dp2p0    = w0/(beta*beta*gamma)            # delta-p/p
+        # emitz = conv.emitwToemitz(emitw_i)
+        # emitz    = -z0*Dp2p0                       # emittance {z,Dp/p} [m]
         # long. twiss @ entrance
-        gammaz = emitz/z0**2
-        betaz  = 1./gammaz         # [m]
+        # gammaz = emitz/z0**2
+        # betaz  = 1./gammaz         # [m]
+        gammaz = 1./betaz
         res =  dict(
+                # {Dphi(x)w}
                 betaw    = betaw,       # beta twiss [rad]
                 gammaw   = gammaw,      # gamma twiss [1/rad]
-                betaz    = betaz,       # twiss beta [m]
-                gammaz   = gammaz,      # twiss gamma [1/m]
-                emitz    = emitz,       # emittance in {z,dp/p} space [m]
-                Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
-                Dp2pmx   = Dp2pmx,      # max D/p on separatrix
+                wmx      = wmx,         # separatrix: max w
+                w0       = w0,          # w-Axenabschnitt
                 Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
-                z0       = z0,          # ellipse z-int    (1/2 axis) [m]
-                DWx      = DWmax,       # separatrix: max W in [MeV]
-                wx       = wmax,        # separatrix: max w
                 phi_1    = phi_1,       # separatrix: max pos. phase
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
-                omgl0    = omgl0)       # synchrotron oscillation [Hz]
+                omgl0    = omgl0,       # synchrotron oscillation [Hz]
+                # {z(x)Dp2p}
+                betaz    = betaz,       # twiss beta [m]
+                gammaz   = gammaz,      # twiss gamma [1/m]
+                emitz    = emitz,       # emittance in {z,dp/p} space [m]
+                Dp2pmx   = Dp2pmx,      # max D/p on separatrix
+                Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                z0       = z0,          # ellipse z-int    (1/2 axis) [m]
+                # {Dphi(x)DW}
+                DWmx      = DWmx)       # separatrix: max W in [MeV]
 
     PARAMS['emitz']   = emitz
     PARAMS['betaw']   = betaw
     PARAMS['betaz']   = betaz
-    PARAMS['DWx']     = DWmax
-    PARAMS['wx']      = wmax
+    PARAMS['DWmx']    = DWmx
+    PARAMS['wmx']     = wmx
     PARAMS['psi']     = psi
     PARAMS['phi_2']   = phi_2
     PARAMS['phi_1']   = phi_1
@@ -341,7 +403,19 @@ def waccept(node):
     PARAMS['z0']      = z0
     PARAMS['omgl0']   = omgl0
     PARAMS['Dp2pmx']  = Dp2pmx
+    PARAMS['w0']      = w0
     
+    # now we can calculate the Twiss objects at injection
+    alfaw = 0. # always
+    twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
+    twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
+    tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
+    twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
+    PARAMS['twiss_x_i'] = twx
+    PARAMS['twiss_y_i'] = twy
+    PARAMS['twiss_w_i'] = tww
+    PARAMS['twiss_z_i'] = twz
+
     return res
 
 def sigmas(alfa,beta,epsi):
@@ -470,9 +544,11 @@ def collect_data_for_summary(lattice):
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-    SUMMARY['(sigx )i*   [mm]']                =  sqrt(PARAMS['betax_i']* PARAMS['emitx_i'])*1.e3
-    SUMMARY['(sigy )i*   [mm]']                =  sqrt(PARAMS['betay_i']* PARAMS['emity_i'])*1.e3
-    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, => w{{a.k.a.Dgamma}} = {:8.2e}[%]'.format(PARAMS['DWx'],PARAMS['wx']*1.e2)
+    SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+    SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+    SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+    SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, => w{{a.k.a.Dgamma}} = {:8.2e}[%]'.format(PARAMS['DWmx'],PARAMS['wmx']*1.e2)
     SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6

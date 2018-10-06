@@ -45,9 +45,9 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
-    - emitx_i:      &emx    1.e-4      # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.e-4      # [m*rad] {y,y'} emittance @ entrance
+    - Tkin:                 70.       # [MeV] energy @ entrance (injection)
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    12.6e-6      # [rad] {Dphi,w} emittance @ entrance
     - betax_i:      &btx    2.285      # [m] twiss beta @ entrance x
     - betay_i:      &bty    0.328      # [m] twiss beta @ entrance y
@@ -123,9 +123,9 @@ elements:
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        # - mapping:   t3d         # Trace 3D linear map model
+        - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
@@ -232,5 +232,5 @@ lattice:
     - title:   1.x.x        # description -  DON't remove or reposition!
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
-    - [70,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     - [ 1,   MARK]

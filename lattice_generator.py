@@ -22,7 +22,7 @@ from math import radians
 import yaml
 import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,DEBUG
+from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,Twiss
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata,V0
@@ -272,6 +272,7 @@ def factory(input_file):
         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
+
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters

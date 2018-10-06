@@ -30,7 +30,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG,Twiss
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
@@ -231,7 +231,7 @@ def simulation(filepath):
 
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
-
+    
     # configure elements for energy increase
     soll_track = track_soll(lattice)
 

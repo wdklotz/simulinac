@@ -25,7 +25,7 @@ from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, K6
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, K6, Twiss
 import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
@@ -223,14 +223,20 @@ class Lattice(object):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
                 printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
                 ## keep variables for later use
-                PARAMS['sigx_i'] = sqrt(bax*emitx)
-                PARAMS['sigy_i'] = sqrt(bay*emity)
-                SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
-                SUMMARY['(sigy)i [mm]'] = 1000.*PARAMS['sigy_i']
-                xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence
-                yip = sqrt(emity*gmy)
-                SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
-                SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
+                twx = Twiss(bax,alx,emitx)
+                twy = Twiss(bay,aly,emity)
+                PARAMS['twiss_x_i'] = twx
+                PARAMS['twiss_y_i'] = twy
+                SUMMARY['(sigx )i*   [mm]'] =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+                SUMMARY["(sigx')i* [mrad]"] =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+                SUMMARY['(sigy )i*   [mm]'] =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+                SUMMARY["(sigy')i* [mrad]"] =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+                # SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
+                # SUMMARY['(sigy)i [mm]'] = 1000.*PARAMS['sigy_i']
+                # xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence
+                # yip = sqrt(emity*gmy)
+                # SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
+                # SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
             else:
                 print('unstable lattice - STOP')
                 sys.exit(1)
@@ -242,12 +248,12 @@ class Lattice(object):
             bay = PARAMS['betay_i']
             alx = PARAMS["alfax_i"]  # twiss alpha @ entrance
             aly = PARAMS["alfay_i"]
-            gmx = (1.+alx*alx)/bax  # twiss gamma @ entrance
+            gmx = (1.+alx*alx)/bax
             gmy = (1.+aly*aly)/bay
-            xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence @ entrance
-            yip = sqrt(emity*gmy)
-            SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
-            SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
+            # xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence @ entrance
+            # yip = sqrt(emity*gmy)
+            # SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
+            # SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
         ## keep twiss values as lattice instance variables
         self.betax0 = bax
         self.alfax0 = alx
