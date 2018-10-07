@@ -106,13 +106,14 @@ def progress(tx):
 
 #todo: aperture check
 #todo: useaper flag
-#todo: discard intermediate Tpoints
+#todo: discard intermediate Tpoints modulo N
 def track_node(node,particle):
     """
     Tracks a particle through a node
     """
     track = particle['track']
-    nb,last_point = track.getpoints()[-1]
+    last = track.getpoints()[-1]
+    nb,last_point = last
     try:
         new_point = node.map(last_point())
     except ValueError as ex:
@@ -128,6 +129,8 @@ def track_node(node,particle):
     else:
         lost = True
     if not lost:
+        if track.nbofpoints() > 1:      # !!DISCARD!! last point kepp new point
+            track.removepoint(last)
         track.addpoint(Tpoint(point=new_point))
     particle.lost = lost
     return lost
@@ -306,7 +309,7 @@ if __name__ == '__main__':
     os.system(command)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 4500,
+                    particles_per_bunch = 10000,
                     show    = True,
                     save    = False,
                     skip    = 1

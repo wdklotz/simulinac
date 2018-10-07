@@ -51,20 +51,22 @@ class Track(object):
         A Track is a container (tuple) of positions (Tpoint). 
     """
     def __init__(self):
-        self.points = []
+        self._points = []
     def __getitem__(self,n):        # evaluation of self[key] for Tpoints in Track
-        return self.points[n]
+        return self._points[n]
 
     def getpoints(self):            # points in Track
-        return self.points
+        return self._points
     def nbofpoints(self):           # nbof points in Track
-        return len(self.points)
+        return len(self._points)
     def addpoint(self,point):       # add a point to Track
         if self.nbofpoints() == 0:
             last = 0
         else:
-            last, p = self.points[-1]
-        self.points.append((last+1,point))
+            last, p = self._points[-1]
+        self._points.append((last+1,point))
+    def removepoint(self,point):
+        self._points.remove(point)
     def as_table(self):
         tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
         tblrows =[]
