@@ -94,7 +94,7 @@ def projection(live_lost_bunches, ordinate= K.z, abszisse= K.zp, show= True, sav
     """ 
     2D phase space projections of Poincaré sections 
     """
-    symbol = ("x","x'","y","y'","z","Dp/2")
+    symbol = ("x","x'","y","y'","z","$\Delta$p/p")
     text   = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
     fig    = scatterPlot(live_lost_bunches, ordinate=ordinate, abszisse=abszisse, text=text)
     if save: plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))

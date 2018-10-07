@@ -364,6 +364,7 @@ def waccept(node):
         # betaz    = emitz/Dp2p0**2                  # beta [m]
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
         gammaz = 1./betaz
+##todo: use y2,y2 from Twiss
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
