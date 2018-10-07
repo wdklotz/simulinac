@@ -89,7 +89,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
     
-def projection(live_lost_bunches, ordinate= K.z, abszisse= K.zp, show= True, save= False):
+def projection(live_lost_bunches, ordinate= K.z, abszisse= K.zp, show = True, save = False):
     """ 
     2D phase space projections of Poincaré sections 
     """
@@ -274,7 +274,7 @@ def tracker(options):
     t4 = time.clock()
 
     # make 2D projections
-    projection(live_lost_bunches, ordinate = K.z, abszisse = K.zp, show = True, save = False)
+    projection(live_lost_bunches, ordinate = K.z, abszisse = K.zp, show = show, save = save)
     t5 = time.clock()
     # finish up
     print()
