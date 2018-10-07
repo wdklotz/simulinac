@@ -37,7 +37,6 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
-#todo: show invalid tracks
 def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     """ 
     Prepare the Poincaré section plot 
@@ -106,6 +105,8 @@ def progress(tx):
     print('{}\r'.format(res),end='')
 
 #todo: aperture check
+#todo: useaper flag
+#todo: discard intermediate Tpoints
 def track_node(node,particle):
     """
     Tracks a particle through a node
@@ -149,16 +150,10 @@ def track(lattice,bunch):
     lmod   = int(lnode*0.05)
     nlost  = 0
     nbpart = bunch.nbofparticles()
-    lbunch = Bunch()
+    lbunch = Bunch()    # lost particles go into this bunch
     for node in iter(lattice):              # nodes
         ndcnt +=1
-        for particle in iter(bunch):    # particles
-            # if not particle.lost: 
-                # # failure = track_node(node,particle)
-                # if failure:
-                #     particle.lost = True
-                #     lost += 1
-                #     continue
+        for particle in iter(bunch):        # particles
             lost = track_node(node,particle)
             if lost:
                 lbunch.addparticle(particle)
@@ -255,7 +250,6 @@ def tracker(options):
     parameter_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
     parameter_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
     parameter_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
-    
     dictprnt(parameter_log,'Tracker Options'); print()
 
     # bunch factory
@@ -273,7 +267,7 @@ def tracker(options):
     track_soll(lattice)  # <----- track soll
     t3 = time.clock()
     progress(('(track design)', '(track bunch)', '', ''))
-    live_lost_bunches = track(lattice,bunch) # <----- track bunch
+    live_lost_bunches = track(lattice,bunch) # <----- track bunch returns (live,lost)-bunch
     t4 = time.clock()
 
     # make 2D projections
@@ -312,7 +306,7 @@ if __name__ == '__main__':
     os.system(command)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 3000,
+                    particles_per_bunch = 4500,
                     show    = True,
                     save    = False,
                     skip    = 1

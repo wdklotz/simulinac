@@ -44,7 +44,7 @@ class Tpoint(object):
         s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[K.x],self.point[K.xp],self.point[K.y],self.point[K.yp],self.point[K.z],self.point[K.zp],self.point[K.T],self.point[K.S])
         return s
     
-
+#todo: simplify Track no (n,Tpoint) tuples
 class Track(object):
     """
         A Track is a dictionary

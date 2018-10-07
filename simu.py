@@ -238,9 +238,10 @@ def simulation(filepath):
     # count elements and make other statistics
     lattice.stats(soll_track)
 
-    # full acellerator: initial values, etc...
+    # full accelerator: initial values, etc...
     lattice.cell(closed = FLAGS['periodic'])
 
+    # results
     kv_only = FLAGS['KVout']
     if kv_only: 
         dictprnt(PARAMS,text='PARAMS',njust=1)

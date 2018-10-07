@@ -73,7 +73,7 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
-
+#todo: elements should get all attrinutes i.e. B',Bpole,bore,k etc.. for quads
 def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]

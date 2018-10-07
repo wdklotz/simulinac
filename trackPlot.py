@@ -42,6 +42,7 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
+#todo: generalize for many samples
 def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
     """ 
     Scatter plot with projection histograms 
@@ -53,8 +54,8 @@ def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
     """
     from matplotlib.ticker import NullFormatter
 
-    x1, y1 = xyvalues1
-    x2, y2 = xyvalues2
+    x1, y1 = xyvalues1  # sample 1
+    x2, y2 = xyvalues2  # sample2
     ax = plt.subplot()
     if projections == (0,0):
         # the scatter plot

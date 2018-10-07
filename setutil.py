@@ -307,7 +307,7 @@ class WConverter(object):
 ## Long. Emittance
 def waccept(node):
     """
-    Helper to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
+    Central to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
     IN
@@ -364,7 +364,7 @@ def waccept(node):
         # betaz    = emitz/Dp2p0**2                  # beta [m]
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
         gammaz = 1./betaz
-##todo: use y2,y2 from Twiss
+#todo: use y2,y2 from Twiss
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
@@ -418,7 +418,7 @@ def waccept(node):
     PARAMS['twiss_z_i'] = twz
 
     return res
-
+#todo: integrate sigmas into Twiss
 def sigmas(alfa,beta,epsi):
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
