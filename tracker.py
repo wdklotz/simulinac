@@ -294,7 +294,7 @@ def test0(filepath):
     d,first = sollTrack[0]
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
-
+#todo: file names from arguments like python tracker.py arg1 arg2 arg3
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF

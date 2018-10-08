@@ -28,10 +28,10 @@ flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     # - sigma:        False           # {True} beam sizes by sigma-matrix
-    # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
-    - useaper:      True            # {False} use aperture check for lattice elements
+    # - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
     # - pspace:       True            # {False} plot the twiss ellipses at entrance
@@ -40,7 +40,7 @@ flags:
 ## SECTION definitions
 
 sections:
-- [&LE LE,  &HE HE]
+     - [&LE 5-30 , &HE 30-200]
 #...........................................................................................
 ## INPUT parameter definitions
 

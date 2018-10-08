@@ -23,6 +23,7 @@ This file is part of the SIMULINAC code
 #todo: each element should have its private steps parameter
 #todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix
 #todo: finish aperture checks for losses
+#todo: rework the KVout 
 import sys
 import os
 # import subprocess
@@ -260,6 +261,7 @@ def simulation(filepath):
         # make plots of functions
         display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
+#todo: file names from arguments like python simu.py arg1 arg2 arg3
 if __name__ == '__main__':
 
     # launch m4 to fill macros in template file
