@@ -55,7 +55,8 @@ class Lattice(object):
         self.accel  = 0.
     
     def __getitem__(self,n):
-        return self.seq[n]
+        item = self.seq[n]
+        return item
 
     def add_element(self,element):
         """ add element to lattice """
@@ -110,7 +111,7 @@ class Lattice(object):
 
     def cell(self,closed=True):
         """
-        construct the full accelerator lattice-cell matrix and extract standard quantities:
+        Construct the full accelerator lattice-cell matrix and extract standard quantities:
             full cell: mcell
             stability?
             betatron tunes: mux, muy
@@ -125,6 +126,7 @@ class Lattice(object):
         ## Stabilität ?
         unstable = False
         stab = fabs(mcell.tracex())
+        PARAMS['traceX'] = stab
         # if verbose:
         printv(1,'stability X? ',stab)
         if stab >= 2.0:
@@ -136,6 +138,7 @@ class Lattice(object):
             mux = degrees(acos(cos_mux))
 
         stab = fabs(mcell.tracey())
+        PARAMS['traceY'] = stab
         # if verbose:
         printv(1,'stability Y? ',stab)
         if stab >= 2.0:

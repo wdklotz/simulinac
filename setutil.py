@@ -131,7 +131,6 @@ PARAMS = dict(
         emitw_i              = 0.2e-6,           # [rad] Vorgabe emittance entrance
         betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
         betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
-        betaw_i              = 0.01,             # [m] Vorgabe twiss beta entrance
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance

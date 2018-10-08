@@ -1,5 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+___version___='7.0.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -296,6 +297,8 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 #todo: file names from arguments like python tracker.py arg1 arg2 arg3
 if __name__ == '__main__':
+    print(___version___)
+
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON

@@ -73,7 +73,7 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
-#todo: elements should get all attrinutes i.e. B',Bpole,bore,k etc.. for quads
+#todo: elements should get all attributes i.e. dBdz,Bpole,bore,k etc.. for quads
 def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
@@ -84,42 +84,54 @@ def instanciate_element(item):
         length   = get_mandatory(attributes,'length',label)
         if 'aperture' in attributes: aperture = attributes['aperture']
         instance =  ELM.D(length=length,label=label,aperture=aperture)
+        instance['label']  = label
+        instance['length'] = length
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
         if 'aperture' in attributes: aperture = attributes['aperture']
         instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
+        instance['label']  = label
+        instance['length'] = length
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
-        kq       = dBdz/PARAMS['sollteilchen'].brho
         slices   = get_mandatory(attributes,'slices',label)
         aperture = get_mandatory(attributes,'aperture',label)
+        kq       = dBdz/PARAMS['sollteilchen'].brho
+        Bpole    = dBdz*aperture
         if slices > 1:
             instance = replace_QF_with_QFth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
         elif slices <= 1:
             instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
-            pass
+        instance['label']  = label
+        instance['dBdz']   = dBdz
+        instance['bore']   = aperture
+        instance['Bpole']  = Bpole
     elif key == 'QD':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
         dBdz     = get_mandatory(attributes,"B'",label)
-        kq       = dBdz/PARAMS['sollteilchen'].brho
         slices   = get_mandatory(attributes,'slices',label)
         aperture = get_mandatory(attributes,'aperture',label)
+        kq       = dBdz/PARAMS['sollteilchen'].brho
+        Bpole    = dBdz*aperture
         if slices > 1:
             instance = replace_QD_with_QDth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
         elif slices <= 1:
             instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
-            pass
+        instance['label']  = label
+        instance['dBdz']   = dBdz
+        instance['bore']   = aperture
+        instance['Bpole']  = Bpole
     elif key == 'RFG':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         gap       = get_mandatory(attributes,'gap',label)
         mapping   = get_mandatory(attributes,'mapping',label)
-        if 'aperture' in attributes: aperture = attributes['aperture']
+        aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
@@ -137,7 +149,13 @@ def instanciate_element(item):
             EzAvg     = get_mandatory(attributes,"EzAvg",label)
             instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
             instance['EzPeak'] = None
-            pass
+        instance['label']    = label
+        instance['PhiSoll']  = PhiSoll
+        instance['fRF']      = fRF
+        instance['gap']      = gap
+        instance['mapping']  = mapping
+        instance['aperture'] = aperture
+        instance['dWf']      = dWf
     elif key == 'RFC':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -146,8 +164,15 @@ def instanciate_element(item):
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         dWf       = FLAGS['dWf']
-        if 'aperture' in attributes: aperture = attributes['aperture']
+        aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.RFC(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
+        instance['label']   = label
+        instance['gap']     = gap
+        instance['length']  = length
+        instance['EzAvg']   = EzAvg
+        instance['PhiSoll'] = PhiSoll
+        instance['fRF']     = fRF
+        instance['dWf']     = dWf
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -155,12 +180,19 @@ def instanciate_element(item):
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         dWf       = FLAGS['dWf']
-        if 'aperture' in attributes: aperture = attributes['aperture']
+        aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
+        instance['label']   = label
+        instance['gap']     = gap
+        instance['EzAvg']   = EzAvg
+        instance['PhiSoll'] = PhiSoll
+        instance['fRF']     = fRF
+        instance['dWf']     = dWf
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
         instance  = ELM.MRK(label=label,actions=actions)
+        instance['label']  = label
     else:
         warnings.showwarning(
                 'InputError: Unknown element type encountered: "{}" - STOP'.format(key),

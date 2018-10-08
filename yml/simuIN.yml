@@ -40,12 +40,12 @@ flags:
 ## SECTION definitions
 
 sections:
-     - [&LE 5-30 , &HE 30-200]
+     - [&LE 5/30 , &HE 30/200]
 #...........................................................................................
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 30.       # [MeV] energy @ entrance (injection)
     - emitx_i:      &emx    2.e-6      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    2.e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    9.6e-5      # [rad] {Dphi,w} emittance @ entrance

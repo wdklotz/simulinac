@@ -1,5 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+___version___='v7.0.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -19,11 +20,12 @@ This file is part of the SIMULINAC code
 """
 #todo: update simu_manual.odt
 #todo: update README.md
-#todo: revise flow control with FLAGS (partly done): global STATE variable?
+#todo: rewise flow control with FLAGS (partly done): global STATE variable?
 #todo: each element should have its private steps parameter
 #todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix
 #todo: finish aperture checks for losses
-#todo: rework the KVout 
+#todo: rework the KVout
+#todo: rework verbose printing levels
 import sys
 import os
 # import subprocess
@@ -263,16 +265,19 @@ def simulation(filepath):
     
 #todo: file names from arguments like python simu.py arg1 arg2 arg3
 if __name__ == '__main__':
+    print(___version___)
 
     # launch m4 to fill macros in template file
-    template_file = 'yml/worktmpl.yml'      # template file
-    input_file    = 'yml/simuIN.yml'        # input file
-    macros_file   = 'yml/macros.sh'         # macro definitions
+    template_file = 'yml/worktmpl.yml'      # def.template file
+    macros_file   = 'yml/macros.sh'         # def.macro definitions
+    input_file    = 'yml/simuIN.yml'        # def.input file
+    if len(sys.argv) == 3:
+        template_file = sys.argv[0]
+        macros_file   = sys.argv[1]
+        input_file    = sys.argv[2]
     command = "{} {} > {}".format(macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
     os.system(command)
 
-    if len(sys.argv) == 2:
-        input_file = sys.argv[1]
     simulation(input_file)
     

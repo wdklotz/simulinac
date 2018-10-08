@@ -40,7 +40,7 @@ flags:
 ## SECTION definitions
 
 sections:
-- [&LE LE,  &HE HE]
+     - [&LE 5/30 , &HE 30/200]
 #...........................................................................................
 ## INPUT parameter definitions
 
