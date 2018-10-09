@@ -25,17 +25,17 @@
 ## RUN configurationgenerator
 
 flags:
-    # - accON:        False           # {True} acceleration on/off flag
-    # - egf:          True            # {False} emittance growth flag
-    # - sigma:        False           # {True} beam sizes by sigma-matrix
-    # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    # - periodic:     True            # {False} treat lattice as ring
-    # - express:      True            # {False} use express version of thin quads
-    # - useaper:      True            # {False} use aperture check for lattice elements
-    # - csTrak:       False           # {True} plot CS trajectories
-    # - bucket:       True            # {False} plot the bucket
-    # - pspace:       True            # {False} plot the twiss ellipses at entrance
-    # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # - accON:        False  # {True} acceleration on/off flag
+    # - egf:          True   # {False} emittance growth flag
+    # - sigma:        False  # {True} beam sizes by sigma-matrix
+    # - KVout:        True   # {False} print a dictionary of Key-Value pairs, no display
+    # - periodic:     True   # {False} treat lattice as ring
+    # - express:      True   # {False} use express version of thin quads
+    # - useaper:      True   # {False} use aperture check for lattice elements
+    # - csTrak:       False  # {True} plot CS trajectories
+    # - bucket:       True   # {False} plot the bucket
+    # - pspace:       True   # {False} plot the twiss ellipses at entrance
+    # - verbose:      2      # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
 

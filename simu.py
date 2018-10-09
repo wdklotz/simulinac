@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.2'
+___version___='v7.0.3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -21,11 +21,13 @@ This file is part of the SIMULINAC code
 #todo: update simu_manual.odt
 #todo: update README.md
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
-#todo: each element should have its private steps parameter
-#todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix
-#todo: finish aperture checks for losses
-#todo: rework the KVout
+#todo: each element should have its private steps parameter - done in parts
+#todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix - done ?
+#todo: finish aperture checks for losses - neede for transverse ?
+#todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
+#todo: update conversions.pdf
+#todo: for simu make phase space plots
 import sys
 import os
 # import subprocess
@@ -275,7 +277,9 @@ if __name__ == '__main__':
         template_file = sys.argv[0]
         macros_file   = sys.argv[1]
         input_file    = sys.argv[2]
-    command = "{} {} > {}".format(macros_file,template_file, input_file)
+#todo: make shure macros.sh is excutable
+    command = "chmod +x yml/macros.sh"
+    command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
     os.system(command)
 

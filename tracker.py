@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='7.0.2'
+___version___='7.0.3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -307,7 +307,8 @@ if __name__ == '__main__':
     template_file = 'yml/worktmpl.yml'           # template file
     input_file    = 'yml/trackIN.yml'            # input file
     macros_file   = 'yml/macros.sh'              # macro definitions
-    command = "{} {} > {}".format(macros_file,template_file, input_file)
+    command = "chmod +x yml/macros.sh"
+    command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
     os.system(command)
 
