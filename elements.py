@@ -358,12 +358,7 @@ class MRK(I):
 # Trace3D drift space
 class D(I):
     """ Trace3D drift space """
-    def __init__(self, 
-                length = 0., 
-                label = 'D', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0],
-                aperture = PARAMS['aperture']):
+    def __init__(self,length = 0.,label = 'D',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(particle = particle, position = position)
         self.label    = label
         self.length   = length
@@ -444,13 +439,7 @@ class QF(D):
 # Trace3D defocusing quad
 class QD(QF):
     """ Trace3D defocussing quad """
-    def __init__(self, 
-                k0 = 0., 
-                length = 0., 
-                label = 'QD', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0], 
-                aperture = PARAMS['aperture']):
+    def __init__(self,k0 = 0.,length = 0.,label = 'QD',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(k0 = k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
@@ -460,13 +449,7 @@ class QD(QF):
 # Trace3D x-plane sector bending dipole
 class SD(D):
     """ Trace3d sector dipole in x-plane """
-    def __init__(self, 
-                radius = 0., 
-                length = 0., 
-                label = 'SD', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0],
-                aperture = PARAMS['aperture']):
+    def __init__(self,radius = 0.,length = 0.,label = 'SD',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(particle = particle, position = position, aperture = aperture)
         self.label    = label
         self.length   = length
@@ -511,13 +494,7 @@ class SD(D):
 # Trace3D x-plane rectangular bending dipole
 class RD(SD):
     """ Trace3D rectangular dipole x-plane """
-    def __init__(self, 
-                radius = 0., 
-                length = 0., 
-                label = 'RD', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0],
-                aperture = PARAMS['aperture']):
+    def __init__(self,radius = 0.,length = 0.,label = 'RD',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(radius = radius, length = length, label = label, particle = particle, position = position, aperture = aperture)
         psi = 0.5*length/radius   # halber Kantenwinkel
 
@@ -649,13 +626,17 @@ class RFG(I):
 
         """ switch gap model """
         if self.mapping == 't3d':
-            self.gap_model = _T3D_G(self)               # Trace3D-matrix and use linear gap-model
+            # Trace3D-matrix and use linear gap-model
+            self.gap_model = _T3D_G(self)
         elif self.mapping == 'simple' or self.mapping == 'base':
-            self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
+            # PyOrbit gap-models w/o SF-data
+            self.gap_model = _PYO_G(self, self.mapping)
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self)               # 3 point TTF-RF gap-model with SF-data (A.Shishlo/J.Holmes)
+            # 3 point TTF-RF gap-model with SF-data
+            self.gap_model = _TTF_G(self) (A.Shishlo/J.Holmes)
         elif self.mapping == 'dyn':
-            self.gap_model = _DYN_G(self)               # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            self.gap_model = _DYN_G(self)
 
     def adjust_energy(self, tkin):
         params = self._params    # params dict
@@ -957,13 +938,7 @@ class _thin(_Node):
 # Thin F-quad
 class QFth(_thin):
     """ Thin F-Quad """
-    def __init__(self, 
-                k0 = 0., 
-                length = 0., 
-                label = 'QFT', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0], 
-                aperture = PARAMS['aperture']):
+    def __init__(self,k0 = 0.,length = 0.,label = 'QFT',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(particle = particle, position = position)
         self.label     = label
         self.length    = length
@@ -1004,13 +979,7 @@ class _kick(I):
 # Thin D-quad
 class QDth(QFth):
     """ Thin D-Quad """
-    def __init__(self, 
-                k0 = 0., 
-                length = 0., 
-                label = 'QDT', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0], 
-                aperture = PARAMS['aperture']):
+    def __init__(self,k0 = 0.,length = 0.,label = 'QDT',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture = PARAMS['aperture']):
         super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo']  = -0.5
 
@@ -1051,13 +1020,7 @@ class QFthx(D):
 # Thin D-quadx
 class QDthx(QFthx):
     """ Thin D-Quad   (express version of QDth) """
-    def __init__(self, 
-                k0 = 0., 
-                length = 0., 
-                label = 'QDT', 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0],
-                aperture =None):
+    def __init__(self,k0 = 0.,length = 0.,label = 'QDT',particle = PARAMS['sollteilchen'],position = [0, 0, 0],aperture =None):
         super().__init__(k0 = -k0, length = length, label = label, particle = particle, position = position, aperture = aperture)
         self['viseo'] = -0.5
 
@@ -1133,12 +1096,7 @@ class RFC(_thin):
 # SixTrack drift map
 class SIXD(D):
     """ Drift with Sixtrack mapping (experimental!) """
-    def __init__(self, 
-                length = 0., 
-                label = "D#", 
-                particle = PARAMS['sollteilchen'], 
-                position = [0., 0., 0.],
-                aperture = PARAMS['aperture']):
+    def __init__(self,length = 0.,label = "D#", particle = PARAMS['sollteilchen'],position = [0., 0., 0.],aperture = PARAMS['aperture']):
         super().__init__(length = length, particle = particle, position = position)
         self.label    = label
         self.length   = length

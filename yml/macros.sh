@@ -1,4 +1,4 @@
-TKIN=30.                # kinetic energy in [Mev]
+TKIN=50.                # kinetic energy in [Mev]
 ##EMITW=12.6e-6         # w emittance in [rad]
 ##EMITW=12.6e-5         # w emittance in [rad]
 EMITW=9.6e-5            # w emittance in [rad]
