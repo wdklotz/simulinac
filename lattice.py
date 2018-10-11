@@ -83,7 +83,7 @@ class Lattice(object):
         mcell.section = '<= full lattice map'
         return mcell.string()
 
-#todo: broken
+#todo: stats() broken
     def stats(self,soll_track):
         """ gather lattice statistics """
         cav_counter = 0
@@ -92,8 +92,8 @@ class Lattice(object):
         ttfx = +1.e-50
         # tk_i = soll_track.first()[6]
         # tk_f = soll_track.last()[6]
-        tk_i = soll_track.getpoints()[0][1]()[6]
-        tk_f = soll_track.getpoints()[-1][1]()[6]
+        tk_i = soll_track.getpoints()[0]()[6]
+        tk_f = soll_track.getpoints()[-1]()[6]
         for element in self.seq:
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
@@ -121,7 +121,8 @@ class Lattice(object):
         """
         mcell = ELM.I(label=' <==')   #  chain matrices for full cell
         for count,element in enumerate(self.seq):
-            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell = element * mcell
 
         ## Stabilität ?
         unstable = False

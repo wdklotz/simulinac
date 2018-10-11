@@ -94,7 +94,7 @@ class _TTF_G(object):
             # slice energy dependence
             self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
-            # update Node matrix with local deltaW
+            # update linear Node matrix with this deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW
             # for test0()
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
@@ -331,7 +331,7 @@ class _TTF_Gslice(object):
             self.parent.dbTab2Rows.append(dbTab2Row)
         return f_track
 
-#todo: broken
+#todo: broken test0()
 def test0():
     import elements as ELM
     from bunch import Track
@@ -367,7 +367,7 @@ def test0():
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tf
 
-#todo: broken
+#todo: broken test1()
 def test1():
     import elements as ELM
     from bunch import Track

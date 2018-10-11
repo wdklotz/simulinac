@@ -44,11 +44,10 @@ class Tpoint(object):
         s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[K.x],self.point[K.xp],self.point[K.y],self.point[K.yp],self.point[K.z],self.point[K.zp],self.point[K.T],self.point[K.S])
         return s
     
-#todo: simplify Track no (n,Tpoint) tuples
 class Track(object):
     """
         A Track is a dictionary
-        A Track is a container (tuple) of positions (Tpoint). 
+        A Track is a container (list) of positions Tpoint objects. 
     """
     def __init__(self):
         self._points = []
@@ -60,17 +59,13 @@ class Track(object):
     def nbofpoints(self):           # nbof points in Track
         return len(self._points)
     def addpoint(self,point):       # add a point to Track
-        if self.nbofpoints() == 0:
-            last = 0
-        else:
-            last, p = self._points[-1]
-        self._points.append((last+1,point))
+        self._points.append(point)
     def removepoint(self,point):
         self._points.remove(point)
     def as_table(self):
         tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
         tblrows =[]
-        for n,point in iter(self):
+        for point in iter(self):
             tblrow = [
                 '{:8.3f}'.format(point()[K.x]),
                 '{:8.3f}'.format(point()[K.xp]),
@@ -85,13 +80,13 @@ class Track(object):
         return tblprnt(tblheadr,tblrows)
     def as_str(self):
         str = ''
-        for n,p in iter(self):
+        for p in iter(self):
             str += p.as_str()+'\n'
         return str
 
 class Bunch(object):
     """
-        A Bunch is a container (list) of particles
+        A Bunch is a container (list) of Particle objects
     """
     def __init__(self):
         self._particles = []
@@ -262,8 +257,8 @@ def test0():
     print('points: ',allpoints)
     print('track.__dict__: ',track.__dict__)
     # loop points in track
-    for n,point in iter(track):
-        print(n,point())
+    for point in iter(track):
+        print(point())
     # link track with particle
     for particle in iter(bunch):
         particle['track'] = track
@@ -307,7 +302,7 @@ def test2():
 
     fig2 = plt.figure('test2:figure 2')
     good = (x, xp)
-    poincarePlot(good, 'x-x\'', (0.1,0.1), projections=(1,1))
+    poincarePlot(good, (0,0), 'x-x\'', (0.1,0.1), projections=(1,1))
     figures.append(fig2)
 
 def test3(filepath):
@@ -316,10 +311,10 @@ def test3(filepath):
     N = 200
     lattice = parse_and_fabric(filepath)
     track = EmitContour(N, random=True)
-    X  = [x()[K.x] for n,x in iter(track)]
-    XP = [x()[K.xp] for n,x in iter(track)]
-    Y  = [x()[K.y] for n,x in iter(track)]
-    YP = [x()[K.yp] for n,x in iter(track)]
+    X  = [x()[K.x] for x in iter(track)]
+    XP = [x()[K.xp] for x in iter(track)]
+    Y  = [x()[K.y] for x in iter(track)]
+    YP = [x()[K.yp] for x in iter(track)]
     fig = plt.figure('test3:figure')
     plt.scatter(X,XP,s=0.1)
     plt.scatter(Y,YP,color='red',s=0.1)
@@ -345,7 +340,7 @@ def test4():
     xaxis = []
     yaxis = []
     for track in tracklist:
-        for n,point in iter(track):
+        for point in iter(track):
             X  = point()[K.x]
             XP = point()[K.xp]
             xaxis.append(X)

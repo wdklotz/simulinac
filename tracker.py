@@ -52,7 +52,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
         track = particle['track']
-        nd, tpoint = track.getpoints()[loc]
+        tpoint = track.getpoints()[loc]
         point = tpoint()
         x.append(point[ordinate])
         y.append(point[abszisse])
@@ -77,7 +77,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
         track = particle['track']
-        nd, tpoint = track.getpoints()[loc]
+        tpoint = track.getpoints()[loc]
         point = tpoint()
         x.append(point[ordinate])
         y.append(point[abszisse])
@@ -107,18 +107,20 @@ def progress(tx):
 
 #todo: aperture check
 #todo: useaper flag
-#todo: discard intermediate Tpoints modulo N
+#todo: discard intermediate Tpoints between Markers
 def track_node(node,particle):
     """
     Tracks a particle through a node
     """
     track = particle['track']
     last = track.getpoints()[-1]
-    nb,last_point = last
+    last_point = last
     try:
         new_point = node.map(last_point())
     except ValueError as ex:
         lost = True
+        track.removepoint(last)
+        return lost
     # check Dp2p-acceptance
     if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
         lost = False
@@ -165,7 +167,7 @@ def track(lattice,bunch):
                 nlost += 1
             # showing track-loop progress
             if (ndcnt+1)%lmod == 0:
-                tx4    = ' {}% done {}/{} lost/initial'.format(int(ndcnt/lnode*100), nlost, nbpart)
+                tx4    = ' {}% done {}/{} lost/initial'.format(int((ndcnt/lnode*100.)+1.), nlost, nbpart)
                 # tx = ('(track design)', '(track bunch)', zeuge[ndcnt%4], tx4)
                 tx = ('(track design)', '(track bunch)', '', tx4)
                 progress(tx)
@@ -182,7 +184,7 @@ def track_soll(lattice):
     tpoint = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., PARAMS['sollteilchen'].tkin, 1., 0., 1.]))
     soll_track.addpoint(tpoint)
     for node in iter(lattice):
-        n,pi = soll_track.getpoints()[-1]   # n,Tpoint at entrance
+        pi = soll_track.getpoints()[-1]   # Tpoint at entrance
         """ energy adjustment """
         node.adjust_energy(pi()[K.T])
         """ mapping with soll map """
@@ -237,24 +239,25 @@ def tracker(options):
     wmx         = PARAMS['wmx']
 
     # gather for print
-    parameter_log = {}
-    parameter_log['tkin.......[MeV]'] = tkin
-    parameter_log["sigma(x,x')_i.....([m,rad])"] = (sigma_x,sigma_xp)
-    parameter_log["sigma(y,y')_i.....([m,rad])"] = (sigma_y,sigma_yp)
-    parameter_log["sigma(Dphi,w)_i....([rad,])"] = (sigma_Dphi,sigma_w)
-    parameter_log["sigma(z,Dp2p)_i......([m,])"] = (sigma_z,sigma_Dp2p)
-    parameter_log['betax_i......[m]'] = betax_i
-    parameter_log['betay_i......[m]'] = betay_i
-    parameter_log['betaw_i....[rad]'] = betaw
-    parameter_log['betaz_i..[m/rad]'] = betaz
-    parameter_log['emitx_i......[m]'] = emitx_i
-    parameter_log['emity_i......[m]'] = emity_i
-    parameter_log['emitw_i....[rad]'] = (emitw, wmx)
-    parameter_log['emitz_i......[m]'] = emitz
-    parameter_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    parameter_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
-    parameter_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
-    dictprnt(parameter_log,'Tracker Options'); print()
+    tracker_log = {}
+    tracker_log['tkin.......[MeV]'] = tkin
+    tracker_log["sigma(x,x')_i.....([m,rad])"] = (sigma_x,sigma_xp)
+    tracker_log["sigma(y,y')_i.....([m,rad])"] = (sigma_y,sigma_yp)
+    tracker_log["sigma(Dphi,w)_i....([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log["sigma(z,Dp2p)_i......([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log['betax_i......[m]'] = betax_i
+    tracker_log['betay_i......[m]'] = betay_i
+    tracker_log['betaw_i....[rad]'] = betaw
+    tracker_log['betaz_i..[m/rad]'] = betaz
+    tracker_log['emitx_i......[m]'] = emitx_i
+    tracker_log['emity_i......[m]'] = emity_i
+    tracker_log['emitw_i....[rad]'] = (emitw, wmx)
+    tracker_log['emitz_i......[m]'] = emitz
+    tracker_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
+    tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
+    tracker_log['lattice version......'] = PARAMS['lattice_version']
+    dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
     bunchfactory = BunchFactory()
@@ -295,7 +298,6 @@ def test0(filepath):
     d,first = sollTrack[0]
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
-#todo: file names from arguments like python tracker.py arg1 arg2 arg3
 if __name__ == '__main__':
     print(___version___)
 
@@ -304,7 +306,7 @@ if __name__ == '__main__':
     DEBUG_TEST0       = DEBUG_ON
     
     # launch m4 to fill macros in template file
-    template_file = 'yml/worktmpl.yml'           # template file
+    template_file = 'yml/tmpl.yml'           # template file
     input_file    = 'yml/trackIN.yml'            # input file
     macros_file   = 'yml/macros.sh'              # macro definitions
     command = "chmod +x yml/macros.sh"
@@ -313,7 +315,7 @@ if __name__ == '__main__':
     os.system(command)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 10000,
+                    particles_per_bunch = 10,
                     show    = True,
                     save    = False,
                     skip    = 1

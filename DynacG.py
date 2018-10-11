@@ -97,7 +97,7 @@ class _DYN_G(object):
             # configure slices
             self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
-            # update Node matrix with local deltaW
+            # update linear Node matrix with this deltaW
             self.matrix[EKOO, DEKOO] = self.deltaW
 
     def map(self,i_track):
@@ -397,7 +397,7 @@ class _DYN_Gslice(object):
         res = res * h**3 / 90.
         return res
 
-#todo: broken        
+#todo: broken test0()        
 def test0():
     import elements as ELM
     print('-----------------------------------TEST 0----------------')

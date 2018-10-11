@@ -191,8 +191,8 @@ class Particle(DictObject,object):
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:
             print("Particle's kinetic energy went negative! (tkin[MeV] = {:6.3f})".format(tkin))
-            # raise ex
-            sys.exit(1)
+            raise ex
+            # sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
@@ -363,7 +363,7 @@ def waccept(node):
         # betaz    = emitz/Dp2p0**2                  # beta [m]
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
         gammaz = 1./betaz
-#todo: use y2,y2 from Twiss
+#todo: use y2,y3 from Twiss or not needed? Acceptance is correct like this!
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
@@ -548,8 +548,9 @@ def collect_data_for_summary(lattice):
     SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
     SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
     SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-    SUMMARY['separatrix: delta-W* [MeV]']      =  '{:8.2e}, => w{{a.k.a.Dgamma}} = {:8.2e}[%]'.format(PARAMS['DWmx'],PARAMS['wmx']*1.e2)
-    SUMMARY['separatrix: phase*   [deg]']      =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
+    SUMMARY['separatrix: DW*   [MeV]']         =  '{:8.2e}'.format(PARAMS['DWmx'])
+    SUMMARY['separatrix: w*      [%]']         =  '{:8.2e}'.format(PARAMS['wmx']*1.e2)
+    SUMMARY['separatrix: Dphi* [deg]']         =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
     SUMMARY['emit{Dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)

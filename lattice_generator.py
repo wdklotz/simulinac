@@ -109,6 +109,7 @@ def instanciate_element(item):
         instance['dBdz']   = dBdz
         instance['bore']   = aperture
         instance['Bpole']  = Bpole
+        pass
     elif key == 'QD':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)

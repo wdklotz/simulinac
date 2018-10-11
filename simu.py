@@ -21,13 +21,12 @@ This file is part of the SIMULINAC code
 #todo: update simu_manual.odt
 #todo: update README.md
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
-#todo: each element should have its private steps parameter - done in parts
-#todo: RFG needs the T3D gap matrix for 6x6 sigma=matrix - done ?
-#todo: finish aperture checks for losses - neede for transverse ?
+#todo: finish aperture checks for losses - needed for transverse ?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
-#todo: update conversions.pdf
+#todo: check conversions.tex for variable names
 #todo: for simu make phase space plots
+#todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
 import sys
 import os
 # import subprocess
@@ -265,19 +264,17 @@ def simulation(filepath):
         # make plots of functions
         display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
-#todo: file names from arguments like python simu.py arg1 arg2 arg3
 if __name__ == '__main__':
     print(___version___)
 
     # launch m4 to fill macros in template file
-    template_file = 'yml/worktmpl.yml'      # def.template file
+    template_file = 'yml/tmpl.yml'          # def.template file
     macros_file   = 'yml/macros.sh'         # def.macro definitions
     input_file    = 'yml/simuIN.yml'        # def.input file
     if len(sys.argv) == 3:
         template_file = sys.argv[0]
         macros_file   = sys.argv[1]
         input_file    = sys.argv[2]
-#todo: make shure macros.sh is excutable
     command = "chmod +x yml/macros.sh"
     command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
     print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)

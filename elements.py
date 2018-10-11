@@ -21,7 +21,6 @@ import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
 from copy import copy, deepcopy
 import numpy as NP
-# from abc import ABC, abstractmethod
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron, DEBUG, ACTIONS
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
@@ -47,23 +46,6 @@ MDIM = 10
 
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})  # pretty printing
 
-# class Node(ABC):
-#     """ Lattice Node interface: virtual functions that must be implemented by all child classes """
-#     def __init__(self):
-#         super().__init__()
-#
-#     @abstractmethod
-#     def map(self, i_track):
-#         pass
-#
-#     @abstractmethod
-#     def soll_map(self, i_track):
-#         pass
-#
-#     @abstractmethod
-#     def adjust_energy(self, tkin):
-#         pass
-
 # The mother of all lattice elements (a.k.a. matrices)
 class _Node(DictObject, object):
     """ Base class for transfer matrices
@@ -77,8 +59,7 @@ class _Node(DictObject, object):
         self.position  = position         # [entrance, middle, exit]
         self.length    = 0.               # default - thin
         self.label     = ''               # default - unlabeled
-        self._deltaW   = 0.               # default - no energy increase
-
+        # self._deltaW   = 0.               # default - no energy increase
         self['slice_min'] = 0.001         # default - minimal slice length
         self['viseo']     = 0             # default - invisible
 
@@ -87,9 +68,6 @@ class _Node(DictObject, object):
         return self['twiss']
     def twiss(self,value):
         self['twiss'] = value
-    @property
-    def deltaW(self):
-        return self._deltaW
     @property
     def particlef(self):
         return copy(self.particle)(self.particle.tkin + self.deltaW) # !!!IMPORTANT!!!
@@ -127,6 +105,7 @@ class _Node(DictObject, object):
 
     def reverse(self):
         raise RuntimeError('_Node:reverse not implemented!')
+        sys.exit()
 
     def inverse(self):
         raise RuntimeError('_Node:inverse not implemented!')
@@ -321,7 +300,6 @@ class _Node(DictObject, object):
         return self
 
     def adjust_energy(self, tkin):
-        pass
         return self
 
 # Unity matrix map (is same as _Node)
@@ -352,7 +330,9 @@ class MRK(I):
             ACTIONS[action](self)
 
     def adjust_energy(self, tkin):
+        _params = self._params
         self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, actions = self.actions)
+        self._params = _params
         return self
 
 # Trace3D drift space
@@ -363,6 +343,7 @@ class D(I):
         self.label    = label
         self.length   = length
         self.aperture = aperture
+        # update linear NODE matrix
         m = self.matrix
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
@@ -370,10 +351,14 @@ class D(I):
         m[SKOO, LKOO]  = self.length        # delta-s
 
     def shorten(self, length):
-        return D(length = length, label = self.label, particle = self.particle, aperture = self.aperture)
+        shortD =  D(length = length, label = self.label, particle = self.particle, aperture = self.aperture)
+        shortD._params = self._params
+        return shortD
 
     def adjust_energy(self, tkin):
+        _params = self._params
         self.__init__(length = self.length, label = self.label, particle = self.particle(tkin), position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
 # Trace3D focussing quad
@@ -391,10 +376,11 @@ class QF(D):
         self['viseo'] = +0.5
 
     def shorten(self, length):
-        res = QF(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortQF = QF(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortQF._params = self._params
         # DEBUG_MODULE('QF: ', self.__dict__)
         # DEBUG_MODULE('QF.shorten: ', ret.__dict__)
-        return res
+        return shortQF
 
     def _mx_(self):
         m = self.matrix
@@ -433,7 +419,9 @@ class QF(D):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         kf = ki*cpi/cpf     # scale quad strength with new impulse
+        _params = self._params
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
 # Trace3D defocusing quad
@@ -444,7 +432,9 @@ class QD(QF):
         self['viseo'] = -0.5
 
     def shorten(self, length):
-        return QD(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortQD = QD(k0 = self.k0, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortQD._params = self._params
+        return shortQD
 
 # Trace3D x-plane sector bending dipole
 class SD(D):
@@ -459,7 +449,9 @@ class SD(D):
         self['viseo'] = 0.25
 
     def shorten(self, length):
-        return SD(radius = self.radius, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortSD = SD(radius = self.radius, length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortSD._params = self._params
+        return shortSD
 
     def _mx_(self):
         m = self.matrix
@@ -488,7 +480,9 @@ class SD(D):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         rf = ri*cpf/cpi  # scale bending radius with new impulse
+        _params = self._params
         self.__init__(radius = rf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
 # Trace3D x-plane rectangular bending dipole
@@ -554,18 +548,24 @@ class GAP(I):
 
         self['viseo']  = 0.25
 
-        lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
+        # lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
+        lamb         = PARAMS['wellenlänge']
         beta         = self.particle.beta                    # beta Einstein
         tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
         U0           = self.EzAvg*self.gap                   # Spaltspannung
-        self._deltaW = U0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
+        self.deltaW  = U0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
         tkin         = self.particle.tkin
         tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
         part_center  = copy(self.particle)(tk_center)        # !!!IMPORTANT!!! particle @ gap center
         bg           = part_center.gamma_beta                # beta*gamma @ gap center
         matrix       = self.matrix
         m0c2         = self.particle.e0
+        # update linear NODE matrix
         self._mx_(matrix, m0c2, U0, tr, PhiSoll, lamb, bg) # transport matrix
+
+    @property
+    def deltaW(self):
+        return self.deltaW
 
     def _trtf_(self, beta, lamb, gap):  # tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65)
         teta = gap / (beta*lamb)
@@ -582,6 +582,7 @@ class GAP(I):
         m[EKOO, DEKOO] = self.deltaW      # energy kick
 
     def adjust_energy(self, tkin):
+        _params = self._params
         self.__init__(EzAvg    = self.EzAvg,
                     PhiSoll    = self.phis,
                     fRF        = self.freq,
@@ -591,6 +592,7 @@ class GAP(I):
                     position   = self.position,
                     dWf        = self.dWf,
                     aperture   = self.aperture)
+        self._params = _params
         return self
 
 # Zero length RF gap
@@ -622,24 +624,27 @@ class RFG(I):
         self['viseo']= 0.25
 
         self.mapset  = PARAMS['mapset']
-        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+        # self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+        self.lamb    = PARAMS['wellenlänge']
+        self.t3d_g   = _T3D_G(self)         # makes the T3D matrix default for RFG
 
         """ switch gap model """
         if self.mapping == 't3d':
             # Trace3D-matrix and use linear gap-model
-            self.gap_model = _T3D_G(self)
+            # self.gap_model = _T3D_G(self)
+            self.gap_model = self.t3d_g
         elif self.mapping == 'simple' or self.mapping == 'base':
             # PyOrbit gap-models w/o SF-data
             self.gap_model = _PYO_G(self, self.mapping)
         elif self.mapping == 'ttf':
-            # 3 point TTF-RF gap-model with SF-data
-            self.gap_model = _TTF_G(self) (A.Shishlo/J.Holmes)
+            # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _TTF_G(self)
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             self.gap_model = _DYN_G(self)
 
     def adjust_energy(self, tkin):
-        params = self._params    # params dict
+        _params = self._params
         self.__init__(
             EzAvg      = self.EzAvg,
             PhiSoll    = self.phis,
@@ -652,7 +657,7 @@ class RFG(I):
             mapping    = self.mapping,
             SFdata     = self.SFdata,
             dWf        = self.dWf)
-        self._params = params
+        self._params = _params
         return self
 
     @property
@@ -764,7 +769,8 @@ class _PYO_G(object):
         ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
 
         f_track = NP.array([xf, xpf, yf, ypf, zf, zfp, Tf, 1., sf, 1.])
-        self.matrix[EKOO, DEKOO] = deltaW             # refresh Node-matrix with local deltaW
+        # update linear NODE matrix with this deltaW
+        self.matrix[EKOO, DEKOO] = deltaW
 
         # for DEBUGGING
         if DEBUG_PYO_G == DEBUG_ON:
@@ -834,7 +840,8 @@ class _PYO_G(object):
             yp  = gbi/gbf*yp
 
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
-        self.matrix[EKOO, DEKOO] = DELTAW             # refresh Node-matrix with local deltaW
+        # update linear NODE matrix with this deltaW
+        self.matrix[EKOO, DEKOO] = DELTAW
 
         # for DEBUGGING
         if DEBUG_PYO_G == DEBUG_ON:
@@ -893,7 +900,7 @@ class _T3D_G(object):
         particlef      = copy(particle)(tkin+deltaW) # !!!IMPORTANT!!! particle @ (f)
         U0             = EzAvg*gap
 
-        # the matrix
+        # update the linear NODE matrix for rf gaps
         mx(matrix, tr, b, g, particle, particlef, U0, phis, lamb, deltaW)
 
         # the parent delegates reading these properties from here
@@ -913,9 +920,7 @@ class _T3D_G(object):
 # Base of thin Nodes
 class _thin(_Node):
     """ Base class for thin elements implemented as triplet D*Kick*D """
-    def __init__(self, 
-                particle = PARAMS['sollteilchen'], 
-                position = [0, 0, 0]):
+    def __init__(self, particle = PARAMS['sollteilchen'], position = [0, 0, 0]):
         super().__init__(particle = particle, position = position)
 
     def make_slices(self, anz = PARAMS['nbof_slices']):  # stepping routine through the triplet
@@ -958,7 +963,9 @@ class QFth(_thin):
         cpf = self.particle.gamma_beta
         ki = self.k0
         kf = ki*cpi/cpf     # scale quad strength with new impulse
+        _params = self._params
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
 # Kick
@@ -1010,7 +1017,9 @@ class QFthx(D):
         cpf = self.particle.gamma_beta
         ki  = self.k0
         kf  = ki*cpi/cpf               # scale quad strength with new impulse
+        _params = self._params
         self.__init__(k0 = kf, length = self.length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
     def make_slices(self, anz = PARAMS['nbof_slices']):
@@ -1074,12 +1083,14 @@ class RFC(_thin):
 
     @property
     def lamb(self):
-        return PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+        # return PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
+        return PARAMS['wellenlänge']
     @property
     def particlef(self):
         return self._particlef
 
     def adjust_energy(self, tkin):
+        _params = self._params
         self.__init__(
                     EzAvg         = self.EzAvg,
                     PhiSoll       = self.phis,
@@ -1091,6 +1102,7 @@ class RFC(_thin):
                     position      = self.position,
                     dWf           = self.dWf,
                     aperture      = self.aperture)
+        self._params = _params
         return self
 
 # SixTrack drift map
@@ -1108,7 +1120,9 @@ class SIXD(D):
         return SIXD(length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
 
     def adjust_energy(self, tkin):
+        _params = self._params
         self.__init__(length = self.length, label = self.label, particle = self.particle(tkin), position = self.position, aperture = self.aperture)
+        self._params = _params
         return self
 
     def map(self, i_track):
