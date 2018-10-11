@@ -1,5 +1,8 @@
 Version v7.0.3
 *) Bug fixed: some elements lost their dictionary values.
+*) Bug fixed: the rf-gaps did not have the T3D linear matrix They were treated as unit matrices and 
+showed emittance growths with energy when using the non-linear maps. I never understood
+this behaviour when comparing with the t3d mapping. This artefact has been eliminated.
 *) simu.py and tracker.py can now be called with 3 file arguments.
 *) renamed worktmpl.yml to tmpl.yml per default
 *) Track class is now a simple list of Tpoint objects

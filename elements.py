@@ -622,7 +622,6 @@ class RFG(I):
         self.dWf      = dWf
 
         self['viseo']= 0.25
-
         self.mapset  = PARAMS['mapset']
         # self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq # [m] RF wellenlaenge
         self.lamb    = PARAMS['wellenlänge']
@@ -631,7 +630,6 @@ class RFG(I):
         """ switch gap model """
         if self.mapping == 't3d':
             # Trace3D-matrix and use linear gap-model
-            # self.gap_model = _T3D_G(self)
             self.gap_model = self.t3d_g
         elif self.mapping == 'simple' or self.mapping == 'base':
             # PyOrbit gap-models w/o SF-data
