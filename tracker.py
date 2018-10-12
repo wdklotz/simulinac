@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='7.0.3'
+___version___='7.0.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os
+import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt
 import time
@@ -51,7 +51,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
-        track = particle['track']
+        track = particle.track
         tpoint = track.getpoints()[loc]
         point = tpoint()
         x.append(point[ordinate])
@@ -76,7 +76,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     nbprt = live_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
-        track = particle['track']
+        track = particle.track
         tpoint = track.getpoints()[loc]
         point = tpoint()
         x.append(point[ordinate])
@@ -112,7 +112,7 @@ def track_node(node,particle):
     """
     Tracks a particle through a node
     """
-    track = particle['track']
+    track = particle.track
     last = track.getpoints()[-1]
     last_point = last
     try:
@@ -299,7 +299,7 @@ def test0(filepath):
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 if __name__ == '__main__':
-    print(___version___)
+    print('tracker.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
 
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
@@ -311,14 +311,15 @@ if __name__ == '__main__':
     macros_file   = 'yml/macros.sh'              # macro definitions
     command = "chmod +x yml/macros.sh"
     command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-    print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
+    print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
     os.system(command)
 
     options = dict( input_file = input_file,
-                    particles_per_bunch = 10,
+                    particles_per_bunch = 3000,
                     show    = True,
                     save    = False,
                     skip    = 1
                     )
     # test0(input_file)
+    # start the run
     tracker(options)

@@ -129,7 +129,7 @@ class BunchFactory(object):
         for i in range(self.numberofparticles):
             particle = Proton(tkin= PARAMS['injection_energy'])
             bunch.addparticle(particle)
-            particle['track'] = initialtracklist[i]
+            particle.track = initialtracklist[i]
         return bunch
 
 def Gauss1D(twx,twy,twz,npart,mask,tk):

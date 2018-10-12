@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.3'
+___version___='v7.0.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -26,6 +26,8 @@ This file is part of the SIMULINAC code
 #todo: rework verbose printing levels
 #todo: check conversions.tex for variable names
 #todo: for simu make phase space plots
+#todo: sigma R-formalism for longitudinal as well?
+#todo: C.K.Allen's matrices which are XAL as well?
 #todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
 import sys
 import os
@@ -265,8 +267,7 @@ def simulation(filepath):
         display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
     
 if __name__ == '__main__':
-    print(___version___)
-
+    print('simu.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
     # launch m4 to fill macros in template file
     template_file = 'yml/tmpl.yml'          # def.template file
     macros_file   = 'yml/macros.sh'         # def.macro definitions
@@ -277,8 +278,8 @@ if __name__ == '__main__':
         input_file    = sys.argv[2]
     command = "chmod +x yml/macros.sh"
     command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-    print('m4->script: ',macros_file,' template: ',template_file,' input: ',input_file)
+    print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
     os.system(command)
-
+    # start the run
     simulation(input_file)
     

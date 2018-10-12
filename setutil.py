@@ -21,17 +21,13 @@ This file is part of the SIMULINAC code
 from __future__ import print_function
 
 import sys,traceback
-# py_major = sys.version_info.major
 import scipy.constants as C
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 import logging, pprint
 from enum import IntEnum
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-from Dictionary import DictObject
 import warnings
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# from matplotlib.figure import Figure
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -171,15 +167,12 @@ class Twiss(object):
     def sigmaV(self):
         (x,y) = self.y3()
         return y
-    
-        
-class Particle(DictObject,object):
+
+class Particle(object):
     """
-        A particle is a class
-        A particle is also a dictionary
+        A particle class
     """
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
-        DictObject.__init__(self)
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
@@ -187,6 +180,7 @@ class Particle(DictObject,object):
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
         self.lost       = False
+        self.track      = None
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:
@@ -462,7 +456,7 @@ def collect_data_for_summary(lattice):
                 test = (type(element).__name__ == typ)  # no section tag? take all!
             return test
 
-#       NOTE: here I use the INFIX operator '|' like a UNIX pipe
+        # NOTE: here I use the INFIX operator '|' like a UNIX pipe
         List     = Apply(list)
         Selector = Filter(predicate)
         return lattice.seq | Selector | List

@@ -36,13 +36,13 @@ DEBUG_MODULE = DEBUG_OFF
 #todo: check eg_corr again - still with global delta-phi
 class Sigma(object):
     """ Utility class for handling of sigma-matrix """
-    def __init__(self, v0):
+    def __init__(self, psv0):
 
         self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
         self._emitx = PARAMS['emitx_i']
         self._emity = PARAMS['emity_i']
         self._emitz = PARAMS['emitz']
-        self._beam(v0)
+        self._beam(psv0)
         
     @property
     def emitx(self,value):
@@ -54,19 +54,19 @@ class Sigma(object):
     def emitz(self,value):
         self._emitz = value
     
-    def _beam(self,v0):
+    def _beam(self,psv0):
         """ calc sigma-matrix from twiss parameters """
-        self.matrix[0,0] = self._emitx*v0[K6.bx]
-        self.matrix[2,2] = self._emity*v0[K6.by]
-        # self.matrix[4,4] = self._emitz*v0[K6.bz]
+        self.matrix[0,0] = self._emitx*psv0[K6.bx]
+        self.matrix[2,2] = self._emity*psv0[K6.by]
+        # self.matrix[4,4] = self._emitz*psv0[K6.bz]
 
-        self.matrix[1,1] = self._emitx*v0[K6.gx]
-        self.matrix[3,3] = self._emity*v0[K6.gy]
-        # self.matrix[5,5] = self._emitz*v0[K6.gz]
+        self.matrix[1,1] = self._emitx*psv0[K6.gx]
+        self.matrix[3,3] = self._emity*psv0[K6.gy]
+        # self.matrix[5,5] = self._emitz*psv0[K6.gz]
         
-        self.matrix[0,1] = self.matrix[1,0] =  -self._emitx*v0[K6.ax]
-        self.matrix[2,3] = self.matrix[3,2] =  -self._emity*v0[K6.ay]
-        # self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*v0[K6.az]
+        self.matrix[0,1] = self.matrix[1,0] =  -self._emitx*psv0[K6.ax]
+        self.matrix[2,3] = self.matrix[3,2] =  -self._emity*psv0[K6.ay]
+        # self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*psv0[K6.az]
     
     def twiss(self):
         """ calc twiss parameters from sigma-matrix """
@@ -190,8 +190,8 @@ def test0():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    v0       = NP.array([bx,ax,gx,by,ay,gy])
-    sg0      = Sigma(v0)
+    psv0     = NP.array([bx,ax,gx,by,ay,gy])
+    sg0      = Sigma(psv0)
     print(sg0.string())
 def test1():
     from elements import RFG
@@ -206,8 +206,8 @@ def test1():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    v0       = NP.array([bx,ax,gx,by,ay,gy])
-    sigma_i  = Sigma(v0)
+    psv0     = NP.array([bx,ax,gx,by,ay,gy])
+    sigma_i  = Sigma(psv0)
     s1 = sigma_i.matrix
     sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
     s2 = sigma_f.matrix

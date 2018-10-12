@@ -83,7 +83,6 @@ class Lattice(object):
         mcell.section = '<= full lattice map'
         return mcell.string()
 
-#todo: stats() broken
     def stats(self,soll_track):
         """ gather lattice statistics """
         cav_counter = 0
@@ -351,18 +350,18 @@ class Lattice(object):
         by       = self.betay0
         ay       = self.alfay0
         gy       = self.gammy0
-        v0       = NP.array([bx,ax,gx,by,ay,gy])
+        psv0     = NP.array([bx,ax,gx,by,ay,gy])
         # twiss ftn's for whole lattice
         beta_fun = []
         for node in self.seq:
             # twiss ftn's for a single node
-            ftn = node.twiss_functions(steps = steps, v0 = v0) 
+            ftn = node.twiss_functions(steps = steps, psv0 = psv0) 
             # prepare plot list of ftn's
             for v,s in ftn:
                 flist = v.tolist()
                 flist.append(s)
                 beta_fun.append(flist)
-            v0 = v   # loop back
+            psv0 = v   # loop back
 
             # aperture check
             if FLAGS['useaper']:
@@ -388,8 +387,8 @@ class Lattice(object):
         by       = self.betay0
         ay       = self.alfay0
         gy       = self.gammy0
-        v0       = NP.array([bx,ax,gx,by,ay,gy])
-        sg0      = Sigma(v0)
+        psv0     = NP.array([bx,ax,gx,by,ay,gy])
+        sg0      = Sigma(psv0)
         # sigma ftn's for whole lattice
         sigma_fun = []
         for node in self.seq:
