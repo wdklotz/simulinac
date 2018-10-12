@@ -275,22 +275,6 @@ class _Node(DictObject, object):
         # KEEPVALUES update
         # KEEP.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
 
-        # APERTURE control
-        # if FLAGS['aperture']:
-        #     nsig       = PARAMS['n_sigma']
-        #     x2av = self['sigxy'][0]
-        #     y2av = self['sigxy'][2]
-        #     rsquare_av = sqrt(x2av**2 + y2av**2)
-        #     limr = nsig*rsquare_av
-        #     if isinstance(self,(ELM.QF, ELM.QD, ELM.RFG, ELM.GAP, ELM.RFC, ELM.QFth, ELM.QDth, ELM.QFthx, ELM.QDthx)):
-        #         aper = element.aperture
-        #         if limr > aper:
-        #             warnings.showwarning(
-        #                 'out {}*sigma at z ={:5.1f}[m]'.format(nsig,s),
-        #                 UserWarning,
-        #                 'lattice.py',
-        #                 'sigma_beam()')
-
     def map(self, i_track):
         """ Linear mapping of trjectory from (i) to (f) """
         f_track = self.matrix.dot(i_track)

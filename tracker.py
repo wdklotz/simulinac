@@ -57,8 +57,8 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
         x.append(point[ordinate])
         y.append(point[abszisse])
     for particle in iter(lost_bunch):
-        track = particle['track']
-        nd, tpoint = track.getpoints()[loc]
+        track = particle.track
+        tpoint = track.getpoints()[loc]
         point = tpoint()
         xlost.append(point[ordinate])
         ylost.append(point[abszisse])
@@ -305,17 +305,20 @@ if __name__ == '__main__':
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     
+    if sys.platform != 'win32':
     # launch m4 to fill macros in template file
-    template_file = 'yml/tmpl.yml'           # template file
-    input_file    = 'yml/trackIN.yml'            # input file
-    macros_file   = 'yml/macros.sh'              # macro definitions
-    command = "chmod +x yml/macros.sh"
-    command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-    print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
-    os.system(command)
-
+        template_file = 'yml/tmpl.yml'           # template file
+        input_file    = 'yml/trackIN.yml'            # input file
+        macros_file   = 'yml/macros.sh'              # macro definitions
+        command = "chmod +x yml/macros.sh"
+        command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+        os.system(command)
+    else:
+        input_file    = 'yml/trackIN.yml'            # input file
+        
     options = dict( input_file = input_file,
-                    particles_per_bunch = 3000,
+                    particles_per_bunch = 5000,
                     show    = True,
                     save    = False,
                     skip    = 1

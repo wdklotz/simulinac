@@ -268,18 +268,22 @@ def simulation(filepath):
     
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
-    # launch m4 to fill macros in template file
-    template_file = 'yml/tmpl.yml'          # def.template file
-    macros_file   = 'yml/macros.sh'         # def.macro definitions
-    input_file    = 'yml/simuIN.yml'        # def.input file
-    if len(sys.argv) == 3:
-        template_file = sys.argv[0]
-        macros_file   = sys.argv[1]
-        input_file    = sys.argv[2]
-    command = "chmod +x yml/macros.sh"
-    command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-    print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
-    os.system(command)
+
+    if sys.platform != 'win32':
+        # launch m4 to fill macros in template file
+        template_file = 'yml/tmpl.yml'          # def.template file
+        macros_file   = 'yml/macros.sh'         # def.macro definitions
+        input_file    = 'yml/simuIN.yml'        # def.input file
+        if len(sys.argv) == 3:
+            template_file = sys.argv[0]
+            macros_file   = sys.argv[1]
+            input_file    = sys.argv[2]
+        command = "chmod +x yml/macros.sh"
+        command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+        os.system(command)
+    else:
+        input_file    = 'yml/simuIN.yml'        # def.input file
     # start the run
     simulation(input_file)
     
