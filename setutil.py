@@ -97,7 +97,7 @@ FLAGS  = dict(
         egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
         KVout                = False,            # print a dictionary of Key-Value pairs, no display
-        dWf                  = 1.,               # acceleration on/off flag 1=on,0=off
+        dWf                  = 1,                # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
         express              = False,            # use express version of thin quads
         useaper              = False,            # use aperture check for quads and rf-gaps
@@ -306,7 +306,9 @@ def waccept(node):
     IN
         node: the 1st rf-gap at the linac entrance
     """
-    if node is not None and FLAGS['dWf']:
+    # betaw, gammaw, wmx, w0, Dphi0, phi_1, phi_2, omgl0, betaz, gammaz, emitz, Dp2pmx, Dp2p0, z0, Dp2pAcceptance, zAcceptance, DWmx  = None
+    dWf = FLAGS['dWf']
+    if node is not None and dWf == 1:
         emitw_i   = PARAMS['emitw_i']    # [rad]
         E0T       = node.EzAvg*node.tr   # [MV/m]
         particle  = node.particle
@@ -383,32 +385,48 @@ def waccept(node):
                 # {Dphi(x)DW}
                 DWmx      = DWmx)       # separatrix: max W in [MeV]
 
-    PARAMS['emitz']   = emitz
-    PARAMS['betaw']   = betaw
-    PARAMS['betaz']   = betaz
-    PARAMS['DWmx']    = DWmx
-    PARAMS['wmx']     = wmx
-    PARAMS['psi']     = psi
-    PARAMS['phi_2']   = phi_2
-    PARAMS['phi_1']   = phi_1
-    PARAMS['Dp2p0']   = Dp2p0
-    PARAMS['z0']      = z0
-    PARAMS['omgl0']   = omgl0
-    PARAMS['Dp2pmx']  = Dp2pmx
-    PARAMS['w0']      = w0
-    PARAMS['Dp2pAcceptance'] = Dp2pAcceptance
-    PARAMS['zAcceptance']    = zAcceptance
-    
-    # now we can calculate the Twiss objects at injection
-    alfaw = 0. # always for longitudinal
-    twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
-    twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-    tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
-    twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
-    PARAMS['twiss_x_i'] = twx
-    PARAMS['twiss_y_i'] = twy
-    PARAMS['twiss_w_i'] = tww
-    PARAMS['twiss_z_i'] = twz
+        PARAMS['emitz']   = emitz
+        PARAMS['betaw']   = betaw
+        PARAMS['betaz']   = betaz
+        PARAMS['DWmx']    = DWmx
+        PARAMS['wmx']     = wmx
+        PARAMS['psi']     = psi
+        PARAMS['phi_2']   = phi_2
+        PARAMS['phi_1']   = phi_1
+        PARAMS['Dp2p0']   = Dp2p0
+        PARAMS['z0']      = z0
+        PARAMS['omgl0']   = omgl0
+        PARAMS['Dp2pmx']  = Dp2pmx
+        PARAMS['w0']      = w0
+        PARAMS['Dp2pAcceptance'] = Dp2pAcceptance
+        PARAMS['zAcceptance']    = zAcceptance
+        
+        # now we can calculate the Twiss objects at injection
+        alfaw = 0. # always for longitudinal
+        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
+        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
+        tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
+        twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
+        PARAMS['twiss_x_i'] = twx
+        PARAMS['twiss_y_i'] = twy
+        PARAMS['twiss_w_i'] = tww
+        PARAMS['twiss_z_i'] = twz
+
+    else:
+        # no acceleration
+        FLAGS['dWf'] = 0
+        res = {}
+        # now we can calculate the Twiss objects at injection
+        # alfaw = 0. # always for longitudinal
+        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
+        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
+        # tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
+        # twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
+        PARAMS['twiss_x_i'] = twx
+        PARAMS['twiss_y_i'] = twy
+        # PARAMS['twiss_w_i'] = tww
+        # PARAMS['twiss_z_i'] = twz
+        pass
 
     return res
 #todo: integrate sigmas into Twiss
@@ -532,7 +550,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['use ring lattice']                =  FLAGS['periodic']
     SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['useaper']
-    SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0. else  True
+    SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
     SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
@@ -542,17 +560,28 @@ def collect_data_for_summary(lattice):
     SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
     SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
     SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-    SUMMARY['separatrix: DW*   [MeV]']         =  '{:8.2e}'.format(PARAMS['DWmx'])
-    SUMMARY['separatrix: w*      [%]']         =  '{:8.2e}'.format(PARAMS['wmx']*1.e2)
-    SUMMARY['separatrix: Dphi* [deg]']         =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
     SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
     SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
     SUMMARY['emit{Dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
-    SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-    SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
-    SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(PARAMS['z0']*1.e2)
-    SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
-    SUMMARY['Dp/p-max on separatrix [%]']      =  PARAMS['Dp2pmx']*100.
+    
+    if FLAGS['dWf'] == 1:
+        SUMMARY['separatrix: DW*   [MeV]']         =  '{:8.2e}'.format(PARAMS['DWmx'])
+        SUMMARY['separatrix: w*      [%]']         =  '{:8.2e}'.format(PARAMS['wmx']*1.e2)
+        SUMMARY['separatrix: Dphi* [deg]']         =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
+        SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
+        SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
+        SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(PARAMS['z0']*1.e2)
+        SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
+        SUMMARY['Dp/p-max on separatrix [%]']      =  PARAMS['Dp2pmx']*100.
+    else:
+        SUMMARY['separatrix: DW*   [MeV]']         =  '{}'.format('NO acceleration')
+        SUMMARY['separatrix: w*      [%]']         =  '{}'.format('NO acceleration')
+        SUMMARY['separatrix: Dphi* [deg]']         =  '{}'.format('NO acceleration')
+        SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{}'.format('NO acceleration')
+        SUMMARY['(sig-Dp/p)i* [%]']                =  '{}'.format('NO acceleration')
+        SUMMARY['(sigz)i*    [cm]']                =  '{}'.format('NO acceleration')
+        SUMMARY['sync.oscillation* [MHz]']         =  '{}'.format('NO acceleration')
+        SUMMARY['Dp/p-max on separatrix [%]']      =  '{}'.format('NO acceleration') 
     return
 
 def I0(x):

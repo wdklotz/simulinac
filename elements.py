@@ -175,15 +175,16 @@ class _Node(DictObject, object):
         # n21  = self.matrix[3, 2];         n22  = self.matrix[3, 3]
         m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
         m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
+        
         n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
         n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
         m_beta  =  NP.array([
-            [m11*m11, -2.*m11*m12,           m12*m12,   0., 0., 0.],
-            [-m11*m21,     m11*m22+m12*m21,  -m22*m12,   0., 0., 0.],
-            [m21*m21, -2.*m22*m21,           m22*m22,   0., 0., 0.],
-            [0., 0., 0., n11*n11, -2.*n11*n12,           n12*n12],
-            [0., 0., 0., -n11*n21,     n11*n22+n12*n21,  -n22*n12],
-            [0., 0., 0., n21*n21, -2.*n22*n21,           n22*n22]
+            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.],
+            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.],
+            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.],
+            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12],
+            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12],
+            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22]
             ])
         return m_beta
 

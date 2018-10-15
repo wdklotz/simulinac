@@ -88,7 +88,10 @@ def make_thin (kf1,kf2,ld,anz=1,verbose=False):
     lat = Lattice()
     for i in range(anz):
         lat.concat(cell)
-    mcell,betax,betay=lat.cell()
+    lat.cell()
+    mcell = lat.accel
+    betax = lat.betax0
+    betay = lat.betay0
 
     if verbose:
         # {:.3f}
@@ -134,7 +137,10 @@ def make_thick(kf1,kf2,ld,anz=1,verbose=False):
     lat = Lattice()
     for i in range(anz):
         lat.concat(cell)
-    mcell,betax,betay=lat.cell()
+    lat.cell()
+    mcell = lat.accel
+    betax = lat.betax0
+    betay = lat.betay0
     if verbose:
         # {:.3f}
         print('L= {:.3f}'.format(ld),end=' ')
@@ -192,7 +198,10 @@ def test2(kf,kd,ld):
     print('---------------------------------Test2---')
     print('using kf,kd,ld',kf,kd,ld)
     cell,dummy,dummy = make_thick(kf,kd,ld)
-    mcell,betax,betay=cell.cell()
+    cell.cell()
+    mcell = cell.accel
+    betax = cell.betax0
+    betay=cell.betay0
     beta_matrix = mcell.beta_matrix()
     eigen, vectors = LA.eig(beta_matrix)
     print('eigen\n',eigen)
@@ -214,11 +223,17 @@ def test3(kf,kd,ld):
     anz = 3
     # thin
     cell,dummy,dummy    = make_thin(kf,kd,ld,anz=anz)
-    mcell,betax,betay   = cell.cell()
+    cell.cell()
+    mcell = cell.accel
+    betax = cell.betax0
+    betay   = cell.betay0
     beta_fun_thin       = cell.twiss_functions(steps=100)
     # thick
     cell,dummy,dummy    = make_thick(kf,kd,ld,anz=anz)
-    mcell,betax,betay   = cell.cell()
+    cell.cell()
+    mcell = cell.accel
+    betax = cell.betax0
+    betay   = cell.betay0
     beta_fun_thick      = cell.twiss_functions(steps=100)
     display((beta_fun_thin,beta_fun_thick))
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*

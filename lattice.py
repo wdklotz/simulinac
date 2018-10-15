@@ -253,10 +253,6 @@ class Lattice(object):
             aly = PARAMS["alfay_i"]
             gmx = (1.+alx*alx)/bax
             gmy = (1.+aly*aly)/bay
-            # xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence @ entrance
-            # yip = sqrt(emity*gmy)
-            # SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
-            # SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
         ## keep twiss values as lattice instance variables
         self.betax0 = bax
         self.alfax0 = alx
@@ -475,20 +471,32 @@ class Lattice(object):
         beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
         lamb        = PARAMS['wellenlänge']
-        x1          = soll_test(sqrt(PARAMS['emitx_i']/self.gammx0)) # x-plane: principal-1 (cos like)
-        x2p         = soll_test(sqrt(PARAMS['emitx_i']/self.betax0)) # x-plane: principal-1 (sin like)
-        y1          = soll_test(sqrt(PARAMS['emity_i']/self.gammy0))
-        y2p         = soll_test(sqrt(PARAMS['emity_i']/self.betay0))
-        sigmaz_i    = soll_test(PARAMS['z0'])      # z0[m] from waccept
-        dp2p_i      = soll_test(PARAMS['Dp2p0'])   # dp/p0 from waccept
+        
+        if True:
+            # 2 point on the ellipse y1 & y4
+            x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
+            y1,y1p = soll_test(PARAMS['twiss_y_i'].y1())
+            x4,x4p = soll_test(PARAMS['twiss_x_i'].y4())
+            y4,y4p = soll_test(PARAMS['twiss_y_i'].y4())
+        else:
+            # 2 point on the ellipse y2 & y3
+            x1,x1p = soll_test(PARAMS['twiss_x_i'].y2())
+            y1,y1p = soll_test(PARAMS['twiss_y_i'].y2())
+            x4,x4p = soll_test(PARAMS['twiss_x_i'].y3())
+            y4,y4p = soll_test(PARAMS['twiss_y_i'].y3())
+        if FLAGS['dWf']:
+            sigmaz_i    = soll_test(PARAMS['z0'])      # z0[m] from waccept
+            Dp2p_i      = soll_test(PARAMS['Dp2p0'])   # dp/p0 from waccept
+        else:
+            sigmaz_i = 0.
+            Dp2p_i   = 0.
+        z1,z1p = soll_test((sigmaz_i, 0.))
+        z4,z4p = soll_test((0., Dp2p_i))
         # MDIMxMDIM tracking used here
         s      = 0.
-        c_like = []
-        s_like = []
-        c_0 = NP.zeros(ELM.MDIM)
-        s_0 = NP.zeros(ELM.MDIM)
-        c_0[XKOO]  = x1; c_0[YKOO]  = y1;  c_0[ZKOO]  = sigmaz_i; c_0[EKOO] = tkin; c_0[DEKOO] = 1.; c_0[LKOO] = 1.  # cos-like traj.
-        s_0[XPKOO] =x2p; s_0[YPKOO] = y2p; s_0[ZPKOO] = dp2p_i  ; s_0[EKOO] = tkin; s_0[DEKOO] = 1.; s_0[LKOO] = 1.  # sin-like traj.
+        c_like = []; s_like = []
+        c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
+        s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
         for element in self.seq:
             particle = element.particle
             gamma = particle.gamma

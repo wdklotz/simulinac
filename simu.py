@@ -57,17 +57,16 @@ def display0(*args):
     """
     CS-Tracks w/o longitudinal motion
     """
-    functions = args[0]
     #----------*----------*   # unpack
-    sigm_fun = functions[0]
-    cos_like = functions[1]
-    sin_like = functions[2]
-    lat_plot = functions[3]
+    sigma_fun = args[0]
+    cos_like  = args[1]
+    sin_like  = args[2]
+    lat_plot  = args[3]
     #-------------------- Bahnkoordinate (z)
-    z    = [x[0] for x in sigm_fun]    # Ordinate
-    bx   = [x[1] for x in sigm_fun]    # envelope (sigma-x)
-    by   = [x[2] for x in sigm_fun]    # envelope (sigma-y)
-    zero = [0.   for x in sigm_fun]    # zero line
+    z    = [x[0] for x in sigma_fun]    # Ordinate
+    bx   = [x[1] for x in sigma_fun]    # envelope (sigma-x)
+    by   = [x[2] for x in sigma_fun]    # envelope (sigma-y)
+    zero = [0.   for x in sigma_fun]    # zero line
     #-------------------- trajectories (tz)
     tz  = [x[0] for x in cos_like]   # Ordinate
     cx  = [x[1] for x in cos_like]   # cos-like-x
@@ -93,41 +92,40 @@ def display0(*args):
     plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
     plt.plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
-    vscale=plt.axis()[3]*0.1
-    viseox = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseox,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
-    plt.legend(loc='lower right',fontsize='x-small')
+    # vscale=plt.axis()[3]*0.1
+    # viseox = [x*vscale for x in vis_abszisse]
+    # for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
+    # plt.plot(vis_ordinate,viseox,label='',color='black')
+    # plt.plot(vis_ordinate,vzero,color='black')
+    # plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y
     splot=plt.subplot(212)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
     plt.plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
-    vscale=plt.axis()[3]*0.1
-    viseoy = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseoy,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
-    plt.legend(loc='lower right',fontsize='x-small')
+    # vscale=plt.axis()[3]*0.1
+    # viseoy = [x*vscale for x in vis_abszisse]
+    # for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
+    # plt.plot(vis_ordinate,viseoy,label='',color='black')
+    # plt.plot(vis_ordinate,vzero,color='black')
+    # plt.legend(loc='lower right',fontsize='x-small')
     
 def display1(*args):
     """
     CS-Tracks with longitudinal motion
     """
-    functions = args[0]
     #-------------------- unpack
-    sigm_fun = functions[0]
-    cos_like = functions[1]
-    sin_like = functions[2]
-    lat_plot = functions[3]
-    ape_plot = functions[4]
+    sigma_fun = args[0]
+    cos_like  = args[1]
+    sin_like  = args[2]
+    lat_plot  = args[3]
+    ape_plot  = args[4]
     #-------------------- twiss functions
-    z    = [x[0] for x in sigm_fun]  # Ordinate
-    bx   = [x[1] for x in sigm_fun]  # envelope (sigma-x)
-    by   = [x[2] for x in sigm_fun]  # envelope (sigma-y)
-    zero = [0.   for x in sigm_fun]  # zero line
+    z    = [x[0] for x in sigma_fun]  # Ordinate
+    bx   = [x[1] for x in sigma_fun]  # envelope (sigma-x)
+    by   = [x[2] for x in sigma_fun]  # envelope (sigma-y)
+    zero = [0.   for x in sigma_fun]  # zero line
     #-------------------- trajectories
     tz  = [x[0] for x in cos_like]   # Ordinate
     cx  = [x[1] for x in cos_like]   # cos-like-x
@@ -212,7 +210,7 @@ def display2(*args):
 # -------------------------  | everything starts here |
 #                            |----------------------- |
 def simulation(filepath):
-    def display(functions):
+    def display(*functions):
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
             plots.append(display0) # CS tracks {x,y}
@@ -226,7 +224,7 @@ def simulation(filepath):
         # standard plots 
         if len(plots) != 0:
             print('PREPARE DISPLAY')
-            [plot(functions) for plot in plots]
+            [plot(*functions) for plot in plots]
     
         # markers plots
         lattice.marker_actions()
@@ -258,13 +256,13 @@ def simulation(filepath):
         # show summary
         dictprnt(SUMMARY,text='summary')
         # generate lattice plot
-        lat_plot, ape_plot = lattice.lattice_plot_functions()
+        (lat_plot, ape_plot) = lattice.lattice_plot_functions()
         # track sin- and cos-like trajectories
         (c_like,s_like) = lattice.cs_traj(steps = steps)
         # calculate envelope functions
         sigma_fun = lattice.sigmas(steps = steps)
-        # make plots of functions
-        display((sigma_fun,c_like,s_like,lat_plot,ape_plot))
+        # make plots of functionsa
+        display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
     
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))

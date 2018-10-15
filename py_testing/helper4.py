@@ -33,7 +33,7 @@ def test0():
     beta     = particle.beta
     freq     = 800.*1.e6    # Hz
     lamb     = PARAMS['lichtgeschwindigkeit']/freq
-    gap      = PARAMS['spalt_laenge']
+    gap      = PARAMS['gap']
     gap      = 0.044
     # phis     = [0, -30, -60., -90.]
     phis     = [0,-25, -50., -75.]

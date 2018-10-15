@@ -27,7 +27,7 @@ from math import sqrt, degrees, radians
 
 from lattice_generator import factory
 import elements as ELM
-from setutil import DEBUG, PARAMS, dictprnt, sigmas, K, PARAMS, waccept
+from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, K, PARAMS, waccept
 from setutil import WConverter
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from trackPlot import poincarePlot
@@ -202,6 +202,12 @@ def tracker(options):
     t0       = time.clock()
     filepath = options['input_file']
     lattice  = factory(filepath)
+
+    # No tracking without acceleration
+    if FLAGS['dWf'] == 0:
+        print('{}'.format('IMPOSSIBLE: no tracking without acceleration?'))
+        sys.exit()
+
     # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
     tkin     = PARAMS['sollteilchen'].tkin
@@ -299,6 +305,8 @@ def test0(filepath):
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 if __name__ == '__main__':
+    # test0(input_file)
+
     print('tracker.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
 
     DEBUG_TRACK       = DEBUG_OFF
@@ -323,6 +331,5 @@ if __name__ == '__main__':
                     save    = False,
                     skip    = 1
                     )
-    # test0(input_file)
     # start the run
     tracker(options)

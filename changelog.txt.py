@@ -1,6 +1,7 @@
 """
 Version v7.0.4
-*) Particle is not a dictionary anymore. Particle has attribute track now.
+*) Particle is not a dictionary anymore instead it has track as attribute now.
+*) fixed bugs when FLAG['dWf'] is set to no acceleration
 
 Version v7.0.3
 *) Bug fixed: some elements lost their dictionary values.
