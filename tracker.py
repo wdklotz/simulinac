@@ -58,7 +58,7 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
         y.append(point[abszisse])
     for particle in iter(lost_bunch):
         track = particle['track']
-        nd, tpoint = track.getpoints()[loc]
+        tpoint = track.getpoints()[loc]
         point = tpoint()
         xlost.append(point[ordinate])
         ylost.append(point[abszisse])
