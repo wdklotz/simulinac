@@ -13,7 +13,7 @@ def Mfodo(f,L): # (6.1)   full cell matrix
         L = distance between quad centers
         f = focus of 1/2 quad
     """
-    fstar = 1./(2.*L/f**2*(1-L/f))      # Wiedemann (6.1)
+    fstar = 1./(2.*L/f**2*(1-L/f))      # Wiedemann (6.1) is wrong!!
     fstar = 1./(2.*L/f**2*(1+L/f))      # corrected
     m11 = 1.-2.*L**2/f**2
     m12 = 2.*L*(1.-L/f)
@@ -23,7 +23,7 @@ def Mfodo(f,L): # (6.1)   full cell matrix
     return M
 
 def Md(L):
-    return np.array([[1.,L],[0.,1.]])       # drift
+    return np.array([[1.,L],[0.,1.]])        # drift
 def Mq(f,L):
     return np.array([[1.,0.],[-1./f,1.]])    # thin quad
 def MQ(f,L):
@@ -45,7 +45,6 @@ def mmult(m1,m2):
         for k in range(2):
             for j in range(2):
                 m1m2[i,k] += (m1[i,j] * m2[j,k])
-    # m1m2 = np.array(m1m2)
     return m1m2
     
 
@@ -116,7 +115,10 @@ def test1():
     fodo1 = FODO.subs(fs,2*f).subs(ld,L/2.)
     fodo1 = np.array(fodo1)
     fodo2 = Mfodo(2*f,L/2.)         # Wiedemann  (the book is wrong!!)
-    print(fodo1-fodo2)
+    print('probe: fodo1-fodo2 must be zero matrix')
+    zero = fodo1-fodo2
+    print(f'{abs(zero[0][0])}  {abs(zero[0][1])}')
+    print(f'{abs(zero[1][0])}  {abs(zero[1][1])}')
     return
     
 def test2():
@@ -159,9 +161,9 @@ def test2():
     s = 0.
     mfodo5 = np.array([[1.,0.],[0.,1.]])
     for m in range(NC):
-        mfodo6 = mfodo5.dot(mfodo2)
+        mfodo6 = mfodo5.dot(mfodo2)     # chain Wiedemann cells
         mfodo5 = mfodo6
-        for n in range(1,slices+1):
+        for n in range(1,slices+1):     # chain slices
             s += lq
             pos.append(s)
             lattice.append(mqd)
