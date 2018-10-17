@@ -51,15 +51,15 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
-        track = particle['track']
+        track  = particle.track
         tpoint = track.getpoints()[loc]
-        point = tpoint()
+        point  = tpoint()
         x.append(point[ordinate])
         y.append(point[abszisse])
     for particle in iter(lost_bunch):
-        track = particle['track']
+        track  = particle.track
         tpoint = track.getpoints()[loc]
-        point = tpoint()
+        point  = tpoint()
         xlost.append(point[ordinate])
         ylost.append(point[abszisse])
     xmax = max(x)
@@ -76,9 +76,9 @@ def scatterPlot(live_lost_bunches, ordinate, abszisse, text, minmax=(1.,1.)):
     nbprt = live_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
-        track = particle['track']
+        track  = particle.track
         tpoint = track.getpoints()[loc]
-        point = tpoint()
+        point  = tpoint()
         x.append(point[ordinate])
         y.append(point[abszisse])
     xmax = max(x)
@@ -112,7 +112,7 @@ def track_node(node,particle):
     """
     Tracks a particle through a node
     """
-    track = particle['track']
+    track = particle.track
     last = track.getpoints()[-1]
     last_point = last
     try:
