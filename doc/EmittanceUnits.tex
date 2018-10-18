@@ -1,0 +1,75 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\title{Longitudinal Emittance Units}
+\author{Steve Hunt, W.-D. Klotz}
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+The Proton Therapy Linac will provide a cost effective method of treating some types of tumours that are difficult or impossible to treat effectively using X-ray (Photon) treatment.  \\
+
+In order to design the Linac, to provide protons of variable energy from 80 to 200MeV, we use our own codes to design and optimise the accelerator lattice. Although many lattice design codes exist, by using our own we can incorporate a number of different algorithms for verification, and we have control for fast modification.\\
+
+We have chosen python as the language of implementation to prioritise maintainability over performance.\\
+
+However one issue that is difficult to overcome when comparing our results with those from other codes, is the plethora of units used for emittance.  For this reason we provide the following overview and comparison of common units.\\
+
+\section{Units of longitudinal emittance}
+
+If at a certain position along the accelerator, for each proton we plot the deviation in phase from the reference phase ($ \Delta\phi $) on one axis, and deviation of normalized kinetic energy ($w$) on the other axis. The area of the ellipse enclosing the points displayed is known as the longitudinal emittance $\epsilon_{w}$ in units of radians. Note that $w \equiv \delta\gamma$ where $\gamma$ is the relativistic gamma-factor.  \\
+
+However, unfortunately, many other definitions and units of longitudinal emittance exist, and are used!. Below we describe some of the common ones: \\
+
+\begin{tabular}{|l|l|l|l|}
+\hline
+SYMBOL   & PHASE-SPACE  &  UNITS & USED BY\\
+
+\hline
+$\epsilon_{w}$  & $ \Delta\phi \otimes w$ & $rad$ & T.Wangler \\
+
+\hline
+$\epsilon_{z}$  & $z \otimes \Delta p/p$  & $m$ & Trace 3D \\
+
+\hline
+$\epsilon_{W}$  & $\Delta\phi \otimes \Delta W$  & $rad\times eV$ & pyOrbit\\
+
+\hline
+$\epsilon_{zW}$ & $z \otimes \Delta W$ & $m \times eV$ & others \\
+
+\hline
+\end{tabular} \\
+
+T.Wangler\footnote {Principles of RF Linear Accelerators, Thomas P. Wangler, John Wiley \& Sons, INC, 1998},
+Trace 3D\footnote {TRACE 3-D Documentation, 3rd Edition, K.R.Crandal and D.P.Rusthoi, LA-UR-97-887},
+pyOrbit\footnote{https://github.com/PyORBIT-Collaboration/PyOrbit-Collaboration.github.io} \\
+\section{Conversion Table}
+
+%If we define our machine RF Frequency (800MeV), Energy???, and yyy, we can define the following conversion table between emittance units.\\
+
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ $from\downarrow to\rightarrow$ & $\epsilon_{w}$     $[rad]$ & $\epsilon_{z}$     $[m]$ & $\epsilon_{W}$   $[rad\times eV]$ & $\epsilon_{zW}$   $[m\times eV]$   \\
+\hline
+$\epsilon_{w}$ & 1 & $\frac{\lambda} {2 \pi \gamma \beta}$ & $mc^{2}$ & $\frac{\beta \lambda} {2 \pi}mc^{2}$  \\
+$\epsilon_{z}$ & $\frac{2 \pi \gamma \beta}{\lambda}$ & 1 & $\frac{2\pi\beta\gamma} {\lambda} mc^{2}$ & $\beta^{2}\gamma mc^{2}$  \\
+$\epsilon_{W}$ & $\frac{1.} {mc^{2}}$ & $\frac{\lambda}{2\pi\beta\gamma mc^{2}}$ &   1 & $\frac{\beta\lambda}{2\pi}$  \\
+$\epsilon_{zW}$ & $\frac{2 \pi} {\beta \lambda mc^{2}} $ & $\frac{1}{\gamma\beta^{2}mc^{2}}$ & $\frac{2\pi}{\beta\lambda}$ & 1  \\
+\hline
+\end{tabular}
+
+\section{Numbers}
+For $T_{kin}$ = 100 MeV, frequency  = 800 MHz and $mc^{2}$ = 938 MeV (proton) we have $\gamma = 1.+T_{kin}/mc^{2}$=1.107, $\beta = \sqrt{1-\gamma^{-2}}$=0.428 and $\lambda$=37.5 $[m]$
+\ \\ \ \\
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ $from\downarrow to\rightarrow$ & $\epsilon_{w}$     $[rad]$ & $\epsilon_{z}$     $[m]$ & $\epsilon_{W}$   $[rad\times eV]$ & $\epsilon_{zW}$   $[m\times eV]$   \\
+\hline
+$\epsilon_{w}$ & 1 & $1.259*10^{1}$ & $9.38*10^{8}$ & $2.397*10^{9}$  \\
+$\epsilon_{z}$ & $7.940*10^{-2}$ & 1 & $7.448*10^{7}$ & $1.904*10^{8}$ \\
+$\epsilon_{W}$ & $1.066*10^{-9}$ & $1.343*10^{-8}$ &   1 & 2.556  \\
+$\epsilon_{zW}$ & $4.171*10^{-10}$ & $5.253*10^{-9}$ & $3.912*10^{-1}$ & 1  \\
+\hline
+\end{tabular}
+\end{document}
