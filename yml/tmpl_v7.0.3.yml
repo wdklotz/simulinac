@@ -229,7 +229,8 @@ segments:
 ## LATTICE definition
 
 lattice:
-    - title:   v7.0.3       # MUST! be given
+    # title is MANDATORY!
+    - title:   v7.0.3
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
     - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]

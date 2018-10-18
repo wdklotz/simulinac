@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.3a4'
+___version___='v7.0.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -304,6 +304,7 @@ def test0(filepath):
     d,first = sollTrack[0]
     d,last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
+
 if __name__ == '__main__':
     # test0(input_file)
 
@@ -313,18 +314,27 @@ if __name__ == '__main__':
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
     
-    if sys.platform != 'win32':
-    # launch m4 to fill macros in template file
-        template_file = 'yml/tmpl.yml'           # template file
-        input_file    = 'yml/trackIN.yml'            # input file
-        macros_file   = 'yml/macros.sh'              # macro definitions
-        command = "chmod +x yml/macros.sh"
-        command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
-        os.system(command)
+    # preset files for launch with  m4
+    template_file = 'yml/tmpl.yml'          # def.template file
+    macros_file   = 'yml/macros.sh'         # def.macro definitions
+    input_file    = 'yml/trackIN.yml'        # def.input file
+
+    if sys.platform   == 'win32':
+        if len(sys.argv) == 2:
+            input_file    = sys.argv[1]
+    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+        if len(sys.argv) == 2:
+            input_file    = sys.argv[1]
+        else:
+            # launch m4
+            command = "chmod +x yml/macros.sh"
+            command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+            print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+            os.system(command)
     else:
-        input_file    = 'yml/trackIN.yml'            # input file
-        
+        print('wrong platform')
+        sys.exit(1)
+
     options = dict( input_file = input_file,
                     particles_per_bunch = 5000,
                     show    = True,

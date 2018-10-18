@@ -275,6 +275,7 @@ segments:
 ## LATTICE definition
 
 lattice:
+    # title is MANDATORY!
     - title:   17.10.18_sh
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
