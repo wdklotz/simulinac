@@ -317,7 +317,7 @@ if __name__ == '__main__':
     # preset files for launch with  m4
     template_file = 'yml/tmpl.yml'          # def.template file
     macros_file   = 'yml/macros.sh'         # def.macro definitions
-    input_file    = 'yml/trackIN.yml'        # def.input file
+    input_file    = 'yml/trackIN.yml'       # def.input file
 
     if sys.platform   == 'win32':
         if len(sys.argv) == 2:

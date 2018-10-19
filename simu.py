@@ -92,24 +92,24 @@ def display0(*args):
     plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
     plt.plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
-    # vscale=plt.axis()[3]*0.1
-    # viseox = [x*vscale for x in vis_abszisse]
-    # for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    # plt.plot(vis_ordinate,viseox,label='',color='black')
-    # plt.plot(vis_ordinate,vzero,color='black')
-    # plt.legend(loc='lower right',fontsize='x-small')
+    vscale=plt.axis()[3]*0.1
+    viseox = [x*vscale for x in vis_abszisse]
+    for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
+    plt.plot(vis_ordinate,viseox,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y
     splot=plt.subplot(212)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
     plt.plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
-    # vscale=plt.axis()[3]*0.1
-    # viseoy = [x*vscale for x in vis_abszisse]
-    # for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    # plt.plot(vis_ordinate,viseoy,label='',color='black')
-    # plt.plot(vis_ordinate,vzero,color='black')
-    # plt.legend(loc='lower right',fontsize='x-small')
+    vscale=plt.axis()[3]*0.1
+    viseoy = [x*vscale for x in vis_abszisse]
+    for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
+    plt.plot(vis_ordinate,viseoy,label='',color='black')
+    plt.plot(vis_ordinate,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
     
 def display1(*args):
     """

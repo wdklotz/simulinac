@@ -25,7 +25,7 @@
 ## RUN configurationgenerator
 
 flags:
-    - accON:        False           # {True} acceleration on/off flag
+    # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -70,7 +70,7 @@ elements:
     - D3:        &D3             # ID: &alias
         - type:     D            # D class
         # - type:     SIXD       # SIXD class
-        - length:   0.08         # [m]
+        - length:   0.04         # [m]
         - sec:      *LE          # is part of section
     - D5:    &D5                 # ID: &alias
         - type:     D            # D class
@@ -82,7 +82,6 @@ elements:
         - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
         - B':       &Bgrad   _BGRAD # [T/m] quadrupole gradient
-        # - B':       &Bgrad   21.575 # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *LE          # is part of section
     - QDL:   &QDL                # ID: &alias
@@ -98,12 +97,13 @@ elements:
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
+        - fRF:      408.e+6         # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - mapping:   t3d         # Trace 3D linear map model
-        - mapping:   simple      # Shishlo/Holmes linear map model
-        - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   simple      # Shishlo/Holmes linear map model
+        # - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *LE          # is part of section
@@ -152,43 +152,43 @@ segments:
         - *QFL
     - RFGL:
         - *D5
-        - *RFGL
+        - *RFGL # 1st cavity
         - *D5
         #
         - *D5
-        - *RFGL
+        - *RFGL # 2nd cavity
         - *D5
         #
         - *D5
-        - *RFGL
+        - *RFGL # 3rd cavity
         - *D5
         #
         - *D5
-        - *RFGL
+        - *RFGL # 4th cavity
         - *D5
         #
         - *D5
-        - *RFGL
+        - *RFGL # 5th cavity
         - *D5
         #
         - *D5
-        - *RFGL
+        - *RFGL # 6th cavity
         - *D5
         #
-        - *D5
-        - *RFGL
-        - *D5
+        # - *D5
+        # - *RFGL # 7th cavity
+        # - *D5
         #
-        - *D5
-        - *RFGL
-        - *D5
+        # - *D5
+        # - *RFGL # 8th cavity
+        # - *D5
         #
-        - *D5
-        - *RFGL
-        - *D5
+        # - *D5
+        # - *RFGL # 9th cavity
+        # - *D5
         #
-        # - *D5     # 10th cavity makes it unstable!!
-        # - *RFGL
+        # - *D5
+        # - *RFGL # 10th cavity
         # - *D5
         #
     - RFCAVH:
@@ -208,8 +208,5 @@ segments:
 
 lattice:
     # title is MANDATORY!
-    - title:   LEwork
-    # - [80,   SEG1L, RFCAVH, SEG2L, RFCAVH, SEG3L]
-    # - [285,   SEG1L, RFGL, SEG2L, RFGL, SEG3L]
+    - title:   LEwork_A
     - [_NCELL,   SEG1L, RFGL, SEG2L, RFGL, SEG3L]
-    # - [285,   SEG1L, RFGL, SEG2L, RFGL, SEG3L]

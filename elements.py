@@ -639,7 +639,7 @@ class RFG(I):
 
         self['viseo']= 0.25
         self.mapset  = PARAMS['mapset']
-        self.lamb    = PARAMS['wellenlänge']
+        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq
         # makes the T3D matrix default for RFG
         self.t3d_g   = _T3D_G(self)
 
