@@ -43,7 +43,6 @@ with units [$m$]. Again the $\beta$-function is given by
 \end{equation}
 with units [$m/rad$].
 
-
 For the $ \Delta\phi\otimes\Delta W $ phase space, because $ \Delta W = mc^{2} w $, we have $ \kappa = 1 $ and $ \tau = mc^{2} $.
 So that 
 \begin{equation}
@@ -54,7 +53,6 @@ So that
 \end{equation}
 
 Finally for the $ \Delta z\otimes\Delta W $ phase space we get the emittance
-
 \begin{equation}
 \epsilon_{zW} = \frac{\beta \lambda} {2 \pi}mc^{2}\epsilon_{w}\quad  [m\times eV] \label{}
 \end{equation}
@@ -62,7 +60,11 @@ Finally for the $ \Delta z\otimes\Delta W $ phase space we get the emittance
 \beta_{zW} = \frac{\beta \lambda} {2 \pi}\frac{1}{mc^{2}}\beta_{w}\quad  [m/eV] \label{}
 \end{equation}
 
-
+Instead of longitudinal position some people use arrival time. For the $ \Delta t\otimes \Delta W $ phase space we use 
+$|\Delta t| = (\beta c)^{-1}|\Delta z| = (\beta c)^{-1} \frac{\beta\lambda}{2\pi} |\Delta \phi|$ and get
+\begin{equation}
+\epsilon_{tW} = \frac{\lambda} {2 \pi c} mc^{2}\epsilon_{w}\quad  [sec\times eV]\label{}
+\end{equation}
 
 \section{Twiss Parameter Values}
 To simplify we assume the twiss parameter $ \alpha = 0 $. The twiss  parameter $ \gamma $ then reduces to $ 1/{\beta} $
@@ -91,12 +93,13 @@ and
 \beta_{0} = 1/\gamma_{0} \label{}
 \end{equation}
 
-NOTE: the two twiss parameters $\gamma_{0}$ and $\beta_{0}$ are independent from the emittance $\epsilon_{w}$ and completely defined by the cavity field $E_{0}$, rf-phase $\phi_{s}$, rf-wavelength $\lambda$ and particle impuls $\thicksim\gamma\beta$.
+NOTE: the two twiss parameters $\gamma_{0}$ and $\beta_{0}$ are completely defined by the emittance $\epsilon_{w}$ and  the cavity field $E_{0}$, rf-phase $\phi_{s}$, rf-wavelength $\lambda$ and particle impuls $\thicksim\gamma\beta$.
 
 \newpage
 \section{Appendix}
+\subsection{SIMULAC Variables}
 \begin{table}[h]
-\caption{SIMULAC variable names}
+\caption{variable names}
 \centering
 \begin{tabular}{ c c c c c }
 \hline\hline
@@ -111,7 +114,8 @@ $\beta_{yi}$ = \verb'betay_i' &$\alpha_{xi}$   = \verb'alfax_i'  &$\alpha_{yi}$ 
 $\omega$ = omg           &$\phi$ = phi               &$\phi_{s}$ = phis 
 \end{tabular}
 \end{table}
-\ \\\ \\
+
+\subsection{Relations Between Ellipse and Twiss Parameters}
 \includegraphics[width=15cm, trim={0.cm 7.6cm 0.cm 8.cm}, clip]{ellipse.pdf}
 %\includegraphics[width=1.4\textwidth}, clip]{ellipse.pdf}
 
