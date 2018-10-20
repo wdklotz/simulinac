@@ -27,7 +27,7 @@
 flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
@@ -55,8 +55,10 @@ parameters:
     - alfax_i:              _ALFAX      # [1] twiss alpha x @ entrance
     - alfay_i:              _ALFAY      # [1] twiss alpha y @ entrance
     - frequency:    &p01    816.e+6     # [Hz] frequency
-    - ql0:          &p02    0.04        # [m] quad-length
-    - ql:           &p03    0.02        # [m] 1/2 quad-length
+    # - ql0:          &p02    0.04        # [m] quad-length
+    # - ql:           &p03    0.02        # [m] 1/2 quad-length
+    - ql0:          &p02    0.02        # [m] quad-length
+    - ql:           &p03    0.01        # [m] 1/2 quad-length
     - quad_bore:    &p04    0.011       # [m] quad bore radius
     - windings:             30          # [1] quad-coil windings
     - gap:          &p15    0.048       # [m] RF gap
@@ -71,6 +73,7 @@ elements:
         - type:     D            # D class
         # - type:     SIXD       # SIXD class
         - length:   0.04         # [m]
+        - length:   0.02         # [m]
         - sec:      *LE          # is part of section
     - D5:    &D5                 # ID: &alias
         - type:     D            # D class
@@ -140,16 +143,16 @@ elements:
 segments:
 # LE            # low energy section
 # HE            # high energy section
-    - SEG1L:
+    - SEGiL:
         - *QFL
         - *D3
-    - SEG2L:
+    - SEGfL:
+        - *D3
+        - *QFL
+    - SEGmL:
         - *D3
         - *QDL
         - *D3
-    - SEG3L:
-        - *D3
-        - *QFL
     - RFGL:
         - *D5
         - *RFGL # 1st cavity
@@ -175,13 +178,13 @@ segments:
         - *RFGL # 6th cavity
         - *D5
         #
-        # - *D5
-        # - *RFGL # 7th cavity
-        # - *D5
+        - *D5
+        - *RFGL # 7th cavity
+        - *D5
         #
-        # - *D5
-        # - *RFGL # 8th cavity
-        # - *D5
+        - *D5
+        - *RFGL # 8th cavity
+        - *D5
         #
         # - *D5
         # - *RFGL # 9th cavity
@@ -208,5 +211,5 @@ segments:
 
 lattice:
     # title is MANDATORY!
-    - title:   LEwork_A
-    - [_NCELL,   SEG1L, RFGL, SEG2L, RFGL, SEG3L]
+    - title:   LEwork_B
+    - [_NCELL,   SEGiL, RFGL, SEGmL, RFGL, SEGfL]

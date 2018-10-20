@@ -523,12 +523,14 @@ def collect_data_for_summary(lattice):
                 mapping  = itm.mapping
                 EzPeak   = itm.EzPeak
                 aperture = itm.aperture
-                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}]  EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]      mapping'.format(sec,typ,itm.label)] = mapping
-                SUMMARY['{2} [{1}.{0}] EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
+                freq     = itm.freq
+                SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
+                SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
+                SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
+                SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
+                SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
 
     types = ['RFC']
     for sec in sections:
@@ -540,11 +542,13 @@ def collect_data_for_summary(lattice):
                 PhiSoll  = degrees(itm.phis)
                 length   = itm.length
                 aperture = itm.aperture
-                SUMMARY['{2} [{1}.{0}]       gap[m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}]  EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-                SUMMARY['{2} [{1}.{0}]    phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
+                freq     = itm.freq
+                SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
+                SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
+                SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
+                SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
 
     SUMMARY['use sigma tracking']              =  FLAGS['sigma']
     SUMMARY['use emittance growth']            =  FLAGS['egf']
@@ -554,7 +558,6 @@ def collect_data_for_summary(lattice):
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
     SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-    SUMMARY['frequency [MHz]']                 =  PARAMS['frequenz']*1.e-6
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3

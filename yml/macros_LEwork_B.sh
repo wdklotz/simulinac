@@ -1,16 +1,16 @@
 TKIN=10.                # kinetic energy in [Mev]
-TKIN=5.                # kinetic energy in [Mev]
-BGRAD=30.
+TKIN=5.                 # kinetic energy in [Mev]
+BGRAD=30.000
 BGRAD=21.575
+BGRAD=43.150
 
 EMITW=1.0e-5            # w emittance in [rad]
-EMITX=1.e-6             # x emittance in [m*rad]
-EMITY=1.e-6             # y emittance in [m*rad]
+EMITX=1.0e-6            # x emittance in [m*rad]
+EMITY=1.0e-6            # y emittance in [m*rad]
 
-BETAX=2.100             # best w/o rf th=10
+BETAX=2.100             # best w/o rf
 BETAX=1.3
-BETAX=1.3
-BETAY=0.290             # best w/o rf tk=10
+BETAY=0.290             # best w/o rf
 BETAY=0.465
 
 ALFAX=0.
@@ -18,7 +18,7 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=1
-NCELL=55
+NCELL=41
 
 ARGS="-D _TKIN=$TKIN"
 ARGS="$ARGS -D _EMITW=$EMITW"
