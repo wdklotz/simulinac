@@ -225,9 +225,8 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-    
         # markers plots
-        lattice.marker_actions()
+        # lattice.marker_actions()
         plt.show()
 
     # parse input file and create a lattice

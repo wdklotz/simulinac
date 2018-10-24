@@ -300,11 +300,11 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
-    def marker_actions(self):
-        """ do MARKER actions """
-        for node in self.seq:
-            if isinstance(node, ELM.MRK):
-                node.do_actions()
+    # def marker_actions(self):
+    #     """ do MARKER actions """
+    #     for node in self.seq:
+    #         if isinstance(node, ELM.MRK):
+    #             node.do_actions()
         
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """

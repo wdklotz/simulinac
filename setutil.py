@@ -745,18 +745,15 @@ def sigma_y_action(*args):
 def tkin_action(*args):
     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
-def poincare_action(*args):
-    pass
 
 """
  (global) ACTIONS: dictionary of possible actions attached to a marker
 """
-ACTIONS = dict(
+MRKR_ACTIONS = dict(
             sigma_x     = sigma_x_action,
             sigma_y     = sigma_y_action,
             Tkin        = tkin_action,
             show_elli   = elli_sxy_action,
-            poincare    = poincare_action
             )
 
 # utilities
@@ -954,7 +951,10 @@ def test2():
     p1 = p(100.)
     print(repr(p1)+':')
     print(p1.string())
-    p2 = p(-10.)
+    try:
+        p2 = p(-10.)
+    except ValueError:
+        print("This was a test: Particle energy deliberately set negative!")
 
 if __name__ == '__main__':
     test0()

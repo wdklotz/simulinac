@@ -27,7 +27,7 @@
 flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    # - sigma:        False           # {True} beam sizes by sigma-matrix
+    - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
@@ -132,11 +132,12 @@ elements:
         - actions:
             - check_aperture     # action aperture check
         - sec:     *LE
-    - F:  &Foil                  # ID: &alias
+    - SC:  &SC                  # ID: &alias
         - type:    MRK           # MRK class
-        - actions:
-            - poincare           # action aperture check
         - sec:     *LE
+        - actions:
+            - scatter           # action aperture check
+            # - scatter           # action aperture check
 #...........................................................................................
 ## SEGMENT definitions
 
@@ -204,12 +205,13 @@ segments:
         - *RFCH
         - *RFCH
         - *RFCH
-    - MARK:
-        - *Foil
+    - SCmarker:
+        - *SC
 #...........................................................................................
 ## LATTICE definition
 
 lattice:
     # title is MANDATORY!
     - title:   LEwork_B
-    - [_NCELL,   SEGiL, RFGL, SEGmL, RFGL, SEGfL]
+    - [_NCELL,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
+    # - [1, SCmarker]
