@@ -23,7 +23,7 @@ from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEBUG, MRKR_ACTIONS
+from setutil import DEBUG
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, K6
 from TTFG import _TTF_G
@@ -320,23 +320,25 @@ class MRK(I):
     Marker element 
     """
     def __init__(self, 
-                label = 'MRK', 
+                label    = 'MRK', 
                 particle = PARAMS['sollteilchen'], 
                 position = [0, 0, 0], 
-                actions = []):
+                actions  = []):
         super().__init__(label = label, particle = particle, position = position)
         self.actions  = actions
     
     def has_action(self,key):
+        """ test if key and action are bound to this marker """
         return key in self.actions
         
-    # def get_action(self,key):
-    #     return MRKR_ACTIONS[key]
+    def get_action_keys(self):
+        """ return a list of all action-keys for this marker """
+        return self.actions
         
-    def do_action(self,key,*args):
-        """ do key-action attached to the marker """
-        MRKR_ACTIONS[key](*args)
-
+    def do_action(self):
+        """ must be implemented by subclass """
+        pass
+        
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, actions = self.actions)

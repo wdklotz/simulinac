@@ -1,0 +1,49 @@
+#!/Users/klotz/SIMULINAC_env/bin/python
+# -*- coding: utf-8 -*-
+"""
+Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+This file is part of the SIMULINAC code
+
+    SIMULINAC is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    any later version.
+
+    SIMULINAC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+"""
+import matplotlib.pyplot as plt
+
+import elements as ELM
+from setutil import PARAMS,K
+
+class PoincareAction(ELM.MRK):
+    """
+    This marker-action will be used by the 'scatter' action
+    """
+    def __init__(self,label='PSC',particle=PARAMS['sollteilchen'],position=[0, 0, 0],actions=[]):
+        super().__init__(label=label, particle=particle, position=position, actions=['scatter'])
+        # all points for this scatter-marker
+        self.tpoints  = []
+
+    def add_track_point(self,track_point):
+        self.tpoints.append(track_point)
+        
+    def do_action(self,number, abszisse, ordinate, box):
+        ax = plt.subplot(label=number)
+        # place a text box in upper left in axes coords
+        # remark: these are matplotlib.patch.Patch properties
+        box = '{0}, {2:.2f}[m], {1}p'.format(box,len(self.tpoints),self.position[1])
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        ax.text(0.05, 0.95, box, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
+
+        x = [tp()[abszisse] for tp in self.tpoints]
+        y = [tp()[ordinate] for tp in self.tpoints]
+        ax.scatter(x,y,s=1)
+        plt.savefig('frames/poincare_section_{:03d}.png'.format(number))
+

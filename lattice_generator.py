@@ -26,6 +26,7 @@ from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,Twiss
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata,V0
+import marker_actions as MRK
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -73,7 +74,6 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
-#todo: elements should get all attributes i.e. dBdz,Bpole,bore,k etc.. for quads
 def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
@@ -192,8 +192,12 @@ def instanciate_element(item):
     elif key == 'MRK':
         label     = attributes['ID']
         actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
-        instance  = ELM.MRK(label=label,actions=actions)
-        instance['label']  = label
+        if 'scatter' in actions:
+            instance = MRK.PoincareAction(label=label)
+        else:
+            instance  = ELM.MRK(label=label,actions=actions)
+        instance['label']    = label
+        instance['actions']  = actions
     else:
         warnings.showwarning(
                 'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
@@ -405,7 +409,7 @@ def parse_and_fabric(input_file):   # delegates to factory
 def test0():
     print('---------------------------------TEST0')
     wfl= []
-    fileobject=open('yml/template.yml','r')
+    fileobject=open('yml/simuIN.yml','r')
     wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
@@ -427,5 +431,5 @@ def test1(input_file):
 
 if __name__ == '__main__':
     test0()
-    test1('yml/test_lg.yml')
+    test1('yml/simuIN.yml')
 

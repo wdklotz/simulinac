@@ -27,8 +27,9 @@ from math import sqrt, degrees, radians
 
 from lattice_generator import factory
 import elements as ELM
+import marker_actions as MRK
 from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, K, PARAMS, waccept
-from setutil import WConverter, MRKR_ACTIONS
+from setutil import WConverter
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from trackPlot import poincarePlot
 
@@ -37,15 +38,6 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-
-def poincare_action(*args):
-    """
-    This marker-action will be called by the 'scatter' action
-    """
-    bunch = args[0]
-    for prtcls in iter(bunch):
-        print(repr(prtcls))
-MRKR_ACTIONS['scatter'] = poincare_action
 
 def scatterPlot(live_lost, ordinate, abszisse, text, minmax=(1.,1.)):
     """ 
@@ -99,16 +91,26 @@ def scatterPlot(live_lost, ordinate, abszisse, text, minmax=(1.,1.)):
     poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
     
-def projection(live_lost, ordinate= K.z, abszisse= K.zp, show = True, save = False):
+def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
     """ 
     2D phase space projections of Poincaré sections 
     """
     symbol = ("x","x'","y","y'","z","$\Delta$p/p")
-    text   = '{}-{}'.format(symbol[ordinate],symbol[abszisse])
-    fig    = scatterPlot(live_lost, ordinate=ordinate, abszisse=abszisse, text=text)
-    if save: plt.savefig('figures/poincare_section_{}_{}.png'.format(text,i))
+    text   = '{}-{}'.format(symbol[abszisse],symbol[ordinate])
+    fig    = scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     if show: plt.show()
 
+def frames(lattice, save, skip, abszisse = K.z, ordinate = K.zp):
+    symbol = ("x","x'","y","y'","z","$\Delta$p/p")
+    text   = '{}-{}'.format(symbol[abszisse],symbol[ordinate])
+    if save:
+        nscnt = 0
+        for node in iter(lattice):
+            if isinstance(node,MRK.PoincareAction):
+                nscnt += 1
+                if nscnt%skip == 0:
+                    node.do_action(nscnt, abszisse, ordinate, text)
+    
 def progress(tx):
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
@@ -116,19 +118,18 @@ def progress(tx):
 
 #todo: aperture check
 #todo: useaper flag
-#todo: discard intermediate Tpoints between Markers
 def track_node(node,particle):
     """
     Tracks a particle through a node
     """
-    track = particle.track
-    last = track.getpoints()[-1]
-    last_point = last
+    track   = particle.track
+    last_tp = track.getpoints()[-1]
     try:
-        new_point = node.map(last_point())
+        new_point = node.map(last_tp())
+        new_tp    = Tpoint(point=new_point)
     except ValueError as ex:
         lost = True
-        track.removepoint(last)
+        track.removepoint(last_tp)
         return lost
     # check Dp2p-acceptance
     if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
@@ -141,9 +142,12 @@ def track_node(node,particle):
     else:
         lost = True
     if not lost:
-        if track.nbofpoints() > 1:      # !!DISCARD!! last point kepp new point
-            track.removepoint(last)
-        track.addpoint(Tpoint(point=new_point))
+        if track.nbofpoints() > 1:
+            # !!DISCARD!! last point
+            track.removepoint(last_tp)
+        track.addpoint(new_tp)
+        if isinstance(node,MRK.PoincareAction) and node.has_action('scatter'):
+            node.add_track_point(new_tp)
     particle.lost = lost
     return lost
     
@@ -160,6 +164,7 @@ def track(lattice,bunch):
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
     tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbofparticles())
 
+    nscnt  = 0
     ndcnt  = 0
     lnode  = len(lattice.seq)
     lmod   = int(lnode*0.05)
@@ -180,10 +185,6 @@ def track(lattice,bunch):
                 # tx = ('(track design)', '(track bunch)', zeuge[ndcnt%4], tx4)
                 tx = ('(track design)', '(track bunch)', '', tx4)
                 progress(tx)
-
-        if isinstance(node,ELM.MRK):
-            if node.has_action('scatter'):
-                node.do_action('scatter',bunch)
                 
     live = nbpart - lbunch.nbofparticles()
     print('\ndone: live particles {}, lost particles {}'.format(live,nlost))
@@ -232,6 +233,8 @@ def tracker(options):
     show     = options['show']
     save     = options['save']
     skip     = options['skip']
+    abszisse = options['abszisse']
+    ordinate = options['ordinate']
 
     # bunch-configuration from PARAMS
     # {x(x)xp}   standard units
@@ -298,7 +301,8 @@ def tracker(options):
     t4 = time.clock()
 
     # make 2D projections
-    projection(live_lost, ordinate = K.z, abszisse = K.zp, show = show, save = save)
+    frames(lattice, save, skip,  abszisse = abszisse, ordinate = ordinate)
+    projection(live_lost, show,  abszisse = abszisse, ordinate = ordinate)
     t5 = time.clock()
     # finish up
     print()
@@ -349,11 +353,14 @@ if __name__ == '__main__':
         print('wrong platform')
         sys.exit(1)
 
-    options = dict( input_file = input_file,
-                    particles_per_bunch = 10,
-                    show    = True,
-                    save    = False,
-                    skip    = 1
-                    )
+    options = {}
+    options['input_file']          = input_file
+    options['particles_per_bunch'] = 3000
+    options['show']                = False
+    options['save']                = True
+    options['skip']                = 1
+    options['abszisse']            = K.z
+    options['ordinate']            = K.zp 
+
     # start the run
     tracker(options)

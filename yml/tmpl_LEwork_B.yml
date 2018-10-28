@@ -119,25 +119,24 @@ elements:
         - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
         - sec:      *LE          # is part of section
-    - M:  &Mrkr                  # ID: &alias
+    # - M:  &Mrkr                  # ID: &alias
+    #     - type:    MRK           # MRK class
+    #     - actions:
+    #         # - sigma_x          # acction horizontal sigma
+    #         # - sigma_y          # action vertical sigma
+    #         # - Tkin             # action kinetic energy
+    #         - show_elli          # action twiss ellipses
+    #     - sec:     *LE
+    # - A:  &Apr                   # ID: &alias
+    #     - type:    MRK           # MRK class
+    #     - actions:
+    #         - check_aperture     # action aperture check
+    #     - sec:     *LE
+    - SC:  &SCm                  # ID: &alias
         - type:    MRK           # MRK class
+        - sec:     *LE           # is part of section
         - actions:
-            # - sigma_x          # acction horizontal sigma
-            # - sigma_y          # action vertical sigma
-            # - Tkin             # action kinetic energy
-            - show_elli          # action twiss ellipses
-        - sec:     *LE
-    - A:  &Apr                   # ID: &alias
-        - type:    MRK           # MRK class
-        - actions:
-            - check_aperture     # action aperture check
-        - sec:     *LE
-    - SC:  &SC                  # ID: &alias
-        - type:    MRK           # MRK class
-        - sec:     *LE
-        - actions:
-            - scatter           # action aperture check
-            # - scatter           # action aperture check
+            - scatter            # action aperture check
 #...........................................................................................
 ## SEGMENT definitions
 
@@ -195,18 +194,18 @@ segments:
         # - *RFGL # 10th cavity
         # - *D5
         #
-    - RFCAVH:
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
-        - *RFCH
+    # - RFCAVH:
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
+    #     - *RFCH
     - SCmarker:
-        - *SC
+        - *SCm
 #...........................................................................................
 ## LATTICE definition
 
@@ -214,4 +213,3 @@ lattice:
     # title is MANDATORY!
     - title:   LEwork_B
     - [_NCELL,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
-    # - [1, SCmarker]

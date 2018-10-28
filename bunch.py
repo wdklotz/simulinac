@@ -46,7 +46,6 @@ class Tpoint(object):
     
 class Track(object):
     """
-        A Track is a dictionary
         A Track is a container (list) of positions Tpoint objects. 
     """
     def __init__(self):
@@ -261,14 +260,14 @@ def test0():
         print(point())
     # link track with particle
     for particle in iter(bunch):
-        particle['track'] = track
+        particle.track = track
     # show
     particles = bunch.getparticles()
     last = particles[-1]
-    print('last particle track: ', last['track'])
-    print("last['track'].__dict__; ",last['track'].__dict__)
+    print('last particle track: ', last.track)
+    print("last.track.__dict__; ",last.track.__dict__)
     
-    print(last['track'].as_table())
+    print(last.track.as_table())
 
 def test1():
     # example data
