@@ -1,5 +1,5 @@
 """
-Version v7.0.4hot
+Version v7.0.4
 *) Particle is not a dictionary anymore instead it has track as attribute now.
 *) fixed bugs when FLAG['dWf'] is set to no acceleration
 *) launching without m4 preprocessing like 'python (simu.py | tracker.py) <input>' possible now
