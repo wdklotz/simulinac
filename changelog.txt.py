@@ -4,6 +4,8 @@ Version v7.0.4hot
 *) fixed bugs when FLAG['dWf'] is set to no acceleration
 *) launching without m4 preprocessing like 'python (simu.py | tracker.py) <input>' possible now
 *) ERROR corrected: RFG objects did not receive the correct wavelength. 
+*) PoincareAction class introduced (in module marker_actions.py). Generation of poincare-sections
+   now possible at any marker position. FRames go to directory ./frames.
 
 Version v7.0.3
 *) Bug fixed: some elements lost their dictionary values.
