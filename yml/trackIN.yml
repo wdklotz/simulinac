@@ -134,6 +134,7 @@ elements:
     #     - sec:     *LE
     - SC:  &SCm                  # ID: &alias
         - type:    MRK           # MRK class
+        - prefix:  frames        # prefix frames
         - sec:     *LE           # is part of section
         - actions:
             - scatter            # action aperture check
