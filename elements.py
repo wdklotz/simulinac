@@ -323,17 +323,17 @@ class MRK(I):
                 label    = 'MRK', 
                 particle = PARAMS['sollteilchen'], 
                 position = [0, 0, 0], 
-                actions  = []):
+                action   = ''):
         super().__init__(label = label, particle = particle, position = position)
-        self.actions  = actions
+        self.action  = action
     
     def has_action(self,key):
         """ test if key and action are bound to this marker """
-        return key in self.actions
+        return key == self.action
         
-    def get_action_keys(self):
-        """ return a list of all action-keys for this marker """
-        return self.actions
+    def get_action_key(self):
+        """ return the action-key for this marker """
+        return self.action
         
     def do_action(self):
         """ must be implemented by subclass """

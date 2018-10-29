@@ -191,15 +191,19 @@ def instanciate_element(item):
         instance['dWf']     = dWf
     elif key == 'MRK':
         label     = attributes['ID']
-        prefix    = attributes['prefix'] if 'prefix' in attributes else ''
-        actions   = get_mandatory(attributes,'actions',label) if 'actions' in attributes else []
-        if 'scatter' in actions:
-            instance = MRK.PoincareAction(label=label, prefix=prefix)
+        action    = get_mandatory(attributes,'action',label)
+        if 'scatter' == action:
+            prefix    = attributes['prefix'] if 'prefix' in attributes else ''
+            abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
+            ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
+            instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
+            instance['prefix']     = prefix
+            instance['abszisse']   = abszisse
+            instance['ordinate']   = ordinate
         else:
-            instance  = ELM.MRK(label=label,actions=actions)
-        instance['label']    = label
-        instance['actions']  = actions
-        instance['prefix']   = prefix
+            instance  = ELM.MRK(label=label,action=action)
+        instance['label']      = label
+        instance['action']     = action
     else:
         warnings.showwarning(
                 'InputError: Unknown element type encountered: "{}" - STOP'.format(key),

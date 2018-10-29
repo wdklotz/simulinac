@@ -132,12 +132,13 @@ elements:
     #     - actions:
     #         - check_aperture     # action aperture check
     #     - sec:     *LE
-    - SC:  &SCm                  # ID: &alias
-        - type:    MRK           # MRK class
-        - prefix:  frames        # prefix frames
-        - sec:     *LE           # is part of section
-        - actions:
-            - scatter            # action aperture check
+    - SC:  &SCm                    # ID: &alias
+        - type:      MRK           # MRK class
+        - prefix:    frames        # prefix for directory holding saved frames
+        - sec:       *LE           # is part of section
+        - action:    scatter       # make a poincare scatter plot
+        - abscissa:  x             # horizontal axis
+        - ordinate:  y             # vertical axis
 #...........................................................................................
 ## SEGMENT definitions
 

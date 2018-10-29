@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.4'
+___version___='v7.0.4a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -39,7 +39,7 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
-def scatterPlot(live_lost, ordinate, abszisse, text, minmax=(1.,1.)):
+def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 
     Prepare the Poincaré section plot 
     """
@@ -55,14 +55,14 @@ def scatterPlot(live_lost, ordinate, abszisse, text, minmax=(1.,1.)):
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        x.append(point[ordinate])
-        y.append(point[abszisse])
-    for particle in iter(lost_bunch):
+        x.append(point[abszisse])
+        y.append(point[ordinate])
+    for particle in iter(lost_bunch): # lost particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        xlost.append(point[ordinate])
-        ylost.append(point[abszisse])
+        xlost.append(point[abszisse])
+        ylost.append(point[ordinate])
     xmax = max(x)
     xmin = min(x)
     ymax = max(y)
@@ -80,8 +80,8 @@ def scatterPlot(live_lost, ordinate, abszisse, text, minmax=(1.,1.)):
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        x.append(point[ordinate])
-        y.append(point[abszisse])
+        x.append(point[abszisse])
+        y.append(point[ordinate])
     xmax = max(x)
     xmin = min(x)
     ymax = max(y)
@@ -95,21 +95,19 @@ def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
     """ 
     2D phase space projections of Poincaré sections 
     """
-    symbol = ("x","x'","y","y'","z","$\Delta$p/p")
-    text   = '{}-{}'.format(symbol[abszisse],symbol[ordinate])
-    fig    = scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    symbols = ("x","x'","y","y'","z","$\Delta$p/p")
+    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
+    fig     = scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     if show: plt.show()
 
-def frames(lattice, save, skip, abszisse = K.z, ordinate = K.zp):
-    symbol = ("x","x'","y","y'","z","$\Delta$p/p")
-    text   = '{}-{}'.format(symbol[abszisse],symbol[ordinate])
+def frames(lattice, save, skip):
     if save:
         nscnt = 0
         for node in iter(lattice):
             if isinstance(node,MRK.PoincareAction):
                 nscnt += 1
                 if nscnt%skip == 0:
-                    node.do_action(nscnt, abszisse, ordinate, text)
+                    node.do_action(nscnt)
     
 def progress(tx):
     template = Template('$tx1 $tx2 $tx3 $tx4')
@@ -187,7 +185,7 @@ def track(lattice,bunch):
                 progress(tx)
                 
     live = nbpart - lbunch.nbofparticles()
-    print('\ndone: live particles {}, lost particles {}'.format(live,nlost))
+    print('TRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
 
 def track_soll(lattice):
@@ -233,8 +231,6 @@ def tracker(options):
     show     = options['show']
     save     = options['save']
     skip     = options['skip']
-    abszisse = options['abszisse']
-    ordinate = options['ordinate']
 
     # bunch-configuration from PARAMS
     # {x(x)xp}   standard units
@@ -301,9 +297,12 @@ def tracker(options):
     t4 = time.clock()
 
     # make 2D projections
-    frames(lattice, save, skip,  abszisse = abszisse, ordinate = ordinate)
-    projection(live_lost, show,  abszisse = abszisse, ordinate = ordinate)
+    print('FILL PLOTS')
+    projection(live_lost, show,  abszisse = K.z, ordinate = K.zp)
     t5 = time.clock()
+    print('SAVE FRAMES')
+    frames(lattice, save, skip)
+    t6 = time.clock()
     # finish up
     print()
     print('total time     >> {:6.3f} [sec]'.format(t5-t0))
@@ -312,6 +311,7 @@ def tracker(options):
     print('track design   >> {:6.3f} [sec] {:4.1f} [%]'.format((t3-t2),(t3-t2)/(t5-t0)*1.e2))
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
+    print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
 
 def test0(filepath):
     print('-----------------------------------------Test0---')
@@ -319,18 +319,18 @@ def test0(filepath):
     sollTrack = track_soll(lattice)
     table = sollTrack.as_table()
     DEBUG_TEST0('sollTrack:\n'+table)
-    d,first = sollTrack[0]
-    d,last  = sollTrack[-1]
+    first = sollTrack[0]
+    last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 
 if __name__ == '__main__':
-    # test0(input_file)
-
-    print('tracker.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
-
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
     DEBUG_TEST0       = DEBUG_ON
+
+    # test0('yml/trackIN.yml')
+
+    print('tracker.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
     
     # preset files for launch with  m4
     template_file = 'yml/tmpl.yml'          # def.template file
@@ -356,11 +356,9 @@ if __name__ == '__main__':
     options = {}
     options['input_file']          = input_file
     options['particles_per_bunch'] = 3000
-    options['show']                = False
+    options['show']                = True
     options['save']                = True
     options['skip']                = 1
-    options['abszisse']            = K.z
-    options['ordinate']            = K.zp 
 
     # start the run
     tracker(options)
