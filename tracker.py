@@ -93,7 +93,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     
 def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
     """ 
-    2D phase space projections of Poincaré sections 
+    2D phase space projections IN and OUT
     """
     symbols = ("x","x'","y","y'","z","$\Delta$p/p")
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
@@ -101,25 +101,34 @@ def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
     if show: plt.show()
 
 def frames(lattice, save, skip):
+    """
+    2D phase space projection at marker position
+    """
     if not save:
         return
     plt.figure()    # new figure instance
     nscnt = 0
     scatter_mrkr = []
+    # gather and count markers
     for node in iter(lattice):
         if isinstance(node,MRK.PoincareAction):
             nscnt += 1
             if nscnt%skip == 0:
                 scatter_mrkr.append((nscnt,node))
+    # make an estimate for x- and y-axis
     d,first_mrkr = scatter_mrkr[0]
     x = [abs(tp()[first_mrkr.xaxis]) for tp in first_mrkr.tpoints]
     y = [abs(tp()[first_mrkr.yaxis]) for tp in first_mrkr.tpoints]
     xmax = max(x)*1.5
     ymax = max(y)*1.5
+    # invoke the marker's action
     for nscnt,node in iter(scatter_mrkr):
         node.do_action(nscnt,xmax,ymax)
 
 def progress(tx):
+    """
+    Show progress
+    """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
@@ -172,7 +181,6 @@ def track(lattice,bunch):
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
     tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbofparticles())
 
-    nscnt  = 0
     ndcnt  = 0
     lnode  = len(lattice.seq)
     lmod   = int(lnode*0.05)
@@ -212,7 +220,7 @@ def track_soll(lattice):
         node.adjust_energy(pi()[K.T])
         """ mapping with soll map """
         pf = node.soll_map(pi())
-        tpoint = Tpoint(pf)                  # n+1,Tpoint at exit
+        tpoint = Tpoint(pf)               # Tpoint at exit
         soll_track.addpoint(tpoint)
     return soll_track
 
@@ -243,24 +251,24 @@ def tracker(options):
     skip     = options['skip']
 
     # bunch-configuration from PARAMS
-    # {x(x)xp}   standard units
+    # {x,xp}   standard units
     twx = PARAMS['twiss_x_i']
     betax_i,alfax_i,gammax_i,emitx_i = twx()
     sigma_x   = twx.sigmaH()
     sigma_xp  = twx.sigmaV()
-    # {y(x)yp}
+    # {y,yp}
     twy = PARAMS['twiss_y_i']
     betay_i,alfay_i,gammay_i,emity_i = twy()
     sigma_y   = twy.sigmaH()
     sigma_yp  = twy.sigmaV()
-    # {z(x)Dp2p}  T3D units
+    # {z,Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
     betaz,alfaz,gammaz,emitz = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
-    # {Dphi(x)w}  T.Wangler units
+    # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw,alfaw,gammaw,emitw = tww()
     sigma_Dphi  = tww.sigmaH()
@@ -313,6 +321,7 @@ def tracker(options):
     print('SAVE FRAMES')
     frames(lattice, save, skip)
     t6 = time.clock()
+
     # finish up
     print()
     print('total time     >> {:6.3f} [sec]'.format(t5-t0))
