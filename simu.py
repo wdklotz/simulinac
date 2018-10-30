@@ -225,7 +225,7 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-#todo:        # markers plots
+#todo: what about markers plots ?
         # lattice.marker_actions()
         plt.show()
 

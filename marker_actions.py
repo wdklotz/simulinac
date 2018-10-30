@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import elements as ELM
 from setutil import PARAMS,K
 
-#todo: fix axes of scatterplots
 class PoincareAction(ELM.MRK):
     """
     This marker-action will be used by the 'scatter' action
@@ -42,7 +41,7 @@ class PoincareAction(ELM.MRK):
         self.tpoints.append(track_point)
         
     def do_action(self,number,xmax,ymax):
-        # box = text in upper left in axes coords (remark: these are matplotlib.patch.Patch properties)
+        # box is text in upper left in axes coords (remark: these are matplotlib.patch.Patch properties)
         symbols = ('x', "x'", 'y', "y'", 'z', "$\Delta$p/p")
         box = '{}-{}'.format(symbols[self.xaxis],symbols[self.yaxis])
         box = '{0}, {2:.2f}[m], {1}p'.format(box,len(self.tpoints),self.position[1])

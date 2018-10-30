@@ -341,7 +341,7 @@ class MRK(I):
         
     def adjust_energy(self, tkin):
         _params = self._params
-        self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, actions = self.actions)
+        self.__init__(label = self.label, particle = self.particle(tkin), position = self.position, action = self.action)
         self._params = _params
         return self
 

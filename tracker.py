@@ -112,8 +112,8 @@ def frames(lattice, save, skip):
             if nscnt%skip == 0:
                 scatter_mrkr.append((nscnt,node))
     d,first_mrkr = scatter_mrkr[0]
-    x = [abs(tp()[first_mrkr.xaxis])  for tp in first_mrkr.tpoints]
-    y = [abs(tp()[first_mrkr.yaxis ]) for tp in first_mrkr.tpoints]
+    x = [abs(tp()[first_mrkr.xaxis]) for tp in first_mrkr.tpoints]
+    y = [abs(tp()[first_mrkr.yaxis]) for tp in first_mrkr.tpoints]
     xmax = max(x)*1.5
     ymax = max(y)*1.5
     for nscnt,node in iter(scatter_mrkr):
