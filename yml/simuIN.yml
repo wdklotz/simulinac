@@ -137,8 +137,8 @@ elements:
         - prefix:    frames        # prefix for directory holding saved frames
         - sec:       *LE           # is part of section
         - action:    scatter       # make a poincare scatter plot
-        - abscissa:  z             # horizontal axis
-        - ordinate:  zp            # vertical axis
+        - abscissa:  x             # horizontal axis
+        - ordinate:  y             # vertical axis
 #...........................................................................................
 ## SEGMENT definitions
 

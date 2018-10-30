@@ -137,8 +137,8 @@ elements:
         - prefix:    frames        # prefix for directory holding saved frames
         - sec:       *LE           # is part of section
         - action:    scatter       # make a poincare scatter plot
-        - abscissa:  x             # horizontal axis
-        - ordinate:  y             # vertical axis
+        - abscissa:  z             # horizontal axis
+        - ordinate:  zp            # vertical axis
 #...........................................................................................
 ## SEGMENT definitions
 
@@ -214,4 +214,7 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   LEwork_B
+    - [ 1, SCmarker ]
     - [41,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
+    - [ 1, SCmarker ]
+    

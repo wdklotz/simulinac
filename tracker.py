@@ -48,7 +48,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     initial = 0; final   = -1
     x=[]; y=[]; xlost=[]; ylost=[]
     loc = initial                   # INITIAL
-    fig = plt.figure(loc)
+    fig = plt.figure("IN")
     nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
@@ -73,7 +73,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
 
     x=[]; y=[]
     loc = final                     # FINAL
-    fig = plt.figure(loc)
+    fig = plt.figure("OUT")
     nbprt = live_bunch.nbofparticles()
     box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
@@ -97,18 +97,28 @@ def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
     """
     symbols = ("x","x'","y","y'","z","$\Delta$p/p")
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
-    fig     = scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     if show: plt.show()
 
 def frames(lattice, save, skip):
-    if save:
-        nscnt = 0
-        for node in iter(lattice):
-            if isinstance(node,MRK.PoincareAction):
-                nscnt += 1
-                if nscnt%skip == 0:
-                    node.do_action(nscnt)
-    
+    if not save:
+        return
+    plt.figure()    # new figure instance
+    nscnt = 0
+    scatter_mrkr = []
+    for node in iter(lattice):
+        if isinstance(node,MRK.PoincareAction):
+            nscnt += 1
+            if nscnt%skip == 0:
+                scatter_mrkr.append((nscnt,node))
+    d,first_mrkr = scatter_mrkr[0]
+    x = [abs(tp()[first_mrkr.xaxis])  for tp in first_mrkr.tpoints]
+    y = [abs(tp()[first_mrkr.yaxis ]) for tp in first_mrkr.tpoints]
+    xmax = max(x)*1.5
+    ymax = max(y)*1.5
+    for nscnt,node in iter(scatter_mrkr):
+        node.do_action(nscnt,xmax,ymax)
+
 def progress(tx):
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )

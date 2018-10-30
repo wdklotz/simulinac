@@ -27,31 +27,34 @@ class PoincareAction(ELM.MRK):
     """
     This marker-action will be used by the 'scatter' action
     """
-    def __init__(self, label='PSC', prefix='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], abszisse=K.z, ordinate=K.zp):
+    def __init__(self, label='PSC', prefix='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], abszisse='z', ordinate='zp'):
         super().__init__(label=label, particle=particle, position=position, action='scatter')
         # all points for this scatter-marker
         self.tpoints  = []
         self.prefix   = prefix
+        krows         = dict(x=int(K.x), xp=int(K.xp), y=int(K.y), yp=int(K.yp), z=int(K.z), zp=int(K.zp))
         self.abszisse = abszisse
         self.ordinate = ordinate
+        self.xaxis    = krows[abszisse]
+        self.yaxis    = krows[ordinate]
 
     def add_track_point(self,track_point):
         self.tpoints.append(track_point)
         
-    def do_action(self,number):
-        krows   = dict(x=K.x, xp=K.xp, y=K.y, yp=K.yp, z=K.z, zp=K.zp)
-        symbols = dict(x='x', xp="x'", y='y', yp="y'", z='z', zp="$\Delta$p/p")
-        abszisse = krows[self.abszisse] 
-        ordinate = krows[self.ordinate]
+    def do_action(self,number,xmax,ymax):
         # box = text in upper left in axes coords (remark: these are matplotlib.patch.Patch properties)
-        box = '{}-{}'.format(symbols[self.abszisse],symbols[self.ordinate])
+        symbols = ('x', "x'", 'y', "y'", 'z', "$\Delta$p/p")
+        box = '{}-{}'.format(symbols[self.xaxis],symbols[self.yaxis])
         box = '{0}, {2:.2f}[m], {1}p'.format(box,len(self.tpoints),self.position[1])
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
         ax = plt.subplot(label=number)
         ax.text(0.05, 0.95, box, transform=ax.transAxes, fontsize=10, verticalalignment='top', bbox=props)
-        x = [tp()[abszisse] for tp in self.tpoints]
-        y = [tp()[ordinate] for tp in self.tpoints]
+        plt.xlim([-xmax,xmax])
+        plt.ylim([-ymax,ymax])
+        ax.autoscale(enable=False,axis='both')
+        x = [tp()[self.xaxis] for tp in self.tpoints]
+        y = [tp()[self.yaxis] for tp in self.tpoints]
         ax.scatter(x,y,s=1)
         plt.savefig('{}/poincare_section_{:03d}.png'.format(self.prefix,number))
 
