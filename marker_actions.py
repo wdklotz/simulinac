@@ -31,7 +31,7 @@ class PoincareAction(ELM.MRK):
         # all points for this scatter-marker
         self.tpoints  = []
         self.prefix   = prefix
-        krows         = dict(x=int(K.x), xp=int(K.xp), y=int(K.y), yp=int(K.yp), z=int(K.z), zp=int(K.zp))
+        krows         = dict(x=K.x.value, xp=K.xp.value, y=K.y.value, yp=K.yp.value, z=K.z.value, zp=K.zp.value)
         self.abszisse = abszisse
         self.ordinate = ordinate
         self.xaxis    = krows[abszisse]
