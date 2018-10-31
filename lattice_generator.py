@@ -272,9 +272,9 @@ def factory(input_file):
             else:
                 FLAGS['dWf'] = 0.
                 SUMMARY['accON'] = False
-        if 'periodic'    in flags: FLAGS['periodic'] = SUMMARY['ring lattice']     = flags['periodic']
-        if 'egf'         in flags: FLAGS['egf']      = SUMMARY['emittance growth'] = flags['egf']
-        if 'sigma'       in flags: FLAGS['sigma']    = SUMMARY['sigma tracking']   = flags['sigma']
+        if 'periodic'    in flags: FLAGS['periodic'] = flags['periodic']
+        if 'egf'         in flags: FLAGS['egf']      = flags['egf']
+        if 'sigma'       in flags: FLAGS['sigma']    = flags['sigma']
         if 'KVout'       in flags: FLAGS['KVout']    = flags['KVout']
         if 'verbose'     in flags: FLAGS['verbose']  = flags['verbose']
         if 'express'     in flags: FLAGS['express']  = flags['express']

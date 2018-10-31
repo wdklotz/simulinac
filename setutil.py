@@ -550,6 +550,7 @@ def collect_data_for_summary(lattice):
                 SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
                 SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
 
+    SUMMARY['use emittance growth']            =  FLAGS['egf']
     SUMMARY['use sigma tracking']              =  FLAGS['sigma']
     SUMMARY['use emittance growth']            =  FLAGS['egf']
     SUMMARY['use ring lattice']                =  FLAGS['periodic']

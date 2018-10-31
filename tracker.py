@@ -161,7 +161,6 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
-#todo: useaper flag
 def track_node(node,particle):
     """
     Tracks a particle through a node
@@ -412,7 +411,7 @@ if __name__ == '__main__':
     options['input_file']          = input_file
     options['particles_per_bunch'] = 3000
     options['show']                = True
-    options['save']                = False
+    options['save']                = True
     options['skip']                = 1
 
     # start the run

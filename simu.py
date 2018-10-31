@@ -21,11 +21,9 @@ This file is part of the SIMULINAC code
 #todo: update simu_manual.odt
 #todo: update README.md
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
-#todo: finish aperture checks for losses - needed for transverse ?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
 #todo: check conversions.tex for variable names
-#todo: for simu make phase space plots
 #todo: sigma R-formalism for longitudinal as well?
 #todo: C.K.Allen's matrices which are XAL as well?
 #todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
