@@ -1,7 +1,12 @@
 """
-Version v7.0.4a2
+Version v7.0.5
 *) code cleaning
 *) Marker-actions reduced from list to single variable
+*) cleaned scatter plotting
+*) n_sigma PARAMETER activated
+*) useaper FLAG activated
+*) aperture checks with n_sigma in simu and tracker
+*) input of aperture improved
 
 Version v7.0.4
 *) Particle is not a dictionary anymore instead it has track as attribute now.
