@@ -361,13 +361,12 @@ class Lattice(object):
 
             # aperture check
             if FLAGS['useaper']:
-                if node.__class__.__name__ == 'D': continue
-                apperture = None
-                if hasattr(node,'aperture'): aperture = node.aperture
-                if aperture != None:
+                n_sigma = PARAMS['n_sigma']
+                if node.aperture != None:
+                    aperture = node.aperture
                     sigx, sigxp, sigy, sigyp = node['sigxy']
                     si,sm,sf                 = node.position
-                    if(aperture < sigx or aperture < sigy):
+                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
                         warnings.showwarning(
                             'aperture hit @ s={:.1f} [m]'.format(sm),
                             UserWarning,'lattice.py',
@@ -400,13 +399,12 @@ class Lattice(object):
 
             # aperture check
             if FLAGS['useaper']:
-                if node.__class__.__name__ == 'D': continue
-                apperture = None
-                if hasattr(node,'aperture'): aperture = node.aperture
+                n_sigma = PARAMS['n_sigma']
                 if aperture != None:
+                    aperture = node.aperture
                     sigx, sigxp, sigy, sigyp = node['sigxy']
                     si,sm,sf                 = node.position
-                    if(aperture < sigx or aperture < sigy):
+                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
                         warnings.showwarning(
                             'aperture hit @ s={:.1f} [m]'.format(sm),
                             UserWarning,'lattice.py',

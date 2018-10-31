@@ -162,6 +162,8 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
+        bx = [i*PARAMS['n_sigma'] for i in bx]
+        plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y tracks
     splot=plt.subplot(312)
@@ -178,6 +180,8 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
+        by = [i*PARAMS['n_sigma'] for i in by]
+        plt.plot(z,by ,label=r'$\sigma$ [m]',color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- longitudinal tracks dPhi, dW/W
     # ax_l = left abszisse

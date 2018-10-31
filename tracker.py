@@ -44,68 +44,96 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     Prepare the Poincaré section plot 
     """
     live_bunch, lost_bunch = live_lost
-    txt = ('{} initial'.format(text),'{} final'.format(text))
+    txt = ('IN {}'.format(text),'OUT {}'.format(text))
     initial = 0; final   = -1
+    # INITIAL DATA
     x=[]; y=[]; xlost=[]; ylost=[]
-    loc = initial                   # INITIAL
-    fig = plt.figure("IN")
+    loc = initial
     nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
-    box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        x.append(point[abszisse])
-        y.append(point[ordinate])
+        x.append(point[abszisse]*1e3)
+        y.append(point[ordinate]*1e3)
     for particle in iter(lost_bunch): # lost particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        xlost.append(point[abszisse])
-        ylost.append(point[ordinate])
-    xmax = max(x)
-    xmin = min(x)
-    ymax = max(y)
-    ymin = min(y)
-    minmax = (xmax-xmin,ymax-ymin)
-    # plt.scatter(x,y,s=1)   # bare scatter plot
-    poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
+        xlost.append(point[abszisse]*1e3)
+        ylost.append(point[ordinate]*1e3)
+    xmax = max([abs(i) for i in x])*1.5
+    ymax = max([abs(i) for i in y])*1.5
+    # figure
+    width = 12; height = 6.
+    fig   = plt.figure(figsize=(width,height))
+    box   = '{} {} particles'.format(txt[loc],nbprt)
+    ax    = plt.subplot(121)
+    ax.set_title(box)
+    plt.xlabel("$10^{-3}$")
+    plt.ylabel("$10^{-3}$")
+    plt.xlim([-xmax,xmax])
+    plt.ylim([-ymax,ymax])
+    plt.scatter(x,y,s=1)
+    plt.scatter(xlost,ylost,s=1,color='red')
+    # poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
 
+    # FINAL DATA
     x=[]; y=[]
-    loc = final                     # FINAL
-    fig = plt.figure("OUT")
+    loc   = final
     nbprt = live_bunch.nbofparticles()
-    box = '{} {} particles'.format(txt[loc],nbprt)
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        x.append(point[abszisse])
-        y.append(point[ordinate])
-    xmax = max(x)
-    xmin = min(x)
-    ymax = max(y)
-    ymin = min(y)
-    minmax = (xmax-xmin,ymax-ymin)
-    # plt.scatter(x,y,s=1)   # bare scatter plot
-    poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
+        x.append(point[abszisse]*1e3)
+        y.append(point[ordinate]*1e3)
+    xmax = max([abs(i) for i in x])*1.5
+    ymax = max([abs(i) for i in y])*1.5
+    # figure
+    box = '{} {} particles'.format(txt[loc],nbprt)
+    ax = plt.subplot(122)
+    ax.set_title(box)
+    plt.xlabel("$10^{-3}$")
+    plt.ylabel("$10^{-3}$")
+    plt.xlim([-xmax,xmax])
+    plt.ylim([-ymax,ymax])
+    plt.scatter(x,y,s=1)
+    # poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
     
-def projection(live_lost, show, abszisse= K.z, ordinate= K.zp):
+def projections(live_lost, show):
     """ 
     2D phase space projections IN and OUT
     """
     symbols = ("x","x'","y","y'","z","$\Delta$p/p")
+    # (x,xp)
+    abszisse = K.x
+    ordinate = K.xp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
-    if show: plt.show()
+    # (y,yp)
+    abszisse = K.y
+    ordinate = K.yp
+    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
+    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    # (x,y)
+    abszisse = K.x
+    ordinate = K.y
+    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
+    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    # (z,zp)
+    abszisse = K.z
+    ordinate = K.zp
+    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
+    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    if show: 
+        plt.show()
 
-def frames(lattice, save, skip):
+def frames(lattice, skip):
     """
     2D phase space projection at marker position
     """
-    if not save:
-        return
     plt.figure()    # new figure instance
     nscnt = 0
     scatter_mrkr = []
@@ -133,7 +161,6 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
-#todo: aperture check
 #todo: useaper flag
 def track_node(node,particle):
     """
@@ -158,6 +185,13 @@ def track_node(node,particle):
         lost = False
     else:
         lost = True
+    # check aperture
+    if FLAGS['useaper'] and node.aperture != None:
+        n_sigma = PARAMS['n_sigma']
+        if abs(new_point[K.x]*n_sigma) < node.aperture and abs(new_point[K.y]*n_sigma) < node.aperture:
+            lost = False
+        else:
+            lost = True
     if not lost:
         if track.nbofpoints() > 1:
             # !!DISCARD!! last point
@@ -294,6 +328,7 @@ def tracker(options):
     tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
     tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
     tracker_log['lattice version......'] = PARAMS['lattice_version']
+    tracker_log['n_sigma..............'] = PARAMS['n_sigma']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
@@ -316,10 +351,11 @@ def tracker(options):
 
     # make 2D projections
     print('FILL PLOTS')
-    projection(live_lost, show,  abszisse = K.z, ordinate = K.zp)
+    projections(live_lost, show)
     t5 = time.clock()
-    print('SAVE FRAMES')
-    frames(lattice, save, skip)
+    if save:
+        print('SAVE FRAMES')
+        frames(lattice, skip)
     t6 = time.clock()
 
     # finish up
@@ -376,7 +412,7 @@ if __name__ == '__main__':
     options['input_file']          = input_file
     options['particles_per_bunch'] = 3000
     options['show']                = True
-    options['save']                = True
+    options['save']                = False
     options['skip']                = 1
 
     # start the run

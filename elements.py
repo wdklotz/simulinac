@@ -73,7 +73,7 @@ class _Node(DictObject, object):
         self.position  = position         # [entrance, middle, exit]
         self.length    = 0.               # default - thin
         self.label     = label            # default - unlabeled
-        # self._deltaW   = 0.               # default - no energy increase
+        self.aperture  = None             # infinite aperture
         self['slice_min'] = 0.001         # default - minimal slice length
         self['viseo']     = 0             # default - invisible
 

@@ -78,21 +78,25 @@ def instanciate_element(item):
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
-    aperture   = PARAMS['aperture']    # default aperture
+    # aperture   = PARAMS['aperture']    # default aperture
     if key == 'D':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
-        if 'aperture' in attributes: aperture = attributes['aperture']
+        # if 'aperture' in attributes: aperture = attributes['aperture'] else None
+        aperture = attributes['aperture'] if 'aperture' in attributes else None
         instance =  ELM.D(length=length,label=label,aperture=aperture)
-        instance['label']  = label
-        instance['length'] = length
+        instance['label']    = label
+        instance['length']   = length
+        instance['aperture'] = aperture
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
-        if 'aperture' in attributes: aperture = attributes['aperture']
+        # if 'aperture' in attributes: aperture = attributes['aperture'] else None
+        aperture = attributes['aperture'] if 'aperture' in attributes else None
         instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
-        instance['label']  = label
-        instance['length'] = length
+        instance['label']    = label
+        instance['length']   = length
+        instance['aperture'] = aperture
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
