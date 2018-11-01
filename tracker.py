@@ -102,7 +102,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
     
-def projections(live_lost, show):
+def projections(live_lost):
     """ 
     2D phase space projections IN and OUT
     """
@@ -127,8 +127,7 @@ def projections(live_lost, show):
     ordinate = K.zp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
-    if show: 
-        plt.show()
+    plt.show()
 
 def frames(lattice, skip):
     """
@@ -153,6 +152,36 @@ def frames(lattice, skip):
     for nscnt,node in iter(scatter_mrkr):
         node.do_action(nscnt,xmax,ymax)
 
+def loss_plot(lattice,live_lost):
+    live_bunch, lost_bunch = live_lost
+    width = 15
+    fig,(ax1,ax2) = plt.subplots(2,1,sharex=True)
+    fig.suptitle('losses')
+    fig.set_size_inches(width,width/2.)
+    ax1.set_xlabel('s [m]')
+    ax1.set_ylabel('x [mm]')
+    ax2.set_xlabel('s [m]')
+    ax2.set_ylabel('y [mm]')
+    for particle in iter(lost_bunch):
+        track  = particle.track
+        xlost = []; ylost = []; s = []
+        for tpoint in iter(track):
+            point  = tpoint()
+            xlost.append(point[K.x]*1e3)
+            ylost.append(point[K.y]*1e3)
+            s.append(point[K.S])
+        ax1.plot(s,xlost)
+        ax2.plot(s,ylost)
+    lat_plot,d   = lattice.lattice_plot_functions()
+    vis_abszisse = [x[0] for x in lat_plot]
+    vis_ordinate = [x[1] for x in lat_plot]
+    vzero        = [0.   for x in lat_plot]      # zero line
+    ax1.plot(vis_abszisse,vis_ordinate,color='gray')
+    ax2.plot(vis_abszisse,vis_ordinate,color='gray')
+    # ax1.plot(vis_abszisse,vzero)
+    plt.show()
+    return
+    
 def progress(tx):
     """
     Show progress
@@ -161,7 +190,7 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
-def track_node(node,particle):
+def track_node_losses(node,particle):
     """
     Tracks a particle through a node
     """
@@ -192,7 +221,48 @@ def track_node(node,particle):
         else:
             lost = True
     if not lost:
-        if track.nbofpoints() > 1:
+        # if track.nbofpoints() > 1:
+            # !!DISCARD!! last point
+            # track.removepoint(last_tp)
+        track.addpoint(new_tp)
+        if isinstance(node,MRK.PoincareAction) and node.has_action('scatter'):
+            node.add_track_point(new_tp)
+    particle.lost = lost
+    return lost
+
+def track_node(node,particle,options):
+    """
+    Tracks a particle through a node
+    """
+    track   = particle.track
+    last_tp = track.getpoints()[-1]
+    try:
+        new_point = node.map(last_tp())
+        new_tp    = Tpoint(point=new_point)
+    except ValueError as ex:
+        lost = True
+        track.removepoint(last_tp)
+        return lost
+    # check Dp2p-acceptance
+    if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
+        lost = False
+    else:
+        lost = True
+    # check z-acceptance
+    if abs(new_point[K.z]) < PARAMS['zAcceptance']:
+        lost = False
+    else:
+        lost = True
+    # check aperture
+    if FLAGS['useaper'] and node.aperture != None:
+        n_sigma = PARAMS['n_sigma']
+        if abs(new_point[K.x]*n_sigma) < node.aperture and abs(new_point[K.y]*n_sigma) < node.aperture:
+            lost = False
+        else:
+            lost = True
+    if not lost:
+        # if we look for losses we keep all track points
+        if track.nbofpoints() > 1 and not options['losses']:
             # !!DISCARD!! last point
             track.removepoint(last_tp)
         track.addpoint(new_tp)
@@ -201,12 +271,12 @@ def track_node(node,particle):
     particle.lost = lost
     return lost
     
-def track(lattice,bunch):
+def track(lattice,bunch,options):
     """
     Tracks a bunch of particles through the lattice using maps
     - lattice is a list of elements (class _Node)
     - bunch (class Bunch) is a list of particles (class Particle)
-    - each particle in a bunch has a track=paticle['track']
+    - each particle in a bunch has a track=pat0000000000000000000000000000000000000000icle['track']
     - track (class Track) is a list of points (class Tpoint)
     
     Input: lattice , bunch
@@ -223,7 +293,7 @@ def track(lattice,bunch):
     for node in iter(lattice):              # nodes
         ndcnt +=1
         for particle in iter(bunch):        # particles
-            lost = track_node(node,particle)
+            lost = track_node(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
@@ -282,6 +352,17 @@ def tracker(options):
     show     = options['show']
     save     = options['save']
     skip     = options['skip']
+    losses   = options['losses']
+    
+    # manipulate options
+    if losses :
+        show = False
+        save = False
+    if show or save:
+        losses = False
+    options['show']   = show
+    options['save']   = save
+    options['losses'] = losses
 
     # bunch-configuration from PARAMS
     # {x,xp}   standard units
@@ -345,17 +426,21 @@ def tracker(options):
     track_soll(lattice)  # <----- track soll
     t3 = time.clock()
     progress(('(track design)', '(track bunch)', '', ''))
-    live_lost = track(lattice,bunch) # <----- track bunch returns (live,lost)-bunch
+    live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
     t4 = time.clock()
 
     # make 2D projections
-    print('FILL PLOTS')
-    projections(live_lost, show)
+    if show:
+        print('FILL PLOTS')
+        projections(live_lost)
     t5 = time.clock()
     if save:
         print('SAVE FRAMES')
         frames(lattice, skip)
     t6 = time.clock()
+    if losses:
+        print('SHOW LOSSES')
+        loss_plot(lattice,live_lost)
 
     # finish up
     print()
@@ -409,10 +494,11 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 3000
+    options['particles_per_bunch'] = 1000
     options['show']                = True
-    options['save']                = True
+    options['save']                = False
     options['skip']                = 1
+    options['losses']              = True
 
     # start the run
     tracker(options)
