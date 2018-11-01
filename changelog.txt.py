@@ -1,4 +1,7 @@
 """
+Version v7.0.6
+*) added loss plots to traker
+
 Version v7.0.5
 *) code cleaning
 *) Marker-actions reduced from list to single variable

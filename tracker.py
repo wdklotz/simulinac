@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.5'
+___version___='v7.0.6'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -31,7 +31,7 @@ import marker_actions as MRK
 from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, K, PARAMS, waccept
 from setutil import WConverter
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
-from trackPlot import poincarePlot
+# from trackPlot import poincarePlot
 
 # DEBUGGING
 def DEBUG_ON(*args):
@@ -41,7 +41,7 @@ def DEBUG_OFF(*args):
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 
-    Prepare the Poincaré section plot 
+    Plot the scatter plots 
     """
     live_bunch, lost_bunch = live_lost
     txt = ('IN {}'.format(text),'OUT {}'.format(text))
@@ -153,6 +153,9 @@ def frames(lattice, skip):
         node.do_action(nscnt,xmax,ymax)
 
 def loss_plot(lattice,live_lost):
+    """
+    Plot losses along the lattice
+    """
     # figure
     width = 15
     fig,(ax1,ax2) = plt.subplots(2,1,sharex=True)
@@ -238,7 +241,7 @@ def track(lattice,bunch,options):
     Tracks a bunch of particles through the lattice using maps
     - lattice is a list of elements (class _Node)
     - bunch (class Bunch) is a list of particles (class Particle)
-    - each particle in a bunch has a track=pat0000000000000000000000000000000000000000icle['track']
+    - each particle in a bunch has a track=particle['track']
     - track (class Track) is a list of points (class Tpoint)
     
     Input: lattice , bunch
@@ -273,7 +276,7 @@ def track(lattice,bunch,options):
 
 def track_soll(lattice):
     """
-    Tracks the reference particle through the lattice and redefines the lattice 
+    Track the reference particle through the lattice and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
     soll_track = Track()
@@ -290,7 +293,9 @@ def track_soll(lattice):
     return soll_track
 
 def tracker(options):
-    """ prepare and launch tracking """
+    """ 
+    Prepare and launch tracking 
+    """
     npart    = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
 
