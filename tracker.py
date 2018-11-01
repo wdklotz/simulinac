@@ -184,51 +184,11 @@ def loss_plot(lattice,live_lost):
     
 def progress(tx):
     """
-    Show progress
+    Show progressammended with
     """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
-
-def track_node_losses(node,particle):
-    """
-    Tracks a particle through a node
-    """
-    track   = particle.track
-    last_tp = track.getpoints()[-1]
-    try:
-        new_point = node.map(last_tp())
-        new_tp    = Tpoint(point=new_point)
-    except ValueError as ex:
-        lost = True
-        track.removepoint(last_tp)
-        return lost
-    # check Dp2p-acceptance
-    if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
-        lost = False
-    else:
-        lost = True
-    # check z-acceptance
-    if abs(new_point[K.z]) < PARAMS['zAcceptance']:
-        lost = False
-    else:
-        lost = True
-    # check aperture
-    if FLAGS['useaper'] and node.aperture != None:
-        n_sigma = PARAMS['n_sigma']
-        if abs(new_point[K.x]*n_sigma) < node.aperture and abs(new_point[K.y]*n_sigma) < node.aperture:
-            lost = False
-        else:
-            lost = True
-    if not lost:
-        # if track.nbofpoints() > 1:
-            # !!DISCARD!! last point
-            # track.removepoint(last_tp)
-        track.addpoint(new_tp)
-        if isinstance(node,MRK.PoincareAction) and node.has_action('scatter'):
-            node.add_track_point(new_tp)
-    particle.lost = lost
-    return lost
 
 def track_node(node,particle,options):
     """
