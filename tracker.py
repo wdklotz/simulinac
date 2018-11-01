@@ -184,7 +184,7 @@ def loss_plot(lattice,live_lost):
     
 def progress(tx):
     """
-    Show progressammended with
+    Show progress
     """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
