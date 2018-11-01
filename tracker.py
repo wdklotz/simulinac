@@ -220,8 +220,7 @@ def track_node(node,particle,options):
         lost = True
     # check aperture
     if FLAGS['useaper'] and node.aperture != None:
-        n_sigma = PARAMS['n_sigma']
-        if abs(new_point[K.x]*n_sigma) < node.aperture and abs(new_point[K.y]*n_sigma) < node.aperture:
+        if abs(new_point[K.x]) < node.aperture and abs(new_point[K.y]) < node.aperture:
             lost = False
         else:
             lost = True
@@ -375,7 +374,6 @@ def tracker(options):
     tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
     tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
     tracker_log['lattice version......'] = PARAMS['lattice_version']
-    tracker_log['n_sigma..............'] = PARAMS['n_sigma']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
@@ -461,7 +459,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1000
+    options['particles_per_bunch'] = 5000
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
