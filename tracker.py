@@ -153,7 +153,7 @@ def frames(lattice, skip):
         node.do_action(nscnt,xmax,ymax)
 
 def loss_plot(lattice,live_lost):
-    live_bunch, lost_bunch = live_lost
+    # figure
     width = 15
     fig,(ax1,ax2) = plt.subplots(2,1,sharex=True)
     fig.suptitle('losses')
@@ -162,6 +162,8 @@ def loss_plot(lattice,live_lost):
     ax1.set_ylabel('x [mm]')
     ax2.set_xlabel('s [m]')
     ax2.set_ylabel('y [mm]')
+    # data
+    live_bunch, lost_bunch = live_lost
     for particle in iter(lost_bunch):
         track  = particle.track
         xlost = []; ylost = []; s = []
@@ -175,10 +177,10 @@ def loss_plot(lattice,live_lost):
     lat_plot,d   = lattice.lattice_plot_functions()
     vis_abszisse = [x[0] for x in lat_plot]
     vis_ordinate = [x[1] for x in lat_plot]
-    vzero        = [0.   for x in lat_plot]      # zero line
+    vis_zero     = [0.   for x in lat_plot]      # zero line
     ax1.plot(vis_abszisse,vis_ordinate,color='gray')
     ax2.plot(vis_abszisse,vis_ordinate,color='gray')
-    # ax1.plot(vis_abszisse,vzero)
+    # ax1.plot(vis_abszisse,vis_zero)
     plt.show()
     return
     

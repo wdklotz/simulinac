@@ -77,8 +77,8 @@ def display0(*args):
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
     stop_viseo = 2000                  # stop viseo plot after so many points
-    vis_ordinate = [x[0] for x in lat_plot]
-    vis_abszisse = [x[1] for x in lat_plot]
+    vis_abszisse = [x[0] for x in lat_plot]
+    vis_ordinate = [x[1] for x in lat_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
     #-------------------- figure frame
     width=14; height=7.6
@@ -91,10 +91,10 @@ def display0(*args):
     plt.plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
     plt.plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
     vscale=plt.axis()[3]*0.1
-    viseox = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseox,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
+    viseox = [x*vscale for x in vis_ordinate]
+    for i in range(stop_viseo,len(vis_abszisse)): viseox[i] = 0.   # stop lattice plotting
+    plt.plot(vis_abszisse,viseox,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y
     splot=plt.subplot(212)
@@ -103,10 +103,10 @@ def display0(*args):
     plt.plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
     plt.plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
     vscale=plt.axis()[3]*0.1
-    viseoy = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseoy,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
+    viseoy = [x*vscale for x in vis_ordinate]
+    for i in range(stop_viseo,len(vis_abszisse)): viseoy[i] = 0.   # stop lattice plotting
+    plt.plot(vis_abszisse,viseoy,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
     
 def display1(*args):
@@ -136,8 +136,8 @@ def display1(*args):
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
     stop_viseo = 2000                  # stop viseo plot after so many points
-    vis_ordinate = [x[0] for x in lat_plot]
-    vis_abszisse = [x[1] for x in lat_plot]
+    vis_abszisse = [x[0] for x in lat_plot]
+    vis_ordinate = [x[1] for x in lat_plot]
     ape_ordinate = [x[0] for x in ape_plot]
     ape_abszisse = [x[1] for x in ape_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
@@ -153,10 +153,10 @@ def display1(*args):
     plt.plot(tz,sx,label='S [m]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
-    viseox = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseox[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseox,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
+    viseox = [x*vscale for x in vis_ordinate]
+    for i in range(stop_viseo,len(vis_abszisse)): viseox[i] = 0.   # stop lattice plotting
+    plt.plot(vis_abszisse,viseox,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
@@ -171,10 +171,10 @@ def display1(*args):
     plt.plot(tz,sy,label='S [m]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
-    viseoy = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseoy[i] = 0.   # stop lattice plotting
-    plt.plot(vis_ordinate,viseoy,label='',color='black')
-    plt.plot(vis_ordinate,vzero,color='black')
+    viseoy = [x*vscale for x in vis_ordinate]
+    for i in range(stop_viseo,len(vis_abszisse)): viseoy[i] = 0.   # stop lattice plotting
+    plt.plot(vis_abszisse,viseoy,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
@@ -197,13 +197,13 @@ def display1(*args):
     ax_r.yaxis.label.set_color('red')
     # ax_r.plot(tz,cdw,color='red',linestyle=':')
     ax_r.plot(tz,sdw,color='red')
-    ax_r.plot(vis_ordinate,vzero,color='red', linestyle='--')
+    ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
     vscale=ax_l.axis()[3]*0.7
-    viseoz = [x*vscale for x in vis_abszisse]
-    for i in range(stop_viseo,len(vis_ordinate)): viseoz[i] = 0.   # stop lattice plotting
-    ax_l.plot(vis_ordinate[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
-    ax_l.plot(vis_ordinate,vzero,color='green',linestyle='--')
+    viseoz = [x*vscale for x in vis_ordinate]
+    for i in range(stop_viseo,len(vis_abszisse)): viseoz[i] = 0.   # stop lattice plotting
+    ax_l.plot(vis_abszisse[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
+    ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
 def display2(*args):
     elli_sxy_action(on_injection=True)
