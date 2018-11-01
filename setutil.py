@@ -735,6 +735,7 @@ def elli_sxy_action(on_injection=False):
     plt.xlim(-xmax*scale, xmax*scale)
     plt.ylim(-ymax*scale, ymax*scale)
 
+#todo: more marker-actions
 # def sigma_x_action(*args):
 #     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
 #     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
@@ -747,9 +748,9 @@ def elli_sxy_action(on_injection=False):
 #     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
 #     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
 # 
-"""
- (global) MRKR_ACTIONS: dictionary of possible actions attached to a marker
-"""
+# """
+#  (global) MRKR_ACTIONS: dictionary of possible actions attached to a marker
+# """
 # MRKR_ACTIONS = dict(
 #             sigma_x     = sigma_x_action,
 #             sigma_y     = sigma_y_action,

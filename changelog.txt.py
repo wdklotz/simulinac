@@ -1,5 +1,5 @@
 """
-Version v7.0.6
+Version v7.0.6alpha
 *) added loss plots to traker
 
 Version v7.0.5

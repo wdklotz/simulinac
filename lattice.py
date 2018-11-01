@@ -89,8 +89,6 @@ class Lattice(object):
         q_counter   = 0
         ttfm = +1.e+50
         ttfx = +1.e-50
-        # tk_i = soll_track.first()[6]
-        # tk_f = soll_track.last()[6]
         tk_i = soll_track.getpoints()[0]()[6]
         tk_f = soll_track.getpoints()[-1]()[6]
         for element in self.seq:
@@ -234,12 +232,6 @@ class Lattice(object):
                 SUMMARY["(sigx')i* [mrad]"] =  PARAMS['twiss_x_i'].sigmaV()*1.e3
                 SUMMARY['(sigy )i*   [mm]'] =  PARAMS['twiss_y_i'].sigmaH()*1.e3
                 SUMMARY["(sigy')i* [mrad]"] =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-                # SUMMARY['(sigx)i [mm]'] = 1000.*PARAMS['sigx_i']
-                # SUMMARY['(sigy)i [mm]'] = 1000.*PARAMS['sigy_i']
-                # xip = sqrt(emitx*gmx)   # 1 sigma x' particle divergence
-                # yip = sqrt(emity*gmy)
-                # SUMMARY["(sigx')i* [mrad]"] = 1000.*xip
-                # SUMMARY["(sigy')i* [mrad]"] = 1000.*yip
             else:
                 print('unstable lattice - STOP')
                 sys.exit(1)
@@ -300,12 +292,6 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
-    # def marker_actions(self):
-    #     """ do MARKER actions """
-    #     for node in self.seq:
-    #         if isinstance(node, ELM.MRK):
-    #             node.do_actions()
-        
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
         def envelopes(function, steps = 10):

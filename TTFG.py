@@ -126,7 +126,7 @@ class _TTF_G(object):
         self.dbTab1Headr = []          # for DEBUGGING
         self.dbTab2Rows  = []          # for DEBUGGING
         self.dbTab2Headr = []          # for DEBUGGING
-        if DEBUG_TTF_G == DEBUG_ON:      # for DEBUGGING
+        if DEBUG_TTF_G == DEBUG_ON:    # for DEBUGGING
             self.dbTab1Headr = ['pout','pin','pout-pin','dp=pout-POUT','wout','win','wout-win','WOUT','dw=wout-WOUT','qV0*10^3']
             self.dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','Tk',"Tkp",'i0-1','i1']
 
