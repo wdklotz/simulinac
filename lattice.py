@@ -354,7 +354,7 @@ class Lattice(object):
                     si,sm,sf                 = node.position
                     if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
                         warnings.showwarning(
-                            'aperture hit @ s={:.1f} [m]'.format(sm),
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
                             UserWarning,'lattice.py',
                             'twiss_functions()')
         return beta_fun
@@ -386,13 +386,13 @@ class Lattice(object):
             # aperture check
             if FLAGS['useaper']:
                 n_sigma = PARAMS['n_sigma']
-                if aperture != None:
+                if node.aperture != None:
                     aperture = node.aperture
                     sigx, sigxp, sigy, sigyp = node['sigxy']
                     si,sm,sf                 = node.position
                     if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
                         warnings.showwarning(
-                            'aperture hit @ s={:.1f} [m]'.format(sm),
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
                             UserWarning,'lattice.py',
                             'sigma_functions()')
         return sigma_fun
