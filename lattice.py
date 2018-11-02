@@ -25,7 +25,7 @@ from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, K6, Twiss
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Twiss
 import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
@@ -46,12 +46,6 @@ class Lattice(object):
     def __init__(self):
         self.seq    = []
         self.length = 0.
-        self.betax0 = 0.
-        self.alfax0 = 0.
-        self.gammx0 = 0.
-        self.betay0 = 0.
-        self.alfay0 = 0.
-        self.gammy0 = 0.
         self.accel  = 0.
     
     def __getitem__(self,n):
@@ -214,7 +208,7 @@ class Lattice(object):
                 aly = 0. if fabs(aly2) < 1.e-9 else sqrt(aly2)
                 print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
-                v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy])
+                v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
                 m_cell_beta = self.accel.beta_matrix()
                 v_beta_e = m_cell_beta.dot(v_beta_a)
                 # if verbose:
@@ -223,7 +217,7 @@ class Lattice(object):
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
                 printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
-                ## keep variables for later use
+                ## transversale twiss parameter fuer periodisches lattice
                 twx = Twiss(bax,alx,emitx)
                 twy = Twiss(bay,aly,emity)
                 PARAMS['twiss_x_i'] = twx
@@ -236,22 +230,10 @@ class Lattice(object):
                 print('unstable lattice - STOP')
                 sys.exit(1)
         else:
-            # Startwerte fuer transferline (keine periodischen Randbedingungen!)
-            # alfa, beta und emittance definieren den beam @ entrance
-            # NOTE: transfer lattices need not to be stable!
-            bax = PARAMS['betax_i']  # twiss beta @ entrance
-            bay = PARAMS['betay_i']
-            alx = PARAMS["alfax_i"]  # twiss alpha @ entrance
-            aly = PARAMS["alfay_i"]
-            gmx = (1.+alx*alx)/bax
-            gmy = (1.+aly*aly)/bay
-        ## keep twiss values as lattice instance variables
-        self.betax0 = bax
-        self.alfax0 = alx
-        self.gammx0 = gmx
-        self.betay0 = bay
-        self.alfay0 = aly
-        self.gammy0 = gmy
+            ## transversale twiss parameter fuer transfer lines
+            # alfa, beta und emittance definieren den beam @ entrance, NOTE: transfer lattices need not to be stable!
+            bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
+            bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return(self)
@@ -297,19 +279,11 @@ class Lattice(object):
         def envelopes(function, steps = 10):
             """ calc. envelopes using function """
             beta_fun  = function(steps = steps)
-            sigma_fun = [(x[K6.s],sqrt(x[K6.bx]*PARAMS['emitx_i']),sqrt(x[K6.by]*PARAMS['emity_i'])) for x in beta_fun]
+            sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*PARAMS['emitx_i']),sqrt(x[Ktw.by]*PARAMS['emity_i'])) for x in beta_fun]
             return sigma_fun
 
-        if FLAGS['sigma'] and FLAGS['dWf'] == 0:
-            warnings.showwarning(
-                'no acceleration - sigma-envelopes need 6x6 matrices - will use twiss-envelopes',
-                UserWarning,
-                'lattice.py',
-                'sigmas()')
-            mess = 'CALCULATE TWISS ENVELOPES'
-            function = self.twiss_functions # use beta-matrix
-        elif FLAGS['sigma'] and FLAGS['dWf'] != 0:
-            mess = 'CALCULATE SIGMA'
+        if FLAGS['sigma']:
+            mess = 'CALCULATE SIGMA ENVELOPES'
             function = self.sigma_functions # use sigma-matrix
         elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
@@ -326,24 +300,21 @@ class Lattice(object):
           steps = 1 (default): elements will not be sliced
         """
         # initials
-        bx       = self.betax0
-        ax       = self.alfax0
-        gx       = self.gammx0
-        by       = self.betay0
-        ay       = self.alfay0
-        gy       = self.gammy0
-        psv0     = NP.array([bx,ax,gx,by,ay,gy])
-        # twiss ftn's for whole lattice
+        bx,ax,gx,epsx = PARAMS['twiss_x_i']()
+        by,ay,gy,epsy = PARAMS['twiss_y_i']()
+        bz,az,gz,epsz = (1.,0.,1.,1.)   # dummies
+        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        # twiss parameters as function of distance s
         beta_fun = []
         for node in self.seq:
             # twiss ftn's for a single node
-            ftn = node.twiss_functions(steps = steps, psv0 = psv0) 
+            ftn = node.twiss_functions(steps = steps, twv = twv0) 
             # prepare plot list of ftn's
             for v,s in ftn:
                 flist = v.tolist()
                 flist.append(s)
                 beta_fun.append(flist)
-            psv0 = v   # loop back
+            twv0 = v   # loop back
 
             # aperture check
             if FLAGS['useaper']:
@@ -362,22 +333,26 @@ class Lattice(object):
     def sigma_functions(self, steps = 1):
         """ track the sigma-matrix through the lattice and extract twiss functions """
         # initials
-        bx       = self.betax0
-        ax       = self.alfax0
-        gx       = self.gammx0
-        by       = self.betay0
-        ay       = self.alfay0
-        gy       = self.gammy0
-        psv0     = NP.array([bx,ax,gx,by,ay,gy])
-        sg0      = Sigma(psv0)
-        # sigma ftn's for whole lattice
+        bx,ax,gx,epsx = PARAMS['twiss_x_i']()
+        by,ay,gy,epsy = PARAMS['twiss_y_i']()
+        # check for acceleration
+        if FLAGS['dWf']  == 0:
+            # dummy numbers if no acceleration
+            bz,az,gz,epsz = (1.,0.,1.,1.)
+        else:
+            # values from beam initials
+            bz,az,gz,epsz = PARAMS['twiss_z_i']()
+        #todo: check initial values
+        twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector
+        sg0      = Sigma(twv0,epsx,epsy,epsz)
+        # sigma envelopes as function of distance s
         sigma_fun = []
         for node in self.seq:
             # sigma-matrices for a single node
-            sigmas = node.sigma_beam(steps = steps, sg0 = sg0) 
+            sigmas = node.sigma_beam(steps = steps, sg = sg0) 
             # prep plot list of ftn's
             for sg,s in sigmas:
-                v = sg.twiss()      # twiss from sigma-matrix
+                v = sg.twiss()      # twiss from Sigma object
                 flist = v.tolist()
                 flist.append(s)
                 sigma_fun.append(flist)
@@ -457,13 +432,13 @@ class Lattice(object):
         lamb        = PARAMS['wellenlänge']
         
         if True:
-            # 2 point on the ellipse y1 & y4
+            # 2 point on the ellipse y1 & y4: intersections
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
             y1,y1p = soll_test(PARAMS['twiss_y_i'].y1())
             x4,x4p = soll_test(PARAMS['twiss_x_i'].y4())
             y4,y4p = soll_test(PARAMS['twiss_y_i'].y4())
         else:
-            # 2 point on the ellipse y2 & y3
+            # 2 point on the ellipse y2 & y3: maximum values
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y2())
             y1,y1p = soll_test(PARAMS['twiss_y_i'].y2())
             x4,x4p = soll_test(PARAMS['twiss_x_i'].y3())
@@ -519,9 +494,9 @@ class Lattice(object):
                     [ 0.,0.,-1.,0., 0.,0.,0.,0.,0.,0.],    #y'
                     [ 0.,0., 0.,0., 0.,1.,0.,0.,0.,0.],    #z
                     [ 0.,0., 0.,0.,-1.,0.,0.,0.,0.,0.],    #z'
-                    [ 0.,0., 0.,0., 0.,0.,1.,0.,0.,0.],    #delta-E
+                    [ 0.,0., 0.,0., 0.,0.,1.,0.,0.,0.],    #T
                     [ 0.,0., 0.,0., 0.,0.,0.,1.,0.,0.],    #1
-                    [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #delta-l
+                    [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #S
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
                     ])
         s = NP.dot(self.accel.matrix.T,s)
@@ -684,20 +659,19 @@ def test1():
     # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
     # cell boundaries
     full_cell = lattice.cell(closed=True)
-    mcell = full_cell.accel
-    betax = full_cell.betax0
-    betay = full_cell.betay0
+    betax,a,g,e = PARAMS['twiss_x_i']()
+    betay,a,g,e = PARAMS['twiss_y_i']()
     lattice.symplecticity()
     # twiss functions
     beta_fun = lattice.twiss_functions(steps=5)
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
-    s  = [x[K6.s]  for x in beta_fun]    # abzisse s
-    xs = [x[K6.bx] for x in beta_fun]    # betax(s)
-    ys = [x[K6.by] for x in beta_fun]    # betay(s)
-    sd = [x[0] for x in disp]            # abzisse s
-    ds = [x[1] for x in disp]            # dispersion(s)
+    s  = [x[Ktw.s]  for x in beta_fun]    # abzisse s
+    xs = [x[Ktw.bx] for x in beta_fun]    # betax(s)
+    ys = [x[Ktw.by] for x in beta_fun]    # betay(s)
+    sd = [x[0] for x in disp]             # abszisse s
+    ds = [x[1] for x in disp]             # dispersion(s)
     #-------------------- lattice viseo
     lat_plot, ape_plot = lattice.lattice_plot_functions()
     vsbase = -1.

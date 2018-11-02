@@ -1,6 +1,8 @@
 """
 Version v7.0.6alpha
 *) added loss plots to traker
+*) unified the coordinate handling: two vectors: twiss-vector (Ktw) and track point (Ktp)
+*) verified correctness of twiss-envelopes and sigma-envelopes
 
 Version v7.0.5
 *) code cleaning

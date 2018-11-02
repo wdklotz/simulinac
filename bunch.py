@@ -22,7 +22,7 @@ import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
 
-from setutil import DEBUG, Proton, tblprnt, K, sigmas, PARAMS, Twiss
+from setutil import DEBUG, Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
 from trackPlot import histPlot, poincarePlot
 
 # DEBUG
@@ -34,19 +34,19 @@ def DEBUG_OFF(*args):
 class Tpoint(object):
     """ 
         A track point is an NP.array of 10 coordinates, 
-        i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=s, 1) 
+        i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
     """
     def __init__(self, point = NP.array([0,0,0,0,0,0,0,1,0,1])):
         self.point = point
     def __call__(self):
         return self.point
     def as_str(self):
-        s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[K.x],self.point[K.xp],self.point[K.y],self.point[K.yp],self.point[K.z],self.point[K.zp],self.point[K.T],self.point[K.S])
+        s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[Ktp.x],self.point[Ktp.xp],self.point[Ktp.y],self.point[Ktp.yp],self.point[Ktp.z],self.point[Ktp.zp],self.point[Ktp.T],self.point[Ktp.S])
         return s
     
 class Track(object):
     """
-        A Track is a container (list) of positions Tpoint objects. 
+        A Track is a list of Tpoint objects. 
     """
     def __init__(self):
         self._points = []
@@ -66,14 +66,14 @@ class Track(object):
         tblrows =[]
         for point in iter(self):
             tblrow = [
-                '{:8.3f}'.format(point()[K.x]),
-                '{:8.3f}'.format(point()[K.xp]),
-                '{:8.3f}'.format(point()[K.y]),
-                '{:8.3f}'.format(point()[K.yp]),
-                '{:8.3f}'.format(point()[K.z]),
-                '{:8.3f}'.format(point()[K.zp]),
-                '{:8.3f}'.format(point()[K.T]),
-                '{:8.3f}'.format(point()[K.S]),
+                '{:8.3f}'.format(point()[Ktp.x]),
+                '{:8.3f}'.format(point()[Ktp.xp]),
+                '{:8.3f}'.format(point()[Ktp.y]),
+                '{:8.3f}'.format(point()[Ktp.yp]),
+                '{:8.3f}'.format(point()[Ktp.z]),
+                '{:8.3f}'.format(point()[Ktp.zp]),
+                '{:8.3f}'.format(point()[Ktp.T]),
+                '{:8.3f}'.format(point()[Ktp.S]),
                 ]
             tblrows.append(tblrow)
         return tblprnt(tblheadr,tblrows)
@@ -85,7 +85,7 @@ class Track(object):
 
 class Bunch(object):
     """
-        A Bunch is a container (list) of Particle objects
+        A Bunch is a list of Particle objects
     """
     def __init__(self):
         self._particles = []
@@ -162,18 +162,18 @@ def Gauss1D(twx,twy,twz,npart,mask,tk):
     for i in range(npart):
         start=NP.array([ 0., 0., 0., 0., 0., 0., tk, 1., 0., 1.])
         # initial setting for each coordinate
-        if mask[K.x]:
-            start[K.x]  = X[i]
-        if mask[K.xp]:
-            start[K.xp] = XP[i]
-        if mask[K.y]:
-            start[K.y]  = Y[i]
-        if mask[K.yp]:
-            start[K.yp] = YP[i]
-        if mask[K.z]:
-            start[K.z]  = Z[i]
-        if mask[K.zp]:
-            start[K.zp] = ZP[i]
+        if mask[Ktp.x]:
+            start[Ktp.x]  = X[i]
+        if mask[Ktp.xp]:
+            start[Ktp.xp] = XP[i]
+        if mask[Ktp.y]:
+            start[Ktp.y]  = Y[i]
+        if mask[Ktp.yp]:
+            start[Ktp.yp] = YP[i]
+        if mask[Ktp.z]:
+            start[Ktp.z]  = Z[i]
+        if mask[Ktp.zp]:
+            start[Ktp.zp] = ZP[i]
         tpoint = Tpoint(point=start)
         track  = Track()
         track.addpoint(tpoint)
@@ -223,10 +223,10 @@ def EmitContour(nTracks,random=False):
     track = Track()
     for i in range(2*nTracks):
         start       = NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
-        start[K.x]  = X[i]
-        start[K.xp] = XP[i]
-        start[K.y]  = Y[i]
-        start[K.yp] = YP[i]
+        start[Ktp.x]  = X[i]
+        start[Ktp.xp] = XP[i]
+        start[Ktp.y]  = Y[i]
+        start[Ktp.yp] = YP[i]
         point = Tpoint(start)
         track.addpoint(point)
     return track
@@ -310,10 +310,10 @@ def test3(filepath):
     N = 200
     lattice = parse_and_fabric(filepath)
     track = EmitContour(N, random=True)
-    X  = [x()[K.x] for x in iter(track)]
-    XP = [x()[K.xp] for x in iter(track)]
-    Y  = [x()[K.y] for x in iter(track)]
-    YP = [x()[K.yp] for x in iter(track)]
+    X  = [x()[Ktp.x] for x in iter(track)]
+    XP = [x()[Ktp.xp] for x in iter(track)]
+    Y  = [x()[Ktp.y] for x in iter(track)]
+    YP = [x()[Ktp.yp] for x in iter(track)]
     fig = plt.figure('test3:figure')
     plt.scatter(X,XP,s=0.1)
     plt.scatter(Y,YP,color='red',s=0.1)
@@ -340,8 +340,8 @@ def test4():
     yaxis = []
     for track in tracklist:
         for point in iter(track):
-            X  = point()[K.x]
-            XP = point()[K.xp]
+            X  = point()[Ktp.x]
+            XP = point()[Ktp.xp]
             xaxis.append(X)
             yaxis.append(XP)
     fig = plt.figure("test4:figure")

@@ -66,30 +66,34 @@ ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   # add handler to logger
 
-# x        x'        y        y'        z       z'=dp/p   T        dT        S        dS
-XKOO = 0;XPKOO = 1;YKOO = 2;YPKOO = 3;ZKOO = 4;ZPKOO = 5;EKOO = 6;DEKOO = 7;SKOO = 8;LKOO = 9
-class K(IntEnum):                                # enum.IntEnum since Python 3.4
-    """ Koordinaten for track points (1x10)"""
-    x  = XKOO
-    xp = XPKOO
-    y  = YKOO
-    yp = YPKOO
-    z  = ZKOO
-    zp = ZPKOO
-    T  = EKOO
-    dT = DEKOO
-    S  = SKOO
-    dS = LKOO
+# using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
+class Ktp(IntEnum):
+    """ Koordinaten fuer track points (1x10)"""
+    x  = 0     # x
+    xp = 1     # x'
+    y  = 2     # y
+    yp = 3     # y'
+    z  = 4     # z
+    zp = 5     # z' = Dp/p
+    T  = 6     # T(s) = Ingegral(dT)
+    dT = 7     # const 1
+    S  = 8     # S = Integral(dS)
+    dS = 9     # const 1
+# for compatability with elder code
+XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 
-class K6(IntEnum):
-    """ Koordinaten for twiss funtions (1x4) """
+class Ktw(IntEnum):
+    """ Koordinaten fuer twiss vector (1x10) """
     bx = 0      # twiss-beta
     ax = 1      # twiss-alpha
     gx = 2      # twiss-gamma
     by = 3
     ay = 4
     gy = 5
-    s  = 6      # abzisse for twiss functions
+    bz = 6
+    az = 7
+    gz = 8
+    s  = 9      # abszisse for twiss functions
 
 # DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
@@ -267,7 +271,7 @@ class WConverter(object):
         return w # []
 
     def emitwToemitz(self,emitw):
-        """ emittance[w(x)Dphi] [rad] to emittance[z(x)Dp2p] [m] """
+        """ emittance[Dphi(x)w] [rad] to emittance[z(x)Dp2p] [m] """
         emitz = self.lamb/(self.twopi*self.gb)*emitw
         return emitz # [m]
     def emitzToemitw(self,emitz):
@@ -306,7 +310,6 @@ def waccept(node):
     IN
         node: the 1st rf-gap at the linac entrance
     """
-    # betaw, gammaw, wmx, w0, Dphi0, phi_1, phi_2, omgl0, betaz, gammaz, emitz, Dp2pmx, Dp2p0, z0, Dp2pAcceptance, zAcceptance, DWmx  = None
     dWf = FLAGS['dWf']
     if node is not None and dWf == 1:
         emitw_i   = PARAMS['emitw_i']    # [rad]
@@ -421,15 +424,18 @@ def waccept(node):
         # alfaw = 0. # always for longitudinal
         twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
         twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        # tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
-        # twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
+        # dummies
+        tww = Twiss(1.,0.,1.)
+        twz = Twiss(1.,0.,1.)
         PARAMS['twiss_x_i'] = twx
         PARAMS['twiss_y_i'] = twy
+        # uncommented next two produce error when used w/o acceleration
         # PARAMS['twiss_w_i'] = tww
         # PARAMS['twiss_z_i'] = twz
         pass
 
     return res
+    
 #todo: integrate sigmas into Twiss
 def sigmas(alfa,beta,epsi):
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
@@ -703,10 +709,10 @@ def elli_sxy_action(on_injection=False):
         node  = args[0]
         twiss,s = node['twiss']
 
-        ax = twiss[K6.ax]
-        bx = twiss[K6.bx]
-        ay = twiss[K6.ay]
-        by = twiss[K6.by]
+        ax = twiss[Ktw.ax]
+        bx = twiss[Ktw.bx]
+        ay = twiss[Ktw.ay]
+        by = twiss[Ktw.by]
 
     org = (0,0)
     ellix = ellicp(org,ax,bx,PARAMS['emitx_i'])

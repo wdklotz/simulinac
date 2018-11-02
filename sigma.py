@@ -21,9 +21,9 @@ from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
 from copy import copy,deepcopy
 
-from setutil import Proton, DEBUG, mxprnt, PARAMS, K6
+from setutil import Proton, DEBUG, mxprnt, PARAMS, Ktw
 
-DIM=6   #(0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
+DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
 # DEBUG MODULE
 def DEBUG_ON(*args):
@@ -32,59 +32,42 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-#todo: add longitudinal phase space
-#todo: check eg_corr again - still with global delta-phi
 class Sigma(object):
-    """ Utility class for handling of sigma-matrix """
-    def __init__(self, psv0):
-
+    """ Utility class for handling the sigma-matrix """
+    def __init__(self, twv0, epsx, epsy, epsz):
         self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
-        self._emitx = PARAMS['emitx_i']
-        self._emity = PARAMS['emity_i']
-        self._emitz = PARAMS['emitz']
-        self._beam(psv0)
+        self._emitx = epsx
+        self._emity = epsy
+        self._emitz = epsz
+        self._beam(twv0)
         
-    @property
-    def emitx(self,value):
-        self._emitx = value
-    @property
-    def emity(self,value):
-        self._emity = value
-    @property
-    def emitz(self,value):
-        self._emitz = value
-    
-    def _beam(self,psv0):
-        """ calc sigma-matrix from twiss parameters """
-        self.matrix[0,0] = self._emitx*psv0[K6.bx]
-        self.matrix[2,2] = self._emity*psv0[K6.by]
-        # self.matrix[4,4] = self._emitz*psv0[K6.bz]
+    def _beam(self,twv0):
+        """ calc sigma-matrix from twiss-parameters """
+        self.matrix[0,0] = self._emitx*twv0[Ktw.bx]
+        self.matrix[2,2] = self._emity*twv0[Ktw.by]
+        self.matrix[4,4] = self._emitz*twv0[Ktw.bz]
 
-        self.matrix[1,1] = self._emitx*psv0[K6.gx]
-        self.matrix[3,3] = self._emity*psv0[K6.gy]
-        # self.matrix[5,5] = self._emitz*psv0[K6.gz]
+        self.matrix[1,1] = self._emitx*twv0[Ktw.gx]
+        self.matrix[3,3] = self._emity*twv0[Ktw.gy]
+        self.matrix[5,5] = self._emitz*twv0[Ktw.gz]
         
-        self.matrix[0,1] = self.matrix[1,0] =  -self._emitx*psv0[K6.ax]
-        self.matrix[2,3] = self.matrix[3,2] =  -self._emity*psv0[K6.ay]
-        # self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*psv0[K6.az]
+        self.matrix[0,1] = self.matrix[1,0] =  -self._emitx*twv0[Ktw.ax]
+        self.matrix[2,3] = self.matrix[3,2] =  -self._emity*twv0[Ktw.ay]
+        self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*twv0[Ktw.az]
     
     def twiss(self):
-        """ calc twiss parameters from sigma-matrix """
-        emitx  = self._emitx
-        emity  = self._emity
-        # emitz  = self._emitz
-
+        """ calc twiss-parameters from sigma-matrix """
         matrix = self.matrix
-        bx  = matrix[0,0]/emitx
-        by  = matrix[2,2]/emity
-        # betaz  = matrix[4,4]/emitz
-        gx = matrix[1,1]/emitx
-        gy = matrix[3,3]/emity
-        # gammaz = matrix[5,5]/emitz
-        ax = -matrix[0,1]/emitx
-        ay = -matrix[2,3]/emity
-        # alphaz = -matrix[4,5]/emitz
-        return NP.array([bx,ax,gx,by,ay,gy])
+        bx  =  matrix[0,0]/self._emitx
+        by  =  matrix[2,2]/self._emity
+        bz  =  matrix[4,4]/self._emitz
+        gx  =  matrix[1,1]/self._emitx
+        gy  =  matrix[3,3]/self._emity
+        gz  =  matrix[5,5]/self._emitz
+        ax  = -matrix[0,1]/self._emitx
+        ay  = -matrix[2,3]/self._emity
+        az  = -matrix[4,5]/self._emitz
+        return NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
     
     def sigv(self):
         """ calc envelopes from sigma-matrix """
@@ -93,7 +76,9 @@ class Sigma(object):
         sgxp  = sqrt(matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
         sgy   = sqrt(matrix[2,2])
         sgyp  = sqrt(matrix[3,3])
-        return NP.array([sgx,sgxp,sgy,sgyp])
+        sgz   = sqrt(matrix[4,4])
+        sgzp  = sqrt(matrix[5,5])
+        return NP.array([sgx,sgxp,sgy,sgyp,sgz,sgzp])
 
     def string(self):
         str = 'SIGMA:'
@@ -106,15 +91,16 @@ class Sigma(object):
     def RSRt(self,R):
         """
         Map this sigma-matrix through element R
-            R instanceof ELM._matrix!
+        *) input R is ELM._matrix!
+        *) returns the transformed Sigma object
         """
-        # R(DIM,DIM) = R.__call__(DIM,DIM): upper element matrix (instanceof NP.ndarray)
-        r    = NP.matrix(R(DIM,DIM))
-        sgf  = deepcopy(self)        # IMPORTANT!!!
-        sgmx = sgf.matrix
-        sgf.matrix = r*sgmx*r.T     # NP matrix multiplication
-        return sgf
+        # R(DIM,DIM) is same as R.__call__(DIM,DIM): upper (DIMxDIM) block matrix
+        r6           = R(DIM,DIM)
+        sigma        = deepcopy(self)       # IMPORTANT!!!
+        sigma.matrix = r6*sigma.matrix*r6.T # NP matrix multiplication
+        return sigma
 
+#todo: check eg_corr again - still with global delta-phi
     def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         """
         Apply emmittance growth correction after passage through RF gap 
@@ -190,8 +176,8 @@ def test0():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    psv0     = NP.array([bx,ax,gx,by,ay,gy])
-    sg0      = Sigma(psv0)
+    twv0     = NP.array([bx,ax,gx,by,ay,gy])
+    sg0      = Sigma(twv0)
     print(sg0.string())
 def test1():
     from elements import RFG
@@ -206,8 +192,8 @@ def test1():
     by       = PARAMS['betay_i']
     ay       = PARAMS['alfay_i']
     gy       = (1+ay**2)/bx
-    psv0     = NP.array([bx,ax,gx,by,ay,gy])
-    sigma_i  = Sigma(psv0)
+    twv0     = NP.array([bx,ax,gx,by,ay,gy])
+    sigma_i  = Sigma(twv0)
     s1 = sigma_i.matrix
     sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
     s2 = sigma_f.matrix

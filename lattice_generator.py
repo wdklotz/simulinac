@@ -82,7 +82,6 @@ def instanciate_element(item):
     if key == 'D':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
-        # if 'aperture' in attributes: aperture = attributes['aperture'] else None
         aperture = attributes['aperture'] if 'aperture' in attributes else None
         instance =  ELM.D(length=length,label=label,aperture=aperture)
         instance['label']    = label
@@ -91,7 +90,6 @@ def instanciate_element(item):
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
-        # if 'aperture' in attributes: aperture = attributes['aperture'] else None
         aperture = attributes['aperture'] if 'aperture' in attributes else None
         instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
         instance['label']    = label

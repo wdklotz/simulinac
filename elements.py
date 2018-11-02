@@ -25,7 +25,7 @@ import numpy as NP
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
 from setutil import DEBUG
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, K6
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
 from TTFG import _TTF_G
 from Ez0 import SFdata
 from DynacG import _DYN_G
@@ -170,7 +170,7 @@ class _Node(DictObject, object):
         return slices
 
     def beta_matrix(self):
-        """ The 6x6 matrix to track twiss functions through the lattice """
+        """ The 9x9 matrix to track twiss functions through the lattice """
         # m11  = self.matrix[0, 0];         m12  = self.matrix[0, 1]
         # m21  = self.matrix[1, 0];         m22  = self.matrix[1, 1]
         # n11  = self.matrix[2, 2];         n12  = self.matrix[2, 3]
@@ -181,38 +181,41 @@ class _Node(DictObject, object):
         n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
         n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
         m_beta  =  NP.array([
-            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.],
-            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.],
-            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.],
-            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12],
-            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12],
-            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22]
+            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,     0.,    0.],
+            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,     0.,    0.],
+            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,     0.,    0.],
+            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,     0.,    0.],
+            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,     0.,    0.],
+            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,     0.,    0.],
+            [0.,        0.,                0.,         0.,        0.,               0.,         1.,     0.,    0.],
+            [0.,        0.,                0.,         0.,        0.,               0.,         0.,     1.,    0.],
+            [0.,        0.,                0.,         0.,        0.,               0.,         0.,     0.,    1.]
             ])
         return m_beta
 
-    def twiss_functions(self, steps = 1, psv0 = None):
+    def twiss_functions(self, steps = 1, twv = None):
         """
         track the twiss functions through a node
-            twiss vector: psv0 = NP.array([betax,alphax,gammax,b..y,a..y,g..y])
+            twiss vector: twv = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
         """            
         si   = self.position[0]     # entrance
-        functions = [(psv0,si)]
+        functions = [(twv,si)]
         if self.length == 0.:
             pass
         elif steps == 1:
             sf = self.position[2]
             m_beta = self.beta_matrix()
-            v = m_beta.dot(psv0)
+            v = m_beta.dot(twv)
             functions.append((v,sf))  # vector at exit
         elif steps > 1:
             s = si
             slices = self.make_slices(anz = steps)
             for slice in slices: # loop slices
                 m_beta = slice.beta_matrix()
-                v = m_beta.dot(psv0)
+                v = m_beta.dot(twv)
                 s += slice.length
                 functions.append((v,s))  # vector at slices
-                psv0 = v
+                twv = v
         else:
             print('something went wrong with steps in  "_Node.twiss_functions()"')
             sys.exit(1)
@@ -227,10 +230,10 @@ class _Node(DictObject, object):
         sm = self.position[1]
         twiss = (avm,sm)
         self['twiss'] = twiss
-        ax = avm[K6.ax]
-        bx = avm[K6.bx]
-        ay = avm[K6.ay]
-        by = avm[K6.by]
+        ax = avm[Ktw.ax]
+        bx = avm[Ktw.bx]
+        ay = avm[Ktw.ay]
+        by = avm[Ktw.by]
         emix = PARAMS['emitx_i']
         emiy = PARAMS['emity_i']
         # avarage twiss-sigmas in the middle
@@ -238,25 +241,25 @@ class _Node(DictObject, object):
         self['sigxy'] = sigxy
         return functions
 
-    def sigma_beam(self,steps = 1, sg0 = None):
+    def sigma_beam(self,steps = 1, sg = None):
         """ 
-        track the sigma-beam-matrix through node
-            twiss vector:      psv0  = NP.array([betax,alphax,gammax,b..y,a..y,g..y])
-            sigma-beam-matrix: sg0 = SIGMA(psv0)
+        Track the Sigma object through a node
+            twiss vector: twv  = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
+            *) input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
         """
         si     = self.position[0]       # entrance
-        sigmas = [(sg0,si)]
+        sigmas = [(sg,si)]
         s      = si
         slices = self.make_slices(anz = steps)
         for slice in slices:
-            # next_SIGMA = R * SIGMA * R_transposed
-            sgf = sg0.RSRt(slice)
+            # next_SIGMA = R * SIGMA * transpose(R)
+            sgf = sg.RSRt(slice)
             # emmitance grow ?
             if isinstance(slice,RFG) and FLAGS['egf']: # loop slices
-                sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg0, delta_phi=PARAMS['Dphi0'])
+                sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg, delta_phi=PARAMS['Dphi0'])
             s += slice.length
             sigmas.append((sgf,s))
-            sg0 = sgf
+            sg = sgf
 
         # averages
         av = []
@@ -274,9 +277,6 @@ class _Node(DictObject, object):
         self['sigxy'] = sigxy
 
         return sigmas
-
-        # KEEPVALUES update
-        # KEEP.update({'z':s,'sigma_x':xsquare_av,'sigma_y':ysquare_av,'Tkin':slice.particle.tkin})
 
     def map(self, i_track):
         """ Linear mapping of trjectory from (i) to (f) """

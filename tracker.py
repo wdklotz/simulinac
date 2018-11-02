@@ -28,7 +28,7 @@ from math import sqrt, degrees, radians
 from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
-from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, K, PARAMS, waccept
+from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
 from setutil import WConverter
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 # from trackPlot import poincarePlot
@@ -108,23 +108,23 @@ def projections(live_lost):
     """
     symbols = ("x","x'","y","y'","z","$\Delta$p/p")
     # (x,xp)
-    abszisse = K.x
-    ordinate = K.xp
+    abszisse = Ktp.x
+    ordinate = Ktp.xp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     # (y,yp)
-    abszisse = K.y
-    ordinate = K.yp
+    abszisse = Ktp.y
+    ordinate = Ktp.yp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     # (x,y)
-    abszisse = K.x
-    ordinate = K.y
+    abszisse = Ktp.x
+    ordinate = Ktp.y
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     # (z,zp)
-    abszisse = K.z
-    ordinate = K.zp
+    abszisse = Ktp.z
+    ordinate = Ktp.zp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     plt.show()
@@ -172,9 +172,9 @@ def loss_plot(lattice,live_lost):
         xlost = []; ylost = []; s = []
         for tpoint in iter(track):
             point  = tpoint()
-            xlost.append(point[K.x]*1e3)
-            ylost.append(point[K.y]*1e3)
-            s.append(point[K.S])
+            xlost.append(point[Ktp.x]*1e3)
+            ylost.append(point[Ktp.y]*1e3)
+            s.append(point[Ktp.S])
         ax1.plot(s,xlost)
         ax2.plot(s,ylost)
     lat_plot,d   = lattice.lattice_plot_functions()
@@ -209,18 +209,18 @@ def track_node(node,particle,options):
         track.removepoint(last_tp)
         return lost
     # check Dp2p-acceptance
-    if abs(new_point[K.zp]) < PARAMS['Dp2pAcceptance']:
+    if abs(new_point[Ktp.zp]) < PARAMS['Dp2pAcceptance']:
         lost = False
     else:
         lost = True
     # check z-acceptance
-    if abs(new_point[K.z]) < PARAMS['zAcceptance']:
+    if abs(new_point[Ktp.z]) < PARAMS['zAcceptance']:
         lost = False
     else:
         lost = True
     # check aperture
     if FLAGS['useaper'] and node.aperture != None:
-        if abs(new_point[K.x]) < node.aperture and abs(new_point[K.y]) < node.aperture:
+        if abs(new_point[Ktp.x]) < node.aperture and abs(new_point[Ktp.y]) < node.aperture:
             lost = False
         else:
             lost = True
@@ -284,7 +284,7 @@ def track_soll(lattice):
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # Tpoint at entrance
         """ energy adjustment """
-        node.adjust_energy(pi()[K.T])
+        node.adjust_energy(pi()[Ktp.T])
         """ mapping with soll map """
         pf = node.soll_map(pi())
         tpoint = Tpoint(pf)               # Tpoint at exit

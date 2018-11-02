@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 import matplotlib.pyplot as plt
 
 import elements as ELM
-from setutil import PARAMS,K
+from setutil import PARAMS,Ktp
 
 class PoincareAction(ELM.MRK):
     """
@@ -31,7 +31,7 @@ class PoincareAction(ELM.MRK):
         # all points for this scatter-marker
         self.tpoints  = []
         self.prefix   = prefix
-        krows         = dict(x=K.x.value, xp=K.xp.value, y=K.y.value, yp=K.yp.value, z=K.z.value, zp=K.zp.value)
+        krows         = dict(x=Ktp.x.value, xp=Ktp.xp.value, y=Ktp.y.value, yp=Ktp.yp.value, z=Ktp.z.value, zp=Ktp.zp.value)
         self.abszisse = abszisse
         self.ordinate = ordinate
         self.xaxis    = krows[abszisse]
