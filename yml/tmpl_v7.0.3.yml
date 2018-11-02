@@ -22,7 +22,7 @@
 #   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 #..........................................................................................
-## RUN configurationgenerator
+## RUN configuration
 
 flags:
     # - accON:        False  # {True} acceleration on/off flag

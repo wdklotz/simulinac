@@ -210,7 +210,7 @@ class Lattice(object):
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
                 m_cell_beta = self.accel.beta_matrix()
-                v_beta_e = m_cell_beta.dot(v_beta_a)
+                v_beta_e = NP.dot(m_cell_beta,v_beta_a)
                 # if verbose:
                 printv(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
                 diffa_e = v_beta_a - v_beta_e
@@ -388,7 +388,7 @@ class Lattice(object):
             slices = element.make_slices(anz = steps)
             for i_element in slices:
                 m_beta = i_element.matrix
-                v_0 = m_beta.dot(v_0)
+                v_0 = NP.dot(m_beta,v_0)
                 s += i_element.length
                 d  = v_0[0]
                 dp = v_0[1]
@@ -414,6 +414,7 @@ class Lattice(object):
             if hasattr(element, 'aperture'): 
                 aperture = element.aperture
             if element.__class__.__name__ == 'D': continue
+            if aperture == None: continue
             ape.append((sm,aperture))
         return fun,ape
 

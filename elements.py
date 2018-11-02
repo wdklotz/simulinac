@@ -205,14 +205,14 @@ class _Node(DictObject, object):
         elif steps == 1:
             sf = self.position[2]
             m_beta = self.beta_matrix()
-            v = m_beta.dot(twv)
+            v = NP.dot(m_beta,twv)
             functions.append((v,sf))  # vector at exit
         elif steps > 1:
             s = si
             slices = self.make_slices(anz = steps)
             for slice in slices: # loop slices
                 m_beta = slice.beta_matrix()
-                v = m_beta.dot(twv)
+                v = NP.dot(m_beta,twv)
                 s += slice.length
                 functions.append((v,s))  # vector at slices
                 twv = v
@@ -253,7 +253,7 @@ class _Node(DictObject, object):
         slices = self.make_slices(anz = steps)
         for slice in slices:
             # next_SIGMA = R * SIGMA * transpose(R)
-            sgf = sg.RSRt(slice)
+            sgf = sg.RSRT(slice)
             # emmitance grow ?
             if isinstance(slice,RFG) and FLAGS['egf']: # loop slices
                 sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg, delta_phi=PARAMS['Dphi0'])
@@ -280,7 +280,7 @@ class _Node(DictObject, object):
 
     def map(self, i_track):
         """ Linear mapping of trjectory from (i) to (f) """
-        f_track = self.matrix.dot(i_track)
+        f_track = NP.dot(self.matrix,i_track)
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
@@ -928,7 +928,7 @@ class _T3D_G(object):
 
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
-        f_track = self.matrix.dot(i_track)
+        f_track = NP.dot(self.matrix,i_track)
         return f_track
 
     def soll_map(self, i_track):

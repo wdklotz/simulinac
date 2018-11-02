@@ -88,7 +88,7 @@ class Sigma(object):
                 str += '{:8.4g}  '.format(self.matrix[i,k])
         return str
 
-    def RSRt(self,R):
+    def RSRT(self,R):
         """
         Map this sigma-matrix through element R
         *) input R is ELM._matrix!
@@ -97,7 +97,7 @@ class Sigma(object):
         # R(DIM,DIM) is same as R.__call__(DIM,DIM): upper (DIMxDIM) block matrix
         r6           = R(DIM,DIM)
         sigma        = deepcopy(self)       # IMPORTANT!!!
-        sigma.matrix = r6*sigma.matrix*r6.T # NP matrix multiplication
+        sigma.matrix = r6 @ sigma.matrix @ r6.T # NP matrix multiplication
         return sigma
 
 #todo: check eg_corr again - still with global delta-phi
@@ -119,12 +119,10 @@ class Sigma(object):
             res = res*3./(dp*dp)
             res = res - sin(dp)/dp
             res = (15.*res)/(dp*dp)
-            # print('f()',res)
             return res
             
         def g(phis,dphi):
             res = 0.5*(1.+(sin(phis)**2-cos(phis)**2)*f(2.*dphi))
-            # print('g()',res)
             return res
         
         Phis          = rf_gap.phis

@@ -121,25 +121,25 @@ def display1(*args):
     ape_plot  = args[4]
     #-------------------- twiss functions
     z    = [x[0] for x in sigma_fun]  # Ordinate
-    bx   = [x[1] for x in sigma_fun]  # envelope (sigma-x)
-    by   = [x[2] for x in sigma_fun]  # envelope (sigma-y)
+    bx   = [x[1]*1.e3 for x in sigma_fun]  # envelope (sigma-x)
+    by   = [x[2]*1.e3 for x in sigma_fun]  # envelope (sigma-y)
     zero = [0.   for x in sigma_fun]  # zero line
     #-------------------- trajectories
     tz  = [x[0] for x in cos_like]   # Ordinate
-    cx  = [x[1] for x in cos_like]   # cos-like-x
-    cy  = [x[3] for x in cos_like]   # cos-like-y
+    cx  = [x[1]*1.e3 for x in cos_like]   # cos-like-x
+    cy  = [x[3]*1.e3 for x in cos_like]   # cos-like-y
     cz  = [x[5] for x in cos_like]   # cos-like-z
     cdw = [x[6] for x in cos_like]   # cos-like-dw/w
-    sx  = [x[1] for x in sin_like]   # sin-like-x
-    sy  = [x[3] for x in sin_like]   # sin-like-x
+    sx  = [x[1]*1.e3 for x in sin_like]   # sin-like-x
+    sy  = [x[3]*1.e3 for x in sin_like]   # sin-like-x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
     stop_viseo = 2000                  # stop viseo plot after so many points
     vis_abszisse = [x[0] for x in lat_plot]
     vis_ordinate = [x[1] for x in lat_plot]
-    ape_ordinate = [x[0] for x in ape_plot]
-    ape_abszisse = [x[1] for x in ape_plot]
+    ape_abszisse = [x[0] for x in ape_plot]
+    ape_ordinate = [x[1]*1.e3 for x in ape_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
     #-------------------- figure frame
     width=14; height=7.6
@@ -148,9 +148,9 @@ def display1(*args):
     #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
-    plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plt.plot(tz,cx,label='C [m]',color='blue',linestyle=':')
-    plt.plot(tz,sx,label='S [m]',color='red' ,linestyle=':')
+    plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
+    plt.plot(tz,cx,label='C [mm]',color='blue',linestyle=':')
+    plt.plot(tz,sx,label='S [mm]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_ordinate]
@@ -159,16 +159,18 @@ def display1(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
-        plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
-        bx = [i*PARAMS['n_sigma'] for i in bx]
-        plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green',linestyle=':')
+        plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
+        N = PARAMS['n_sigma']
+        bx = [i*N for i in bx]
+        label = F'{N:1}$\sigma$ [mm]'
+        plt.plot(z,bx ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- transverse Y tracks
     splot=plt.subplot(312)
     splot.set_title('transverse y')
-    plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plt.plot(tz,cy,label='C [m]',color='blue',linestyle=':')
-    plt.plot(tz,sy,label='S [m]',color='red' ,linestyle=':')
+    plt.plot(z,by ,label=r'$\sigma$ [mm]',color='green')
+    plt.plot(tz,cy,label='C [mm]',color='blue',linestyle=':')
+    plt.plot(tz,sy,label='S [mm]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]
@@ -177,9 +179,10 @@ def display1(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
-        plt.plot(ape_ordinate,ape_abszisse,label='',color='black',marker='.',markersize=1.6,linestyle='')
-        by = [i*PARAMS['n_sigma'] for i in by]
-        plt.plot(z,by ,label=r'$\sigma$ [m]',color='green',linestyle=':')
+        plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
+        N = PARAMS['n_sigma']
+        by = [i*N for i in by]
+        plt.plot(z,by ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
     #-------------------- longitudinal tracks dPhi, dW/W
     # ax_l = left abszisse
