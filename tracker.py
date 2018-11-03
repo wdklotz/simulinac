@@ -459,11 +459,11 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1500
+    options['particles_per_bunch'] = 10000
     options['show']                = True
-    options['save']                = False
+    options['save']                = True
     options['skip']                = 1
-    options['losses']              = True
+    options['losses']              = False
 
     # start the run
     tracker(options)

@@ -304,7 +304,7 @@ class Lattice(object):
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        bz,az,gz,epsz = (1.,0.,1.,1.)   # dummies
+        bz,az,gz,epsz = PARAMS['twiss_z_i']()
         twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
         # twiss parameters as function of distance s
         beta_fun = []
@@ -337,13 +337,7 @@ class Lattice(object):
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        # check for acceleration
-        if FLAGS['dWf']  == 0:
-            # dummy numbers if no acceleration
-            bz,az,gz,epsz = (1.,0.,1.,1.)
-        else:
-            # values from beam initials
-            bz,az,gz,epsz = PARAMS['twiss_z_i']()
+        bz,az,gz,epsz = PARAMS['twiss_z_i']()
         #todo: check initial values
         twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
         sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice

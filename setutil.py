@@ -310,8 +310,7 @@ def waccept(node):
     IN
         node: the 1st rf-gap at the linac entrance
     """
-    dWf = FLAGS['dWf']
-    if node is not None and dWf == 1:
+    if node is not None and FLAGS['dWf'] == 1:
         emitw_i   = PARAMS['emitw_i']    # [rad]
         E0T       = node.EzAvg*node.tr   # [MV/m]
         particle  = node.particle
@@ -417,22 +416,18 @@ def waccept(node):
         PARAMS['twiss_z_i'] = twz
 
     else:
-        # no acceleration
+        # assume no acceleration
         FLAGS['dWf'] = 0
         res = {}
-        # now we can calculate the Twiss objects at injection
-        # alfaw = 0. # always for longitudinal
+        # we can calculate the Twiss objects at injection ...
         twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
         twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        # dummies
-        tww = Twiss(1.,0.,1.)
-        twz = Twiss(1.,0.,1.)
+        # ... and use dummies
+        tww = twz = Twiss(1.,0.,1.)
         PARAMS['twiss_x_i'] = twx
         PARAMS['twiss_y_i'] = twy
-        # uncommented next two produce error when used w/o acceleration
-        # PARAMS['twiss_w_i'] = tww
-        # PARAMS['twiss_z_i'] = twz
-        pass
+        PARAMS['twiss_w_i'] = tww
+        PARAMS['twiss_z_i'] = twz
 
     return res
     
