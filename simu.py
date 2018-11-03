@@ -27,6 +27,7 @@ This file is part of the SIMULINAC code
 #todo: sigma R-formalism for longitudinal as well?
 #todo: C.K.Allen's matrices which are XAL as well?
 #todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
+#todo: CHECK dyn again. Why does particle energy get negative at LEwork_B?
 import sys
 import os
 # import subprocess

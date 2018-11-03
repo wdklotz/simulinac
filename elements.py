@@ -171,25 +171,25 @@ class _Node(DictObject, object):
 
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions through the lattice """
-        # m11  = self.matrix[0, 0];         m12  = self.matrix[0, 1]
-        # m21  = self.matrix[1, 0];         m22  = self.matrix[1, 1]
-        # n11  = self.matrix[2, 2];         n12  = self.matrix[2, 3]
-        # n21  = self.matrix[3, 2];         n22  = self.matrix[3, 3]
         m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
         m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
         
         n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
         n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
+
+        o11  = self.matrix[ZKOO, ZKOO];   o12  = self.matrix[ZKOO, ZPKOO]
+        o21  = self.matrix[ZPKOO, ZKOO];  o22  = self.matrix[ZPKOO, ZPKOO]
+
         m_beta  =  NP.array([
-            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,     0.,    0.],
-            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,     0.,    0.],
-            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,     0.,    0.],
-            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,     0.,    0.],
-            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,     0.,    0.],
-            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,     0.,    0.],
-            [0.,        0.,                0.,         0.,        0.,               0.,         1.,     0.,    0.],
-            [0.,        0.,                0.,         0.,        0.,               0.,         0.,     1.,    0.],
-            [0.,        0.,                0.,         0.,        0.,               0.,         0.,     0.,    1.]
+            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
+            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
+            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
+            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
+            [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
+            [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
+            [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
             ])
         return m_beta
 

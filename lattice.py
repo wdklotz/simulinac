@@ -279,7 +279,9 @@ class Lattice(object):
         def envelopes(function, steps = 10):
             """ calc. envelopes using function """
             beta_fun  = function(steps = steps)
-            sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*PARAMS['emitx_i']),sqrt(x[Ktw.by]*PARAMS['emity_i'])) for x in beta_fun]
+            b,a,g,epsx = PARAMS['twiss_x_i']()
+            b,a,g,epsy = PARAMS['twiss_y_i']()
+            sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
             return sigma_fun
 
         if FLAGS['sigma']:
@@ -306,7 +308,7 @@ class Lattice(object):
         twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
         # twiss parameters as function of distance s
         beta_fun = []
-        for node in self.seq:
+        for node in self.seq:     # loop nodes
             # twiss ftn's for a single node
             ftn = node.twiss_functions(steps = steps, twv = twv0) 
             # prepare plot list of ftn's
@@ -314,7 +316,7 @@ class Lattice(object):
                 flist = v.tolist()
                 flist.append(s)
                 beta_fun.append(flist)
-            twv0 = v   # loop back
+            twv0 = v              # loop back nodes
 
             # aperture check
             if FLAGS['useaper']:
@@ -343,11 +345,11 @@ class Lattice(object):
             # values from beam initials
             bz,az,gz,epsz = PARAMS['twiss_z_i']()
         #todo: check initial values
-        twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector
-        sg0      = Sigma(twv0,epsx,epsy,epsz)
+        twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
+        sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = []
-        for node in self.seq:
+        for node in self.seq: # loop nodes
             # sigma-matrices for a single node
             sigmas = node.sigma_beam(steps = steps, sg = sg0) 
             # prep plot list of ftn's
@@ -356,7 +358,7 @@ class Lattice(object):
                 flist = v.tolist()
                 flist.append(s)
                 sigma_fun.append(flist)
-            sg0 = sg        # loop back
+            sg0 = sg          # loop back nodes
 
             # aperture check
             if FLAGS['useaper']:
