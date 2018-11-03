@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
-#.................................QDL.........................................................
+#..........................................................................................
 # Input file for FODO linac simulator
 # Input file follows YAML syntax (http:\\http://yaml.org/)
 #
@@ -22,7 +22,7 @@
 #   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 #..........................................................................................
-## RUN configurationgenerator
+## RUN configuration
 
 flags:
     # - accON:        False           # {True} acceleration on/off flag
@@ -107,7 +107,7 @@ elements:
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - mapping:   t3d         # Trace 3D linear map model
         # - mapping:   simple      # Shishlo/Holmes linear map model
-        # - mapping:   base        # Shishlo/Holmes base map model
+        - mapping:   base        # Shishlo/Holmes base map model
         # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *LE          # is part of section

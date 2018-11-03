@@ -30,54 +30,48 @@ def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
-DEBUG_MODULE = DEBUG_OFF
 
 class Sigma(object):
     """ Utility class for handling the sigma-matrix """
     def __init__(self, twv0, epsx, epsy, epsz):
         self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
-        self._emitx = epsx
-        self._emity = epsy
-        self._emitz = epsz
-        self._beam(twv0)
-        
-    def _beam(self,twv0):
+        self.emitx = epsx
+        self.emity = epsy
+        self.emitz = epsz
         """ calc sigma-matrix from twiss-parameters """
-        self.matrix[0,0] = self._emitx*twv0[Ktw.bx]
-        self.matrix[2,2] = self._emity*twv0[Ktw.by]
-        self.matrix[4,4] = self._emitz*twv0[Ktw.bz]
+        self.matrix[0,0] = self.emitx*twv0[Ktw.bx]
+        self.matrix[2,2] = self.emity*twv0[Ktw.by]
+        self.matrix[4,4] = self.emitz*twv0[Ktw.bz]
 
-        self.matrix[1,1] = self._emitx*twv0[Ktw.gx]
-        self.matrix[3,3] = self._emity*twv0[Ktw.gy]
-        self.matrix[5,5] = self._emitz*twv0[Ktw.gz]
+        self.matrix[1,1] = self.emitx*twv0[Ktw.gx]
+        self.matrix[3,3] = self.emity*twv0[Ktw.gy]
+        self.matrix[5,5] = self.emitz*twv0[Ktw.gz]
         
-        self.matrix[0,1] = self.matrix[1,0] =  -self._emitx*twv0[Ktw.ax]
-        self.matrix[2,3] = self.matrix[3,2] =  -self._emity*twv0[Ktw.ay]
-        self.matrix[4,5] = self.matrix[5,4] =  -self._emitz*twv0[Ktw.az]
+        self.matrix[0,1] = self.matrix[1,0] =  -self.emitx*twv0[Ktw.ax]
+        self.matrix[2,3] = self.matrix[3,2] =  -self.emity*twv0[Ktw.ay]
+        self.matrix[4,5] = self.matrix[5,4] =  -self.emitz*twv0[Ktw.az]
     
     def twiss(self):
         """ calc twiss-parameters from sigma-matrix """
-        matrix = self.matrix
-        bx  =  matrix[0,0]/self._emitx
-        by  =  matrix[2,2]/self._emity
-        bz  =  matrix[4,4]/self._emitz
-        gx  =  matrix[1,1]/self._emitx
-        gy  =  matrix[3,3]/self._emity
-        gz  =  matrix[5,5]/self._emitz
-        ax  = -matrix[0,1]/self._emitx
-        ay  = -matrix[2,3]/self._emity
-        az  = -matrix[4,5]/self._emitz
+        bx  =  self.matrix[0,0]/self.emitx
+        by  =  self.matrix[2,2]/self.emity
+        bz  =  self.matrix[4,4]/self.emitz
+        gx  =  self.matrix[1,1]/self.emitx
+        gy  =  self.matrix[3,3]/self.emity
+        gz  =  self.matrix[5,5]/self.emitz
+        ax  = -self.matrix[0,1]/self.emitx
+        ay  = -self.matrix[2,3]/self.emity
+        az  = -self.matrix[4,5]/self.emitz
         return NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
     
     def sigv(self):
         """ calc envelopes from sigma-matrix """
-        matrix = self.matrix
-        sgx   = sqrt(matrix[0,0])   # sigmax  = <x*x>**1/2   [m]
-        sgxp  = sqrt(matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
-        sgy   = sqrt(matrix[2,2])
-        sgyp  = sqrt(matrix[3,3])
-        sgz   = sqrt(matrix[4,4])
-        sgzp  = sqrt(matrix[5,5])
+        sgx   = sqrt(self.matrix[0,0])   # sigmax  = <x*x>**1/2   [m]
+        sgxp  = sqrt(self.matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
+        sgy   = sqrt(self.matrix[2,2])
+        sgyp  = sqrt(self.matrix[3,3])
+        sgz   = sqrt(self.matrix[4,4])
+        sgzp  = sqrt(self.matrix[5,5])
         return NP.array([sgx,sgxp,sgy,sgyp,sgz,sgzp])
 
     def string(self):
@@ -168,14 +162,17 @@ class Sigma(object):
 def test0():
     print('-----------------------------Test0--')
     PARAMS['emitz_i'] = 0.0     # use this for test
-    bx       = PARAMS['betax_i']
-    ax       = PARAMS['alfax_i']
+    bx       = 1.
+    ax       = 0.
     gx       = (1+ax**2)/bx
-    by       = PARAMS['betay_i']
-    ay       = PARAMS['alfay_i']
+    by       = 1.
+    ay       = 0.
     gy       = (1+ay**2)/bx
-    twv0     = NP.array([bx,ax,gx,by,ay,gy])
-    sg0      = Sigma(twv0)
+    bz       = 1.
+    az       = 0.
+    gz       = (1+ay**2)/bx
+    twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+    sg0      = Sigma(twv0,1.,1.,1.)
     print(sg0.string())
 def test1():
     from elements import RFG
@@ -184,16 +181,19 @@ def test1():
     particle = Proton(tkin=2.)
     R = RFG(particle=particle)
 
-    bx       = PARAMS['betax_i']
-    ax       = PARAMS['alfax_i']
+    bx       = 1.
+    ax       = 0.
     gx       = (1+ax**2)/bx
-    by       = PARAMS['betay_i']
-    ay       = PARAMS['alfay_i']
+    by       = 1.
+    ay       = 0.
     gy       = (1+ay**2)/bx
-    twv0     = NP.array([bx,ax,gx,by,ay,gy])
-    sigma_i  = Sigma(twv0)
+    bz       = 1.
+    az       = 0.
+    gz       = (1+ay**2)/bx
+    twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+    sigma_i  = Sigma(twv0,1.,1.,1.)
     s1 = sigma_i.matrix
-    sigma_f = sigma_i.RSRt(R)   ## apply map to sigma
+    sigma_f = sigma_i.RSRT(R)   ## apply map to sigma
     s2 = sigma_f.matrix
     DEBUG('{sigma}\n',mxprnt(s1.A))
     DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2.A))
@@ -204,6 +204,6 @@ def test1():
     DEBUG('{sigma_f}_corrected minus {sigma_f}_uncorrected\n',mxprnt((s3-s2).A))
 # main ----------
 if __name__ == '__main__':
-    test0()    
     DEBUG_MODULE = DEBUG_ON
+    test0()    
     test1()
