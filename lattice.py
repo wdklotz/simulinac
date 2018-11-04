@@ -25,7 +25,7 @@ from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Twiss
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Ktp, Twiss
 import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
@@ -274,6 +274,41 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
+    def env_with_twiss_functions(self,steps=1):
+        R_matrix = NP.eye(ELM.MDIM)
+        bx,ax,gx,epsx = PARAMS['twiss_x_i']()
+        by,ay,gy,epsy = PARAMS['twiss_y_i']()
+        bz,az,gz,epsz = PARAMS['twiss_z_i']()
+        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        beta_fun = [list(twv0)+[0]]
+        B_matrix = NP.eye(9)
+        for node in iter(self.seq):
+            # R_matrix = NP.dot(node.matrix,R_matrix)
+            cx  = node.matrix[Ktp.x ,Ktp.x];    sx  = node.matrix[Ktp.x ,Ktp.xp]
+            cxp = node.matrix[Ktp.xp,Ktp.x];    sxp = node.matrix[Ktp.xp,Ktp.xp]
+            cy  = node.matrix[Ktp.y ,Ktp.y];    sy  = node.matrix[Ktp.y ,Ktp.yp]
+            cyp = node.matrix[Ktp.yp,Ktp.y];    syp = node.matrix[Ktp.yp,Ktp.yp]
+            cz  = node.matrix[Ktp.z ,Ktp.z];    sz  = node.matrix[Ktp.z ,Ktp.zp]
+            czp = node.matrix[Ktp.zp,Ktp.z];    szp = node.matrix[Ktp.zp,Ktp.zp]
+
+            beta_matrix = NP.eye(9)
+            beta_matrix[0,0] = cx*2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx*2
+            beta_matrix[1,0] = -cx*cxp; beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
+            beta_matrix[2,0] = cxp*2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp*2
+
+            beta_matrix[3,3] = cy*2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy*2
+            beta_matrix[4,3] = -cy*cyp; beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
+            beta_matrix[5,3] = cyp*2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp*2
+            
+            B_matrix = NP.dot(beta_matrix,B_matrix)
+            twv = NP.dot(B_matrix,twv0)
+            print(list(twv))
+            position = node.position
+            s = position[2]
+            beta_fun.append(list(twv)+[s])
+            pass
+        return beta_fun
+        
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
         def envelopes(function, steps = 10):
@@ -281,6 +316,8 @@ class Lattice(object):
             beta_fun  = function(steps = steps)
             b,a,g,epsx = PARAMS['twiss_x_i']()
             b,a,g,epsy = PARAMS['twiss_y_i']()
+            for x in beta_fun:
+                print(x[Ktw.bx])
             sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
             return sigma_fun
 
@@ -289,7 +326,8 @@ class Lattice(object):
             function = self.sigma_functions # use sigma-matrix
         elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
-            function = self.twiss_functions # use beta-matrix
+            # function = self.twiss_functions # use beta-matrix
+            function = self.env_with_twiss_functions # use beta-matrix
 
         if not FLAGS['KVout']: 
             print(mess)
