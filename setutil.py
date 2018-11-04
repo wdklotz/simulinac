@@ -428,6 +428,11 @@ def waccept(node):
         PARAMS['twiss_y_i'] = twy
         PARAMS['twiss_w_i'] = tww
         PARAMS['twiss_z_i'] = twz
+        
+    PARAMS['twiss_x_i()'] = twx()
+    PARAMS['twiss_xyi()'] = twy()
+    PARAMS['twiss_w_i()'] = tww()
+    PARAMS['twiss_z_i()'] = twz()
 
     return res
     

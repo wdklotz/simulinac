@@ -368,7 +368,6 @@ def factory(input_file):
         latticeList=[]
         for segSubList in lattice_def:
             nsuper = segSubList[0]
-            PARAMS['nsuper'] = nsuper
             del segSubList[0]              #pull nsuper off
             DEBUG_MODULE('segSubList in expand_reduce()',segSubList)
             for i in range(nsuper):        #expand nsuper times
