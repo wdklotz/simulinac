@@ -97,7 +97,7 @@ class _DYN_G(object):
             # configure slices
             self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
-            # update linear Node matrix with this deltaW
+            # UPDATE linear matrix with this deltaW
             self.matrix[EKOO, DEKOO] = self.deltaW
 
     def map(self,i_track):

@@ -94,7 +94,7 @@ class _TTF_G(object):
             # slice energy dependence
             self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
-            # update linear Node matrix with this deltaW
+            # UPDATE linear matrix with this deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW
             # for test0()
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
