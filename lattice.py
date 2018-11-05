@@ -274,8 +274,8 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
-    def env_with_twiss_functions(self,steps=1):
-        R_matrix = NP.eye(ELM.MDIM)
+    def twiss_envelopes(self,steps=1):
+        # R_matrix = NP.eye(ELM.MDIM)
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
@@ -292,21 +292,34 @@ class Lattice(object):
             czp = node.matrix[Ktp.zp,Ktp.z];    szp = node.matrix[Ktp.zp,Ktp.zp]
 
             beta_matrix = NP.eye(9)
-            beta_matrix[0,0] = cx*2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx*2
-            beta_matrix[1,0] = -cx*cxp; beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
-            beta_matrix[2,0] = cxp*2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp*2
+            beta_matrix[0,0] = cx**2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx**2
+            beta_matrix[1,0] = -cx*cxp;  beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
+            beta_matrix[2,0] = cxp**2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp**2
 
-            beta_matrix[3,3] = cy*2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy*2
-            beta_matrix[4,3] = -cy*cyp; beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
-            beta_matrix[5,3] = cyp*2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp*2
+            beta_matrix[3,3] = cy**2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy**2
+            beta_matrix[4,3] = -cy*cyp;  beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
+            beta_matrix[5,3] = cyp**2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp**2
             
             B_matrix = NP.dot(beta_matrix,B_matrix)
             twv = NP.dot(B_matrix,twv0)
-            print(list(twv))
-            position = node.position
-            s = position[2]
-            beta_fun.append(list(twv)+[s])
+            si,sm,sf = node.position
+            beta_fun.append(list(twv)+[sf])
+            bx = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
+            by = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
+            sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
+            node['sigxy'] = sigxy
             pass
+            # aperture check
+            if FLAGS['useaper']:
+                n_sigma = PARAMS['n_sigma']
+                if node.aperture != None:
+                    aperture = node.aperture
+                    sigx, sigxp, sigy, sigyp = sigxy
+                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
+                        warnings.showwarning(
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
+                            UserWarning,'lattice.py',
+                            'twiss_functions()')
         return beta_fun
         
     def sigmas(self,steps = 10):
@@ -316,61 +329,61 @@ class Lattice(object):
             beta_fun  = function(steps = steps)
             b,a,g,epsx = PARAMS['twiss_x_i']()
             b,a,g,epsy = PARAMS['twiss_y_i']()
-            for x in beta_fun:
-                print(x[Ktw.bx])
+            # for x in beta_fun:
+            #     print(x[Ktw.bx])
             sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
             return sigma_fun
 
         if FLAGS['sigma']:
             mess = 'CALCULATE SIGMA ENVELOPES'
-            function = self.sigma_functions # use sigma-matrix
+            function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
             # function = self.twiss_functions # use beta-matrix
-            function = self.env_with_twiss_functions # use beta-matrix
+            function = self.twiss_envelopes # use beta-matrix
 
         if not FLAGS['KVout']: 
             print(mess)
             sigma_fun = envelopes(function, steps = steps)
         return sigma_fun
 
-    def twiss_functions(self,steps = 1):
-        """ 
-          track twiss functions with beta-matrix through lattice
-          steps = 1 (default): elements will not be sliced
-        """
-        # initials
-        bx,ax,gx,epsx = PARAMS['twiss_x_i']()
-        by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
-        # twiss parameters as function of distance s
-        beta_fun = []
-        for node in self.seq:     # loop nodes
-            # twiss ftn's for a single node
-            ftn = node.twiss_functions(steps = steps, twv = twv0) 
-            # prepare plot list of ftn's
-            for v,s in ftn:
-                flist = v.tolist()
-                flist.append(s)
-                beta_fun.append(flist)
-            twv0 = v              # loop back nodes
+    # def twiss_functions(self,steps = 1):
+    #     """ 
+    #       track twiss functions with beta-matrix through lattice
+    #       steps = 1 (default): elements will not be sliced
+    #     """
+    #     # initials
+    #     bx,ax,gx,epsx = PARAMS['twiss_x_i']()
+    #     by,ay,gy,epsy = PARAMS['twiss_y_i']()
+    #     bz,az,gz,epsz = PARAMS['twiss_z_i']()
+    #     twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+    #     # twiss parameters as function of distance s
+    #     beta_fun = []
+    #     for node in self.seq:     # loop nodes
+    #         # twiss ftn's for a single node
+    #         ftn = node.twiss_functions(steps = steps, twv = twv0) 
+    #         # prepare plot list of ftn's
+    #         for v,s in ftn:
+    #             flist = v.tolist()
+    #             flist.append(s)
+    #             beta_fun.append(flist)
+    #         twv0 = v              # loop back nodes
 
-            # aperture check
-            if FLAGS['useaper']:
-                n_sigma = PARAMS['n_sigma']
-                if node.aperture != None:
-                    aperture = node.aperture
-                    sigx, sigxp, sigy, sigyp = node['sigxy']
-                    si,sm,sf                 = node.position
-                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
-                        warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
-                            UserWarning,'lattice.py',
-                            'twiss_functions()')
-        return beta_fun
+    #           # aperture check
+    #         if FLAGS['useaper']:
+    #             n_sigma = PARAMS['n_sigma']
+    #             if node.aperture != None:
+    #                 aperture = node.aperture
+    #                 sigx, sigxp, sigy, sigyp = node['sigxy']
+    #                 si,sm,sf                 = node.position
+    #                 if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
+    #                     warnings.showwarning(
+    #                         '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
+    #                         UserWarning,'lattice.py',
+    #                         'twiss_functions()')
+    #     return beta_fun
 
-    def sigma_functions(self, steps = 1):
+    def sigma_envelopes(self, steps = 1):
         """ track the sigma-matrix through the lattice and extract twiss functions """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()

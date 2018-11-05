@@ -175,77 +175,77 @@ class _Node(DictObject, object):
         if mr != None: slices += [mr]
         return slices
 
-    def beta_matrix(self):
-        """ The 9x9 matrix to track twiss functions through the lattice """
-        m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
-        m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
-        
-        n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
-        n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
+    # def beta_matrix(self):
+    #     """ The 9x9 matrix to track twiss functions through the lattice """
+        # m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
+        # m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
+        # 
+        # n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
+        # n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
 
-        o11  = self.matrix[ZKOO, ZKOO];   o12  = self.matrix[ZKOO, ZPKOO]
-        o21  = self.matrix[ZPKOO, ZKOO];  o22  = self.matrix[ZPKOO, ZPKOO]
+        # o11  = self.matrix[ZKOO, ZKOO];   o12  = self.matrix[ZKOO, ZPKOO]
+        # o21  = self.matrix[ZPKOO, ZKOO];  o22  = self.matrix[ZPKOO, ZPKOO]
 
-        m_beta  =  NP.array([
-            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
-            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
-            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
-            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
-            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
-            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
-            [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
-            [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
-            [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
-            ])
-        return m_beta
+        # m_beta  =  NP.array([
+        # [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+        # [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+        # [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
+        # [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
+        # [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
+        # [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
+        # [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
+        # [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
+        # [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
+        # ])
+        # return m_beta
 
-    def twiss_functions(self, steps = 1, twv = None):
-        """
-        track the twiss functions through a node
-            twiss vector: twv = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
-        """            
-        si   = self.position[0]     # entrance
-        functions = [(twv,si)]
-        if self.length == 0.:
-            pass
-        elif steps == 1:
-            sf = self.position[2]
-            m_beta = self.beta_matrix()
-            v = NP.dot(m_beta,twv)
-            functions.append((v,sf))  # vector at exit
-        elif steps > 1:
-            s = si
-            slices = self.make_slices(anz = steps)
-            for slice in slices: # loop slices
-                m_beta = slice.beta_matrix()
-                v = NP.dot(m_beta,twv)
-                s += slice.length
-                functions.append((v,s))  # vector at slices
-                twv = v
-        else:
-            print('something went wrong with steps in  "_Node.twiss_functions()"')
-            sys.exit(1)
-        # averages
-        av = []
-        for f,s in functions:
-            v = f.tolist()
-            av.append(v)
-        avarr = NP.array(av)
-        avm = NP.mean(avarr,axis=0)
-        # average twiss-vector in the middle
-        sm = self.position[1]
-        twiss = (avm,sm)
-        self['twiss'] = twiss
-        ax = avm[Ktw.ax]
-        bx = avm[Ktw.bx]
-        ay = avm[Ktw.ay]
-        by = avm[Ktw.by]
-        emix = PARAMS['emitx_i']
-        emiy = PARAMS['emity_i']
-        # avarage twiss-sigmas in the middle
-        sigxy = (*sigmas(ax,bx,emix),*sigmas(ay,by,emiy))
-        self['sigxy'] = sigxy
-        return functions
+    # def twiss_functions(self, steps = 1, twv = None):
+    #     """
+    #     track the twiss functions through a node
+    #         twiss vector: twv = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
+    #     """            
+    #     si   = self.position[0]     # entrance
+    #     functions = [(twv,si)]
+    #     if self.length == 0.:
+    #         pass
+    #     elif steps == 1:
+    #         sf = self.position[2]
+    #         m_beta = self.beta_matrix()
+    #         v = NP.dot(m_beta,twv)
+    #         functions.append((v,sf))  # vector at exit
+    #     elif steps > 1:
+    #         s = si
+    #         slices = self.make_slices(anz = steps)
+    #         for slice in slices: # loop slices
+    #             m_beta = slice.beta_matrix()
+    #             v = NP.dot(m_beta,twv)
+    #             s += slice.length
+    #             functions.append((v,s))  # vector at slices
+    #             twv = v
+    #     else:
+    #         print('something went wrong with steps in  "_Node.twiss_functions()"')
+    #         sys.exit(1)
+    #     # averages
+    #     av = []
+    #     for f,s in functions:
+    #         v = f.tolist()
+    #         av.append(v)
+    #     avarr = NP.array(av)
+    #     avm = NP.mean(avarr,axis=0)
+    #     # average twiss-vector in the middle
+    #     sm = self.position[1]
+    #     twiss = (avm,sm)
+    #     self['twiss'] = twiss
+    #     ax = avm[Ktw.ax]
+    #     bx = avm[Ktw.bx]
+    #     ay = avm[Ktw.ay]
+    #     by = avm[Ktw.by]
+    #     emix = PARAMS['emitx_i']
+    #     emiy = PARAMS['emity_i']
+    #     # avarage twiss-sigmas in the middle
+    #     sigxy = (*sigmas(ax,bx,emix),*sigmas(ay,by,emiy))
+    #     self['sigxy'] = sigxy
+    #     return functions
 
     def sigma_beam(self,steps = 1, sg = None):
         """ 
