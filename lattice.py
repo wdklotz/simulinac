@@ -274,6 +274,7 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
+#todo: smooth function by using the slicing - which is here ignored
     def twiss_envelopes(self,steps=1):
         # R_matrix = NP.eye(ELM.MDIM)
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
@@ -346,42 +347,6 @@ class Lattice(object):
             print(mess)
             sigma_fun = envelopes(function, steps = steps)
         return sigma_fun
-
-    # def twiss_functions(self,steps = 1):
-    #     """ 
-    #       track twiss functions with beta-matrix through lattice
-    #       steps = 1 (default): elements will not be sliced
-    #     """
-    #     # initials
-    #     bx,ax,gx,epsx = PARAMS['twiss_x_i']()
-    #     by,ay,gy,epsy = PARAMS['twiss_y_i']()
-    #     bz,az,gz,epsz = PARAMS['twiss_z_i']()
-    #     twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
-    #     # twiss parameters as function of distance s
-    #     beta_fun = []
-    #     for node in self.seq:     # loop nodes
-    #         # twiss ftn's for a single node
-    #         ftn = node.twiss_functions(steps = steps, twv = twv0) 
-    #         # prepare plot list of ftn's
-    #         for v,s in ftn:
-    #             flist = v.tolist()
-    #             flist.append(s)
-    #             beta_fun.append(flist)
-    #         twv0 = v              # loop back nodes
-
-    #           # aperture check
-    #         if FLAGS['useaper']:
-    #             n_sigma = PARAMS['n_sigma']
-    #             if node.aperture != None:
-    #                 aperture = node.aperture
-    #                 sigx, sigxp, sigy, sigyp = node['sigxy']
-    #                 si,sm,sf                 = node.position
-    #                 if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
-    #                     warnings.showwarning(
-    #                         '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
-    #                         UserWarning,'lattice.py',
-    #                         'twiss_functions()')
-    #     return beta_fun
 
     def sigma_envelopes(self, steps = 1):
         """ track the sigma-matrix through the lattice and extract twiss functions """
@@ -709,9 +674,10 @@ def test1():
     full_cell = lattice.cell(closed=True)
     betax,a,g,e = PARAMS['twiss_x_i']()
     betay,a,g,e = PARAMS['twiss_y_i']()
+    PARAMS['twiss_z_i'] = Twiss(1.,0.,1.)
     lattice.symplecticity()
     # twiss functions
-    beta_fun = lattice.twiss_functions(steps=5)
+    beta_fun = lattice.twiss_envelopes(steps=5)
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
