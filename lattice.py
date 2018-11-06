@@ -274,48 +274,54 @@ class Lattice(object):
             element = copy(element) if element in self.seq else element
             self.add_element(element)
 
-#todo: smooth function by using the slicing - which is here ignored
     def twiss_envelopes(self,steps=1):
-        # R_matrix = NP.eye(ELM.MDIM)
+        """
+        Calulate envelopes from initial twiss-vector with beta-matrices
+        """
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
         beta_fun = [list(twv0)+[0]]
-        B_matrix = NP.eye(9)
+        B_matrix = NP.eye(9)                            # cumulated beta-matrix
         for node in iter(self.seq):
-            # R_matrix = NP.dot(node.matrix,R_matrix)
-            cx  = node.matrix[Ktp.x ,Ktp.x];    sx  = node.matrix[Ktp.x ,Ktp.xp]
-            cxp = node.matrix[Ktp.xp,Ktp.x];    sxp = node.matrix[Ktp.xp,Ktp.xp]
-            cy  = node.matrix[Ktp.y ,Ktp.y];    sy  = node.matrix[Ktp.y ,Ktp.yp]
-            cyp = node.matrix[Ktp.yp,Ktp.y];    syp = node.matrix[Ktp.yp,Ktp.yp]
-            cz  = node.matrix[Ktp.z ,Ktp.z];    sz  = node.matrix[Ktp.z ,Ktp.zp]
-            czp = node.matrix[Ktp.zp,Ktp.z];    szp = node.matrix[Ktp.zp,Ktp.zp]
-
-            beta_matrix = NP.eye(9)
-            beta_matrix[0,0] = cx**2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx**2
-            beta_matrix[1,0] = -cx*cxp;  beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
-            beta_matrix[2,0] = cxp**2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp**2
-
-            beta_matrix[3,3] = cy**2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy**2
-            beta_matrix[4,3] = -cy*cyp;  beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
-            beta_matrix[5,3] = cyp**2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp**2
-            
-            B_matrix = NP.dot(beta_matrix,B_matrix)
-            twv = NP.dot(B_matrix,twv0)
-            si,sm,sf = node.position
-            beta_fun.append(list(twv)+[sf])
-            bx = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
-            by = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
-            sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
-            node['sigxy'] = sigxy
-            pass
+            slices = node.make_slices(anz = steps)
+            means = []
+            s,sm,sf = node.position
+            for slice in slices:
+                cx  = slice.matrix[Ktp.x ,Ktp.x];    sx  = slice.matrix[Ktp.x ,Ktp.xp]
+                cxp = slice.matrix[Ktp.xp,Ktp.x];    sxp = slice.matrix[Ktp.xp,Ktp.xp]
+                cy  = slice.matrix[Ktp.y ,Ktp.y];    sy  = slice.matrix[Ktp.y ,Ktp.yp]
+                cyp = slice.matrix[Ktp.yp,Ktp.y];    syp = slice.matrix[Ktp.yp,Ktp.yp]
+                cz  = slice.matrix[Ktp.z ,Ktp.z];    sz  = slice.matrix[Ktp.z ,Ktp.zp]
+                czp = slice.matrix[Ktp.zp,Ktp.z];    szp = slice.matrix[Ktp.zp,Ktp.zp]
+    
+                beta_matrix = NP.eye(9)
+                beta_matrix[0,0] = cx**2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx**2
+                beta_matrix[1,0] = -cx*cxp;  beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
+                beta_matrix[2,0] = cxp**2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp**2
+    
+                beta_matrix[3,3] = cy**2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy**2
+                beta_matrix[4,3] = -cy*cyp;  beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
+                beta_matrix[5,3] = cyp**2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp**2
+                
+                B_matrix = NP.dot(beta_matrix,B_matrix)
+                twv = NP.dot(B_matrix,twv0)             # track twiss-vector
+                s += slice.length
+                beta_fun.append(list(twv)+[s])
+                bx = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
+                by = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
+                sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
+                means.append(sigxy)
+            means = NP.array(means)
+            means = NP.mean(means,axis=0)
+            node['sigxy'] = means                       # each node has its average sigmas
             # aperture check
             if FLAGS['useaper']:
                 n_sigma = PARAMS['n_sigma']
                 if node.aperture != None:
                     aperture = node.aperture
-                    sigx, sigxp, sigy, sigyp = sigxy
+                    sigx, sigxp, sigy, sigyp = node['sigxy']
                     if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
                         warnings.showwarning(
                             '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
