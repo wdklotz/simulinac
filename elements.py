@@ -176,7 +176,7 @@ class _Node(DictObject, object):
         return slices
 
     def beta_matrix(self):
-        """ The 9x9 matrix to track twiss functions through the lattice """
+        """ The 9x9 matrix to track twiss functions from the node's R-matrix """
         m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
         m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
         
@@ -198,54 +198,6 @@ class _Node(DictObject, object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
-
-    # def twiss_functions(self, steps = 1, twv = None):
-    #     """
-    #     track the twiss functions through a node
-    #         twiss vector: twv = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
-    #     """            
-    #     si   = self.position[0]     # entrance
-    #     functions = [(twv,si)]
-    #     if self.length == 0.:
-    #         pass
-    #     elif steps == 1:
-    #         sf = self.position[2]
-    #         m_beta = self.beta_matrix()
-    #         v = NP.dot(m_beta,twv)
-    #         functions.append((v,sf))  # vector at exit
-    #     elif steps > 1:
-    #         s = si
-    #         slices = self.make_slices(anz = steps)
-    #         for slice in slices: # loop slices
-    #             m_beta = slice.beta_matrix()
-    #             v = NP.dot(m_beta,twv)
-    #             s += slice.length
-    #             functions.append((v,s))  # vector at slices
-    #             twv = v
-    #     else:
-    #         print('something went wrong with steps in  "_Node.twiss_functions()"')
-    #         sys.exit(1)
-    #     # averages
-    #     av = []
-    #     for f,s in functions:
-    #         v = f.tolist()
-    #         av.append(v)
-    #     avarr = NP.array(av)
-    #     avm = NP.mean(avarr,axis=0)
-    #     # average twiss-vector in the middle
-    #     sm = self.position[1]
-    #     twiss = (avm,sm)
-    #     self['twiss'] = twiss
-    #     ax = avm[Ktw.ax]
-    #     bx = avm[Ktw.bx]
-    #     ay = avm[Ktw.ay]
-    #     by = avm[Ktw.by]
-    #     emix = PARAMS['emitx_i']
-    #     emiy = PARAMS['emity_i']
-    #     # avarage twiss-sigmas in the middle
-    #     sigxy = (*sigmas(ax,bx,emix),*sigmas(ay,by,emiy))
-    #     self['sigxy'] = sigxy
-    #     return functions
 
     def sigma_beam(self,steps = 1, sg = None):
         """ 
@@ -275,12 +227,10 @@ class _Node(DictObject, object):
         avarr = NP.array(av)
         avm = NP.mean(avarr,axis=0)
         # sgxm, sgym are mean values of sigmas over slices
-        sgxm  = avm[0]
-        sgxpm = avm[1]
-        sgym  = avm[2]
-        sgypm = avm[3]
+        sgxm  = avm[0]; sgxpm = avm[1]
+        sgym  = avm[2]; sgypm = avm[3]
         sigxy = (sgxm,sgxpm,sgym,sgypm)
-        self['sigxy'] = sigxy
+        self['sigxy'] = sigxy                   # each node has its tuple of average sigmas
 
         return sigmas
 

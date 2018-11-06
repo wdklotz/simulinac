@@ -73,7 +73,8 @@ class Lattice(object):
         mcell = ELM.I(label='')   #  chain matrices
         for element in self.seq:
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
-            mcell = element * mcell   # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            mcell = element * mcell   
         mcell.section = '<= full lattice map'
         return mcell.string()
 
@@ -172,10 +173,6 @@ class Lattice(object):
         if closed:
             if not unstable:
                 cell_matrix = self.accel.matrix
-                # m11  = cell_matrix[0,0];         m12  = cell_matrix[0,1]
-                # m21  = cell_matrix[1,0];         m22  = cell_matrix[1,1]
-                # n11  = cell_matrix[2,2];         n12  = cell_matrix[2,3]
-                # n21  = cell_matrix[3,2];         n22  = cell_matrix[3,3]
                 m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
                 m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
                 n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
@@ -289,33 +286,18 @@ class Lattice(object):
             means = []
             s,sm,sf = node.position
             for slice in slices:
-                cx  = slice.matrix[Ktp.x ,Ktp.x];    sx  = slice.matrix[Ktp.x ,Ktp.xp]
-                cxp = slice.matrix[Ktp.xp,Ktp.x];    sxp = slice.matrix[Ktp.xp,Ktp.xp]
-                cy  = slice.matrix[Ktp.y ,Ktp.y];    sy  = slice.matrix[Ktp.y ,Ktp.yp]
-                cyp = slice.matrix[Ktp.yp,Ktp.y];    syp = slice.matrix[Ktp.yp,Ktp.yp]
-                cz  = slice.matrix[Ktp.z ,Ktp.z];    sz  = slice.matrix[Ktp.z ,Ktp.zp]
-                czp = slice.matrix[Ktp.zp,Ktp.z];    szp = slice.matrix[Ktp.zp,Ktp.zp]
-    
-                beta_matrix = NP.eye(9)
-                beta_matrix[0,0] = cx**2;    beta_matrix[0,1] = -2*cx*sx;      beta_matrix[0,2] = sx**2
-                beta_matrix[1,0] = -cx*cxp;  beta_matrix[1,1] = sx*cxp+sxp*cx; beta_matrix[1,2] = -sx*sxp
-                beta_matrix[2,0] = cxp**2;   beta_matrix[2,1] = -2*cxp*sxp;    beta_matrix[2,2] = sxp**2
-    
-                beta_matrix[3,3] = cy**2;    beta_matrix[3,4] = -2*cy*sy;      beta_matrix[3,5] = sy**2
-                beta_matrix[4,3] = -cy*cyp;  beta_matrix[4,4] = sy*cyp+syp*cy; beta_matrix[4,5] = -sy*syp
-                beta_matrix[5,3] = cyp**2;   beta_matrix[5,4] = -2*cyp*syp;    beta_matrix[5,5] = syp**2
-                
-                B_matrix = NP.dot(beta_matrix,B_matrix)
-                twv = NP.dot(B_matrix,twv0)             # track twiss-vector
-                s += slice.length
+                beta_matrix = slice.beta_matrix()
+                B_matrix    = NP.dot(beta_matrix,B_matrix)
+                twv         = NP.dot(B_matrix,twv0)     # track twiss-vector
+                s          += slice.length
                 beta_fun.append(list(twv)+[s])
-                bx = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
-                by = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
+                bx    = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
+                by    = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
                 sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 means.append(sigxy)
             means = NP.array(means)
             means = NP.mean(means,axis=0)
-            node['sigxy'] = means                       # each node has its average sigmas
+            node['sigxy'] = tuple(means)                # each node has its tuple of average sigmas
             # aperture check
             if FLAGS['useaper']:
                 n_sigma = PARAMS['n_sigma']
@@ -336,8 +318,6 @@ class Lattice(object):
             beta_fun  = function(steps = steps)
             b,a,g,epsx = PARAMS['twiss_x_i']()
             b,a,g,epsy = PARAMS['twiss_y_i']()
-            # for x in beta_fun:
-            #     print(x[Ktw.bx])
             sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
             return sigma_fun
 
@@ -346,7 +326,6 @@ class Lattice(object):
             function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:
             mess = 'CALCULATE TWISS ENVELOPES'
-            # function = self.twiss_functions # use beta-matrix
             function = self.twiss_envelopes # use beta-matrix
 
         if not FLAGS['KVout']: 
@@ -355,12 +334,13 @@ class Lattice(object):
         return sigma_fun
 
     def sigma_envelopes(self, steps = 1):
-        """ track the sigma-matrix through the lattice and extract twiss functions """
+        """ 
+        Envelopes and twiss-functions from sigma-matrix mathod
+        """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        #todo: check initial values
         twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
         sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
@@ -393,7 +373,8 @@ class Lattice(object):
     def dispersion(self,steps=10,closed=True):
         """ track the dispersion function """
         traj = []
-        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])    # column vector with MDIM rows, 1 column
+        # column vector with MDIM rows, 1 column
+        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         if closed == True:
             m_cell = self.accel
             m11 = m_cell.matrix[0,0]
@@ -478,7 +459,7 @@ class Lattice(object):
         for element in self.seq:
             particle = element.particle
             gamma = particle.gamma
-            # objprnt(particle,text='cs_traj: '+element.label)         # DEBUG
+            # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
             for i_element in slices:
                 s += i_element.length

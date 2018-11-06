@@ -459,9 +459,9 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 10000
+    options['particles_per_bunch'] = 1000
     options['show']                = True
-    options['save']                = True
+    options['save']                = False
     options['skip']                = 1
     options['losses']              = False
 
