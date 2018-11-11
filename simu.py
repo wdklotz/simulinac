@@ -18,14 +18,14 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#todo: update simu_manual.odt
-#todo: update README.md
+#todo: use normalized emittances !!!
+#todo: results if waccept are global - each node should have its own
+#todo: make new simu_manual.tex, README.md, check conversions.tex
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
-#todo: check conversions.tex for variable names
-#todo: sigma R-formalism for longitudinal as well?
 #todo: C.K.Allen's matrices which are XAL as well?
+#todo: OpenXAL model from Shishlo
 #todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
 #todo: CHECK dyn again. Why does particle energy get negative at LEwork_B?
 import sys

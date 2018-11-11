@@ -18,6 +18,10 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+#todo: stistical analalysis of bunch: position, size, etc ...
+#todo: how to get the hokey stick?
+#todo: check w-acceptance at each node entrance
+#todo: no phase damping - why?
 import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt
@@ -459,9 +463,9 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1000
+    options['particles_per_bunch'] = 1500
     options['show']                = True
-    options['save']                = False
+    options['save']                = True
     options['skip']                = 1
     options['losses']              = False
 

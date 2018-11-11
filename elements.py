@@ -17,13 +17,14 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+#todo: more cavity models?
 import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
 from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEBUG
+from setutil import DEBUG, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
 from TTFG import _TTF_G
@@ -230,7 +231,8 @@ class _Node(DictObject, object):
         sgxm  = avm[0]; sgxpm = avm[1]
         sgym  = avm[2]; sgypm = avm[3]
         sigxy = (sgxm,sgxpm,sgym,sgypm)
-        self['sigxy'] = sigxy                   # each node has its tuple of average sigmas
+        # each node has its tuple of average sigmas     
+        self['sigxy'] = sigxy
 
         return sigmas
 
@@ -433,15 +435,15 @@ class SD(D):
         phi = self.length/rho
         cx = cos(phi) ; sx = sin(phi)
         b = self.particle.beta
-        # x-plane
+        # x,x'-plane
         # m[0, 0] = cx;          m[0, 1] = sx/k;           m[0, 5] = rho*(1.-cx)
         # m[1, 0] = -sx*k;       m[1, 1] = cx;             m[1, 5] = sx
         m[XKOO, XKOO]  = cx;     m[XKOO, XPKOO]   = sx/k;  m[XKOO, ZPKOO]  = rho*(1.-cx)
         m[XPKOO, XKOO] = -sx*k;  m[XPKOO, XPKOO]  = cx;    m[XPKOO, ZPKOO] = sx
-        # y-plane
+        # y,y'-plane
         # m[2, 3] = self.length
         m[YKOO, YPKOO] = self.length
-        # z-plane
+        # z,z'-plane
         # m[4, 0] = -sx;       m[4, 1] = -rho*(1.-cx);          m[4, 5] = rho*sx-self.length*b*b
         m[ZKOO, XKOO] = -sx;   m[ZKOO, XPKOO] = -rho*(1.-cx);   m[ZKOO, ZPKOO] = rho*sx-self.length*b*b
         m[SKOO, LKOO] = self.length     # delta-s
@@ -564,7 +566,7 @@ class GAP(I):
 # Zero length RF gap
 class RFG(I):
     """ 
-    Zero length RF gap-model (wraps several gap-models) 
+    Wrapper to zero length RF gap-models
     """
     def __init__(self,
             EzAvg      = PARAMS['EzAvg'],
@@ -684,59 +686,62 @@ class _PYO_G(object):
         return self.map(i_track)
 
     def simple_map(self, i_track, lamb, particle, qE0L, tr, phis):
-        """ Mapping from position (i) to (f) in linear approx. (A.Shislo 4.1) """
+        """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
         yi        = i_track[YKOO]       # [2]
         ypi       = i_track[YPKOO]      # [3]
-        zi        = i_track[ZKOO]       # [4] z-z0
-        zpi       = i_track[ZPKOO]      # [5] dp/p - (dp/p)0
-        Ti        = i_track[EKOO]       # [6] summe aller delta-T
-        si        = i_track[SKOO]       # [8] summe aller laengen
+        zi        = i_track[ZKOO]       # [4] z
+        zpi       = i_track[ZPKOO]      # [5] Dp/p
+        T         = i_track[EKOO]       # [6] summe aller delta-T
+        S         = i_track[SKOO]       # [8] summe aller laengen
 
-        m0c2       = particle.e0
-        qE0LT      = qE0L*tr
+        m0c2      = particle.e0
+        qE0LT     = qE0L*tr
 
-        Wsi        = particle.tkin
-        betasi     = particle.beta
-        gammasi    = particle.gamma
-        gbsi       = particle.gamma_beta
-        # deltaW energy kick nach Trace3D
-        deltaW     = qE0LT*cos(phis)
+        WIN       = particle.tkin
+        betai     = particle.beta
+        gammai    = particle.gamma
+        gbi       = particle.gamma_beta
+        # deltaW energy kick Trace3D (same as Shishlo)
+        deltaW    = qE0LT*cos(phis)
 
         DEBUG_PYO_G('simple_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,1.,phis))
 
-        DWs        = deltaW
-        Wsf        = Wsi + DWs
-        particlesf = copy(particle)(tkin = Wsf)     # !!!IMPORTANT!!!
-        betasf     = particlesf.beta
-        gammasf    = particlesf.gamma
-        gbsf       = particlesf.gamma_beta
+        DW         = deltaW
+        WOUT       = WIN + DW
+        particlef  = copy(particle)(tkin = WOUT)     # !!!IMPORTANT!!!
+        betaf      = particlef.beta
+        gammaf     = particlef.gamma
+        gbf        = particlef.gamma_beta
 
-        m11 = gbsf/gbsi
+        # the long. 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
+        m11 = gbf/gbi
         m12 = 0.
-        m21 = qE0LT*twopi/(lamb*betasi)*sin(phis)
+        m21 = qE0LT*twopi/(lamb*betai)*sin(phis)
         m22 = 1.
-        condPdT = m0c2*betasi**2*gammasi
-        DWi = condPdT*zpi  # dp/p --> dT
+ 
+        # Dp/p --> DW
+        condPdT = m0c2*betai**2*gammai
+        dwi     = condPdT*zpi  
 
-        # THE MAP (a 2x2 matrix which is always linear!) A.Shishlo/J.Holmes (4.1.6-10)
-        zf  = m11*zi + m12*DWi
-        DWf = m21*zi + m22*DWi
+        # long. (z,DW)
+        zf  = m11*zi + m12*dwi
+        dwf = m21*zi + m22*dwi
 
-        condTdP = 1./(m0c2*betasf**2*gammasf)
-        zfp = DWf*condTdP   # dT --> dp/p
+        # DW --> Dp/p
+        condTdP = 1./(m0c2*betaf**2*gammaf)
+        zfp     = dwf*condTdP
 
-        xf   = xi     # x does not change
-        yf   = yi     # y does not change
-        Tf   = Ti + DWs
-        sf   = si     # because self.length always 0
-        xpf  = gbsi/gbsf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
-        ypf  = gbsi/gbsf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbsi*gbsi*gbsf)) * sin(phis)
+        T  = T + DW
 
-        f_track = NP.array([xf, xpf, yf, ypf, zf, zfp, Tf, 1., sf, 1.])
+        # transverse (x',y')
+        xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
+        ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis)
 
-        # UPDATE linear matrix with this deltaW
+        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
+
+        # UPDATE linear NODE matrix with this deltaW
         self.matrix[EKOO, DEKOO] = deltaW
 
         # for DEBUGGING
@@ -755,7 +760,7 @@ class _PYO_G(object):
         return f_track
 
     def base_map(self, i_track, lamb, particle, qE0L, tr, phis):
-        """ Mapping (i) to (f) in base-RF gap-model approx. (A.Shislo 4.2) """
+        """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -770,7 +775,9 @@ class _PYO_G(object):
         betai  = particle.beta
         gammai = particle.gamma
         gbi    = particle.gamma_beta
-
+        tki    = particle.tkin
+        frq    = PARAMS['lichtgeschwindigkeit']/lamb
+        
         r      = sqrt(x**2+y**2)                      # radial coordinate
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
@@ -780,11 +787,14 @@ class _PYO_G(object):
         DELTAW    = qE0LT*cos(phis)                   # energy kick
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # particle
-        phin   = -z * twopi/(betai*lamb) + phis       # phase (i)
-        deltaW = qE0LT*i0*cos(phin)                   # energy kick
-        win    = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT
-        wout   = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
-        dw     = wout - WOUT                          # d(deltaW)
+        converter = WConverter(tki,freq=frq)
+#       phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
+        phin      = converter.zToDphi(z) + phis          # phase (i)
+        deltaW    = qE0LT*i0*cos(phin)                   # energy kick
+#       win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
+        win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
+        wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
+        dw        = wout - WOUT                          # d(deltaW)
 
         DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
 
@@ -793,8 +803,10 @@ class _PYO_G(object):
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
 
-        z      = betaf/betai*z                        # z (f) (4.2.5) A.Shishlo/J.Holmes
-        zpf    = gammaf/(gammaf+1.) * dw/WOUT         # dW --> dp/p (f)
+        converter = WConverter(WOUT,freq=frq)
+        z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
+#       zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
+        zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
 
         T   = T + DELTAW                              # soll energy summation
 
@@ -808,7 +820,7 @@ class _PYO_G(object):
 
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
-        # UPDATE linear matrix with this deltaW
+        # UPDATE linear NODE matrix with this deltaW
         self.matrix[EKOO, DEKOO] = DELTAW
 
         # for DEBUGGING
@@ -828,10 +840,10 @@ class _PYO_G(object):
 
 # Trace3D RF gap-model
 class _T3D_G(object):
-    """ Trace3D zero length RF gap-model """
+    """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
     def __init__(self, parent):
         def trtf(lamb, gap, beta):
-            """ Transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65) """
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
             x = gap/(beta*lamb)
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
@@ -847,7 +859,7 @@ class _T3D_G(object):
             m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
             m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
             m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-            # UPDATE linear matrix with this deltaW
+            # UPDATE linear NODE matrix with this deltaW
             m[EKOO, DEKOO] = deltaW
             return
 
@@ -858,8 +870,8 @@ class _T3D_G(object):
         gap            = parent.gap
         lamb           = parent.lamb
         beta           = particle.beta
-        tr             = trtf(lamb, gap, beta)       # Panovski
-        deltaW         = EzAvg*gap*tr*cos(phis)      # deltaW energy kick nach Trace3D
+        tr             = trtf(lamb, gap, beta)       # Panofski
+        deltaW         = EzAvg*gap*tr*cos(phis)      # deltaW energy kick Trace3D
         tkin           = particle.tkin
         tk_center      = deltaW*0.5+tkin             # energy in gap center
         part_center    = copy(particle)(tk_center)   # !!!IMPORTANT!!! particle @ gap center
@@ -868,7 +880,7 @@ class _T3D_G(object):
         particlef      = copy(particle)(tkin+deltaW) # !!!IMPORTANT!!! particle @ (f)
         U0             = EzAvg*gap
 
-        # the linear matrix for rf gaps
+        # the linear NODE matrix for rf gaps
         mx(matrix, tr, b, g, particle, particlef, U0, phis, lamb, deltaW)
 
         # the parent delegates reading these properties from here

@@ -269,6 +269,14 @@ class WConverter(object):
         """ Dp2p [] to w=DW/m0c2(a.k.a. Dgamma) [] """
         w = (self.g2-1.)/self.g*Dp2p
         return w # []
+    def Dp2pToW(self,Dp2p):
+        """ Dp2p [] to DW=Dw*m0*c^2 [MeV] """
+        W = self.Dp2pTow(Dp2p)*self.m0c2
+        return W
+    def DWToDp2p(self,DW):
+        """ DW [MeV] to Dp2p [] """
+        Dp2p = self.wToDp2p(DW/self.m0c2)
+        return Dp2p
 
     def emitwToemitz(self,emitw):
         """ emittance[Dphi(x)w] [rad] to emittance[z(x)Dp2p] [m] """

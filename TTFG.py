@@ -94,7 +94,7 @@ class _TTF_G(object):
             # slice energy dependence
             self.deltaW, self.tr = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
-            # UPDATE linear matrix with this deltaW
+            # UPDATE linear NODE matrix with this deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW
             # for test0()
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
@@ -149,7 +149,7 @@ class _TTF_G(object):
         return f_track
 
 class _TTF_Gslice(object):
-    """ PyOrbit's Transition Time Factors RF Gap Model """
+    """ PyOrbit's Transit Time Factor RF-Gap Model """
     def __init__(self, parent, poly, particle):
         self.parent     = parent           # the gap this slice is part off
         self.freq       = parent.freq
@@ -208,8 +208,9 @@ class _TTF_Gslice(object):
         self.Tk      = self._T (self.poly,self.k)
         self.Tkp     = self._Tp(self.poly,self.k)
 
-        c     = PARAMS['lichtgeschwindigkeit']
-        m0c3  = self.particle.e0*c
+        # c     = PARAMS['lichtgeschwindigkeit']
+        m0c2  = self.particle.e0
+        m0c3  = self.particle.m0c3
         omeg  = twopi*self.freq
         i0    = 1.
         i1    = 0.
@@ -229,9 +230,9 @@ class _TTF_Gslice(object):
         DEBUG_SLICE('_TTF_Gslice: {}\n'.format(self),self.__dict__)
         return 
 
-    def wout_minus_win(self, conv, i0, tk, sk, phi):
+    def wout_minus_win(self, fac, i0, tk, sk, phi):
         """Formel 4.3.1 A.Shishlo/J.Holmes"""
-        return conv*i0*(tk*cos(phi)-sk*sin(phi))
+        return fac*i0*(tk*cos(phi)-sk*sin(phi))
 
     def phiout_minus_phiin(self, fac, gamma, r, i0, i1, tk, sk, tkp, skp, phi):
         """Formel 4.3.2 A.Shishlo/J.Holmes"""
@@ -248,48 +249,51 @@ class _TTF_Gslice(object):
         T        = i_track[EKOO]       # [6] summe aller dT
         s        = i_track[SKOO]       # [8] summe aller laengen
 
-        c          = PARAMS['lichtgeschwindigkeit']
+        # c          = PARAMS['lichtgeschwindigkeit']
         m0c2       = self.particle.e0
-        m0c3       = m0c2*c
+        m0c3       = self.particle.m0c3
         omeg       = twopi*self.freq
 
-        be         = self.particle.beta
-        ga         = self.particle.gamma
-        pin        = -z*omeg/(c*be) + self.PHIN       # phase  (i)  ~ (-z)
-        win        = (zp*(ga+1.)/ga+1.)*self.WIN      # energy (i) ~ (zp)
+        # energy parameters from soll
+        betai      = self.particle.beta
+        gammai     = self.particle.gamma
+        gbi        = self.particle.gamma_beta
 
-        # particle   = copy(self.particle)(tkin=win)  # energy parameters from particle
-        particle   = self.particle                    # energy parameters from soll
-        be         = particle.beta
-        ga         = particle.gamma
-        gb         = particle.gamma_beta
-        k          = omeg/(c*be)
-        Tk         = self._T (self.poly,k)
+        pin        = -z*omeg/(c*betai) + self.PHIN            # phase  (i)  ~ (-z)
+        win        = (zp*(gammai+1.)/gammai+1.)*self.WIN      # energy (i)  ~ (z')
+
+        # energy parameters from particle ??
+        # particle   = copy(self.particle)(tkin=win)  
+        # betai      = particle.beta
+        # gammai     = particle.gamma
+        # gbi        = particle.gamma_beta
+
+        k          = omeg/(c*betai)
+        Tk         = self._T(self.poly,k)
         Tkp        = self._Tp(self.poly,k)
-        r          = sqrt(x**2+y**2)                # radial coordinate
-        Kbess      = omeg/(c*gb) * r
-        i0         = I0(Kbess)                      # bessel function
-        i1         = I1(Kbess)                      # bessel function
-        fact       = self.V0*omeg/(m0c3*gb**3)
+        r          = sqrt(x**2+y**2)            # radial coordinate
+        K          = omeg/(c*gbi) * r
+        i0         = I0(K)                      # bessel function I0
+        i1         = I1(K)                      # bessel function I1
+        fact       = self.V0*omeg/(m0c3*gbi**3)
 
-        wowi = self.wout_minus_win(self.V0,i0,Tk,0.,pin) 
-        wout = win + wowi                              # energy (f)
+        womwi = self.wout_minus_win(self.V0,i0,Tk,0.,pin) 
+        wout  = win + womwi                              # energy (f)
 
-        popi = self.phiout_minus_phiin(fact,ga,r,i0,i1,Tk,0.,Tkp,0.,pin)
-        pout = pin + popi                              # phase (f)
+        pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,0.,Tkp,0.,pin)
+        pout  = pin + pompi                              # phase (f)
         
         dp = +(pout-self.PHOUT)    # delta phase  (f)
         dw = +(wout-self.WOUT)     # delta energy (f)
         
-        zf  = -dp*(c*be)/omeg
-        zpf = ga/(ga+1)*dw/self.WOUT
+        zf  = -dp*(c*betai)/omeg
+        zpf = gammai/(gammai+1)*dw/self.WOUT
 
-        # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from particle
         f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from soll
+        # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from particle ??
         gbf        = f_particle.gamma_beta
 
-        fact = self.V0/(m0c2*gb*gbf)*i1
-        gbi = gb
+        fact = self.V0/(m0c2*gbi*gbf)*i1
         if r > 0.:
             xp = gbi/gbf*xp-x/r*fact*Tk*sin(pin)
             yp = gbi/gbf*yp-y/r*fact*Tk*sin(pin)
@@ -297,18 +301,18 @@ class _TTF_Gslice(object):
             xp = gbi/gbf*xp
             yp = gbi/gbf*yp
 
-        T = T + self.deltaW       # sum of deltaW soll
+        T = T + self.deltaW       # add deltaW to soll
         f_track = NP.array([x,xp,y,yp,zf,zpf,T,1.,s,1.])
 
         if DEBUG_SLICE == DEBUG_ON:    # for DEBUGGING
             dbTab1Row = [
                 '{:8.4f}'.format(degrees(pout)),
                 '{:8.4f}'.format(degrees(pin)),
-                '{:8.4g}'.format(degrees(popi)),
+                '{:8.4g}'.format(degrees(pompi)),
                 '{:8.4g}'.format(dp),
                 '{:8.4g}'.format(wout),
                 '{:8.4g}'.format(win),
-                '{:8.4g}'.format(wowi),
+                '{:8.4g}'.format(womwi),
                 '{:8.4g}'.format(dw),
                 '{:8.4g}'.format(self.WOUT),
                 '{:8.3f}'.format(self.V0*1.e3),
@@ -331,10 +335,9 @@ class _TTF_Gslice(object):
             self.parent.dbTab2Rows.append(dbTab2Row)
         return f_track
 
-#todo: broken test0()
 def test0():
     import elements as ELM
-    from bunch import Track
+    from bunch import Tpoint, Track
     
     print('-----------------------------------TEST 0----------------')
     input_file='SF_WDK2g44.TBL'
@@ -356,21 +359,23 @@ def test0():
     z = 1.e-3
     x=y=1.e-2
     T = tkin
-    # track-point fields:          x   x'  y  y'  z   z'  T  1   s   1
-    track = Track(start=NP.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
-    ti = track.last()
+    # track-point fields:              x   x'  y  y'  z   z'  T  1   S   1
+    tpoint = Tpoint(point = NP.array([ x,  0., y, 0., z,  0., T, 1., 0., 1.]))
+    track = Track()
+    track.addpoint(tpoint)
+    ti = track.getpoints()[-1]
     for i in range(1):
-        DEBUG_TEST0('MAP:\n',track.last_str())
-        tf = ttfg.map(ti)
-        track.append(tf)
-        DEBUG_TEST0('MAP:\n',track.last_str())
+        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
+        tf = ttfg.map(ti())
+        tpf = Tpoint(tf)
+        track.addpoint(tpf)
+        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
-        ti = tf
+        ti = tpf
 
-#todo: broken test1()
 def test1():
     import elements as ELM
-    from bunch import Track
+    from bunch import Tpoint, Track
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'
@@ -390,17 +395,19 @@ def test1():
     x = 1.e-1
     z = von
     T = 0.
-    # start            x   x'  y  y'  z   z'  T  1   s   1
-    start = NP.array([ x,  xp, y, yp, z,  zp, T, 1., 0., 1.])
-    trck = Track(start=start)
-    ti = trck.last()
+    # start                           x   x'  y  y'  z   z'  T  1   S   1
+    start = Tpoint(point = NP.array([ x,  xp, y, yp, z,  zp, T, 1., 0., 1.]))
+    track = Track()
+    track.addpoint(start)
+    ti = track.getpoints()[-1]
     for i in range(anz+1):
-        tf = ttfg.map(ti)
-        trck.append(tf)
+        tf = ttfg.map(ti())
+        tpf = Tpoint(tf)
+        track.addpoint(tpf)
         z += delta
-        start[4] = z
-        ti = tf
-    DEBUG_TEST1('TRACK:\n',trck.as_table())
+        tf[4] = z
+        ti = Tpoint(tf)
+    DEBUG_TEST1('TRACK-POINTS:\n',track.as_table())
 
 if __name__ == '__main__':
     test0()

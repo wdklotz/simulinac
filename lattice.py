@@ -297,7 +297,8 @@ class Lattice(object):
                 means.append(sigxy)
             means = NP.array(means)
             means = NP.mean(means,axis=0)
-            node['sigxy'] = tuple(means)                # each node has its tuple of average sigmas
+            # each node has its tuple of average sigmas
+            node['sigxy'] = tuple(means)
             # aperture check
             if FLAGS['useaper']:
                 n_sigma = PARAMS['n_sigma']
