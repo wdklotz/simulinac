@@ -584,6 +584,7 @@ class RFG(I):
         self.EzAvg    = EzAvg*dWf          # [MV/m] average gap field
         self.phis     = PhiSoll            # [radians] soll phase
         self.freq     = fRF                # [Hz]  RF frequenz
+        self.omega    = twopi*self.freq
         self.gap      = gap                # [m] rf-gap
         self.aperture = aperture           # [m]
         self.mapping  = mapping            # map model

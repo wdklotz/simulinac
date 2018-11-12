@@ -462,28 +462,32 @@ class Lattice(object):
             gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
-            for i_element in slices:
-                s += i_element.length
-                ## COS_like
-                # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
-                c_0 = i_element.map(c_0)   # map!!!
-                cx  = c_0[XKOO]
-                cxp = c_0[XPKOO]
-                cy  = c_0[YKOO]
-                cyp = c_0[YPKOO]
-                cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
-                cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
-                ## SIN_like
-                # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
-                s_0 = i_element.map(s_0)   # map!!!
-                sx  = s_0[XKOO]
-                sxp = s_0[XPKOO]
-                sy  = s_0[YKOO]
-                syp = s_0[YPKOO]
-                sz  = -s_0[ZKOO]*360./(beta*lamb)
-                sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
-                c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
-                s_like.append((s,sx,sxp,sy,syp,sz,sdw))
+            try:
+                for i_element in slices:
+                    s += i_element.length
+                    ## COS_like
+                    # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
+                    c_0 = i_element.map(c_0)   # map!!!
+                    cx  = c_0[XKOO]
+                    cxp = c_0[XPKOO]
+                    cy  = c_0[YKOO]
+                    cyp = c_0[YPKOO]
+                    cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
+                    cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
+                    c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
+                    ## SIN_like
+                    # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
+                    s_0 = i_element.map(s_0)   # map!!!
+                    sx  = s_0[XKOO]
+                    sxp = s_0[XPKOO]
+                    sy  = s_0[YKOO]
+                    syp = s_0[YPKOO]
+                    sz  = -s_0[ZKOO]*360./(beta*lamb)
+                    sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
+                    s_like.append((s,sx,sxp,sy,syp,sz,sdw))
+            except ValueError as ex:
+                print(F'STOP C+S TRAJECTORIES at s = {s:6.2f} [m]')
+                break
         return (c_like,s_like)
 
     def symplecticity(self):

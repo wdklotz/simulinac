@@ -5,6 +5,7 @@ BGRAD=21.575
 BGRAD=43.150
 
 EMITW=1.0e-5            # w emittance in [rad]
+EMITW=1.0e-5            # w emittance in [rad]
 EMITX=1.0e-6            # x emittance in [m*rad]
 EMITY=1.0e-6            # y emittance in [m*rad]
 

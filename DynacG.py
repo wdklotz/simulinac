@@ -22,12 +22,12 @@ This file is part of the SIMULINAC code
 import sys
 import numpy as NP
 from copy import copy
-import math
+import math as MATH
 from functools import partial
 import warnings
 
 
-from setutil import DEBUG, arrprnt, PARAMS, tblprnt
+from setutil import DEBUG, arrprnt, PARAMS, tblprnt, Ktp, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from Ez0 import SFdata, Ipoly
 
@@ -40,7 +40,7 @@ DEBUG_SLICE    = DEBUG_OFF
 DEBUG_DYN_G    = DEBUG_OFF
 DEBUG_TEST0    = DEBUG_ON
 
-twopi = 2.*math.pi
+twopi = 2.*MATH.pi
 
 """ Numerical computations in an accelerating gap or in a cavity;
     E.TANKE and S.VALERO
@@ -48,8 +48,64 @@ twopi = 2.*math.pi
 """
 class _DYN_G(object):
     """ Wrapper to DYNAC's RF-gap model """
+    # def __init__(self, parent):
+    #     def make_slices(parent, gap, SFdata, particle):
+    #         """Slice the RF gap"""
+    #         slices = []
+    #         zl = -gap/2.*100.   # [m] --> [cm]
+    #         zr = -zl
+    #         E0z = 0.
+    #         z = 0.
+    #         for poly in SFdata.Ez_poly:
+    #             zil = poly.zl
+    #             zir = poly.zr
+    #             if zil < zl or zir > zr: continue
+    #             # instanciate _DYN_Gslices
+    #             slice = _DYN_Gslice(parent, poly, particle)
+    #             slices.append(slice)
+    #         return slices
+
+   ##       def configure_slices(slices, phis, tkin):
+    #         next_phase = phis
+    #         next_tkin  = tkin
+    #         Tklist = []
+    #         for slice in slices:
+    #             print(next_tkin)
+    #             # setting phase and energy @ slice entrance
+    #             slice.adjust_slice_parameters(next_phase, next_tkin)
+    #             Tklist.append(slice.Tk)
+    #             next_phase = slice.PHOUT
+    #             next_tkin  = slice.WOUT
+    #         deltaW  = next_tkin-tkin        # total energy kick as sum over slices
+    #         tr      = NP.sum(NP.array(Tklist))/len(Tklist)
+    #         return deltaW,tr
+
+   ##       # _DYN_G attributes
+    #     self.phis     = parent.phis
+    #     self.freq     = parent.freq
+    #     self.gap      = parent.gap
+    #     self.dWf      = parent.dWf
+    #     self.lamb     = parent.lamb
+    #     self.SFdata   = parent.SFdata
+    #     self.matrix   = parent.matrix
+    #     self.particle = parent.particle
+    #     if self.SFdata == None:
+    #         raise RuntimeError('_DYN_G: missing E(z) table - STOP!')
+    #         sys.exit(1)
+    #     else:
+    #         # slice the gap
+    #         self.slices = \
+    #             make_slices(self, self.gap, self.SFdata, self.particle)
+    #         DEBUG_DYN_G('_DYN_G:make_slices()\n',list(self.slices))
+    #         # configure slices
+    #         self.deltaW, self.tr = \self.omega/(betai*PARAMS['lichtgeschwindigkeit'])*dz
+    #             configure_slices(self.slices, self.phis, self.particle.tkin)
+    #         # UPDATE linear matrix with this deltaW
+    #         self.matrix[EKOO, DEKOO] = self.deltaW
+
     def __init__(self, parent):
-        def make_slices(parent, gap, SFdata, particle):
+        #todo: move make_slices out of _DYN_G class - has not to be repeated for every gap
+        def make_slices(parent, gap, SFdata, particle):   
             """Slice the RF gap"""
             slices = []
             zl = -gap/2.*100.   # [m] --> [cm]
@@ -65,20 +121,20 @@ class _DYN_G(object):
                 slices.append(slice)
             return slices
 
-        def configure_slices(slices, phis, tkin):
-            next_phase = phis
-            next_tkin  = tkin
-            Tklist = []
-            for slice in slices:
-                print(next_tkin)
-                # setting phase and energy @ slice entrance
-                slice.adjust_slice_parameters(next_phase, next_tkin)
-                Tklist.append(slice.Tk)
-                next_phase = slice.PHOUT
-                next_tkin  = slice.WOUT
-            deltaW  = next_tkin-tkin        # total energy kick as sum over slices
-            tr      = NP.sum(NP.array(Tklist))/len(Tklist)
-            return deltaW,tr
+        # def configure_slices(slices, phis, tkin):
+        #     next_phase = phis
+        #     next_tkin  = tkin
+        #     Tklist = []
+        #     for slice in slices:
+        #         print(next_tkin)
+        #         # setting phase and energy @ slice entrance
+        #         slice.adjust_slice_parameters(next_phase, next_tkin)
+        #         Tklist.append(slice.Tk)
+        #         next_phase = slice.PHOUT
+        #         next_tkin  = slice.WOUT
+        #     deltaW  = next_tkin-tkin        # total energy kick as sum over slices
+        #     tr      = NP.sum(NP.array(Tklist))/len(Tklist)
+        #     return deltaW,tr
 
         # _DYN_G attributes
         self.phis     = parent.phis
@@ -86,29 +142,36 @@ class _DYN_G(object):
         self.gap      = parent.gap
         self.dWf      = parent.dWf
         self.lamb     = parent.lamb
+        self.EzAvg    = parent.EzAvg    #todo: check EzAvg and EzPeak again
         self.SFdata   = parent.SFdata
         self.matrix   = parent.matrix
         self.particle = parent.particle
+        self.omega    = parent.omega
+        self.slices   = []
+        self.tr       = 0.85   #todo: better use Panofski for initial value
+        self.deltaW   = None
+        self.clight   = PARAMS['lichtgeschwindigkeit']
         if self.SFdata == None:
             raise RuntimeError('_DYN_G: missing E(z) table - STOP!')
             sys.exit(1)
         else:
             # slice the gap
+            particle = copy(self.particle)    # clone
             self.slices = \
-                make_slices(self, self.gap, self.SFdata, self.particle)
+                make_slices(self, self.gap, self.SFdata, particle)
             DEBUG_DYN_G('_DYN_G:make_slices()\n',list(self.slices))
             # configure slices
-            self.deltaW, self.tr = \
-                configure_slices(self.slices, self.phis, self.particle.tkin)
+            # self.deltaW, self.tr = \
+                # configure_slices(self.slices, self.phis, self.particle.tkin)
             # UPDATE linear matrix with this deltaW
-            self.matrix[EKOO, DEKOO] = self.deltaW
+            # self.matrix[EKOO, DEKOO] = self.deltaW
 
     def map(self,i_track):
         """ Mapping from (i) to (f) """
-        for slice in self.slices:
+        for slice in iter(self.slices):
             f_track = slice.slice_map(i_track)   # map slice with DYNAC gap-model
             i_track = f_track
-        
+
         # parent property
         self.particlef = copy(self.particle)(self.particle.tkin + self.deltaW)
 
@@ -125,7 +188,20 @@ class _DYN_G(object):
         return f_track
         
     def soll_map(self, i_track):
-        return self.map(i_track)
+        tkini = tkin = i_track[Ktp.T]   # energy IN
+        for slice in iter(self.slices):
+            betai = MATH.sqrt(1.-1./(1.+tkin/self.particle.e0)**2)  #todo: here I assume beta=const in slice - can be refined
+            dz    = slice.poly.z0*1.e-2                                              # [m] distance from gap center
+            dphi  = self.omega/(betai*self.clight)*dz   # [rad] phase adjustment
+            # phase < phis if z < 0 here!
+            phi   = self.phis+dphi
+            slice.adjust_slice_parameters(phi,tkin)
+            tkin += slice.deltaW       # energy OUT
+        i_track[Ktp.T] = tkin                           # track update
+        self.deltaW = tkin - tkini                      # enery gain
+        self.tr = self.deltaW/(self.EzAvg*self.gap)     # time transition factor
+        self.matrix[EKOO, DEKOO] = self.deltaW          # update linear NODE matrix
+        return i_track
 
 class _DYN_Gslice(object):
     """ The DYNAC gap-model """
@@ -133,13 +209,13 @@ class _DYN_Gslice(object):
         # _DYN_Gslice attributes (inherited)
         self.parent   = parent
         self.freq     = parent.freq     # frquency
-        self.omega    = twopi*self.freq # Kreisfrequenz
+        self.omega    = parent.omega    # Kreisfrequenz
         self.lamb     = parent.lamb     # Wellenlaenge
-        self.particle = copy(particle)  # soll particle (copy)
-        self.poly     = poly            # the current interval
         self.SFdata   = parent.SFdata   # reference to superfish data
+        self.particle = particle        # cloned from parent
+        self.poly     = poly            # the current interval
     #todo: calculate Tk better ??
-        self.Tk       = 0.85
+        # self.Tk       = 0.85
 
     def time_array(self,betac,h,zarr):
         """ create arrival times azimutal positions 
@@ -181,15 +257,15 @@ class _DYN_Gslice(object):
         I1        = self.Integral1(self.zarr, tarr, h, self.omega, phin, particle)
         I3        = self.Integral3(self.zarr, tarr, h, self.omega, phin, particle)
         # soll parameter
-        self.BETA     = particle.beta                     # beta
-        self.GAMMA    = particle.gamma                    # gamma
-        self.WIN      = tkin                              # (z0) kin.energy
-        self.PHIN     = phin                              # (z0) phase
-        self.deltaW   = I1                                # (z4) delta-kin.energy
-        self.deltaT   = I3/m0c3                           # (z4) delta-time
-        self.deltaP   = self.deltaT*self.omega            # (z4) delta-phase
-        self.WOUT     = tkin + self.deltaW                # (z4) kin.energy
-        self.PHOUT    = phin + self.deltaP                # (z4) phase
+        self.BETA      = particle.beta                     # beta
+        self.GAMMA     = particle.gamma                    # gamma
+        self.WIN       = tkin                              # (z0) kin.energy
+        self.PHIN      = phin                              # (z0) phase
+        self.deltaW    = I1                                # (z4) delta-kin.energy: formel (12)  E.Tanke and S.Valero
+        self.deltaT    = I3/m0c3                           # (z4) delta-time
+        self.deltaPh   = self.deltaT*self.omega            # (z4) delta-phase
+        self.WOUT      = tkin + self.deltaW                # (z4) kin.energy
+        self.PHOUT     = phin + self.deltaPh                # (z4) phase
 
         DEBUG_SLICE('_DYN_Gslice: {}\n'.format(self),self.__dict__)
         DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():zarr.........[m]: ', self.zarr)
@@ -206,7 +282,7 @@ class _DYN_Gslice(object):
         DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():phin..........[]: ', phin)
         DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():WOUT.......[MeV]: ', self.WOUT)
         DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():PHOUT.........[]: ', self.PHOUT)
-        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():deltaP........[]: ', self.deltaP)
+        DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():deltaPh.......[]: ', self.deltaPh)
         # DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():deltaT.....[sec]: ', self.deltaT)
         DEBUG_SLICE('_DYN_Gslice:adjust_slice_parameters():deltaW.....[Kev]: ', self.deltaW*1.e3)
         DEBUG_SLICE('============================================================ adjust_slice_parameters() end')
@@ -223,10 +299,14 @@ class _DYN_Gslice(object):
         T        = i_track[EKOO]       # [6] summe aller dT
         S        = i_track[SKOO]       # [8] summe aller laengen
 
-        # particle kin.energy and phase at entrance (z0)
-        win      = (zp * (self.GAMMA+1.)/self.GAMMA +1.) * self.WIN      # (z0) W
-        pin      = - z*twopi/(self.BETA*self.lamb) + self.PHIN           # (z0) phase
-        particle = copy(self.particle)(win)                              # (z0) particle
+        # particle kin.energy and phase IN
+        converter = WConverter(self.particle.T,freq=self.freq)
+        # win = (zp * (self.GAMMA+1.)/self.GAMMA +1.) * self.WIN      # falsch
+        # win = zp*(1.+1./self.GAMMA)*self.particle.T+self.WIN
+        win       = converter.Dp2pToW(zp) + self.WIN                      # kin. energy IN
+        # pin      = - z*twopi/(self.BETA*self.lamb) + self.PHIN 
+        pin       = converter.zToDphi(z)+self.PHIN                        # phase IN
+        particle  = copy(self.particle)(win)                              # particle IN
 
         # aliases
         gamma   = particle.gamma
@@ -237,9 +317,9 @@ class _DYN_Gslice(object):
         m0c3    = particle.m0c3
         betac   = particle.betac
         omega   = self.omega
-        gbroot  = math.sqrt(gambeta)
+        gbroot  = MATH.sqrt(gambeta)
         gb3     = gambeta**3
-        K1      = (math.pi/self.lamb)**2/gb3  # [1./m**2] common factor
+        K1      = (MATH.pi/self.lamb)**2/gb3  # [1./m**2] common factor
  
         # Integrale
         tarr = self.time_array(betac, self.h, self.zarr)
@@ -266,7 +346,7 @@ class _DYN_Gslice(object):
         dz2    = - betac * dtime                   # z = distance from soll
         if abs(dz1-dz2) > 1.e-15:
             warnings.warn('|delta-z difference| too large - should be equal')
-        DEBUG_OFF('(deltaW[KeV], dphi[mdeg]) ',(deltaW*1.e3, math.degrees(dphi)*1.e3))
+        DEBUG_OFF('(deltaW[KeV], dphi[mdeg]) ',(deltaW*1.e3, MATH.degrees(dphi)*1.e3))
 
         # mapping of reduced coordinates
         dR     = R*J2 + Rp*J3  # delta-radius
@@ -274,22 +354,25 @@ class _DYN_Gslice(object):
         Rf     = R + dR
         Rpf    = Rp + dRp
 
-        # Picht back-transformation
+        # Picht transformation back
         particle = copy(self.particle)(tkin = win + deltaW)
         gamma    = particle.gamma
         gambeta  = particle.gamma_beta
-        gbroot   = math.sqrt(gambeta)
+        gbroot   = MATH.sqrt(gambeta)
         rf       = Rf/gbroot
         rpf      = (Rpf - 0.5*Rf*gamma/(gamma**2-1.)) / gbroot
 
         # new z
-        pout     = pin + dphi
-        dp       = pout - self.PHOUT
-        zf       = -beta*self.lamb/twopi*dp     # z out
+        converter = WConverter(particle.T,freq=self.freq)
+        pout      = pin + dphi
+        dp        = pout - self.PHOUT
+        # zf        = -beta*self.lamb/twopi*dp     # z out
+        zf        = converter.DphiToz(dp)          # z OUT
         # new dp/p 
         wout     = win + deltaW
         dw       = wout - self.WOUT
-        zpf      = gamma/(gamma+1.)*dw/wout     # delta-p/p out
+        # zpf      = gamma/(gamma+1.)*dw/wout     # delta-p/p out
+        zpf      = converter.DWToDp2p(dw)         # Dp2p OUT
   
         # new track point
         f_track = NP.array([x,xp,y,yp,z,zp,T,1.,S,1.])
@@ -323,7 +406,7 @@ class _DYN_Gslice(object):
             # DEBUGING
             # if i == 0: print('====E(z,0,t)')
             # t = tarr[i]
-            # cos = math.cos(omega*t+phin)
+            # cos = MATH.cos(omega*t+phin)
             # Ez = Ipoly(z,self.SFdata.Ez_poly)
             # probe = E(z,tarr[i]) - Ez*cos
             # print('(z,t,I1,E,cos,0.0) ',(z,t,res,Ez,cos,probe))

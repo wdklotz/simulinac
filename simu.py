@@ -18,6 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+#todo: handle exceptions speziel ValueError
 #todo: use normalized emittances !!!
 #todo: results if waccept are global - each node should have its own
 #todo: make new simu_manual.tex, README.md, check conversions.tex
@@ -121,12 +122,12 @@ def display1(*args):
     lat_plot  = args[3]
     ape_plot  = args[4]
     #-------------------- twiss functions
-    z    = [x[0] for x in sigma_fun]  # Ordinate
+    z    = [x[0] for x in sigma_fun]  # Abszisse
     bx   = [x[1]*1.e3 for x in sigma_fun]  # envelope (sigma-x)
     by   = [x[2]*1.e3 for x in sigma_fun]  # envelope (sigma-y)
     zero = [0.   for x in sigma_fun]  # zero line
     #-------------------- trajectories
-    tz  = [x[0] for x in cos_like]   # Ordinate
+    tz  = [x[0] for x in cos_like]   # Abszisse
     cx  = [x[1]*1.e3 for x in cos_like]   # cos-like-x
     cy  = [x[3]*1.e3 for x in cos_like]   # cos-like-y
     cz  = [x[5] for x in cos_like]   # cos-like-z
@@ -238,12 +239,15 @@ def simulation(filepath):
     # parse input file and create a lattice
     lattice = parse_and_fabric(filepath)
 
+    # configure elements for energy increase
+    soll_track = track_soll(lattice)
+    
+    print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
+
+
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
     
-    # configure elements for energy increase
-    soll_track = track_soll(lattice)
-
     # count elements and make other statistics
     lattice.stats(soll_track)
 
