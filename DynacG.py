@@ -26,10 +26,9 @@ import math as MATH
 from functools import partial
 import warnings
 
-
 from setutil import DEBUG, arrprnt, PARAMS, tblprnt, Ktp, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from Ez0 import SFdata, Ipoly
+from Ez0 import SFdata, Ipoly, DynacSteps
 
 # DEBUG__*
 def DEBUG_ON(string,arg = '',end = '\n'):
@@ -46,6 +45,7 @@ twopi = 2.*MATH.pi
     E.TANKE and S.VALERO
     3-Oct-2016 
 """
+
 class _DYN_G(object):
     """ Wrapper to DYNAC's RF-gap model """
     # def __init__(self, parent):
@@ -165,7 +165,7 @@ class _DYN_G(object):
                 # configure_slices(self.slices, self.phis, self.particle.tkin)
             # UPDATE linear matrix with this deltaW
             # self.matrix[EKOO, DEKOO] = self.deltaW
-
+        
     def map(self,i_track):
         """ Mapping from (i) to (f) """
         for slice in iter(self.slices):
