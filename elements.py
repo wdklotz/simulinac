@@ -645,7 +645,7 @@ class RFG(I):
         """ delegate to gap-model """
         return self.gap_model.deltaW
     @property
-    def particlef(self):
+    def particlef(self):    #todo: don't use particlef - only deltaW
         """ delegate to gap-model """
         return self.gap_model.particlef
     def map(self, i_track):

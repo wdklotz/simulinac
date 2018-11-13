@@ -124,10 +124,10 @@ elements:
         - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - mapping:   t3d         # Trace 3D linear map model
-        # - mapping:   simple      # Shishlo/Holmes linear map model
-        # - mapping:   base        # Shishlo/Holmes base map model
-        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
-        # - mapping:   dyn         # Tanke/Valero RF gap-model
+        - mapping:   simple      # Shishlo/Holmes linear map model
+        - mapping:   base        # Shishlo/Holmes base map model
+        - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
         - type:     RFC          # RFC class
@@ -138,24 +138,26 @@ elements:
         - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
-    - M:  &Mrkr                  # ID: &alias
-        - type:    MRK           # MRK class
-        - actions:
-            # - sigma_x          # action hoeizontal sigma
-            # - sigma_y          # action vertical sigma
-            # - Tkin             # action kinetic energy
-            - show_elli          # action twiss ellipses
+    # - M:  &Mrkr                  # ID: &alias
+    #     - type:    MRK           # MRK class
+    #     - actions:
+    #         # - sigma_x          # action hoeizontal sigma
+    #         # - sigma_y          # action vertical sigma
+    #         # - Tkin             # action kinetic energy
+    #         - show_elli          # action twiss ellipses
+    #     - sec:     *HE
+    # - A:  &Apr                   # ID: &alias
+    #     - type:    MRK           # MRK class
+    #     - actions:
+    #         - check_aperture     # action aperture check
         - sec:     *HE
-    - A:  &Apr                   # ID: &alias
-        - type:    MRK           # MRK class
-        - actions:
-            - check_aperture     # action aperture check
-        - sec:     *HE
-    - F:  &Foil                  # ID: &alias
-        - type:    MRK           # MRK class
-        - actions:
-            - poincare           # action aperture check
-        - sec:     *HE
+    - SC:  &SCm                    # ID: &alias
+        - type:      MRK           # MRK class
+        - prefix:    frames        # prefix for directory holding saved frames
+        - sec:       *HE           # is part of section
+        - action:    scatter       # make a poincare scatter plot
+        - abscissa:  z             # horizontal axis
+        - ordinate:  zp            # vertical axis
 #...........................................................................................
 ## SEGMENT definitions
 
@@ -224,7 +226,7 @@ segments:
         - *RFCH
         - *RFCH
     - MARK:
-        - *Foil
+        - *SCm
 #...........................................................................................
 ## LATTICE definition
 
@@ -232,6 +234,5 @@ lattice:
     # title is MANDATORY!
     - title:   v7.0.3
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    # - [80,   SEG1H,       RFGH, SEG2H, RFGH, SEG3H]
     - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     - [ 1,   MARK]

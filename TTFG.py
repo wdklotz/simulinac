@@ -208,7 +208,6 @@ class _TTF_Gslice(object):
         self.Tk      = self._T (self.poly,self.k)
         self.Tkp     = self._Tp(self.poly,self.k)
 
-        # c     = PARAMS['lichtgeschwindigkeit']
         m0c2  = self.particle.e0
         m0c3  = self.particle.m0c3
         omeg  = twopi*self.freq
@@ -249,7 +248,7 @@ class _TTF_Gslice(object):
         T        = i_track[EKOO]       # [6] summe aller dT
         s        = i_track[SKOO]       # [8] summe aller laengen
 
-        # c          = PARAMS['lichtgeschwindigkeit']
+        c          = PARAMS['lichtgeschwindigkeit']
         m0c2       = self.particle.e0
         m0c3       = self.particle.m0c3
         omeg       = twopi*self.freq

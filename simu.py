@@ -110,7 +110,8 @@ def display0(*args):
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
-    
+
+#todo: introduce Function class    
 def display1(*args):
     """
     CS-Tracks with longitudinal motion
@@ -127,13 +128,14 @@ def display1(*args):
     by   = [x[2]*1.e3 for x in sigma_fun]  # envelope (sigma-y)
     zero = [0.   for x in sigma_fun]  # zero line
     #-------------------- trajectories
-    tz  = [x[0] for x in cos_like]   # Abszisse
+    z1  = [x[0] for x in cos_like]   # Abszisse
     cx  = [x[1]*1.e3 for x in cos_like]   # cos-like-x
     cy  = [x[3]*1.e3 for x in cos_like]   # cos-like-y
     cz  = [x[5] for x in cos_like]   # cos-like-z
     cdw = [x[6] for x in cos_like]   # cos-like-dw/w
+    z2  = [x[0] for x in sin_like]   # Abszisse
     sx  = [x[1]*1.e3 for x in sin_like]   # sin-like-x
-    sy  = [x[3]*1.e3 for x in sin_like]   # sin-like-x
+    sy  = [x[3]*1.e3 for x in sin_like]   # sin-like-z1x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
@@ -151,8 +153,8 @@ def display1(*args):
     splot=plt.subplot(311)
     splot.set_title('transverse x')
     plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
-    plt.plot(tz,cx,label='C [mm]',color='blue',linestyle=':')
-    plt.plot(tz,sx,label='S [mm]',color='red' ,linestyle=':')
+    plt.plot(z1,cx,label='C [mm]',color='blue',linestyle=':')
+    plt.plot(z2,sx,label='S [mm]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_ordinate]
@@ -171,8 +173,8 @@ def display1(*args):
     splot=plt.subplot(312)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [mm]',color='green')
-    plt.plot(tz,cy,label='C [mm]',color='blue',linestyle=':')
-    plt.plot(tz,sy,label='S [mm]',color='red' ,linestyle=':')
+    plt.plot(z1,cy,label='C [mm]',color='blue',linestyle=':')
+    plt.plot(z2,sy,label='S [mm]',color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]
@@ -193,7 +195,7 @@ def display1(*args):
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    ax_l.plot(tz,cz,color='green',linestyle=':')
+    ax_l.plot(z1,cz,color='green',linestyle=':')
     # ax_l.plot(tz,sz,color='green')
     # ax_r = right abszisse
     ax_r = ax_l.twinx()
@@ -201,7 +203,7 @@ def display1(*args):
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
     # ax_r.plot(tz,cdw,color='red',linestyle=':')
-    ax_r.plot(tz,sdw,color='red')
+    ax_r.plot(z2,sdw,color='red')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
     vscale=ax_l.axis()[3]*0.7

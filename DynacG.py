@@ -172,9 +172,6 @@ class _DYN_G(object):
             f_track = slice.slice_map(i_track)   # map slice with DYNAC gap-model
             i_track = f_track
 
-        # parent property
-        self.particlef = copy(self.particle)(self.particle.tkin + self.deltaW)
-
         # for DEBUGGING
         if DEBUG_DYN_G == DEBUG_ON:
             itr = i_track.copy()
@@ -188,6 +185,7 @@ class _DYN_G(object):
         return f_track
         
     def soll_map(self, i_track):
+        # print(i_track)
         tkini = tkin = i_track[Ktp.T]   # energy IN
         for slice in iter(self.slices):
             betai = MATH.sqrt(1.-1./(1.+tkin/self.particle.e0)**2)  #todo: here I assume beta=const in slice - can be refined
@@ -201,6 +199,8 @@ class _DYN_G(object):
         self.deltaW = tkin - tkini                      # enery gain
         self.tr = self.deltaW/(self.EzAvg*self.gap)     # time transition factor
         self.matrix[EKOO, DEKOO] = self.deltaW          # update linear NODE matrix
+        # parent property
+        self.particlef = copy(self.particle)(tkin)
         return i_track
 
 class _DYN_Gslice(object):
@@ -225,9 +225,9 @@ class _DYN_Gslice(object):
             
             OUT<--array of arrival times
         """
-        th = - h / betac         # [s] time step size
+        th = h / betac         # [s] time step size (Error: was negative before)
         # t0 is time at slice entry!
-        t0 = - zarr[0] / betac   # [s] time on interval entry
+        t0 = zarr[0] / betac   # [s] time on interval entry (Error: was negative before)
         t4 = th+t0
         t3 = 0.75*th+t0
         t2 = 0.50*th+t0
@@ -239,13 +239,14 @@ class _DYN_Gslice(object):
             IN-->phin = phase of soll at entry
                  tkin = kin.energy at entry
         """
+        # print(phin,tkin)
         # new soll-particle energy
         particle   = self.particle(tkin)
         m0c3       = particle.m0c3
         betac      = particle.betac
 
         self.h = 1.e-2*2.*self.poly.dz # [m] azimutal step size
-        # z0 = z at slice entry!
+        # z = z0 at slice entry!
         h  = self.h
         z0 = 1.e-2*self.poly.zl        # [m] interval left border
         z4 = h+z0                      # [m] interval right border
@@ -308,6 +309,8 @@ class _DYN_Gslice(object):
         pin       = converter.zToDphi(z)+self.PHIN                        # phase IN
         particle  = copy(self.particle)(win)                              # particle IN
 
+        # print('(z,zp) ({:10.5f} , {:10.5f}) win {:10.5f}'.format(i_track[Ktp.z],i_track[Ktp.zp],win))
+
         # aliases
         gamma   = particle.gamma
         beta    = particle.beta
@@ -317,7 +320,12 @@ class _DYN_Gslice(object):
         m0c3    = particle.m0c3
         betac   = particle.betac
         omega   = self.omega
-        gbroot  = MATH.sqrt(gambeta)
+        try:
+            gbroot  = MATH.sqrt(gambeta)
+        except ValueError as ex:
+            for k,v in particle.__dict__.items():
+                print(k,v)
+            raise ex
         gb3     = gambeta**3
         K1      = (MATH.pi/self.lamb)**2/gb3  # [1./m**2] common factor
  
@@ -382,7 +390,7 @@ class _DYN_Gslice(object):
         f_track[YPKOO] = rpf[1]
         f_track[ZKOO]  = zf
         f_track[ZPKOO] = zpf
-        f_track[EKOO]  = T + deltaW
+        # f_track[EKOO]  = T
 
         # DEBUG_SLICE('_DYN_Gslice:slice_map():R............[m]: ', R)
         # DEBUG_SLICE('_DYN_Gslice:slice_map():Rp.........[rad]: ', Rp)
@@ -507,10 +515,15 @@ def test0():
     yp = 1.0e-3
     z  = 0.0
     zp = 0.0
+    
     i_track = NP.array([ x, xp, y, yp, z, zp, PARAMS['sollteilchen'].tkin, 1., 0., 1.])
 
     dyng = ELM.RFG(gap = 0.048,SFdata = SF_tab,mapping = 'dyn')
     DEBUG_TEST0('_DYN_Gslice:test0():i_track:\n', str(i_track))
+
+    f_track = dyng.soll_map(i_track)
+    DEBUG_TEST0('_DYN_Gslice:test0():f_track:\n', str(f_track))
+
     f_track = dyng.map(i_track)
     DEBUG_TEST0('_DYN_Gslice:test0():f_track:\n', str(f_track))
 
