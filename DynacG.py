@@ -171,6 +171,7 @@ class _DYN_G(object):
         for slice in iter(self.slices):
             f_track = slice.slice_map(i_track)   # map slice with DYNAC gap-model
             i_track = f_track
+            print(i_track)
 
         # for DEBUGGING
         if DEBUG_DYN_G == DEBUG_ON:
@@ -390,7 +391,7 @@ class _DYN_Gslice(object):
         f_track[YPKOO] = rpf[1]
         f_track[ZKOO]  = zf
         f_track[ZPKOO] = zpf
-        # f_track[EKOO]  = T
+        f_track[EKOO]  = T + self.deltaW
 
         # DEBUG_SLICE('_DYN_Gslice:slice_map():R............[m]: ', R)
         # DEBUG_SLICE('_DYN_Gslice:slice_map():Rp.........[rad]: ', Rp)
