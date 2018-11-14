@@ -231,7 +231,7 @@ class DynacSteps(object):
             if zil < self.zl or zir > self.zr: 
                 continue
             else:
-                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))
+                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))    # all-in [m]
         polyvals = tuple(polyvals) 
         self.h = polyvals[0][1] - polyvals[0][0]
         z_parts = []
@@ -253,6 +253,9 @@ class DynacSteps(object):
 
     def nparts(self):
         return 5
+    
+    def steplen(self):
+        return self.h
 
     def _t_parts(self,beta,num):
         velocity = beta * 2.99792458e8
@@ -529,8 +532,9 @@ def test4(input_file):
     beta = 0.1
     steps = DynacSteps(gap,sf_data)
     zs,ts = steps(beta)
+    h = steps.steplen()
     # show
-    print('gap [m]= ',gap,' beta= ',beta)
+    print('gap [m]= ',gap,' beta= ',beta,'  h[m]= ',h)
     for ns in range(steps.nsteps()):
         for np in range(steps.nparts()):
             print('z [m]= ',zs[ns,np],'\tt[sec]= ',ts[ns,np])

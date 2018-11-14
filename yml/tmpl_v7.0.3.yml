@@ -125,8 +125,8 @@ elements:
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - mapping:   t3d         # Trace 3D linear map model
         - mapping:   simple      # Shishlo/Holmes linear map model
-        - mapping:   base        # Shishlo/Holmes base map model
-        - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        # - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
         - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
@@ -234,5 +234,5 @@ lattice:
     # title is MANDATORY!
     - title:   v7.0.3
     # - [80,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [80,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [160,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
     - [ 1,   MARK]
