@@ -35,9 +35,10 @@ def DEBUG_ON(string,arg = '',end = '\n'):
     DEBUG(string,arg,end)
 def DEBUG_OFF(string,arg = '',end = '\n'):
     pass
-DEBUG_SLICE    = DEBUG_OFF
+# DEBUG_SLICE    = DEBUG_OFF
 DEBUG_DYN_G    = DEBUG_OFF
 DEBUG_TEST0    = DEBUG_ON
+DEBUG_SOLL     = DEBUG_OFF
 
 twopi = 2.*MATH.pi
 
@@ -72,17 +73,17 @@ class _DYN_G(object):
         
     def Integral1(self, z, t, h, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phi=phis):
+        def E(z, t, omega=omega, phis=phis):
             z = 1.e2*z     # [cm]
-            return self.SFdata.Ez0t(z,t,omega,phi)
+            return self.SFdata.Ez0t(z,t,omega,phis)
         res = 7.*E(z[0],t[0]) + 32.*E(z[1],t[1]) +12.*E(z[2],t[2]) +32.*E(z[3],t[3]) +7.*E(z[4],t[4])
         res = res * h / 90.
         return res
 
     def Integral2(self, z, t, h, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phi=phis):
-            return self.SFdata.Ez0t(z,t,omega,phi)
+        def E(z, t, omega=omega, phis=phis):
+            return self.SFdata.Ez0t(z,t,omega,phis)
         z = 1.e2*z     # [cm]
         res = 8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) +24.*E(z[3],t[3]) + 7.*E(z[4],t[4])
         res = res * h**2 / 90.
@@ -91,8 +92,8 @@ class _DYN_G(object):
     #todo: use beta_gamma[i], i=1,4,1
     def Integral3(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phi=phis):
-            return self.SFdata.Ez0t(z,t,omega,phi)
+        def E(z, t, omega=omega, phis=phis):
+            return self.SFdata.Ez0t(z,t,omega,phis)
         z = 1.e2*z     # [cm]
         bg3 = bg**3
         res = 8.*E(z[1],t[1])/bg3 + 6.*E(z[2],t[2])/bg3 + 24.*E(z[3],t[3])/bg3 + 7.*E(z[4],t[4])/bg3
@@ -101,8 +102,8 @@ class _DYN_G(object):
 
     def Integral4(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phi=phis):
-            return self.SFdata.Ez0t(z,t,omega,phi)
+        def E(z, t, omega=omega, phis=phis):
+            return self.SFdata.Ez0t(z,t,omega,phis)
         z = 1.e2*z     # [cm]
         bg3 = bg**3
         res = 2.*E(z[1],t[1])/bg3 + 3.*E(z[2],t[2])/bg3 + 18.*E(z[3],t[3])/bg3 + 7.*E(z[4],t[4])/bg3
@@ -110,16 +111,17 @@ class _DYN_G(object):
         return res
 
     def soll_map(self, i_track):
+        """ Soll mapping form (i) to (f) """
         particle = self.particle
         m0c2     = particle.m0c2
         phis     = self.phis
         omega    = self.omega
         tkin     = self.particle.tkin   # energy IN
 
-        nsteps = self.steps.nsteps()        # nb-steps
-        h      = self.steps.steplen()       # step lengrh
+        nsteps = self.steps.nsteps()    # nb-steps
+        h      = self.steps.steplen()   # step length
         
-        for nstep in range(nsteps):         # loop steps
+        for nstep in range(nsteps):# loop steps
             # start with const beta in step
             beta  = MATH.sqrt(1.-1./(1.+tkin/m0c2)**2)
             zs,ts = self.steps(beta)
@@ -139,7 +141,7 @@ class _DYN_G(object):
         # track the track
         f_track        = i_track
         f_track[Ktp.T] = tkin
-        print(f_track,self.tr)
+        DEBUG_SOLL('SOLL',(f_track,self.tr))
         return f_track
 
     def map(self,i_track):
@@ -148,6 +150,8 @@ class _DYN_G(object):
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
         yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4]
+        zp       = i_track[ZPKOO]      # [5]
         # aliases
         c        = PARAMS['lichtgeschwindigkeit']
         particle = self.particle
@@ -486,7 +490,7 @@ def test0():
     
     i_track = NP.array([ x, xp, y, yp, z, zp, PARAMS['sollteilchen'].tkin, 1., 0., 1.])
 
-    dyng = ELM.RFG(gap = 0.048,SFdata = SF_tab,mapping = 'dyn')
+    dyng = ELM.RFG(gap=0.048, SFdata=SF_tab, mapping='dyn')
     DEBUG_TEST0('_DYN_Gslice:test0():i_track:\n', str(i_track))
 
     f_track = dyng.soll_map(i_track)

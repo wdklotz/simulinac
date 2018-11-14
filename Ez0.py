@@ -361,9 +361,9 @@ class SFdata(object):
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             self._poly.append(pval)
 
-    def Ez0t(self, z, t, omega, phi):
+    def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
-        res = Ipoly(z,self.Ez_poly) * cos(omega*t+phi)
+        res = Ipoly(z,self.Ez_poly) * cos(omega*t+phis)
         return res
 
     def dEz0tdt(self, z, t, omega, phi):
