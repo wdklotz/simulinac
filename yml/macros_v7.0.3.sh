@@ -1,6 +1,5 @@
 TKIN=70.                # kinetic energy in [Mev]
 EMITW=1.2e-5            # w emittance in [rad]
-# EMITW=12.6e-5         # w emittance in [rad]
 # EMITW=9.6e-5           # w emittance in [rad]
 # EMITW=1.2994732e-5     # w emittance in [rad]  limit dyn @ tk=45
 EMITX=1.e-6             # x emittance in [m*rad]

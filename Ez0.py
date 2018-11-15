@@ -245,8 +245,14 @@ class DynacSteps(object):
         self.z_steps = tuple(z_parts)
         return
     
-    def _z_step(self,num):
-        return self.z_steps[num]
+    def _z_step(self,nstep):
+        return self.z_steps[nstep]
+
+    def z_upstream(self):
+        return self._z_step(0)[0]
+
+    def z_downstream(self):
+        return self._z_step(-1)[-1]
     
     def nsteps(self):
         return len(self.z_steps)
@@ -256,24 +262,24 @@ class DynacSteps(object):
     
     def steplen(self):
         return self.h
-
-    def _t_parts(self,beta,num):
-        velocity = beta * 2.99792458e8
-        t0 = self.z_steps[num][0]/velocity
-        t1 = t0 + self.h/(4*velocity)
-        t2 = t0 + self.h/(2*velocity)
-        t3 = t0 +(3*self.h)/(4*velocity)
-        t4 = t0 + self.h/velocity
-        return (t0,t1,t2,t3,t4)
+    
+    def _t_parts(self,t0,betac,nstep):
+        # t0 = self.z_steps[nstep][0]/betac
+        t1 = t0 + self.h/(4*betac)
+        t2 = t0 + self.h/(2*betac)
+        t3 = t0 +(3*self.h)/(4*betac)
+        t4 = t0 + self.h/betac
+        return (t0,t1,t2,t3,t4)   # times of ref particle at positions z0,...,z4
  
-    def __call__(self,beta):
+    def __call__(self,t0,betac):
         nsteps = self.nsteps()
         nparts = self.nparts()
         zs = NP.zeros((nsteps,nparts))
         ts = NP.zeros((nsteps,nparts))
         for i in range(nsteps):
             z_step = self._z_step(i)
-            t_step = self._t_parts(beta,i)
+            t_step = self._t_parts(t0,betac,i)
+            t0 += self.h/betac
             for j in range(nparts):
                 zs[i,j] = z_step[j]
                 ts[i,j] = t_step[j]
@@ -366,9 +372,9 @@ class SFdata(object):
         res = Ipoly(z,self.Ez_poly) * cos(omega*t+phis)
         return res
 
-    def dEz0tdt(self, z, t, omega, phi):
+    def dEz0tdt(self, z, t, omega, phis):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
-        res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phi)
+        res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phis)
         return res
 
     @property

@@ -37,8 +37,6 @@ def DEBUG_OFF(string,arg = '',end = '\n'):
     pass
 # DEBUG_SLICE    = DEBUG_OFF
 DEBUG_DYN_G    = DEBUG_OFF
-DEBUG_TEST0    = DEBUG_ON
-DEBUG_SOLL     = DEBUG_OFF
 
 twopi = 2.*MATH.pi
 
@@ -46,6 +44,59 @@ twopi = 2.*MATH.pi
     E.TANKE and S.VALERO
     3-Oct-2016 
 """
+
+class StepFactory(object):
+    """ 
+    StepFactory
+    """
+    def __init__(self,gap,SFdata):
+        self.zl = -gap*100./2.   # [cm]
+        self.zr = -self.zl
+        polyvals = []
+        for poly in SFdata.Ez_poly:
+            zil = poly.zl
+            zir = poly.zr
+            if zil < self.zl or zir > self.zr: 
+                continue
+            else:
+                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))    # all-in [m]
+        polyvals = tuple(polyvals) 
+        self.h = polyvals[0][1] - polyvals[0][0]
+        z_parts = []
+        for interval in polyvals:
+            z0 = interval[0]
+            z1 = z0 + self.h/4.
+            z2 = z0 + self.h/2.
+            z3 = z0 + (3*self.h)/4.
+            z4 = z0 + self.h
+            z_parts.append((z0,z1,z2,z3,z4))
+        self.z_steps = NP.array(z_parts)
+        return
+    
+    def zArray(self,n):
+        return self.z_steps[n]
+
+    def tArray(self,t0,betac):
+        t1 = t0 + self.h/(4*betac)
+        t2 = t0 + self.h/(2*betac)
+        t3 = t0 +(3*self.h)/(4*betac)
+        t4 = t0 + self.h/betac
+        return NP.array([t0,t1,t2,t3,t4])
+
+    # def z_upstream(self):
+    #     return self.z_steps[0][0]
+
+   ##   def z_downstream(self):
+    #     return self.z_steps[-1][-1]
+
+    def nsteps(self):
+        return len(self.z_steps)
+
+    def nparts(self):
+        return 5
+    
+    def steplen(self):
+        return self.h
 
 class _DYN_G(object):
     """ DYNAC's RF-gap model """
@@ -69,7 +120,8 @@ class _DYN_G(object):
         if self.SFdata == None:
             raise RuntimeError('_DYN_G: missing E(z) table - STOP!')
             sys.exit(1)
-        self.steps = DynacSteps(self.gap,self.SFdata)
+        # self.steps = DynacSteps(self.gap,self.SFdata)
+        self.stpfac = StepFactory(self.gap,self.SFdata)
         
     def Integral1(self, z, t, h, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
@@ -96,7 +148,7 @@ class _DYN_G(object):
             return self.SFdata.Ez0t(z,t,omega,phis)
         z = 1.e2*z     # [cm]
         bg3 = bg**3
-        res = 8.*E(z[1],t[1])/bg3 + 6.*E(z[2],t[2])/bg3 + 24.*E(z[3],t[3])/bg3 + 7.*E(z[4],t[4])/bg3
+        res = (8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) + 24.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
         res = res * h**2 / 90.
         return res
 
@@ -106,30 +158,72 @@ class _DYN_G(object):
             return self.SFdata.Ez0t(z,t,omega,phis)
         z = 1.e2*z     # [cm]
         bg3 = bg**3
-        res = 2.*E(z[1],t[1])/bg3 + 3.*E(z[2],t[2])/bg3 + 18.*E(z[3],t[3])/bg3 + 7.*E(z[4],t[4])/bg3
+        res = (2.*E(z[1],t[1]) + 3.*E(z[2],t[2]) + 18.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
+        res = res * h**3 / 90.
+        return res
+
+    #todo: use G1(gamma[i]), i=1,4,1
+    def Jntegral1(self, z, t, h, omega, phis, gamma):
+        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
+        def Ep(z, t, omega=omega, phis=phis):
+            return self.SFdata.dEz0tdt(z,t,omega,phis)
+        def G1(gamma):
+            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+        g1 = G1(gamma)
+        res = (7.*Ep(z[0],t[0]) + 32.*Ep(z[1],t[1]) + 12.*Ep(z[2],t[2]) + 32.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
+        res = res * h / 90.
+        return res
+
+    def Jntegral2(self, z, t, h, omega, phis, gamma):
+        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
+        def Ep(z, t, omega=omega, phis=phis):
+            return self.SFdata.dEz0tdt(z,t,omega,phis)
+        def G1(gamma):
+            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+        g1 = G1(gamma)
+        res = (8.*Ep(z[1],t[1]) + 6.*Ep(z[2],t[2]) + 24.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
+        res = res * h**2 / 90.
+        return res
+
+    def Jntegral3(self, z, t, h, omega, phis, gamma):
+        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
+        def Ep(z, t, omega=omega, phis=phis):
+            return self.SFdata.dEz0tdt(z,t,omega,phis)
+        def G1(gamma):
+            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+        g1 = G1(gamma)
+        res = (2.*Ep(z[1],t[1]) + 3.*Ep(z[2],t[2]) + 18.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h**3 / 90.
         return res
 
     def soll_map(self, i_track):
         """ Soll mapping form (i) to (f) """
+        DEBUG_SOLL = DEBUG_OFF
         particle = self.particle
         m0c2     = particle.m0c2
+        beta     = particle.beta
+        betac    = particle.betac
+        c        = self.c
         phis     = self.phis
         omega    = self.omega
         tkin     = self.particle.tkin   # energy IN
 
-        nsteps = self.steps.nsteps()    # nb-steps
-        h      = self.steps.steplen()   # step length
+        nsteps = self.stpfac.nsteps()    # nb-steps
+        h      = self.stpfac.steplen()   # step length
+    
+        # z_upstream   = self.stpfac.z_upstream()
+        # z_downstream = self.stpfac.z_downstream()
+        # t0 = z_upstream/betac
         
         for nstep in range(nsteps):# loop steps
             # start with const beta in step
             beta  = MATH.sqrt(1.-1./(1.+tkin/m0c2)**2)
-            zs,ts = self.steps(beta)
-            zarr = zs[nstep]
-            tarr = ts[nstep]
+            zarr = self.stpfac.zArray(nstep)
+            t0 = zarr[0]/betac
+            tarr = self.stpfac.tArray(t0,betac)
             I1   = self.Integral1(zarr,tarr,h,omega,phis)
-            dgamma  = I1/m0c2    # (12)
-            tkin += dgamma * m0c2
+            dgamma  = I1/m0c2                               # (12)
+            tkin = tkin + dgamma * m0c2
         # energy gain per rf-gap
         deltaW = tkin - particle.tkin
         # UPDATE linear NODE matrix with this deltaW
@@ -146,6 +240,7 @@ class _DYN_G(object):
 
     def map(self,i_track):
         """ Mapping from (i) to (f) """
+        DEBUG_MAP = DEBUG_ON
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -153,54 +248,107 @@ class _DYN_G(object):
         z        = i_track[ZKOO]       # [4]
         zp       = i_track[ZPKOO]      # [5]
         # aliases
-        c        = PARAMS['lichtgeschwindigkeit']
-        particle = self.particle
-        m0c2     = particle.m0c2
-        m0c3     = particle.m0c3
-        gamma    = particle.gamma
-        beta     = particle.beta
-        bg       = particle.gamma_beta
-        bgroot   = MATH.sqrt(bg)
-        phis     = self.phis
-        omega    = self.omega
-        tkin     = self.particle.tkin   # energy IN
-
+        # ref particle
+        particleS = self.particle
+        m0c2      = particleS.m0c2
+        m0c3      = particleS.m0c3
+        # gammaS    = particleS.gamma
+        # betaS     = particleS.beta
+        # bgS       = particleS.gamma_beta
+        # bgrootS   = MATH.sqrt(bgS)
+        phiS      = self.phis
+        freq      = self.freq
+        omega     = self.omega
+        c         = self.c
+        tkinS     = particleS.tkin   # soll energy IN
+        
+        # particle
+        converter = WConverter(tkinS,freq=freq)
+        DW   = converter.Dp2pToW(zp)
+        DPHI = converter.zToDphi(z)
+        particle = copy(particleS)(tkinS+DW)
+        gamma  = particle.gamma
+        beta   = particle.beta
+        betac  = particle.betac
+        bg     = particle.gamma_beta
+        bgroot = MATH.sqrt(bg)
+        tkin   = particle.tkin
+        
         # Picht transformation
         r      = NP.array([x,y])                        # (x,y)
         rp     = NP.array([xp,yp])                      # (x',y')
-        R0     = r*bgroot                               # (X,Y)
-        Rp0    = rp*bgroot+0.5*R0*gamma/(gamma**2-1.)   # (X',Y')
+        R      = r*bgroot                               # (X,Y)
+        Rp     = rp*bgroot+0.5*R*gamma/(gamma**2-1.)    # (X',Y')
 
-        nsteps = self.steps.nsteps()        # nb-steps
-        nparts = self.steps.nparts()        # nb-parts/step
-        h      = self.steps.steplen()       # step lengrh
+        Dtime   = -z/(beta*c)    # time difference from ref particle IN
+        # Dtime   = DPHI/omega     # time difference from ref particle IN
+        t00 = self.stpfac.zArray(0)[0]/betac
+        t0 = t00 + Dtime
+        nsteps = self.stpfac.nsteps()        # nb-steps
+        # nparts = self.steps.nparts()        # nb-parts/step
+        h      = self.stpfac.steplen()       # step length
         
-        R  = R0
-        Rp = Rp0
-        for nstep in range(nsteps):         # loop steps
-            # start with const beta in step
+        for nstep in range(nsteps):         # steps loop
+            # const. beta  in step
             beta  = MATH.sqrt(1.-1./(1.+tkin/m0c2)**2)
             gamma = 1./MATH.sqrt(1.- beta**2)
             bg    = beta*gamma
             K1    = omega**2/(4.*c**2*bg**3)
-            zs,ts = self.steps(beta)
+            betac = beta*c
+            # time
+            # zs,ts = self.steps(beta*c)
+            # zarr = zs[nstep]
+            # tarr = ts[nstep]
+            zarr = self.stpfac.zArray(nstep)
+            # time at z0
+            # t0 = zarr[0]/betac+Dtime
+            tarr = self.stpfac.tArray(t0,betac)
+            I3 = self.Integral3(zarr,tarr,bg,h,omega,phiS)
+            I4 = self.Integral4(zarr,tarr,bg,h,omega,phiS)
+            # delta time
+            Dtime = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3       # (26)
+            # time at z4
+            t4 = t0 + Dtime + h/(betac)
+            t4 = tarr[-1] + Dtime
+            t0 = t4
 
-            zarr = zs[nstep]
-            tarr = ts[nstep]
-
-            I1   = self.Integral1(zarr,tarr,h,omega,phis)
-            I2   = self.Integral2(zarr,tarr,h,omega,phis)
+            # energy
+            I1   = self.Integral1(zarr,tarr,h,omega,phiS)
+            I2   = self.Integral2(zarr,tarr,h,omega,phiS)
             # delta gamma
-            dgamma  = ((1. + NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2    # (12)
-            tkin += dgamma * m0c2
+            Dgamma  = ((1. + NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2    # (12)
+            tkin = tkin + Dgamma * m0c2
             
-            # t0   = tarr[0]
-            # I3 = self.Integral3(zarr,tarr,bg,h,omega,phis)
-            # I4 = self.Integral4(zarr,tarr,bg,h,omega,phis)
-            # # delta time
-            # dtime = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3       # (26)
-            # t4 = t0 + dtime + h/(beta*c)
-        return
+            # transverse
+            J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
+            J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
+            J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
+            # delta Picht
+            DRp  = R*J1 + Rp*J2
+            DR   = R*J2 + Rp*J3
+            R    = R  + DR
+            Rp   = Rp + DRp
+            pass                            # end steps loop
+        
+        # Picht back-transformation
+        particle = particle(tkin = tkin)
+        gamma    = particle.gamma
+        gambeta  = particle.gamma_beta
+        gbroot   = MATH.sqrt(gambeta)
+        rf       = R/gbroot
+        rpf      = (Rp - 0.5*R*gamma/(gamma**2-1.)) / gbroot
+        
+        x  = rf[0]
+        xp = rpf[0]
+        y  = rf[1]
+        yp = rpf[1]
+        z  = -t4 *(betac)
+        converter = WConverter(tkin,freq=freq)
+        zp = converter.DWToDp2p(tkin - tkinS)
+
+        f_track = NP.array([ x, xp, y, yp, z, zp, tkin, 1., 0., 1.])
+        DEBUG_MAP('x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S{:+10.5f} {:+10.5f} '.format(f_track[0],f_track[1],f_track[2],f_track[3],f_track[4],f_track[5],f_track[6],f_track[7],f_track[8],f_track[9]))
+        return f_track
             
 #         
 # 
@@ -475,6 +623,7 @@ class _DYN_G(object):
 #         return res
 # 
 def test0():
+    DEBUG_TEST0 = DEBUG_ON
     import elements as ELM
     print('-----------------------------------TEST 0----------------')
     print('test _DYN_Gslice:slice_map()...')
@@ -485,19 +634,26 @@ def test0():
     xp = 1.0e-3
     y  = 1.0e-2
     yp = 1.0e-3
-    z  = 0.0
-    zp = 0.0
+    z  = 1.0e-3
+    zp = 1.0e-3
     
-    i_track = NP.array([ x, xp, y, yp, z, zp, PARAMS['sollteilchen'].tkin, 1., 0., 1.])
-
+    i_track1 = NP.array([ 0,  0, 0,  0, 0,  0, PARAMS['sollteilchen'].tkin, 1., 0., 1.])
+    i_track2 = NP.array([ x, xp, y, yp, z, zp, PARAMS['sollteilchen'].tkin, 1., 0., 1.])
     dyng = ELM.RFG(gap=0.048, SFdata=SF_tab, mapping='dyn')
-    DEBUG_TEST0('_DYN_Gslice:test0():i_track:\n', str(i_track))
+    
+    f_track = dyng.soll_map(i_track1)
+    DEBUG_TEST0('_DYN_G.soll_map():i_track:\n', str(i_track1))
+    DEBUG_TEST0('_DYN_G.soll_map():f_track:\n', str(f_track))
 
-    f_track = dyng.soll_map(i_track)
-    DEBUG_TEST0('_DYN_Gslice:test0():f_track:\n', str(f_track))
-
-    f_track = dyng.map(i_track)
-    DEBUG_TEST0('_DYN_Gslice:test0():f_track:\n', str(f_track))
+    DEBUG_TEST0('_DYN_G.map():i_track:\n', str(i_track2))
+    tracks = []
+    for i in range(10):
+        f_track = dyng.map(i_track2)
+        tracks.append(f_track)
+        i_track2 = f_track
+    DEBUG_TEST0('_DYN_G.map():f_track:')
+    for track in tracks:
+        print('x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S{:+10.5f} {:+10.5f} '.format(track[0],track[1],track[2],track[3],track[4],track[5],track[6],track[7],track[8],track[9]))
 
 if __name__ == '__main__':
     test0()

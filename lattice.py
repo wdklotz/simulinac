@@ -487,7 +487,7 @@ class Lattice(object):
                     s_like.append((s,sx,sxp,sy,syp,sz,sdw))
             except ValueError as ex:
                 print(F'STOP C+S TRAJECTORIES at s = {s:6.2f} [m]')
-                raise ex
+                # raise ex
                 break
         return (c_like,s_like)
 

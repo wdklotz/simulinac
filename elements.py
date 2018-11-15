@@ -892,7 +892,9 @@ class _T3D_G(object):
 
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
+        DEBUG_T3D_G = DEBUG_ON
         f_track = NP.dot(self.matrix,i_track)
+        DEBUG_T3D_G('x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S {:+10.5f} {:+10.5f} '.format(f_track[0],f_track[1],f_track[2],f_track[3],f_track[4],f_track[5],f_track[6],f_track[7],f_track[8],f_track[9]))
         return f_track
 
     def soll_map(self, i_track):
