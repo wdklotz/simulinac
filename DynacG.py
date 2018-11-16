@@ -83,11 +83,8 @@ class StepFactory(object):
         t4 = t0 + self.h/betac
         return NP.array([t0,t1,t2,t3,t4])
 
-    # def z_upstream(self):
-    #     return self.z_steps[0][0]
-
-   ##   def z_downstream(self):
-    #     return self.z_steps[-1][-1]
+    def z0(self,nstep):
+        return self.z_steps[nstep][0]
 
     def nsteps(self):
         return len(self.z_steps)
@@ -199,142 +196,125 @@ class _DYN_G(object):
     def soll_map(self, i_track):
         """ Soll mapping form (i) to (f) """
         DEBUG_SOLL = DEBUG_OFF
-        particle = self.particle
-        m0c2     = particle.m0c2
-        beta     = particle.beta
-        betac    = particle.betac
-        c        = self.c
-        phis     = self.phis
+        tkin     = self.particle.tkin
+        m0c2     = PARAMS['proton_mass']
+        phiS     = self.phis
         omega    = self.omega
-        tkin     = self.particle.tkin   # energy IN
 
+        tkIN = tkin   # energy IN
         nsteps = self.stpfac.nsteps()    # nb-steps
-        h      = self.stpfac.steplen()   # step length
     
-        # z_upstream   = self.stpfac.z_upstream()
-        # z_downstream = self.stpfac.z_downstream()
-        # t0 = z_upstream/betac
-        
         for nstep in range(nsteps):# loop steps
-            # start with const beta in step
-            beta  = MATH.sqrt(1.-1./(1.+tkin/m0c2)**2)
-            zarr = self.stpfac.zArray(nstep)
-            t0 = zarr[0]/betac
-            tarr = self.stpfac.tArray(t0,betac)
-            I1   = self.Integral1(zarr,tarr,h,omega,phis)
-            dgamma  = I1/m0c2                               # (12)
-            tkin = tkin + dgamma * m0c2
+            # do with const beta in step
+            gamma = 1.+ tkin/m0c2
+            R = Rp = NP.array([0,0])
+            z = 0
+            DR,DRp,Dgamma,Dtime,t0 = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
+            tkin = tkin + Dgamma*m0c2
         # energy gain per rf-gap
-        deltaW = tkin - particle.tkin
+        deltaW = tkin - tkIN
         # UPDATE linear NODE matrix with this deltaW
         self.matrix[EKOO, DEKOO] = deltaW
         # the parent delegates reading these properties from here
         self.tr        = deltaW/(self.EzAvg*self.gap)
         self.deltaw    = deltaW
-        self.particlef = copy(particle)(tkin)     # copy is !!!IMPORTANT!!!
+        self.particlef = copy(self.particle)(tkin)  # copy is !!!IMPORTANT!!!
         # track the track
-        f_track        = i_track
-        f_track[Ktp.T] = tkin
+        f_track = i_track
+        f_track[Ktp.T] += deltaW
         DEBUG_SOLL('SOLL',(f_track,self.tr))
         return f_track
 
+    def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):
+        c = PARAMS['lichtgeschwindigkeit']
+        h = self.stpfac.steplen()  
+        m0c2 = PARAMS['proton_mass']
+        m0c3 = m0c2*c     
+        bg = MATH.sqrt(gamma**2-1)
+        beta = bg/gamma
+        betac = beta*c
+
+        zarr = self.stpfac.zArray(nstep)
+        t0   = (zarr[0]-z)/betac
+        tarr = self.stpfac.tArray(t0,betac)
+
+        I1   = self.Integral1(zarr,tarr,h,omega,phiS)
+        I2   = self.Integral2(zarr,tarr,h,omega,phiS)
+        I3   = self.Integral3(zarr,tarr,h,bg,omega,phiS)
+        I4   = self.Integral4(zarr,tarr,h,bg,omega,phiS)
+        J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
+        J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
+        J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
+        K1   = omega**2/(4.*c**2*bg**3)
+        Dgamma  = ((1.+ NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2     # (12)
+        Dtime   = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3     # (26)
+        DRp     = R*J1 + Rp*J2
+        DR      = R*J2 + Rp*J3
+        return DR,DRp,Dgamma,Dtime,t0
+
     def map(self,i_track):
         """ Mapping from (i) to (f) """
-        DEBUG_MAP = DEBUG_ON
+        DEBUG_MAP = DEBUG_OFF
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4]
         zp       = i_track[ZPKOO]      # [5]
+        S        = i_track[SKOO]
         # aliases
+        c      = PARAMS['lichtgeschwindigkeit']
+        h      = self.stpfac.steplen()  
+        m0c2   = PARAMS['proton_mass']
+        phiS   = self.phis
+        freq   = self.freq
+        omega  = self.omega
+        nsteps = self.stpfac.nsteps()        # nb-steps
+
         # ref particle
-        particleS = self.particle
-        m0c2      = particleS.m0c2
-        m0c3      = particleS.m0c3
-        # gammaS    = particleS.gamma
-        # betaS     = particleS.beta
-        # bgS       = particleS.gamma_beta
-        # bgrootS   = MATH.sqrt(bgS)
-        phiS      = self.phis
-        freq      = self.freq
-        omega     = self.omega
-        c         = self.c
-        tkinS     = particleS.tkin   # soll energy IN
+        tkinS     = self.particle.tkin   # soll energy IN
+        gammaS    = 1.+ tkinS/m0c2
+        bgS       = MATH.sqrt(gammaS**2-1)
+        betaS     = bgS/gammaS
         
         # particle
         converter = WConverter(tkinS,freq=freq)
-        DW   = converter.Dp2pToW(zp)
-        DPHI = converter.zToDphi(z)
-        particle = copy(particleS)(tkinS+DW)
-        gamma  = particle.gamma
-        beta   = particle.beta
-        betac  = particle.betac
-        bg     = particle.gamma_beta
-        bgroot = MATH.sqrt(bg)
-        tkin   = particle.tkin
+        DPHI   = converter.zToDphi(z)
+        DW     = converter.Dp2pToW(zp)
+        tkin   = tkinS+DW
+        gamma  = 1.+ tkin/m0c2
+        bg     = MATH.sqrt(gamma**2-1)
         
         # Picht transformation
+        bgroot = MATH.sqrt(bg)
         r      = NP.array([x,y])                        # (x,y)
         rp     = NP.array([xp,yp])                      # (x',y')
         R      = r*bgroot                               # (X,Y)
         Rp     = rp*bgroot+0.5*R*gamma/(gamma**2-1.)    # (X',Y')
 
-        Dtime   = -z/(beta*c)    # time difference from ref particle IN
-        # Dtime   = DPHI/omega     # time difference from ref particle IN
-        t00 = self.stpfac.zArray(0)[0]/betac
-        t0 = t00 + Dtime
-        nsteps = self.stpfac.nsteps()        # nb-steps
-        # nparts = self.steps.nparts()        # nb-parts/step
-        h      = self.stpfac.steplen()       # step length
-        
         for nstep in range(nsteps):         # steps loop
             # const. beta  in step
-            beta  = MATH.sqrt(1.-1./(1.+tkin/m0c2)**2)
-            gamma = 1./MATH.sqrt(1.- beta**2)
-            bg    = beta*gamma
-            K1    = omega**2/(4.*c**2*bg**3)
+            DR,DRp,Dgamma,Dtime,t0 = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
+            bg    = MATH.sqrt(gamma**2-1)
+            beta  = bg/gamma
             betac = beta*c
-            # time
-            # zs,ts = self.steps(beta*c)
-            # zarr = zs[nstep]
-            # tarr = ts[nstep]
-            zarr = self.stpfac.zArray(nstep)
-            # time at z0
-            # t0 = zarr[0]/betac+Dtime
-            tarr = self.stpfac.tArray(t0,betac)
-            I3 = self.Integral3(zarr,tarr,bg,h,omega,phiS)
-            I4 = self.Integral4(zarr,tarr,bg,h,omega,phiS)
-            # delta time
-            Dtime = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3       # (26)
             # time at z4
-            t4 = t0 + Dtime + h/(betac)
-            t4 = tarr[-1] + Dtime
-            t0 = t4
+            t4 = t0 + h/betac + Dtime
+            z  = t4*betac
 
             # energy
-            I1   = self.Integral1(zarr,tarr,h,omega,phiS)
-            I2   = self.Integral2(zarr,tarr,h,omega,phiS)
-            # delta gamma
-            Dgamma  = ((1. + NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2    # (12)
-            tkin = tkin + Dgamma * m0c2
-            
+            tkin = tkin + Dgamma*m0c2
+            gamma = 1.+ tkin/m0c2
+
             # transverse
-            J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
-            J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
-            J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
-            # delta Picht
-            DRp  = R*J1 + Rp*J2
-            DR   = R*J2 + Rp*J3
             R    = R  + DR
             Rp   = Rp + DRp
             pass                            # end steps loop
         
         # Picht back-transformation
-        particle = particle(tkin = tkin)
-        gamma    = particle.gamma
-        gambeta  = particle.gamma_beta
-        gbroot   = MATH.sqrt(gambeta)
+        gamma    = 1.+ tkin/m0c2
+        bg       = MATH.sqrt(gamma**2-1)
+        gbroot   = MATH.sqrt(bg)
         rf       = R/gbroot
         rpf      = (Rp - 0.5*R*gamma/(gamma**2-1.)) / gbroot
         
@@ -342,12 +322,12 @@ class _DYN_G(object):
         xp = rpf[0]
         y  = rf[1]
         yp = rpf[1]
-        z  = -t4 *(betac)
         converter = WConverter(tkin,freq=freq)
-        zp = converter.DWToDp2p(tkin - tkinS)
+        zp = converter.DWToDp2p(tkin-tkinS)
 
-        f_track = NP.array([ x, xp, y, yp, z, zp, tkin, 1., 0., 1.])
-        DEBUG_MAP('x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S{:+10.5f} {:+10.5f} '.format(f_track[0],f_track[1],f_track[2],f_track[3],f_track[4],f_track[5],f_track[6],f_track[7],f_track[8],f_track[9]))
+        f_track = NP.array([ x, xp, y, yp, z, zp, tkin, 1., S, 1.])
+        # DEBUG_MAP('MAP',(f_track,None))
+        DEBUG_MAP('MAP ','x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S{:+10.5f} {:+10.5f} '.format(f_track[0],f_track[1],f_track[2],f_track[3],f_track[4],f_track[5],f_track[6],f_track[7],f_track[8],f_track[9]))
         return f_track
             
 #         

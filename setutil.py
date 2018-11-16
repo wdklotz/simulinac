@@ -110,10 +110,14 @@ FLAGS  = dict(
         pspace               = False             # plot CS twiss ellipses at entrance
         )
 PARAMS = dict(
-        lichtgeschwindigkeit = 299792458.,       # [m/s] const
-        elementarladung      = 1.602176565e-19,  # [coulomb] const
-        proton_mass          = 938.272,          # [MeV/c**2] const
-        electron_mass        = 0.5109989,        # [MeV/c**2] const
+        # lichtgeschwindigkeit = 299792458.,       # [m/s] const
+        # elementarladung      = 1.602176565e-19,  # [coulomb] const
+        # proton_mass          = 938.272,          # [MeV/c**2] const
+        # electron_mass        = 0.5109989,        # [MeV/c**2] const
+        lichtgeschwindigkeit = C.c,              # [m/s] const
+        elementarladung      = C.e,              # [coulomb] const
+        proton_mass          = C.value('proton mass energy equivalent in MeV'),
+        electron_mass        = C.value('electron mass energy equivalent in MeV'),
         EzAvg                = 2.87,             # [MV/m] default average E-field on axis
         gap                  = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
@@ -242,7 +246,7 @@ class WConverter(object):
     def __init__(self,tk,freq=PARAMS['frequenz']):
         self.pi             = C.pi
         self.lamb           = C.c/freq           # [m]
-        self.m0c2,unit,prec = C.physical_constants['proton mass energy equivalent in MeV']
+        self.m0c2           = C.value('proton mass energy equivalent in MeV')
         self.gamma          = 1. + tk/self.m0c2
         self.beta           = sqrt(1.-1./(self.gamma*self.gamma))
         self.b              = self.beta
