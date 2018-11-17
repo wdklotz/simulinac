@@ -31,6 +31,7 @@ def DEBUG_ON(*args):
 def DEBUG_OFF(*args):
     pass
 
+#todo: uniform bucket fill ?
 class Tpoint(object):
     """ 
         A track point is an NP.array of 10 coordinates, 

@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.6a2'
+___version___='v7.0.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -19,16 +19,17 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #todo: handle exceptions speziel ValueError
-#todo: use normalized emittances !!!
-#todo: results if waccept are global - each node should have its own
+#todo: use normalized emittances ?
+#todo: waccept are global - results if each node should have its own
 #todo: make new simu_manual.tex, README.md, check conversions.tex
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
 #todo: C.K.Allen's matrices which are XAL as well?
-#todo: OpenXAL model from Shishlo
+#todo: OpenXAL model from Shishlo has priority
 #todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
-#todo: CHECK dyn again. Why does particle energy get negative at LEwork_B?
+#todo: introduce Function class for plot routines
+
 import sys
 import os
 # import subprocess
@@ -111,7 +112,6 @@ def display0(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 
-#todo: introduce Function class    
 def display1(*args):
     """
     CS-Tracks with longitudinal motion
@@ -234,7 +234,7 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-#todo: what about markers plots ?
+    #todo: what about markers plots ?
         # lattice.marker_actions()
         plt.show()
 

@@ -1,4 +1,7 @@
 """
+Version v7.0.7
+*) totally new DYNAC rf-gap model replaces all ealier which were incorrect
+
 Version v7.0.6a2
 *) added loss plots to traker
 *) unified the coordinate handling: two vectors: twiss-vector (Ktw) and track point (Ktp)

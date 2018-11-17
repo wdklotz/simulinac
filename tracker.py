@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.6a2'
+___version___='v7.0.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#todo: stistical analalysis of bunch: position, size, etc ...
+#todo: statistical analalysis of bunch: position, size, etc ...
 #todo: how to get the hokey stick?
 #todo: check w-acceptance at each node entrance
 #todo: no phase damping - why?

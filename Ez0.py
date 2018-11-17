@@ -213,79 +213,6 @@ def EzAvg(poly):
     Eav = sum/N               # EzAvg [MV/m]
     return Eav
 
-class DynacSteps(object):
-    """ Produce DYNAC's steps and parts values.
-        DYNAC integrates the gap in serveral steps depending on the Superfish data.
-        Each step is split into 4 parts. 
-        Each part has a (z,time) tuple.
-        The tuples are arranged in 2 matrices: one for z-values and one for time-values.
-        Time values are calculated from velocity beta in units of lightspeed.
-    """
-    def __init__(self,gap,SFdata):
-        self.zl = -gap*100./2.   # [cm]
-        self.zr = -self.zl
-        polyvals = []
-        for poly in SFdata.Ez_poly:
-            zil = poly.zl
-            zir = poly.zr
-            if zil < self.zl or zir > self.zr: 
-                continue
-            else:
-                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))    # all-in [m]
-        polyvals = tuple(polyvals) 
-        self.h = polyvals[0][1] - polyvals[0][0]
-        z_parts = []
-        for interval in polyvals:
-            z0 = interval[0]
-            z1 = z0 + self.h/4.
-            z2 = z0 + self.h/2.
-            z3 = z0 + (3*self.h)/4.
-            z4 = z0 + self.h
-            z_parts.append((z0,z1,z2,z3,z4))
-        self.z_steps = tuple(z_parts)
-        return
-    
-    def _z_step(self,nstep):
-        return self.z_steps[nstep]
-
-    def z_upstream(self):
-        return self._z_step(0)[0]
-
-    def z_downstream(self):
-        return self._z_step(-1)[-1]
-    
-    def nsteps(self):
-        return len(self.z_steps)
-
-    def nparts(self):
-        return 5
-    
-    def steplen(self):
-        return self.h
-    
-    def _t_parts(self,t0,betac,nstep):
-        # t0 = self.z_steps[nstep][0]/betac
-        t1 = t0 + self.h/(4*betac)
-        t2 = t0 + self.h/(2*betac)
-        t3 = t0 +(3*self.h)/(4*betac)
-        t4 = t0 + self.h/betac
-        return (t0,t1,t2,t3,t4)   # times of ref particle at positions z0,...,z4
- 
-    def __call__(self,t0,betac):
-        nsteps = self.nsteps()
-        nparts = self.nparts()
-        zs = NP.zeros((nsteps,nparts))
-        ts = NP.zeros((nsteps,nparts))
-        for i in range(nsteps):
-            z_step = self._z_step(i)
-            t_step = self._t_parts(t0,betac,i)
-            t0 += self.h/betac
-            for j in range(nparts):
-                zs[i,j] = z_step[j]
-                ts[i,j] = t_step[j]
-        return zs,ts
-            
-
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf EzPeak)'''
     def __init__(self,input_file,EzPeak=1.):
@@ -531,22 +458,6 @@ def test3(input_file):
     DEBUG_TEST3('S(k)',s)
     DEBUG_TEST3("S'(k)",sp)
 
-def test4(input_file):
-    print('----------------------------TEST4---')
-    sf_data = SFdata(input_file)
-    gap = 0.048
-    beta = 0.1
-    steps = DynacSteps(gap,sf_data)
-    zs,ts = steps(beta)
-    h = steps.steplen()
-    # show
-    print('gap [m]= ',gap,' beta= ',beta,'  h[m]= ',h)
-    for ns in range(steps.nsteps()):
-        for np in range(steps.nparts()):
-            print('z [m]= ',zs[ns,np],'\tt[sec]= ',ts[ns,np])
-        print()
-    return
-    
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'
     ax = pre_plt(input_file)
@@ -555,4 +466,4 @@ if __name__ == '__main__':
     # test2()                         # poly-fit to NG
     test3(input_file)               # poly-fit to SF
     post_plt(ax)
-    test4(input_file)
+    # test4(input_file)

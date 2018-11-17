@@ -1,4 +1,4 @@
-TKIN=10.                # kinetic energy in [Mev]
+TKIN=60.                # kinetic energy in [Mev]
 TKIN=5.                 # kinetic energy in [Mev]
 BGRAD=30.000
 BGRAD=21.575
