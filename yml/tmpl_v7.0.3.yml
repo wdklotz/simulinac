@@ -233,4 +233,4 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   v7.0.3
-    - [40,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]
+    - [160,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]

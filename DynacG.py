@@ -276,16 +276,19 @@ class _DYN_G(object):
         gammaS    = 1.+ tkinS/m0c2
         bgS       = MATH.sqrt(gammaS**2-1)
         betaS     = bgS/gammaS
-        
+        zS        = 0
+       
         # particle
         converter = WConverter(tkinS,freq=freq)
-        DPHI   = converter.zToDphi(z)
-        DW     = converter.Dp2pToW(zp)
-        tkin   = tkinS+DW
-        gamma  = 1.+ tkin/m0c2
-        bg     = MATH.sqrt(gamma**2-1)
+        DW        = converter.Dp2pToW(zp)
+        tkin      = tkinS+DW
+        gamma     = 1.+ tkin/m0c2
+        bg        = MATH.sqrt(gamma**2-1)
         
         # Picht transformation
+        # ref. particle
+        RS = RpS = NP.array([0,0])
+        # particle
         bgroot = MATH.sqrt(bg)
         r      = NP.array([x,y])                        # (x,y)
         rp     = NP.array([xp,yp])                      # (x',y')
@@ -293,16 +296,26 @@ class _DYN_G(object):
         Rp     = rp*bgroot+0.5*R*gamma/(gamma**2-1.)    # (X',Y')
 
         for nstep in range(nsteps):         # steps loop
-            # const. beta  in step
+            # ref particle step
+            gammaS = 1.+ tkinS/m0c2
+            DRS,DRpS,DgammaS,DtimeS,t0S = self.do_step(nstep,zS,gammaS,RS,RpS,omega,phiS)
+            bgS = MATH.sqrt(gammaS**2-1)
+            betaS = bgS/gammaS
+
+            # particle step
             DR,DRp,Dgamma,Dtime,t0 = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
             bg    = MATH.sqrt(gamma**2-1)
             beta  = bg/gamma
-            betac = beta*c
-            # time at z4
-            t4 = t0 + h/betac + Dtime
-            z  = t4*betac
+            # ref. particle time at t4
+            DtimeS = h/(betaS*c)
+            # partile time at z4
+            DtimeP = h/(beta*c) + Dtime
+            z  += (DtimeP - DtimeS)*(beta*c)
 
-            # energy
+            # ref. particle energy
+            tkinS = tkinS + DgammaS*m0c2
+            gammaS = 1.+ tkinS/m0c2
+            # particle energy
             tkin = tkin + Dgamma*m0c2
             gamma = 1.+ tkin/m0c2
 
@@ -322,7 +335,7 @@ class _DYN_G(object):
         xp = rpf[0]
         y  = rf[1]
         yp = rpf[1]
-        converter = WConverter(tkin,freq=freq)
+        converter = WConverter(tkinS,freq=freq)
         zp = converter.DWToDp2p(tkin-tkinS)
 
         f_track = NP.array([ x, xp, y, yp, z, zp, tkin, 1., S, 1.])
