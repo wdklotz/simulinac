@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.7a1'
+___version___='v7.0.7a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -195,15 +195,15 @@ def display1(*args):
     ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    ax_l.plot(z1,cz,color='green',linestyle=':')
-    # ax_l.plot(tz,sz,color='green')
+    ax_l.plot(z1,cz,color='green')
+    ax_l.plot(z2,sz,color='green',linestyle=':')
     # ax_r = right abszisse
     ax_r = ax_l.twinx()
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    # ax_r.plot(tz,cdw,color='red',linestyle=':')
-    ax_r.plot(z2,sdw,color='red')
+    ax_r.plot(z1,cdw,color='red')
+    ax_r.plot(z2,sdw,color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
     vscale=ax_l.axis()[3]*0.7

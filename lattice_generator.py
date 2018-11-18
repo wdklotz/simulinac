@@ -133,9 +133,9 @@ def instanciate_element(item):
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
         gap       = get_mandatory(attributes,'gap',label)
-        mapping   = get_mandatory(attributes,'mapping',label)
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
+        mapping   = PARAMS['mapping']
         if not mapping in PARAMS['mapset']:
             raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
             sys.exit(1)
@@ -317,6 +317,7 @@ def factory(input_file):
         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
+        if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
 
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']

@@ -42,6 +42,7 @@ twopi = 2.*MATH.pi
     3-Oct-2016 
 """
 
+#todo: check dWf flag
 class StepFactory(object):
     """ 
     StepFactory
@@ -312,7 +313,8 @@ class _DYN_G(object):
             # partile time at z4
             DtimeP = h/(beta*c) + Dtime
             # correction to z from this step   (der Knackpunt der mich 1 Woche Arbeit kostete!)
-            z = z + (DtimeP - DtimeS)*(beta*c)
+            # vorzeichen: -z = omega*t daher z = z - delta-t
+            z = z - (DtimeP - DtimeS)*(beta*c)
             # particle energy
             tkin = tkin + Dgamma*m0c2
             gamma = 1.+ tkin/m0c2

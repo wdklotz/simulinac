@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.7a1'
+___version___='v7.0.7a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -378,6 +378,7 @@ def tracker(options):
     tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
     tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
     tracker_log['lattice version......'] = PARAMS['lattice_version']
+    tracker_log['mapping..............'] = PARAMS['mapping']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory

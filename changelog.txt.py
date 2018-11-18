@@ -1,6 +1,8 @@
 """
-Version v7.0.7
+Version v7.0.7a2
 *) totally new DYNAC rf-gap model replaces all ealier which were incorrect
+*) sign error for z correction/step in _DYN_G fixed 
+*) mapping is global now
 
 Version v7.0.6a2
 *) added loss plots to traker
