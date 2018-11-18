@@ -28,7 +28,7 @@ from setutil import PARAMS,DEBUG,Proton
 # polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 
-## DEBUG MODULE
+# DEBUGING
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):

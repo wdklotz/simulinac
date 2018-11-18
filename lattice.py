@@ -30,15 +30,14 @@ import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
 
-## DEBUGING
+# DEBUGING
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-#todo: cos-like, sin-like traj in z ???      
-## Lattice
+# Lattice
 class Lattice(object):
     """
     The Lattice object is a list of elements: ELM.<element> in self.seq
@@ -579,7 +578,7 @@ class Lattice(object):
 #             sys.exit(1)
 #         obj.__class__ = Section
 
-## Sections
+# Sections
 # To add Sections to the lattice I augment the Lattice class with member-functions 
 # using the built-in 'setattr(..)'
 def get_section(self,sec=None):

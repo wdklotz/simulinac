@@ -66,35 +66,6 @@ ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   # add handler to logger
 
-# using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
-class Ktp(IntEnum):
-    """ Koordinaten fuer track points (1x10)"""
-    x  = 0     # x
-    xp = 1     # x'
-    y  = 2     # y
-    yp = 3     # y'
-    z  = 4     # z
-    zp = 5     # z' = Dp/p
-    T  = 6     # T(s) = Ingegral(dT)
-    dT = 7     # const 1
-    S  = 8     # S = Integral(dS)
-    dS = 9     # const 1
-# for compatability with elder code
-XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-
-class Ktw(IntEnum):
-    """ Koordinaten fuer twiss vector (1x10) """
-    bx = 0      # twiss-beta
-    ax = 1      # twiss-alpha
-    gx = 2      # twiss-gamma
-    by = 3
-    ay = 4
-    gy = 5
-    bz = 6
-    az = 7
-    gz = 8
-    s  = 9      # abszisse for twiss functions
-
 # DEFAULTS "FLAGS" & "PARAMS"
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
@@ -142,10 +113,36 @@ PARAMS = dict(
         mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
         mapping              = 'base'            # default rf gap-model      
         )
-"""
- (global) KEEP: dict to keep tracking results
-"""
-KEEP = dict(z=0.,sigma_x=0.,sigma_y=0.,Tkin=0.)
+
+# using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
+class Ktp(IntEnum):
+    """ Koordinaten fuer track points (1x10)"""
+    x  = 0     # x
+    xp = 1     # x'
+    y  = 2     # y
+    yp = 3     # y'
+    z  = 4     # z
+    zp = 5     # z' = Dp/p
+    T  = 6     # T(s) = Ingegral(dT)
+    dT = 7     # const 1
+    S  = 8     # S = Integral(dS)
+    dS = 9     # const 1
+# for compatability with elder code
+XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
+
+class Ktw(IntEnum):
+    """ Koordinaten fuer twiss vector (1x10) """
+    bx = 0      # twiss-beta
+    ax = 1      # twiss-alpha
+    gx = 2      # twiss-gamma
+    by = 3
+    ay = 4
+    gy = 5
+    bz = 6
+    az = 7
+    gz = 8
+    s  = 9      # abszisse for twiss functions
+
 
 class Twiss(object):
     def __init__(self, beta, alfa, epsi):
@@ -313,6 +310,46 @@ class WConverter(object):
         emitz = self.emitwToemitz(emitw)
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
+
+class FunctionValues(object):
+    """
+    Syntactic sugar ...
+    """
+    def __init__(self):
+        self._pairs = [()]
+    def set_xy_value(self,xy):
+        self._pairs.append(xy)
+    def get_xy_values(self):
+        return self._pairs
+    def append(self,x,y):
+        self._pairs.append((x,y))
+    def get_xlist(self):
+        return [v[0] for v in self._pairs]
+    def get_ylist(self):
+        return [v[1] for v in self._pairs]
+    def nvalues(self):
+        return len(self._pairs)
+    pass
+    
+class SCTainer(object):
+    """
+    A (singleton) container for objects
+    """
+    class _singleton_(object):
+        def __init__(self):
+            self.objects = []
+    instance = None
+    def __init__(self):
+        if not SCTainer.instance:
+            SCTainer.instance = self._singleton_()
+    def object(self,n):
+        return SCTainer.instance.objects[n]
+    def objects(self):
+        return SCTainer.instance.objects
+    def append(self,obj):
+        SCTainer.instance.objects.append(obj)
+    def len(self):
+        return len(SCTainer.instance)
 
 ## Long. Emittance
 def waccept(node):
@@ -678,26 +715,6 @@ def I1(x):
             print('Bessel-function I1 overflow: (arg = {6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res
-
-class SCTainer(object):
-    """
-    A (singleton) container for objects
-    """
-    class _singleton_(object):
-        def __init__(self):
-            self.objects = []
-    instance = None
-    def __init__(self):
-        if not SCTainer.instance:
-            SCTainer.instance = self._singleton_()
-    def object(self,n):
-        return SCTainer.instance.objects[n]
-    def objects(self):
-        return SCTainer.instance.objects
-    def append(self,obj):
-        SCTainer.instance.objects.append(obj)
-    def len(self):
-        return len(SCTainer.instance)
 
 def ellicp(xy,alfa,beta,emit):
     """ convert twiss parameters to plot parameters """

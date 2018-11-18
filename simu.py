@@ -20,15 +20,15 @@ This file is part of the SIMULINAC code
 """
 #todo: handle exceptions speziel ValueError
 #todo: use normalized emittances ?
-#todo: waccept are global - results if each node should have its own
+#todo: waccept results are global - each node should carry its own
 #todo: make new simu_manual.tex, README.md, check conversions.tex
 #todo: rewise flow control with FLAGS (partly done): global STATE variable?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
 #todo: C.K.Allen's matrices which are XAL as well?
-#todo: OpenXAL model from Shishlo has priority
-#todo: sliced lattice to go parallel with thick element lattice; each element can have its private steps parameter linked to sliced lattice
-#todo: introduce Function class for plot routines
+#todo: give priority to OpenXAL model from Shishlo
+#todo: sliced sub-lattice belonging to thick element; each element could have individual slicing
+#todo: introduce Function class to make plot routines more robust
 
 import sys
 import os
