@@ -37,6 +37,7 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
+#todo: lattice as boubly linked list? makes soll-map easier and faster
 # Lattice
 class Lattice(object):
     """
