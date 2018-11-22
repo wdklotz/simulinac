@@ -43,21 +43,63 @@ class Lattice(object):
     """
     The Lattice object is a list of elements: ELM.<element> in self.seq
     """
+    class LRiterator(object):
+        def __init__(self,lattice):
+            self.lattice = lattice
+            self.next(None)
+            if len(self.lattice.seq) > 0:
+                self.next = self.lattice.seq[0]
+        def __iter__(self):
+            return self
+        def __next__(self):
+            if self.next != None:
+                this = self.next
+                self.next = self.next.next
+                return this
+            else:
+                raise StopIteration
+            
+    class RLiterator(object):
+        def __init__(self,lattice):
+            self.lattice = lattice
+            self.next = None
+            if len(self.lattice.seq) > 0:
+                self.next = self.lattice.seq[-1]
+        def __iter__(self):
+            return self
+        def __next__(self):
+            if self.next != None:
+                this = self.next
+                self.next = self.next.previous
+                return this
+            else:
+                raise StopIteration
+            
     def __init__(self):
         self.seq    = []
         self.length = 0.
         self.accel  = 0.
+        # default: iterating lattice left-right
+        self.iteration = "LR"
     
-    def __getitem__(self,n):
-        item = self.seq[n]
-        return item
-
+    def __iter__(self):
+        if self.iteration == "RL":
+            iterator = self.RLiterator(self)
+        elif self.iteration == "LR":
+            iterator = self.LRiterator(self)
+        return iterator
+    
     def add_element(self,element):
         """ add element to lattice """
         if len(self.seq) == 0:
             s0 = 0.
+            element.previous = None
         else:
-            s0 = self.seq[-1].position[2]
+            previous         = self.seq[-1]
+            previous.next    = element
+            element.previous = previous
+            s0               = element.previous.position[2]
+        self.seq.append(element)
         l = element.length
         si = s0
         sf = si+l
@@ -65,13 +107,12 @@ class Lattice(object):
         position = (si,sm,sf)
         element.position = position 
         self.length = sf
-        # DEBUG('add_element: ',' [si,sm,sf,]=[{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
-        self.seq.append(element)
 
     def string(self):
         """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
         for element in self.seq:
+        # for element in iter(self):
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
             # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
             mcell = element * mcell   
@@ -86,7 +127,8 @@ class Lattice(object):
         ttfx = +1.e-50
         tk_i = soll_track.getpoints()[0]()[6]
         tk_f = soll_track.getpoints()[-1]()[6]
-        for element in self.seq:
+        # for element in self.seq:
+        for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
             if isinstance(element,(ELM.RFG,ELM.RFC)):
@@ -112,9 +154,13 @@ class Lattice(object):
             twiss prameters beta, alpha, gamma for periodic lattices
         """
         mcell = ELM.I(label=' <==')   #  chain matrices for full cell
-        for count,element in enumerate(self.seq):
-            # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
-            mcell = element * mcell
+        # for count,element in enumerate(self.seq):
+        for count,element in enumerate(iter(self)):
+            if count == 0:
+                mcell = element
+            else:
+                # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+                mcell = element * mcell
 
         ## Stabilität ?
         unstable = False
@@ -241,7 +287,8 @@ class Lattice(object):
         reprt = ''
         header = ''
         row = ''
-        for count,element in enumerate(reversed(self.seq)):
+        # for count,element in enumerate(reversed(self.seq)):
+        for count,element in enumerate(iter(self)):
             name = element.label
             len = element.length
             rest = (count+1)%19
@@ -256,21 +303,17 @@ class Lattice(object):
         reprt += header+' \n'+row+' \n'
         return reprt
 
-    def reverse(self):
-        raise RuntimeWarning('Lattice.reverse() not implemented and not used! (probably bogus!)')
-        res = Lattice()
-        seq = copy(self.seq)
-        seq.reverse()
-        for elm in seq:
-            res.add_element(elm)
-        return res
-
-    def concat(self,lattice_piece):
-        """Concatenate two Lattice pieces"""
-        for element in lattice_piece.seq:
-            element = copy(element) if element in self.seq else element
+    def toggle_iteration(self):
+      if self.iteration == "LR":
+          self.iteration = "RL"
+      elif self.iteration == "RL":
+          self.iteration = "LR"
+    def concat(self,lattice):
+        """Concatenate two Lattice pieces (self+lattice)"""
+        for element in iter(lattice):
+            element = copy(element)
             self.add_element(element)
-
+        
     def twiss_envelopes(self,steps=1):
         """
         Calulate envelopes from initial twiss-vector with beta-matrices
@@ -281,7 +324,7 @@ class Lattice(object):
         twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
         beta_fun = [list(twv0)+[0]]
         B_matrix = NP.eye(9)                            # cumulated beta-matrix
-        for node in iter(self.seq):
+        for node in iter(self):
             slices = node.make_slices(anz = steps)
             means = []
             s,sm,sf = node.position
@@ -346,7 +389,8 @@ class Lattice(object):
         sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = []
-        for node in self.seq: # loop nodes
+        # for node in self.seq: # loop nodes
+        for node in iter(self): # loop nodes
             # sigma-matrices for a single node
             sigmas = node.sigma_beam(steps = steps, sg = sg0) 
             # prep plot list of ftn's
@@ -384,7 +428,8 @@ class Lattice(object):
             v_0[0] = d0
         s = 0.0
         traj = [(s,v_0[0],v_0[1])]
-        for element in self.seq:
+        # for element in self.seq:
+        for element in iter(self):
             slices = element.make_slices(anz = steps)
             for i_element in slices:
                 m_beta = i_element.matrix
@@ -398,7 +443,8 @@ class Lattice(object):
     def lattice_plot_functions(self):
         fun = []   # is list((s = Abzisse,f = Ordinate))
         ape = []
-        for element in self.seq:
+        # for element in self.seq:
+        for element in iter(self):
             # DEBUG((element.__class__,element['viseo'],element.position))
             pos   = element.position
             # element plot
@@ -703,6 +749,21 @@ def test2():
     lattice.label = 'LABEL'
     lattice.section = 'SECTION'
     print(lattice.__dict__)
+
+def test3():
+    print('-------------------------------------Test3--')
+    lattice = make_wille()
+    print("@@@@@@@@@@ Lattice from left to right (default)")
+    for next in iter(lattice):
+        print('{:38s} {:38s} {:38s}'.format(repr(next.previous),repr(next),repr(next.next)))
+        next = next.next
+    print("@@@@@@@@@@ lattice from right to left (reversed)")
+    lattice.toggle_iteration()
+    for next in iter(lattice):
+        print('{:38s} {:38s} {:38s}'.format(repr(next.previous),repr(next),repr(next.next)))
+        next = next.next
+    
 if __name__ == '__main__':
     test1()
     test2()
+    test3()

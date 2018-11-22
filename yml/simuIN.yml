@@ -213,6 +213,6 @@ lattice:
     # title is MANDATORY!
     - title:   LEwork_B
     - [ 1, SCmarker ]
-    - [41,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
+    - [1,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
     - [ 1, SCmarker ]
     

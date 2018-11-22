@@ -404,7 +404,7 @@ def factory(input_file):
 
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])   # __call__ sollteilchen energy
     lattice = make_lattice(latticeList,segments)
-    DEBUG_MODULE('lattice_generator >>\n',lattice.string())
+    # DEBUG_MODULE('lattice_generator >>\n',lattice.string())
 
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
     DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
@@ -414,10 +414,10 @@ def parse_and_fabric(input_file):   # delegates to factory
     return factory(input_file)
 
 # utilities
-def test0():
+def test0(input_file):
     print('---------------------------------TEST0')
     wfl= []
-    fileobject=open('yml/simuIN.yml','r')
+    fileobject=open(input_file,'r')
     wfl= yaml.load(fileobject)
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
@@ -436,8 +436,16 @@ def test0():
 def test1(input_file):
     print('---------------------------------TEST1')
     lattice = parse_and_fabric(input_file)
-
+    print('%%%%%%%%%%%%%%%%%%% Left------->Right')
+    for cnt,node in enumerate(iter(lattice)):
+        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
+    print('\n%%%%%%%%%%%%%%%%%%% Right------->Left')
+    lattice.toggle_iteration()
+    for cnt,node in enumerate(iter(lattice)):
+        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.previous)))
+        
 if __name__ == '__main__':
-    test0()
-    test1('yml/simuIN.yml')
+    input_file = 'yml/simuIN.yml'
+    test0(input_file)
+    test1(input_file)
 

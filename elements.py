@@ -85,6 +85,15 @@ class _Node(DictObject, object):
         return self
 
     @property
+    def previous(self):
+        return self._previous
+    def previous(self,value):
+        self._previous = value
+    def next(self):
+        return self._next
+    def next(self.value):
+        self._next = value
+    @property
     def twiss(self):
         return self['twiss']
     def twiss(self,value):

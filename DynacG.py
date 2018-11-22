@@ -292,6 +292,8 @@ class _DYN_G(object):
         rp     = NP.array([xp,yp])                      # (x',y')
         R      = r*bgroot                               # (X,Y)
         Rp     = rp*bgroot+0.5*R*gamma/(gamma**2-1.)    # (X',Y')
+        # R0     = R
+        # Rp0    = Rp
 
         for nstep in range(nsteps):         # steps loop
             # ref particle step
@@ -320,8 +322,9 @@ class _DYN_G(object):
             gamma = 1.+ tkin/m0c2
 
             # transverse
-            R    = R  + DR
-            Rp   = Rp + DRp
+            Rp0  = Rp
+            Rp   = Rp + DRp                 # (34)
+            R    = R  + DR + h*Rp0          # (39)
             pass                            # end steps loop
         
         # Picht back-transformation

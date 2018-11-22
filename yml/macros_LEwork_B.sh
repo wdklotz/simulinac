@@ -25,7 +25,7 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=1
-NCELL=41
+# NCELL=41
 # NCELL=166
 
 ARGS="-D _TKIN=$TKIN"
