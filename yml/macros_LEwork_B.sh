@@ -1,31 +1,30 @@
 TKIN=5.                 # kinetic energy in [Mev]
-# TKIN=35.                # kinetic energy in [Mev]
-BGRAD=30.000
-BGRAD=21.575
+TKIN=70.                # kinetic energy in [Mev]
 BGRAD=43.150
 
 MAPPING=t3d          # Trace 3D linear map model
-MAPPING=simple       # Shishlo/Holmes linear map model
-MAPPING=base         # Shishlo/Holmes base map model
-# MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
-# MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
+# MAPPING=simple       # Shishlo/Holmes linear map model
+# MAPPING=base         # Shishlo/Holmes base map model
+MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
+MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
 
 EMITW=1.0e-5            # w emittance in [rad]
 EMITW=1.0e-5            # w emittance in [rad]
 EMITX=1.0e-6            # x emittance in [m*rad]
 EMITY=1.0e-6            # y emittance in [m*rad]
 
-BETAX=2.100             # best w/o rf
-BETAX=1.3
-BETAY=0.290             # best w/o rf
-BETAY=0.465
+BETAX=3.3               # best w/o rf
+# BETAX=0.65
+BETAY=2.5               # best w/o rf
+# BETAY=0.49
 
 ALFAX=0.
 ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=1
-NCELL=41
+NCELL=4
+# NCELL=41
 # NCELL=166
 
 ARGS="-D _TKIN=$TKIN"
