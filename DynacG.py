@@ -210,7 +210,9 @@ class _DYN_G(object):
         # UPDATE linear NODE matrix with this deltaW
         self.matrix[EKOO, DEKOO] = deltaW
         # the parent delegates reading these properties from here
-        self.tr        = deltaW/(self.EzAvg*self.gap)
+        self.tr = 0.
+        if self.dWf == 1:
+            self.tr    = deltaW/(self.EzAvg*self.gap)
         self.deltaw    = deltaW
         self.particlef = copy(self.particle)(tkin)  # copy is !!!IMPORTANT!!!
         # track the track
@@ -223,30 +225,33 @@ class _DYN_G(object):
         """
         Full step through the DYNAC intervall with its 4 parts
         """
-        c = PARAMS['lichtgeschwindigkeit']
-        h = self.stpfac.steplen()  
-        m0c2 = PARAMS['proton_mass']
-        m0c3 = m0c2*c     
-        bg = MATH.sqrt(gamma**2-1)
-        beta = bg/gamma
-        betac = beta*c
-
-        zarr = self.stpfac.zArray(nstep)
-        t0   = (zarr[0]-z)/betac
-        tarr = self.stpfac.tArray(t0,betac)
-
-        I1   = self.Integral1(zarr,tarr,h,omega,phiS)
-        I2   = self.Integral2(zarr,tarr,h,omega,phiS)
-        I3   = self.Integral3(zarr,tarr,h,bg,omega,phiS)
-        I4   = self.Integral4(zarr,tarr,h,bg,omega,phiS)
-        J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
-        J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
-        J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
-        K1   = omega**2/(4.*c**2*bg**3)
-        Dgamma  = ((1.+ NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2     # (12)
-        Dtime   = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3     # (26)
-        DRp     = R*J1 + Rp*J2                                            # (33)
-        DR      = R*J2 + Rp*J3                                            # (38)
+        if self.dWf == 1:
+            c = PARAMS['lichtgeschwindigkeit']
+            h = self.stpfac.steplen()  
+            m0c2 = PARAMS['proton_mass']
+            m0c3 = m0c2*c     
+            bg = MATH.sqrt(gamma**2-1)
+            beta = bg/gamma
+            betac = beta*c
+    
+            zarr = self.stpfac.zArray(nstep)
+            t0   = (zarr[0]-z)/betac
+            tarr = self.stpfac.tArray(t0,betac)
+    
+            I1   = self.Integral1(zarr,tarr,h,omega,phiS)
+            I2   = self.Integral2(zarr,tarr,h,omega,phiS)
+            I3   = self.Integral3(zarr,tarr,h,bg,omega,phiS)
+            I4   = self.Integral4(zarr,tarr,h,bg,omega,phiS)
+            J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
+            J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
+            J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
+            K1   = omega**2/(4.*c**2*bg**3)
+            Dgamma  = ((1.+ NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2     # (12)
+            Dtime   = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3     # (26)
+            DRp     = R*J1 + Rp*J2                                            # (33)
+            DR      = R*J2 + Rp*J3                                            # (38)
+        else:
+            DR,DRp,Dgamma,Dtime = (0.,0.,0.,0.)
         return DR,DRp,Dgamma,Dtime
 
     def map(self,i_track):

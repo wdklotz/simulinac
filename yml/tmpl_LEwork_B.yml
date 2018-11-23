@@ -25,7 +25,7 @@
 ## RUN configuration
 
 flags:
-    # - accON:        False           # {True} acceleration on/off flag
+    - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -102,7 +102,7 @@ elements:
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        # - fRF:      408.e+6      # [Hz] frequency
         # - fRF:      204.e+6      # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore
