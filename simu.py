@@ -29,6 +29,7 @@ This file is part of the SIMULINAC code
 #todo: give priority to OpenXAL model from Shishlo
 #todo: sliced sub-lattice belonging to thick element; each element could have individual slicing
 #todo: introduce Function class to make plot routines more robust
+#todo: REMAKE _DYN_G
 
 import sys
 import os

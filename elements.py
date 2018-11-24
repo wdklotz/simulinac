@@ -44,8 +44,8 @@ twopi = 2.*pi     # used about everywhere
 
 # MDIM: dimension of matrices
 MDIM = 10
-
-NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})  # pretty printing
+# pretty printing
+NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
 class DictObject(object):
     """
@@ -75,8 +75,8 @@ class _Node(DictObject, object):
         self.length    = 0.               # default - thin
         self.label     = label            # default - unlabeled
         self.aperture  = aperture         # default - infinite aperture
-        self.next      = next
-        self.prev      = prev
+        self.next      = next             # right link
+        self.prev      = prev             # left link
         self['slice_min'] = 0.001         # default - minimal slice length
         self['viseo']     = 0             # default - invisible
 
@@ -234,7 +234,6 @@ class _Node(DictObject, object):
         sigxy = (sgxm,sgxpm,sgym,sgypm)
         # each node has its tuple of average sigmas     
         self['sigxy'] = sigxy
-
         return sigmas
 
     def map(self, i_track):
@@ -247,7 +246,6 @@ class _Node(DictObject, object):
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
-
         return f_track
 
     def soll_map(self, i_track):
@@ -348,8 +346,6 @@ class QF(D):
     def shorten(self, length):
         shortQF = QF(k0=self.k0, length=length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture)
         shortQF._params = self._params
-        # DEBUG_MODULE('QF: ', self.__dict__)
-        # DEBUG_MODULE('QF.shorten: ', ret.__dict__)
         return shortQF
 
     def _mx_(self):
@@ -462,10 +458,10 @@ class RD(SD):
 
     def make_slices(self, anz=PARAMS['nbof_slices']):
         # DEBUG_MODULE('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
-        sdshort = self.shorten(self.length/anz)
+        shortSD = self.shorten(self.length/anz)
         slices = [self.wd]          # wedge @ entrance
         for i in range(anz):
-            slices.append(sdshort)
+            slices.append(shortSD)
         slices.append(self.wd)      # wedge @ exit
         # DEBUG_MODULE('slices', slices)
         return slices
@@ -480,8 +476,6 @@ class _wedge(I):
         ckp = tan(psi)/radius
         m = self.matrix
         # MDIMxMDIM matrix
-        # m[1, 0]      = +ckp
-        # m[3, 2]      = -ckp
         m[XPKOO, XKOO] = +ckp
         m[YPKOO, YKOO] = -ckp
 
@@ -513,8 +507,7 @@ class GAP(I):
 
         self['viseo']  = 0.25
 
-        # lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
-        lamb         = PARAMS['wellenlänge']
+        lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
         beta         = self.particle.beta                    # beta Einstein
         tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
         U0           = self.EzAvg*self.gap                   # Spaltspannung
@@ -555,9 +548,6 @@ class GAP(I):
 
     def _mx_(self, m, m0c2, U0, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
         cyp = cxp = -pi*U0*tr*sin(phis)/(m0c2*lamb*bg**3)
-        # m[1, 0]      = cxp
-        # m[3, 2]      = cyp
-        # m[6, 7]      = self.deltaW
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
         m[EKOO, DEKOO] = self.deltaW      # energy kick
@@ -582,7 +572,7 @@ class RFG(I):
             next       = None,
             prev       = None):
         super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
-        self.EzAvg    = EzAvg*dWf          # [MV/m] average gap field
+        self._EzAvg   = EzAvg*dWf          # [MV/m] average gap field
         self.phis     = PhiSoll            # [radians] soll phase
         self.freq     = fRF                # [Hz]  RF frequenz
         self.omega    = twopi*self.freq
@@ -593,6 +583,7 @@ class RFG(I):
         self.dWf      = dWf
 
         self['viseo']= 0.25
+        self['EzAvg']= self._EzAvg
         self.mapset  = PARAMS['mapset']
         self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq
         # makes the T3D matrix default for RFG
@@ -636,9 +627,10 @@ class RFG(I):
         return self['EzPeak']
     @property
     def EzAvg(self):
-        return self['EzAvg']
+        return self._EzAvg
+    @EzAvg.setter
     def EzAvg(self,value):
-        self.EzAvg = value
+        self._EzAvg = self['EzAvg'] = value
     @property
     def tr(self):
         """ delegate to gap-model """
@@ -651,6 +643,7 @@ class RFG(I):
     def particlef(self):    #todo: don't use particlef - only deltaW
         """ delegate to gap-model """
         return self.gap_model.particlef
+
     def map(self, i_track):
         """ delegate to gap-model """
         return self.gap_model.map(i_track)
@@ -960,7 +953,7 @@ class QFth(_thin):
         self._params = _params
         return self
 
-# Kick
+# thin quad kick
 class _kick(I):
     """ 
     Matrix for thin lens quad 
@@ -969,7 +962,6 @@ class _kick(I):
         super().__init__(label='k', particle=particle, position=position, aperture=aperture)
         m = self.matrix
         # m[1, 0]      = -self.k0*L
-        # m[3, 2]      = -m[1, 0]
         m[XPKOO, XKOO] = -quad.k0*quad.length
         m[YPKOO, YKOO] = -m[XPKOO, XKOO]
 
@@ -1099,7 +1091,7 @@ class RFC(_thin):
 
     @property
     def lamb(self):
-        return PARAMS['wellenlänge']
+        return PARAMS['lichtgeschwindigkeit']/self.freq
     @property
     def particlef(self):
         return self._particlef
@@ -1130,7 +1122,9 @@ class SIXD(D):
         return self
 
     def shorten(self, length):
-        return SIXD(length = length, label = self.label, particle = self.particle, position = self.position, aperture = self.aperture)
+        shortSIXD = SIXD(length=length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture)
+        shortSIXD._params = self._params
+        return shortSIXD
 
     def map(self, i_track):
         def fpsigma(psigma, soll):
