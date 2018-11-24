@@ -559,35 +559,33 @@ class RFG(I):
     """
     def __init__(self,
             EzAvg      = PARAMS['EzAvg'],
+            label      = 'RFG',
             PhiSoll    = radians(PARAMS['phisoll']),
             fRF        = PARAMS['frequenz'],
-            label      = 'RFG',
-            particle   = PARAMS['sollteilchen'],
             gap        = PARAMS['gap'],
-            position   = [0, 0, 0],
             aperture   = None,
+            dWf        = FLAGS['dWf'],
             mapping    = 't3d',
             SFdata     = None,  # return of SFdata (SuperFish data)
-            dWf        = FLAGS['dWf'],
+            particle   = PARAMS['sollteilchen'],
+            position   = [0, 0, 0],
             next       = None,
             prev       = None):
         super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf          # [MV/m] average gap field
         self.phis     = PhiSoll            # [radians] soll phase
         self.freq     = fRF                # [Hz]  RF frequenz
-        self.omega    = twopi*self.freq
         self.gap      = gap                # [m] rf-gap
         self.aperture = aperture           # [m]
+        self.dWf      = dWf
         self.mapping  = mapping            # map model
         self.SFdata   = SFdata             # SuperFish data
-        self.dWf      = dWf
 
-        self['viseo']= 0.25
-        self['EzAvg']= self._EzAvg
-        self.mapset  = PARAMS['mapset']
-        self.lamb    = PARAMS['lichtgeschwindigkeit']/self.freq
+        self['viseo'] = 0.25
+        self['EzAvg'] = self._EzAvg
+        # self.mapset   = PARAMS['mapset']
         # makes the T3D matrix default for RFG
-        self.t3d_g   = _T3D_G(self)
+        self.t3d_g    = _T3D_G(self)
 
         """ set switch to gap model """
         if self.mapping == 't3d':
@@ -601,7 +599,12 @@ class RFG(I):
             self.gap_model = _TTF_G(self)
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
-            self.gap_model = _DYN_G(self)
+            # self.gap_model = _DYN_G(self)  not for RFG anymore!
+            self.gap_model = None
+            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
+            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
+            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
+            sys.exit(1)
 
     def adjust_energy(self, tkin):
         _params = self._params
@@ -623,6 +626,12 @@ class RFG(I):
         return self
 
     @property
+    def omega(self):
+        return twopi*self.freq
+    @property
+    def lamb(self):
+        return PARAMS['lichtgeschwindigkeit']/self.freq
+    @property
     def EzPeak(self):
         return self['EzPeak']
     @property
@@ -640,8 +649,9 @@ class RFG(I):
         """ delegate to gap-model """
         return self.gap_model.deltaW
     @property
-    def particlef(self):    #todo: don't use particlef - only deltaW
+    def particlef(self):
         """ delegate to gap-model """
+        #todo: don't use particlef - only deltaW
         return self.gap_model.particlef
 
     def map(self, i_track):
@@ -652,6 +662,116 @@ class RFG(I):
         """ delegate to gap-model """
         f_track = self.gap_model.soll_map(i_track)
         return f_track
+
+# RF cavity as D*RFG*D
+class RFC(I):
+    """ 
+    Rf cavity as product D*RFG*D with Trace3D mapping 
+    """
+    # instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
+    def __init__(self,
+                EzAvg    = PARAMS['EzAvg'],
+                label    = 'RFC',
+                PhiSoll  = radians(PARAMS['phisoll']),
+                fRF      = PARAMS['frequenz'],
+                gap      = PARAMS['gap'],
+                aperture = PARAMS['aperture'],
+                dWf      = FLAGS['dWf'],
+                length   = 0.,
+                mapping  = 't3d',
+                SFdata   = None,
+                particle = PARAMS['sollteilchen'],
+                position = [0, 0, 0],
+                next     = None,
+                prev     = None):
+        super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
+        self._EzAvg   = EzAvg*dWf
+        self.phis     = PhiSoll
+        self.freq     = fRF
+        self.gap      = gap
+        self.length   = length
+        self.aperture = aperture
+        self.dWf      = dWf
+        self.length   = length
+        self.mapping  = mapping
+        self.SFdata   = SFdata
+        
+        if length == 0: self.length = self.gap       # ideale pillbox
+        self['viseo']   = 0.33
+        
+        if self.mapping != 'dyn':
+            # ---> DKD models <---
+            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            kick  = RFG( EzAvg     = self._EzAvg,
+                        PhiSoll   = self.phis,
+                        fRF       = self.freq,
+                        gap       = self.gap,
+                        aperture  = self.aperture,
+                        dWf       = self.dWf,
+                        mapping   = self.mapping,
+                        SFdata    = self.SFdata,
+                        particle  = self.particle)
+            self.triplet = (dri, kick, drf)
+            # dri['viseo'] = drf['viseo'] = kick['viseo'] = self['viseo']
+            deltaW       = kick.deltaW
+            tkinf        = self.particle.tkin + deltaW   # tkin after acc. gap
+            # UPDATE energy for downstream drift after gap
+            drf.adjust_energy(tkinf)
+            # ---> make DKD matrix <----
+            # dkd          = drf * kick * dri
+            # self.matrix  = dkd.matrix
+            # UPDATE linear NODE matrix with this deltaW
+            # self.matrix[EKOO, DEKOO] = deltaW
+            # self._particlef = copy(self.particle)(tk_f)     # !!!IMPORTANT!!!
+            # self.tr         = kick.tr
+        elif self.mapping == 'dyn':
+            sys.exit(1)
+
+    def adjust_energy(self, tkin):
+        _params = self._params
+        self.__init__(
+                    EzAvg         = self.EzAvg,
+                    label         = self.label,
+                    PhiSoll       = self.phis,
+                    fRF           = self.freq,
+                    gap           = self.gap,
+                    aperture      = self.aperture,
+                    dWf           = self.dWf,
+                    length        = self.length,
+                    mapping       = self.mapping,
+                    SFdata        = self.SFdata,
+                    particle      = self.particle(tkin),
+                    position      = self.position,
+                    next          = self.next,
+                    prev          = self.prev)
+        self._params = _params
+        return self
+
+    def shorten(self, length):
+        #todo: too complicated to make it now
+        return self
+        
+    def map(self,i_track):
+        pass
+    def soll_map(self,i_track):
+        pass
+
+    @property
+    def EzPeak(self):
+        return self['EzPeak']
+    @property
+    def EzAvg(self):
+        return self._EzAvg
+    @EzAvg.setter
+    def EzAvg(self,value):
+        self._EzAvg = self['EzAvg'] = value
+    # @property
+    # def lamb(self):
+    #     return PARAMS['lichtgeschwindigkeit']/self.freq
+    # @property
+    # def particlef(self):
+    #     return self._particlef
 
 # PyOrbit RF gap-models
 class _PYO_G(object):
@@ -671,13 +791,19 @@ class _PYO_G(object):
         self.lamb     = parent.lamb
         self.tr       = trtf(parent.lamb, parent.gap, parent.particle.beta)
         self.U0       = parent.EzAvg*parent.gap
+        self.deltaW   = None     # will be set by mapping function
 
-    def map(self, i_track):
         if self.mapping == 'simple':
-            which_map = self.simple_map
+            self.which_map = self.simple_map
         elif self.mapping == 'base':
-            which_map = self.base_map
-        return which_map(i_track, self.lamb, self.particle, self.U0, self.tr, self.phis)
+            self.which_map = self.base_map
+            
+    # @property
+    # def deltaW(self):
+    #     return self.deltaW
+            
+    def map(self, i_track):
+        return self.which_map(i_track, self.lamb, self.particle, self.U0, self.tr, self.phis)
 
     def soll_map(self, i_track):
         return self.map(i_track)
@@ -752,7 +878,7 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self.deltaw    = deltaW
+        self.deltaW    = deltaW
         self.particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
         return f_track
 
@@ -1019,82 +1145,6 @@ class QDthx(QFthx):
     def __init__(self, k0=0., length=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None):
         super().__init__(k0=-k0, length=length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
         self['viseo'] = -0.5
-
-# RF cavity as D*RFG*D
-class RFC(_thin):
-    """ 
-    Rf cavity as product D*RFG*D with Trace3D mapping 
-    """
-    def __init__(self,
-                EzAvg    = PARAMS['EzAvg'],
-                PhiSoll  = radians(PARAMS['phisoll']),
-                fRF      = PARAMS['frequenz'],
-                label    = 'RFC',
-                particle = PARAMS['sollteilchen'],
-                gap      = PARAMS['gap'],
-                length   = 0.,
-                position = [0, 0, 0],
-                aperture = PARAMS['aperture'],
-                dWf      = FLAGS['dWf'],
-                next     = None,
-                prev     = None):
-        super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
-        if length == 0.: length = gap  # eff. gap can be different from cavity-length
-        self.length   = length
-        self.aperture = aperture
-        self.EzAvg    = EzAvg*dWf
-        self.phis     = PhiSoll
-        self.freq     = fRF
-        self.gap      = gap
-        self.dWf      = dWf
-        
-        di   = D(length = 0.5*length, particle = self.particle)
-        df   = D(length = 0.5*length, particle = self.particle)
-        # Trace3D RF gap
-        kick = RFG( EzAvg     = self.EzAvg,
-                    PhiSoll   = self.phis,
-                    fRF       = self.freq,
-                    label     = self.label,
-                    particle  = self.particle,
-                    gap       = self.gap,
-                    mapping   = 't3d',
-                    dWf       = self.dWf,
-                    aperture  = self.aperture)
-        self.tr         = kick.tr
-        tk_f            = self.particle.tkin+kick.deltaW   # tkin after acc. gap
-        # update energy for downstream drift after gap
-        df.adjust_energy(tk_f)
-        # ---> one for three <----
-        lens            = df * kick * df
-        self.matrix     = lens.matrix
-        self._particlef = copy(self.particle)(tk_f)     # !!!IMPORTANT!!!
-        self.triplet    = (di, kick, df)
-        self['viseo']   = 0.33
-
-    def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-                    EzAvg         = self.EzAvg,
-                    PhiSoll       = self.phis,
-                    fRF           = self.freq,
-                    label         = self.label,
-                    particle      = self.particle(tkin),
-                    gap           = self.gap,
-                    length        = self.length,
-                    position      = self.position,
-                    aperture      = self.aperture,
-                    dWf           = self.dWf,
-                    next          = self.next,
-                    prev          = self.prev)
-        self._params = _params
-        return self
-
-    @property
-    def lamb(self):
-        return PARAMS['lichtgeschwindigkeit']/self.freq
-    @property
-    def particlef(self):
-        return self._particlef
 
 # SixTrack drift map
 class SIXD(D):

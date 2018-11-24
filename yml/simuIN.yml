@@ -97,7 +97,7 @@ elements:
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *LE          # is part of section
     - RFGL:  &RFGL               # ID: &alias
-        - type:     RFG          # RFG class
+        - type:     RFG          # RFG gap class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
@@ -108,28 +108,18 @@ elements:
         - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - sec:      *LE          # is part of section
-    - RFCH:  &RFCH               # ID: &alias
-        - type:     RFC          # RFC class
-        - EzAvg:    2.31         # [MV/m] average E-field on axis
+    - RFC:  &RFCL                # ID: &alias
+        - type:     RFC          # RFC cavity class
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *p01         # [Hz] frequency
+        # - fRF:      *p01         # [Hz] frequency
+        - fRF:      408.e+6      # [Hz] frequency
         - gap:      *p15         # [m] gap length
-        - aperture: *p04         # [m] quad bore
         - length:   0.044        # [m] cavity length
+        - aperture: *p04         # [m] quad bore
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - sec:      *LE          # is part of section
-    # - M:  &Mrkr                  # ID: &alias
-    #     - type:    MRK           # MRK class
-    #     - actions:
-    #         # - sigma_x          # acction horizontal sigma
-    #         # - sigma_y          # action vertical sigma
-    #         # - Tkin             # action kinetic energy
-    #         - show_elli          # action twiss ellipses
-    #     - sec:     *LE
-    # - A:  &Apr                   # ID: &alias
-    #     - type:    MRK           # MRK class
-    #     - actions:
-    #         - check_aperture     # action aperture check
-    #     - sec:     *LE
     - SC:  &SCm                    # ID: &alias
         - type:      MRK           # MRK class
         - prefix:    frames        # prefix for directory holding saved frames
@@ -185,25 +175,15 @@ segments:
         - *D5
         - *RFGL # 8th cavity
         - *D5
-        #
-        # - *D5
-        # - *RFGL # 9th cavity
-        # - *D5
-        #
-        # - *D5
-        # - *RFGL # 10th cavity
-        # - *D5
-        #
-    # - RFCAVH:
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
-    #     - *RFCH
+    - RFCAVL:
+        - *RFCL      # 1
+        - *RFCL      # 2
+        - *RFCL      # 3
+        - *RFCL      # 4
+        - *RFCL      # 5
+        - *RFCL      # 6
+        - *RFCL      # 7
+        - *RFCL      # 8
     - SCmarker:
         - *SCm
 #...........................................................................................
@@ -211,8 +191,8 @@ segments:
 
 lattice:
     # title is MANDATORY!
-    - title:   LEwork_B
+    - title:   work
     - [ 1, SCmarker ]
-    - [41,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
+    - [41,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]
     - [ 1, SCmarker ]
     

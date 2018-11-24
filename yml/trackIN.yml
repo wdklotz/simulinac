@@ -211,7 +211,7 @@ segments:
 
 lattice:
     # title is MANDATORY!
-    - title:   LEwork_B
+    - title:   work
     - [ 1, SCmarker ]
     - [41,   SEGiL, RFGL, SCmarker, SEGmL, RFGL, SEGfL]
     - [ 1, SCmarker ]

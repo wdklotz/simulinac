@@ -145,7 +145,7 @@ def instanciate_element(item):
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
             EzAvg = PARAMS[fname].EzAvg
-            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,SFdata=PARAMS[fname],dWf=dWf,aperture=aperture)
+            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
             instance['EzPeak'] = EzPeak
             pass
         else:
@@ -156,26 +156,42 @@ def instanciate_element(item):
         instance['PhiSoll']  = PhiSoll
         instance['fRF']      = fRF
         instance['gap']      = gap
-        instance['mapping']  = mapping
         instance['aperture'] = aperture
         instance['dWf']      = dWf
+        instance['mapping']  = mapping
     elif key == 'RFC':
         label     = attributes['ID']
-        gap       = get_mandatory(attributes,'gap',label)
-        length    = get_mandatory(attributes,'length',label)
-        EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         fRF       = get_mandatory(attributes,"fRF",label)
-        dWf       = FLAGS['dWf']
+        gap       = get_mandatory(attributes,'gap',label)
         aperture  = get_mandatory(attributes,'aperture',label)
-        instance  =  ELM.RFC(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,length=length,dWf=dWf,aperture=aperture)
-        instance['label']   = label
-        instance['gap']     = gap
-        instance['length']  = length
-        instance['EzAvg']   = EzAvg
-        instance['PhiSoll'] = PhiSoll
-        instance['fRF']     = fRF
-        instance['dWf']     = dWf
+        dWf       = FLAGS['dWf']
+        length    = get_mandatory(attributes,'length',label)
+        mapping   = PARAMS['mapping']
+        if not mapping in PARAMS['mapset']:
+            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
+            sys.exit(1)
+        if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
+            fname     = get_mandatory(attributes,"SFdata",label)
+            EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            if fname not in PARAMS:
+                PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
+            EzAvg = PARAMS[fname].EzAvg
+            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
+            instance['EzPeak'] = EzPeak
+            pass
+        else:
+            EzAvg     = get_mandatory(attributes,"EzAvg",label)
+            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
+            instance['EzPeak'] = None
+        instance['label']    = label
+        instance['PhiSoll']  = PhiSoll
+        instance['fRF']      = fRF
+        instance['gap']      = gap
+        instance['aperture'] = aperture
+        instance['dWf']      = dWf
+        instance['length']   = length
+        instance['mapping']  = mapping
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)

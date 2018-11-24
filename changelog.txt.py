@@ -1,4 +1,10 @@
 """
+Version v7.0.8work
+*) Lattice is now double linked list
+*) dyn mapping still wrong
+*) EzAvg-bug fixed
+*) aperture-bug fixed
+
 Version v7.0.7a2
 *) totally new DYNAC rf-gap model replaces all ealier which were incorrect
 *) sign error for z correction/step in _DYN_G fixed 
