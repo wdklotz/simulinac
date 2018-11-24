@@ -102,7 +102,7 @@ elements:
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
-        # - fRF:      408.e+6      # [Hz] frequency
+        - fRF:      408.e+6      # [Hz] frequency
         # - fRF:      204.e+6      # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore

@@ -378,7 +378,11 @@ def waccept(node):
         # NOTE: w == Dgamma == normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
         wmx  = 2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis
-        wmx  = sqrt(wmx) # T.Wangler (6.28) wmx on sepratrix
+        try:
+            wmx  = sqrt(wmx) # T.Wangler (6.28) wmx on sepratrix
+        except ValueError as ex:
+            print('No energy acceptance at 1st gap! Maybe wrong frequency?')
+            raise ex
         DWmx = wmx*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
         # NOTE: Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
         Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
