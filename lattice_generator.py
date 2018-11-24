@@ -442,7 +442,7 @@ def test1(input_file):
     print('\n%%%%%%%%%%%%%%%%%%% Right------->Left')
     lattice.toggle_iteration()
     for cnt,node in enumerate(iter(lattice)):
-        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.previous)))
+        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
         
 if __name__ == '__main__':
     input_file = 'yml/simuIN.yml'

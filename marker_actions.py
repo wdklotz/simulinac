@@ -26,8 +26,8 @@ class PoincareAction(ELM.MRK):
     """
     This marker-action will be used by the 'scatter' action
     """
-    def __init__(self, label='PSC', prefix='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], abszisse='z', ordinate='zp'):
-        super().__init__(label=label, particle=particle, position=position, action='scatter')
+    def __init__(self, label='PSC', prefix='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None, abszisse='z', ordinate='zp'):
+        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev, action='scatter')
         # all points for this scatter-marker
         self.tpoints  = []
         self.prefix   = prefix
@@ -59,6 +59,6 @@ class PoincareAction(ELM.MRK):
 
     def adjust_energy(self, tkin):
         _params = self._params
-        self.__init__(label=self.label, prefix=self.prefix, particle=self.particle(tkin), position=self.position, abszisse=self.abszisse, ordinate=self.ordinate)
+        self.__init__(label=self.label, prefix=self.prefix, particle=self.particle(tkin), position=self.position, aperture=self.aperture, next=self.next, prev=self.prev, abszisse=self.abszisse, ordinate=self.ordinate)
         self._params = _params
         return self

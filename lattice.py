@@ -46,7 +46,7 @@ class Lattice(object):
     class LRiterator(object):
         def __init__(self,lattice):
             self.lattice = lattice
-            self.next(None)
+            self.next = None
             if len(self.lattice.seq) > 0:
                 self.next = self.lattice.seq[0]
         def __iter__(self):
@@ -70,11 +70,11 @@ class Lattice(object):
         def __next__(self):
             if self.next != None:
                 this = self.next
-                self.next = self.next.previous
+                self.next = self.next.prev
                 return this
             else:
                 raise StopIteration
-            
+## lattice body        
     def __init__(self):
         self.seq    = []
         self.length = 0.
@@ -93,12 +93,12 @@ class Lattice(object):
         """ add element to lattice """
         if len(self.seq) == 0:
             s0 = 0.
-            element.previous = None
+            element.prev = None
         else:
-            previous         = self.seq[-1]
-            previous.next    = element
-            element.previous = previous
-            s0               = element.previous.position[2]
+            previous = self.seq[-1]
+            previous.next = element
+            element.prev  = previous
+            s0 = element.prev.position[2]
         self.seq.append(element)
         l = element.length
         si = s0
@@ -111,7 +111,8 @@ class Lattice(object):
     def string(self):
         """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
-        for element in self.seq:
+        # for element in self.seq:
+        for element in iter(self):
         # for element in iter(self):
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
             # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
@@ -308,6 +309,7 @@ class Lattice(object):
           self.iteration = "RL"
       elif self.iteration == "RL":
           self.iteration = "LR"
+
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
@@ -503,7 +505,8 @@ class Lattice(object):
         c_like = []; s_like = []
         c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
         s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
-        for element in self.seq:
+        # for element in self.seq:
+        for element in iter(self):
             particle = element.particle
             gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
@@ -511,17 +514,17 @@ class Lattice(object):
             try:
                 for i_element in slices:
                     s += i_element.length
-                    ## COS_like
+                    ## COSine_like
                     # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
                     c_0 = i_element.map(c_0)   # map!!!
                     cx  = c_0[XKOO]
                     cxp = c_0[XPKOO]
                     cy  = c_0[YKOO]
                     cyp = c_0[YPKOO]
-                    cz  = -c_0[ZKOO]*360./(beta*lamb)            # conversion sigmaz_i --> dPhi [deg]
-                    cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # conversion dp/p --> dW/W [%]
+                    cz  = -c_0[ZKOO]*360./(beta*lamb)            # sigmaz_i --> dPhi [deg]
+                    cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
-                    ## SIN_like
+                    ## SINus_like
                     # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
                     s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
@@ -564,12 +567,26 @@ class Lattice(object):
     @property
     def first_gap(self):
         node = None
-        for elm in self.seq:
+        # for elm in self.seq:
+        for elm in iter(self):
             if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
                 node = elm
                 break
         return node
 
+    def show_linkage(self):
+        """ Show left-right links of lattice nodes. Iterate in both directions """
+        print(F"@@@@@@@@@@ iteration {self.iteration:s} @@@@@@@@@@")
+        for next in iter(self):
+            print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
+            next = next.next
+        self.toggle_iteration()
+        print(F"@@@@@@@@@@ iteration {self.iteration:s} @@@@@@@@@@")
+        for next in iter(self):
+            print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
+            next = next.next
+        self.toggle_iteration()
+        
 # The commented code is *legacy*. No use to define a new
 # subclass and to cast from base class to subclass
 # although it worked well!
@@ -635,7 +652,8 @@ def get_section(self,sec=None):
         return section
     else:
         section = Lattice()
-        for elm in self.seq:
+        # for elm in self.seq:
+        for elm in iter(self):
             try:
                 elmsec = elm.section
             except AttributeError as ex:
@@ -753,15 +771,7 @@ def test2():
 def test3():
     print('-------------------------------------Test3--')
     lattice = make_wille()
-    print("@@@@@@@@@@ Lattice from left to right (default)")
-    for next in iter(lattice):
-        print('{:38s} {:38s} {:38s}'.format(repr(next.previous),repr(next),repr(next.next)))
-        next = next.next
-    print("@@@@@@@@@@ lattice from right to left (reversed)")
-    lattice.toggle_iteration()
-    for next in iter(lattice):
-        print('{:38s} {:38s} {:38s}'.format(repr(next.previous),repr(next),repr(next.next)))
-        next = next.next
+    lattice.show_linkage()
     
 if __name__ == '__main__':
     test1()

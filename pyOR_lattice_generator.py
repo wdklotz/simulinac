@@ -176,5 +176,5 @@ if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
     # aperture = PARAMS['quad_bore_radius']
     file = 'orbit'
-    file = 'work'
+    file = 'simuIN'
     generator(EzFile = EzFile, file = file)
