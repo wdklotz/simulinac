@@ -692,7 +692,6 @@ class RFC(I):
         self.length   = length
         self.aperture = aperture
         self.dWf      = dWf
-        self.length   = length
         self.mapping  = mapping
         self.SFdata   = SFdata
         
@@ -786,29 +785,36 @@ class _PYO_G(object):
             return ttf
         self.matrix   = parent.matrix
         self.particle = parent.particle
-        self.mapping  = mapping
         self.phis     = parent.phis
         self.lamb     = parent.lamb
-        self.tr       = trtf(parent.lamb, parent.gap, parent.particle.beta)
-        self.U0       = parent.EzAvg*parent.gap
-        self.deltaW   = None     # will be set by mapping function
+        self.freq     = parent.freq
+        self.mapping  = mapping
+        self.E0L      = parent.EzAvg*parent.gap
+        self.ttf      = trtf(parent.lamb, parent.gap, parent.particle.beta)
+        self.qE0LT    = self.E0L*self.ttf
+        # deltaW soll-energy kick Trace3D (same as Shishlo)
+        self._deltaW  = self.qE0LT*cos(self.phis)
+
+        # UPDATE linear NODE matrix with deltaW
+        self.matrix[EKOO, DEKOO] = self.deltaW
 
         if self.mapping == 'simple':
             self.which_map = self.simple_map
         elif self.mapping == 'base':
             self.which_map = self.base_map
             
-    # @property
-    # def deltaW(self):
-    #     return self.deltaW
+    @property
+    def deltaW(self):
+        return self._deltaW
             
     def map(self, i_track):
-        return self.which_map(i_track, self.lamb, self.particle, self.U0, self.tr, self.phis)
+        return self.which_map(i_track)
 
     def soll_map(self, i_track):
-        return self.map(i_track)
+        i_track[EK00] = i_track[EK00] + self.deltaW
+        return i_track
 
-    def simple_map(self, i_track, lamb, particle, qE0L, tr, phis):
+    def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
         xi        = i_track[XKOO]       # [0]
         xpi       = i_track[XPKOO]      # [1]
@@ -819,15 +825,17 @@ class _PYO_G(object):
         T         = i_track[EKOO]       # [6] summe aller delta-T
         S         = i_track[SKOO]       # [8] summe aller laengen
 
+        particle  = self.particle
         m0c2      = particle.e0
-        qE0LT     = qE0L*tr
-
         WIN       = particle.tkin
         betai     = particle.beta
         gammai    = particle.gamma
         gbi       = particle.gamma_beta
-        # deltaW energy kick Trace3D (same as Shishlo)
-        deltaW    = qE0LT*cos(phis)
+        deltaW    = self.deltaW
+        lamb      = self.lamb
+        qE0LT     = self.qE0LT
+        phis      = self.phis
+        
 
         DEBUG_PYO_G('simple_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,1.,phis))
 
@@ -864,9 +872,6 @@ class _PYO_G(object):
 
         f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
 
-        # UPDATE linear NODE matrix with this deltaW
-        self.matrix[EKOO, DEKOO] = deltaW
-
         # for DEBUGGING
         if DEBUG_PYO_G == DEBUG_ON:
             itr = i_track.copy()
@@ -878,11 +883,10 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self.deltaW    = deltaW
         self.particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
         return f_track
 
-    def base_map(self, i_track, lamb, particle, qE0L, tr, phis):
+    def base_map(self, i_track):
         """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -893,24 +897,27 @@ class _PYO_G(object):
         T        = i_track[EKOO]       # [6] summe aller delta-T
         S        = i_track[SKOO]       # [8] summe aller laengen
 
-        qE0LT  = qE0L*tr
-        m0c2   = particle.e0
-        betai  = particle.beta
-        gammai = particle.gamma
-        gbi    = particle.gamma_beta
-        tki    = particle.tkin
-        frq    = PARAMS['lichtgeschwindigkeit']/lamb
+        particle = self.particle
+        m0c2     = particle.e0
+        betai    = particle.beta
+        gammai   = particle.gamma
+        gbi      = particle.gamma_beta
+        tki      = particle.tkin
+        frq      = self.freq
+        lamb     = self.lamb
+        phis     = self.phis
+        qE0LT    = self.qE0LT
         
         r      = sqrt(x**2+y**2)                      # radial coordinate
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
         i1     = I1(Kr)                               # bessel function I1
         # soll
-        WIN       = particle.tkin                     # energy (i)
-        DELTAW    = qE0LT*cos(phis)                   # energy kick
+        WIN       = tki                               # energy (i)
+        DELTAW    = self.deltaW                       # energy kick
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # particle
-        converter = WConverter(tki,freq=frq)
+        converter = WConverter(WIN,freq=frq)
 #       phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
@@ -931,8 +938,6 @@ class _PYO_G(object):
 #       zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
 
-        T   = T + DELTAW                              # soll energy summation
-
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
         if r > 0.:
             xp  = gbi/gbf*xp - x/r*commonf*sin(phin)  # Formel 4.2.6 A.Shishlo/J.Holmes
@@ -942,9 +947,6 @@ class _PYO_G(object):
             yp  = gbi/gbf*yp
 
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
-
-        # UPDATE linear NODE matrix with this deltaW
-        self.matrix[EKOO, DEKOO] = DELTAW
 
         # for DEBUGGING
         if DEBUG_PYO_G == DEBUG_ON:
@@ -957,7 +959,6 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'base_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self.deltaW    = DELTAW
         self.particlef = particlef
         return f_track
 
