@@ -52,7 +52,6 @@ def DEBUG_OFF(*args):
     pass
 
 DEBUG_MODULE   = DEBUG_OFF
-DEBUG_LATTICE  = DEBUG_OFF
 
 def bucket(*args):
     bucket_size.bucket()
@@ -222,6 +221,7 @@ def display2(*args):
 # -------------------------  | everything starts here |
 #                            |----------------------- |
 def simulation(filepath):
+    DEBUG_LATTICE  = DEBUG_OFF
     def display(*functions):
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
@@ -244,7 +244,7 @@ def simulation(filepath):
     # parse input file and create a lattice
     lattice = parse_and_fabric(filepath)
 
-    if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
     
     # configure elements for energy increase
     soll_track = track_soll(lattice)

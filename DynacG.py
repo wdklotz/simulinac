@@ -105,7 +105,7 @@ class _DYN_G(object):
         self.matrix   = parent.matrix
         self.particle = parent.particle
         self.omega    = parent.omega
-        self.tr       = 0.68   #todo: better use Panofski for initial value
+        self.ttf       = 0.68   #todo: better use Panofski for initial value
         self.deltaW    = None
         self.particlef = None
 
@@ -210,15 +210,15 @@ class _DYN_G(object):
         # UPDATE linear NODE matrix with this deltaW
         self.matrix[EKOO, DEKOO] = deltaW
         # the parent delegates reading these properties from here
-        self.tr = 0.
+        self.ttf = 0.
         if self.dWf == 1:
-            self.tr    = deltaW/(self.EzAvg*self.gap)
+            self.ttf    = deltaW/(self.EzAvg*self.gap)
         self.deltaw    = deltaW
         self.particlef = copy(self.particle)(tkin)  # copy is !!!IMPORTANT!!!
         # track the track
         f_track = i_track
         f_track[Ktp.T] += deltaW
-        DEBUG_SOLL('SOLL',(f_track,self.tr))
+        DEBUG_SOLL('SOLL',(f_track,self.ttf))
         return f_track
 
     def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):

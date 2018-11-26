@@ -92,7 +92,7 @@ class _TTF_G(object):
             self.slices = \
                 _make_slices(self, self.gap, self.SFdata, self.particle)
             # slice energy dependence
-            self.deltaW, self.tr = \
+            self.deltaW, self.ttf = \
                 configure_slices(self.slices, self.phis, self.particle.tkin)
             # UPDATE linear NODE matrix with this deltaW
             self.matrix[EKOO,DEKOO] = self.deltaW

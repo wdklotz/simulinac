@@ -99,14 +99,13 @@ class _Node(DictObject, object):
         return self.matrix[:n, :m]
 
     def __mul__(self, other):
-        product = NP.einsum('ij,jk', self.matrix, other.matrix)
         res = _Node()
         if (self.label == ''):
             res.label = other.label
         else:
             res.label = self.label+'*'+other.label
-        res.length = self.length+other.length
-        res.matrix = product
+        res.length = self.length + other.length
+        res.matrix = NP.dot(self.matrix, other.matrix)
         return res
 
     def string(self):
@@ -237,8 +236,9 @@ class _Node(DictObject, object):
         return sigmas
 
     def map(self, i_track):
-        """ Linear mapping of trjectory from (i) to (f) """
-        f_track = NP.dot(self.matrix,i_track)
+        """ Linear mapping of trajectory from (i) to (f) """
+        f_track = copy(i_track)
+        f_track = NP.dot(self.matrix,f_track)
 
         # for DEBUGGING
         if DEBUG_MAP == DEBUG_ON:
@@ -249,8 +249,10 @@ class _Node(DictObject, object):
         return f_track
 
     def soll_map(self, i_track):
-        """ Use full map for soll_track """
-        f_track = self.map(i_track)
+        # """ Use full map for soll_track """
+        # f_track = self.map(i_track)
+        f_track = copy(i_track)
+        f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
         return f_track
 
     def shorten(self, length):
@@ -510,8 +512,8 @@ class GAP(I):
         lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
         beta         = self.particle.beta                    # beta Einstein
         tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
-        U0           = self.EzAvg*self.gap                   # Spaltspannung
-        self.deltaW  = U0*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
+        E0L          = self.EzAvg*self.gap                   # Spaltspannung
+        self.deltaW  = E0L*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
         tkin         = self.particle.tkin
         tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
         part_center  = copy(self.particle)(tk_center)        # !!!IMPORTANT!!! particle @ gap center
@@ -519,7 +521,7 @@ class GAP(I):
         matrix       = self.matrix
         m0c2         = self.particle.e0
         # UPDATE linear matrix
-        self._mx_(matrix, m0c2, U0, tr, PhiSoll, lamb, bg)   # transport matrix
+        self._mx_(matrix, m0c2, E0L, tr, PhiSoll, lamb, bg)   # transport matrix
 
     def adjust_energy(self, tkin):
         _params = self._params
@@ -546,8 +548,8 @@ class GAP(I):
         res = NP.sinc(teta)/teta
         return res
 
-    def _mx_(self, m, m0c2, U0, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
-        cyp = cxp = -pi*U0*tr*sin(phis)/(m0c2*lamb*bg**3)
+    def _mx_(self, m, m0c2, E0L, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
+        cyp = cxp = -pi*E0L*tr*sin(phis)/(m0c2*lamb*bg**3)
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
         m[EKOO, DEKOO] = self.deltaW      # energy kick
@@ -573,6 +575,7 @@ class RFG(I):
             prev       = None):
         super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf          # [MV/m] average gap field
+        self['EzAvg'] = self._EzAvg
         self.phis     = PhiSoll            # [radians] soll phase
         self.freq     = fRF                # [Hz]  RF frequenz
         self.gap      = gap                # [m] rf-gap
@@ -582,7 +585,6 @@ class RFG(I):
         self.SFdata   = SFdata             # SuperFish data
 
         self['viseo'] = 0.25
-        self['EzAvg'] = self._EzAvg
         # self.mapset   = PARAMS['mapset']
         # makes the T3D matrix default for RFG
         self.t3d_g    = _T3D_G(self)
@@ -600,12 +602,11 @@ class RFG(I):
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # self.gap_model = _DYN_G(self)  not for RFG anymore!
-            self.gap_model = None
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
-            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
-            sys.exit(1)
-
+            print("RFG is a kick-model and does not work with 'dyn'-mapping!",flush=True)
+            exit(1)
+            
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(
@@ -641,9 +642,9 @@ class RFG(I):
     def EzAvg(self,value):
         self._EzAvg = self['EzAvg'] = value
     @property
-    def tr(self):
+    def ttf(self):
         """ delegate to gap-model """
-        return self.gap_model.tr
+        return self.gap_model.ttf
     @property
     def deltaW(self):
         """ delegate to gap-model """
@@ -689,11 +690,14 @@ class RFC(I):
         self.phis     = PhiSoll
         self.freq     = fRF
         self.gap      = gap
+        self.E0L      = self._EzAvg*self.gap
         self.length   = length
         self.aperture = aperture
         self.dWf      = dWf
         self.mapping  = mapping
         self.SFdata   = SFdata
+        self._ttf     = None
+        self._deltaW  = None
         
         if length == 0: self.length = self.gap       # ideale pillbox
         self['viseo']   = 0.33
@@ -702,7 +706,7 @@ class RFC(I):
             # ---> DKD models <---
             dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
             drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            kick  = RFG( EzAvg     = self._EzAvg,
+            kick  = RFG(EzAvg     = self._EzAvg,
                         PhiSoll   = self.phis,
                         fRF       = self.freq,
                         gap       = self.gap,
@@ -712,18 +716,15 @@ class RFC(I):
                         SFdata    = self.SFdata,
                         particle  = self.particle)
             self.triplet = (dri, kick, drf)
-            # dri['viseo'] = drf['viseo'] = kick['viseo'] = self['viseo']
-            deltaW       = kick.deltaW
-            tkinf        = self.particle.tkin + deltaW   # tkin after acc. gap
+            self._deltaW = kick.deltaW
+            tkinf        = self.particle.tkin + self.deltaW   # tkin after acc. gap
             # UPDATE energy for downstream drift after gap
             drf.adjust_energy(tkinf)
-            # ---> make DKD matrix <----
-            # dkd          = drf * kick * dri
-            # self.matrix  = dkd.matrix
-            # UPDATE linear NODE matrix with this deltaW
-            # self.matrix[EKOO, DEKOO] = deltaW
-            # self._particlef = copy(self.particle)(tk_f)     # !!!IMPORTANT!!!
-            # self.tr         = kick.tr
+            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
+            # in case off ... (really not needed ?)
+            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
+            DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
+            # self.matrix = None
         elif self.mapping == 'dyn':
             sys.exit(1)
 
@@ -747,15 +748,36 @@ class RFC(I):
         self._params = _params
         return self
 
+    def map(self,i_track):
+        dri,kick,drf = self.triplet
+        track1  = dri.map(i_track)
+        track2  = kick.map(track1)
+        f_track = drf.map(track2)
+        return f_track
+
+    def soll_map(self,i_track):
+        dri,kick,drf = self.triplet
+        track1  = dri.soll_map(i_track)
+        track2  = kick.soll_map(track1)
+        f_track = drf.soll_map(track2)
+        return f_track
+
     def shorten(self, length):
         #todo: too complicated to make it now
         return self
         
-    def map(self,i_track):
-        pass
-    def soll_map(self,i_track):
-        pass
-
+    @property
+    def ttf(self):
+        return self._ttf
+        
+    @property
+    def lamb(self):
+        return PARAMS['lichtgeschwindigkeit']/self.freq
+        
+    @property
+    def deltaW(self):
+        return self._deltaW
+        
     @property
     def EzPeak(self):
         return self['EzPeak']
@@ -765,12 +787,10 @@ class RFC(I):
     @EzAvg.setter
     def EzAvg(self,value):
         self._EzAvg = self['EzAvg'] = value
-    # @property
-    # def lamb(self):
-    #     return PARAMS['lichtgeschwindigkeit']/self.freq
-    # @property
-    # def particlef(self):
-    #     return self._particlef
+
+    @property
+    def particlef(self):
+        return self._particlef
 
 # PyOrbit RF gap-models
 class _PYO_G(object):
@@ -783,17 +803,18 @@ class _PYO_G(object):
             x = gap/(beta*lamb)
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
-        self.matrix   = parent.matrix
-        self.particle = parent.particle
-        self.phis     = parent.phis
-        self.lamb     = parent.lamb
-        self.freq     = parent.freq
-        self.mapping  = mapping
-        self.E0L      = parent.EzAvg*parent.gap
-        self.ttf      = trtf(parent.lamb, parent.gap, parent.particle.beta)
-        self.qE0LT    = self.E0L*self.ttf
+        self.matrix     = parent.matrix
+        self.particle   = parent.particle
+        self.phis       = parent.phis
+        self.lamb       = parent.lamb
+        self.freq       = parent.freq
+        self.mapping    = mapping
+        self.E0L        = parent.EzAvg*parent.gap
+        self.ttf        = trtf(parent.lamb, parent.gap, parent.particle.beta)
+        self.qE0LT      = self.E0L*self.ttf
         # deltaW soll-energy kick Trace3D (same as Shishlo)
-        self._deltaW  = self.qE0LT*cos(self.phis)
+        self._deltaW    = self.qE0LT*cos(self.phis)
+        self._particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
 
         # UPDATE linear NODE matrix with deltaW
         self.matrix[EKOO, DEKOO] = self.deltaW
@@ -806,13 +827,18 @@ class _PYO_G(object):
     @property
     def deltaW(self):
         return self._deltaW
+    
+    @property
+    def particlef(self):
+        return self._particlef
             
     def map(self, i_track):
         return self.which_map(i_track)
 
     def soll_map(self, i_track):
-        i_track[EK00] = i_track[EK00] + self.deltaW
-        return i_track
+        f_track       = copy(i_track)
+        f_track[EKOO] = f_track[EKOO] + self.deltaW
+        return f_track
 
     def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
@@ -883,7 +909,7 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self.particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
+        self._particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
         return f_track
 
     def base_map(self, i_track):
@@ -959,7 +985,7 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'base_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self.particlef = particlef
+        self._particlef = particlef
         return f_track
 
 # Trace3D RF gap-model
@@ -972,10 +998,10 @@ class _T3D_G(object):
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
 
-        def mx(m, tr, beta, gamma, particlei, particlef, U0, phis, lamb, deltaW):
+        def mx(m, ttf, beta, gamma, particlei, particlef, E0L, phis, lamb, deltaW):
             """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
             e0 = particlei.e0
-            kz = 2.*pi*U0*tr*sin(phis)/(e0*beta*beta*lamb)
+            kz = 2.*pi*E0L*ttf*sin(phis)/(e0*beta*beta*lamb)
             ky = kx = -0.5*kz/(gamma*gamma)
             bgi = particlei.gamma_beta
             bgf = particlef.gamma_beta
@@ -987,41 +1013,51 @@ class _T3D_G(object):
             m[EKOO, DEKOO] = deltaW
             return
 
+        # from parent
         matrix         = parent.matrix
         particle       = parent.particle
         EzAvg          = parent.EzAvg
         phis           = parent.phis
         gap            = parent.gap
         lamb           = parent.lamb
+        position       = parent.position
+        # function scope
         beta           = particle.beta
-        tr             = trtf(lamb, gap, beta)       # Panofski
-        deltaW         = EzAvg*gap*tr*cos(phis)      # deltaW energy kick Trace3D
+        ttf            = trtf(lamb, gap, beta)       # Panofski
+        deltaW         = EzAvg*gap*ttf*cos(phis)     # deltaW energy kick Trace3D
         tkin           = particle.tkin
         tk_center      = deltaW*0.5+tkin             # energy in gap center
         part_center    = copy(particle)(tk_center)   # !!!IMPORTANT!!! particle @ gap center
-        b              = part_center.beta            # beta @ gap cemter
-        g              = part_center.gamma           # gamma @ gap center
+        beta_mid       = part_center.beta            # beta @ gap cemter
+        gamma_mid      = part_center.gamma           # gamma @ gap center
         particlef      = copy(particle)(tkin+deltaW) # !!!IMPORTANT!!! particle @ (f)
-        U0             = EzAvg*gap
+        E0L            = EzAvg*gap
 
         # the linear NODE matrix for rf gaps
-        mx(matrix, tr, b, g, particle, particlef, U0, phis, lamb, deltaW)
+        mx(matrix, ttf, beta_mid, gamma_mid, particle, particlef, E0L, phis, lamb, deltaW)
 
-        # the parent delegates reading these properties from here
-        self.matrix    = matrix
-        self.tr        = tr
-        self.deltaW    = deltaW
-        self.particlef = particlef
+        # class scope
+        # parent may delegate reading these properties this object
+        self.matrix     = matrix
+        self.ttf        = ttf
+        self.deltaW     = deltaW
+        self.particlef  = particlef
+        self.position   = position
 
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
-        DEBUG_T3D_G = DEBUG_OFF
-        f_track = NP.dot(self.matrix,i_track)
-        DEBUG_T3D_G('x{:+10.5f} xp{:+10.5f} y{:+10.5f} yp{:+10.5f} z {:+10.5f} zp {:+10.5f} T {:+10.5f} {:+10.5f} S {:+10.5f} {:+10.5f} '.format(f_track[0],f_track[1],f_track[2],f_track[3],f_track[4],f_track[5],f_track[6],f_track[7],f_track[8],f_track[9]))
+        f_track = copy(i_track)
+        f_track = NP.dot(self.matrix,f_track)
+        DEBUG_OFF('t3d ',f_track)
         return f_track
 
     def soll_map(self, i_track):
-        return self.map(i_track)
+        si,sm,sf = self.position
+        f_track = copy(i_track)
+        f_track[EKOO] += self.deltaW
+        f_track[SKOO] = si
+        DEBUG_ON('t3d ',f_track)
+        return f_track
 
 # Base of thin Nodes
 class _thin(_Node):

@@ -134,8 +134,8 @@ class Lattice(object):
                 q_counter += 1
             if isinstance(element,(ELM.RFG,ELM.RFC)):
                 cav_counter += 1
-                ttfm = min(element.tr,ttfm)
-                ttfx = max(element.tr,ttfx)
+                ttfm = min(element.ttf,ttfm)
+                ttfx = max(element.ttf,ttfx)
         if q_counter == 0:
             SUMMARY['nbof quadrupoles*'] = '0 (no thick quads?)'
         else:
@@ -160,7 +160,7 @@ class Lattice(object):
             if count == 0:
                 mcell = element
             else:
-                # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+                # Achtung: Reihenfolge !
                 mcell = element * mcell
 
         ## Stabilität ?
@@ -515,8 +515,7 @@ class Lattice(object):
                 for i_element in slices:
                     s += i_element.length
                     ## COSine_like
-                    # DEBUG_MODULE('cs_traj: calls {}.map() for C'.format(i_element))
-                    c_0 = i_element.map(c_0)   # map!!!
+                    # c_0 = i_element.map(c_0)   # map!!!
                     cx  = c_0[XKOO]
                     cxp = c_0[XPKOO]
                     cy  = c_0[YKOO]
@@ -525,7 +524,6 @@ class Lattice(object):
                     cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
                     ## SINus_like
-                    # DEBUG_MODULE('cs_traj: calls {}.map() for S'.format(i_element))
                     s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
                     sxp = s_0[XPKOO]

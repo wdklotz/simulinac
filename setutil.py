@@ -362,7 +362,7 @@ def waccept(node):
     """
     if node is not None and FLAGS['dWf'] == 1:
         emitw_i   = PARAMS['emitw_i']    # [rad]
-        E0T       = node.EzAvg*node.tr   # [MV/m]
+        E0T       = node.EzAvg*node.ttf  # [MV/m]
         particle  = node.particle
         phis      = node.phis            # [rad]
         lamb      = node.lamb            # [m]
@@ -601,13 +601,17 @@ def collect_data_for_summary(lattice):
                 EzAvg    = itm.EzAvg
                 PhiSoll  = degrees(itm.phis)
                 length   = itm.length
+                mapping  = itm.mapping
+                EzPeak   = itm.EzPeak
                 aperture = itm.aperture
                 freq     = itm.freq
                 SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
+                SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
                 SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
                 SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
                 SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
+                SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
+                SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
                 SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
 
     SUMMARY['use emittance growth']            =  FLAGS['egf']
