@@ -141,7 +141,9 @@ def display1(*args):
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
-    stop_viseo = 2000                  # stop viseo plot after so many points
+    stop_viseox = 5                  # stop viseo plot after so many [m]
+    stop_viseoy = 5                  # stop viseo plot after so many [m]
+    stop_viseoz = 5                  # stop viseo plot after so many [m]
     vis_abszisse = [x[0] for x in lat_plot]
     vis_ordinate = [x[1] for x in lat_plot]
     ape_abszisse = [x[0] for x in ape_plot]
@@ -160,7 +162,10 @@ def display1(*args):
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_ordinate]
-    for i in range(stop_viseo,len(vis_abszisse)): viseox[i] = 0.   # stop lattice plotting
+    # stop lattice plotting after stop_viseo meters
+    for i,s in enumerate(vis_abszisse):
+        if s > stop_viseox:
+            viseox[i] = 0.
     plt.plot(vis_abszisse,viseox,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     # apertures
@@ -180,7 +185,10 @@ def display1(*args):
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]
-    for i in range(stop_viseo,len(vis_abszisse)): viseoy[i] = 0.   # stop lattice plotting
+    # stop lattice plotting after stop_viseo meters
+    for i,s in enumerate(vis_abszisse):
+        if s > stop_viseoy:
+            viseoy[i] = 0.
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     # apertures
@@ -210,8 +218,11 @@ def display1(*args):
     # lattice elements
     vscale=ax_l.axis()[3]*0.7
     viseoz = [x*vscale for x in vis_ordinate]
-    for i in range(stop_viseo,len(vis_abszisse)): viseoz[i] = 0.   # stop lattice plotting
-    ax_l.plot(vis_abszisse[0:stop_viseo],viseoz[0:stop_viseo],label='',color='black')
+    # stop lattice plotting after stop_viseo meters
+    for i,s in enumerate(vis_abszisse):
+        if s > stop_viseoz:
+            viseoz[i] = 0.
+    ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
 def display2(*args):
@@ -249,7 +260,7 @@ def simulation(filepath):
     # configure elements for energy increase
     soll_track = track_soll(lattice)
     
-    if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
 
     print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
 

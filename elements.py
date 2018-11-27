@@ -92,7 +92,8 @@ class _Node(DictObject, object):
 
     @property
     def particlef(self):
-        return copy(self.particle)(self.particle.tkin + self.deltaW) # !!!IMPORTANT!!!
+         # !!!IMPORTANT!!! return a copy with updated energy
+        return copy(self.particle)(self.particle.tkin + self.deltaW)
 
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
@@ -116,8 +117,9 @@ class _Node(DictObject, object):
             label = self.label[:n]+'.....'+self.label[-n:]
         else:
             label = self.label
+        # try because sections are not mandatory
         try:
-            s = '{} [{}]\n'.format(label, self.sec) # sections are not mandatory
+            s = '{} [{}]\n'.format(label, self.sec)
         except AttributeError:
             s = '{}\n'.format(label)
         for i in range(MDIM):
@@ -150,10 +152,12 @@ class _Node(DictObject, object):
         return res
 
     def make_slices(self, anz = PARAMS['nbof_slices']):
-        mr = None  # ignore the very small rest
+        # ignore the very small rest
+        mr = None
         slices = []
 
-        if self.length == 0.:           # nothing todo for zero length element
+        if self.length == 0.:
+            # nothing todo for zero length element
             slices.append(self)
 
         else:
@@ -164,7 +168,8 @@ class _Node(DictObject, object):
             (step_fraction_part, step_int_part) = modf(self.length/step)
 
             rest = step * step_fraction_part
-            mx   = self.shorten(step)     # shorten element to step length
+            # shorten element to step length
+            mx   = self.shorten(step)
             if rest > 1.e-3:
                 mr = self.shorten(rest)
             elif rest < 0.:
@@ -249,8 +254,6 @@ class _Node(DictObject, object):
         return f_track
 
     def soll_map(self, i_track):
-        # """ Use full map for soll_track """
-        # f_track = self.map(i_track)
         f_track = copy(i_track)
         f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
         return f_track
@@ -307,7 +310,7 @@ class D(I):
         m = self.matrix
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
-        m[ZKOO, ZPKOO] = self.length/(g*g)  # koppelt z,z'
+        m[ZKOO, ZPKOO] = self.length/(g*g)
         m[SKOO, LKOO]  = self.length        # delta-s
 
     def adjust_energy(self, tkin):
@@ -485,7 +488,7 @@ class _wedge(I):
 class GAP(I):
     """ 
     Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-       Nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! 
+    ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! 
     """
     def __init__(self,
                     EzAvg      = PARAMS['EzAvg'],
@@ -543,12 +546,14 @@ class GAP(I):
     def deltaW(self):
         return self.deltaW
 
-    def _trtf_(self, beta, lamb, gap):  # tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65)
+    def _trtf_(self, beta, lamb, gap):
+        """ tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65) """
         teta = gap / (beta*lamb)
         res = NP.sinc(teta)/teta
         return res
 
-    def _mx_(self, m, m0c2, E0L, tr, phis, lamb, bg):       # cavity nach Dr.Tiede pp.33
+    def _mx_(self, m, m0c2, E0L, tr, phis, lamb, bg):
+        """ cavity nach Dr.Tiede pp.33 """
         cyp = cxp = -pi*E0L*tr*sin(phis)/(m0c2*lamb*bg**3)
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
@@ -667,9 +672,8 @@ class RFG(I):
 # RF cavity as D*RFG*D
 class RFC(I):
     """ 
-    Rf cavity as product D*RFG*D with Trace3D mapping 
+    Rf cavity as product D*RF-gap*D (DKD-model)
     """
-    # instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
     def __init__(self,
                 EzAvg    = PARAMS['EzAvg'],
                 label    = 'RFC',
@@ -699,11 +703,11 @@ class RFC(I):
         self._ttf     = None
         self._deltaW  = None
         
-        if length == 0: self.length = self.gap       # ideale pillbox
-        self['viseo']   = 0.33
+        if length == 0: self.length = self.gap       # die ideale pillbox
+        self['viseo']   = 0.25
         
         if self.mapping != 'dyn':
-            # ---> DKD models <---
+            # ---> DKD models <--- uses RFG for t3d, simple, base, ttf mappings
             dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
             drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
             kick  = RFG(EzAvg     = self._EzAvg,
@@ -717,17 +721,20 @@ class RFC(I):
                         particle  = self.particle)
             self.triplet = (dri, kick, drf)
             self._deltaW = kick.deltaW
-            tkinf        = self.particle.tkin + self.deltaW   # tkin after acc. gap
+            tkin_f       = self.particle.tkin + self.deltaW   # tkin after acc. gap
             # UPDATE energy for downstream drift after gap
-            drf.adjust_energy(tkinf)
+            drf.adjust_energy(tkin_f)
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
             # in case off ... (really not needed ?)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
             DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
-            # self.matrix = None
         elif self.mapping == 'dyn':
-            sys.exit(1)
-
+            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            print("'dyn'-mapping not available yet!")
+            print("'dyn'-mapping not available yet!")
+            print("'dyn'-mapping not available yet!")
+            exit(1)
+            
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(
@@ -753,31 +760,39 @@ class RFC(I):
         track1  = dri.map(i_track)
         track2  = kick.map(track1)
         f_track = drf.map(track2)
+        DEBUG_OFF('rfc-map ',f_track)
         return f_track
 
     def soll_map(self,i_track):
+        si,sm,sf = self.position
         dri,kick,drf = self.triplet
         track1  = dri.soll_map(i_track)
         track2  = kick.soll_map(track1)
         f_track = drf.soll_map(track2)
+        f_track[SKOO] += sm
+        DEBUG_OFF('rfc-soll ',f_track)
         return f_track
 
-    def shorten(self, length):
-        #todo: too complicated to make it now
-        return self
-        
+    def make_slices(self, anz = PARAMS['nbof_slices']):
+        slices = []
+        dri,kick,drf = self.triplet
+        anz = anz/2 if anz != 0 else 1
+        dri_slices = dri.make_slices(anz=anz)
+        drf_slices = drf.make_slices(anz=anz)
+        slices += dri_slices
+        slices.append(kick)
+        slices += drf_slices
+        return slices
+
     @property
     def ttf(self):
         return self._ttf
-        
     @property
     def lamb(self):
         return PARAMS['lichtgeschwindigkeit']/self.freq
-        
     @property
     def deltaW(self):
         return self._deltaW
-        
     @property
     def EzPeak(self):
         return self['EzPeak']
@@ -787,7 +802,6 @@ class RFC(I):
     @EzAvg.setter
     def EzAvg(self,value):
         self._EzAvg = self['EzAvg'] = value
-
     @property
     def particlef(self):
         return self._particlef
@@ -827,7 +841,6 @@ class _PYO_G(object):
     @property
     def deltaW(self):
         return self._deltaW
-    
     @property
     def particlef(self):
         return self._particlef
@@ -1009,7 +1022,7 @@ class _T3D_G(object):
             m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
             m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
             m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-            # UPDATE linear NODE matrix with this deltaW
+            # UPDATE linear NODE matrix with deltaW
             m[EKOO, DEKOO] = deltaW
             return
 
@@ -1048,15 +1061,15 @@ class _T3D_G(object):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
         f_track = NP.dot(self.matrix,f_track)
-        DEBUG_OFF('t3d ',f_track)
+        DEBUG_OFF('t3d-map ',f_track)
         return f_track
 
     def soll_map(self, i_track):
         si,sm,sf = self.position
         f_track = copy(i_track)
         f_track[EKOO] += self.deltaW
-        f_track[SKOO] = si
-        DEBUG_ON('t3d ',f_track)
+        f_track[SKOO] = sm
+        DEBUG_OFF('t3d-soll ',f_track)
         return f_track
 
 # Base of thin Nodes
@@ -1149,7 +1162,8 @@ class QFthx(D):
         self.k0       = k0
         self['viseo'] = +0.5
         L = self.length
-        m = self.matrix                # thin lens quad matrix (by hand calculation)
+        m = self.matrix
+        # thin lens quad matrix (by hand calculation)
         m[0, 0]  = 1. - k0*(L**2)/2.
         m[0, 1]  = L - k0*(L**3)/4.
         m[1, 0]  = -k0*L
