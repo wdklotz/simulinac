@@ -121,7 +121,8 @@ class _TTF_G(object):
     def soll_map(self, i_track):
         return self.map(i_track)
         
-    def _full_gap_map(self, slices, i_track):  # the wrapper to slice mappings
+    def _full_gap_map(self, slices, i_track):
+        """ The wrapper to slice mappings """
         self.dbTab1Rows  = []          # for DEBUGGING
         self.dbTab1Headr = []          # for DEBUGGING
         self.dbTab2Rows  = []          # for DEBUGGING

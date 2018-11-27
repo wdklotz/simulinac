@@ -672,7 +672,7 @@ class RFG(I):
 # RF cavity as D*RFG*D
 class RFC(I):
     """ 
-    Rf cavity as product D*RF-gap*D (DKD-model)
+    Rf cavity as product D*Kick*D (DKD-model)
     """
     def __init__(self,
                 EzAvg    = PARAMS['EzAvg'],
@@ -861,8 +861,8 @@ class _PYO_G(object):
         ypi       = i_track[YPKOO]      # [3]
         zi        = i_track[ZKOO]       # [4] z
         zpi       = i_track[ZPKOO]      # [5] Dp/p
-        T         = i_track[EKOO]       # [6] summe aller delta-T
-        S         = i_track[SKOO]       # [8] summe aller laengen
+        T         = i_track[EKOO]       # [6] kinetic energy soll
+        S         = i_track[SKOO]       # [8] position soll
 
         particle  = self.particle
         m0c2      = particle.e0
@@ -903,8 +903,6 @@ class _PYO_G(object):
         condTdP = 1./(m0c2*betaf**2*gammaf)
         zfp     = dwf*condTdP
 
-        T  = T + DW
-
         # transverse (x',y')
         xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
         ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis)
@@ -933,8 +931,8 @@ class _PYO_G(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] summe aller delta-T
-        S        = i_track[SKOO]       # [8] summe aller laengen
+        T        = i_track[EKOO]       # [6] kinetic energy soll
+        S        = i_track[SKOO]       # [8] position soll
 
         particle = self.particle
         m0c2     = particle.e0

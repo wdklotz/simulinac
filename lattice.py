@@ -515,7 +515,7 @@ class Lattice(object):
                 for i_element in slices:
                     s += i_element.length
                     ## COSine_like
-                    # c_0 = i_element.map(c_0)   # map!!!
+                    c_0 = i_element.map(c_0)   # map!!!
                     cx  = c_0[XKOO]
                     cxp = c_0[XPKOO]
                     cy  = c_0[YKOO]

@@ -27,7 +27,7 @@
 flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
@@ -193,7 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]
-    # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]
+    # - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     
