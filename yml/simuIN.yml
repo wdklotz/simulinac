@@ -65,7 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              base    # global rf gap-model
+    - mapping:              ttf    # global rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -193,7 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    # - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
-    - [240,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
+    - [240,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     

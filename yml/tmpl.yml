@@ -193,7 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    # - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
-    - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
+    - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     

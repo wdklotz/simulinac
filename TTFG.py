@@ -42,7 +42,7 @@ twopi          = 2*PI
 class _TTF_G(object):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, parent):
-        def _make_slices(parent, gap, SFdata, particle):
+        def make_slices(parent, gap, SFdata, particle):
             """Slice the RF gap"""
             slices = []
             zl = -gap/2.*100.   # [m] --> [cm]
@@ -62,100 +62,97 @@ class _TTF_G(object):
             """adjust energy of slices"""
             next_phase = phis
             next_tkin  = tkin
-            Tklist = []         # helper to keep values to calculate min and max
+            # Tklist = []         # helper to keep values to calculate min and max
             for slice in slices:
                 # setting phase @ slice entrance
                 slice.phis = next_phase
                 # setting energy @ slice entrance
                 slice.adjust_slice_parameters(next_tkin)
-                Tklist.append(slice.Tk)
+                # Tklist.append(slice.Tk)
                 next_phase = slice.PHOUT       # slice OUT as next slice IN
                 next_tkin  = slice.WOUT        # slice OUT as next slice IN
                 DEBUG_TTF_G('_TTF_G: {}\n'.format(self),self.__dict__)
             deltaW  = next_tkin-tkin                        # total energy kick as sum over slices
-            tr      = NP.sum(NP.array(Tklist))/len(Tklist)  # total ttf as average over slices
-            return deltaW,tr
+            return deltaW
+
         # _TTF_G
+        self.EzAvg    = parent.EzAvg
+        self.gap      = parent.gap
+        self.E0L      = self.EzAvg*self.gap
         self.phis     = parent.phis
         self.freq     = parent.freq
-        self.gap      = parent.gap
         self.dWf      = parent.dWf
         self.lamb     = parent.lamb
         self.SFdata   = parent.SFdata
         self.matrix   = parent.matrix
         self.particle = parent.particle
+        self.position = parent.position
+        self.tkin     = self.particle.tkin
         if parent.SFdata == None:
             raise RuntimeError('_TTF_G: missing E(z) table - STOP')
             sys.exit(1)
         else:
              # slice the gap
-            self.slices = \
-                _make_slices(self, self.gap, self.SFdata, self.particle)
+            self.slices = make_slices(self, self.gap, self.SFdata, self.particle)
             # slice energy dependence
-            self.deltaW, self.ttf = \
-                configure_slices(self.slices, self.phis, self.particle.tkin)
-            # UPDATE linear NODE matrix with this deltaW
-            self.matrix[EKOO,DEKOO] = self.deltaW
+            self._deltaW = configure_slices(self.slices, self.phis, self.tkin)
+            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
+            # UPDATE linear NODE matrix with deltaW
+            self.matrix[EKOO,DEKOO] = self._deltaW
+            self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             # for test0()
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
 
+    # delegated parent properties
+    @property
+    def ttf(self):
+        return self._ttf
+    @property
+    def deltaW(self):
+        return self._deltaW
+    @property
+    def particlef(self):
+        return self._particlef
+
     def map(self, i_track):
         """ Mapping from position (i) to (f )"""
-        f_track = self._full_gap_map(self.slices, i_track)   # full map through sliced TTFGap
-
-        # parent property
-        self.particlef = copy(self.particle)(self.particle.tkin + self.deltaW)
-
-        # for DEBUGGING
-        if DEBUG_TTF_G == DEBUG_ON:
-            itr = i_track.copy()
-            ftr = f_track.copy()
-            for i in range(len(f_track)-4):
-                itr[i]  = itr[i]*1.e3
-                ftr[i]  = ftr[i]*1.e3
-            arrprnt(itr, fmt = '{:6.3g},', txt = 'ttfg_map:i_track:')
-            arrprnt(ftr, fmt = '{:6.3g},', txt = 'ttfg_map:f_track:')
-        
+        f_track = copy(i_track)
+        # full map through sliced TTF-gap
+        f_track = self._full_gap_map(self.slices, f_track)
+        f_track[EKOO] += self._deltaW
+        DEBUG_OFF('ttf-map ',f_track)
         return f_track
 
     def soll_map(self, i_track):
-        return self.map(i_track)
+        si,sm,sf = self.position
+        f_track = copy(i_track)
+        f_track[EKOO] += self._deltaW
+        f_track[SKOO]  = sm
+        DEBUG_OFF('ttf-soll ',f_track)
+        return f_track
         
     def _full_gap_map(self, slices, i_track):
         """ The wrapper to slice mappings """
-        self.dbTab1Rows  = []          # for DEBUGGING
-        self.dbTab1Headr = []          # for DEBUGGING
-        self.dbTab2Rows  = []          # for DEBUGGING
-        self.dbTab2Headr = []          # for DEBUGGING
-        if DEBUG_TTF_G == DEBUG_ON:    # for DEBUGGING
-            self.dbTab1Headr = ['pout','pin','pout-pin','dp=pout-POUT','wout','win','wout-win','WOUT','dw=wout-WOUT','qV0*10^3']
-            self.dbTab2Headr = ['x*10^3','xp*10^3','y*10^3','yp*10^3','z*10^3','zp*10^3','r*10^3','Tk',"Tkp",'i0-1','i1']
-
-        for cnt,slice in enumerate(slices):
-            # DEBUG_TTF_G('_TTF_G:_full_gap_map: {} tkin {} '.format(cnt,self.particle.tkin),slice)
-            f_track = slice.slice_map(i_track)    # map slice with TTF 3-point gap-model
-            i_track = f_track
-
-                # relativistic scaling. Is it needed?
-                # z = f_track[ZKOO]
-                # betai = self.particle.beta
-                # tkin  = self.particle.tkin
-                # betaf = Proton(tkin=tkin+self.deltaW).beta
-                # z = betaf/betai*z
-                # f_track[ZKOO] = z
-
-        DEBUG_TTF_G('_TTF_G:_full_gap_map:\n',tblprnt(self.dbTab1Headr,self.dbTab1Rows))
-        DEBUG_TTF_G('_TTF_G:_full_gap_map:\n',tblprnt(self.dbTab2Headr,self.dbTab2Rows))
-
+        f_track = copy(i_track)
+        for slice in slices:
+            # map each slice with TTF 3-point gap-model
+            f_track = slice.slice_map(f_track)
+            # relativistic scaling. Is it needed?
+            # z = f_track[ZKOO]
+            # betai = self.particle.beta
+            # tkin  = self.particle.tkin
+            # betaf = Proton(tkin=tkin+self.deltaW).beta
+            # z = betaf/betai*z
+            # f_track[ZKOO] = z
         return f_track
-
+        
 class _TTF_Gslice(object):
     """ PyOrbit's Transit Time Factor RF-Gap Model """
     def __init__(self, parent, poly, particle):
-        self.parent     = parent           # the gap this slice is part off
+        self.parent     = parent # the gap this slice belongs to
         self.freq       = parent.freq
         self.lamb       = parent.lamb
-        self.particle   = copy(particle)   # incoming soll particle
+        self.particle   = copy(particle) # incoming SOLL particle
         self.poly       = poly # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.V0         = self._V0(self.poly)
         self.beta       = self.particle.beta
@@ -246,15 +243,15 @@ class _TTF_Gslice(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z~(phi-phis)
         zp       = i_track[ZPKOO]      # [5] dp/p~dT
-        T        = i_track[EKOO]       # [6] summe aller dT
-        s        = i_track[SKOO]       # [8] summe aller laengen
+        T        = i_track[EKOO]       # [6] kinetic energy soll
+        S        = i_track[SKOO]       # [8] position soll
 
         c          = PARAMS['lichtgeschwindigkeit']
         m0c2       = self.particle.e0
         m0c3       = self.particle.m0c3
         omeg       = twopi*self.freq
 
-        # energy parameters from soll
+        # energy parameters from SOLL
         betai      = self.particle.beta
         gammai     = self.particle.gamma
         gbi        = self.particle.gamma_beta
@@ -289,8 +286,8 @@ class _TTF_Gslice(object):
         zf  = -dp*(c*betai)/omeg
         zpf = gammai/(gammai+1)*dw/self.WOUT
 
-        f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from soll
-        # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from particle ??
+        f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from SOLL
+        # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from PARTICLE ??
         gbf        = f_particle.gamma_beta
 
         fact = self.V0/(m0c2*gbi*gbf)*i1
@@ -301,38 +298,7 @@ class _TTF_Gslice(object):
             xp = gbi/gbf*xp
             yp = gbi/gbf*yp
 
-        T = T + self.deltaW       # add deltaW to soll
-        f_track = NP.array([x,xp,y,yp,zf,zpf,T,1.,s,1.])
-
-        if DEBUG_SLICE == DEBUG_ON:    # for DEBUGGING
-            dbTab1Row = [
-                '{:8.4f}'.format(degrees(pout)),
-                '{:8.4f}'.format(degrees(pin)),
-                '{:8.4g}'.format(degrees(pompi)),
-                '{:8.4g}'.format(dp),
-                '{:8.4g}'.format(wout),
-                '{:8.4g}'.format(win),
-                '{:8.4g}'.format(womwi),
-                '{:8.4g}'.format(dw),
-                '{:8.4g}'.format(self.WOUT),
-                '{:8.3f}'.format(self.V0*1.e3),
-                ]
-            self.parent.dbTab1Rows.append(dbTab1Row)
-
-            dbTab2Row = [
-                '{:8.4g}'.format(x*1.e3),
-                '{:8.4g}'.format(xp*1.e2),
-                '{:8.4g}'.format(y*1.e3),
-                '{:8.4g}'.format(yp*1.e3),
-                '{:8.4g}'.format(z*1.e3),
-                '{:8.4g}'.format(zp*1.e3),
-                '{:8.4g}'.format(r*1.e3),
-                '{:8.4g}'.format(Tk),
-                '{:8.3g}'.format(Tkp),
-                '{:8.4g}'.format(i0-1.),
-                '{:8.4g}'.format(i1),
-                ]
-            self.parent.dbTab2Rows.append(dbTab2Row)
+        f_track = NP.array([x,xp,y,yp,zf,zpf,T,1.,S,1.])
         return f_track
 
 def test0():
