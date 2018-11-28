@@ -320,6 +320,11 @@ class Lattice(object):
         """
         Calulate envelopes from initial twiss-vector with beta-matrices
         """
+        if PARAMS['mapping'] == 'dyn':
+            print('SKIP ENVELOPES ("dyn" mapping!)')
+            beta_fun = [[0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]]
+            return beta_fun
+            
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
@@ -359,6 +364,7 @@ class Lattice(object):
         
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
+        #todo: analytical sigmas for 'dyn' mapping as best estimates ?
         def envelopes(function, steps = 10):
             """ calc. envelopes using function """
             beta_fun  = function(steps = steps)
@@ -367,6 +373,11 @@ class Lattice(object):
             sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
             return sigma_fun
 
+        if PARAMS['mapping'] == 'dyn':
+            print('SKIP ENVELOPES ("dyn" mapping!)')
+            sigma_fun = [[0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]]
+            return sigma_fun
+            
         if FLAGS['sigma']:
             mess = 'CALCULATE SIGMA ENVELOPES'
             function = self.sigma_envelopes # use sigma-matrix
@@ -524,7 +535,7 @@ class Lattice(object):
                     cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
                     ## SINus_like
-                    s_0 = i_element.map(s_0)   # map!!!
+                    # s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
                     sxp = s_0[XPKOO]
                     sy  = s_0[YKOO]

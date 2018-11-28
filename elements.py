@@ -721,19 +721,28 @@ class RFC(I):
                         particle  = self.particle)
             self.triplet = (dri, kick, drf)
             self._deltaW = kick.deltaW
-            tkin_f       = self.particle.tkin + self.deltaW   # tkin after acc. gap
+            tkin_f       = self.particle.tkin + self._deltaW   # tkin after acc. gap
             # UPDATE energy for downstream drift after gap
             drf.adjust_energy(tkin_f)
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
-            # in case off ... (really not needed ?)
+            # in case off ... (really needed ?)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
             DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
-            print("'dyn'-mapping not available yet!")
-            print("'dyn'-mapping not available yet!")
-            print("'dyn'-mapping not available yet!")
-            exit(1)
+            dri             = I(particle=self.particle)
+            drf             = I(particle=self.particle)
+            cav             = _DYN_G(self)
+            self.triplet    = (dri, cav, dri)
+            self._deltaW    = cav.deltaW
+            self._particlef = cav.particlef
+            tkin_f          = self.particlef.tkin   # tkin after acc. gap
+            drf.adjust_energy(tkin_f)
+            self._ttf       = cav.ttf
+            # print("'dyn'-mapping not available yet!")
+            # print("'dyn'-mapping not available yet!")
+            # print("'dyn'-mapping not available yet!")
+            # exit(1)
             
     def adjust_energy(self, tkin):
         _params = self._params

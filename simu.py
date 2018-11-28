@@ -132,12 +132,16 @@ def display1(*args):
     #-------------------- trajectories
     z1  = [x[0] for x in cos_like]   # Abszisse
     cx  = [x[1]*1.e3 for x in cos_like]   # cos-like-x
+    cxp = [x[2]*1.e3 for x in cos_like]   # cos-like-x
     cy  = [x[3]*1.e3 for x in cos_like]   # cos-like-y
+    cyp = [x[4]*1.e3 for x in cos_like]   # cos-like-y
     cz  = [x[5] for x in cos_like]   # cos-like-z
     cdw = [x[6] for x in cos_like]   # cos-like-dw/w
     z2  = [x[0] for x in sin_like]   # Abszisse
     sx  = [x[1]*1.e3 for x in sin_like]   # sin-like-x
+    sxp = [x[2]*1.e3 for x in sin_like]   # sin-like-x
     sy  = [x[3]*1.e3 for x in sin_like]   # sin-like-z1x
+    syp = [x[4]*1.e3 for x in sin_like]   # sin-like-z1x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
@@ -157,8 +161,10 @@ def display1(*args):
     splot=plt.subplot(311)
     splot.set_title('transverse x')
     plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
-    plt.plot(z1,cx,label='C [mm]',color='blue',linestyle=':')
-    plt.plot(z2,sx,label='S [mm]',color='red' ,linestyle=':')
+    plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle=':')
+    plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
+    plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle=':')
+    plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_ordinate]

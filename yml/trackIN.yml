@@ -27,7 +27,7 @@
 flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
-    - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
@@ -45,12 +45,12 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 5.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 70.       # [MeV] energy @ entrance (injection)
     - emitx_i:      &emx    1.0e-6      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
-    - betax_i:      &btx    0.65      # [m] twiss beta @ entrance x
-    - betay_i:      &bty    0.49      # [m] twiss beta @ entrance y
+    - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    2.5      # [m] twiss beta @ entrance y
     - phi_sync:     &phs    -30.      # [deg] synchronous phase
     - alfax_i:              0.      # [1] twiss alpha x @ entrance
     - alfay_i:              0.      # [1] twiss alpha y @ entrance
@@ -65,7 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              simple    # global rf gap-model
+    - mapping:              ttf    # global rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -102,7 +102,7 @@ elements:
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        # - fRF:      408.e+6      # [Hz] frequency
         # - fRF:      204.e+6      # [Hz] frequency
         - gap:      *p15         # [m] length
         - aperture: *p04         # [m] quad bore
@@ -113,8 +113,8 @@ elements:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        # - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        - fRF:      *p01         # [Hz] frequency
+        # - fRF:      408.e+6      # [Hz] frequency
         - gap:      *p15         # [m] gap length
         - length:   0.044        # [m] cavity length
         - aperture: *p04         # [m] quad bore
@@ -193,6 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    - [41,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]
+    - [240,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     
