@@ -209,7 +209,7 @@ class _DYN_G(object):
         def Ep(z, t, omega=omega, phis=phis):
             return self.SFdata.dEz0tdt(z,t,omega,phis)
         def G1(gamma):
-            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
         g1 = G1(gamma)
         res = (7.*Ep(z[0],t[0]) + 32.*Ep(z[1],t[1]) + 12.*Ep(z[2],t[2]) + 32.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h / 90.
@@ -220,7 +220,7 @@ class _DYN_G(object):
         def Ep(z, t, omega=omega, phis=phis):
             return self.SFdata.dEz0tdt(z,t,omega,phis)
         def G1(gamma):
-            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
         g1 = G1(gamma)
         res = (8.*Ep(z[1],t[1]) + 6.*Ep(z[2],t[2]) + 24.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h**2 / 90.
@@ -231,7 +231,7 @@ class _DYN_G(object):
         def Ep(z, t, omega=omega, phis=phis):
             return self.SFdata.dEz0tdt(z,t,omega,phis)
         def G1(gamma):
-            return (gamma**2-1.)**(-1.5)/(2.*self.particle.m0c3)
+            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
         g1 = G1(gamma)
         res = (2.*Ep(z[1],t[1]) + 3.*Ep(z[2],t[2]) + 18.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h**3 / 90.
@@ -311,15 +311,19 @@ class _DYN_G(object):
         # Picht transformation
         # PARTICLE
         DEBUG_OFF('Picht transformation\n',(NP.dot(Picht(gamma),Picht(gamma,inv=True))))
-        xv  = NP.array([x,xp])
-        Xv  = NP.dot(Picht(gamma),xv)
-        xvr = NP.dot(Picht(gamma,True),Xv)
-        yv  = NP.array([y,yp])
-        Yv  = NP.dot(Picht(gamma),yv)
-        yvr = NP.dot(Picht(gamma,True),Yv)
-        R   = NP.array([Xv[0],Yv[0]])
-        Rp  = NP.array([Xv[1],Yv[1]])
-        
+        xmx  = NP.array([[x,y],[xp,yp]])
+        Rmx  = NP.dot(Picht(gamma),xmx)
+        xmxr = NP.dot(Picht(gamma,inv=True),Rmx)
+        # Xv   = NP.dot(Picht(gamma),xv)
+        # xvr = NP.dot(Picht(gamma,True),Xv)
+        # yv  = NP.array([y,yp])
+        # Yv  = NP.dot(Picht(gamma),yv)
+        # yvr = NP.dot(Picht(gamma,True),Yv)
+        # R   = NP.array([Xv[0],Yv[0]])
+        # Rp  = NP.array([Xv[1],Yv[1]])
+        R = Rmx[:,0]
+        Rp= Rmx[:,1]
+
         for nstep in range(nsteps): # steps loop
             zarr    = stpfac.zArray(nstep)
             # SOLL step
@@ -346,22 +350,30 @@ class _DYN_G(object):
             z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: 1 Woche Arbeit!)
 
             # transverse
-            Rp0  = copy(Rp)
+            R    = R  + DR + h*Rp           # (39)
             Rp   = Rp + DRp                 # (34)
-            R    = R  + DR + h*Rp0          # (39)
             pass # end steps loop
         
         # Picht-inverse transformation
-        Xv  = NP.array([R[0],Rp[0]])
-        Yv  = NP.array([R[1],Rp[1]])
-        xv  = NP.dot(Picht(gamma,inv=True),Xv)
-        yv  = NP.dot(Picht(gamma,inv=True),Yv)
+        # R=(x,y)   Rp=(xp,yp)
+        # Xv  = NP.array([R[0],Rp[0]])
+        # Yv  = NP.array([R[1],Rp[1]])
+        
+        # xv  = NP.dot(Picht(gamma,inv=True),Xv)
+        # yv  = NP.dot(Picht(gamma,inv=True),Yv)
+    
+        Rmx = NP.array([R,Rp])
+        Rmx = NP.transpose(Rmx)
+        xmx = NP.dot(Picht(gamma,inv=True),Rmx)
+        
+        xv = xmx[:,0]
+        yv = xmx[:,1]
         
         x  = xv[0]
         xp = xv[1]
         y  = yv[0]
         yp = yv[1]
-        
+
         tkinS = (gammaS-1.)*m0c2
         tkin  = (gamma -1.)*m0c2
         converter = WConverter(tkinS,freq=freq)

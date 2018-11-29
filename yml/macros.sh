@@ -23,7 +23,7 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=1
-# NCELL=6
+NCELL=6
 NCELL=41
 # NCELL=166
 # NCELL=240
