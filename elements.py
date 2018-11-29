@@ -689,14 +689,14 @@ class RFC(I):
                 position = [0, 0, 0],
                 next     = None,
                 prev     = None):
-        super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
+        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf
         self.phis     = PhiSoll
         self.freq     = fRF
         self.gap      = gap
         self.E0L      = self._EzAvg*self.gap
         self.length   = length
-        self.aperture = aperture
+        # self.aperture = aperture
         self.dWf      = dWf
         self.mapping  = mapping
         self.SFdata   = SFdata

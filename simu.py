@@ -85,7 +85,8 @@ def display0(*args):
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
-    stop_viseo = 2000                  # stop viseo plot after so many points
+    stop_viseox = 5                  # stop viseo plot after so many [m]
+    stop_viseoy = 5                  # stop viseo plot after so many [m]
     vis_abszisse = [x[0] for x in lat_plot]
     vis_ordinate = [x[1] for x in lat_plot]
     vzero        = [0.   for x in lat_plot]      # zero line
@@ -99,11 +100,13 @@ def display0(*args):
     plt.plot(z,bx , label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx ,label='Cx[m]', color='blue',linestyle='-')
     plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
-    plt.plot(tz,sx, label='Sx[m]', color='red' ,linestyle='-')
-    plt.plot(tz,sxp,label="Sx'[m]",color='red' ,linestyle=':')
+    plt.plot(tz,sy, label='Sx[m]', color='red' ,linestyle='-')
+    plt.plot(tz,syp,label="Sx'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseox = [x*vscale for x in vis_ordinate]
-    for i in range(stop_viseo,len(vis_abszisse)): viseox[i] = 0.   # stop lattice plotting
+    for i,s in enumerate(vis_abszisse):
+        if s > stop_viseox:
+            viseox[i] = 0.
     plt.plot(vis_abszisse,viseox,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
@@ -117,7 +120,9 @@ def display0(*args):
     plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_ordinate]
-    for i in range(stop_viseo,len(vis_abszisse)): viseoy[i] = 0.   # stop lattice plotting
+    for i,s in enumerate(vis_abszisse):
+        if s > stop_viseoy:
+            viseoy[i] = 0.
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
@@ -169,9 +174,9 @@ def display1(*args):
     splot=plt.subplot(311)
     splot.set_title('transverse x')
     plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
-    plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle=':')
+    plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
-    plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle=':')
+    plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
     plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
@@ -194,8 +199,10 @@ def display1(*args):
     splot=plt.subplot(312)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [mm]',color='green')
-    plt.plot(z1,cy,label='C [mm]',color='blue',linestyle=':')
-    plt.plot(z2,sy,label='S [mm]',color='red' ,linestyle=':')
+    plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
+    plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
+    plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
+    plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]

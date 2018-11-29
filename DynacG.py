@@ -309,9 +309,6 @@ class _DYN_G(object):
         gamma     = 1.+ tkin/m0c2
         
         # Picht transformation
-        # SOLL
-        RS  = NP.array([0,0])
-        RpS = NP.array([0,0])
         # PARTICLE
         DEBUG_OFF('Picht transformation\n',(NP.dot(Picht(gamma),Picht(gamma,inv=True))))
         xv  = NP.array([x,xp])
@@ -323,7 +320,7 @@ class _DYN_G(object):
         R   = NP.array([Xv[0],Yv[0]])
         Rp  = NP.array([Xv[1],Yv[1]])
         
-        for nstep in range(nsteps):         # steps loop
+        for nstep in range(nsteps): # steps loop
             zarr    = stpfac.zArray(nstep)
             # SOLL step
             bgS     = MATH.sqrt(gammaS**2-1)
@@ -352,7 +349,7 @@ class _DYN_G(object):
             Rp0  = copy(Rp)
             Rp   = Rp + DRp                 # (34)
             R    = R  + DR + h*Rp0          # (39)
-            pass                            # end steps loop
+            pass # end steps loop
         
         # Picht-inverse transformation
         Xv  = NP.array([R[0],Rp[0]])
