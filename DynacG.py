@@ -125,13 +125,13 @@ class _DYN_G(object):
             h        = stpfac.steplen()  
             nsteps   = stpfac.nsteps()# nb-steps
             for nstep in range(nsteps):# loop steps
-                gamma = 1.+ tkin/m0c2
-                bg    = MATH.sqrt(gamma**2-1)
-                beta  = bg/gamma
-                betac = beta*c
-                zarr  = stpfac.zArray(nstep)
-                t0    = zarr[0]/betac
-                tarr  = stpfac.tArray(t0,betac)
+                gamma  = 1.+ tkin/m0c2
+                bg     = MATH.sqrt(gamma**2-1)
+                beta   = bg/gamma
+                betac  = beta*c
+                zarr   = stpfac.zArray(nstep)
+                t0     = zarr[0]/betac
+                tarr   = stpfac.tArray(t0,betac)
                 Dgamma = self.Integral1(zarr,tarr,h,omega,phiS)/m0c2
                 tkin  += Dgamma*m0c2
             deltaW    = tkin - self.particle.tkin
@@ -241,15 +241,14 @@ class _DYN_G(object):
         """
         Full step through the DYNAC intervall with its 4 parts
         """
-        if self.dWf == 1:
-            c = PARAMS['lichtgeschwindigkeit']
-            h = self.stpfac.steplen()  
-            m0c2 = PARAMS['proton_mass']
-            m0c3 = m0c2*c     
-            bg = MATH.sqrt(gamma**2-1)
-            beta = bg/gamma
-            betac = beta*c
-    
+        c = PARAMS['lichtgeschwindigkeit']
+        h = self.stpfac.steplen()  
+        m0c2 = PARAMS['proton_mass']
+        m0c3 = m0c2*c     
+        bg = MATH.sqrt(gamma**2-1)
+        beta = bg/gamma
+        betac = beta*c
+        if self.dWf == 1:    
             zarr = self.stpfac.zArray(nstep)
             t0   = (zarr[0]-z)/betac
             tarr = self.stpfac.tArray(t0,betac)
@@ -273,18 +272,12 @@ class _DYN_G(object):
     def map(self,i_track):
         """ Mapping from (i) to (f) """
         DEBUG_MAP = DEBUG_OFF
-        def Picht(beta_gamma,gamma):
-            a=d=MATH.sqrt(beta_gamma)
-            b=0.
-            c=0.5*a*gamma/(gamma**2-1.)
-            return NP.array([[a,b],[c,d]])
-        def Picht_inverse(beta_gamma,gamma):
-            a=d=MATH.sqrt(beta_gamma)
-            b=0.
-            c=0.5*a*gamma/(gamma**2-1.)
-            m = NP.array([[d,-b],[-c,a]])
-            det = a*d-b*c
-            return m/det
+        
+        def Picht(gamma,inv=False):
+            sgn = 1. if inv == False else -1.
+            g2m1 = gamma**2-1.
+            c=sgn*0.5*gamma/g2m1
+            return NP.array([[1,0],[c,1]])*MATH.pow(g2m1,sgn*0.25)
             
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -292,111 +285,96 @@ class _DYN_G(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4]
         zp       = i_track[ZPKOO]      # [5]
+        T        = i_track[EKOO]
         S        = i_track[SKOO]
 
         # aliases
+        stpfac = self.stpfac
         c      = PARAMS['lichtgeschwindigkeit']
-        h      = self.stpfac.steplen()  
+        h      = stpfac.steplen()  
         m0c2   = PARAMS['proton_mass']
         phiS   = self.phis
         freq   = self.freq
         omega  = self.omega
-        nsteps = self.stpfac.nsteps()        # nb-steps
+        nsteps = stpfac.nsteps() # nb-steps
 
         # SOLL
-        tkinS     = self.particle.tkin   # soll energy IN
+        tkinS     = self.particle.tkin # soll energy IN
         gammaS    = 1.+ tkinS/m0c2
-        # bgS       = MATH.sqrt(gammaS**2-1)
-        # betaS     = bgS/gammaS
-        zS        = 0
-        timeS    = 0
        
         # PARTICLE
         converter = WConverter(tkinS,freq=freq)
         DW        = converter.Dp2pToW(zp)
         tkin      = tkinS+DW
         gamma     = 1.+ tkin/m0c2
-        # bg        = MATH.sqrt(gamma**2-1)
         
         # Picht transformation
         # SOLL
         RS  = NP.array([0,0])
         RpS = NP.array([0,0])
-                            # bgroot = MATH.sqrt(bg)
-                            # r      = NP.array([x,y])                        # (x,y)
-                            # rp     = NP.array([xp,yp])                      # (x',y')
-                            # R      = r*bgroot                               # (X,Y)
-                            # Rp     = rp*bgroot+0.5*R*gamma/(gamma**2-1.)    # (X',Y')
-                            # R0     = R
-                            # Rp0    = Rp
         # PARTICLE
+        DEBUG_OFF('Picht transformation\n',(NP.dot(Picht(gamma),Picht(gamma,inv=True))))
         xv  = NP.array([x,xp])
-        Xv  = NP.dot(Picht(bg,gamma),xv)
-        xvr = NP.dot(Picht_inverse(bg,gamma),Xv)
+        Xv  = NP.dot(Picht(gamma),xv)
+        xvr = NP.dot(Picht(gamma,True),Xv)
         yv  = NP.array([y,yp])
-        Yv  = NP.dot(Picht(bg,gamma),yv)
-        yvr = NP.dot(Picht_inverse(bg,gamma),Yv)
+        Yv  = NP.dot(Picht(gamma),yv)
+        yvr = NP.dot(Picht(gamma,True),Yv)
         R   = NP.array([Xv[0],Yv[0]])
         Rp  = NP.array([Xv[1],Yv[1]])
         
-
         for nstep in range(nsteps):         # steps loop
-            # ref particle step
-            #todo: replace by sigle liner
-            # gammaS = 1.+ tkinS/m0c2
-            DRS,DRpS,DgammaS,DtimeS = self.do_step(nstep,zS,gammaS,RS,RpS,omega,phiS)
-            gammaS += DgammaS
-            # bgS = MATH.sqrt(gammaS**2-1)
-            # betaS = bgS/gammaS
-            # ref. particle time at t4
-            timeS += DtimeS
-            # ref. particle energy
-            # tkinS = tkinS + DgammaS*m0c2
-            # gammaS = 1.+ tkinS/m0c2
+            zarr    = stpfac.zArray(nstep)
+            # SOLL step
+            bgS     = MATH.sqrt(gammaS**2-1)
+            betaS   = bgS/gammaS
+            betaSc  = betaS*c
+            t0      = zarr[0]/betaSc
+            tarr    = stpfac.tArray(t0,betaSc)
+            DgammaS = self.Integral1(zarr,tarr,h,omega,phiS)/m0c2
+            timeS   = tarr[4]     # SOLL time at z4
+            gammaS += DgammaS     # SOLL gamma at z4
 
-            # particle step
+            # PARTICLE step
+            bg = MATH.sqrt(gamma**2-1)
+            beta    = bg/gamma
+            betac   = beta*c
+            t0      = (zarr[0]-z)/betac
+            tarr    = stpfac.tArray(t0,betac)
             DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
-            bg    = MATH.sqrt(gamma**2-1)
-            beta  = bg/gamma
-            # partile time at z4
-            DtimeP = h/(beta*c) + Dtime
-            # correction to z from this step   (der Knackpunt der mich 1 Woche Arbeit kostete!)
-            # vorzeichen: -z = omega*t daher z = z - delta-t
-            z = z - (DtimeP - DtimeS)*(beta*c)
-            # particle energy
-            tkin = tkin + Dgamma*m0c2
-            gamma = 1.+ tkin/m0c2
+            time    = tarr[4] + Dtime # PARTICLE time at z4
+            gamma  += Dgamma         # PARTICLE gamma at z4
+            # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
+            DEBUG_OFF('time-timeS ', time-timeS)
+            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: 1 Woche Arbeit!)
 
             # transverse
-            Rp0  = Rp
+            Rp0  = copy(Rp)
             Rp   = Rp + DRp                 # (34)
             R    = R  + DR + h*Rp0          # (39)
-            # R    = R  + DR           # (39)
             pass                            # end steps loop
         
-        # Picht back-transformation
-        gamma    = 1.+ tkin/m0c2
-        bg       = MATH.sqrt(gamma**2-1)
-        # gbroot   = MATH.sqrt(bg)
-        # rf       = R/gbroot
-        # rpf      = (Rp - 0.5*R*gamma/(gamma**2-1.)) / gbroot
+        # Picht-inverse transformation
         Xv  = NP.array([R[0],Rp[0]])
         Yv  = NP.array([R[1],Rp[1]])
-        xv  = NP.dot(Picht_inverse(bg,gamma),Xv)
-        yv  = NP.dot(Picht_inverse(bg,gamma),Yv)
+        xv  = NP.dot(Picht(gamma,inv=True),Xv)
+        yv  = NP.dot(Picht(gamma,inv=True),Yv)
         
-        # x  = rf[0]
-        # xp = rpf[0]
-        # y  = rf[1]
-        # yp = rpf[1]
         x  = xv[0]
         xp = xv[1]
         y  = yv[0]
         yp = yv[1]
+        
+        tkinS = (gammaS-1.)*m0c2
+        tkin  = (gamma -1.)*m0c2
         converter = WConverter(tkinS,freq=freq)
         zp = converter.DWToDp2p(tkin-tkinS)
 
-        f_track = NP.array([ x, xp, y, yp, z, zp, tkin, 1., S, 1.])
+        T += self.deltaW
+        S += self.length
+
+        f_track = NP.array([ x, xp, y, yp, z, zp, T, 1., S, 1.])
+        DEBUG_OFF('dyn-map ',i_track)
         DEBUG_OFF('dyn-map ',f_track)
         return f_track
             

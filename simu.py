@@ -73,11 +73,15 @@ def display0(*args):
     #-------------------- trajectories (tz)
     tz  = [x[0] for x in cos_like]   # Ordinate
     cx  = [x[1] for x in cos_like]   # cos-like-x
+    cxp = [x[2] for x in cos_like]   # cos-like-x
     cy  = [x[3] for x in cos_like]   # cos-like-y
+    cyp = [x[4] for x in cos_like]   # cos-like-y
     cz  = [x[5] for x in cos_like]   # cos-like-z
     cdw = [x[6] for x in cos_like]   # cos-like-dw/w
     sx  = [x[1] for x in sin_like]   # sin-like-x
+    sxp = [x[2] for x in sin_like]   # sin-like-x
     sy  = [x[3] for x in sin_like]   # sin-like-x
+    syp = [x[4] for x in sin_like]   # sin-like-x
     sz  = [x[5] for x in sin_like]   # sin-like-z
     sdw = [x[6] for x in sin_like]   # sin-like-dw/w
     #-------------------- lattice viseo
@@ -92,9 +96,11 @@ def display0(*args):
     #-------------------- transverse X
     splot=plt.subplot(211)
     splot.set_title('transverse x')
-    plt.plot(z,bx ,label=r'$\sigma$ [m]',color='green')
-    plt.plot(tz,cx,label='Cx[m]',color='blue',linestyle='-')
-    plt.plot(tz,sx,label='Sx[m]',color='red' ,linestyle='-')
+    plt.plot(z,bx , label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cx ,label='Cx[m]', color='blue',linestyle='-')
+    plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
+    plt.plot(tz,sx, label='Sx[m]', color='red' ,linestyle='-')
+    plt.plot(tz,sxp,label="Sx'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseox = [x*vscale for x in vis_ordinate]
     for i in range(stop_viseo,len(vis_abszisse)): viseox[i] = 0.   # stop lattice plotting
@@ -104,9 +110,11 @@ def display0(*args):
     #-------------------- transverse Y
     splot=plt.subplot(212)
     splot.set_title('transverse y')
-    plt.plot(z,by ,label=r'$\sigma$ [m]',color='green')
-    plt.plot(tz,cy,label='Cy[m]',color='blue',linestyle='-')
-    plt.plot(tz,sy,label='Sy[m]',color='red' ,linestyle='-')
+    plt.plot(z,by , label=r'$\sigma$ [m]',color='green')
+    plt.plot(tz,cy, label='Cy[m]', color='blue',linestyle='-')
+    plt.plot(tz,cyp,label="Cy'[m]",color='blue',linestyle=':')
+    plt.plot(tz,sy, label='Sy[m]', color='red' ,linestyle='-')
+    plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_ordinate]
     for i in range(stop_viseo,len(vis_abszisse)): viseoy[i] = 0.   # stop lattice plotting
