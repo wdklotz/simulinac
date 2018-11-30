@@ -6,7 +6,7 @@ MAPPING=t3d          # Trace 3D linear map model
 # MAPPING=simple       # Shishlo/Holmes linear map model
 # MAPPING=base         # Shishlo/Holmes base map model
 # MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
-MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
+# MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
 
 EMITW=1.0e-5            # w emittance in [rad]
 EMITW=1.0e-5            # w emittance in [rad]
@@ -25,7 +25,7 @@ PHISY=-30.              # synchronous phase in [deg]
 NCELL=1
 NCELL=6
 # NCELL=41
-# NCELL=166
+NCELL=166
 # NCELL=240
 
 ARGS="-D _TKIN=$TKIN"

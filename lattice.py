@@ -535,7 +535,7 @@ class Lattice(object):
                     cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
                     ## SINus_like
-                    # s_0 = i_element.map(s_0)   # map!!!
+                    s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
                     sxp = s_0[XPKOO]
                     sy  = s_0[YKOO]

@@ -40,15 +40,16 @@ twopi = 2.*MATH.pi
     3-Oct-2016 
 """
 
-def Picht(gamma,r,rp,back=False):
+def Picht(gamma,r,rp,DgDz,back=False):
+    """ A Picht transformation from cartesian to reduced variables """
     g2m1 = gamma**2-1.
     gqroot = MATH.pow(g2m1,0.25)
     if not back:
         # r=(x,y) rp=(xp,yp)
         X=gqroot*r[0]
         Y=gqroot*r[1]
-        Xp=gqroot*rp[0]+0.5*X*gamma/g2m1
-        Yp=gqroot*rp[1]+0.5*Y*gamma/g2m1
+        Xp=(gqroot*rp[0]+0.5*X*gamma/g2m1*DgDz)
+        Yp=(gqroot*rp[1]+0.5*Y*gamma/g2m1*DgDz)
         R=[X,Y]
         Rp=[Xp,Yp]
         return R,Rp
@@ -56,13 +57,12 @@ def Picht(gamma,r,rp,back=False):
         # r=(X,Y) rp=(Xp,Yp)
         x=r[0]/gqroot
         y=r[1]/gqroot
-        xp=(rp[0]-0.5*gamma*r[0]/g2m1)/gqroot
-        yp=(rp[1]-0.5*gamma*r[1]/g2m1)/gqroot
+        xp=((rp[0]-0.5*gamma*r[0]/g2m1*DgDz)/gqroot)
+        yp=((rp[1]-0.5*gamma*r[1]/g2m1*DgDz)/gqroot)
         R=[x,y]
         Rp=[xp,yp]
         return R,Rp
 
-#todo: check dWf flag
 class StepFactory(object):
     """ 
     StepFactory
@@ -189,6 +189,7 @@ class _DYN_G(object):
         
     def Integral1(self, z, t, h, omega, phis):
         #todo: use non_const beta, i.e. gamma[i], i=1,4,1 in inegrals
+        #todo: find better position for multiplication with dWf-flag
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
         def E(z, t, omega=omega, phis=phis):
             z = 1.e2*z     # [cm]
@@ -302,8 +303,8 @@ class _DYN_G(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4]
         zp       = i_track[ZPKOO]      # [5]
-        T        = i_track[EKOO]
-        S        = i_track[SKOO]
+        T        = i_track[EKOO]       # kinetic energy SOLL
+        S        = i_track[SKOO]       # position of node
 
         # aliases
         stpfac = self.stpfac
@@ -325,11 +326,14 @@ class _DYN_G(object):
         tkin      = tkinS+DW
         gamma     = 1.+ tkin/m0c2
         
-        # Picht transformation
         # PARTICLE
+        # Picht transformation
+        # REMARK: when outside of the cavity gamma is constant, it's derivative zero!
+        DgDz = 0.
         r    = [x,y]
         rp   = [xp,yp]
-        R,Rp = Picht(gamma,r,rp)
+        R,Rp = Picht(gamma,r,rp,DgDz)
+        # change reduced variables from lists to NP.arrays to make do_step easier
         R    = NP.array(R)
         Rp   = NP.array(Rp)
 
@@ -354,19 +358,22 @@ class _DYN_G(object):
             DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
             time    = tarr[4] + Dtime # PARTICLE time at z4
             gamma  += Dgamma          # PARTICLE gamma at z4
+            # DgDz stands for the z-derivative of gamma. When I intorduced it 
+            # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
+            DgDz    = Dgamma/h        # Dgamma/Dz estimate
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
             DEBUG_OFF('time-timeS ', time-timeS)
-            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: 1 Woche Arbeit!)
+            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: noch 1 Woche Arbeit!)
 
             # transverse
             R    = R  + DR + h*Rp           # (39)
             Rp   = Rp + DRp                 # (34)
             pass # end steps loop
         
-        # Picht-inverse transformation
+        # Picht-back transformation
         R    = R.tolist()
         Rp   = Rp.tolist()
-        r,rp = Picht(gamma,R,Rp,back=True)
+        r,rp = Picht(gamma,R,Rp,DgDz,back=True)
         
         x  = r[0]
         xp = rp[0]

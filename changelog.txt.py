@@ -1,7 +1,8 @@
 """
-Version v7.0.8work
+Version v7.1.0
 *) Lattice is now double linked list
-*) dyn mapping still wrong
+*) All models now implemented as DKD nodes
+*) dyn mapping working
 *) EzAvg-bug fixed
 *) aperture-bug fixed
 

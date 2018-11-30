@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.0.8work'
+___version___='v7.1.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -94,6 +94,7 @@ def display0(*args):
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+
     #-------------------- transverse X
     splot=plt.subplot(211)
     splot.set_title('transverse x')
@@ -110,6 +111,7 @@ def display0(*args):
     plt.plot(vis_abszisse,viseox,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
+
     #-------------------- transverse Y
     splot=plt.subplot(212)
     splot.set_title('transverse y')
@@ -170,14 +172,15 @@ def display1(*args):
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+
     #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
     plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
-    plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
+    # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
-    plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
+    # plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseox = [x*vscale for x in vis_ordinate]
@@ -195,14 +198,15 @@ def display1(*args):
         label = F'{N:1}$\sigma$ [mm]'
         plt.plot(z,bx ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
+
     #-------------------- transverse Y tracks
     splot=plt.subplot(312)
     splot.set_title('transverse y')
     plt.plot(z,by ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
-    plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
+    # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
-    plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
+    # plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]
@@ -219,6 +223,7 @@ def display1(*args):
         by = [i*N for i in by]
         plt.plot(z,by ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
+
     #-------------------- longitudinal tracks dPhi, dW/W
     # ax_l = left abszisse
     ax_l=plt.subplot(313)
