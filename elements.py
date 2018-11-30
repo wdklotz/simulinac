@@ -435,15 +435,11 @@ class SD(D):
         cx = cos(phi) ; sx = sin(phi)
         b = self.particle.beta
         # x,x'-plane
-        # m[0, 0] = cx;          m[0, 1] = sx/k;           m[0, 5] = rho*(1.-cx)
-        # m[1, 0] = -sx*k;       m[1, 1] = cx;             m[1, 5] = sx
         m[XKOO, XKOO]  = cx;     m[XKOO, XPKOO]   = sx/k;  m[XKOO, ZPKOO]  = rho*(1.-cx)
         m[XPKOO, XKOO] = -sx*k;  m[XPKOO, XPKOO]  = cx;    m[XPKOO, ZPKOO] = sx
         # y,y'-plane
-        # m[2, 3] = self.length
         m[YKOO, YPKOO] = self.length
         # z,z'-plane
-        # m[4, 0] = -sx;       m[4, 1] = -rho*(1.-cx);          m[4, 5] = rho*sx-self.length*b*b
         m[ZKOO, XKOO] = -sx;   m[ZKOO, XPKOO] = -rho*(1.-cx);   m[ZKOO, ZPKOO] = rho*sx-self.length*b*b
         m[SKOO, LKOO] = self.length     # delta-s
         return m
@@ -590,7 +586,6 @@ class RFG(I):
         self.SFdata   = SFdata             # SuperFish data
 
         self['viseo'] = 0.25
-        # self.mapset   = PARAMS['mapset']
         # makes the T3D matrix default for RFG
         self.t3d_g    = _T3D_G(self)
 
@@ -657,7 +652,7 @@ class RFG(I):
     @property
     def particlef(self):
         """ delegate to gap-model """
-        #todo: don't use particlef - only deltaW
+        #todo: better don't use particlef - only deltaW
         return self.gap_model.particlef
 
     def map(self, i_track):
@@ -696,14 +691,13 @@ class RFC(I):
         self.gap      = gap
         self.E0L      = self._EzAvg*self.gap
         self.length   = length
-        # self.aperture = aperture
         self.dWf      = dWf
         self.mapping  = mapping
         self.SFdata   = SFdata
         self._ttf     = None
         self._deltaW  = None
         
-        if length == 0: self.length = self.gap       # die ideale pillbox
+        if length == 0: self.length = self.gap # die ideale pillbox
         self['viseo']   = 0.25
         
         if self.mapping != 'dyn':
@@ -739,10 +733,6 @@ class RFC(I):
             tkin_f          = self.particlef.tkin   # tkin after acc. gap
             drf.adjust_energy(tkin_f)
             self._ttf       = cav.ttf
-            # print("'dyn'-mapping not available yet!")
-            # print("'dyn'-mapping not available yet!")
-            # print("'dyn'-mapping not available yet!")
-            # exit(1)
             
     def adjust_energy(self, tkin):
         _params = self._params

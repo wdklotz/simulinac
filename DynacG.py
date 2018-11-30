@@ -275,7 +275,6 @@ class _DYN_G(object):
             zarr = self.stpfac.zArray(nstep)
             t0   = (zarr[0]-z)/betac
             tarr = self.stpfac.tArray(t0,betac)
-    
             I1   = self.Integral1(zarr,tarr,h,omega,phiS)
             I2   = self.Integral2(zarr,tarr,h,omega,phiS)
             I3   = self.Integral3(zarr,tarr,h,bg,omega,phiS)
@@ -328,7 +327,7 @@ class _DYN_G(object):
         
         # PARTICLE
         # Picht transformation
-        # REMARK: when outside of the cavity gamma is constant, it's derivative zero!
+        # REMARK: when outside of the cavity gamma is constant and it's derivative zero!
         DgDz = 0.
         r    = [x,y]
         rp   = [xp,yp]
@@ -358,7 +357,7 @@ class _DYN_G(object):
             DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
             time    = tarr[4] + Dtime # PARTICLE time at z4
             gamma  += Dgamma          # PARTICLE gamma at z4
-            # DgDz stands for the z-derivative of gamma. When I intorduced it 
+            # DgDz stands for the z-derivative of gamma. When I introduced it 
             # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
             DgDz    = Dgamma/h        # Dgamma/Dz estimate
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac

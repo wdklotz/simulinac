@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#todo: handle exceptions speziel ValueError
+#todo: handle exceptions speziel ValueError   - more or less done
 #todo: use normalized emittances ?
 #todo: waccept results are global - each node should carry its own
 #todo: make new simu_manual.tex, README.md, check conversions.tex
@@ -27,9 +27,10 @@ This file is part of the SIMULINAC code
 #todo: rework verbose printing levels
 #todo: C.K.Allen's matrices which are XAL as well?
 #todo: give priority to OpenXAL model from Shishlo
-#todo: sliced sub-lattice belonging to thick element; each element could have individual slicing
+#todo: sliced sub-lattice belonging to thick element; more or less done
 #todo: introduce Function class to make plot routines more robust
-#todo: REMAKE _DYN_G
+#todo: REMAKE _DYN_G    - done
+#todo: lattice as double-linked list   - done
 
 import sys
 import os
