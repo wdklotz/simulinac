@@ -45,15 +45,15 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 70.       # [MeV] energy @ entrance (injection)
-    - emitx_i:      &emx    1.0e-6      # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
-    - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
-    - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
-    - betay_i:      &bty    2.5      # [m] twiss beta @ entrance y
-    - phi_sync:     &phs    -30.      # [deg] synchronous phase
-    - alfax_i:              0.      # [1] twiss alpha x @ entrance
-    - alfay_i:              0.      # [1] twiss alpha y @ entrance
+    - Tkin:                 _TKIN       # [MeV] energy @ entrance (injection)
+    - emitx_i:      &emx    _EMITX      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    _EMITY      # [m*rad] {y,y'} emittance @ entrance
+    - emitw_i:      &emw    _EMITW      # [rad] {Dphi,w} emittance @ entrance
+    - betax_i:      &btx    _BETAX      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    _BETAY      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    _PHISY      # [deg] synchronous phase
+    - alfax_i:              _ALFAX      # [1] twiss alpha x @ entrance
+    - alfay_i:              _ALFAY      # [1] twiss alpha y @ entrance
     - frequency:    &p01    816.e+6     # [Hz] frequency
     # - ql0:          &p02    0.04        # [m] quad-length
     # - ql:           &p03    0.02        # [m] 1/2 quad-length
@@ -65,7 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              dyn    # global rf gap-model
+    - mapping:              _MAPPING    # global rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -86,7 +86,7 @@ elements:
         - type:     QF           # QF classtest0
         - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
-        - B':       &Bgrad   43.150 # [T/m] quadrupole gradient
+        - B':       &Bgrad   _BGRAD # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *LE          # is part of section
     - QDL:   &QDL                # ID: &alias
@@ -193,7 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    - [166,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
     # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     
