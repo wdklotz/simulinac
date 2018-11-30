@@ -183,6 +183,7 @@ class _Node(DictObject, object):
 
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
+        # Aliases
         m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
         m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
         
@@ -333,7 +334,7 @@ class QF(D):
         super().__init__(label=label, particle=particle, position=position, next=next, prev=prev)
         self.length   = length
         self.aperture = aperture
-        self.k0       = k0         # Quad strength [m**-2]
+        self.k0       = k0         # [m**-2]
         self.matrix   = self._mx_()
         self['viseo'] = +0.5
 
@@ -342,7 +343,7 @@ class QF(D):
         cpi = self.particle.gamma_beta
         self.particle(tkin)
         cpf = self.particle.gamma_beta
-        kf = ki*cpi/cpf     # scale quad strength with new impulse
+        kf = ki*cpi/cpf # scale quad strength with new impulse
         _params = self._params
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
@@ -381,7 +382,7 @@ class QF(D):
         else:
             raise RuntimeError('QF: neither QF nor QD! should never happen! - STOP')
             sys.exit(1)
-        m[SKOO, LKOO]  = self.length     # delta-s
+        m[SKOO, LKOO]  = self.length # delta-S
         return m
 
 # Trace3D defocusing quad
@@ -416,7 +417,7 @@ class SD(D):
         cpi = self.particle.gamma_beta
         self.particle(tkin)
         cpf = self.particle.gamma_beta
-        rf = ri*cpf/cpi  # scale bending radius with new impulse
+        rf = ri*cpf/cpi # scale bending radius with new impulse
         _params = self._params
         self.__init__(radius=rf, length=self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
@@ -441,10 +442,10 @@ class SD(D):
         m[YKOO, YPKOO] = self.length
         # z,z'-plane
         m[ZKOO, XKOO] = -sx;   m[ZKOO, XPKOO] = -rho*(1.-cx);   m[ZKOO, ZPKOO] = rho*sx-self.length*b*b
-        m[SKOO, LKOO] = self.length     # delta-s
+        m[SKOO, LKOO] = self.length # delta-S
         return m
 
-# Trace3D x-plane rectangular bending dipole
+# Trace3D rectangular bending dipole in x-plane
 class RD(SD):
     """ 
     Trace3D rectangular dipole x-plane 
@@ -558,7 +559,7 @@ class GAP(I):
 # Zero length RF gap
 class RFG(I):
     """ 
-    Wrapper to zero length RF gap-models
+    Wrapper to zero length RF kick gap-models
     """
     def __init__(self,
             EzAvg      = PARAMS['EzAvg'],
@@ -724,6 +725,7 @@ class RFC(I):
             DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            # This is no DKD-model. Therefore we use I-nodes on both sides.
             dri             = I(particle=self.particle)
             drf             = I(particle=self.particle)
             cav             = _DYN_G(self)
@@ -860,8 +862,8 @@ class _PYO_G(object):
         ypi       = i_track[YPKOO]      # [3]
         zi        = i_track[ZKOO]       # [4] z
         zpi       = i_track[ZPKOO]      # [5] Dp/p
-        T         = i_track[EKOO]       # [6] kinetic energy soll
-        S         = i_track[SKOO]       # [8] position soll
+        T         = i_track[EKOO]       # [6] kinetic energy SOLL
+        S         = i_track[SKOO]       # [8] position SOLL
 
         particle  = self.particle
         m0c2      = particle.e0
@@ -879,7 +881,7 @@ class _PYO_G(object):
 
         DW         = deltaW
         WOUT       = WIN + DW
-        particlef  = copy(particle)(tkin = WOUT)     # !!!IMPORTANT!!!
+        particlef  = copy(particle)(tkin = WOUT) # !!!IMPORTANT!!!
         betaf      = particlef.beta
         gammaf     = particlef.gamma
         gbf        = particlef.gamma_beta
@@ -919,7 +921,7 @@ class _PYO_G(object):
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
 
         # the parent delegates reading these properties from here
-        self._particlef = copy(particle)(particle.tkin + deltaW)     # !!!IMPORTANT!!!
+        self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
         return f_track
 
     def base_map(self, i_track):
@@ -930,8 +932,8 @@ class _PYO_G(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy soll
-        S        = i_track[SKOO]       # [8] position soll
+        T        = i_track[EKOO]       # [6] kinetic energy SOLL
+        S        = i_track[SKOO]       # [8] position SOLL
 
         particle = self.particle
         m0c2     = particle.e0
@@ -948,11 +950,11 @@ class _PYO_G(object):
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
         i1     = I1(Kr)                               # bessel function I1
-        # soll
+        # SOLL
         WIN       = tki                               # energy (i)
         DELTAW    = self.deltaW                       # energy kick
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
-        # particle
+        # PARTICLE
         converter = WConverter(WIN,freq=frq)
 #       phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
@@ -964,7 +966,7 @@ class _PYO_G(object):
 
         DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
 
-        particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! soll particle (f)
+        particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
         betaf     = particlef.beta
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
@@ -1047,7 +1049,7 @@ class _T3D_G(object):
         mx(matrix, ttf, beta_mid, gamma_mid, particle, particlef, E0L, phis, lamb, deltaW)
 
         # class scope
-        # parent may delegate reading these properties this object
+        # parent may delegate reading these properties from here
         self.matrix     = matrix
         self.ttf        = ttf
         self.deltaW     = deltaW
@@ -1111,7 +1113,7 @@ class QFth(_thin):
         di = D(length  = 0.5*self.length, particle = self.particle)
         df = di
         kick = _kick(self, particle=self.particle, position=self.position, aperture=self.aperture)
-        lens = df * (kick * di)     # matrix produkt df*kick*di
+        lens = df * (kick * di) # matrix produkt df*kick*di
         self.matrix = lens.matrix
         self.triplet = (di, kick, df)
 
@@ -1120,7 +1122,7 @@ class QFth(_thin):
         self.particle(tkin)
         cpf = self.particle.gamma_beta
         ki = self.k0
-        kf = ki*cpi/cpf     # scale quad strength with new impulse
+        kf = ki*cpi/cpf # scale quad strength with new impulse
         _params = self._params
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
@@ -1172,10 +1174,10 @@ class QFthx(D):
 
     def adjust_energy(self, tkin):
         cpi = self.particle.gamma_beta
-        self.particle(tkin)            # particle energy adjusted
+        self.particle(tkin) # PARTICLE energy adjusted
         cpf = self.particle.gamma_beta
         ki  = self.k0
-        kf  = ki*cpi/cpf               # scale quad strength with new impulse
+        kf  = ki*cpi/cpf # scale quad strength with new impulse
         _params = self._params
         self.__init__(k0=kf, length=self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
@@ -1204,7 +1206,7 @@ class SIXD(D):
         self.length   = length
         self.aperture = aperture
         self['viseo'] = 0.
-        self.off_soll = copy(self.particle)     # !!!IMPORTANT!!!
+        self.off_soll = copy(self.particle) # !!!IMPORTANT!!!
 
     def adjust_energy(self, tkin):
         _params = self._params
@@ -1245,12 +1247,12 @@ class SIXD(D):
             yp       = i_track[YPKOO]      # [3]
             z        = i_track[ZKOO]       # [4] z
             dp2p     = i_track[ZPKOO]      # [5] dp/p
-            T        = i_track[EKOO]       # [6] summe aller delta-T
-            s        = i_track[SKOO]       # [8] summe aller laengen
+            T        = i_track[EKOO]       # [6] kinetic energy SOLL
+            s        = i_track[SKOO]       # [8] position SOLL
 
             E0       = soll.e
             beta0    = soll.beta
-            p0       = soll.p             # cp-soll [MeV]
+            p0       = soll.p             # cp SOLL [MeV]
             m0c2     = soll.e0
             p        = p0/(1.-dp2p)
             E        = sqrt(p**2+m0c2**2) # E aus dp2p und p0

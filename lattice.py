@@ -37,7 +37,6 @@ def DEBUG_OFF(*args):
     pass
 DEBUG_MODULE = DEBUG_OFF
 
-#todo: lattice as boubly linked list? makes soll-map easier and faster
 # Lattice
 class Lattice(object):
     """
@@ -115,7 +114,7 @@ class Lattice(object):
         for element in iter(self):
         # for element in iter(self):
             DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
-            # Achtung: Reihenfolge im Produkt ist wichtig! Umgekehrt == Blödsinn
+            # ACHTUNG: Reihenfolge im Produkt ist wichtig!
             mcell = element * mcell   
         mcell.section = '<= full lattice map'
         return mcell.string()

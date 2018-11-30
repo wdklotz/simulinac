@@ -68,7 +68,7 @@ class StepFactory(object):
     StepFactory
     """
     def __init__(self,gap,SFdata):
-        self.zl = -gap*100./2.   # [cm]
+        self.zl = -gap*100./2. # [cm]
         self.zr = -self.zl
         polyvals = []
         for poly in SFdata.Ez_poly:
@@ -77,7 +77,7 @@ class StepFactory(object):
             if zil < self.zl or zir > self.zr: 
                 continue
             else:
-                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))    # all-in [m]
+                polyvals.append((poly.zl*1.e-2,poly.zr*1.e-2))    # [m]
         polyvals = tuple(polyvals) 
         self.h = polyvals[0][1] - polyvals[0][0]
         z_parts = []
@@ -145,8 +145,8 @@ class _DYN_G(object):
             omega    = self.omega
             stpfac   = self.stpfac
             h        = stpfac.steplen()  
-            nsteps   = stpfac.nsteps()# nb-steps
-            for nstep in range(nsteps):# loop steps
+            nsteps   = stpfac.nsteps() # nb-steps
+            for nstep in range(nsteps): # loop steps
                 gamma  = 1.+ tkin/m0c2
                 bg     = MATH.sqrt(gamma**2-1)
                 beta   = bg/gamma
@@ -303,7 +303,7 @@ class _DYN_G(object):
         z        = i_track[ZKOO]       # [4]
         zp       = i_track[ZPKOO]      # [5]
         T        = i_track[EKOO]       # kinetic energy SOLL
-        S        = i_track[SKOO]       # position of node
+        S        = i_track[SKOO]       # position SOLL
 
         # aliases
         stpfac = self.stpfac
@@ -316,7 +316,7 @@ class _DYN_G(object):
         nsteps = stpfac.nsteps() # nb-steps
 
         # SOLL
-        tkinS     = self.particle.tkin # soll energy IN
+        tkinS     = self.particle.tkin # SOLL energy IN
         gammaS    = 1.+ tkinS/m0c2
        
         # PARTICLE

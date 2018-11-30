@@ -62,17 +62,15 @@ class _TTF_G(object):
             """adjust energy of slices"""
             next_phase = phis
             next_tkin  = tkin
-            # Tklist = []         # helper to keep values to calculate min and max
             for slice in slices:
                 # setting phase @ slice entrance
                 slice.phis = next_phase
                 # setting energy @ slice entrance
                 slice.adjust_slice_parameters(next_tkin)
-                # Tklist.append(slice.Tk)
                 next_phase = slice.PHOUT       # slice OUT as next slice IN
                 next_tkin  = slice.WOUT        # slice OUT as next slice IN
                 DEBUG_TTF_G('_TTF_G: {}\n'.format(self),self.__dict__)
-            deltaW  = next_tkin-tkin                        # total energy kick as sum over slices
+            deltaW  = next_tkin-tkin # total energy kick as sum over slices
             return deltaW
 
         # _TTF_G
@@ -153,7 +151,8 @@ class _TTF_Gslice(object):
         self.freq       = parent.freq
         self.lamb       = parent.lamb
         self.particle   = copy(particle) # incoming SOLL particle
-        self.poly       = poly # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
+        # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
+        self.poly       = poly 
         self.V0         = self._V0(self.poly)
         self.beta       = self.particle.beta
         self.gamma      = self.particle.gamma
@@ -243,8 +242,8 @@ class _TTF_Gslice(object):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z~(phi-phis)
         zp       = i_track[ZPKOO]      # [5] dp/p~dT
-        T        = i_track[EKOO]       # [6] kinetic energy soll
-        S        = i_track[SKOO]       # [8] position soll
+        T        = i_track[EKOO]       # [6] kinetic energy SOLL
+        S        = i_track[SKOO]       # [8] position SOLL
 
         c          = PARAMS['lichtgeschwindigkeit']
         m0c2       = self.particle.e0
@@ -259,7 +258,7 @@ class _TTF_Gslice(object):
         pin        = -z*omeg/(c*betai) + self.PHIN            # phase  (i)  ~ (-z)
         win        = (zp*(gammai+1.)/gammai+1.)*self.WIN      # energy (i)  ~ (z')
 
-        # energy parameters from particle ??
+        # energy parameters from PARTICLE ??
         # particle   = copy(self.particle)(tkin=win)  
         # betai      = particle.beta
         # gammai     = particle.gamma
@@ -278,7 +277,7 @@ class _TTF_Gslice(object):
         wout  = win + womwi                              # energy (f)
 
         pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,0.,Tkp,0.,pin)
-        pout  = pin + pompi                              # phase (f)
+        pout  = pin + pompi         # phase (f)
         
         dp = +(pout-self.PHOUT)    # delta phase  (f)
         dw = +(wout-self.WOUT)     # delta energy (f)
