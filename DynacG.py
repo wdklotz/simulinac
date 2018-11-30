@@ -40,6 +40,28 @@ twopi = 2.*MATH.pi
     3-Oct-2016 
 """
 
+def Picht(gamma,r,rp,back=False):
+    g2m1 = gamma**2-1.
+    gqroot = MATH.pow(g2m1,0.25)
+    if not back:
+        # r=(x,y) rp=(xp,yp)
+        X=gqroot*r[0]
+        Y=gqroot*r[1]
+        Xp=gqroot*rp[0]+0.5*X*gamma/g2m1
+        Yp=gqroot*rp[1]+0.5*Y*gamma/g2m1
+        R=[X,Y]
+        Rp=[Xp,Yp]
+        return R,Rp
+    else:
+        # r=(X,Y) rp=(Xp,Yp)
+        x=r[0]/gqroot
+        y=r[1]/gqroot
+        xp=(rp[0]-0.5*gamma*r[0]/g2m1)/gqroot
+        yp=(rp[1]-0.5*gamma*r[1]/g2m1)/gqroot
+        R=[x,y]
+        Rp=[xp,yp]
+        return R,Rp
+
 #todo: check dWf flag
 class StepFactory(object):
     """ 
@@ -173,7 +195,7 @@ class _DYN_G(object):
             return self.SFdata.Ez0t(z,t,omega,phis)
         res = 7.*E(z[0],t[0]) + 32.*E(z[1],t[1]) +12.*E(z[2],t[2]) +32.*E(z[3],t[3]) +7.*E(z[4],t[4])
         res = res * h / 90.
-        return res
+        return res*self.dWf
 
     def Integral2(self, z, t, h, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
@@ -182,7 +204,7 @@ class _DYN_G(object):
         z = 1.e2*z     # [cm]
         res = 8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) +24.*E(z[3],t[3]) + 7.*E(z[4],t[4])
         res = res * h**2 / 90.
-        return res
+        return res*self.dWf
 
     def Integral3(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
@@ -192,7 +214,7 @@ class _DYN_G(object):
         bg3 = bg**3
         res = (8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) + 24.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
         res = res * h**2 / 90.
-        return res
+        return res*self.dWf
 
     def Integral4(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
@@ -202,7 +224,7 @@ class _DYN_G(object):
         bg3 = bg**3
         res = (2.*E(z[1],t[1]) + 3.*E(z[2],t[2]) + 18.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
         res = res * h**3 / 90.
-        return res
+        return res*self.dWf
 
     def Jntegral1(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
@@ -213,7 +235,7 @@ class _DYN_G(object):
         g1 = G1(gamma)
         res = (7.*Ep(z[0],t[0]) + 32.*Ep(z[1],t[1]) + 12.*Ep(z[2],t[2]) + 32.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h / 90.
-        return res
+        return res*self.dWf
 
     def Jntegral2(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
@@ -224,7 +246,7 @@ class _DYN_G(object):
         g1 = G1(gamma)
         res = (8.*Ep(z[1],t[1]) + 6.*Ep(z[2],t[2]) + 24.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h**2 / 90.
-        return res
+        return res*self.dWf
 
     def Jntegral3(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
@@ -235,7 +257,7 @@ class _DYN_G(object):
         g1 = G1(gamma)
         res = (2.*Ep(z[1],t[1]) + 3.*Ep(z[2],t[2]) + 18.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
         res = res * h**3 / 90.
-        return res
+        return res*self.dWf
 
     def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):
         """
@@ -266,19 +288,14 @@ class _DYN_G(object):
             DRp     = R*J1 + Rp*J2                                            # (33)
             DR      = R*J2 + Rp*J3                                            # (38)
         else:
-            DR,DRp,Dgamma,Dtime = (0.,0.,0.,h/betac)  #todo Dtime?
+            DR = DRp = NP.array([0.,0.])
+            DR,DRp,Dgamma,Dtime = (DR,DRp,0.,h/betac)  #todo Dtime?
         return DR,DRp,Dgamma,Dtime
 
     def map(self,i_track):
         """ Mapping from (i) to (f) """
         DEBUG_MAP = DEBUG_OFF
-        
-        def Picht(gamma,inv=False):
-            sgn = 1. if inv == False else -1.
-            g2m1 = gamma**2-1.
-            c=sgn*0.5*gamma/g2m1
-            return NP.array([[1,0],[c,1]])*MATH.pow(g2m1,sgn*0.25)
-            
+                    
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -310,19 +327,11 @@ class _DYN_G(object):
         
         # Picht transformation
         # PARTICLE
-        DEBUG_OFF('Picht transformation\n',(NP.dot(Picht(gamma),Picht(gamma,inv=True))))
-        xmx  = NP.array([[x,y],[xp,yp]])
-        Rmx  = NP.dot(Picht(gamma),xmx)
-        xmxr = NP.dot(Picht(gamma,inv=True),Rmx)
-        # Xv   = NP.dot(Picht(gamma),xv)
-        # xvr = NP.dot(Picht(gamma,True),Xv)
-        # yv  = NP.array([y,yp])
-        # Yv  = NP.dot(Picht(gamma),yv)
-        # yvr = NP.dot(Picht(gamma,True),Yv)
-        # R   = NP.array([Xv[0],Yv[0]])
-        # Rp  = NP.array([Xv[1],Yv[1]])
-        R = Rmx[:,0]
-        Rp= Rmx[:,1]
+        r    = [x,y]
+        rp   = [xp,yp]
+        R,Rp = Picht(gamma,r,rp)
+        R    = NP.array(R)
+        Rp   = NP.array(Rp)
 
         for nstep in range(nsteps): # steps loop
             zarr    = stpfac.zArray(nstep)
@@ -344,7 +353,7 @@ class _DYN_G(object):
             tarr    = stpfac.tArray(t0,betac)
             DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
             time    = tarr[4] + Dtime # PARTICLE time at z4
-            gamma  += Dgamma         # PARTICLE gamma at z4
+            gamma  += Dgamma          # PARTICLE gamma at z4
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
             DEBUG_OFF('time-timeS ', time-timeS)
             z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: 1 Woche Arbeit!)
@@ -355,24 +364,14 @@ class _DYN_G(object):
             pass # end steps loop
         
         # Picht-inverse transformation
-        # R=(x,y)   Rp=(xp,yp)
-        # Xv  = NP.array([R[0],Rp[0]])
-        # Yv  = NP.array([R[1],Rp[1]])
+        R    = R.tolist()
+        Rp   = Rp.tolist()
+        r,rp = Picht(gamma,R,Rp,back=True)
         
-        # xv  = NP.dot(Picht(gamma,inv=True),Xv)
-        # yv  = NP.dot(Picht(gamma,inv=True),Yv)
-    
-        Rmx = NP.array([R,Rp])
-        Rmx = NP.transpose(Rmx)
-        xmx = NP.dot(Picht(gamma,inv=True),Rmx)
-        
-        xv = xmx[:,0]
-        yv = xmx[:,1]
-        
-        x  = xv[0]
-        xp = xv[1]
-        y  = yv[0]
-        yp = yv[1]
+        x  = r[0]
+        xp = rp[0]
+        y  = r[1]
+        yp = rp[1]
 
         tkinS = (gammaS-1.)*m0c2
         tkin  = (gamma -1.)*m0c2
