@@ -194,38 +194,39 @@ class _DYN_G(object):
         def E(z, t, omega=omega, phis=phis):
             z = 1.e2*z     # [cm]
             return self.SFdata.Ez0t(z,t,omega,phis)
-        res = 7.*E(z[0],t[0]) + 32.*E(z[1],t[1]) +12.*E(z[2],t[2]) +32.*E(z[3],t[3]) +7.*E(z[4],t[4])
+        self.Ezt = (self.dWf*E(z[0],t[0]), self.dWf*E(z[1],t[1]), self.dWf*E(z[2],t[2]), self.dWf*E(z[3],t[3]), self.dWf*E(z[4],t[4]))
+        res = 7.*self.Ezt[0] + 32.*self.Ezt[1] +12.*self.Ezt[2] +32.*self.Ezt[3] +7.*self.Ezt[4]
         res = res * h / 90.
-        return res*self.dWf
+        return res
 
     def Integral2(self, z, t, h, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phis=phis):
-            return self.SFdata.Ez0t(z,t,omega,phis)
-        z = 1.e2*z     # [cm]
-        res = 8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) +24.*E(z[3],t[3]) + 7.*E(z[4],t[4])
+        # def E(z, t, omega=omega, phis=phis):
+        #     return self.SFdata.Ez0t(z,t,omega,phis)
+        # z = 1.e2*z     # [cm]
+        res = 8.*self.Ezt[1] + 6.*self.Ezt[2] +24.*self.Ezt[3] + 7.*self.Ezt[4]
         res = res * h**2 / 90.
-        return res*self.dWf
+        return res
 
     def Integral3(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phis=phis):
-            return self.SFdata.Ez0t(z,t,omega,phis)
-        z = 1.e2*z     # [cm]
+        # def E(z, t, omega=omega, phis=phis):
+        #     return self.SFdata.Ez0t(z,t,omega,phis)
+        # z = 1.e2*z     # [cm]
         bg3 = bg**3
-        res = (8.*E(z[1],t[1]) + 6.*E(z[2],t[2]) + 24.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
+        res = (8.*self.Ezt[1] + 6.*self.Ezt[2] + 24.*self.Ezt[3] + 7.*self.Ezt[4])/bg3
         res = res * h**2 / 90.
-        return res*self.dWf
+        return res
 
     def Integral4(self, z, t, h, bg, omega, phis):
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phis=phis):
-            return self.SFdata.Ez0t(z,t,omega,phis)
-        z = 1.e2*z     # [cm]
+        # def E(z, t, omega=omega, phis=phis):
+        #     return self.SFdata.Ez0t(z,t,omega,phis)
+        # z = 1.e2*z     # [cm]
         bg3 = bg**3
-        res = (2.*E(z[1],t[1]) + 3.*E(z[2],t[2]) + 18.*E(z[3],t[3]) + 7.*E(z[4],t[4]))/bg3
+        res = (2.*self.Ezt[1] + 3.*self.Ezt[2] + 18.*self.Ezt[3] + 7.*self.Ezt[4])/bg3
         res = res * h**3 / 90.
-        return res*self.dWf
+        return res
 
     def Jntegral1(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
@@ -233,32 +234,33 @@ class _DYN_G(object):
             return self.SFdata.dEz0tdt(z,t,omega,phis)
         def G1(gamma):
             return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        g1 = G1(gamma)
-        res = (7.*Ep(z[0],t[0]) + 32.*Ep(z[1],t[1]) + 12.*Ep(z[2],t[2]) + 32.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
+        self.Epzt = (self.dWf*Ep(z[0],t[0]), self.dWf*Ep(z[1],t[1]), self.dWf*Ep(z[2],t[2]), self.dWf*Ep(z[3],t[3]), self.dWf*Ep(z[4],t[4]))
+        self.g1 = G1(gamma)
+        res = (7.*self.Epzt[0] + 32.*self.Epzt[1] + 12.*self.Epzt[2] + 32.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
         res = res * h / 90.
-        return res*self.dWf
+        return res
 
     def Jntegral2(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
-        def Ep(z, t, omega=omega, phis=phis):
-            return self.SFdata.dEz0tdt(z,t,omega,phis)
-        def G1(gamma):
-            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        g1 = G1(gamma)
-        res = (8.*Ep(z[1],t[1]) + 6.*Ep(z[2],t[2]) + 24.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
+        # def Ep(z, t, omega=omega, phis=phis):
+        #     return self.SFdata.dEz0tdt(z,t,omega,phis)
+        # def G1(gamma):
+        #     return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
+        # g1 = G1(gamma)
+        res = (8.*self.Epzt[1] + 6.*self.Epzt[2] + 24.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
         res = res * h**2 / 90.
-        return res*self.dWf
+        return res
 
     def Jntegral3(self, z, t, h, omega, phis, gamma):
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
-        def Ep(z, t, omega=omega, phis=phis):
-            return self.SFdata.dEz0tdt(z,t,omega,phis)
-        def G1(gamma):
-            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        g1 = G1(gamma)
-        res = (2.*Ep(z[1],t[1]) + 3.*Ep(z[2],t[2]) + 18.*Ep(z[3],t[3]) + 7.*Ep(z[4],t[4]))*g1
+        # def Ep(z, t, omega=omega, phis=phis):
+        #     return self.SFdata.dEz0tdt(z,t,omega,phis)
+        # def G1(gamma):
+        #     return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
+        # g1 = G1(gamma)
+        res = (2.*self.Epzt[1] + 3.*self.Epzt[2] + 18.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
         res = res * h**3 / 90.
-        return res*self.dWf
+        return res
 
     def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):
         """

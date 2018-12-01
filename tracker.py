@@ -212,24 +212,28 @@ def track_node(node,particle,options):
         lost = True
         track.removepoint(last_tp)
         return lost
+
     # check Dp2p-acceptance
-    if abs(new_point[Ktp.zp]) < PARAMS['Dp2pAcceptance']:
-        lost = False
-    else:
-        lost = True
-    # check z-acceptance
-    if abs(new_point[Ktp.z]) < PARAMS['zAcceptance']:
-        lost = False
-    else:
-        lost = True
+    if FLAGS['useaper']:
+        if abs(new_point[Ktp.zp]) < PARAMS['Dp2pAcceptance']:
+            lost = False
+        else:
+            lost = True
+        # check z-acceptance
+        if abs(new_point[Ktp.z]) < PARAMS['zAcceptance']:
+            lost = False
+        else:
+            lost = True
+
     # check aperture
     if FLAGS['useaper'] and node.aperture != None:
         if abs(new_point[Ktp.x]) < node.aperture and abs(new_point[Ktp.y]) < node.aperture:
             lost = False
         else:
             lost = True
+
+    # if we look for losses we keep all track points
     if not lost:
-        # if we look for losses we keep all track points
         if track.nbofpoints() > 1 and not options['losses']:
             # !!DISCARD!! last point
             track.removepoint(last_tp)
@@ -268,7 +272,7 @@ def track(lattice,bunch,options):
                 nlost += 1
             # showing track-loop progress
             if (ndcnt+1)%lmod == 0:
-                tx4    = ' {}% done {}/{} lost/initial'.format(int((ndcnt/lnode*100.)+1.), nlost, nbpart)
+                tx4 = ' {}% done {}% lost'.format(int((ndcnt/lnode*100.)+1.), int(nlost/nbpart*100.))
                 # tx = ('(track design)', '(track bunch)', zeuge[ndcnt%4], tx4)
                 tx = ('(track design)', '(track bunch)', '', tx4)
                 progress(tx)
@@ -464,7 +468,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1500
+    options['particles_per_bunch'] = 500*10
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
