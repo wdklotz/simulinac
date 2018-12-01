@@ -327,6 +327,8 @@ class _DYN_G(object):
         
         # PARTICLE
         # Picht transformation
+        # DgDz stands for the z-derivative of gamma. When I introduced it 
+        # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
         # REMARK: when outside of the cavity gamma is constant and it's derivative zero!
         DgDz = 0.
         r    = [x,y]
@@ -357,9 +359,6 @@ class _DYN_G(object):
             DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
             time    = tarr[4] + Dtime # PARTICLE time at z4
             gamma  += Dgamma          # PARTICLE gamma at z4
-            # DgDz stands for the z-derivative of gamma. When I introduced it 
-            # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
-            DgDz    = Dgamma/h        # Dgamma/Dz estimate
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
             DEBUG_OFF('time-timeS ', time-timeS)
             z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: noch 1 Woche Arbeit!)
@@ -370,6 +369,7 @@ class _DYN_G(object):
             pass # end steps loop
         
         # Picht-back transformation
+        DgDz    = Dgamma/h        # Dgamma/Dz estimate
         R    = R.tolist()
         Rp   = Rp.tolist()
         r,rp = Picht(gamma,R,Rp,DgDz,back=True)
