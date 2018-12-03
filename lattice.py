@@ -25,7 +25,8 @@ from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Ktp, Twiss
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Ktp
+from setutil import Twiss, Functions
 import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
@@ -511,10 +512,13 @@ class Lattice(object):
         z1,z1p = soll_test((sigmaz_i, 0.))
         z4,z4p = soll_test((0., Dp2p_i))
         # MDIMxMDIM tracking used here
-        s      = 0.
-        c_like = []; s_like = []
+        s   = 0.
         c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
         s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
+        # function names
+        c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdw'))
+        s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdw'))
+
         # for element in self.seq:
         for element in iter(self):
             particle = element.particle
@@ -532,7 +536,7 @@ class Lattice(object):
                     cyp = c_0[YPKOO]
                     cz  = -c_0[ZKOO]*360./(beta*lamb)            # sigmaz_i --> dPhi [deg]
                     cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
-                    c_like.append((s,cx,cxp,cy,cyp,cz,cdw))
+                    c_fun.append(s,(cx,cxp,cy,cyp,cz,cdw))
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
@@ -541,12 +545,12 @@ class Lattice(object):
                     syp = s_0[YPKOO]
                     sz  = -s_0[ZKOO]*360./(beta*lamb)
                     sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
-                    s_like.append((s,sx,sxp,sy,syp,sz,sdw))
+                    s_fun.append(s,(sx,sxp,sy,syp,sz,sdw))
             except ValueError as ex:
                 print(F'STOP C+S TRAJECTORIES at s = {s:6.2f} [m]')
                 # raise ex
                 break
-        return (c_like,s_like)
+        return (c_fun,s_fun)
 
     def symplecticity(self):
         """ test symplecticity """

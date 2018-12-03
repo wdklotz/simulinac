@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.0a1'
+___version___='v7.1.0a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -28,7 +28,7 @@ This file is part of the SIMULINAC code
 #todo: C.K.Allen's matrices which are XAL as well?
 #todo: give priority to OpenXAL model from Shishlo
 #todo: sliced sub-lattice belonging to thick element; more or less done
-#todo: introduce Function class to make plot routines more robust
+#todo: introduce Function class to make plot routines more robust  - partially done
 #todo: REMAKE _DYN_G    - done
 #todo: lattice as double-linked list   - done
 
@@ -56,7 +56,8 @@ DEBUG_MODULE   = DEBUG_OFF
 
 def bucket(*args):
     bucket_size.bucket()
-    
+
+#todo: use Functions class also for sigma envelopes and lattice functions
 def display0(*args):
     """
     CS-Tracks w/o longitudinal motion
@@ -72,19 +73,20 @@ def display0(*args):
     by   = [x[2] for x in sigma_fun]    # envelope (sigma-y)
     zero = [0.   for x in sigma_fun]    # zero line
     #-------------------- trajectories (tz)
-    tz  = [x[0] for x in cos_like]   # Ordinate
-    cx  = [x[1] for x in cos_like]   # cos-like-x
-    cxp = [x[2] for x in cos_like]   # cos-like-x
-    cy  = [x[3] for x in cos_like]   # cos-like-y
-    cyp = [x[4] for x in cos_like]   # cos-like-y
-    cz  = [x[5] for x in cos_like]   # cos-like-z
-    cdw = [x[6] for x in cos_like]   # cos-like-dw/w
-    sx  = [x[1] for x in sin_like]   # sin-like-x
-    sxp = [x[2] for x in sin_like]   # sin-like-x
-    sy  = [x[3] for x in sin_like]   # sin-like-x
-    syp = [x[4] for x in sin_like]   # sin-like-x
-    sz  = [x[5] for x in sin_like]   # sin-like-z
-    sdw = [x[6] for x in sin_like]   # sin-like-dw/w
+    tz=  [cos_like(i,'s')     for i in range(cos_like.nbpoints)]
+    cx=  [cos_like(i,'cx')    for i in range(cos_like.nbpoints)]
+    cxp= [cos_like(i,'cxp')   for i in range(cos_like.nbpoints)]
+    cy=  [cos_like(i,'cy')    for i in range(cos_like.nbpoints)]
+    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
+    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
+    cdw= [cos_like(i,'cdw')   for i in range(cos_like.nbpoints)]
+
+    sx=  [sin_like(i,'sx')    for i in range(sin_like.nbpoints)]
+    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
+    sy=  [sin_like(i,'sy')    for i in range(sin_like.nbpoints)]
+    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
+    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
+    sdw= [sin_like(i,'sdw')   for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox = 5                  # stop viseo plot after so many [m]
     stop_viseoy = 5                  # stop viseo plot after so many [m]
@@ -146,20 +148,21 @@ def display1(*args):
     by   = [x[2]*1.e3 for x in sigma_fun]  # envelope (sigma-y)
     zero = [0.   for x in sigma_fun]  # zero line
     #-------------------- trajectories
-    z1  = [x[0] for x in cos_like]   # Abszisse
-    cx  = [x[1]*1.e3 for x in cos_like]   # cos-like-x
-    cxp = [x[2]*1.e3 for x in cos_like]   # cos-like-x
-    cy  = [x[3]*1.e3 for x in cos_like]   # cos-like-y
-    cyp = [x[4]*1.e3 for x in cos_like]   # cos-like-y
-    cz  = [x[5] for x in cos_like]   # cos-like-z
-    cdw = [x[6] for x in cos_like]   # cos-like-dw/w
-    z2  = [x[0] for x in sin_like]   # Abszisse
-    sx  = [x[1]*1.e3 for x in sin_like]   # sin-like-x
-    sxp = [x[2]*1.e3 for x in sin_like]   # sin-like-x
-    sy  = [x[3]*1.e3 for x in sin_like]   # sin-like-z1x
-    syp = [x[4]*1.e3 for x in sin_like]   # sin-like-z1x
-    sz  = [x[5] for x in sin_like]   # sin-like-z
-    sdw = [x[6] for x in sin_like]   # sin-like-dw/w
+    z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
+    cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
+    cxp= [cos_like(i,'cxp')*1.e3   for i in range(cos_like.nbpoints)]
+    cy=  [cos_like(i,'cy')*1.e3    for i in range(cos_like.nbpoints)]
+    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
+    cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
+    cdw= [cos_like(i,'cdw')        for i in range(cos_like.nbpoints)]
+
+    z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
+    sx=  [sin_like(i,'sx')*1.e3    for i in range(sin_like.nbpoints)]
+    sxp= [sin_like(i,'sxp')*1.e3   for i in range(sin_like.nbpoints)]
+    sy=  [sin_like(i,'sy')*1.e3    for i in range(sin_like.nbpoints)]
+    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
+    sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
+    sdw= [sin_like(i,'sdw')        for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox = 5                  # stop viseo plot after so many [m]
     stop_viseoy = 5                  # stop viseo plot after so many [m]

@@ -311,24 +311,33 @@ class WConverter(object):
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
 
-class FunctionValues(object):
+class Functions(object):
     """
-    Syntactic sugar ...
+    A class to gather function-values (Ordinaten) over a common independent variable (Abszisse)
     """
-    def __init__(self):
-        self._pairs = [()]
-    def set_xy_value(self,xy):
-        self._pairs.append(xy)
-    def get_xy_values(self):
-        return self._pairs
-    def append(self,x,y):
-        self._pairs.append((x,y))
-    def get_xlist(self):
-        return [v[0] for v in self._pairs]
-    def get_ylist(self):
-        return [v[1] for v in self._pairs]
-    def nvalues(self):
-        return len(self._pairs)
+    def __init__(self,names):
+        self._values  = [] # [(abzisse, ordinate-1, ordinate-2, ordinate-3,...)]
+        self._points = 0
+        nmap = {}
+        for i in range(len(names)):
+            nmap[names[i]] = i   # {name:i}..... 
+        self._nmap = nmap
+    def append(self,abszisse,ordinate):
+        value = (abszisse,*ordinate)
+        self._values.append(value)
+        self._points += 1
+    @property
+    def nbpoints(self):
+        return self._points
+    @property
+    def nbfunctions(self):
+        return len(self._nmap)-1
+    def __getitem__(self,n):
+        return self._values[n], self._nmap
+    def __call__(self,npoint,nfunc):
+        nf = self._nmap[nfunc]
+        value = self._values[npoint][nf]
+        return value
     pass
     
 class SCTainer(object):
@@ -1002,8 +1011,27 @@ def test2():
     except ValueError:
         print("This was a test: Particle energy deliberately set negative!")
 
+def test3():
+    print('--------------------------Test3---')
+    names = ('t','SIN','COS')
+    fn = Functions(names)
+    for ph in range(0,361):
+        phr = radians(ph)
+        fn.append(ph,(sin(phr),cos(3*phr)))
+    
+    t= [fn(i,'t')   for i in range(fn.nbpoints)]
+    S= [fn(i,'SIN') for i in range(fn.nbpoints)]
+    C= [fn(i,'COS') for i in range(fn.nbpoints)]
+    
+    for i in range(fn.nbpoints):
+        print(t[i],S[i],C[i])
+    
+    plt.plot(S,C)
+    plt.show()
+
 if __name__ == '__main__':
-    test0()
-    test1()
-    test2()
+    # test0()
+    # test1()
+    # test2()
+    test3()
 
