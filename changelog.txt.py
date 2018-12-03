@@ -1,5 +1,5 @@
 """
-Version v7.1.0
+Version v7.1.0a1
 *) Lattice is now double linked list
 *) All models now implemented as DKD nodes
 *) dyn mapping working

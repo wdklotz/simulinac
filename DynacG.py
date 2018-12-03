@@ -187,9 +187,10 @@ class _DYN_G(object):
     def particlef(self):
         return self._particlef
         
+#todo: use non_const beta, i.e. gamma[i], i=1,4,1 in inegrals
+#todo: find better position for multiplication with dWf-flag
     def Integral1(self, z, t, h, omega, phis):
-        #todo: use non_const beta, i.e. gamma[i], i=1,4,1 in inegrals
-        #todo: find better position for multiplication with dWf-flag
+        # !!!ACHTUNG!!! must be called before all other I integrals
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
         def E(z, t, omega=omega, phis=phis):
             z = 1.e2*z     # [cm]
@@ -200,6 +201,7 @@ class _DYN_G(object):
         return res
 
     def Integral2(self, z, t, h, omega, phis):
+        # !!!ACHTUNG!!! must be called immefiately after Integral1
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
         # def E(z, t, omega=omega, phis=phis):
         #     return self.SFdata.Ez0t(z,t,omega,phis)
@@ -209,6 +211,7 @@ class _DYN_G(object):
         return res
 
     def Integral3(self, z, t, h, bg, omega, phis):
+        # !!!ACHTUNG!!! must be called immefiately after Integral1
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
         # def E(z, t, omega=omega, phis=phis):
         #     return self.SFdata.Ez0t(z,t,omega,phis)
@@ -219,6 +222,7 @@ class _DYN_G(object):
         return res
 
     def Integral4(self, z, t, h, bg, omega, phis):
+        # !!!ACHTUNG!!! must be called immefiately after Integral1
         # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
         # def E(z, t, omega=omega, phis=phis):
         #     return self.SFdata.Ez0t(z,t,omega,phis)
@@ -229,6 +233,7 @@ class _DYN_G(object):
         return res
 
     def Jntegral1(self, z, t, h, omega, phis, gamma):
+        # !!!ACHTUNG!!! must be called before all other J integrals
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
         def Ep(z, t, omega=omega, phis=phis):
             return self.SFdata.dEz0tdt(z,t,omega,phis)
@@ -241,6 +246,7 @@ class _DYN_G(object):
         return res
 
     def Jntegral2(self, z, t, h, omega, phis, gamma):
+        # !!!ACHTUNG!!! must be called immefiately after Jntegral1
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
         # def Ep(z, t, omega=omega, phis=phis):
         #     return self.SFdata.dEz0tdt(z,t,omega,phis)
@@ -252,6 +258,7 @@ class _DYN_G(object):
         return res
 
     def Jntegral3(self, z, t, h, omega, phis, gamma):
+        # !!!ACHTUNG!!! must be called immefiately after Jntegral1
         # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
         # def Ep(z, t, omega=omega, phis=phis):
         #     return self.SFdata.dEz0tdt(z,t,omega,phis)
@@ -261,7 +268,7 @@ class _DYN_G(object):
         res = (2.*self.Epzt[1] + 3.*self.Epzt[2] + 18.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
         res = res * h**3 / 90.
         return res
-
+#todo: use equivalent E-field instead of SFdata
     def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):
         """
         Full step through the DYNAC intervall with its 4 parts
@@ -295,9 +302,7 @@ class _DYN_G(object):
         return DR,DRp,Dgamma,Dtime
 
     def map(self,i_track):
-        """ Mapping from (i) to (f) """
-        DEBUG_MAP = DEBUG_OFF
-                    
+        """ Mapping from (i) to (f) """                    
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -329,9 +334,10 @@ class _DYN_G(object):
         
         # PARTICLE
         # Picht transformation
+        #todo: DYNAC uses predictor-corrector for gamma1,...,gamma4. Details in subroutines BOUCLE and BCNUM in FORTRAN sources.
         # DgDz stands for the z-derivative of gamma. When I introduced it 
         # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
-        # REMARK: when outside of the cavity gamma is constant and it's derivative zero!
+        # REMARK: when enetring the cavity gamma is constant and it's derivative zero!
         DgDz = 0.
         r    = [x,y]
         rp   = [xp,yp]
@@ -371,7 +377,8 @@ class _DYN_G(object):
             pass # end steps loop
         
         # Picht-back transformation
-        DgDz    = Dgamma/h        # Dgamma/Dz estimate
+        #todo: how to get better DgDz extimates?
+        DgDz    = Dgamma/h # Dgamma/Dz estimate at exit of interval 
         R    = R.tolist()
         Rp   = Rp.tolist()
         r,rp = Picht(gamma,R,Rp,DgDz,back=True)
