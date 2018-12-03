@@ -1353,7 +1353,7 @@ def test0():
 def test1():
     print('--------------------------------Test1---')
     print('trivial test 1 ...')
-    i1 = _Node()
+    i1 = I()
     i2 = i1*i1
     print(i1.string())
     print(i2.string())
