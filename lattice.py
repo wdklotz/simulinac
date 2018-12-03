@@ -703,15 +703,15 @@ def make_wille():
     lb = wille()['dipole_length']
     ld = wille()['drift_length']
     # elements
-    mqf1 = ELM.QF(kqf,lqf,'QF1')
-    mqf2 = ELM.QF(kqf,lqf,'QF2')
-    mqd1 = ELM.QD(kqd,lqd,'QD1')
-    md1  = ELM.D(ld)
-    md2  = ELM.D(ld)
-    md3  = ELM.D(ld)
-    md4  = ELM.D(ld)
-    mbr1  = ELM.RD(rhob,lb)
-    mbr2  = ELM.RD(rhob,lb)
+    mqf1 = ELM.QF(k0=kqf,length=lqf,label='QF1')
+    mqf2 = ELM.QF(k0=kqf,length=lqf,label='QF2')
+    mqd1 = ELM.QD(k0=kqd,length=lqd,label='QD1')
+    md1  = ELM.D(length=ld)
+    md2  = ELM.D(length=ld)
+    md3  = ELM.D(length=ld)
+    md4  = ELM.D(length=ld)
+    mbr1  = ELM.RD(radius=rhob,length=lb)
+    mbr2  = ELM.RD(radius=rhob,length=lb)
     # lattice
     lattice = Lattice()
     lattice.add_element(mqf1)

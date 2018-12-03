@@ -329,7 +329,7 @@ class QF(D):
     def __init__(self, k0=0., label='QF', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self.k0       = k0         # [m**-2]
-        self.matrix   = self._mx_()
+        self._mx()
         self['viseo'] = +0.5
 
     def adjust_energy(self, tkin):
@@ -348,7 +348,7 @@ class QF(D):
         shortQF._params = self._params
         return shortQF
 
-    def _mx_(self):
+    def _mx(self):
         m = self.matrix
         g = self.particle.gamma
         rzz12 = self.length/(g*g)
@@ -399,7 +399,7 @@ class SD(D):
     def __init__(self, radius=0., label='SD', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self.radius   = radius
-        self.matrix   = self._mx_()
+        self._mx()
         self['viseo'] = 0.25
 
     def adjust_energy(self, tkin):
@@ -418,7 +418,7 @@ class SD(D):
         shortSD._params = self._params
         return shortSD
 
-    def _mx_(self):
+    def _mx(self):
         m = self.matrix
         rho = self.radius
         k = 1./rho
