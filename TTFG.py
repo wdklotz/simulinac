@@ -39,6 +39,7 @@ DEBUG_TTF_G    = DEBUG_OFF
 
 twopi          = 2*PI
 
+#todo: in pyOrbit models the S(K) coefficients are NOT zero! (Shishlo). Are they needed?
 class _TTF_G(object):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, parent):
