@@ -39,7 +39,6 @@ DEBUG_TTF_G    = DEBUG_OFF
 
 twopi          = 2*PI
 
-#todo: in pyOrbit models the S(K) coefficients are NOT zero! (Shishlo). Are they needed?
 class _TTF_G(object):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, parent):
@@ -160,7 +159,9 @@ class _TTF_Gslice(object):
         self.gb         = self.particle.gamma_beta
         self.k          = twopi/(self.lamb*self.beta)
         self.Tk         = self._T (self.poly, self.k)
-        self.Tkp        = self._Tp(self.poly, self.k)
+        self.Sk         = self._S (self.poly, self.k)
+        self.Tkp        = self._Sp(self.poly, self.k)
+        self.Skp        = self._Tp(self.poly, self.k)
         self.phis      = None  # initialized in configure_slices
         self.WIN       = None  # initialized in adjust_slice_parameters
         self.WOUT      = None  # initialized in adjust_slice_parameters
@@ -179,6 +180,17 @@ class _TTF_Gslice(object):
         # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
         return t
 
+    def _S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
+        a  = poly.a
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        f2 = 1.-k*dz/tan(k*dz)
+        s  = f1*f2
+        # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
+        return s
+
     def _Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b
         dz  = poly.dz
@@ -187,6 +199,16 @@ class _TTF_Gslice(object):
         tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
+
+    def _Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        sp  = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        sp  = sp*(dz**2-2./k**2+dz/tan(k*dz)*2/k)
+        sp  = sp*1.e-2     # [cm] --> [m]
+        return sp
 
     def _V0(self, poly):    # A.Shishlo/J.Holmes (4.4.3)
         E0 = poly.E0                          # [MV/m]
@@ -268,16 +290,18 @@ class _TTF_Gslice(object):
         k          = omeg/(c*betai)
         Tk         = self._T(self.poly,k)
         Tkp        = self._Tp(self.poly,k)
+        Sk         = self._S(self.poly,k)
+        Skp        = self._Sp(self.poly,k)
         r          = sqrt(x**2+y**2)            # radial coordinate
         K          = omeg/(c*gbi) * r
         i0         = I0(K)                      # bessel function I0
         i1         = I1(K)                      # bessel function I1
         fact       = self.V0*omeg/(m0c3*gbi**3)
 
-        womwi = self.wout_minus_win(self.V0,i0,Tk,0.,pin) 
+        womwi = self.wout_minus_win(self.V0,i0,Tk,Sk,pin) 
         wout  = win + womwi                              # energy (f)
 
-        pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,0.,Tkp,0.,pin)
+        pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,Sk,Tkp,Skp,pin)
         pout  = pin + pompi         # phase (f)
         
         dp = +(pout-self.PHOUT)    # delta phase  (f)

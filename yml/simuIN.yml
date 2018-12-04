@@ -67,6 +67,7 @@ parameters:
     - aperture:             *p04        # [m] global aperture setting (default = None)
     - mapping:              dyn    # global rf gap-model
     - mapping:              t3d    # global rf gap-model
+    - mapping:              ttf    # global rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
