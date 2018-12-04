@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.0a2'
+___version___='v7.1.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -468,7 +468,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 500*10
+    options['particles_per_bunch'] = 500*20
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
