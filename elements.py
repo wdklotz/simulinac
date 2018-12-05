@@ -214,7 +214,8 @@ class _Node(DictObject, object):
             *) input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
         """
         si     = self.position[0] # entrance
-        sigmas = [(sg,si)]
+        # sigmas = [(sg,si)]
+        sigmas = []
         s      = si
         slices = self.make_slices(anz = steps)
         for slice in slices:

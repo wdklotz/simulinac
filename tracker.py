@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.1'
+___version___='v7.1.1a1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -33,7 +33,7 @@ from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
 from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
-from setutil import WConverter
+from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 # from trackPlot import poincarePlot
 
@@ -173,21 +173,26 @@ def loss_plot(lattice,live_lost):
     live_bunch, lost_bunch = live_lost
     for particle in iter(lost_bunch):
         track  = particle.track
-        xlost = []; ylost = []; s = []
+        lost = Functions(('s','x','y'))
         for tpoint in iter(track):
             point  = tpoint()
-            xlost.append(point[Ktp.x]*1e3)
-            ylost.append(point[Ktp.y]*1e3)
-            s.append(point[Ktp.S])
-        ax1.plot(s,xlost)
-        ax2.plot(s,ylost)
+            xlost = point[Ktp.x]*1.e3
+            ylost = point[Ktp.y]*1.e3
+            s = point[Ktp.S]
+            lost.append(s,(xlost,ylost))
+        s    = [lost(i,'s') for i in range(lost.nbpoints)]
+        ordx = [lost(i,'x') for i in range(lost.nbpoints)]
+        ordy = [lost(i,'y') for i in range(lost.nbpoints)]
+        ax1.plot(s,ordx)
+        ax2.plot(s,ordy)
     lat_plot,d   = lattice.lattice_plot_functions()
-    vis_abszisse = [x[0] for x in lat_plot]
-    vis_ordinate = [x[1] for x in lat_plot]
-    vis_zero     = [0.   for x in lat_plot]      # zero line
+    vis_abszisse = [lat_plot(i,'s')     for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo') for i in range(lat_plot.nbpoints)]
+    vis_zero     = [0.                  for i in range(lat_plot.nbpoints)] # zero line
     ax1.plot(vis_abszisse,vis_ordinate,color='gray')
+    ax1.plot(vis_abszisse,vis_zero,color='gray')
     ax2.plot(vis_abszisse,vis_ordinate,color='gray')
-    # ax1.plot(vis_abszisse,vis_zero)
+    ax2.plot(vis_abszisse,vis_zero,color='gray')
     plt.show()
     return
     
@@ -199,10 +204,9 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
-xlim_max  = ylim_max   = 10.e-3
-xplim_max = yplim_max  = 10.e-3
-zlim_max  = zplim_max  = 10.e-3
-limit = sqrt(xlim_max*xlim_max+ylim_max*ylim_max+xplim_max*xplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
+xlim_max  = ylim_max   = zlim_max  = 10.e-3
+xplim_max = yplim_max  = zplim_max = 10.e-3
+limit = sqrt(xlim_max*xlim_max+xplim_max*xplim_max+ylim_max*ylim_max+yplim_max*yplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
 
 def track_node(node,particle,options):
     """
@@ -487,11 +491,11 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 500*30
+    options['particles_per_bunch'] = 500*1
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
-    options['losses']              = False
+    options['losses']              = True
 
     # start the run
     tracker(options)

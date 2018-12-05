@@ -320,16 +320,16 @@ class Lattice(object):
         """
         Calulate envelopes from initial twiss-vector with beta-matrices
         """
+        twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
         if PARAMS['mapping'] == 'dyn':
             print('SKIP ENVELOPES ("dyn" mapping!)')
-            beta_fun = [[0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]]
-            return beta_fun
-            
+            twfun.append(0.,(0.,0.,0.,0.,0.,0.,0.,0.,0.))
+            return twfun
+
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
         twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
-        beta_fun = [list(twv0)+[0]]
         B_matrix = NP.eye(9)                            # cumulated beta-matrix
         for node in iter(self):
             slices = node.make_slices(anz = steps)
@@ -340,12 +340,12 @@ class Lattice(object):
                 B_matrix    = NP.dot(beta_matrix,B_matrix)
                 twv         = NP.dot(B_matrix,twv0)     # track twiss-vector
                 s          += slice.length
-                beta_fun.append(list(twv)+[s])
+                twfun.append(s,tuple(twv))
                 bx    = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
                 by    = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
                 sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 means.append(sigxy)
-            means = NP.array(means)
+            # means = NP.array(means)
             means = NP.mean(means,axis=0)
             # each node has its tuple of average sigmas
             node['sigxy'] = tuple(means)
@@ -360,17 +360,23 @@ class Lattice(object):
                             '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
                             UserWarning,'lattice.py',
                             'twiss_functions()')
-        return beta_fun
+        return twfun
         
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
         #todo: analytical sigmas for 'dyn' mapping as best estimates ?
         def envelopes(function, steps = 10):
             """ calc. envelopes using function """
-            beta_fun  = function(steps = steps)
+            twfunc     = function(steps = steps)
             b,a,g,epsx = PARAMS['twiss_x_i']()
             b,a,g,epsy = PARAMS['twiss_y_i']()
-            sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in beta_fun]
+            sigma_fun  = Functions(('s','sigmax','sigmay'))
+            # sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in twfunc]
+            for i in range(twfunc.nbpoints):
+                val,dummy = twfunc[i]
+                (s,bx,ax,gx,by,ay,gy,bz,az,gz) = val
+                val=(sqrt(bx*epsx),sqrt(by*epsy))
+                sigma_fun.append(s,val)
             return sigma_fun
 
         if PARAMS['mapping'] == 'dyn':
@@ -402,6 +408,7 @@ class Lattice(object):
         sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = []
+        sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
         # for node in self.seq: # loop nodes
         for node in iter(self): # loop nodes
             # sigma-matrices for a single node
@@ -409,9 +416,10 @@ class Lattice(object):
             # prep plot list of ftn's
             for sg,s in sigmas:
                 v = sg.twiss()      # twiss from Sigma object
+                # flist = v.tolist()
                 flist = v.tolist()
-                flist.append(s)
-                sigma_fun.append(flist)
+                # flist.append(s,tuple(flist))
+                sigma_fun.append(s,tuple(flist))
             sg0 = sg          # loop back nodes
 
             # aperture check
@@ -454,8 +462,8 @@ class Lattice(object):
         return traj
 
     def lattice_plot_functions(self):
-        fun = []   # is list((s = Abzisse,f = Ordinate))
-        ape = []
+        fun = Functions(('s','viseo'))
+        ape = Functions(('s','aperture'))
         # for element in self.seq:
         for element in iter(self):
             # DEBUG((element.__class__,element['viseo'],element.position))
@@ -463,10 +471,10 @@ class Lattice(object):
             # element plot
             viseo = element['viseo']
             si, sm, sf = pos
-            fun.append((si,0))
-            fun.append((si,viseo))
-            fun.append((sf,viseo))
-            fun.append((sf,0))
+            fun.append(si,(0,))
+            fun.append(si,(viseo,))
+            fun.append(sf,(viseo,))
+            fun.append(sf,(0,))
 
             # aperture plot
             aperture = None
@@ -474,7 +482,7 @@ class Lattice(object):
                 aperture = element.aperture
             if element.__class__.__name__ == 'D': continue
             if aperture == None: continue
-            ape.append((sm,aperture))
+            ape.append(sm,(aperture,))
         return fun,ape
 
     def cs_traj(self,steps=10):

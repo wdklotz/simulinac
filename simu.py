@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.1'
+___version___='v7.1.1a1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -142,11 +142,11 @@ def display1(*args):
     sin_like  = args[2]
     lat_plot  = args[3]
     ape_plot  = args[4]
-    #-------------------- twiss functions
-    z    = [x[0] for x in sigma_fun]  # Abszisse
-    bx   = [x[1]*1.e3 for x in sigma_fun]  # envelope (sigma-x)
-    by   = [x[2]*1.e3 for x in sigma_fun]  # envelope (sigma-y)
-    zero = [0.   for x in sigma_fun]  # zero line
+    #-------------------- sigma functions
+    zero = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
+    z    = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
+    bx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
+    by   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
     #-------------------- trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
@@ -167,11 +167,11 @@ def display1(*args):
     stop_viseox = 5                  # stop viseo plot after so many [m]
     stop_viseoy = 5                  # stop viseo plot after so many [m]
     stop_viseoz = 5                  # stop viseo plot after so many [m]
-    vis_abszisse = [x[0] for x in lat_plot]
-    vis_ordinate = [x[1] for x in lat_plot]
-    ape_abszisse = [x[0] for x in ape_plot]
-    ape_ordinate = [x[1]*1.e3 for x in ape_plot]
-    vzero        = [0.   for x in lat_plot]      # zero line
+    vzero        = [0.                      for i in range(lat_plot.nbpoints)]      # zero line
+    vis_abszisse = [lat_plot(i,'s')         for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo')     for i in range(lat_plot.nbpoints)]
+    ape_abszisse = [ape_plot(i,'s')         for i in range(ape_plot.nbpoints)]
+    ape_ordinate = [ape_plot(i,'aperture')  for i in range(ape_plot.nbpoints)]
     #-------------------- figure frame
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
