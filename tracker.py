@@ -199,19 +199,38 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('{}\r'.format(res),end='')
 
+xlim_max  = ylim_max   = 10.e-3
+xplim_max = yplim_max  = 10.e-3
+zlim_max  = zplim_max  = 10.e-3
+limit = sqrt(xlim_max*xlim_max+ylim_max*ylim_max+xplim_max*xplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
+
 def track_node(node,particle,options):
     """
     Tracks a particle through a node
     """
+    def norm(track):
+        track_norm = sqrt(track[0]*track[0]+track[1]*track[1]+track[2]*track[2]+track[3]*track[3]+track[4]*track[4]+track[5]*track[5])
+        return track_norm > limit
+    
     track   = particle.track
     last_tp = track.getpoints()[-1]
+    lost    = False
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
-    except ValueError as ex:
+    except (ValueError,OverflowError) as ex:
         lost = True
         track.removepoint(last_tp)
+        particle.lost = lost
         return lost
+
+    # limit to stay physicaly reasonable 
+    if not FLAGS['useaper']:
+        if norm(last_tp()):
+            lost = True
+            track.removepoint(last_tp)
+            particle.lost = lost
+            return
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
@@ -468,7 +487,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 500*20
+    options['particles_per_bunch'] = 500*30
     options['show']                = True
     options['save']                = False
     options['skip']                = 1

@@ -693,8 +693,10 @@ def I0(x):
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I0,x )',(res,x))
         except OverflowError as ex:
-            print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
-            sys.exit(1)
+            print('Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
+            # sys.exit(1)
+            raise ex
+            
     return res
 
 def I1(x):
@@ -729,8 +731,9 @@ def I1(x):
             res = res*exp(x)/sqrt(x)
             # DEBUG_MODULE('(I1,x )',(res,x))
         except OverflowError as ex:
-            print('Bessel-function I1 overflow: (arg = {6.3f})! - STOP'.format(x))
-            sys.exit(1)
+            print('Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
+            # sys.exit(1)
+            raise ex
     return res
 
 def ellicp(xy,alfa,beta,emit):
