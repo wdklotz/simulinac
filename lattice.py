@@ -345,6 +345,7 @@ class Lattice(object):
                 by    = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
                 sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 means.append(sigxy)
+                
             # means = NP.array(means)
             means = NP.mean(means,axis=0)
             # each node has its tuple of average sigmas
@@ -371,7 +372,6 @@ class Lattice(object):
             b,a,g,epsx = PARAMS['twiss_x_i']()
             b,a,g,epsy = PARAMS['twiss_y_i']()
             sigma_fun  = Functions(('s','sigmax','sigmay'))
-            # sigma_fun = [(x[Ktw.s],sqrt(x[Ktw.bx]*epsx),sqrt(x[Ktw.by]*epsy)) for x in twfunc]
             for i in range(twfunc.nbpoints):
                 val,dummy = twfunc[i]
                 (s,bx,ax,gx,by,ay,gy,bz,az,gz) = val
@@ -381,7 +381,8 @@ class Lattice(object):
 
         if PARAMS['mapping'] == 'dyn':
             print('SKIP ENVELOPES ("dyn" mapping!)')
-            sigma_fun = [[0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]]
+            sigma_fun = Functions(('s','sigmax','sigmay'))
+            sigma_fun.append(0.,(0.,0.))
             return sigma_fun
             
         if FLAGS['sigma']:
@@ -407,18 +408,14 @@ class Lattice(object):
         twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
         sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
-        sigma_fun = []
         sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
-        # for node in self.seq: # loop nodes
         for node in iter(self): # loop nodes
             # sigma-matrices for a single node
             sigmas = node.sigma_beam(steps = steps, sg = sg0) 
             # prep plot list of ftn's
             for sg,s in sigmas:
                 v = sg.twiss()      # twiss from Sigma object
-                # flist = v.tolist()
                 flist = v.tolist()
-                # flist.append(s,tuple(flist))
                 sigma_fun.append(s,tuple(flist))
             sg0 = sg          # loop back nodes
 

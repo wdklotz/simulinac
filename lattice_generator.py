@@ -136,10 +136,9 @@ def instanciate_element(item):
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
         mapping   = PARAMS['mapping']
-        if not mapping in PARAMS['mapset']:
-            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
-            sys.exit(1)
-        if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
+        if mapping == None:
+            mapping = 't3d'
+        if mapping == 'ttf' or mapping == 'dyn': # TTFG or DYNAC from SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
@@ -168,10 +167,9 @@ def instanciate_element(item):
         dWf       = FLAGS['dWf']
         length    = get_mandatory(attributes,'length',label)
         mapping   = PARAMS['mapping']
-        if not mapping in PARAMS['mapset']:
-            raise RuntimeError("unrecognized mapping '{}' specified - STOP!".format(mapping))
-            sys.exit(1)
-        if mapping == 'ttf' or mapping == 'dyn':     # TTFG or DYNAC from SF-data
+        if mapping == None:
+            mapping = 't3d'
+        if mapping == 'ttf' or mapping == 'dyn': # TTFG or DYNAC from SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:

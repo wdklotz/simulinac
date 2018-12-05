@@ -68,10 +68,10 @@ def display0(*args):
     sin_like  = args[2]
     lat_plot  = args[3]
     #-------------------- Bahnkoordinate (z)
-    z    = [x[0] for x in sigma_fun]    # Ordinate
-    bx   = [x[1] for x in sigma_fun]    # envelope (sigma-x)
-    by   = [x[2] for x in sigma_fun]    # envelope (sigma-y)
-    zero = [0.   for x in sigma_fun]    # zero line
+    z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)]
+    sgx   = [sigma_fun(i,'sigmax') for i in range(sigma_fun.nbpoints)]
+    sgy   = [sigma_fun(i,'sigmay') for i in range(sigma_fun.nbpoints)]
+    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
     #-------------------- trajectories (tz)
     tz=  [cos_like(i,'s')     for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')    for i in range(cos_like.nbpoints)]
@@ -88,24 +88,23 @@ def display0(*args):
     sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
     sdw= [sin_like(i,'sdw')   for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
-    stop_viseox = 5                  # stop viseo plot after so many [m]
-    stop_viseoy = 5                  # stop viseo plot after so many [m]
-    vis_abszisse = [x[0] for x in lat_plot]
-    vis_ordinate = [x[1] for x in lat_plot]
-    vzero        = [0.   for x in lat_plot]      # zero line
+    stop_viseox  = 5                  # stop viseo plot after so many [m]
+    stop_viseoy  = 5                  # stop viseo plot after so many [m]
+    vzero        = [0.                  for i in range(lat_plot.nbpoints)] # zero line
+    vis_abszisse = [lat_plot(i,'s')     for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo') for i in range(lat_plot.nbpoints)]
     #-------------------- figure frame
     width=14; height=7.6
-    # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
 
     #-------------------- transverse X
     splot=plt.subplot(211)
     splot.set_title('transverse x')
-    plt.plot(z,bx , label=r'$\sigma$ [m]',color='green')
+    plt.plot(z,sgx ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx ,label='Cx[m]', color='blue',linestyle='-')
-    plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
-    plt.plot(tz,sy, label='Sx[m]', color='red' ,linestyle='-')
-    plt.plot(tz,syp,label="Sx'[m]",color='red' ,linestyle=':')
+    # plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
+    plt.plot(tz,sx, label='Sx[m]', color='red' ,linestyle='-')
+    # plt.plot(tz,sxp,label="Sx'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseox = [x*vscale for x in vis_ordinate]
     for i,s in enumerate(vis_abszisse):
@@ -118,11 +117,11 @@ def display0(*args):
     #-------------------- transverse Y
     splot=plt.subplot(212)
     splot.set_title('transverse y')
-    plt.plot(z,by , label=r'$\sigma$ [m]',color='green')
+    plt.plot(z,sgy ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy, label='Cy[m]', color='blue',linestyle='-')
     plt.plot(tz,cyp,label="Cy'[m]",color='blue',linestyle=':')
-    plt.plot(tz,sy, label='Sy[m]', color='red' ,linestyle='-')
-    plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
+    # plt.plot(tz,sy, label='Sy[m]', color='red' ,linestyle='-')
+    # plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_ordinate]
     for i,s in enumerate(vis_abszisse):
@@ -143,10 +142,10 @@ def display1(*args):
     lat_plot  = args[3]
     ape_plot  = args[4]
     #-------------------- sigma functions
-    zero = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
-    z    = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
-    bx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
-    by   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
+    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
+    z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
+    sgx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
+    sgy   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
     #-------------------- trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
@@ -167,11 +166,11 @@ def display1(*args):
     stop_viseox = 5                  # stop viseo plot after so many [m]
     stop_viseoy = 5                  # stop viseo plot after so many [m]
     stop_viseoz = 5                  # stop viseo plot after so many [m]
-    vzero        = [0.                      for i in range(lat_plot.nbpoints)]      # zero line
-    vis_abszisse = [lat_plot(i,'s')         for i in range(lat_plot.nbpoints)]
-    vis_ordinate = [lat_plot(i,'viseo')     for i in range(lat_plot.nbpoints)]
-    ape_abszisse = [ape_plot(i,'s')         for i in range(ape_plot.nbpoints)]
-    ape_ordinate = [ape_plot(i,'aperture')  for i in range(ape_plot.nbpoints)]
+    vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
+    vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
+    ape_abszisse = [ape_plot(i,'s')              for i in range(ape_plot.nbpoints)]
+    ape_ordinate = [ape_plot(i,'aperture')*1.e3  for i in range(ape_plot.nbpoints)]
     #-------------------- figure frame
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
@@ -180,7 +179,7 @@ def display1(*args):
     #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
-    plt.plot(z,bx ,label=r'$\sigma$ [mm]',color='green')
+    plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
@@ -198,19 +197,19 @@ def display1(*args):
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
         N = PARAMS['n_sigma']
-        bx = [i*N for i in bx]
+        sgx = [i*N for i in sgx]
         label = F'{N:1}$\sigma$ [mm]'
-        plt.plot(z,bx ,label=label,color='green',linestyle=':')
+        plt.plot(z,sgx ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- transverse Y tracks
     splot=plt.subplot(312)
     splot.set_title('transverse y')
-    plt.plot(z,by ,label=r'$\sigma$ [mm]',color='green')
+    plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
-    plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
-    # plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
+    plt.plot(z2,sy, label="S  [mm]",color='red' ,linestyle='-')
+    # plt.plot(z2,syp,label="S' [mr]",color='red' ,linestyle=':')
     # lattice elements
     vscale=plt.axis()[3]*0.4
     viseoy = [x*vscale for x in vis_ordinate]
@@ -224,8 +223,8 @@ def display1(*args):
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
         N = PARAMS['n_sigma']
-        by = [i*N for i in by]
-        plt.plot(z,by ,label=label,color='green',linestyle=':')
+        sgy = [i*N for i in sgy]
+        plt.plot(z,sgy ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- longitudinal tracks dPhi, dW/W
