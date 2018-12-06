@@ -1,0 +1,11 @@
+-------------------delta W
+Dbeta*Dphi*Spks*cphis*omcb*qV0 + Dbeta*Dphi*Tpks*omcb*qV0*sphis + Dbeta*Spks*omcb*qV0*sphis - Dbeta*Tpks*cphis*omcb*qV0 - Dphi*Sks*cphis*qV0 - Dphi*Tks*qV0*sphis
+------------------delta beta
+Dp2p*Ws*betas**(-0.5)*(gammas + 1)/(gammas**4*m0c2)
+------------delta phi
+Dp2p*Dphi*Sppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**3*m0c2) + Dp2p*Dphi*Sppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**4*m0c2) - Dp2p*Dphi*Tppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**3*m0c2) - Dp2p*Dphi*Tppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**4*m0c2) - Dp2p*Sppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**3*m0c2) - Dp2p*Sppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**4*m0c2) - Dp2p*Tppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**3*m0c2) - Dp2p*Tppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**4*m0c2) - Dphi*Spks*fac*sphis + Dphi*Tpks*cphis*fac
+------------------ombc=omega/c/bstas**2
+omega/(betas**2*c)
+------------------fac=qV0*omeag/mc2/c/(bg)**3
+omega*qV0/(betas**3*c*gammas**3*m0c2)
+
