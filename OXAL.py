@@ -232,9 +232,9 @@ class _OXAL_slice(object):
         self.Sk      = self._S(self.poly,self.k)
         self.Skp     = self._Sp(self.poly.self.k)
 
-        c     = PARAMS['lichtgeschwindigkeit']
-        m0c2  = PARAMS['proton_mass']
-        m0c3  = m0c2*c
+        c      = PARAMS['lichtgeschwindigkeit']
+        m0c2   = PARAMS['proton_mass']
+        m0c3   = m0c2*c
         omega  = twopi*self.freq
         i0    = 1.
         i1    = 0.
@@ -264,15 +264,17 @@ class _OXAL_slice(object):
         S        = i_track[SKOO]       # [8] position SOLL
 
         # Aliases
-        c          = PARAMS['lichtgeschwindigkeit']
-        m0c2       = self.particle.e0
-        m0c3       = self.particle.m0c3
-        omeg       = twopi*self.freq
+        c      = PARAMS['lichtgeschwindigkeit']
+        m0c2   = PARAMS['proton_mass']
+        m0c3   = m0c2*c
+        omega  = twopi*self.freq
 
-        # energy parameters from SOLL
+        # SOLL
+        tkinS      = self.tkin
         betaS      = self.beta
         gammaS     = self.gamma
         bgS        = self.gb
+        phiS       = self.phi
         kS         = self.k
         TkS        = self.Tk
         SkS        = self.Sk
@@ -280,14 +282,16 @@ class _OXAL_slice(object):
         SkpS       = self.Skp
         
         
-        # energy parameters from PARTICLE        
-        tkinP      = (zp*(gammai+1.)/gammai+1.)*self.WIN      # energy (i)  ~ (z')
+        # PARTICLE        
+        tkinP      = (zp*(gammaS+1.)/gammaS+1.)*tkinS
         gammaP     = 1.+tkinP/m0c2
         bgP        = sqrt(gammaP**2-1.)
         betaP      = bgP/gammaP
-        phiP       = -z*omeg/(c*betaS) + self.PHIN            # phase  (i)  ~ (-z)
+        phiP       = -z*omega/(c*betaS) + self.PHIN
 
-        k          = omeg/(c*betai)
+        # k          = omega/(c*betaS)
+        Dbeta = betaP-betaS
+        fac = omega/(c*betaS)*Dbeta/betaS
         Tk         = self._T(self.poly,k)
         Tkp        = self._Tp(self.poly,k)
         Sk         = self._S(self.poly,k)

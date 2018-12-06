@@ -153,7 +153,6 @@ class _TTF_Gslice(object):
         self.particle   = copy(particle) # incoming SOLL particle
         # polynom interval: ACHTUNG: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.poly       = poly 
-        self.V0         = self._V0(self.poly)
         self.beta       = self.particle.beta
         self.gamma      = self.particle.gamma
         self.gb         = self.particle.gamma_beta
@@ -162,6 +161,7 @@ class _TTF_Gslice(object):
         self.Sk         = self._S (self.poly, self.k)
         self.Tkp        = self._Sp(self.poly, self.k)
         self.Skp        = self._Tp(self.poly, self.k)
+        self.V0         = self._V0(self.poly)
         self.phis      = None  # initialized in configure_slices
         self.WIN       = None  # initialized in adjust_slice_parameters
         self.WOUT      = None  # initialized in adjust_slice_parameters
@@ -227,6 +227,8 @@ class _TTF_Gslice(object):
         self.k       = twopi/(self.lamb*self.beta)
         self.Tk      = self._T (self.poly,self.k)
         self.Tkp     = self._Tp(self.poly,self.k)
+        self.Sk      = self._S(self.poly,self.k)
+        self.Skp     = self._Sp(self.poly,self.k)
 
         m0c2  = self.particle.e0
         m0c3  = self.particle.m0c3
@@ -235,9 +237,9 @@ class _TTF_Gslice(object):
         i1    = 0.
         WIN   = self.particle.tkin
         PHIN  = self.phis
-        DW    = self.wout_minus_win(self.V0,i0,self.Tk,0.,PHIN)
+        DW    = self.wout_minus_win(self.V0,i0,self.Tk,self.Sk,PHIN)
         WOUT  = WIN+DW
-        DPHI  = self.phiout_minus_phiin(self.V0*omeg/(m0c3*self.gb**3), self.gamma,0.,i0,i1,self.Tk,0.,self.Tkp,0.,PHIN)
+        DPHI  = self.phiout_minus_phiin(self.V0*omeg/(m0c3*self.gb**3), self.gamma,0.,i0,i1,self.Tk,self.Sk,self.Tkp,self.Skp,PHIN)
         PHOUT = PHIN+DPHI
 
         self.WIN      = WIN
