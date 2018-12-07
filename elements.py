@@ -27,9 +27,10 @@ from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
 from setutil import DEBUG, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
-from TTFG import _TTF_G
 from Ez0 import SFdata
+from TTFG import _TTF_G
 from DynacG import _DYN_G
+from OXAL import _OXAL
 
 # DEBUG
 def DEBUG_ON(*args):
@@ -69,7 +70,7 @@ class _Node(DictObject, object):
     """
     def __init__(self, label='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         DictObject.__init__(self)
-        self.matrix    = NP.zeros(MDIM,MDIM)   # MDIMxMDIM zero matrix used here
+        self.matrix    = NP.zeros([MDIM,MDIM])   # MDIMxMDIM zero matrix used here
         # !!!IMPORTANT!!! local copy of the particle object
         self.particle  = copy(particle)
         self.position  = position         # [entrance, middle, exit]
@@ -584,6 +585,9 @@ class RFG(I):
         elif self.mapping == 'ttf':
             # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
             self.gap_model = _TTF_G(self)
+        elif self.mapping == 'oxal':
+            # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _OXAL(self)
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # self.gap_model = _DYN_G(self)  not for RFG anymore!
@@ -746,7 +750,7 @@ class RFC(I):
         si,sm,sf = self.position
         track = copy(i_track)
         for node in iter(self.triplet):
-            f_track = node.map(track)
+            f_track = node.soll_map(track)
             track = f_track
         f_track[SKOO] += sm
         DEBUG_OFF('rfc-soll ',f_track)

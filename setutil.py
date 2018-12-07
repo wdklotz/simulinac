@@ -110,7 +110,7 @@ PARAMS = dict(
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
         nbof_slices          = 10,               # default number of slices
-        mapset               = frozenset(['t3d','simple','base','ttf','dyn']), #gap-models
+        mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
         mapping              = 'base'            # default rf gap-model      
         )
 

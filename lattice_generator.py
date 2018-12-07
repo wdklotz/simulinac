@@ -87,6 +87,7 @@ def instanciate_element(item):
         instance['label']    = label
         instance['length']   = length
         instance['aperture'] = aperture
+
     elif key == 'SIXD':
         label     = attributes['ID']+'#'
         length    = get_mandatory(attributes,'length',label)
@@ -95,6 +96,7 @@ def instanciate_element(item):
         instance['label']    = label
         instance['length']   = length
         instance['aperture'] = aperture
+
     elif key == 'QF':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
@@ -112,6 +114,7 @@ def instanciate_element(item):
         instance['bore']   = aperture
         instance['Bpole']  = Bpole
         pass
+
     elif key == 'QD':
         label    = attributes['ID']
         length   = get_mandatory(attributes,'length',label)
@@ -128,6 +131,7 @@ def instanciate_element(item):
         instance['dBdz']   = dBdz
         instance['bore']   = aperture
         instance['Bpole']  = Bpole
+
     elif key == 'RFG':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
@@ -138,7 +142,7 @@ def instanciate_element(item):
         mapping   = PARAMS['mapping']
         if mapping == None:
             mapping = 't3d'
-        if mapping == 'ttf' or mapping == 'dyn': # TTFG or DYNAC from SF-data
+        if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
@@ -158,6 +162,7 @@ def instanciate_element(item):
         instance['aperture'] = aperture
         instance['dWf']      = dWf
         instance['mapping']  = mapping
+
     elif key == 'RFC':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
@@ -169,7 +174,7 @@ def instanciate_element(item):
         mapping   = PARAMS['mapping']
         if mapping == None:
             mapping = 't3d'
-        if mapping == 'ttf' or mapping == 'dyn': # TTFG or DYNAC from SF-data
+        if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
@@ -190,6 +195,7 @@ def instanciate_element(item):
         instance['dWf']      = dWf
         instance['length']   = length
         instance['mapping']  = mapping
+
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
@@ -205,6 +211,7 @@ def instanciate_element(item):
         instance['PhiSoll'] = PhiSoll
         instance['fRF']     = fRF
         instance['dWf']     = dWf
+
     elif key == 'MRK':
         label     = attributes['ID']
         action    = get_mandatory(attributes,'action',label)
