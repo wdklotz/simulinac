@@ -1,11 +1,15 @@
--------------------delta W
-Dbeta*Dphi*Spks*cphis*omcb*qV0 + Dbeta*Dphi*Tpks*omcb*qV0*sphis + Dbeta*Spks*omcb*qV0*sphis - Dbeta*Tpks*cphis*omcb*qV0 - Dphi*Sks*cphis*qV0 - Dphi*Tks*qV0*sphis
-------------------delta beta
-Dp2p*Ws*betas**(-0.5)*(gammas + 1)/(gammas**4*m0c2)
-------------delta phi
-Dp2p*Dphi*Sppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**3*m0c2) + Dp2p*Dphi*Sppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**4*m0c2) - Dp2p*Dphi*Tppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**3*m0c2) - Dp2p*Dphi*Tppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**4*m0c2) - Dp2p*Sppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**3*m0c2) - Dp2p*Sppks*Ws*betas**(-0.5)*cphis*fac*omcb/(gammas**4*m0c2) - Dp2p*Tppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**3*m0c2) - Dp2p*Tppks*Ws*betas**(-0.5)*fac*omcb*sphis/(gammas**4*m0c2) - Dphi*Spks*fac*sphis + Dphi*Tpks*cphis*fac
-------------------ombc=omega/c/bstas**2
-omega/(betas**2*c)
-------------------fac=qV0*omeag/mc2/c/(bg)**3
-omega*qV0/(betas**3*c*gammas**3*m0c2)
 
+------------------------T'(k)
+-2*(-Dz*(Dz**2*b - 6*b/k**2 + 1)*cot(Dz*k) + (3*Dz**2*b - 6*b/k**2 + 1)/k)*sin(Dz*k)/(k*(0.666666666666667*Dz**3*b + 2*Dz))
+-----------------------T''(k)
+2*(Dz*k*(Dz*k*(-6*b + k**2*(Dz**2*b + 1))*cot(Dz*k) + 6*b - k**2*(3*Dz**2*b + 1))*cos(Dz*k) 
+- (Dz*k*(-6*b + k**2*(Dz**2*b + 1))*cot(Dz*k) + 6*b - k**2*(3*Dz**2*b + 1))*sin(Dz*k) 
+- (Dz**2*k**2*(-6*b + k**2*(Dz**2*b + 1))/sin(Dz*k)**2 - 12*Dz*b*k*cot(Dz*k) + 18*b 
+- k**2*(3*Dz**2*b + 1))*sin(Dz*k))/(Dz*k**5*(0.666666666666667*Dz**2*b + 2))
+
+
+-----------------------S'(k)
+2*a*(Dz**2 + 2*Dz*cot(Dz*k)/k - 2/k**2)*sin(Dz*k)/(k*(0.666666666666667*Dz**2*b + 2*Dz))
+---------------------------S''(k)
+2*a*(Dz**3*k**3*cos(Dz*k) - 3*Dz**2*k**2*sin(Dz*k)
+- 6*Dz*k*cos(Dz*k) + 6*sin(Dz*k))/(Dz*k**4*(0.666666666666667*Dz*b + 2))

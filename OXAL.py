@@ -184,6 +184,28 @@ class _OXAL(object):
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
 
+    def _Tpp(self, poly, k):
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        tpp = 
+            2*(dz*k*(dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*cos(dz*k) 
+            - (dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*sin(dz*k) 
+            - (dz**2*k**2*(-6*b + k**2*(dz**2*b + 1))/sin(dz*k)**2 - 12*dz*b*k/tan(dz*k) + 18*b 
+            - k**2*(3*dz**2*b + 1))*sin(dz*k))/(dz*k**5*(2./3.*dz**2*b + 2))
+        return tpp
+
+    def _Spp(self, poly, k):
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        spp = 
+            2*a*(dz**3*k**3*cos(dz*k) - 3*dz**2*k**2*sin(dz*k)
+            - 6*dz*k*cos(dz*k) + 6*sin(dz*k))/(dz*k**4*(2./3.*dz*b + 2))
+        return spp
+
     def _V0(self, poly):    # A.Shishlo/J.Holmes (4.4.3)
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
@@ -215,7 +237,9 @@ class _OXAL_slice(object):
         self.Tks        = None  # initialized in adjust_slice_parameters
         self.Sks        = None  # initialized in adjust_slice_parameters
         self.Tpks       = None  # initialized in adjust_slice_parameters
-        seld.Spsk       = None  # initialized in adjust_slice_parameters
+        self.Spsk       = None  # initialized in adjust_slice_parameters
+        self.Tppks      = None  # initialized in adjust_slice_parameters
+        self.Sppks      = None  # initialized in adjust_slice_parameters
         # self.WIN       = None  # initialized in adjust_slice_parameters
         # self.WOUT      = None  # initialized in adjust_slice_parameters
         # self.deltaW    = None  # initialized in adjust_slice_parameters
@@ -236,33 +260,34 @@ class _OXAL_slice(object):
         self.phis   = phi
         self.ks     = twopi*/(self.parent.lamb*self.betas)
         
-        self.Tks   = self.parent._T(self.poly,self.ks)
-        self.Sks   = self.parent._S(self.poly,self.ks)
-        self.Tpks  = self.parent._Tp(self.poly,self.ks)
-        self.Spks  = self.parent._Sp(self.poly,self.ks)
-        self.sphis = sin(self.phis)
-        self.cphis = cos(self.phis)
+        self.Tks    = self.parent._T(self.poly,self.ks)
+        self.Sks    = self.parent._S(self.poly,self.ks)
+        self.Tpks   = self.parent._Tp(self.poly,self.ks)
+        self.Spks   = self.parent._Sp(self.poly,self.ks)
+        self.Tppks  = self.parent._Tpp(self.poly,self.ks)
+        self.Sppks  = self.parent._Spp(self.poly,self.ks)
+        self.sphis  = sin(self.phis)
+        self.cphis  = cos(self.phis)
         
-        facw = self.omega/(c*self.betas**2)
+        facw   = self.omega/(c*self.betas**2)
         facphi = self.Ws*self.betas**(-5.5)*self.omega**2*self.V0/(c**2*self.gammas**7*m0c2**2)
         
-        self.mx = NP.eye(2)   # linear matrix {z x Dp/p}
-        # [z]'    = m11*[z] + m12*[Dp/p]
-        # [Dp/p]' = m21*[z] + ms2*[Dp/p]
-        self.mx[1,1] = facphi*(self.Spks*self.sphis + self.Tpks*self.cphis)*(-1./(c*self.betas))
+        self.mx = NP.zeros(2,2)   # linear matrix {Dphi x Dp/p}
+        # [Dphi]' = m11*[Dphi] + m12*[Dp/p]
+        # [Dp/p]' = m21*[Dphi] + ms2*[Dp/p]
+        self.mx[1,1] = facphi*(self.Spks*self.sphis + self.Tpks*self.cphis)
         self.mx[1,2] = facphi*2.*(-self.Sppks*self.cphis - self.Tppks*self.sphis)
-        self.mx[2,1] = self.V0*(-self.Sks*self.cphis - self.Tks*self.sphis)*(-1./(c*self.betas))
+        self.mx[2,1] = self.V0*(-self.Sks*self.cphis - self.Tks*self.sphis)
         self.mx[2,2] = facw*self.V0(self.Spks*self.sphis -self.Tpks*self.cphis)
 
+        # conversion matrices
+        # z ==> Dphi
+        self.ztoDphi = NP.eye(2,2)
+        self.ztoDphi[1,1] = (-1./(c*self.betas))
+        # Dphi ==> z
+        self.Dphitoz = NP.eye(2,2)
+        self.Dphitoz[1,1] = 1./self.ztoDphi[1,1]
         return 
-
-    def wout_minus_win(self, fac, i0, tk, sk, phi):
-        """Formel 4.3.1 A.Shishlo/J.Holmes"""
-        return fac*i0*(tk*cos(phi)-sk*sin(phi))
-
-    def phiout_minus_phiin(self, fac, gamma, r, i0, i1, tk, sk, tkp, skp, phi):
-        """Formel 4.3.2 A.Shishlo/J.Holmes"""
-        return  fac*i0*(tkp*sin(phi)+skp*cos(phi)+gamma*r*i1*(tk*sin(phi)+sk*cos(phi)))
 
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
@@ -276,67 +301,67 @@ class _OXAL_slice(object):
         S        = i_track[SKOO]       # [8] position SOLL
 
         # Aliases
-        c      = PARAMS['lichtgeschwindigkeit']
-        m0c2   = PARAMS['proton_mass']
-        m0c3   = m0c2*c
-        omega  = twopi*self.freq
+        # c      = PARAMS['lichtgeschwindigkeit']
+        # m0c2   = PARAMS['proton_mass']
+        # m0c3   = m0c2*c
+        # omega  = twopi*self.freq
 
         # SOLL
-        tkinS      = self.tkin
-        betaS      = self.beta
-        gammaS     = self.gamma
-        bgS        = self.gb
-        phiS       = self.phi
-        kS         = self.k
-        TkS        = self.Tk
-        SkS        = self.Sk
-        TkpS       = self.Tkp
-        SkpS       = self.Skp
+        # tkinS      = self.tkin
+        # betaS      = self.beta
+        # gammaS     = self.gamma
+        # bgS        = self.gb
+        # phiS       = self.phi
+        # kS         = self.k
+        # TkS        = self.Tk
+        # SkS        = self.Sk
+        # TkpS       = self.Tkp
+        # SkpS       = self.Skp
         
         
         # PARTICLE        
-        tkinP      = (zp*(gammaS+1.)/gammaS+1.)*tkinS
-        gammaP     = 1.+tkinP/m0c2
-        bgP        = sqrt(gammaP**2-1.)
-        betaP      = bgP/gammaP
-        phiP       = -z*omega/(c*betaS) + self.PHIN
+        # tkinP      = (zp*(gammaS+1.)/gammaS+1.)*tkinS
+        # gammaP     = 1.+tkinP/m0c2
+        # bgP        = sqrt(gammaP**2-1.)
+        # betaP      = bgP/gammaP
+        # phiP       = -z*omega/(c*betaS) + self.PHIN
 
         # k          = omega/(c*betaS)
-        Dbeta = betaP-betaS
-        fac = omega/(c*betaS)*Dbeta/betaS
-        Tk         = self._T(self.poly,k)
-        Tkp        = self._Tp(self.poly,k)
-        Sk         = self._S(self.poly,k)
-        Skp        = self._Sp(self.poly,k)
-        r          = sqrt(x**2+y**2)            # radial coordinate
-        K          = omeg/(c*gbi) * r
-        i0         = I0(K)                      # bessel function I0
-        i1         = I1(K)                      # bessel function I1
-        fact       = self.V0*omeg/(m0c3*gbi**3)
+        # Dbeta = betaP-betaS
+        # fac = omega/(c*betaS)*Dbeta/betaS
+        # Tk         = self._T(self.poly,k)
+        # Tkp        = self._Tp(self.poly,k)
+        # Sk         = self._S(self.poly,k)
+        # Skp        = self._Sp(self.poly,k)
+        # r          = sqrt(x**2+y**2)            # radial coordinate
+        # K          = omeg/(c*gbi) * r
+        # i0         = I0(K)                      # bessel function I0
+        # i1         = I1(K)                      # bessel function I1
+        # fact       = self.V0*omeg/(m0c3*gbi**3)
 
-        womwi = self.wout_minus_win(self.V0,i0,Tk,Sk,pin) 
-        wout  = win + womwi                              # energy (f)
+        # womwi = self.wout_minus_win(self.V0,i0,Tk,Sk,pin) 
+        # wout  = win + womwi                              # energy (f)
 
-        pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,Sk,Tkp,Skp,pin)
-        pout  = pin + pompi         # phase (f)
+        # pompi = self.phiout_minus_phiin(fact,gammai,r,i0,i1,Tk,Sk,Tkp,Skp,pin)
+        # pout  = pin + pompi         # phase (f)
         
-        dp = +(pout-self.PHOUT)    # delta phase  (f)
-        dw = +(wout-self.WOUT)     # delta energy (f)
+        # dp = +(pout-self.PHOUT)    # delta phase  (f)
+        # dw = +(wout-self.WOUT)     # delta energy (f)
         
-        zf  = -dp*(c*betai)/omeg
-        zpf = gammai/(gammai+1)*dw/self.WOUT
+        # zf  = -dp*(c*betai)/omeg
+        # zpf = gammai/(gammai+1)*dw/self.WOUT
 
-        f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from SOLL
+         # f_particle = copy(self.particle)(tkin=self.WOUT)  # energy parameters from SOLL
         # f_particle = copy(self.particle)(tkin=wout)     # energy parameters from PARTICLE ??
-        gbf        = f_particle.gamma_beta
+        # gbf        = f_particle.gamma_beta
 
-        fact = self.V0/(m0c2*gbi*gbf)*i1
-        if r > 0.:
-            xp = gbi/gbf*xp-x/r*fact*Tk*sin(pin)
-            yp = gbi/gbf*yp-y/r*fact*Tk*sin(pin)
-        elif r == 0.:
-            xp = gbi/gbf*xp
-            yp = gbi/gbf*yp
+        # fact = self.V0/(m0c2*gbi*gbf)*i1
+        # if r > 0.:
+        #     xp = gbi/gbf*xp-x/r*fact*Tk*sin(pin)
+        #     yp = gbi/gbf*yp-y/r*fact*Tk*sin(pin)
+        # elif r == 0.:
+        #     xp = gbi/gbf*xp
+        #     yp = gbi/gbf*yp
 
         f_track = NP.array([x,xp,y,yp,zf,zpf,T,1.,S,1.])
         return f_track

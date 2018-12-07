@@ -1,6 +1,8 @@
 from sympy import *
 
-# DWs,DW =symbols('DWs DW')
+"""
+Use SYMPY to make the error-prone factorization work for the Open-XAL formulas
+"""
 m0c2, gammas, betas, Ws, omega , c, Dp2p  \
           = symbols('m0c2 gammas betas Ws omega c Dp2p')
 Tks, Tpks = symbols('Tks Tpks')   # T(ks), T'(ks) fuer SOLL
@@ -50,7 +52,23 @@ print(ombc)
 print("------------------fac=qV0*omeag/mc2/c/(bg)**3")
 fac = qV0*omega/(m0c2*c*(gammas*betas)**3)
 print(fac)
+print(Ws*betas**(-0.5)*fac*ombc/gammas**4/m0c2)
 print()
 
-print(Ws*betas**(-0.5)*fac*ombc/gammas**4/m0c2)
+print("------------------------T'(k)")
+k, Dz, a, b = symbols('k Dz a, b')
+Tpks = -(2*sin(k*Dz)/(k*(2*Dz+2/3*b*Dz**3)))*((1+3*b*Dz**2-6*b/k**2)/k-Dz*cot(k*Dz)*(1+b*Dz**2-6*b/k**2))
+print(Tpks)
+
+print("-----------------------T''(k)")
+Tppks = diff(Tpks,k)
+print (simplify(Tppks))
+
+print("-----------------------S'(k)")
+Spks = 2*a*sin(k*Dz)/(k*(2*Dz+2/3*b*Dz**2))*(Dz**2-2/k**2+Dz*cot(k*Dz)*2/k)
+print(Spks)
+
+print("---------------------------S''(k)")
+Sppks = diff(Spks,k)
+print(simplify(Sppks))
 

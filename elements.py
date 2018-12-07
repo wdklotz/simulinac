@@ -69,7 +69,7 @@ class _Node(DictObject, object):
     """
     def __init__(self, label='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         DictObject.__init__(self)
-        self.matrix    = NP.zeros(MDIM)   # MDIMxMDIM zero matrix used here
+        self.matrix    = NP.zeros(MDIM,MDIM)   # MDIMxMDIM zero matrix used here
         # !!!IMPORTANT!!! local copy of the particle object
         self.particle  = copy(particle)
         self.position  = position         # [entrance, middle, exit]
@@ -270,7 +270,7 @@ class I(_Node):
     """
     def __init__(self, label='I', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
+        self.matrix    = NP.eye(MDIM,MDIM)     # MDIMxMDIM unit matrix used here
 
 class MRK(I):
     """ 
