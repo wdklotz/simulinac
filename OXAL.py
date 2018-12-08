@@ -140,7 +140,6 @@ class _OXAL(object):
             # betaf = Proton(tkin=tkin+self.deltaW).beta
             # z = betaf/betai*z
             # f_track[ZKOO] = z
-        DEBUG_ON('oxal-map ',f_track)
         return f_track
         
     def _T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
@@ -367,8 +366,8 @@ class _OXAL_slice(object):
         # track = NP.dot(track,self.DphiDbetaTozDp2p) # delta-phi ==> z
         zOUT,zpOUT = zzpOUT(z,zp)
         f_track[Ktp.z]  = zOUT
-        f_track[Ktp.zp] = zpOUT
-        DEBUG_ON('oxal-slice ',f_track)
+        f_track[Ktp.zp] += zpOUT
+        DEBUG_OFF('oxal-slice ',f_track)
         return f_track
 
 def test0():
