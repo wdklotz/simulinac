@@ -262,11 +262,8 @@ class _OXAL_slice(object):
         self.PHOUTs    = self.phis + self.omega*self.length/(c*self.betas)
         self.particlef = copy(self.particle)(tkin=self.WOUTs)
 
-        fac1   = self.omega/(c*self.betas**2)
-        fac2   = self.V0*self.omega/(m0c3*(self.gammas*self.betas)**3)
-
-        DbetafromDp2p = self.Ws*(self.gammas+1.)/(sqrt(self.betas)*m0c2*self.gammas**4)
-        Dphifromz     = -self.omega/(c*self.betas)
+        self.DbetafromDp2p = DbetafromDp2p = self.Ws*(self.gammas+1.)/(self.betas*m0c2*self.gammas**4)
+        self.Dphifromz = Dphifromz     = -self.omega/(c*self.betas)
 
         # conversion matrices
         # z ==> Dphi
@@ -281,23 +278,30 @@ class _OXAL_slice(object):
         # Dbeta ==> Dp2p
         DbetatoDp2p = NP.eye(ELM.MDIM,ELM.MDIM)
         DbetatoDp2p[Ktp.zp,Ktp.zp] = 1./DbetafromDp2p
+        # Dw ==> Dbeta
+        DwtoDbeta = NP.eye(ELM.MDIM,ELM.MDIM)
+        self.DwtoDbeta = DwtoDbeta[Ktp.zp,Ktp.zp] = 1./(self.betas*m0c2*self.gammas**3)
         # (z,Dp2p) ==> (Dphi,Dbeta)
         self.zDp2pToDphiDbeta = NP.dot(ztoDphi,Dp2ptoDbeta)
         # (Dphi,Dbeta) ==> (z,Dp2p)
         self.DphiDbetaTozDp2p = NP.dot(Dphitoz,DbetatoDp2p)
         
+        self.fac1 = fac1   = self.omega/(c*self.betas**2)
+        self.fac2 = fac2   = self.omega/(m0c3*(self.gammas*self.betas)**3)
+
         self.mx = NP.eye(ELM.MDIM,ELM.MDIM)
         # longitudinal: linear submatrix transforms {Dphi,Dbeta}IN to {Dphi,Dw}OUT
-        self.mx[Ktp.z,Ktp.z]   = -fac2*        (self.Spks*self.sphis    - self.Tpks*self.cphis)
-        self.mx[Ktp.z,Ktp.zp]  = -fac2*fac1*   (self.Sppks*self.cphis   + self.Tppks*self.sphis)
-        self.mx[Ktp.zp,Ktp.z]  = -self.V0*     (self.Sks*self.cphis     + self.Tks*self.sphis)
-        self.mx[Ktp.zp,Ktp.zp] = +self.V0*fac1*(self.Spks*self.sphis    - self.Tpks*self.cphis)
+        # self.mx[Ktp.z,Ktp.z]   = -fac2*self.V0*     (+self.Spks*self.sphis    - self.Tpks*self.cphis)   # (dp,dp)
+        # self.mx[Ktp.z,Ktp.zp]  = -fac2*fac1*self.V0*(+self.Sppks*self.cphis   + self.Tppks*self.sphis)  # (dp,db)
+        # self.mx[Ktp.zp,Ktp.z]  = +self.V0*          (-self.Sks*self.cphis     + self.Tks*self.sphis)    # (db,dp)
+        # self.mx[Ktp.zp,Ktp.zp] = -self.V0*fac1*     (-self.Spks*self.sphis    + self.Tpks*self.cphis)   # (db.db)
+        # self.mx = NP.dot(self.mx,DwtoDbeta)   # {Dphi,Dw}OUT ==> {Dphi,Dbeta}OUT
 
         # tranverse: linear submatrix matrix {x,x',y,y'}
         gbINs    = self.gammas*self.betas
         gammaOUTs= 1 + self.WOUTs/m0c2
         gbOUTs   = sqrt(gammaOUTs**2-1.)
-        facxy    = - self.V0*self.omega/(2.*m0c3*gbOUTs*gbINs**2)
+        facxy    = -self.V0*self.omega/(2.*m0c3*gbOUTs*gbINs**2)
         self.mx[Ktp.xp,Ktp.x]  = facxy * (self.Tks*self.sphis + self.Sks*self.cphis) # mx(x',x) * x_in
         self.mx[Ktp.xp,Ktp.xp] = gbINs/gbOUTs                                        # mx(x',x')* x'-in
         self.mx[Ktp.yp,Ktp.y]  = facxy * (self.Tks*self.sphis + self.Sks*self.cphis) # mx(y',y) * y_in
@@ -315,17 +319,57 @@ class _OXAL_slice(object):
         # xp       = i_track[XPKOO]      # [1]
         # y        = i_track[YKOO]       # [2]
         # yp       = i_track[YPKOO]      # [3]
-        # z        = i_track[ZKOO]       # [4] z~(phi-phis)
-        # zp       = i_track[ZPKOO]      # [5] dp/p~dT
+        z        = i_track[Ktp.z]       # [4] z~(phi-phis)
+        zp       = i_track[Ktp.zp]      # [5] dp/p~dT
         # T        = i_track[Ktp.T]       # [6] kinetic energy SOLL
         # S        = i_track[Ktp.S]       # [8] position SOLL
-        
+        def tr1(v):
+            z,zp = v
+            dphi = self.Dphifromz*z
+            dw2w = (self.gammas+1.)/self.gammas*zp
+            return dphi,dw2w
+        def tr2(v):
+            dphi,dw2w = v
+            dw = self.Ws*dw2w
+            return dphi,dw
+        def tr3(v):
+            dphi,dw = v
+            dw2w = dw/self.Ws
+            return dphi,dw2w
+        def tr4(v):
+            dphi,dw2w=v
+            z= dphi/self.Dphifromz
+            dp2p = self.gammas/(self.gammas+1.)*dw2w
+            return z,dp2p
+
+        def dwOUT(dphi,dbeta):
+            dwout = -self.V0*self.fac1*(self.Tpks*self.cphis - self.Spks*self.sphis) * dbeta + self.V0*(self.Tks*self.sphis - self.Sks*self.cphis) * dphi
+            return dwout
+        def dphiOUT(dphi,dbeta):
+            dphiout = -self.V0*self.fac1*self.fac2*(self.Sppks*self.cphis + self.Tppks*self.sphis) * dbeta - self.V0*self.fac2*(self.Spks*self.sphis - self.Tpks*self.cphis) * dphi
+            return dphiout
+            
+        def zzpOUT(z,zp):
+            v = tr1((z,zp))
+            v = tr2(v)
+            dphi,dbeta = v
+            dpo = dphiOUT(dphi,dbeta)
+            dwo = dwOUT(dphi,dbeta)
+            v = (dpo,dwo)
+            v = tr3(v)
+            v = tr4(v)
+            return v
+
         track = copy(i_track)
-        track = NP.dot(self.zDp2pToDphiDbeta,track)  # z ==> delta-phi
-        track = NP.dot(self.mx,track)
-        track = NP.dot(self.DphiDbetaTozDp2p,track) # delta-phi ==> z
-        DEBUG_OFF('oxal-slice ',track)
-        return track
+        
+        # track = NP.dot(track,self.zDp2pToDphiDbeta)  # z ==> delta-phi
+        f_track = NP.dot(self.mx,track)
+        # track = NP.dot(track,self.DphiDbetaTozDp2p) # delta-phi ==> z
+        zOUT,zpOUT = zzpOUT(z,zp)
+        f_track[Ktp.z]  = zOUT
+        f_track[Ktp.zp] = zpOUT
+        DEBUG_ON('oxal-slice ',f_track)
+        return f_track
 
 def test0():
     import elements as ELM
