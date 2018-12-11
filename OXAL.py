@@ -217,6 +217,8 @@ def DbetaFromDp2p(W,gamma,beta,Dp2p):
     return W*(gamma+1)/(beta*m0c2*gamma**4)*Dp2p
 def DphiFromZ(omega,c,beta,z):
     return -omega/(c*beta)*z
+def ZFromDphi(omega,c,beta,dphi):
+    return -(c*beta)/omega*dphi
 def DeltaWFromDp2p(gamma,W,Dp2p):
     return (gamma+1)/gamma*W*Dp2p
 
@@ -234,7 +236,7 @@ class _OXAL_slice(object):
         self.Tks        = None  # initialized in adjust_slice_parameters
         self.Sks        = None  # initialized in adjust_slice_parameters
         self.Tpks       = None  # initialized in adjust_slice_parameters
-        self.Spsk       = None  # initialized in adjust_slice_parameters
+        self.Spks       = None  # initialized in adjust_slice_parameters
         self.Tppks      = None  # initialized in adjust_slice_parameters
         self.Sppks      = None  # initialized in adjust_slice_parameters
         self.Wouts      = None  # initialized in adjust_slice_parameters
@@ -305,7 +307,8 @@ class _OXAL_slice(object):
         self.cphis = cphis
         self.sphis = sphis
         self.dws   = dws
-        self.gbshm3= 1./(gammas*betas)**3
+        self.Wouts = Wouts
+        self.gsbs3= 1./(gammas*betas)**3
         return Wouts, Phiouts
 
     def slice_map(self, i_track):
@@ -325,7 +328,7 @@ class _OXAL_slice(object):
         m0c3   = m0c2*c
         betas  = self.betas
         gammas = self.gammas
-        gbshm3 = self.gbshm3
+        gsbs3 = self.gsbs3
         omega  = self.omega
         qV0    = self.qV0
         Wins   = self.Wins
@@ -343,88 +346,50 @@ class _OXAL_slice(object):
         
         Dp2pin= zp
         Win   = Wins + DeltaWFromDp2p(gammas,Wins,Dp2pin)
-        gamma = 1.+ Win/m0c2
-        beta  = 1.-1./gamma**2
-        beta  = sqrt(beta)
-        db2bs = DbetaFromDp2p(Wins,gammas,betas,Dp2pin)/betas  # delta_beta/betas
-        dphi = DphiFromZ(omega,c,beta,z)                       # delta-phi
-        phin = phis + dphi
+        db2bs = DeltaWFromDp2p(gammas,Wins,Dp2pin)/(m0c2*gammas**3*betas)
+        dphi = DphiFromZ(omega,c,betas,z)                       # delta-phi
+        
+        DPHIS = gsbs3*omega*qV0*(Spks*cphis + Tpks*sphis)/m0c3 
 
-        # a_terms = betas*c*(-gbshm3*omega*qV0*(Spks*cphis + Tpks*sphis) + m0c3*dphi)/(m0c3*omega)
-        # b_terms = \
-        #     ( 
-        #     betas**3*c*gammas*m0c3*dphi   # O(2)
-        #     + betas**2*gammas*gbshm3*omega*qV0*
-        #     ( 
-        #     -Spks*betas*c*cphis + Sppks*cphis*omega-Tpks*betas*c*sphis +Tppks*omega*sphis
-        #     ) 
-        #     + 3*c*omega*qV0*(Spks*cphis + Tpks*sphis)
-        #     )/(betas**2*gammas*m0c3*omega)
-        # p_terms = betas*c*gbshm3*qV0*(Spks*sphis - Tpks*cphis)/m0c3
-        # 
-        # zout = a_terms + b_terms*db2bs + p_terms*dphi
-        
-        zout = \
-        -Spks*betas*c*cphis*db2bs*gbshm3*qV0/m0c3 
-        - Spks*betas*c*cphis*gbshm3*qV0/m0c3 
-        + Spks*betas*c*db2bs*dphi*gbshm3*qV0*sphis/m0c3 
-        + Spks*betas*c*dphi*gbshm3*qV0*sphis/m0c3 
-        + 3*Spks*c*cphis*db2bs**2*qV0/(betas**2*gammas*m0c3) 
-        + 3*Spks*c*cphis*db2bs*qV0/(betas**2*gammas*m0c3) 
-        - 3*Spks*c*db2bs**2*dphi*qV0*sphis/(betas**2*gammas*m0c3) 
-        - 3*Spks*c*db2bs*dphi*qV0*sphis/(betas**2*gammas*m0c3) 
-        + Sppks*cphis*db2bs**2*gbshm3*omega*qV0/m0c3 
-        + Sppks*cphis*db2bs*gbshm3*omega*qV0/m0c3 
-        - Sppks*db2bs**2*dphi*gbshm3*omega*qV0*sphis/m0c3 
-        - Sppks*db2bs*dphi*gbshm3*omega*qV0*sphis/m0c3 
-        - 3*Sppks*cphis*db2bs**3*omega*qV0/(betas**3*gammas*m0c3) 
-        - 3*Sppks*cphis*db2bs**2*omega*qV0/(betas**3*gammas*m0c3) 
-        + 3*Sppks*db2bs**3*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3) 
-        + 3*Sppks*db2bs**2*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3) 
-        - Tpks*betas*c*cphis*db2bs*dphi*gbshm3*qV0/m0c3 
-        - Tpks*betas*c*cphis*dphi*gbshm3*qV0/m0c3 
-        - Tpks*betas*c*db2bs*gbshm3*qV0*sphis/m0c3 
-        - Tpks*betas*c*gbshm3*qV0*sphis/m0c3 
-        + 3*Tpks*c*cphis*db2bs**2*dphi*qV0/(betas**2*gammas*m0c3) 
-        + 3*Tpks*c*cphis*db2bs*dphi*qV0/(betas**2*gammas*m0c3) 
-        + 3*Tpks*c*db2bs**2*qV0*sphis/(betas**2*gammas*m0c3) 
-        + 3*Tpks*c*db2bs*qV0*sphis/(betas**2*gammas*m0c3) 
-        + Tppks*cphis*db2bs**2*dphi*gbshm3*omega*qV0/m0c3 
-        + Tppks*cphis*db2bs*dphi*gbshm3*omega*qV0/m0c3 
-        + Tppks*db2bs**2*gbshm3*omega*qV0*sphis/m0c3 
-        + Tppks*db2bs*gbshm3*omega*qV0*sphis/m0c3 
-        - 3*Tppks*cphis*db2bs**3*dphi*omega*qV0/(betas**3*gammas*m0c3) 
-        - 3*Tppks*cphis*db2bs**2*dphi*omega*qV0/(betas**3*gammas*m0c3) 
-        - 3*Tppks*db2bs**3*omega*qV0*sphis/(betas**3*gammas*m0c3) 
-        - 3*Tppks*db2bs**2*omega*qV0*sphis/(betas**3*gammas*m0c3) 
-        - betas*c*db2bs*phin/omega 
-        + betas*c*db2bs*phis/omega 
-        - betas*c*phin/omega 
-        + betas*c*phis/omega 
-        
-        # dw = (-Sks*cphis*dphi - Sks*sphis 
-        #      + Tks*cphis - Tks*dphi*sphis 
-        #      + Spks*db2bs*omega*sphis/(betas*c) 
-        #      - Tpks*cphis*db2bs*omega/(betas*c)
-        #      # + Spks*cphis*db2bs*dphi*omega/(betas*c)  # O(2)
-        #      # + Tpks*db2bs*dphi*omega*sphis/(betas*c)  # O(2)
-        #      )*qV0
+        DPHI = \
+        Spks*cphis*gsbs3*omega*qV0/m0c3 
+        - Spks*dphi*gsbs3*omega*qV0*sphis/m0c3 
+        - 3*Spks*cphis*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
+        # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3) 
+        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3) 
+        # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3) 
+        # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3) 
+        # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) 
+        + Tpks*cphis*dphi*gsbs3*omega*qV0/m0c3 
+        + Tpks*gsbs3*omega*qV0*sphis/m0c3 
+        # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3) 
+        - 3*Tpks*db2bs*omega*qV0*sphis/(betas**3*gammas*m0c3) 
+        # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3) 
+        # - Tppks*db2bs**2*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3) 
+        # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) 
+        + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) 
+        + dphi + phis 
         
         dw = \
         -Sks*cphis*dphi*qV0 
         - Sks*qV0*sphis 
-        + Spks*cphis*db2bs*dphi*omega*qV0/(betas*c) 
+        # + Spks*cphis*db2bs*dphi*omega*qV0/(betas*c) 
         + Spks*db2bs*omega*qV0*sphis/(betas*c) 
-        + Tks*cphis*qV0 
-        - Tks*dphi*qV0*sphis 
+        + Tks*cphis*qV0 - Tks*dphi*qV0*sphis 
         - Tpks*cphis*db2bs*omega*qV0/(betas*c) 
-        + Tpks*db2bs*dphi*omega*qV0*sphis/(betas*c)
+        # + Tpks*db2bs*dphi*omega*qV0*sphis/(betas*c) 
         
         Wout  = Win + dw
-        DWout = Win + dw - (Wins + dws)
-        gammaout = 1.+ Wout/m0c2
-        Dp2pout = gammaout/(gammaout+1.)*DWout/Wout
-        zpout = Dp2pout
+        Wouts = Wins + dws
+        DWout = Wout - Wouts
+        gammaouts = 1.+ Wouts/m0c2
+        gbouts    = sqrt(gammaouts**2-1.)
+        betaouts  = gbouts/gammaouts
+        Dp2pout   = gammaouts/(gammaouts+1.)*DWout/Wouts
+        
+        dphio     = dphi+DPHI-DPHIS
+        zpout     = Dp2pout
+        zout      = ZFromDphi(omega,c,betaouts,dphio)
         
         f_track = NP.dot(self.mx,track)
         f_track[Ktp.z]  = zout

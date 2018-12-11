@@ -15,11 +15,11 @@ print("=========================================================================
 print("Use SYMPY to make the error-prone factorization work for the Open-XAL formulas")
 print("==============================================================================")
 
-qV0, omg, c, bets, db2bs, dphi = symbols('qV0 omg c bets db2bs dphi')
+qV0, omega, c, betas, db2bs, dphi = symbols('qV0 omega c betas db2bs dphi')
 Tks, Sks, Tpks, Spks, cphis, sphis  = symbols('Tks Sks Tpks Spks cphis sphis')
 
-_TK=Tks - Tpks * omg/c/bets*db2bs
-_SK=Sks - Spks * omg/c/bets*db2bs
+_TK=Tks - Tpks * omega/c/betas*db2bs
+_SK=Sks - Spks * omega/c/betas*db2bs
 _CPHI=cphis-sphis*dphi
 _SPHI=sphis+cphis*dphi
 _dw  = qV0*(_TK*_CPHI-_SK*_SPHI)
@@ -36,35 +36,35 @@ print('Wouts= \n',Wouts,'\n')
 print('Wout= \n',Wout,'\n')
 # print('DWout/Wout= \n',DWout2Wout,'\n')
 
-_Wouts = Wins+dws
-_Wout  = Win+dw
+# _Wouts = Wins+dws
+# _Wout  = Win+dw
 DWout = Wout-Wouts
-DWout = DWout.subs(Wout,_Wout)
-DWout = DWout.subs(Wouts,_Wouts)
 DWout = DWout.subs(dw,_dw)
 DWout = DWout.subs(dws,_dws)
+# DWout = DWout.subs(dw,_dw)
+# DWout = DWout.subs(dws,_dws)
 print('DWout= \n',DWout,'\n')
 
 DWout=expand(DWout)
 print('DWout(expanded)= \n',DWout,'\n')
 
-delta_beta_terms = DWout.subs(dphi,0)
+# delta_beta_terms = DWout.subs(dphi,0)
 # print('delta_beta_terms= \n',delta_beta_terms,'\n')
 
-absolute_terms = delta_beta_terms.subs(db2bs,0)
-print('absolute_terms= \n',absolute_terms,'\n')
+# absolute_terms = delta_beta_terms.subs(db2bs,0)
+# print('absolute_terms= \n',absolute_terms,'\n')
 
-linear_delta_beta_terms = delta_beta_terms.coeff(db2bs,1)
+# linear_delta_beta_terms = delta_beta_terms.coeff(db2bs,1)
 # print('linear_delta_beta_terms= \n',linear_delta_beta_terms,'\n')
 
-delta_phi_terms = DWout.subs(db2bs,0)
+# delta_phi_terms = DWout.subs(db2bs,0)
 # print('delta_phi_terms= \n',delta_phi_terms,'\n')
 
-linear_delta_phi_terms = delta_phi_terms.coeff(dphi,1)
+# linear_delta_phi_terms = delta_phi_terms.coeff(dphi,1)
 # print('linear_delta_phi_terms= \n',linear_delta_phi_terms,'\n')
 
-print('linear_delta_beta_terms(simplified)= \n',simplify(linear_delta_beta_terms),'\n')
-print('linear_delta_phi_terms(simplified)= \n',simplify(linear_delta_phi_terms),'\n')
+# print('linear_delta_beta_terms(simplified)= \n',simplify(linear_delta_beta_terms),'\n')
+# print('linear_delta_phi_terms(simplified)= \n',simplify(linear_delta_phi_terms),'\n')
 
 gamma, m0c2 = symbols('gamma m0c2')
 Dp2pout = gamma/(gamma+1)*DWout/Wout
