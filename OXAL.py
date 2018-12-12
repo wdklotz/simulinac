@@ -135,7 +135,8 @@ class _OXAL(object):
         f_track = copy(i_track)
         for slice in slices:
             # map each slice with openXAL gap-model
-            f_track = slice.slice_map(f_track)
+            # f_track = slice.slice_map(f_track)
+            f_track = slice.slice_map_from_sympy(f_track)
             # relativistic scaling. Is it needed??
             # z = f_track[ZKOO]
             # betai = self.particle.beta
@@ -276,8 +277,8 @@ class _OXAL_slice(object):
         Sks    = self.parent._S(self.poly,ks)
         Tpks   = self.parent._Tp(self.poly,ks)
         Spks   = self.parent._Sp(self.poly,ks)
-        # Tppks  = self.parent._Tpp(self.poly,ks)
-        # Sppks  = self.parent._Spp(self.poly,ks)
+        Tppks  = self.parent._Tpp(self.poly,ks)
+        Sppks  = self.parent._Spp(self.poly,ks)
         sphis  = sin(phis)
         cphis  = cos(phis)
 
@@ -314,8 +315,8 @@ class _OXAL_slice(object):
         self.Sks   = Sks
         self.Tpks  = Tpks
         self.Spks  = Spks
-        # self.Tppks = Tppks
-        # self.Sppks = Sppks
+        self.Tppks = Tppks
+        self.Sppks = Sppks
         self.cphis = cphis
         self.sphis = sphis
         self.dws   = dws
@@ -323,8 +324,8 @@ class _OXAL_slice(object):
         self.gsbs3= 1./(gammas*betas)**3
         return Wouts, Phiouts
 #todo: check again when to use (bg)-IN and (bg)-OUT 
-#todo: check against Shishlo's formulas
-    def slice_map(self, i_track):
+#todo: check against Shishlo's formulas done: slice_map_from_sympy ist immer noch falsch grrrr...!
+    def slice_map_from_sympy(self, i_track):
         """Map through this slice from position (i) to (f)"""
         z        = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
@@ -397,6 +398,62 @@ class _OXAL_slice(object):
         zpout     = Dp2pout
         zout      = ZFromDphi(omega,c,betaouts,dphiout)
         
+        f_track = NP.dot(self.mx,track)
+        f_track[Ktp.z]  = zout
+        f_track[Ktp.zp] = zpout
+        DEBUG_OFF(repr(self.__dict__))
+        DEBUG_OFF('oxal-slice ',f_track)
+        # dbg_slice(self)
+        return f_track
+#todo: put the map in matrix form
+    def slice_map(self, i_track):
+        """Map through this slice from position (i) to (f)"""
+        z        = i_track[Ktp.z]       # [4] z~(phi-phis)
+        zp       = i_track[Ktp.zp]      # [5] delta-p/p
+        track = copy(i_track)
+        # locals
+        c      = PARAMS['lichtgeschwindigkeit']
+        m0c2   = PARAMS['proton_mass']
+        m0c3   = m0c2*c
+        betas  = self.betas
+        gammas = self.gammas
+        gsbs3  = self.gsbs3
+        omega  = self.omega
+        qV0    = self.qV0
+        Wins   = self.Wins
+        # phis   = self.phis    not used??
+        Tks    = self.Tks
+        Sks    = self.Sks
+        Tpks   = self.Tpks
+        Spks   = self.Spks
+        Tppks  = self.Tppks
+        Sppks  = self.Sppks
+        cphis  = self.cphis
+        sphis  = self.sphis
+        dws    = self.dws                           # kin. energy increase in gap SOLL
+        Wouts  = self.Wouts
+        
+        Win   = Wins + Dw2wFromDp2p(gammas,zp)*Wins # W in
+        db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas in
+        dphi  = DphiFromZ(omega,c,betas,z)          # delta-phi in
+        # SOLL
+        gbs3_in     = gsbs3                      # (gamma*beta)**3 in
+        betas_in    = betas                      # beta in
+        gammas_in   = gammas                     # gamma  in
+        g3b2s_in    = gammas_in**3*betas_in**2   # gamma**3*beta**2 in
+        gammas_out  = 1. + Wouts/m0c2            # gamma  out
+        gbs_out     = sqrt(gammas_out**2-1)      # (gamma*beta) out
+        gbs3_out    = gbs_out**3                 # (gamma*beta)**3 out
+        betas_out   = gbs_out/gammas_out         # beta out
+        g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
+
+        # (4.6.9) in Shishlo's article
+        dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
+        
+        # (4.6.11) in Shishlo's article
+        zout = betas_out/betas_in*z + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
+
+        zpout = gammas_out**2*dbeta2beta_out
         f_track = NP.dot(self.mx,track)
         f_track[Ktp.z]  = zout
         f_track[Ktp.zp] = zpout
