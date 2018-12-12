@@ -136,7 +136,7 @@ class _OXAL(object):
         for slice in slices:
             # map each slice with openXAL gap-model
             f_track = slice.slice_map(f_track)
-            # relativistic scaling. Is it needed?
+            # relativistic scaling. Is it needed??
             # z = f_track[ZKOO]
             # betai = self.particle.beta
             # tkin  = self.particle.tkin
@@ -146,7 +146,8 @@ class _OXAL(object):
             pass
         return f_track
         
-    def _T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
+    def _T(self, poly, k):
+        """ T(k) A.Shishlo/J.Holmes (4.4.6) """
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
@@ -156,7 +157,8 @@ class _OXAL(object):
         # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
         return t
 
-    def _S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
+    def _S(self, poly, k):
+        """ S(k) A.Shishlo/J.Holmes (4.4.7) """
         a  = poly.a
         b  = poly.b
         dz = poly.dz
@@ -167,7 +169,8 @@ class _OXAL(object):
         # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
         return s
 
-    def _Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
+    def _Tp(self, poly, k):
+        """ 1st derivative T'(k) A.Shishlo/J.Holmes (4.4.8) """
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
@@ -176,7 +179,8 @@ class _OXAL(object):
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
 
-    def _Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
+    def _Sp(self, poly, k):
+        """ 1st derivative S'(k) A.Shishlo/J.Holmes (4.4.9) """
         a   = poly.a
         b   = poly.b
         dz  = poly.dz
@@ -187,6 +191,7 @@ class _OXAL(object):
         return sp
 
     def _Tpp(self, poly, k):
+        """ 2nd derivative T''(k) """
         a   = poly.a
         b   = poly.b
         dz  = poly.dz
@@ -199,6 +204,7 @@ class _OXAL(object):
         return tpp
 
     def _Spp(self, poly, k):
+        """ 2nd derivative S''(k) """
         a   = poly.a
         b   = poly.b
         dz  = poly.dz
@@ -208,7 +214,8 @@ class _OXAL(object):
             - 6*dz*k*cos(dz*k) + 6*sin(dz*k))/(dz*k**4*(2./3.*dz*b + 2))
         return spp
 
-    def _V0(self, poly):    # A.Shishlo/J.Holmes (4.4.3)
+    def _V0(self, poly):
+        """ V0 A.Shishlo/J.Holmes (4.4.3) """
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
@@ -230,7 +237,7 @@ def dbg_slice(slice):
     print('Win {:8.5} \t Phin {:8.3}'.format(slice.Wins,degrees(slice.phis)))
 
 class _OXAL_slice(object):
-    """ PyOrbit's openXAL RF-Gap Model """
+    """ PyOrbit's openXAL linear RF-Gap Model """
     def __init__(self, parent, poly, particle):
         self.parent     = parent # the gap this slice belongs to
         self.particle   = copy(particle) # incoming SOLL particle
@@ -239,7 +246,7 @@ class _OXAL_slice(object):
         self.length     = poly.dz*1.e-2     # [cm] ==> [m]
         self.V0         = parent._V0(self.poly)
         self.phis       = None  # initialized in configure_slices
-        # self.ks         = None  # initialized in adjust_slice_parameters
+        # self.ks         = None  # initialized in adjust_slice_parameters   not used??
         self.Tks        = None  # initialized in adjust_slice_parameters
         self.Sks        = None  # initialized in adjust_slice_parameters
         self.Tpks       = None  # initialized in adjust_slice_parameters
@@ -328,25 +335,25 @@ class _OXAL_slice(object):
         m0c3   = m0c2*c
         betas  = self.betas
         gammas = self.gammas
-        gsbs3 = self.gsbs3
+        gsbs3  = self.gsbs3
         omega  = self.omega
         qV0    = self.qV0
         Wins   = self.Wins
-        # phis   = self.phis
+        # phis   = self.phis    not used??
         Tks    = self.Tks
         Sks    = self.Sks
         Tpks   = self.Tpks
         Spks   = self.Spks
-        # Tppks  = self.Tppks
-        # Sppks  = self.Sppks
+        # Tppks  = self.Tppks   not used??
+        # Sppks  = self.Sppks   not used??
         cphis  = self.cphis
         sphis  = self.sphis
-        dws    = self.dws                                       # kin. energy increase in gap SOLL
+        dws    = self.dws                           # kin. energy increase in gap SOLL
         Wouts  = self.Wouts
         
-        Win   = Wins + Dw2wFromDp2p(gammas,zp)*Wins             # W @ IN
-        db2bs = DbetaToBetaFromDp2p(gammas,zp)                  # delta-beta/betas
-        dphi  = DphiFromZ(omega,c,betas,z)                      # delta-phi
+        Win   = Wins + Dw2wFromDp2p(gammas,zp)*Wins # W @ IN
+        db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas
+        dphi  = DphiFromZ(omega,c,betas,z)          # delta-phi
 
         # phase increase SOLL        
         DPHIS = gsbs3*omega*qV0*(Spks*cphis + Tpks*sphis)/m0c3
@@ -386,9 +393,9 @@ class _OXAL_slice(object):
         betaouts  = gbouts/gammaouts
         Dp2pout   = Dp2pFromDw2w(gammaouts,DWout/Wouts)
         
-        dphio     = dphi+DPHI-DPHIS
+        dphiout   = dphi+DPHI-DPHIS
         zpout     = Dp2pout
-        zout      = ZFromDphi(omega,c,betaouts,dphio)
+        zout      = ZFromDphi(omega,c,betaouts,dphiout)
         
         f_track = NP.dot(self.mx,track)
         f_track[Ktp.z]  = zout
