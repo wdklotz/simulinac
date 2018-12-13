@@ -60,7 +60,7 @@ def bucket(*args):
 #todo: use Functions class also for sigma envelopes and lattice functions
 def display0(*args):
     """
-    CS-Tracks w/o longitudinal motion
+    C&S-Tracks w/o longitudinal motion
     """
     #----------*----------*   # unpack
     sigma_fun = args[0]
@@ -119,8 +119,8 @@ def display0(*args):
     splot.set_title('transverse y')
     plt.plot(z,sgy ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy, label='Cy[m]', color='blue',linestyle='-')
-    plt.plot(tz,cyp,label="Cy'[m]",color='blue',linestyle=':')
-    # plt.plot(tz,sy, label='Sy[m]', color='red' ,linestyle='-')
+    # plt.plot(tz,cyp,label="Cy'[m]",color='blue',linestyle=':')
+    plt.plot(tz,sy, label='Sy[m]', color='red' ,linestyle='-')
     # plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_ordinate]
@@ -133,7 +133,7 @@ def display0(*args):
 
 def display1(*args):
     """
-    CS-Tracks with longitudinal motion
+    C&S-Tracks with longitudinal motion
     """
     #-------------------- unpack
     sigma_fun = args[0]
@@ -265,9 +265,9 @@ def simulation(filepath):
     def display(*functions):
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
-            plots.append(display0) # CS tracks {x,y}
+            plots.append(display0) # C&S tracks {x,y}
         elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
-            plots.append(display1) # CS tracks {x,y,z}
+            plots.append(display1) # C&S tracks {x,y,z}
             if FLAGS['bucket']:
                 plots.append(bucket) # separatrix
         if FLAGS['pspace']:

@@ -60,16 +60,17 @@ class _OXAL(object):
         #todo: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
             """adjust energy dependence of slices"""
+            matrix = NP.eye(ELM.MDIM,ELM.MDIM)
             tkinIN = tkin
             phIN = phis
             for slice in slices:
                 # call with time(aka phase) and energy @ entrance, return them @ exit
                 tkin, phis = slice.adjust_slice_parameters(tkin,phis)
                 # update Node matrix
-                self.matrix = NP.dot(self.matrix,slice.matrix)
+                matrix = NP.dot(matrix,slice.matrix)
             deltaW   = tkin-tkinIN  # total energy advance
             deltaPhi = phis-phIN    # total phase advance
-            return deltaW, deltaPhi
+            return deltaW, deltaPhi,matrix
 
         # _OXAL
         self.EzAvg    = parent.EzAvg
@@ -80,7 +81,6 @@ class _OXAL(object):
         self.omega    = twopi*self.freq
         self.dWf      = parent.dWf
         self.SFdata   = parent.SFdata
-        self.matrix   = parent.matrix
         self.particle = parent.particle
         self.tkin     = self.particle.tkin
         self.position = parent.position
@@ -93,10 +93,10 @@ class _OXAL(object):
              # slice the gap
             self.slices = make_slices(self, self.gap, self.SFdata, self.particle)
             # slice energy dependence
-            self._deltaW, dummy = configure_slices(self.slices, self.phis, self.tkin)
+            self._deltaW, dummy, matrix = configure_slices(self.slices, self.phis, self.tkin)
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
             # UPDATE linear NODE matrix
-            parent.matrix = self.matrix
+            parent.matrix = matrix
             # self.matrix[Ktp.T,Ktp.dT] = self._deltaW
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             parent['slices'] = self.slices   # satify test0()
@@ -332,91 +332,6 @@ class _OXAL_slice(object):
         self.gammas     = gammas
         self.gammas_out = gammas_out
         return Wouts, Phiouts
-#todo: check again when to use (bg)-IN and (bg)-OUT 
-#todo: check against Shishlo's formulas done: slice_map_from_sympy ist immer noch falsch grrrr...!
-    def slice_map_from_sympy(self, i_track):
-        """
-        Map through this slice from position (i) to (f) 
-        ACHTUNG: this function produces wrong results !!! 
-        """
-        z        = i_track[Ktp.z]       # [4] z~(phi-phis)
-        zp       = i_track[Ktp.zp]      # [5] delta-p/p
-        track = copy(i_track)
-        # locals
-        c      = PARAMS['lichtgeschwindigkeit']
-        m0c2   = PARAMS['proton_mass']
-        m0c3   = m0c2*c
-        betas  = self.betas
-        gammas = self.gammas
-        gsbs3  = self.gsbs3
-        omega  = self.omega
-        qV0    = self.qV0
-        Wins   = self.Wins
-        # phis   = self.phis    not used??
-        Tks    = self.Tks
-        Sks    = self.Sks
-        Tpks   = self.Tpks
-        Spks   = self.Spks
-        # Tppks  = self.Tppks   not used??
-        # Sppks  = self.Sppks   not used??
-        cphis  = self.cphis
-        sphis  = self.sphis
-        dws    = self.dws                           # kin. energy increase in gap SOLL
-        Wouts  = self.Wouts
-        
-        Win   = Wins + Dw2wFromDp2p(gammas,zp)*Wins # W @ IN
-        db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas
-        dphi  = DphiFromZ(omega,c,betas,z)          # delta-phi
-
-        # phase increase SOLL        
-        DPHIS = gsbs3*omega*qV0*(Spks*cphis + Tpks*sphis)/m0c3
-
-        # phase increase PARTICLE
-        DPHI = \
-        + gsbs3*omega*qV0/m0c3 *                       (Spks*cphis + Tpks*sphis)
-        - dphi*gsbs3*omega*qV0/m0c3 *                  (Spks*sphis + Tpks*cphis)
-        - 3 * db2bs*omega*qV0/(betas**3*gammas*m0c3) * (Spks*cphis - Tpks*sphis)
-        # formula made with symy. O(2) and higher terms commented
-        # dphi + phis 
-        # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) 
-        # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3) 
-        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3) 
-        # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3) 
-        # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3) 
-        # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) 
-        # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3) 
-        # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3) 
-        # - Tppks*db2bs**2*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3) 
-        # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) 
-        
-        # kin. energy increase in gap PARTICLE
-        dw = \
-        qV0 * dphi *                (-Sks*cphis - Tks*sphis) 
-        qV0 *                       (-Sks*sphis + Tks*cphis)
-        db2bs*omega*qV0/(betas*c) * (+Spks*sphis - Tpks*cphis)
-        # formula made with symy. O(2) and higher terms commented
-        # + Spks*cphis*db2bs*dphi*omega*qV0/(betas*c) 
-        # + Tpks*db2bs*dphi*omega*qV0*sphis/(betas*c) 
-        
-        Wouts = Wins + dws           # SOLL
-        Wout  = Win + dw             # PARTICLE
-        DWout = Wout - Wouts         # delta-delta
-        gammaouts = 1.+ Wouts/m0c2
-        gbouts    = sqrt(gammaouts**2-1.)
-        betaouts  = gbouts/gammaouts
-        Dp2pout   = Dp2pFromDw2w(gammaouts,DWout/Wouts)
-        
-        dphiout   = dphi+DPHI-DPHIS
-        zpout     = Dp2pout
-        zout      = ZFromDphi(omega,c,betaouts,dphiout)
-        
-        f_track = NP.dot(self.mx,track)
-        f_track[Ktp.z]  = zout
-        f_track[Ktp.zp] = zpout
-        DEBUG_OFF(repr(self.__dict__))
-        DEBUG_OFF('oxal-slice ',f_track)
-        # dbg_slice(self)
-        return f_track
 
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""

@@ -214,9 +214,9 @@ class _Node(DictObject, object):
             twiss vector: twv  = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
             *) input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
         """
-        si     = self.position[0] # entrance
-        sigmas = []
-        s      = si
+        si,sm,sf = self.position # entrance
+        sigmas   = []
+        s        = si
         slices = self.make_slices(anz = steps)
         for slice in slices:
             # next_SIGMA = R * SIGMA * transpose(R)
@@ -310,7 +310,7 @@ class D(I):
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
         m[ZKOO, ZPKOO] = self.length/(g*g)
-        m[SKOO, LKOO]  = self.length        # delta-s
+        m[SKOO, LKOO]  = self.length        # length increase
 
     def adjust_energy(self, tkin):
         _params = self._params
@@ -377,7 +377,7 @@ class QF(D):
         else:
             raise RuntimeError('QF: neither QF nor QD! should never happen! - STOP')
             sys.exit(1)
-        m[SKOO, LKOO]  = self.length # delta-S
+        m[SKOO, LKOO]  = self.length # length increase
         return m
 
 class QD(QF):
@@ -433,7 +433,7 @@ class SD(D):
         m[YKOO, YPKOO] = self.length
         # z,z'-plane
         m[ZKOO, XKOO] = -sx;   m[ZKOO, XPKOO] = -rho*(1.-cx);   m[ZKOO, ZPKOO] = rho*sx-self.length*b*b
-        m[SKOO, LKOO] = self.length # delta-S
+        m[SKOO, LKOO] = self.length # length increase
         return m
 
 class RD(SD):
@@ -541,7 +541,7 @@ class GAP(I):
         cyp = cxp = -pi*E0L*tr*sin(phis)/(m0c2*lamb*bg**3)
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
-        m[EKOO, DEKOO] = self.deltaW      # energy kick
+        m[EKOO, DEKOO] = self.deltaW # energy increase
 
 class RFG(I):
     """ 
@@ -672,6 +672,7 @@ class RFC(I):
                 position = [0, 0, 0],
                 next     = None,
                 prev     = None):
+        if length == 0: self.length = self.gap # die ideale pillbox
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf
         self.phis     = PhiSoll
@@ -680,11 +681,10 @@ class RFC(I):
         self.E0L      = self._EzAvg*self.gap
         self.dWf      = dWf
         self.mapping  = mapping
-        self.SFdata   = SFdata
+        self.SFdata   = SFdata 
         self._ttf     = None
         self._deltaW  = None
         
-        if length == 0: self.length = self.gap # die ideale pillbox
         self['viseo']   = 0.25
         
         if self.mapping != 'dyn':
@@ -810,7 +810,7 @@ class _PYO_G(object):
         self.E0L        = parent.EzAvg*parent.gap
         self.ttf        = trtf(parent.lamb, parent.gap, parent.particle.beta)
         self.qE0LT      = self.E0L*self.ttf
-        # deltaW soll-energy kick Trace3D (same as Shishlo)
+        # deltaW soll-energy increase Trace3D (same as Shishlo)
         self._deltaW    = self.qE0LT*cos(self.phis)
         self._particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
 
