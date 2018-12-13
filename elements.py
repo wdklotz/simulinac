@@ -802,7 +802,6 @@ class _PYO_G(object):
             x = gap/(beta*lamb)
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
-        self.matrix     = parent.matrix
         self.particle   = parent.particle
         self.phis       = parent.phis
         self.lamb       = parent.lamb
@@ -816,7 +815,7 @@ class _PYO_G(object):
         self._particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
 
         # UPDATE linear NODE matrix with deltaW
-        self.matrix[EKOO, DEKOO] = self.deltaW
+        parent.matrix[EKOO, DEKOO] = self.deltaW
 
         if self.mapping == 'simple':
             self.which_map = self.simple_map

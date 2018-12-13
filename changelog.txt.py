@@ -1,4 +1,10 @@
 """
+Version v7.1.2
+*) added the openXAL linear gap-model from Shishlo & Holmes
+*) the implemetation with sympy does not produce correct results
+*) various checks and bug fixes
+*) code cleaning and commenting
+
 Version v7.1.1
 *) Functions class for easier plotting
 *) TTFG: map completed with inclusion of S(k) ans S'(k) coefficients

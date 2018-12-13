@@ -65,6 +65,8 @@ class _OXAL(object):
             for slice in slices:
                 # call with time(aka phase) and energy @ entrance, return them @ exit
                 tkin, phis = slice.adjust_slice_parameters(tkin,phis)
+                # update Node matrix
+                self.matrix = NP.dot(self.matrix,slice.matrix)
             deltaW   = tkin-tkinIN  # total energy advance
             deltaPhi = phis-phIN    # total phase advance
             return deltaW, deltaPhi
@@ -93,8 +95,9 @@ class _OXAL(object):
             # slice energy dependence
             self._deltaW, dummy = configure_slices(self.slices, self.phis, self.tkin)
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
-            # UPDATE linear NODE matrix with deltaW
-            self.matrix[Ktp.T,Ktp.dT] = self._deltaW
+            # UPDATE linear NODE matrix
+            parent.matrix = self.matrix
+            # self.matrix[Ktp.T,Ktp.dT] = self._deltaW
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             parent['slices'] = self.slices   # satify test0()
             # for slice in self.slices:
@@ -135,8 +138,8 @@ class _OXAL(object):
         f_track = copy(i_track)
         for slice in slices:
             # map each slice with openXAL gap-model
-            # f_track = slice.slice_map(f_track)
-            f_track = slice.slice_map_from_sympy(f_track)
+            f_track = slice.slice_map(f_track)
+            # f_track = slice.slice_map_from_sympy(f_track)       # falsh grrrr.....!!
             # relativistic scaling. Is it needed??
             # z = f_track[ZKOO]
             # betai = self.particle.beta
@@ -244,7 +247,7 @@ class _OXAL_slice(object):
         self.particle   = copy(particle) # incoming SOLL particle
         # !!!ACHTUNG units!!! poly interval: E(z)=E0(1.+a*z+b*z**2), z in [cm] E0 in [MV/m]
         self.poly       = poly 
-        self.length     = poly.dz*1.e-2     # [cm] ==> [m]
+        self.polydz     = poly.dz*1.e-2     # [cm] ==> [m]
         self.V0         = parent._V0(self.poly)
         self.phis       = None  # initialized in configure_slices
         # self.ks         = None  # initialized in adjust_slice_parameters   not used??
@@ -282,51 +285,60 @@ class _OXAL_slice(object):
         sphis  = sin(phis)
         cphis  = cos(phis)
 
-        # energy
+        # energy increase SOLL
         dws       = qV0*(Tks*cphis - Sks*sphis)
         Wouts     = Wins + dws
         particlef = copy(self.particle)(tkin=Wouts)
-        # phase
-        Phiouts   = phis + omega*self.length/(c*betas)
+        # phase increase SOLL
+        Phiouts   = phis + omega*self.polydz/(c*betas)
 
-        self.mx = NP.eye(ELM.MDIM,ELM.MDIM)
-        # tranverse: linear submatrix matrix {x,x',y,y'}
-        gbINs    = gammas*betas
-        gammaOUTs= 1 + Wouts/m0c2
-        gbOUTs   = sqrt(gammaOUTs**2-1.)
-        facxy    = -qV0*omega/(2.*m0c3*gbOUTs*gbINs**2)
-        self.mx[Ktp.xp,Ktp.x]  = facxy * (Tks*sphis + Sks*cphis) # mx(x',x) * xin
-        self.mx[Ktp.xp,Ktp.xp] = gbINs/gbOUTs                    # mx(x',x')* xin'
-        self.mx[Ktp.yp,Ktp.y]  = facxy * (Tks*sphis + Sks*cphis) # mx(y',y) * yin
-        self.mx[Ktp.yp,Ktp.yp] = gbINs/gbOUTs                    # mx(y',y')* yin'
+        # aliases for SOLL
+        gbs3_in     = 1./(gammas*betas)**3       # (gamma*beta)**3 in
+        betas_in    = betas                      # beta in
+        gammas_in   = gammas                     # gamma  in
+        g3b2s_in    = gammas_in**3*betas_in**2   # gamma**3*beta**2 in
+        gammas_out  = 1. + Wouts/m0c2            # gamma  out
+        gbs_out     = sqrt(gammas_out**2-1)      # (gamma*beta) out
+        betas_out   = gbs_out/gammas_out         # beta out
+        g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
+
+        # (4.6.9) in Shishlo's article
+        # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
+        # (4.6.11) in Shishlo's article
+        # z_out = betas_out/betas_in*z + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
+
+        # {z, delta-beta/betas}: linear submatrix
+        mx = NP.eye(ELM.MDIM,ELM.MDIM)
+        mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
+        mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
+        mx[Ktp.zp,Ktp.z] = qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
+        mx[Ktp.zp,Ktp.zp]= (g3b2s_in/g3b2s_out - qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis))
+
+        # {x,x',y,y'}: linear submatrix
+        gbs_in     = gammas*betas
+        gbs_out    = sqrt(gammas_out**2-1.)
+        facxy      = -qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
+        mx[Ktp.xp,Ktp.x]  = facxy * (Tks*sphis + Sks*cphis) # mx(x',x) * xin
+        mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out                  # mx(x',x')* xin'
+        mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp,Ktp.x]                # mx(y',y) * yin
+        mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp,Ktp.xp]               # mx(y',y')* yin'
 
         # energy and length increase
-        self.mx[Ktp.T,Ktp.dT] = dws
-        self.mx[Ktp.S,Ktp.dS] = self.length
+        mx[Ktp.T,Ktp.dT] = dws
+        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DGK
         
         # variables needed by slice_map
-        self.Wins  = Wins
-        self.phis  = phis
-        self.betas = betas
-        self.gammas= gammas
-        self.omega = omega
-        self.qV0   = qV0
-        self.Tks   = Tks
-        self.Sks   = Sks
-        self.Tpks  = Tpks
-        self.Spks  = Spks
-        self.Tppks = Tppks
-        self.Sppks = Sppks
-        self.cphis = cphis
-        self.sphis = sphis
-        self.dws   = dws
-        self.Wouts = Wouts
-        self.gsbs3= 1./(gammas*betas)**3
+        self.matrix     = mx
+        self.gammas     = gammas
+        self.gammas_out = gammas_out
         return Wouts, Phiouts
 #todo: check again when to use (bg)-IN and (bg)-OUT 
 #todo: check against Shishlo's formulas done: slice_map_from_sympy ist immer noch falsch grrrr...!
     def slice_map_from_sympy(self, i_track):
-        """Map through this slice from position (i) to (f)"""
+        """
+        Map through this slice from position (i) to (f) 
+        ACHTUNG: this function produces wrong results !!! 
+        """
         z        = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
         track = copy(i_track)
@@ -405,58 +417,21 @@ class _OXAL_slice(object):
         DEBUG_OFF('oxal-slice ',f_track)
         # dbg_slice(self)
         return f_track
-#todo: put the map in matrix form
+
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
         z        = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
         track = copy(i_track)
-        # locals
-        c      = PARAMS['lichtgeschwindigkeit']
-        m0c2   = PARAMS['proton_mass']
-        m0c3   = m0c2*c
-        betas  = self.betas
+        # local aliases
         gammas = self.gammas
-        gsbs3  = self.gsbs3
-        omega  = self.omega
-        qV0    = self.qV0
-        Wins   = self.Wins
-        # phis   = self.phis    not used??
-        Tks    = self.Tks
-        Sks    = self.Sks
-        Tpks   = self.Tpks
-        Spks   = self.Spks
-        Tppks  = self.Tppks
-        Sppks  = self.Sppks
-        cphis  = self.cphis
-        sphis  = self.sphis
-        dws    = self.dws                           # kin. energy increase in gap SOLL
-        Wouts  = self.Wouts
-        
-        Win   = Wins + Dw2wFromDp2p(gammas,zp)*Wins # W in
+        gammas_out = self.gammas_out        
+
         db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas in
-        dphi  = DphiFromZ(omega,c,betas,z)          # delta-phi in
-        # SOLL
-        gbs3_in     = gsbs3                      # (gamma*beta)**3 in
-        betas_in    = betas                      # beta in
-        gammas_in   = gammas                     # gamma  in
-        g3b2s_in    = gammas_in**3*betas_in**2   # gamma**3*beta**2 in
-        gammas_out  = 1. + Wouts/m0c2            # gamma  out
-        gbs_out     = sqrt(gammas_out**2-1)      # (gamma*beta) out
-        gbs3_out    = gbs_out**3                 # (gamma*beta)**3 out
-        betas_out   = gbs_out/gammas_out         # beta out
-        g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
-
-        # (4.6.9) in Shishlo's article
-        dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
-        
-        # (4.6.11) in Shishlo's article
-        zout = betas_out/betas_in*z + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
-
-        zpout = gammas_out**2*dbeta2beta_out
-        f_track = NP.dot(self.mx,track)
-        f_track[Ktp.z]  = zout
-        f_track[Ktp.zp] = zpout
+        track[Ktp.zp] = db2bs                       # zp ==> db2bs
+        f_track = NP.dot(self.matrix,track)         # matrix
+        zp_out = gammas_out**2*f_track[Ktp.zp]      # db2bs ==> zp
+        f_track[Ktp.zp] = zp_out
         DEBUG_OFF(repr(self.__dict__))
         DEBUG_OFF('oxal-slice ',f_track)
         # dbg_slice(self)

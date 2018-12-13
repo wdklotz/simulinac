@@ -82,7 +82,6 @@ class _TTF_G(object):
         self.dWf      = parent.dWf
         self.lamb     = parent.lamb
         self.SFdata   = parent.SFdata
-        self.matrix   = parent.matrix
         self.particle = parent.particle
         self.position = parent.position
         self.tkin     = self.particle.tkin
@@ -95,8 +94,8 @@ class _TTF_G(object):
             # slice energy dependence
             self._deltaW = configure_slices(self.slices, self.phis, self.tkin)
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
-            # UPDATE linear NODE matrix with deltaW
-            self.matrix[EKOO,DEKOO] = self._deltaW
+            # UPDATE linear NODE matrix
+            parent.matrix[EKOO,DEKOO] = self._deltaW
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             # for test0()
             if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
