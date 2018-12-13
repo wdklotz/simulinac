@@ -1,10 +1,10 @@
 TKIN=5.                 # kinetic energy in [Mev]
-# TKIN=50.                # kinetic energy in [Mev]
+TKIN=50.                # kinetic energy in [Mev]
 BGRAD=43.150
 
 MAPPING=t3d          # Trace 3D linear map model
 # MAPPING=simple       # Shishlo/Holmes linear map model
-MAPPING=oxal           # openXAL linear model
+# MAPPING=oxal           # openXAL linear model
 # MAPPING=base         # Shishlo/Holmes base map model
 # MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
 # MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
@@ -31,7 +31,7 @@ NCELL=60
 # NCELL=90
 # NCELL=160
 # NCELL=200
-# NCELL=300
+NCELL=300
 
 ####################################################
 ARGS="-D _TKIN=$TKIN"

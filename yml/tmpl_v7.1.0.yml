@@ -113,8 +113,8 @@ elements:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        # - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        - fRF:      *p01         # [Hz] frequency
+        # - fRF:      408.e+6      # [Hz] frequency
         - gap:      *p15         # [m] gap length
         - length:   0.044        # [m] cavity length
         - aperture: *p04         # [m] quad bore

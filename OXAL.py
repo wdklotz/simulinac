@@ -139,14 +139,6 @@ class _OXAL(object):
         for slice in slices:
             # map each slice with openXAL gap-model
             f_track = slice.slice_map(f_track)
-            # f_track = slice.slice_map_from_sympy(f_track)       # falsh grrrr.....!!
-            # relativistic scaling. Is it needed??
-            # z = f_track[ZKOO]
-            # betai = self.particle.beta
-            # tkin  = self.particle.tkin
-            # betaf = Proton(tkin=tkin+self.deltaW).beta
-            # z = betaf/betai*z
-            # f_track[ZKOO] = z
             pass
         return f_track
         
@@ -250,7 +242,6 @@ class _OXAL_slice(object):
         self.polydz     = poly.dz*1.e-2     # [cm] ==> [m]
         self.V0         = parent._V0(self.poly)
         self.phis       = None  # initialized in configure_slices
-        # self.ks         = None  # initialized in adjust_slice_parameters   not used??
         self.Tks        = None  # initialized in adjust_slice_parameters
         self.Sks        = None  # initialized in adjust_slice_parameters
         self.Tpks       = None  # initialized in adjust_slice_parameters
