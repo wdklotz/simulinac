@@ -72,7 +72,7 @@ class _OXAL(object):
             deltaPhi = phis-phIN    # total phase advance
             return deltaW, deltaPhi,matrix
 
-        # _OXAL
+        # _OXAL attributes
         self.EzAvg    = parent.EzAvg
         self.gap      = parent.gap
         self.E0L      = self.EzAvg*self.gap
@@ -92,12 +92,15 @@ class _OXAL(object):
         else:
              # slice the gap
             self.slices = make_slices(self, self.gap, self.SFdata, self.particle)
-            # slice energy dependence
+
+            # configure slice for SOLL energy
             self._deltaW, dummy, matrix = configure_slices(self.slices, self.phis, self.tkin)
-            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
+
             # UPDATE linear NODE matrix
             parent.matrix = matrix
-            # self.matrix[Ktp.T,Ktp.dT] = self._deltaW
+
+            # delayed  _OXAL attributes
+            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             parent['slices'] = self.slices   # satify test0()
             # for slice in self.slices:
@@ -253,7 +256,7 @@ class _OXAL_slice(object):
         self.phis       = None  # initialized in adjust_slice_parameters
         self.particlef  = None  # initialized in adjust_slice_parameters
 
-    def adjust_slice_parameters(self, tkin, phi):
+    def adjust_slice_parameters(self, tkin, phin):
         """ Adjust energy-dpendent SOLL parameters for this slice """
         self.particle(tkin)    # UPDATE tkin
         c      = PARAMS['lichtgeschwindigkeit']
@@ -263,7 +266,7 @@ class _OXAL_slice(object):
         betas  = self.particle.beta
         gammas = self.particle.gamma
         omega  = self.parent.omega
-        phis   = phi
+        phis   = phin
         qV0    = self.V0
         ks     = omega/(c*betas)
         
@@ -283,7 +286,7 @@ class _OXAL_slice(object):
         # phase increase SOLL
         Phiouts   = phis + omega*self.polydz/(c*betas)
 
-        # aliases for SOLL
+        # oxal-matrix from SOLL aliases and variables
         gbs3_in     = 1./(gammas*betas)**3       # (gamma*beta)**3 in
         betas_in    = betas                      # beta in
         gammas_in   = gammas                     # gamma  in
@@ -316,9 +319,9 @@ class _OXAL_slice(object):
 
         # energy and length increase
         mx[Ktp.T,Ktp.dT] = dws
-        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DGK
+        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DGK - no length increase
         
-        # variables needed by slice_map
+        # _OXAL_slice attributes needed by slice_map
         self.matrix     = mx
         self.gammas     = gammas
         self.gammas_out = gammas_out
@@ -330,7 +333,7 @@ class _OXAL_slice(object):
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
         track = copy(i_track)
         # local aliases
-        gammas = self.gammas
+        gammas     = self.gammas
         gammas_out = self.gammas_out        
 
         db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas in
