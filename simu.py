@@ -22,15 +22,10 @@ This file is part of the SIMULINAC code
 #todo: use normalized emittances ?
 #todo: waccept results are global - each node should carry its own
 #todo: make new simu_manual.tex, README.md, check conversions.tex
-#todo: rewise flow control with FLAGS (partly done): global STATE variable?
 #todo: rework the KVout - done in parts
 #todo: rework verbose printing levels
 #todo: C.K.Allen's matrices which are XAL as well?
-#todo: give priority to OpenXAL model from Shishlo
-#todo: sliced sub-lattice belonging to thick element; more or less done
-#todo: introduce Function class to make plot routines more robust  - partially done
-#todo: REMAKE _DYN_G    - done
-#todo: lattice as double-linked list   - done
+#todo: slices as sub-lattice attribute to thick element
 
 import sys
 import os
@@ -57,7 +52,6 @@ DEBUG_MODULE   = DEBUG_OFF
 def bucket(*args):
     bucket_size.bucket()
 
-#todo: use Functions class also for sigma envelopes and lattice functions
 def display0(*args):
     """
     C&S-Tracks w/o longitudinal motion

@@ -257,7 +257,7 @@ class _OXAL_slice(object):
         self.particlef  = None  # initialized in adjust_slice_parameters
 
     def adjust_slice_parameters(self, tkin, phin):
-        """ Adjust energy-dpendent SOLL parameters for this slice """
+        """ Adjust SOLL-energy dpendent parameters for this slice """
         self.particle(tkin)    # UPDATE tkin
         c      = PARAMS['lichtgeschwindigkeit']
         m0c2   = PARAMS['proton_mass']
