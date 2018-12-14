@@ -52,7 +52,7 @@ class _OXAL(object):
                 zil = poly.zl
                 zir = poly.zr
                 if zil < zl or zir > zr: continue
-                # instanciate _TTF_Gslices
+                # instantiate _TTF_Gslices
                 slice = _OXAL_slice(parent, poly, particle)
                 slices.append(slice)
             return slices
@@ -124,6 +124,7 @@ class _OXAL(object):
         f_track = copy(i_track)
         # full map through sliced openXAL gap-model
         f_track = self._full_gap_map(self.slices, f_track)
+        # add SOLL-energy increase
         f_track[Ktp.T] += self._deltaW
         DEBUG_OFF('oxal-map ',f_track)
         return f_track
@@ -140,7 +141,7 @@ class _OXAL(object):
         """ The wrapper to slice mappings """
         f_track = copy(i_track)
         for slice in slices:
-            # map each slice with openXAL gap-model
+            # map each slice
             f_track = slice.slice_map(f_track)
             pass
         return f_track
@@ -285,7 +286,7 @@ class _OXAL_slice(object):
         Wouts     = Wins + dws
         particlef = copy(self.particle)(tkin=Wouts)
         # phase increase SOLL
-        Phiouts   = phis + omega*self.polydz/(c*betas)
+        phiouts   = phis + omega*self.polydz/(c*betas)
 
         # oxal-matrix from SOLL aliases and variables
         gbs3_in     = 1./(gammas*betas)**3       # (gamma*beta)**3 in
@@ -299,13 +300,13 @@ class _OXAL_slice(object):
 
 #=======================================================================================
 # (4.6.10) in Shishlo's paper mit SYMPY berechnet: 
- # ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme! 
+ # ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme hier! 
         # DDPHI= # DDPHI= phi_out - phi_in 
         # -(Spks*sphis - Tpks*cphis)*dphi*gsbs3*omega*qV0/m0c3 
         # -(Spks*cphis + Tpks*sphis)*3*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
         
-        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)  (a) term mit gleichem factor in (4.6.10)
-        # - Tppks*sphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)  (b) term mit gleichem factor in (4.6.10)
+        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2) (a) term mit gleichem factor in (4.6.10)
+        # - Tppks*sphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2) (b) term mit gleichem factor in (4.6.10)
 
         # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3)          O(2)
         # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3)          O(2)
@@ -315,30 +316,30 @@ class _OXAL_slice(object):
         # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3)      O(3)
         # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) O(4)
         # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(4)
-# Facit: Formeln (4.6.10) und (4.6.11) im paper sind nicht korreckt. Terme (a) und (b) sind O(2) und nicht O(1) !
-# Facit: die sympy-Rechnung ist besser als das paper !!
+# Facit: Formeln (4.6.10) und (4.6.11) im paper sind nicht korreckt. Terme (a) & (b) sind O(2) und nicht O(1) !
+# Facit: die sympy-Rechnung ist genauer als die Formeln im paper !!
  #=======================================================================================        
  # (4.6.9) in Shishlo's paper:
         # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) 
         # + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
 # (4.6.11) in Shishlo's paper:
         # z_out = betas_out/betas_in*z 
-        # +qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)
-        # +omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs 
+        # + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)
+        # + omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs 
         # + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
  #=======================================================================================        
 
-        # {z, delta-beta/betas}: linear submatrix
+        # {z, delta-beta/betas}: linear sub matrix
         mx = NP.eye(ELM.MDIM,ELM.MDIM)
         # implementation (4.6.9) und (4.6.11) from Shishlo's paper
         mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
-        # (4.6.11) mit meiner sympy Korrektur: keine Tpp- und Spp-terme in (4.6.11)
         # mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
+        # (4.6.11) mit meiner sympy Korrektur: keine Tpp- und Spp-terme in (4.6.11)
         mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis))
         mx[Ktp.zp,Ktp.z] = qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
         mx[Ktp.zp,Ktp.zp]= (g3b2s_in/g3b2s_out - qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis))
 
-        # {x,x',y,y'}: linear submatrix
+        # {x,x',y,y'}: linear sub-matrix
         gbs_in     = gammas*betas
         gbs_out    = sqrt(gammas_out**2-1.)
         facxy      = -qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
@@ -349,17 +350,17 @@ class _OXAL_slice(object):
 
         # energy and length increase
         mx[Ktp.T,Ktp.dT] = dws
-        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DKD - no length increase
+        mx[Ktp.S,Ktp.dS] = 0     # oxal-gap is kick of DKD - no length increase
         
         # _OXAL_slice attributes needed by slice_map
         self.matrix     = mx
         self.gammas     = gammas
         self.gammas_out = gammas_out
-        return Wouts, Phiouts
+        return Wouts, phiouts
 
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
-        z        = i_track[Ktp.z]       # [4] z~(phi-phis)
+        # z      = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
         track    = copy(i_track)
         # local aliases
@@ -367,9 +368,9 @@ class _OXAL_slice(object):
         gammas_out = self.gammas_out        
 
         db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas in
-        track[Ktp.zp] = db2bs                       # zp ==> db2bs
+        track[Ktp.zp]   = db2bs                     # zp ==> db2bs
         f_track = NP.dot(self.matrix,track)         # matrix
-        zp_out = gammas_out**2*f_track[Ktp.zp]      # db2bs ==> zp
+        zp_out  = gammas_out**2*f_track[Ktp.zp]     # db2bs ==> zp
         f_track[Ktp.zp] = zp_out
         DEBUG_OFF(repr(self.__dict__))
         DEBUG_OFF('oxal-slice ',f_track)
