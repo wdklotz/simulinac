@@ -84,3 +84,9 @@ print('DPHI= \n',DPHI,'\n')
 
 print('DPHI= \n',expand(DPHI),'\n')
 
+DDPHI = symbols('DDPHI')
+DDPHI = DPHI - DPHIS
+print('DDPHI= \n',DDPHI,'\n')
+
+print('DDPHI(expanded)= \n',expand(DDPHI),'\n')
+

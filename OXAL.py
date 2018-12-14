@@ -296,13 +296,37 @@ class _OXAL_slice(object):
         betas_out   = gbs_out/gammas_out         # beta out
         g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
 
-        # (4.6.9) in Shishlo's article
-        # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
-        # (4.6.11) in Shishlo's article
-        # z_out = betas_out/betas_in*z + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
+#=======================================================================================
+# (4.6.10) in Shishlo's paper mit SYMPY berechnet: 
+ # ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme! 
+        # DDPHI= # DDPHI= phi_out - phi_in 
+        # -(Spks*sphis - Tpks*cphis)*dphi*gsbs3*omega*qV0/m0c3 
+        # -(Spks*cphis + Tpks*sphis)*3*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
+        
+        # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3)          O(2)
+        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)
+        # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)       O(2)
+        # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3)      O(2)
+        # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) O(2)
+        # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3)          O(2)
+        # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3)       O(2)
+        # - Tppks*db2bs**2*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)            O(2)
+        # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(2)
+        # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3)      O(2)
+ #=======================================================================================        
+ # (4.6.9) in Shishlo's paper:
+        # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) 
+        # + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
+# (4.6.11) in Shishlo's paper:
+        # z_out = betas_out/betas_in*z 
+        # +qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)
+        # +omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs 
+        # + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
+ #=======================================================================================        
 
         # {z, delta-beta/betas}: linear submatrix
         mx = NP.eye(ELM.MDIM,ELM.MDIM)
+        # (4.6.9) und (4.6.11) in Shishlo's paper
         mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
         mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
         mx[Ktp.zp,Ktp.z] = qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
