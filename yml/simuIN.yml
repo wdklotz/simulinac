@@ -65,7 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              t3d    # global rf gap-model
+    - mapping:              oxal    # global rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
