@@ -330,7 +330,7 @@ class _OXAL_slice(object):
 
         # {z, delta-beta/betas}: linear submatrix
         mx = NP.eye(ELM.MDIM,ELM.MDIM)
-        # implementation (4.6.9) und (4.6.11) in Shishlo's paper
+        # implementation (4.6.9) und (4.6.11) from Shishlo's paper
         mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
         # (4.6.11) mit meiner sympy Korrektur: keine Tpp- und Spp-terme in (4.6.11)
         # mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
