@@ -59,7 +59,7 @@ class _OXAL(object):
 
         #todo: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
-            """adjust energy dependence of slices"""
+            """adjust SOLL-energy dependence of slices"""
             matrix = NP.eye(ELM.MDIM,ELM.MDIM)
             tkinIN = tkin
             phIN = phis
@@ -70,7 +70,7 @@ class _OXAL(object):
                 matrix = NP.dot(matrix,slice.matrix)
             deltaW   = tkin-tkinIN  # total energy advance
             deltaPhi = phis-phIN    # total phase advance
-            return deltaW, deltaPhi,matrix
+            return deltaW, deltaPhi, matrix
 
         # _OXAL attributes
         self.EzAvg    = parent.EzAvg
@@ -189,29 +189,29 @@ class _OXAL(object):
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
 
-    def _Tpp(self, poly, k):
-        """ 2nd derivative T''(k) """
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        tpp = \
-            2*(dz*k*(dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*cos(dz*k) 
-            - (dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*sin(dz*k) 
-            - (dz**2*k**2*(-6*b + k**2*(dz**2*b + 1))/sin(dz*k)**2 - 12*dz*b*k/tan(dz*k) + 18*b 
-            - k**2*(3*dz**2*b + 1))*sin(dz*k))/(dz*k**5*(2./3.*dz**2*b + 2))
-        return tpp
+    # def _Tpp(self, poly, k):
+    #     """ 2nd derivative T''(k) """
+    #     a   = poly.a
+    #     b   = poly.b
+    #     dz  = poly.dz
+    #     k   = k*1.e-2      # [1/m] --> [1/cm]
+    #     tpp = \
+    #         2*(dz*k*(dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*cos(dz*k) 
+    #         - (dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*sin(dz*k) 
+    #         - (dz**2*k**2*(-6*b + k**2*(dz**2*b + 1))/sin(dz*k)**2 - 12*dz*b*k/tan(dz*k) + 18*b 
+    #         - k**2*(3*dz**2*b + 1))*sin(dz*k))/(dz*k**5*(2./3.*dz**2*b + 2))
+    #     return tpp
 
-    def _Spp(self, poly, k):
-        """ 2nd derivative S''(k) """
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        spp = \
-            2*a*(dz**3*k**3*cos(dz*k) - 3*dz**2*k**2*sin(dz*k)
-            - 6*dz*k*cos(dz*k) + 6*sin(dz*k))/(dz*k**4*(2./3.*dz*b + 2))
-        return spp
+    #   def _Spp(self, poly, k):
+    #     """ 2nd derivative S''(k) """
+    #     a   = poly.a
+    #     b   = poly.b
+    #     dz  = poly.dz
+    #     k   = k*1.e-2      # [1/m] --> [1/cm]
+    #     spp = \
+    #         2*a*(dz**3*k**3*cos(dz*k) - 3*dz**2*k**2*sin(dz*k)
+    #         - 6*dz*k*cos(dz*k) + 6*sin(dz*k))/(dz*k**4*(2./3.*dz*b + 2))
+    #     return spp
 
     def _V0(self, poly):
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
@@ -232,8 +232,9 @@ def Dw2wFromDp2p(gamma,Dp2p):
     return (gamma+1)/gamma*Dp2p
 def Dp2pFromDw2w(gamma,Dw2w):
     return gamma/(gamma+1)*Dw2w
-def dbg_slice(slice):
-    print('Win {:8.5} \t Phin {:8.3}'.format(slice.Wins,degrees(slice.phis)))
+
+# def dbg_slice(slice):
+#     print('Win {:8.5} \t Phin {:8.3}'.format(slice.Wins,degrees(slice.phis)))
 
 class _OXAL_slice(object):
     """ PyOrbit's openXAL linear RF-Gap Model """
@@ -249,8 +250,8 @@ class _OXAL_slice(object):
         self.Sks        = None  # initialized in adjust_slice_parameters
         self.Tpks       = None  # initialized in adjust_slice_parameters
         self.Spks       = None  # initialized in adjust_slice_parameters
-        self.Tppks      = None  # initialized in adjust_slice_parameters
-        self.Sppks      = None  # initialized in adjust_slice_parameters
+        self.Tppks      = None  # initialized in adjust_slice_parameters   # not needed for linear model
+        self.Sppks      = None  # initialized in adjust_slice_parameters   # not needed for linear model
         self.Wouts      = None  # initialized in adjust_slice_parameters
         self.dws        = None  # initialized in adjust_slice_parameters
         self.phis       = None  # initialized in adjust_slice_parameters
@@ -274,8 +275,8 @@ class _OXAL_slice(object):
         Sks    = self.parent._S(self.poly,ks)
         Tpks   = self.parent._Tp(self.poly,ks)
         Spks   = self.parent._Sp(self.poly,ks)
-        Tppks  = self.parent._Tpp(self.poly,ks)
-        Sppks  = self.parent._Spp(self.poly,ks)
+        # Tppks  = self.parent._Tpp(self.poly,ks)   # not needed for linear model
+        # Sppks  = self.parent._Spp(self.poly,ks)   # not needed for linear model
         sphis  = sin(phis)
         cphis  = cos(phis)
 
@@ -303,16 +304,19 @@ class _OXAL_slice(object):
         # -(Spks*sphis - Tpks*cphis)*dphi*gsbs3*omega*qV0/m0c3 
         # -(Spks*cphis + Tpks*sphis)*3*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
         
-        # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3)          O(2)
-        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)
-        # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)       O(2)
-        # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3)      O(2)
-        # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) O(2)
+        # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)  (a) term mit gleichem factor in (4.6.10)
+        # - Tppks*sphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2)  (b) term mit gleichem factor in (4.6.10)
+
         # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3)          O(2)
-        # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3)       O(2)
-        # - Tppks*db2bs**2*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)            O(2)
-        # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(2)
-        # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3)      O(2)
+        # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3)          O(2)
+        # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3)       O(3)
+        # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)       O(3)
+        # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3)      O(3)
+        # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3)      O(3)
+        # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) O(4)
+        # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(4)
+# Facit: Formeln (4.6.10) und (4.6.11) im paper sind nicht korreckt. Terme (a) und (b) sind O(2) und nicht O(1) !
+# Facit: die sympy-Rechnung ist besser als das paper !!
  #=======================================================================================        
  # (4.6.9) in Shishlo's paper:
         # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) 
@@ -326,9 +330,11 @@ class _OXAL_slice(object):
 
         # {z, delta-beta/betas}: linear submatrix
         mx = NP.eye(ELM.MDIM,ELM.MDIM)
-        # (4.6.9) und (4.6.11) in Shishlo's paper
+        # implementation (4.6.9) und (4.6.11) in Shishlo's paper
         mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
-        mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
+        # (4.6.11) mit meiner sympy Korrektur: keine Tpp- und Spp-terme in (4.6.11)
+        # mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
+        mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis))
         mx[Ktp.zp,Ktp.z] = qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
         mx[Ktp.zp,Ktp.zp]= (g3b2s_in/g3b2s_out - qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis))
 
@@ -343,7 +349,7 @@ class _OXAL_slice(object):
 
         # energy and length increase
         mx[Ktp.T,Ktp.dT] = dws
-        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DGK - no length increase
+        mx[Ktp.S,Ktp.dS] = 0     # oxal is a DKD - no length increase
         
         # _OXAL_slice attributes needed by slice_map
         self.matrix     = mx
@@ -355,7 +361,7 @@ class _OXAL_slice(object):
         """Map through this slice from position (i) to (f)"""
         z        = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
-        track = copy(i_track)
+        track    = copy(i_track)
         # local aliases
         gammas     = self.gammas
         gammas_out = self.gammas_out        
