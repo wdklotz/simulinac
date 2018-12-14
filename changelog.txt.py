@@ -1,4 +1,7 @@
 """
+Version v7.1.3
+*) corection of oxal-map for wrong formulas in S&H paper
+
 Version v7.1.2
 *) added the openXAL linear gap-model from Shishlo & Holmes
 *) the implemetation with sympy does not produce correct results
