@@ -32,17 +32,10 @@ from math import sqrt, degrees, radians
 from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
-from setutil import DEBUG, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
+from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 # from trackPlot import poincarePlot
-
-# DEBUGGING
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 

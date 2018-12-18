@@ -23,29 +23,19 @@ from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEBUG, WConverter
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, WConverter
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
 from Ez0 import SFdata
 from TTFG import _TTF_G
 from DynacG import _DYN_G
 from OXAL import _OXAL
 
-# DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
-
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_MAP    = DEBUG_OFF
 DEBUG_PYO_G  = DEBUG_OFF
 
 twopi = 2.*pi     # used about everywhere
-
-# MDIM: dimension of matrices
-MDIM = 10
 
 # pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
@@ -673,7 +663,10 @@ class RFC(I):
                 position = [0, 0, 0],
                 next     = None,
                 prev     = None):
-        if length == 0: self.length = self.gap # die ideale pillbox
+        if length > 0:
+            self.length = length
+        else:
+            self.length = gap   # die ideale pillbox
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf
         self.phis     = PhiSoll

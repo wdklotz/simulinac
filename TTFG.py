@@ -23,16 +23,9 @@ from math import pi as PI
 from copy import copy
 import numpy as NP
 
-from setutil import PARAMS,DEBUG,I0,I1,tblprnt,arrprnt
+from setutil import PARAMS,DEBUG,DEBUG_ON,DEBUG_OFF,I0,I1,tblprnt,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
-
-# DEBUG__*
-def DEBUG_ON(string,arg='',end='\n'):
-    DEBUG(string,arg,end)
-    return True
-def DEBUG_OFF(string,arg='',end='\n'):
-    return False
 
 DEBUG_TEST0    = DEBUG_ON
 DEBUG_TEST1    = DEBUG_ON

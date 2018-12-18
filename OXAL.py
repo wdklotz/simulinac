@@ -22,17 +22,9 @@ from math import sin,cos,tan,radians,degrees,sqrt,pi
 from copy import copy
 import numpy as NP
 
-from setutil import PARAMS,DEBUG,I0,I1,tblprnt,arrprnt,objprnt,Ktp
-import elements as ELM
+from setutil import PARAMS,DEBUG,DEBUG_ON,DEBUG_OFF,I0,I1,tblprnt,arrprnt,objprnt,Ktp,MDIM
 from Ez0 import SFdata
 
-# DEBUG__*
-def DEBUG_ON(string,arg='',end='\n'):
-    DEBUG(string,arg,end)
-    return True
-def DEBUG_OFF(string,arg='',end='\n'):
-    return False
-    
 DEBUG_SLICE = DEBUG_OFF
 DEBUG_TEST0 = DEBUG_ON
 DEBUG_TEST1 = DEBUG_ON
@@ -61,7 +53,7 @@ class _OXAL(object):
         #todo: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
             """adjust SOLL-energy dependence of slices"""
-            matrix = NP.eye(ELM.MDIM,ELM.MDIM)
+            matrix = NP.eye(MDIM,MDIM)
             tkinIN = tkin
             phIN = phis
             for slice in slices:
@@ -331,7 +323,7 @@ class _OXAL_slice(object):
 #=======================================================================================        
 
         # {z, delta-beta/betas}: linear sub matrix
-        mx = NP.eye(ELM.MDIM,ELM.MDIM)
+        mx = NP.eye(MDIM,MDIM)
         # implementation (4.6.9) und (4.6.11) from Shishlo's paper
         mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
         # mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
@@ -379,15 +371,15 @@ class _OXAL_slice(object):
         return f_track
 
 def test0():
-    import elements as ELM
     from bunch import Tpoint, Track
+    from elements import RFC,RFG
     
     print('-----------------------------------TEST 0----------------')
     input_file='SF_WDK2g44.TBL'
     EzPeak = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg fuer INTG(NG(von 0 bis 2.2*sigma)
     SF_tab = SFdata(input_file,EzPeak)
     
-    oxal = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
+    oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
     tkin = 50.
     oxal.adjust_energy(tkin=tkin)
     if DEBUG_TEST0():
@@ -417,15 +409,15 @@ def test0():
         ti = tpf
 
 def test1():
-    import elements as ELM
     from bunch import Tpoint, Track
+    from elements import RFC,RFG
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'
     EzPeak = PARAMS['EzAvg']
     SF_tab = SFdata(input_file,EzPeak)
     
-    oxal = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
+    oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
     tkin = 150.
     oxal.adjust_energy(tkin=tkin)
     DEBUG_TEST1('TTFG: oxal.__dict__',oxal.__dict__)      # for DEBUGGING

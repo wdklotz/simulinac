@@ -29,16 +29,16 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import warnings
 
+# MDIM: dimension of matrices
+MDIM = 10
+
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
     return True
 def DEBUG_OFF(*args):
     return False
-
-DEBUG_MODULE = DEBUG_OFF
-
-def DEBUG(string,arg='',end='\n'):
+def DEBUG(string='',arg='',end='\n'):
     """
     Print debug message
     IN:
@@ -58,6 +58,8 @@ def DEBUG(string,arg='',end='\n'):
         print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
     else:
         print('DEBUG: {}{}'.format(string,arg),end=end)
+
+DEBUG_MODULE = DEBUG_OFF
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
