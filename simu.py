@@ -44,8 +44,9 @@ import bucket_size
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
 
 DEBUG_MODULE   = DEBUG_OFF
 
@@ -278,12 +279,12 @@ def simulation(filepath):
     # parse input file and create a lattice
     lattice = parse_and_fabric(filepath)
 
-    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    # if DEBUG_LATTICE(): lattice.show_linkage()      # DEBUG
     
     # configure elements for energy increase
     soll_track = track_soll(lattice)
     
-    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    # if DEBUG_LATTICE(): lattice.show_linkage()      # DEBUG
 
     print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
 

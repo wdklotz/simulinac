@@ -31,8 +31,11 @@ import marker_actions as MRK
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
     pass
+    return False
+
 DEBUG_MODULE = DEBUG_OFF
 
 # parse and generate latttice

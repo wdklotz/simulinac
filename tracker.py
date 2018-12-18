@@ -40,8 +40,9 @@ from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 # DEBUGGING
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 

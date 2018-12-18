@@ -28,8 +28,9 @@ DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 # DEBUG MODULE
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
 
 class Sigma(object):
     """ Utility class for handling the sigma-matrix """

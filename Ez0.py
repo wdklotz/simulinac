@@ -31,8 +31,10 @@ Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # DEBUGING
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
+
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_TEST2  = DEBUG_OFF
 DEBUG_TEST3  = DEBUG_OFF

@@ -23,8 +23,9 @@ import matplotlib.pyplot as plt
 # DEBUGGING
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
 
 def histPlot(x,mu,sigma):
     """ a historgram plot """

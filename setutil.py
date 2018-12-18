@@ -32,8 +32,10 @@ import warnings
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
+
 DEBUG_MODULE = DEBUG_OFF
 
 def DEBUG(string,arg='',end='\n'):

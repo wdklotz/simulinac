@@ -29,8 +29,9 @@ from Ez0 import SFdata
 # DEBUG__*
 def DEBUG_ON(string,arg='',end='\n'):
     DEBUG(string,arg,end)
+    return True
 def DEBUG_OFF(string,arg='',end='\n'):
-    pass
+    return False
     
 DEBUG_SLICE = DEBUG_OFF
 DEBUG_TEST0 = DEBUG_ON
@@ -389,7 +390,7 @@ def test0():
     oxal = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
     tkin = 50.
     oxal.adjust_energy(tkin=tkin)
-    if DEBUG_TEST0 == DEBUG_ON:
+    if DEBUG_TEST0():
         print('TTFG: oxal.__dict__',oxal.__dict__)      # for DEBUGGING
         slices = oxal['slices']
         for slice in slices:

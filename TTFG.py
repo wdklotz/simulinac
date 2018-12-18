@@ -30,8 +30,10 @@ from Ez0 import SFdata
 # DEBUG__*
 def DEBUG_ON(string,arg='',end='\n'):
     DEBUG(string,arg,end)
+    return True
 def DEBUG_OFF(string,arg='',end='\n'):
-    pass
+    return False
+
 DEBUG_TEST0    = DEBUG_ON
 DEBUG_TEST1    = DEBUG_ON
 DEBUG_SLICE    = DEBUG_OFF
@@ -98,7 +100,7 @@ class _TTF_G(object):
             parent.matrix[EKOO,DEKOO] = self._deltaW
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             # for test0()
-            if DEBUG_TEST0 == DEBUG_ON:  parent['slices'] = self.slices
+            if DEBUG_TEST0():  parent['slices'] = self.slices
 
     # delegated parent properties
     @property
@@ -338,7 +340,7 @@ def test0():
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 50.
     ttfg.adjust_energy(tkin=tkin)
-    if DEBUG_TEST0 == DEBUG_ON:
+    if DEBUG_TEST0():
         print('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
         slices = ttfg['slices']
         for slice in slices:

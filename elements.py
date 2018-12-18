@@ -34,8 +34,10 @@ from OXAL import _OXAL
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
+
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_MAP    = DEBUG_OFF
 DEBUG_PYO_G  = DEBUG_OFF
@@ -248,7 +250,7 @@ class _Node(DictObject, object):
         f_track = NP.dot(self.matrix,f_track)
 
         # for DEBUGGING
-        if DEBUG_MAP == DEBUG_ON:
+        if DEBUG_MAP():
             f = f_track.copy() # !!!IMPORTANT!!!
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
@@ -893,7 +895,7 @@ class _PYO_G(object):
         f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G == DEBUG_ON:
+        if DEBUG_PYO_G():
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -969,7 +971,7 @@ class _PYO_G(object):
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G == DEBUG_ON:
+        if DEBUG_PYO_G():
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
