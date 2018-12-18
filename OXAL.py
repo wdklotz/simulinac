@@ -300,7 +300,7 @@ class _OXAL_slice(object):
 
 #=======================================================================================
 # (4.6.10) in Shishlo's paper mit SYMPY berechnet: 
- # ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme hier! 
+# ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme hier! 
         # DDPHI= # DDPHI= phi_out - phi_in 
         # -(Spks*sphis - Tpks*cphis)*dphi*gsbs3*omega*qV0/m0c3 
         # -(Spks*cphis + Tpks*sphis)*3*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
@@ -318,8 +318,8 @@ class _OXAL_slice(object):
         # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(4)
 # Facit: Formeln (4.6.10) und (4.6.11) im paper sind nicht korreckt. Terme (a) & (b) sind O(2) und nicht O(1) !
 # Facit: die sympy-Rechnung ist genauer als die Formeln im paper !!
- #=======================================================================================        
- # (4.6.9) in Shishlo's paper:
+#=======================================================================================        
+# (4.6.9) in Shishlo's paper:
         # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) 
         # + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
 # (4.6.11) in Shishlo's paper:
@@ -327,7 +327,7 @@ class _OXAL_slice(object):
         # + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)
         # + omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs 
         # + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
- #=======================================================================================        
+#=======================================================================================        
 
         # {z, delta-beta/betas}: linear sub matrix
         mx = NP.eye(ELM.MDIM,ELM.MDIM)
