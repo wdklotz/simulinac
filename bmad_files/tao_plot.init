@@ -1,0 +1,50 @@
+This initialization file defines how plotting is done.
+
+The following namelist block defines how the plot window (also called
+the plot page) is broken up.
+
+&tao_plot_page
+  plot_page%plot_display_type = 'X'
+  plot_page%size = 800, 450
+  plot_page%text_height = 12.0
+  plot_page%border = 0, 0, 0, 0, '%PAGE'
+  plot_page%main_title_text_scale  = 1.5
+  plot_page%title(1) = "ALCELI", 0.5, 0.97, "%PAGE", "CC"
+  region(1) = 'top'    0.0, 1.0, 0.48, 0.95
+  region(2) = 'middle' 0.0, 1.0, 0.24, 0.48
+  region(3) = 'bottom' 0.0, 1.0, 0.0,  0.24
+  place(1) = 'top', 'beta'
+  place(2) = 'middle', 'energy'
+  place(3) = 'bottom', 'zoomed_layout'
+/
+
+!------------------ layout ------
+&tao_template_plot
+	plot%name = 'zoomed_layout'
+	plot%x%min = 0
+	plot%x%max = 2
+	!plot%x%major_div = 10
+	!plot%x%label = ' '
+	plot%n_graph = 1
+	plot%x_axis_type = 's'
+/
+
+&tao_template_graph
+	graph_index = 1
+	graph%name = 'u1'
+	graph%type = 'lat_layout'
+	graph%box = 1, 1, 1, 1
+	graph%x%draw_numbers = .false.
+	graph%ix_universe = -1 !Syntax Changed from 0
+	graph%margin =  0.15, 0.05, 0.12, 0.12, '%BOX'
+	graph%n_curve = 0
+  	!graph%y%label = 'Layout'
+ 	graph%y%max =  20
+  	graph%y%min = -20
+ 	graph%y%major_div = 4
+/
+&lat_layout_drawing
+  ele_shape(1) = 'LCavity::*'       'XBox'      'Red'    40  'none'
+  ele_shape(2) = 'Quadrupole::*'    'XBox'  'Magenta'    30  'name'
+  ele_shape(3) = 'SBend::*'          'Box'     'Blue'    15  'none'
+/

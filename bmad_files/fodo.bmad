@@ -1,0 +1,38 @@
+parameter[geometry] = open
+    !parameter[geometry] = closed
+parameter[particle] = proton
+parameter[absolute_time_tracking] = F
+
+tkin = 50.E+6           ! eV
+lqf  = 0.01             ! m
+Bg   = 43.150           ! T/m
+freq = 816.E+6          ! Hz
+bore = 0.011            ! m
+Eg   = 1.E+6            ! V/m
+psy  =-30./360.         ! rad/2*pi
+gap  = 0.048            ! m
+lc   = 0.040            ! m
+
+beginning[e_tot] = m_proton + tkin
+beginning[alpha_a] = 0.
+beginning[alpha_b] = 0.
+beginning[beta_a]  = 3.3
+beginning[beta_b]  = 2.5
+
+D3: drift, l=0.040
+D5: drift, l=0.022
+QF: quadrupole, l=lqf,   b1_gradient=+Bg, aperture=bore
+QD: quadrupole, l=lqf*2, b1_gradient=-Bg, aperture=bore
+CAV: lcavity,   l=gap , gradient=Eg, phi0=psy, rf_frequency=freq
+
+CAV[is_on] = T
+
+    !rfc:     line = (D5,D5)
+rfc:     line = (D5,CAV,D5)
+rfc8:    line = (rfc,rfc,rfc,rfc,rfc,rfc,rfc,rfc)
+cell:    line = (QF,D3,rfc8,D3,QD,D3,rfc8,D3,QF)
+cell10:  line = (cell,cell,cell,cell,cell,cell,cell,cell,cell,cell)
+    !lat:     line = (cell10)
+lat:     line = (cell10,cell10,cell10,cell10)
+
+use, lat                    ! Line used to construct the lattice
