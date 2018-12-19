@@ -23,27 +23,19 @@ from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEBUG, WConverter
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, WConverter
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
 from Ez0 import SFdata
 from TTFG import _TTF_G
 from DynacG import _DYN_G
 from OXAL import _OXAL
 
-# DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-def DEBUG_OFF(*args):
-    pass
 DEBUG_MODULE = DEBUG_OFF
 DEBUG_MAP    = DEBUG_OFF
 DEBUG_PYO_G  = DEBUG_OFF
 
 twopi = 2.*pi     # used about everywhere
-
-# MDIM: dimension of matrices
-MDIM = 10
 
 # pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
@@ -248,7 +240,7 @@ class _Node(DictObject, object):
         f_track = NP.dot(self.matrix,f_track)
 
         # for DEBUGGING
-        if DEBUG_MAP == DEBUG_ON:
+        if DEBUG_MAP():
             f = f_track.copy() # !!!IMPORTANT!!!
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
@@ -671,7 +663,10 @@ class RFC(I):
                 position = [0, 0, 0],
                 next     = None,
                 prev     = None):
-        if length == 0: self.length = self.gap # die ideale pillbox
+        if length > 0:
+            self.length = length
+        else:
+            self.length = gap   # die ideale pillbox
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self._EzAvg   = EzAvg*dWf
         self.phis     = PhiSoll
@@ -893,7 +888,7 @@ class _PYO_G(object):
         f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G == DEBUG_ON:
+        if DEBUG_PYO_G():
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -969,7 +964,7 @@ class _PYO_G(object):
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G == DEBUG_ON:
+        if DEBUG_PYO_G():
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):

@@ -28,8 +28,9 @@ from trackPlot import histPlot, poincarePlot
 # DEBUG
 def DEBUG_ON(*args):
     DEBUG(*args)
+    return True
 def DEBUG_OFF(*args):
-    pass
+    return False
 
 #todo: uniform bucket fill ?
 class Tpoint(object):

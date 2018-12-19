@@ -22,17 +22,12 @@ from math import radians
 import yaml
 import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,Twiss
+from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,DEBUG_ON,DEBUG_OFF,Twiss
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata,V0
 import marker_actions as MRK
 
-# DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-def DEBUG_OFF(*args):
-    pass
 DEBUG_MODULE = DEBUG_OFF
 
 # parse and generate latttice

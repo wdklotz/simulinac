@@ -34,20 +34,15 @@ from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG,Twiss
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG,DEBUG_ON,DEBUG_OFF,Twiss
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
 
 import bucket_size
 
-# DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-def DEBUG_OFF(*args):
-    pass
-
 DEBUG_MODULE   = DEBUG_OFF
+DEBUG_LATTICE  = DEBUG_OFF
 
 def bucket(*args):
     bucket_size.bucket()
@@ -255,7 +250,6 @@ def display2(*args):
 # -------------------------  | everything starts here |
 #                            |----------------------- |
 def simulation(filepath):
-    DEBUG_LATTICE  = DEBUG_OFF
     def display(*functions):
         plots   = []
         if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
@@ -278,12 +272,12 @@ def simulation(filepath):
     # parse input file and create a lattice
     lattice = parse_and_fabric(filepath)
 
-    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    if DEBUG_LATTICE(): lattice.show_linkage() 
     
     # configure elements for energy increase
     soll_track = track_soll(lattice)
     
-    # if DEBUG_LATTICE == DEBUG_ON: lattice.show_linkage()      # DEBUG
+    # if DEBUG_LATTICE(): lattice.show_linkage()
 
     print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
 

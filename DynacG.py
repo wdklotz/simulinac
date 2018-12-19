@@ -30,8 +30,9 @@ from Ez0 import SFdata, Ipoly
 # DEBUG__*
 def DEBUG_ON(string,arg = '',end = '\n'):
     DEBUG(string,arg,end)
+    return True
 def DEBUG_OFF(string,arg = '',end = '\n'):
-    pass
+    return False
 
 twopi = 2.*MATH.pi
 
