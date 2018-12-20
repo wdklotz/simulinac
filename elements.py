@@ -25,7 +25,7 @@ import numpy as NP
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
 from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw, Ktp
 from Ez0 import SFdata
 from TTFG import _TTF_G
 from DynacG import _DYN_G
@@ -712,6 +712,8 @@ class RFC(I):
             self._particlef = cav.particlef
             self._ttf       = cav.ttf
             self.matrix     = D(label=self.label, particle=self.particle, position=self.position, length=self.length, aperture=self.aperture, next=self.next, prev=self.prev).matrix
+            # set energy increase also in _Node.matrix
+            self.matrix[Ktp.T,Ktp.dT] = self._deltaW
 
             
     def adjust_energy(self, tkin):
