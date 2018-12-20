@@ -377,7 +377,7 @@ class Lattice(object):
             return sigma_fun
 
         if PARAMS['mapping'] == 'dyn':
-            mess = 'SKIP CAVITY ENVELOPES ("dyn" mapping!)'
+            mess = 'CALCULATE TWISS ENVELOPES ("dyn" mapping - skip cavities!)'
             function = self.twiss_envelopes # use beta-matrix            
         elif FLAGS['sigma']:
             mess = 'CALCULATE SIGMA ENVELOPES'
