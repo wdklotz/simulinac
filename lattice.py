@@ -323,11 +323,6 @@ class Lattice(object):
         Calulate envelopes from initial twiss-vector with beta-matrices
         """
         twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
-        if PARAMS['mapping'] == 'dyn':
-            print('SKIP ENVELOPES ("dyn" mapping!)')
-            twfun.append(0.,(0.,0.,0.,0.,0.,0.,0.,0.,0.))
-            return twfun
-
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
@@ -382,12 +377,9 @@ class Lattice(object):
             return sigma_fun
 
         if PARAMS['mapping'] == 'dyn':
-            print('SKIP ENVELOPES ("dyn" mapping!)')
-            sigma_fun = Functions(('s','sigmax','sigmay'))
-            sigma_fun.append(0.,(0.,0.))
-            return sigma_fun
-            
-        if FLAGS['sigma']:
+            mess = 'SKIP CAVITY ENVELOPES ("dyn" mapping!)'
+            function = self.twiss_envelopes # use beta-matrix            
+        elif FLAGS['sigma']:
             mess = 'CALCULATE SIGMA ENVELOPES'
             function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:

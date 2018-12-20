@@ -28,7 +28,7 @@ from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
 DEBUG_TEST0    = DEBUG_ON
-DEBUG_TEST1    = DEBUG_ON
+DEBUG_TEST1    = DEBUG_OFF
 DEBUG_SLICE    = DEBUG_OFF
 DEBUG_TTF_G    = DEBUG_OFF
 
@@ -93,7 +93,7 @@ class _TTF_G(object):
             parent.matrix[EKOO,DEKOO] = self._deltaW
             self._particlef = copy(self.particle)(self.particle.tkin + self._deltaW)
             # for test0()
-            if DEBUG_TEST0():  parent['slices'] = self.slices
+            parent['slices'] = self.slices
 
     # delegated parent properties
     @property

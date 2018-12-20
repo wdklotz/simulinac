@@ -711,6 +711,8 @@ class RFC(I):
             self._deltaW    = cav.deltaW
             self._particlef = cav.particlef
             self._ttf       = cav.ttf
+            self.matrix     = D(label=self.label, particle=self.particle, position=self.position, length=self.length, aperture=self.aperture, next=self.next, prev=self.prev).matrix
+
             
     def adjust_energy(self, tkin):
         _params = self._params
