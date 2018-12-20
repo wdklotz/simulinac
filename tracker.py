@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a1'
+___version___='v7.1.3a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -62,12 +62,14 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         ylost.append(point[ordinate]*1e3)
     xmax = max([abs(i) for i in x])*1.5
     ymax = max([abs(i) for i in y])*1.5
-    # figure
+    # figure with mapping box
     width = 12; height = 6.
     fig   = plt.figure(figsize=(width,height))
     box   = '{} {} particles'.format(txt[loc],nbprt)
     ax    = plt.subplot(121)
     ax.set_title(box)
+    # mapping box
+    ax.text(0.01, 1.1, PARAMS['mapping'], transform= ax.transAxes, fontsize= 8, bbox= dict(boxstyle='round',facecolor='wheat',alpha=0.5), verticalalignment= 'top')
     plt.xlabel("$10^{-3}$")
     plt.ylabel("$10^{-3}$")
     plt.xlim([-xmax,xmax])
@@ -489,7 +491,7 @@ if __name__ == '__main__':
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
-    options['losses']              = True
+    options['losses']              = False
 
     # start the run
     tracker(options)

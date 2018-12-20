@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a1'
+___version___='v7.1.3a2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -165,9 +165,14 @@ def display1(*args):
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
 
+    # these are matplotlib.patch.Patch properties
+    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+
     #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
+    # mapping box
+    splot.text(0.01, 1.1, PARAMS['mapping'],transform=splot.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
