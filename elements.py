@@ -711,12 +711,12 @@ class RFC(I):
             self._deltaW    = cav.deltaW
             self._particlef = cav.particlef
             self._ttf       = cav.ttf
-            # ACHTUNG! no matrix for cav, so replace cav-matrix by a t3d-DKD-matrix
+            # ACHTUNG! _DYN_G has no matrix, so use DKD with _T3D_G-matrix instead
             dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
             drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
             kick  = _T3D_G(self)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
-            # update correct energy increase in _Node.matrix
+            # correct energy increase in _Node.matrix
             self.matrix[Ktp.T,Ktp.dT] = self._deltaW
 
             
