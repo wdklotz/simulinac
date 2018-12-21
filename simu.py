@@ -165,9 +165,6 @@ def display1(*args):
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
     fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
 
-    # these are matplotlib.patch.Patch properties
-    # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-
     #-------------------- transverse X tracks
     splot=plt.subplot(311)
     splot.set_title('transverse x')
@@ -229,13 +226,13 @@ def display1(*args):
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(z1,cz,color='green')
-    ax_l.plot(z2,sz,color='green')
+    ax_l.plot(z2,sz,color='green',linestyle=':')
     # ax_r = right abszisse
     ax_r = ax_l.twinx()
     ax_r.set_ylabel(r'$\Delta$w/w [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z2,cdw,color='red',linestyle=':')
+    ax_r.plot(z2,cdw,color='red')
     ax_r.plot(z2,sdw,color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
