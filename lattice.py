@@ -546,7 +546,7 @@ class Lattice(object):
                     sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdw))
             except ValueError as ex:
-                print(F'STOP C+S TRAJECTORIES at s = {s:6.2f} [m]')
+                print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))
                 # raise ex
                 break
         return (c_fun,s_fun)
@@ -587,12 +587,12 @@ class Lattice(object):
 
     def show_linkage(self):
         """ Show left-right links of lattice nodes. Iterate in both directions """
-        print(F"@@@@@@@@@@ iteration {self.iteration:s} @@@@@@@@@@")
+        print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
         for next in iter(self):
             print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
             next = next.next
         self.toggle_iteration()
-        print(F"@@@@@@@@@@ iteration {self.iteration:s} @@@@@@@@@@")
+        print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
         for next in iter(self):
             print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
             next = next.next

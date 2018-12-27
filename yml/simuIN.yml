@@ -45,7 +45,7 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 5.       # [MeV] energy @ entrance (injection)
+    - Tkin:                 50.       # [MeV] energy @ entrance (injection)
     - emitx_i:      &emx    1.0e-6      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
@@ -65,8 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              base        # rf gap-model
-    # - mapping:              dyn        # rf gap-model
+    - mapping:              dyn    # rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -114,8 +113,8 @@ elements:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        # - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        - fRF:      *p01         # [Hz] frequency
+        # - fRF:      408.e+6      # [Hz] frequency
         - gap:      *p15         # [m] gap length
         - length:   0.044        # [m] cavity length
         - aperture: *p04         # [m] quad bore

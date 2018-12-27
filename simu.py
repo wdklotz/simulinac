@@ -189,7 +189,8 @@ def display1(*args):
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
         N = PARAMS['n_sigma']
         sgx = [i*N for i in sgx]
-        label = F'{N:1}$\sigma$ [mm]'
+        #label = F'{N:1}$\sigma$ [mm]'
+        label = '{:1}$\sigma$ [mm]'.format(N)
         plt.plot(z,sgx ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
 
@@ -281,7 +282,8 @@ def simulation(filepath):
     
     # if DEBUG_LATTICE(): lattice.show_linkage()
 
-    print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
+    #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
+    print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
 
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
