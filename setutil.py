@@ -652,7 +652,7 @@ def collect_data_for_summary(lattice):
         SUMMARY['separatrix: Dphi* [deg]']         =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
         SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
         SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
-        SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(PARAMS['z0']*1.e2)
+        SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(abs(PARAMS['z0'])*1.e2)
         SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
         SUMMARY['Dp/p-max on separatrix [%]']      =  PARAMS['Dp2pmx']*100.
     else:

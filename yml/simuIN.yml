@@ -50,7 +50,7 @@ parameters:
     - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
     - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
-    - betay_i:      &bty    2.5      # [m] twiss beta @ entrance y
+    - betay_i:      &bty    0.75      # [m] twiss beta @ entrance y
     - phi_sync:     &phs    -30.      # [deg] synchronous phase
     - alfax_i:              0.      # [1] twiss alpha x @ entrance
     - alfay_i:              0.      # [1] twiss alpha y @ entrance
@@ -65,8 +65,7 @@ parameters:
     - gap:          &p15    0.048       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              base        # rf gap-model
-    # - mapping:              dyn        # rf gap-model
+    - mapping:              base    # rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -194,7 +193,7 @@ lattice:
     # title is MANDATORY!
     - title:   work
     - [ 1, SCmarker ]
-    - [300,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
+    - [80,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
     # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
     - [ 1, SCmarker ]
     
