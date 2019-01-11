@@ -40,7 +40,8 @@ flags:
 ## SECTION definitions
 
 sections:
-     - [&LE 5/25 , &HE 25/200]
+     # - [&LE 5/25 , &HE 25/200]
+     - [&LE 5/25]
 #...........................................................................................
 ## INPUT parameter definitions
 
@@ -54,15 +55,15 @@ parameters:
     - phi_sync:     &phs    _PHISY      # [deg] synchronous phase
     - alfax_i:              _ALFAX      # [1] twiss alpha x @ entrance
     - alfay_i:              _ALFAY      # [1] twiss alpha y @ entrance
-    - frequency:    &p01    816.e+6     # [Hz] frequency
-    # - ql0:          &p02    0.04        # [m] quad-length
-    # - ql:           &p03    0.02        # [m] 1/2 quad-length
-    - ql0:          &p02    0.02        # [m] quad-length
-    - ql:           &p03    0.01        # [m] 1/2 quad-length
-    # - quad_bore:    &p04    0.011       # [m] quad bore radius
-    - quad_bore:    &p04    0.006       # [m] quad bore radius
+    - frequency:    &p01    800.e+6     # [Hz] frequency
+    # - ql0:        &p02    0.04        # [m] quad-length
+    # - ql1:        &p03    0.02        # [m] 1/2 quad-length
+    - ql0:          &ql0    0.02        # [m] quad-length
+    - ql2:          &ql2    0.01        # [m] 1/2 quad-length
+    - quad_bore:    &p04    0.011       # [m] quad bore radius
+    # - quad_bore:  &p04    0.006       # [m] quad bore radius
     - windings:             30          # [1] quad-coil windings
-    - gap:          &p15    0.048       # [m] RF gap
+    - gap:          &p15    0.046       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
     - mapping:              _MAPPING    # rf gap-model
@@ -71,52 +72,36 @@ parameters:
 
 elements:
 # LE
+    - D2:        &D2             # ID: &alias
+        - type:     D            # D class
+        - length:   0.140        # [m]
+        - sec:      *LE          # is part of section
     - D3:        &D3             # ID: &alias
         - type:     D            # D class
-        # - type:     SIXD       # SIXD class
-        - length:   0.04         # [m]
-        - length:   0.02         # [m]
-        - sec:      *LE          # is part of section
-    - D5:    &D5                 # ID: &alias
-        - type:     D            # D class
-        # - type:     SIXD       # SIXD class
-        - length:   0.022        # [m] half cavity
+        - length:   0.06         # [m]
         - sec:      *LE          # is part of section
     - QFL:   &QFL                # ID: &alias
         - type:     QF           # QF classtest0
-        - length:   *p03         # [m]
+        - length:   *ql2         # [m]
         - aperture: *p04         # [m] quad bore
         - B':       &Bgrad   _BGRAD # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *LE          # is part of section
     - QDL:   &QDL                # ID: &alias
         - type:     QD           # QD class
-        - length:   *p02         # [m] length
+        - length:   *ql0         # [m] length
         - aperture: *p04         # [m] quad bore
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        - sec:      *LE          # is part of section
-    - RFGL:  &RFGL               # ID: &alias
-        - type:     RFG          # RFG gap class
-        - EzAvg:    1.00         # [MV/m] average E-field on axis
-        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
-        - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *p01         # [Hz] frequency
-        # - fRF:      408.e+6      # [Hz] frequency
-        # - fRF:      204.e+6      # [Hz] frequency
-        - gap:      *p15         # [m] length
-        - aperture: *p04         # [m] quad bore
-        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - sec:      *LE          # is part of section
     - RFC:  &RFCL                # ID: &alias
         - type:     RFC          # RFC cavity class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        # - fRF:      *p01         # [Hz] frequency
-        - fRF:      408.e+6      # [Hz] frequency
+        - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
-        - length:   0.044        # [m] cavity length
+        - length:   *p15         # [m] cavity length
         - aperture: *p04         # [m] quad bore
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - sec:      *LE          # is part of section
@@ -133,6 +118,8 @@ elements:
 segments:
 # LE            # low energy section
 # HE            # high energy section
+    - Dm:
+        - *D2
     - SEGiL:
         - *QFL
         - *D3
@@ -143,38 +130,6 @@ segments:
         - *D3
         - *QDL
         - *D3
-    - RFGL:
-        - *D5
-        - *RFGL # 1st cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 2nd cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 3rd cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 4th cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 5th cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 6th cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 7th cavity
-        - *D5
-        #
-        - *D5
-        - *RFGL # 8th cavity
-        - *D5
     - RFCAVL:
         - *RFCL      # 1
         - *RFCL      # 2
@@ -184,6 +139,8 @@ segments:
         - *RFCL      # 6
         - *RFCL      # 7
         - *RFCL      # 8
+        - *RFCL      # 9
+        - *RFCL      # 10
     - SCmarker:
         - *SCm
 #...........................................................................................
@@ -191,9 +148,8 @@ segments:
 
 lattice:
     # title is MANDATORY!
-    - title:   work
-    - [ 1, SCmarker ]
-    - [_NCELL,   SEGiL, RFCAVL, SCmarker, SEGmL, RFCAVL, SEGfL]    # cavities
-    # - [_NCELL,   SEGiL, RFGL,   SCmarker, SEGmL, RFGL, SEGfL]    # gaps
-    - [ 1, SCmarker ]
+    - title:   20-cav/2-quad per cell
+    # - [ 1, SCmarker ]
+    - [_NCELL,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
+    # - [ 1, SCmarker ]
     
