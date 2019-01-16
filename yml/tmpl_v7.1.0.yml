@@ -151,5 +151,6 @@ lattice:
     - title:   20-cav/2-quad per cell
     # - [ 1, SCmarker ]
     - [_NCELL,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
+    # - [1, Dm]
     # - [ 1, SCmarker ]
     

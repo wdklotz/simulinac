@@ -66,7 +66,7 @@ parameters:
     - gap:          &p15    0.046       # [m] RF gap
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              oxal    # rf gap-model
+    - mapping:              t3d    # rf gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -150,6 +150,7 @@ lattice:
     # title is MANDATORY!
     - title:   20-cav/2-quad per cell
     # - [ 1, SCmarker ]
-    - [40,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
+    - [23,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
+    # - [1, Dm]
     # - [ 1, SCmarker ]
     
