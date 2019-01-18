@@ -50,8 +50,8 @@ parameters:
     - emitx_i:      &emx    1.0e-6      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
     - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
-    - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
-    - betay_i:      &bty    0.75      # [m] twiss beta @ entrance y
+    - betax_i:      &btx    3.713      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    2.501      # [m] twiss beta @ entrance y
     - phi_sync:     &phs    -30.      # [deg] synchronous phase
     - alfax_i:              0.      # [1] twiss alpha x @ entrance
     - alfay_i:              0.      # [1] twiss alpha y @ entrance
@@ -149,8 +149,6 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   20-cav/2-quad per cell
-    # - [ 1, SCmarker ]
-    - [23,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
-    # - [1, Dm]
+    - [5,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
     # - [ 1, SCmarker ]
     

@@ -34,8 +34,8 @@ R - Removed as the card that requires it is not called.
     cell_length         (cm)        Y
     t                               H
     tp                              H
-    electric_field      (MV/m)      Y
-    rf_phase            (deg)       Y
+    e_field      (MV/m)      Y
+    rfphdeg            (deg)       Y
     tpp                             H
     frequency           (MHz)       Y
     attenuation_factor              H
@@ -70,7 +70,7 @@ from setutil import PARAMS, WConverter, waccept
 
 def call_INTRO(arg):
     file = arg['file']
-    file.write("ALCELI ; TITLE'\n") 
+    file.write("ALCELI'\n") 
 
 def call_GEBEAM(arg):
     LAW    =   2
@@ -101,13 +101,32 @@ def call_INPUT(arg):
     UEM     =  arg['m0c2']
     ATM     = 1.
     Q       = 1.
-    ENEDEP  = arg['tkIN'] + UEM    # m0c2 + tk
+    ENEDEP  = arg['tkIN']    # tkIN [Mev]
     TOF     = 0.
 
     file = arg['file']
     file.write('INPUT\n')
     file.write('{} {} {} ; UEM ATM Q\n'.format(UEM,ATM,Q))
     file.write('{} {} ; ENEDEP TOF\n'.format(ENEDEP,TOF))
+
+def call_REJECT(arg):
+    IFW=     arg['ifw']
+    WDISP=   arg['wdisp'] 
+    WPHAS=   arg['wphas'] 
+    WX=      arg['wx'] 
+    WY=      arg['wy'] 
+    RLIM=    arg['rlim']
+
+    file = arg['file']
+    file.write('REJECT\n')
+    file.write('{} {} {} {} {} {} ; IFW WDISP WPHAS WX WY RLIM\n'.format(IFW, WDISP, WPHAS, WX, WY, RLIM))
+
+def call_REFCOG(arg):
+    ISHIFT=    arg['ishift']
+    
+    file = arg['file']
+    file.write('REFCOG\n')
+    file.write('{} ; ISHIFT\n'.format(ISHIFT))
 
 def call_EMIPRT(arg):
     IEMQESG   = 1
@@ -172,11 +191,13 @@ def call_ALCELI(arg):
     file = arg['file']
     file.write(";ALCELI begin\n")
     number_of_RFQH = 0
+    limits = [1., 5., 1., 5., 1., 1.,  20., 1.]
     i = 0
     for section in sections:
         for node in section.seq:
             
             if isinstance(node,(ELM.QF,ELM.QD)):
+                # call_EMITGR('{}'.format(i),arg,limits)
                 field_length = (node.length)*100                 #(cm)
                 pole_tip_field = (node['Bpole'])*10              #(kG)
                 radius_to_the_pole_tips = (node.aperture)*100    #(cm)
@@ -190,6 +211,7 @@ def call_ALCELI(arg):
                     )
                 call_QUAD(params)
                 i = i + 1
+                # call_EMITGR('{}'.format(i),arg,limits)
                 continue
                 
             elif isinstance(node,ELM.RFC):
@@ -204,12 +226,12 @@ def call_ALCELI(arg):
                 sp = 0.                               # dummy variable, not used in DYNAC
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
-                electric_field = -node.EzAvg           # (MV/m)
-                rf_phase = math.degrees(node.phis)    # (deg) RF phase in the middle of the gap
+                e_field =  +node.EzAvg                # (MV/m)
+                rfphdeg =  +math.degrees(node.phis)-30.   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
                 attenuation = arg['attenuation']      # attenuation E-field   (1 usually)
-                etcell = [ 
+                etcell = [
                     number_of_RFQH,
                     energy,
                     beta,
@@ -220,22 +242,23 @@ def call_ALCELI(arg):
                     sp,
                     quad_length,
                     quad_strength,
-                    electric_field,
-                    rf_phase,
+                    e_field,
+                    rfphdeg,
                     accumulated_length,
                     tpp,
                     frequency_MHz,
                     attenuation
                     ]
                 call_CAVSC(dict(file=file,ETCELL=etcell))
-                
                 i = i + 1
+                # call_EMITGR('{}'.format(i),arg,limits)
                 continue
                 
             elif isinstance(node,ELM.D):
                 drift_length = (lattice.seq[i].length)*100 #(cm)
                 call_DRIFT(dict(file=file,length=drift_length))
                 i = i + 1
+                # call_EMITGR('{}'.format(i),arg,limits)
                 continue  
             else:
                 i = i + 1
@@ -247,11 +270,16 @@ def call_FINISH(arg):
     file.close()
 
 if __name__ == '__main__':
+    # lattice
+    lattice  = factory('yml/simuIN.yml')
+    sections = lattice.get_sections()
+    waccept(lattice.first_gap)
+        
     #Hardcoded Parameters
     # The following pararg['title']ameters are not imported and hardcoded a specific value.
     particles           = 3000
     tof_time_adjustment = 0 
-    attenuation_factor  = 1
+    attenuation_factor  = 1.
     c                   = C.c
     pi                  = C.pi    
     m0c2                = C.value('proton mass energy equivalent in MeV')
@@ -259,11 +287,6 @@ if __name__ == '__main__':
     tp1                 = 4.9e-2
     tpp1                = 4.9e-3
     
-    # lattice
-    lattice  = factory('yml/simuIN.yml')
-    sections = lattice.get_sections()
-    waccept(lattice.first_gap)
-        
     # Parameter import
     # Imports all the parameters and converts them to the correct units apart from the accelerating 
     # and transport elements which are imported later on as thier parameters are not global.
@@ -275,16 +298,23 @@ if __name__ == '__main__':
     betay     = PARAMS['betay_i']
     emity     = PARAMS['emity_i']*1E06 # mm*mrad - DYNAC units
     emitw     = PARAMS['emitw_i']      # mm/mrad - DYNAC units
-    rf_phase  = PARAMS['phisoll']
-
-    tkIN   = PARAMS['injection_energy'] # MeV
-    conv   = WConverter(tkIN)
-    phi0   = math.degrees(conv.zToDphi(PARAMS['z0'])) # deg: z --> phase
-    alphaz = 0.
-    emitz  = 180.e3/pi*m0c2*emitw # deg*keV - DYNAC units
-    betaz  = phi0**2/emitz        # deg/keV - DYNAC units
-
-    file = open("dynac.in", "w") 
+    rfphdeg   = PARAMS['phisoll']
+    tkIN      = PARAMS['injection_energy'] # MeV
+    conv      = WConverter(tkIN)
+    alphaz    = 0.
+    # alphaz    = -0.21
+    emitz     = 180.e3/pi*m0c2*emitw # deg*keV - DYNAC units
+    try:
+        phi0  = math.degrees(conv.zToDphi(PARAMS['z0']))    # deg: z --> phase
+        betaz = phi0**2/emitz        # deg/keV - DYNAC units
+    except KeyError:
+        betaz = 1.e-2
+    # emitz    = 629.6 # deg*keV - DYNAC units
+    # betaz    = 0.033 # deg/keV - DYNAC units
+    limits_i = [1., 5., 1., 5., 1., 1.,  20., 1.]
+    # limits_f = limits_i
+    limits_f = [1., 5., 1., 5., 1., 1.,  1000., 10.]
+    file     = open("dynac.in", "w") 
 
     dyn_params = dict(
                 file=             file,
@@ -302,7 +332,7 @@ if __name__ == '__main__':
                 emitz=            emitz,
                 m0c2=             m0c2,
                 tkIN=             tkIN,
-                rf_phase=         rf_phase,
+                rfphdeg=         rfphdeg,
                 nbparticles=      particles,
                 tog=              tof_time_adjustment,
                 attenuation=      attenuation_factor,
@@ -310,18 +340,25 @@ if __name__ == '__main__':
                 pi=               pi,
                 t1=               t1,
                 tp1=              tp1,
-                tpp1=             tpp1
+                tpp1=             tpp1,
+                # REJECT
+                ifw=              1,
+                wdisp=            100,  # MeV
+                wphas=            1000, # deg
+                wx=               5,    # cm
+                wy=               5,    # cm
+                rlim=             5,    # cm
+                # REFCOG
+                ishift=           1,
                 )
-    
-    limits_i = [1., 5., 1., 5., 1., 1.,  20., 1.]
-    limits_f = [1., 5., 5., 1., 3., 3.,  250., 120.]
-
-    # generate dynac.in
+        # generate dynac.in
     call_INTRO (dyn_params)
     call_GEBEAM(dyn_params)
     call_INPUT (dyn_params)
+    # call_REJECT(dyn_params)
+    call_REFCOG(dyn_params)
     call_EMIPRT(dyn_params)
-    call_EMITGR('IN', dyn_params,limits_i)
+    call_EMITGR('IN',dyn_params,limits_i)
     call_ALCELI(dyn_params)
     call_EMITGR('OUT',dyn_params,limits_f)
     call_FINISH(dyn_params)

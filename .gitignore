@@ -19,3 +19,11 @@ Tablplot.log
 TplotPRF.TXT
 figures/
 frames/
+dynac/dynac.*
+!dynac/dynac.in
+dynac/dynac_*
+dynac/beam_*
+dynac/cavdat*
+dynac/emit.*
+dynac/lost_particles.*
+

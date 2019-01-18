@@ -16,16 +16,18 @@ EMITY=1.0e-6            # y emittance in [m*rad]
 
 BETAX=3.3               # tao
 BETAY=0.75              # tao
+BETAX=3.713    # closed
+BETAY=2.501    # closed
 
 ALFAX=0.
 ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
-NCELL=1
 NCELL=5
-NCELL=10
-NCELL=20
-NCELL=23    # dynac limit  80->113 Mev
+# NCELL=20
+# NCELL=23    # dynac limit  80->113 Mev
+# NCELL=54
+# NCELL=85
 # NCELL=40
 # NCELL=60
 # NCELL=80
