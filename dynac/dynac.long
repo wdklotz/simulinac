@@ -1,6 +1,6 @@
 ****** DYNAC V6R19, 14-Jul-2018 *******
  Input file: dynac.in                                                                                                                        
- Started on Fri Jan 18 2019 at 18:12:34
+ Started on Sat Jan 19 2019 at 19:19:24
  ALCELI'                                                                         
  TYPE CODE: GEBEAM **************
   Generate particles based on law            2
@@ -14956,5 +14956,5 @@
                                          STOP on key  : STOP    
 
 
- Stopped on Fri Jan 18 2019 at 18:12:35
+ Stopped on Sat Jan 19 2019 at 19:19:26
 ************************************************************************

@@ -1,6 +1,6 @@
 ****** DYNAC V6R19, 14-Jul-2018 *******
  Input file: dynac.in                                                                                                                        
- Started on Fri Jan 18 2019 at 18:12:34
+ Started on Sat Jan 19 2019 at 19:19:24
  ALCELI'                                                                         
 *****************************************************
   Energies are in [MeV], phases in [deg] lengths in [mm] ,tof in [deg]
@@ -2738,4 +2738,4 @@ STOP card encountered; beam data are:
     2.553      0.905    0.5593   0.82413E+00 mm.mrad (norm)    1.914 (non norm)
 
 
- Stopped on Fri Jan 18 2019 at 18:12:35
+ Stopped on Sat Jan 19 2019 at 19:19:26
