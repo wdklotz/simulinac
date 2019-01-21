@@ -25,7 +25,7 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=5
-# NCELL=20
+NCELL=20
 # NCELL=23    # dynac limit  80->113 Mev
 # NCELL=54
 # NCELL=85

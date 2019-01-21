@@ -227,7 +227,7 @@ def call_ALCELI(arg):
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
                 e_field =  +node.EzAvg                # (MV/m)
-                rfphdeg =  +math.degrees(node.phis)-30.   # (deg) RF phase in the middle of the gap
+                rfphdeg =  -math.degrees(node.phis)   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
                 attenuation = arg['attenuation']      # attenuation E-field   (1 usually)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     # The following pararg['title']ameters are not imported and hardcoded a specific value.
     particles           = 3000
     tof_time_adjustment = 0 
-    attenuation_factor  = 1.
+    attenuation_factor  = 0.1
     c                   = C.c
     pi                  = C.pi    
     m0c2                = C.value('proton mass energy equivalent in MeV')
@@ -313,7 +313,7 @@ if __name__ == '__main__':
     # betaz    = 0.033 # deg/keV - DYNAC units
     limits_i = [1., 5., 1., 5., 1., 1.,  20., 1.]
     # limits_f = limits_i
-    limits_f = [1., 5., 1., 5., 1., 1.,  1000., 10.]
+    limits_f = [1., 5., 1., 5., 1., 1.,  1000., 20.]
     file     = open("dynac.in", "w") 
 
     dyn_params = dict(

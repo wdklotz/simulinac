@@ -149,6 +149,6 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   20-cav/2-quad per cell
-    - [5,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
+    - [20,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
     # - [ 1, SCmarker ]
     
