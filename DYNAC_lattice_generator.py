@@ -227,7 +227,7 @@ def call_ALCELI(arg):
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
                 e_field =  +node.EzAvg                # (MV/m)
-                rfphdeg =  -math.degrees(node.phis)   # (deg) RF phase in the middle of the gap
+                rfphdeg =  +math.degrees(node.phis)-40.   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
                 attenuation = arg['attenuation']      # attenuation E-field   (1 usually)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     # The following pararg['title']ameters are not imported and hardcoded a specific value.
     particles           = 3000
     tof_time_adjustment = 0 
-    attenuation_factor  = 0.1
+    attenuation_factor  = 1.0
     c                   = C.c
     pi                  = C.pi    
     m0c2                = C.value('proton mass energy equivalent in MeV')
@@ -305,15 +305,15 @@ if __name__ == '__main__':
     # alphaz    = -0.21
     emitz     = 180.e3/pi*m0c2*emitw # deg*keV - DYNAC units
     try:
-        phi0  = math.degrees(conv.zToDphi(PARAMS['z0']))    # deg: z --> phase
-        betaz = phi0**2/emitz        # deg/keV - DYNAC units
+        phi0  = math.degrees(conv.zToDphi(PARAMS['z0']))  # deg: z --> phase
+        betaz = phi0**2/emitz                             # deg/keV - DYNAC units
     except KeyError:
-        betaz = 1.e-2
+        betaz = 1.
     # emitz    = 629.6 # deg*keV - DYNAC units
     # betaz    = 0.033 # deg/keV - DYNAC units
-    limits_i = [1., 5., 1., 5., 1., 1.,  20., 1.]
+    limits_i = [1., 5., 1., 5., 1., 1.,  100., 0.05]
     # limits_f = limits_i
-    limits_f = [1., 5., 1., 5., 1., 1.,  1000., 20.]
+    limits_f = [1., 5., 1., 5., 1., 1.,  100., 0.05]
     file     = open("dynac.in", "w") 
 
     dyn_params = dict(

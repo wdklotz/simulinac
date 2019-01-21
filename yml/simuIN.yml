@@ -80,6 +80,10 @@ elements:
         - type:     D            # D class
         - length:   0.06         # [m]
         - sec:      *LE          # is part of section
+    - D1:        &D1             # ID: &alias
+        - type:     D            # D class
+        - length:   0.46         # [m]
+        - sec:      *LE          # is part of section
     - QFL:   &QFL                # ID: &alias
         - type:     QF           # QF classtest0
         - length:   *ql2         # [m]
@@ -120,6 +124,8 @@ segments:
 # HE            # high energy section
     - Dm:
         - *D2
+    - D1:
+        - *D1
     - SEGiL:
         - *QFL
         - *D3
@@ -149,6 +155,7 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   20-cav/2-quad per cell
-    - [20,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
+    # - [_NCELL,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
+    - [85,   SEGiL, D1, Dm, D1, SEGmL, D1, Dm, D1, SEGfL]
     # - [ 1, SCmarker ]
     

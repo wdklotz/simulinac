@@ -2,6 +2,7 @@ TKIN=5.                 # kinetic energy in [Mev]
 TKIN=50.                # kinetic energy in [Mev]
 TKIN=80.                # kinetic energy in [Mev]
 BGRAD=43.150
+# BGRAD=23.150
 
 MAPPING=t3d          # Trace 3D linear map model
 # MAPPING=simple       # Shishlo/Holmes linear map model
@@ -25,10 +26,10 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=5
-NCELL=20
+# NCELL=20
 # NCELL=23    # dynac limit  80->113 Mev
-# NCELL=54
-# NCELL=85
+NCELL=54
+NCELL=85
 # NCELL=40
 # NCELL=60
 # NCELL=80
