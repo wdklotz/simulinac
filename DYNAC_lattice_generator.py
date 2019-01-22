@@ -66,12 +66,49 @@ import math
 import elements as ELM
 from lattice_generator import factory as factory
 from setutil import PARAMS, WConverter, waccept
+from Ez0 import SFdata
+from copy import copy
 
 
 def call_INTRO(arg):
     file = arg['file']
-    file.write("ALCELI'\n") 
-
+    file.write("ALCELI\n") 
+    
+def call_FIELD(arg):
+    ATT           =   arg['attenuation']
+    FH            =   arg['frequency']
+    cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
+    sfdata        =   SFdata(arg['sfdata_file'])
+    sfdtable      =   sfdata._Ez0_tab
+    file_tbl_name =   'field.txt'
+    
+    tmp = []
+    for p in sfdtable:
+        if abs(p.z) > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
+        tmp.append(p)
+    sfdtable = tmp
+    field =   [[p.z*1.e-2,p.Ez*1.e6] for p in sfdtable]   # m, V/m conversion
+    # interpolate end-points
+    x1= field[0][0]
+    x2= field[1][0]
+    y1= field[0][1]
+    y2= field[1][1]
+    dx = -cavlen-x1
+    x3 = x1+dx
+    y3 = (x3-x1)*(y2-y1)/(x2-x1)+y1
+    field.insert(0,(x3,y3))      # [-interval
+    field.append((-x3,y3))       # ]-interval
+    # write field-file
+    with open(file_tbl_name,'w') as field_table:
+        field_table.write('{}\n'.format(FH))
+        for p in field:
+            field_table.write('{:10.4} {:10.4}\n'.format(p[0],p[1]))
+        
+    file = arg['file']
+    file.write("FIELD\n") 
+    file.write('{}\n'.format(file_tbl_name))
+    file.write('{} ; ATT\n'.format(ATT))
+    
 def call_GEBEAM(arg):
     LAW    =   2
     ITWISS =   1
@@ -172,6 +209,19 @@ def call_BUNCHER(arg):
     file = arg['file']
     file.write('BUNCHER\n')
     file.write('{} {} {} {} ; PV PDP PHARM PRLIM\n'.format(PV,PDP,PHARM,PRLIM))
+
+def call_CAVNUM(arg):
+    IDUM      = arg['number']
+    DUMMY     = 0.0
+    DPHASE    = arg['dphase']
+    FFIELD    = 0.0
+    INTRVL    = arg['intrvl']
+    IELEC     = 1    # protons Erest > 1 MeV
+    
+    file = arg['file']
+    file.write('CAVNUM\n')
+    file.write('{} ; IDUM\n'.format(IDUM))
+    file.write('{} {} {} {} {} ; DUMMY DPHASE FFIELD INTRVL IELEC\n'.format(DUMMY, DPHASE, FFIELD, INTRVL, IELEC))
     
 def call_CAVSC(arg):
     ETCELL  = arg['ETCELL']
@@ -227,7 +277,7 @@ def call_ALCELI(arg):
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
                 e_field =  +node.EzAvg                # (MV/m)
-                rfphdeg =  +math.degrees(node.phis)-40.   # (deg) RF phase in the middle of the gap
+                rfphdeg =  +math.degrees(node.phis)   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
                 attenuation = arg['attenuation']      # attenuation E-field   (1 usually)
@@ -249,7 +299,15 @@ def call_ALCELI(arg):
                     frequency_MHz,
                     attenuation
                     ]
-                call_CAVSC(dict(file=file,ETCELL=etcell))
+                # call_CAVSC(dict(file=file, ETCELL=etcell))
+                cavnum_par = dict(
+                    file   = file,
+                    number = number_of_RFQH,
+                    dphase = rfphdeg,
+                    ffield = attenuation,
+                    intrvl = 6
+                    )
+                call_CAVNUM(cavnum_par)
                 i = i + 1
                 # call_EMITGR('{}'.format(i),arg,limits)
                 continue
@@ -311,12 +369,13 @@ if __name__ == '__main__':
         betaz = 1.
     # emitz    = 629.6 # deg*keV - DYNAC units
     # betaz    = 0.033 # deg/keV - DYNAC units
-    limits_i = [1., 5., 1., 5., 1., 1.,  100., 0.05]
+    limits_i = [1., 5., 1., 5., 1., 1.,  40., 0.5]
     # limits_f = limits_i
-    limits_f = [1., 5., 1., 5., 1., 1.,  100., 0.05]
+    limits_f = [1., 5., 1., 5., 1., 1.,  40., 0.5]
     file     = open("dynac.in", "w") 
 
     dyn_params = dict(
+                sfdata_file=      'SF_WDK2g44.TBL',
                 file=             file,
                 lattice=          lattice,
                 sections=         sections,
@@ -332,7 +391,7 @@ if __name__ == '__main__':
                 emitz=            emitz,
                 m0c2=             m0c2,
                 tkIN=             tkIN,
-                rfphdeg=         rfphdeg,
+                rfphdeg=          rfphdeg,
                 nbparticles=      particles,
                 tog=              tof_time_adjustment,
                 attenuation=      attenuation_factor,
@@ -350,9 +409,12 @@ if __name__ == '__main__':
                 rlim=             5,    # cm
                 # REFCOG
                 ishift=           1,
+                # cavities
+                cavlen=           PARAMS['gap'] # m lentgh of cavities
                 )
         # generate dynac.in
     call_INTRO (dyn_params)
+    call_FIELD  (dyn_params)
     call_GEBEAM(dyn_params)
     call_INPUT (dyn_params)
     # call_REJECT(dyn_params)

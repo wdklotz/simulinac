@@ -94,7 +94,7 @@ elements:
     - QDL:   &QDL                # ID: &alias
         - type:     QD           # QD class
         - length:   *ql0         # [m] length
-        - aperture: *p04         # [m] quad bore
+        - aperture: *p04         # [m] quad boreattenuation
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *LE          # is part of section
@@ -155,7 +155,7 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   20-cav/2-quad per cell
-    # - [_NCELL,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
-    - [_NCELL,   SEGiL, D1, Dm, D1, SEGmL, D1, Dm, D1, SEGfL]
+    - [_NCELL,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]
+    # - [_NCELL,   SEGiL, D1, Dm, D1, SEGmL, D1, Dm, D1, SEGfL]
     # - [ 1, SCmarker ]
     
