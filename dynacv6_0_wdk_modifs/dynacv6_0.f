@@ -13285,7 +13285,6 @@
 ! *****     PHRFS(rad):phase RF
 ! *****       common/parmrf/DWRFS,SPHRFS,PHRFS,ngdrf
        logical iesp,irstay,iavp,ispcel,iemgrw
-       CHARACTER cr*1
 !         SHIFT =TRUE: cog and synchronous particle are independent
 !         SHIFT =FALSE: cog and synchronous particle are coinciding
        LOGICAL SHIFT,CHASIT,ITVOL,IMAMIN,DAVE,ICHAES
@@ -13301,10 +13300,7 @@
        NDTL=NDTL+1
        nrres=nrres+1
 ! allow for print out on terminal of gap# on one and the same line
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NDTL,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating gap    :',i5,a1)
+       call PROGRESS(NRTRE,NDTL)
        WRITE(16,*)'ACCELERATING GAP N :',NDTL
        read(IN,*) (etcell(iet),iet=1,16)
        FH=etcell(15)
@@ -15195,14 +15191,10 @@
        COMMON/DAVCOM/dav1(maxcell1,40),davtot,iitem(maxcell1),idav
        COMMON/COMPT/NRRES,NRTRE,NRBUNC,NRDBUN
        CHARACTER*(8) PRLAB
-       CHARACTER cr*1
        logical iesp,ichaes
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *       '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        if (nvf.eq.0) then
 ! horizontal magnetic steerer
          write(16,*) 'Horizontal magnetic steerer: ',fld,' Tm'
@@ -17595,7 +17587,6 @@
 ! ****       common/parmrf/DWRFS,SPHRFS,PHRFS,ngdrf
        logical iesp,ichaes,irstay,iavp,ispcel,ifield,iemgrw
        LOGICAL SHIFT,CHASIT,ITVOL,IMAMIN,DAVE
-       CHARACTER cr*1
 !************************************************************
 !    XESLN : NEGATIVE LENGHT OF THE DRIFT FOLLOWING THE GAP
 !    IF XESLN N.E.0 THEN THE CHARGE SPACE EFFECT IMPLIES THE
@@ -17603,10 +17594,7 @@
        NRRES=NRRES+1
        ncavmc=ncavmc+1
 ! allow for print out on terminal of gap# on one and the same line
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        WRITE(16,*)' CAVITY N :',NRRES
        ilost=0
        aqst=abs(qst)
@@ -21660,7 +21648,6 @@
        common/cgtof/charm(20),cgtdv(20),nbch(20),netac
        COMMON/QSEX/L,KQ2,KS2
        REAL(8) L,KQ2,KS2
-       character cr*1
        dimension trans(2)
        ilost=0
        fprec=epsilon(arg)
@@ -21671,11 +21658,8 @@
          CALL STAPL(davtot*10.)
        endif       
        NRTRE=NRTRE+1
-       cr=char(13)
 ! print out on terminal of transport element # on one and the same line
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        len=1
 !  if itwist=.true. skews the sextupole before misalignments
        sqtwist=0.
@@ -21869,13 +21853,9 @@
        logical itvol,imamin
        REAL(8) L,KQ2,KS2
        dimension trans(1)
-       character cr*1
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        ilost=0
 !   B : GRADIENT IN kG/cm
        b=bquad/rg
@@ -22086,13 +22066,9 @@
        common/cgtof/charm(20),cgtdv(20),nbch(20),netac
        COMMON/QSEX/L,KQ2,KS2
        REAL(8) L,KQ2,KS2
-       character cr*1
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        rgorge=rg
        ilost=0
 !      statistics
@@ -22559,13 +22535,9 @@
        COMMON /BLOC11/ R(6,6), T(6,6,6)
        dimension rs(6,6),rcul(6,6)
        logical iesp,ichaes,shift,ialin,iemgrw
-       character cr*1
 !    print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
 !       read the magnetic field on the disk
        read(25,*) ncord
        if(ncord.eq.0) then
@@ -22793,17 +22765,12 @@
        logical itvol,imamin
 !       dimension rs(6,6),rcul(6,6)
        logical iesp,ichaes,shift,ialin,iemgrw
-       character cr*1
        COMMON/SOLE/L,KL,KO
        REAL(8) L,KL,KO
        fprec=epsilon(KO)
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-! print out on terminal of transport element # on one and the same line
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        write(16,*) ' ****** SOLENOID *********'
 !      PLOT
        IF(IPRF.EQ.1) then
@@ -23089,15 +23056,11 @@
        COMMON/SC3/BEAMC,SCDIST,SCE10,CPLM,ECT,APL,ICHAES,ISCSP
        LOGICAL ICHAES
        logical iesp,shift,ialin,iemgrw
-       character cr*1
        COMMON/SLQ/L,KSO,KQO
        REAL(8) L,KSO,KQO
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
        FH0=FH/VL
 !      PLOT
        IF(IPRF.EQ.1) then
@@ -24011,14 +23974,10 @@
        common/dcspa/iesp
        common/spl/xspl(4000),yspl(4000),s(3000),p(3000),q(3000)
        dimension gam(3000),xe(3000),xpe(3000),ye(3000),ype(3000)
-       character cr*1
        logical flgsc,iesp,ichaes,iemgrw
 !    print out on terminal of transport element # on one and the same line
        nrres=nrres+1
-       cr=char(13)
-       WRITE(6,8254) NRTRE,NRRES
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5)
+       call PROGRESS(NRTRE,NRRES)
        write(6,'(A)') 'EGUN calculation started'
 !  energy at the entrance
        we=0.
@@ -26620,7 +26579,6 @@
        logical itvol,imamin
        REAL(8) L,KQ2,KS2
        dimension trans(1)
-       character cr*1
        ilost=0
 !      statistics
        IF(IPRF.EQ.1) then
@@ -26635,10 +26593,7 @@
      *        ' deg at position: ',e12.5,' cm in lattice')
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
 !  if itwist=.true. skews the quadrupole before misalignments (only if abs(volt) gt 1.e-13)
 !     len = 1 level 1 in rlux routine
        len=1
@@ -26839,7 +26794,6 @@
        logical itvol,imamin,ityq
        REAL(8) L,KQ2,KS2
        dimension trans(1)
-       character cr*1
        ilost=0
        if(ityqu.eq.0) ityq=.true.
        if(ityqu.ne.0) ityq=.false.
@@ -26860,10 +26814,7 @@
      *        ' deg  position in the lattice: ',e12.5,' cm ')
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
 !  if itwist=.true. skews the quadrupole before misalignments (only if abs(arg) gt 1.e-13)
 !     len = 1 level 1 in rlux routine
        len=1
@@ -27138,7 +27089,6 @@
      *  t0tr3d(15)
        logical iesp,ichaes,irstay,iavp,ispcel,ifield,iemgrw
        LOGICAL SHIFT,CHASIT,ITVOL,IMAMIN,DAVE,JELEC
-       CHARACTER cr*1
 !************************************************************
 !    XESLN : NEGATIVE LENGTH OF THE DRIFT FOLLOWING THE GAP
 !    IF XESLN N.E.0 THEN THE CHARGE SPACE EFFECT AFFECTS THE
@@ -28829,7 +28779,6 @@
        common/isector/nsector,nsprint
 ! --------------------------------------
        logical itvol,imamin,ichaes
-       character cr*1
        logical ialin
        dimension xmoy(20),ymoy(20),rmoy(20),rig(20),ncs(20)
        dimension xpmoy(20),ypmoy(20)
@@ -28858,10 +28807,7 @@
        gap=wy
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
 !old       IF(IROT1) WRITE(16,1010) PENT1,RAB1,EK1,EK2,APB(1)
        if(ichaes) then
         write(16,*)'***** beam current: ',beamc,' mA'
@@ -29428,17 +29374,13 @@
        LOGICAL ISEOR,sseor
        common/mcs/imcs,ncstat,cstat(20)
        logical itvol,imamin,ichaes
-       character cr*1
        logical ialin
        dimension xmoy(20),ymoy(20),rmoy(20),rig(20),ncs(20)
        dimension xpmoy(20),ypmoy(20),avbt(20),charge(20),alp(20)
 ! -----------------------------------------------------------------
 ! print out on terminal of transport element # on one and the same line
        NRTRE=NRTRE+1
-       cr=char(13)
-       WRITE(6,8254,advance='no') NRTRE,NRRES,cr
-8254   format('Transport element:',i5,
-     *        '      Accelerating element:',i5,a1)
+       call PROGRESS(NRTRE,NRRES)
 !  ---- save iseor in sseor
         sseor=iseor
 !   iseor = false ---> second ordre transport matrix not available for the deflector
@@ -32343,7 +32285,7 @@ c          evaluate and apply impulse
 !******************************************
 ! added by WDK
 !******************************************
-       SUBROUTINE progress(NRTRE,NRRES)
+       SUBROUTINE PROGRESS(NRTRE,NRRES)
        CHARACTER cr*1
        cr=char(13)
        WRITE(6,8254,advance='no') NRTRE,NRRES,cr
