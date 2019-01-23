@@ -115,7 +115,8 @@ PARAMS = dict(
         alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
         nbof_slices          = 2,                # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
-        mapping              = 'base'            # default rf gap-model      
+        mapping              = 'base',           # default rf gap-model  
+        EzPeak               = 1.4               # [MV/m] cavity field DYNAC's CAVNUM    
         )
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees

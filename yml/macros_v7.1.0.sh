@@ -11,7 +11,7 @@ MAPPING=t3d          # Trace 3D linear map model
 # MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
 # MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
 
-EMITW=1.0e-4            # w emittance in [rad]
+EMITW=1.0e-7            # w emittance in [rad]
 # EMITW=1.0e-7            # w emittance in [rad]
 EMITX=1.0e-6            # x emittance in [m*rad]
 EMITY=1.0e-6            # y emittance in [m*rad]
@@ -26,10 +26,10 @@ ALFAY=0.
 
 PHISY=-30.              # synchronous phase in [deg]
 NCELL=5
-NCELL=20
+NCELL=9
 # NCELL=23    # dynac limit  80->113 Mev
 # NCELL=54
-NCELL=85
+# NCELL=85
 # NCELL=40
 # NCELL=60
 # NCELL=80

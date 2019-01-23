@@ -249,7 +249,7 @@ class SFdata(object):
                 ep.append(Ez)
         zprev = [-x for x in reversed(zp[1:])]
         zp = zprev+zp
-        rprev = [-x for x in reversed(rp[1:])]
+        rprev = [x for x in reversed(rp[1:])]
         rp = rprev+rp
         eprev = [x for x in reversed(ep[1:])]
         ep =eprev+ep

@@ -4659,7 +4659,7 @@
        logical chasit,fromrfq,bindst
        character wfile*80
 !      PRINT OF PARTICLE COORDINATES
-       print*,'prbeam'
+!wdk       print*,'prbeam'
        myfile=''
        ecog=0.
        tcog=0.
@@ -18097,13 +18097,16 @@
        read(20,*)fhc
 !nov02       att=att*(1.+eflvl)
        att=atte
+!wdk       print*,'att',att         !wdk 10E-9 ???
        read(20,*) xspl(1),yspl(1)
        yspl(1)=yspl(1)*att
        xspl(1)=xspl(1)*100.
        fprec=epsilon(xspl(1))
+!wdk       print*,'fprec',fprec     !wdk 2.2E-16
        npt=2
        do 
          read(20,*) xspl(npt),yspl(npt)
+!wdk         print *,xspl(npt),yspl(npt)      !wdk
 !         if (xspl(npt).eq.0.) exit
          if (abs(xspl(npt)).le.fprec) exit
          if (npt.gt.4000) then
@@ -18116,13 +18119,16 @@
          endif  
          xspl(npt)=xspl(npt)*100.
          yspl(npt)=yspl(npt)*att
+!wdk         print *,xspl(npt),yspl(npt)      !wdk
          npt=npt+1
        enddo
        npt=npt-1
 ! **************************************
         tdep=xspl(1)
         do it=1,npt
+         print *,xspl(it),yspl(it)      !wdk
          xspl(it)=xspl(it)-tdep
+!wdk        print*,tdep,xspl(it)
         enddo
 ! **************************************
        call deriv2(npt)

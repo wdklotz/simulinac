@@ -135,21 +135,21 @@ def instanciate_element(item):
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
         mapping   = PARAMS['mapping']
+        EzPeak    = get_mandatory(attributes,"EzPeak",label)
+        EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
-            EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
             EzAvg = PARAMS[fname].EzAvg
             instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
-            instance['EzPeak'] = EzPeak
             pass
         else:
-            EzAvg     = get_mandatory(attributes,"EzAvg",label)
             instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
-            instance['EzPeak'] = None
+        instance['EzAvg']    = EzAvg
+        instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
         instance['fRF']      = fRF
@@ -167,21 +167,21 @@ def instanciate_element(item):
         dWf       = FLAGS['dWf']
         length    = get_mandatory(attributes,'length',label)
         mapping   = PARAMS['mapping']
+        EzPeak    = get_mandatory(attributes,"EzPeak",label)
+        EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
-            EzPeak    = get_mandatory(attributes,"EzPeak",label)
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
             EzAvg = PARAMS[fname].EzAvg
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
-            instance['EzPeak'] = EzPeak
             pass
         else:
-            EzAvg     = get_mandatory(attributes,"EzAvg",label)
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
-            instance['EzPeak'] = None
+        instance['EzAvg']    = EzAvg
+        instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
         instance['fRF']      = fRF

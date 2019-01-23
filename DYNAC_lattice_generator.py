@@ -78,31 +78,37 @@ def call_FIELD(arg):
     ATT           =   arg['attenuation']
     FH            =   arg['frequency']
     cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
+    EzPeak        =   arg['ezpeak']        # Mv/m
     sfdata        =   SFdata(arg['sfdata_file'])
     sfdtable      =   sfdata._Ez0_tab
     file_tbl_name =   'field.txt'
     
     tmp = []
     for p in sfdtable:
-        if abs(p.z) > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
+        if p.z < 0. or p.z > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
         tmp.append(p)
     sfdtable = tmp
-    field =   [[p.z*1.e-2,p.Ez*1.e6] for p in sfdtable]   # m, V/m conversion
+    for i in sfdtable:
+        print(i)
+    field =   [[p.z*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable[1:]]   # z[m], EzPeak[V/m]
     # interpolate end-points
-    x1= field[0][0]
-    x2= field[1][0]
-    y1= field[0][1]
-    y2= field[1][1]
-    dx = -cavlen-x1
-    x3 = x1+dx
-    y3 = (x3-x1)*(y2-y1)/(x2-x1)+y1
-    field.insert(0,(x3,y3))      # [-interval
-    field.append((-x3,y3))       # ]-interval
+    # x1= field[0][0]
+    # x2= field[1][0]
+    # y1= field[0][1]
+    # y2= field[1][1]
+    # dx = -cavlen-x1
+    # x3 = x1+dx
+    # y3 = (x3-x1)*(y2-y1)/(x2-x1)+y1
+    # field.insert(0,(x3,y3))      # [-interval
+    # field.append((-x3,y3))       # ]-interval
     # write field-file
+    # for i in field:
+    #     print('{:10.4} {:10.4}'.format(i[0],i[1]))
     with open(file_tbl_name,'w') as field_table:
         field_table.write('{}\n'.format(FH))
         for p in field:
             field_table.write('{:10.4} {:10.4}\n'.format(p[0],p[1]))
+        field_table.write('{:10.4} {:10.4}\n'.format(0.,0.))
         
     file = arg['file']
     file.write("FIELD\n") 
@@ -214,7 +220,7 @@ def call_CAVNUM(arg):
     IDUM      = arg['number']
     DUMMY     = 0.0
     DPHASE    = arg['dphase']
-    FFIELD    = 0.0
+    FFIELD    = arg['ffield']
     INTRVL    = arg['intrvl']
     IELEC     = 1    # protons Erest > 1 MeV
     
@@ -276,7 +282,7 @@ def call_ALCELI(arg):
                 sp = 0.                               # dummy variable, not used in DYNAC
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
-                e_field =  +node.EzAvg                # (MV/m)
+                EzAvg  = node['EzAvg']                # (MV/m)
                 rfphdeg =  +math.degrees(node.phis)   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
@@ -292,7 +298,7 @@ def call_ALCELI(arg):
                     sp,
                     quad_length,
                     quad_strength,
-                    e_field,
+                    EzAvg,
                     rfphdeg,
                     accumulated_length,
                     tpp,
@@ -304,8 +310,8 @@ def call_ALCELI(arg):
                     file   = file,
                     number = number_of_RFQH,
                     dphase = rfphdeg,
-                    ffield = attenuation,
-                    intrvl = 6
+                    intrvl = 6,
+                    ffield = 0.
                     )
                 call_CAVNUM(cavnum_par)
                 i = i + 1
@@ -371,9 +377,10 @@ if __name__ == '__main__':
     # betaz    = 0.033 # deg/keV - DYNAC units
     limits_i = [1., 5., 1., 5., 1., 1.,  40., 0.5]
     # limits_f = limits_i
-    limits_f = [1., 5., 1., 5., 1., 1.,  40., 0.5]
+    limits_f = [1., 5., 1., 5., 1., 1.,  75., 1.]
     file     = open("dynac.in", "w") 
 
+##dync_params
     dyn_params = dict(
                 sfdata_file=      'SF_WDK2g44.TBL',
                 file=             file,
@@ -410,7 +417,8 @@ if __name__ == '__main__':
                 # REFCOG
                 ishift=           1,
                 # cavities
-                cavlen=           PARAMS['gap'] # m lentgh of cavities
+                cavlen=           PARAMS['gap'], # m lentgh of cavities
+                ezpeak=           PARAMS['EzPeak']  # Mv/m
                 )
         # generate dynac.in
     call_INTRO (dyn_params)
