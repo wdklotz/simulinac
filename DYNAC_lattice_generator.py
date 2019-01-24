@@ -74,6 +74,47 @@ def call_INTRO(arg):
     file = arg['file']
     file.write("ALCELI\n") 
     
+def call_FIELD_T(arg):   # E.Tanke's Vorschlag
+    def shift(field,z0):
+        f = [[p[0]+z0,p[1]] for p in field]
+        return f
+    ATT           =   arg['attenuation']
+    FH            =   arg['frequency']
+    cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
+    EzPeak        =   arg['ezpeak']        # Mv/m
+    sfdata        =   SFdata(arg['sfdata_file'])
+    sfdtable      =   sfdata._Ez0_tab
+    file_tbl_name =   'field.txt'
+    
+    tmp = []
+    for p in sfdtable:
+        if abs(p.z) > (cavlen+1.e-4)*1.e2: continue
+        tmp.append(p)
+    sfdtable = tmp
+    field    =   [[p.z*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable[1:]]   # z[m], EzPeak[V/m]
+
+    z0 =  field[-1][0]
+    field0 = shift(field,z0)
+    field = field0
+    z0=2*z0
+    for i in range(9):
+        field0 = shift(field0,z0)
+        field  = field + field0
+
+    # write field-file
+    for i in field:
+        print('{:10.5}[m] {:10.5}[V/m]'.format(i[0],i[1]))
+    with open(file_tbl_name,'w') as field_table:
+        field_table.write('{}\n'.format(FH))
+        for p in field:
+            field_table.write('{:10.4} {:10.4}\n'.format(p[0],p[1]))
+        field_table.write('{:10.4} {:10.4}\n'.format(0.,0.))
+        
+    file = arg['file']
+    file.write("FIELD\n") 
+    file.write('{}\n'.format(file_tbl_name))
+    file.write('{} ; ATT\n'.format(ATT))
+
 def call_FIELD(arg):
     ATT           =   arg['attenuation']
     FH            =   arg['frequency']
@@ -85,10 +126,12 @@ def call_FIELD(arg):
     
     tmp = []
     for p in sfdtable:
-        if p.z < 0. or p.z > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
+        # if p.z < 0. or p.z > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
+        if abs(p.z) > (cavlen+1.e-4)*1.e2: continue
         tmp.append(p)
     sfdtable = tmp
-    field =   [[p.z*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable[1:]]   # z[m], EzPeak[V/m]
+    z0 = sfdtable[0].z
+    field = [[(p.z-z0)*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable]   # z[m], EzPeak[V/m]
 
     # interpolate end-points
     # x1= field[0][0]
@@ -102,8 +145,8 @@ def call_FIELD(arg):
     # field.append((-x3,y3))       # ]-interval
 
     # write field-file
-    for i in field:
-        print('{:10.5}[m] {:10.5}[V/m]'.format(i[0],i[1]))
+    # for i in field:
+    #     print('{:10.5}[m] {:10.5}[V/m]'.format(i[0],i[1]))
     with open(file_tbl_name,'w') as field_table:
         field_table.write('{}\n'.format(FH))
         for p in field:
@@ -390,9 +433,9 @@ if __name__ == '__main__':
         betaz = 1.
     # emitz    = 629.6 # deg*keV - DYNAC units
     # betaz    = 0.033 # deg/keV - DYNAC units
-    limits_i = [1., 5., 1., 5., 1., 1.,  40., 0.5]
+    limits_i = [1., 1., 1., 1., 1., 1.,  10., 1.]
     # limits_f = limits_i
-    limits_f = [35., 35., 35., 35., 35., 35.,  75., 1.]
+    limits_f = [1., 1., 1., 1., 1., 1.,  10., 1.]
     file     = open("dynac.in", "w") 
 
 ##dync_params
@@ -437,20 +480,20 @@ if __name__ == '__main__':
                 # PROFGR
                 idwdp=            0,
                 iscale=           0,
-                xlim=             30.,
-                ylim=             30.,
-                zlim=             70.,
-                distmin=          0.
+                xlim=             0.5,   # cm
+                ylim=             0.5,   # cm
+                zlim=             7.,    # deg
+                distmin=          1.e-2
                 )
         # generate dynac.in
     call_INTRO (dyn_params)
-    call_FIELD  (dyn_params)
     call_GEBEAM(dyn_params)
     call_INPUT (dyn_params)
     # call_REJECT(dyn_params)
     call_REFCOG(dyn_params)
     call_EMIPRT(dyn_params)
     call_EMITGR('IN',dyn_params,limits_i)
+    call_FIELD (dyn_params)
     call_ALCELI(dyn_params)
     call_EMITGR('OUT',dyn_params,limits_f)
     call_PROFGR('OUT',dyn_params)

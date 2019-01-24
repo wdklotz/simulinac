@@ -18126,9 +18126,9 @@
 !wdk         xspl(it)=xspl(it)-tdep
 !wdk        enddo
 ! **************************************
-        do it=1,npt                                     !wdk
-           print *,xspl(it),'[cm]',yspl(it),'[MV/cm]'   !wdk
-        enddo                                           !wdk
+!wdk        do it=1,npt                                     !wdk
+!wdk           print *,xspl(it),'[cm]',yspl(it),'[MV/cm]'   !wdk
+!wdk        enddo                                           !wdk
        call deriv2(npt)
        xpas=(xspl(3)-xspl(2))/part
        xcour=xspl(1)

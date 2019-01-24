@@ -11,7 +11,7 @@ MAPPING=t3d          # Trace 3D linear map model
 # MAPPING=ttf          # Shishlo/Holmes three point TTF RF gap-model
 # MAPPING=dyn          # Tanke/Valero DYNAC RF gap-model
 
-EMITW=1.0e-6            # w emittance in [rad]
+EMITW=1.0e-5            # w emittance in [rad]
 # EMITW=1.0e-7            # w emittance in [rad]
 EMITX=1.0e-6            # x emittance in [m*rad]
 EMITY=1.0e-6            # y emittance in [m*rad]
