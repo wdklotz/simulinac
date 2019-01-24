@@ -88,9 +88,8 @@ def call_FIELD(arg):
         if p.z < 0. or p.z > cavlen*1.e2: continue  # trimm 1/2-interval to 1/2-cavlen
         tmp.append(p)
     sfdtable = tmp
-    for i in sfdtable:
-        print(i)
     field =   [[p.z*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable[1:]]   # z[m], EzPeak[V/m]
+
     # interpolate end-points
     # x1= field[0][0]
     # x2= field[1][0]
@@ -101,9 +100,10 @@ def call_FIELD(arg):
     # y3 = (x3-x1)*(y2-y1)/(x2-x1)+y1
     # field.insert(0,(x3,y3))      # [-interval
     # field.append((-x3,y3))       # ]-interval
+
     # write field-file
-    # for i in field:
-    #     print('{:10.4} {:10.4}'.format(i[0],i[1]))
+    for i in field:
+        print('{:10.5}[m] {:10.5}[V/m]'.format(i[0],i[1]))
     with open(file_tbl_name,'w') as field_table:
         field_table.write('{}\n'.format(FH))
         for p in field:
@@ -197,6 +197,21 @@ def call_EMITGR(title,arg,limits):
     file.write('{} {} ; IDWDP RMSMTP\n'.format(IDWDP,RMSMTP))
     file.write('{} {} {} {} {} {} {} {} ; XLIM1,...YLIM4\n'.format(XLIM1,YLIM1,XLIM2,YLIM2,XLIM3,YLIM3,XLIM4,YLIM4))
 
+def call_PROFGR(title,arg):
+    IDWDP    = arg['idwdp']
+    ISCALE   = arg['iscale']
+    XLIM     = arg['xlim']
+    YLIM     = arg['ylim']
+    ZLIM     = arg['zlim']
+    DISTMIN  = arg['distmin']
+    
+    file = arg['file']
+    file.write('PROFGR\n')
+    file.write('{}\n'.format(title))
+    file.write('{} {} ; IDWDP ISCALE\n'.format(IDWDP,ISCALE))
+    file.write('{} {} {} {} ; XLIM YLIM ZLIM DISTMIN\n'.format(XLIM,YLIM,ZLIM,DISTMIN))
+    
+    
 def call_QUAD(arg):
     XL    = arg['eff_length']
     BQ    = arg['pole_field']
@@ -377,7 +392,7 @@ if __name__ == '__main__':
     # betaz    = 0.033 # deg/keV - DYNAC units
     limits_i = [1., 5., 1., 5., 1., 1.,  40., 0.5]
     # limits_f = limits_i
-    limits_f = [1., 5., 1., 5., 1., 1.,  75., 1.]
+    limits_f = [35., 35., 35., 35., 35., 35.,  75., 1.]
     file     = open("dynac.in", "w") 
 
 ##dync_params
@@ -418,7 +433,14 @@ if __name__ == '__main__':
                 ishift=           1,
                 # cavities
                 cavlen=           PARAMS['gap'], # m lentgh of cavities
-                ezpeak=           PARAMS['EzPeak']  # Mv/m
+                ezpeak=           PARAMS['EzPeak'],  # Mv/m
+                # PROFGR
+                idwdp=            0,
+                iscale=           0,
+                xlim=             30.,
+                ylim=             30.,
+                zlim=             70.,
+                distmin=          0.
                 )
         # generate dynac.in
     call_INTRO (dyn_params)
@@ -431,6 +453,7 @@ if __name__ == '__main__':
     call_EMITGR('IN',dyn_params,limits_i)
     call_ALCELI(dyn_params)
     call_EMITGR('OUT',dyn_params,limits_f)
+    call_PROFGR('OUT',dyn_params)
     call_FINISH(dyn_params)
 
 

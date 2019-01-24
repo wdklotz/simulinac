@@ -67,6 +67,7 @@ parameters:
     - n_sigma:              4           # [m] sigma aperture
     - aperture:             *p04        # [m] global aperture setting (default = None)
     - mapping:              _MAPPING    # rf gap-model
+    - EzPeak:               1.4         # Ez-peak for DYNAC field.txt
 #...........................................................................................
 ## ELEMENT definitions
 

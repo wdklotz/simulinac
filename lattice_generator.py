@@ -334,6 +334,7 @@ def factory(input_file):
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
         if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
+        if 'EzPeak'           in parameters: PARAMS['EzPeak']           = parameters['EzPeak']
 
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']

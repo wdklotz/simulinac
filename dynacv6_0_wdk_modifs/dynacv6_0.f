@@ -18097,7 +18097,6 @@
        read(20,*)fhc
 !nov02       att=att*(1.+eflvl)
        att=atte
-!wdk       print*,'att',att         !wdk 10E-9 ???
        read(20,*) xspl(1),yspl(1)
        yspl(1)=yspl(1)*att
        xspl(1)=xspl(1)*100.
@@ -18106,7 +18105,6 @@
        npt=2
        do 
          read(20,*) xspl(npt),yspl(npt)
-!wdk         print *,xspl(npt),yspl(npt)      !wdk
 !         if (xspl(npt).eq.0.) exit
          if (abs(xspl(npt)).le.fprec) exit
          if (npt.gt.4000) then
@@ -18119,18 +18117,18 @@
          endif  
          xspl(npt)=xspl(npt)*100.
          yspl(npt)=yspl(npt)*att
-!wdk         print *,xspl(npt),yspl(npt)      !wdk
          npt=npt+1
        enddo
        npt=npt-1
 ! **************************************
-        tdep=xspl(1)
-        do it=1,npt
-         print *,xspl(it),yspl(it)      !wdk
-         xspl(it)=xspl(it)-tdep
-!wdk        print*,tdep,xspl(it)
-        enddo
+!wdk        tdep=xspl(1)
+!wdk        do it=1,npt
+!wdk         xspl(it)=xspl(it)-tdep
+!wdk        enddo
 ! **************************************
+        do it=1,npt                                     !wdk
+           print *,xspl(it),'[cm]',yspl(it),'[MV/cm]'   !wdk
+        enddo                                           !wdk
        call deriv2(npt)
        xpas=(xspl(3)-xspl(2))/part
        xcour=xspl(1)

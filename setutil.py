@@ -116,7 +116,7 @@ PARAMS = dict(
         nbof_slices          = 2,                # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
         mapping              = 'base',           # default rf gap-model  
-        EzPeak               = 1.4               # [MV/m] cavity field DYNAC's CAVNUM    
+        EzPeak               = 2.0               # [MV/m] cavity field DYNAC's CAVNUM    
         )
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
