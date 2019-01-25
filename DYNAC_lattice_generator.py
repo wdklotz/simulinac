@@ -479,11 +479,11 @@ if __name__ == '__main__':
                 ezpeak=           PARAMS['EzPeak'],  # Mv/m
                 # PROFGR
                 idwdp=            0,
-                iscale=           0,
+                iscale=           1,
                 xlim=             0.5,   # cm
                 ylim=             0.5,   # cm
                 zlim=             7.,    # deg
-                distmin=          1.e-2
+                distmin=          0.01
                 )
         # generate dynac.in
     call_INTRO (dyn_params)
