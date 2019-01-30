@@ -326,8 +326,11 @@ class Functions(object):
         for i in range(len(names)):
             nmap[names[i]] = i   # {name:i}..... 
         self._nmap = nmap
-    def append(self,abszisse,ordinate):
-        value = (abszisse,*ordinate)
+    def append(self,abszisse,ordinaten):
+        value = [abszisse]
+        for ord in iter(ordinaten):
+            value.append(ord)
+        value = tuple(value)
         self._values.append(value)
         self._points += 1
     @property
@@ -444,9 +447,9 @@ def waccept(node):
                 psi      = psi,         # separatrix: bunch length [rad]
                 omgl0    = omgl0,       # synchrotron oscillation [Hz]
                 # {z(x)Dp2p}
-                betaz    = betaz,       # twiss beta [m]
+                betaz    = betaz,       # twiss beta [m/rad]
                 gammaz   = gammaz,      # twiss gamma [1/m]
-                emitz    = emitz,       # emittance in {z,dp/p} space [m]
+                emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
                 Dp2pmx   = Dp2pmx,      # max D/p on separatrix
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
@@ -458,6 +461,7 @@ def waccept(node):
         PARAMS['emitz']   = emitz
         PARAMS['betaw']   = betaw
         PARAMS['betaz']   = betaz
+        PARAMS['alfaz']   = 0.0
         PARAMS['DWmx']    = DWmx
         PARAMS['wmx']     = wmx
         PARAMS['psi']     = psi

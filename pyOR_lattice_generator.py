@@ -23,63 +23,69 @@ from math import degrees
 import warnings
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
-from setutil import FLAGS,PARAMS,DEBUG
+from setutil import FLAGS,PARAMS,DEBUG,waccept
 from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
 
 # DEBUG
-import pprint
-import inspect
-PP = pprint.PrettyPrinter(indent=4).pprint
-def lineno():
-   # return (inspect.getframeinfo(inspect.currentframe()).filename,inspect.currentframe().f_lineno)
-   return inspect.currentframe().f_back.f_lineno
-def DEBUG(line,arg):
-    if isinstance(arg,str):
-        print('DEBUG[{}]: '.format(line)+arg)
-    elif isinstance(arg,(tuple,list,dict)):
-        print('DEBUG[{}]: '.format(line))
-        for i in arg:
-            PP(i)
-    else:
-        print('DEBUG[{}]: '.format(line)+repr(arg))
 def DEBUG_ON(*args):
     DEBUG(*args)
 def DEBUG_OFF(*args):
     pass
 
 DEBUG_GEN    = DEBUG_OFF
-DEBUG_GEN(lineno(),dir())
+# DEBUG_GEN(lineno(),dir())
 
-
-def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
+def generator(dir='yml', file='simuIN', ext='yml', EzFile=None):
     input   = '{}/{}.{}'.format(dir,file,ext)
     output  = '{}/{}.{}'.format('.','lattice','xml')
 
+    # lattice and longitudinal paramters at entrance
     lattice = factory(input)
+    waccept(lattice.first_gap)
 
     root_da   = XmlDataAdaptor(name='Alceli')
-    sections  = lattice.get_sections()       #sections is [section-1,...,section-N]
+    sections  = lattice.get_sections() #sections is [section-1,...,section-N]
 
-    # transfer a selection of PARAMS to xml-lattice
-    exclude_keys = ['mapset','sollteilchen','sections','wellenlänge','elementarladung','electron_mass','n_coil']
-    parameters = PARAMS.copy()
-    for key in exclude_keys:
-        del parameters[key]
+    # transfer a selection of parameters to <PARAMS/>-tag
+    parameter = dict(
+            clight           = PARAMS['lichtgeschwindigkeit'],# [m/s]
+            proton_mass      = PARAMS['proton_mass'],         # MeV
+            # EzAvg            = PARAMS['EzAvg'],               # [MV/m]
+            gap              = PARAMS['gap'],                 # [m]
+            cavity_laenge    = PARAMS['cavity_laenge'],       # [m]
+            # phisoll          = PARAMS['phisoll'],             # [deg]
+            frequenz         = PARAMS['frequenz'],            # [Hz]
+            injection_energy = PARAMS['injection_energy'],    # [MeV]
+            emitx_i          = PARAMS['emitx_i'],             # [m*rad]
+            emity_i          = PARAMS['emity_i'],             # [m*rad]
+            emitz_i          = PARAMS['emitz'],               # [m*rad]
+            betax_i          = PARAMS['betax_i'],             # [m/rad]
+            betay_i          = PARAMS['betay_i'],             # [m/rad]
+            betaz_i          = PARAMS['betaz'],               # [m/rad]
+            alfax_i          = PARAMS['alfax_i'],             # []
+            alfay_i          = PARAMS['alfay_i'],             # []
+            alfaz_i          = PARAMS['alfaz'],               # []
+            lattice_version  = PARAMS['lattice_version'],
+            z0               = PARAMS['z0'],                  # [m]
+                     )
     params_dict_da = root_da.createChild('PARAMS')
-    for key in parameters:
-        params_dict_da.setValue(key,PARAMS[key])
+    for key in parameter:
+        value = parameter[key]
+        params_dict_da.setValue(key,value)
+
+    print('-----XmlGenerator for pyOrbit -----\n{}'.format(root_da.makeXmlText()))
+    print('wait...')
 
     # loop over sections
     for section in sections:
         if len(section.seq) == 0: continue
-        # sec      = section.get_name()    *legacy*
-        sec      = section.name
+        sec      = "S"+section.name
         sec_da   = root_da.createChild(sec)
         sec_da.setValue('length',section.length)
-        DEBUG_GEN(lineno(),'section: {}, length: {}'.format(sec,section.length))
         sec_da.setValue('name',sec)
+        DEBUG_GEN('sec_da: {}'.format(sec_da.makeXmlText()))
         cavs_da  = sec_da.createChild('Cavities')
         gap_cnt  = 0
         quad_cnt = 0
@@ -125,7 +131,7 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
                     # phiSoll = degrees(node.phis) + 180. # pyOrbit's soll phase ~135 [deg]!
                     phiSoll = degrees(node.phis)
                     E0L  = node.EzAvg*node.gap*1.e-3   # pyOrbit [Gev]
-                    E0TL = E0L*node.tr                 # use this when energy is adjusted
+                    E0TL = E0L*node.ttf                # use this when energy is adjusted
                     E0TL = E0L*0.8575                  # some reasonable(?) average
                     aperture = node.aperture
                     name = '{}:{}'.format('pillbox',gap_cnt)
@@ -164,17 +170,13 @@ def generator(dir='yml', file='ref_run', ext='yml', EzFile=None):
                     cavity_da.setValue('pos', sm)
                 else:
                     pass
+            DEBUG_GEN('accelm_da: {}'.format(accelm_da.makeXmlText()))
 
-    DEBUG_GEN(lineno(),'root_da.makeXmlText()\n'+root_da.makeXmlText())
     root_da.writeToFile(output)
-    print('----------------------------XmlGenerator for pyOrbit -----')
     print('Input from file ==> {}'.format(input))
     print('Result in  file ==> {}'.format(output))
     return
 
 if __name__ == '__main__':
     EzFile = './SF_WDK2g44.TBL'
-    # aperture = PARAMS['quad_bore_radius']
-    file = 'orbit'
-    file = 'simuIN'
-    generator(EzFile = EzFile, file = file)
+    generator(EzFile = EzFile)
