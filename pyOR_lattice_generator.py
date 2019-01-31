@@ -61,6 +61,7 @@ def generator(dir='yml', file='simuIN', ext='yml', EzFile=None):
             emitx_i          = PARAMS['emitx_i'],             # [m*rad]
             emity_i          = PARAMS['emity_i'],             # [m*rad]
             emitz_i          = PARAMS['emitz'],               # [m*rad]
+            emitw_i          = PARAMS['emitw_i'],             # [rad]
             betax_i          = PARAMS['betax_i'],             # [m/rad]
             betay_i          = PARAMS['betay_i'],             # [m/rad]
             betaz_i          = PARAMS['betaz'],               # [m/rad]
