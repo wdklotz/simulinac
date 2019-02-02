@@ -40,116 +40,244 @@ flags:
 ## SECTION definitions
 
 sections:
-     # - [&LE 5/25 , &HE 25/200]
-     - [&LE 5/25]
+     - [&LE 5to25 , &HE 25to200]
 #...........................................................................................
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 80.       # [MeV] energy @ entrance (injection)
-    - emitx_i:      &emx    1.0e-6      # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.0e-6      # [m*rad] {y,y'} emittance @ entrance
-    - emitw_i:      &emw    1.0e-5      # [rad] {Dphi,w} emittance @ entrance
+    - Tkin:                 25.       # [MeV] energy @ injection
+    - DT2T:                 2.e-3       # delta-T/T kinetic energy spread @ injection
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
     - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
-    - betay_i:      &bty    0.75      # [m] twiss beta @ entrance y
-    - phi_sync:     &phs    -30.      # [deg] synchronous phase
-    - alfax_i:              0.      # [1] twiss alpha x @ entrance
-    - alfay_i:              0.      # [1] twiss alpha y @ entrance
-    - frequency:    &p01    800.e+6     # [Hz] frequency
-    # - ql0:        &p02    0.04        # [m] quad-length
-    # - ql1:        &p03    0.02        # [m] 1/2 quad-length
-    - ql0:          &ql0    0.02        # [m] quad-length
-    - ql2:          &ql2    0.01        # [m] 1/2 quad-length
+    - betay_i:      &bty    0.55      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    -25.      # [deg] synchronous phase
+    - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfay_i:              0.          # [1] twiss alpha y @ entrance
+    - frequency:    &p01    816.e+6     # [Hz] frequency
+    - ql0:          &p02    0.04        # [m] quad-length
+    - ql:           &p03    0.02        # [m] 1/2 quad-length
     - quad_bore:    &p04    0.011       # [m] quad bore radius
-    # - quad_bore:  &p04    0.006       # [m] quad bore radius
     - windings:             30          # [1] quad-coil windings
     - gap:          &p15    0.046       # [m] RF gap
-    - n_sigma:              4           # [m] sigma aperture
-    - aperture:             *p04        # [m] global aperture setting (default = None)
-    - mapping:              t3d    # rf gap-model
+    - n_sigma:              10          # [m] sigma aperture
+    - aperture:             15.e-3      # [m] global aperture setting (default = None)
+    - mapping:              base
 #...........................................................................................
 ## ELEMENT definitions
 
 elements:
-# LE
-    - D2:        &D2             # ID: &alias
-        - type:     D            # D class
-        - length:   0.140        # [m]
-        - sec:      *LE          # is part of section
+# HE
     - D3:        &D3             # ID: &alias
         - type:     D            # D class
-        - length:   0.06         # [m]
-        - sec:      *LE          # is part of section
-    - QFL:   &QFL                # ID: &alias
-        - type:     QF           # QF classtest0
-        - length:   *ql2         # [m]
+        # - type:     SIXD       # SIXD class
+        - length:   0.03         # [m]
+        - sec:      *HE          # is part of section
+    - D5:    &D5                 # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.023        # [m] half cavity
+        - sec:      *HE          # is part of section
+    - D10:    &D10                 # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.100        # [m]
+        - sec:      *HE          # is part of section
+    - QFH:   &QFH                # ID: &alias
+        - type:     QF           # QF class
+        - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
-        - B':       &Bgrad   43.150 # [T/m] quadrupole gradient
+        # - B':       &Bgrad   40. # [T/m] quadrupole gradient
+        - B':       &Bgrad   30. # [T/m] quadrupole gradient
+        # - B':       &Bgrad   38.8 # [T/m] quadrupole gradient  (zero RF)
+        # - B':       &Bgrad   34.5 # [T/m] quadrupole gradient  (zero RF)
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        - sec:      *LE          # is part of section
-    - QDL:   &QDL                # ID: &alias
+        - sec:      *HE          # is part of section
+    - QDH:   &QDH                # ID: &alias
         - type:     QD           # QD class
-        - length:   *ql0         # [m] length
+        - length:   *p02         # [m] length
         - aperture: *p04         # [m] quad bore
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        - sec:      *LE          # is part of section
-    - RFC:  &RFCL                # ID: &alias
-        - type:     RFC          # RFC cavity class
+        - sec:      *HE          # is part of section
+    - RFGHx:    &RFGHx           # replacement of RFG by D
+        - type:     D            # replacement of RFG by D
+        - length:   0.0          # replacement of RFG by D
+        - sec:      *HE          # replacement of RFG by D
+    - RFGH:  &RFGH               # ID: &alias
+        - type:     RFG          # RFG class
+        # - EzAvg:    2.87         # [MV/m] average E-field on axis
         - EzAvg:    1.00         # [MV/m] average E-field on axis
+        # - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
-        - gap:      *p15         # [m] gap length
-        - length:   *p15         # [m] cavity length
-        - aperture: *p04         # [m] quad bore
+        - gap:      *p15         # [m] length
+        # - aperture: *p04         # [m] quad bore
+        - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        - sec:      *LE          # is part of section
-    - SC:  &SCm                    # ID: &alias
-        - type:      MRK           # MRK class
-        - prefix:    frames        # prefix for directory holding saved frames
-        - sec:       *LE           # is part of section
-        - action:    scatter       # make a poincare scatter plot
-        - abscissa:  z             # horizontal axis
-        - ordinate:  zp            # vertical axis
+        # - mapping:   t3d         # Trace 3D linear map model
+        # - mapping:   simple      # Shishlo/Holmes linear map model
+        # - mapping:   base        # Shishlo/Holmes base map model
+        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+        # - mapping:   dyn         # Tanke/Valero RF gap-model
+        - sec:      *HE          # is part of section
+    - RFCH:  &RFCH               # ID: &alias
+        - type:     RFC          # RFC class
+        - EzAvg:    2.31         # [MV/m] average E-field on axis
+        - PhiSync:  *phs         # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      *p15         # [m] gap length
+        - aperture: *p04         # [m] quad bore
+        - length:   0.044        # [m] cavity length
+        - sec:      *HE          # is part of section
+    - M:  &Mrkr                  # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            # - sigma_x          # action hoeizontal sigma
+            # - sigma_y          # action vertical sigma
+            # - Tkin             # action kinetic energy
+            - show_elli          # action twiss ellipses
+        - sec:     *HE
+    - A:  &Apr                   # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            - check_aperture     # action aperture check
+        - sec:     *HE
+    - F:  &Foil                  # ID: &alias
+        - type:    MRK           # MRK class
+        - actions:
+            - poincare           # action aperture check
+        - sec:     *HE
 #...........................................................................................
 ## SEGMENT definitions
 
 segments:
-# LE            # low energy section
+# LE            # empty section
 # HE            # high energy section
-    - Dm:
-        - *D2
-    - SEGiL:
-        - *QFL
+    - SEG1H:
+        - *QFH
         - *D3
-    - SEGfL:
+    - SEG2H:
         - *D3
-        - *QFL
-    - SEGmL:
+        - *QDH
         - *D3
-        - *QDL
+    - SEG3H:
         - *D3
-    - RFCAVL:
-        - *RFCL      # 1
-        - *RFCL      # 2
-        - *RFCL      # 3
-        - *RFCL      # 4
-        - *RFCL      # 5
-        - *RFCL      # 6
-        - *RFCL      # 7
-        - *RFCL      # 8
-        - *RFCL      # 9
-        - *RFCL      # 10
-    - SCmarker:
-        - *SCm
+        - *QFH
+    - RFGH:
+        - *D5     # 1st cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 2nd cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 3rd cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 4th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 5th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 6th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 7th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 8th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 9th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 10th cavity
+        - *RFGH
+        - *D5
+        #
+        - *D10    # 10cm Gap for vacuum or diagnostics between groups of ten cavities
+        #
+        - *D5     # 11th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 12th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 13th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 14th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 15th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 16th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 17th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 18th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 19th cavity 
+        - *RFGH
+        - *D5
+        #
+        - *D5     # 20th cavity 
+        - *RFGH
+        - *D5
+        #
+        #
+    - RFCAVH:
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+        - *RFCH
+    - MARK:
+        - *Foil
 #...........................................................................................
 ## LATTICE definition
 
 lattice:
     # title is MANDATORY!
-    - title:   20-cav/2-quad per cell
-    # - [ 1, SCmarker ]
-    - [40,   SEGiL, RFCAVL, Dm, RFCAVL, SEGmL, RFCAVL, Dm, RFCAVL, SEGfL]    # cavities
-    # - [ 1, SCmarker ]
-    
+    - title:   29.01.19_pyO
+    # - [_NCELL,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    - [100,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
+    # - [ 1,   MARK]

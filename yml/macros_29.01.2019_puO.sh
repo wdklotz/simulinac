@@ -1,4 +1,5 @@
-TKIN=25.                # kinetic energy in [Mev]
+T=25.                   # kinetic energy in [Mev]
+DT2T=2.e-3              # delta-T/T
 
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]
@@ -13,7 +14,8 @@ NCELL=100
 
 MAP=base
 
-ARGS="-D _TKIN=$TKIN"
+ARGS="-D _TKIN=$T"
+ARGS="$ARGS -D _DT2T=$DT2T"
 ARGS="$ARGS -D _EMITW=$EMITW"
 ARGS="$ARGS -D _EMITX=$EMITX"
 ARGS="$ARGS -D _EMITY=$EMITY"

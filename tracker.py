@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a3'
+___version___='v7.1.3a4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -385,10 +385,10 @@ def tracker(options):
     # gather for print
     tracker_log = {}
     tracker_log['tkin.......[MeV]'] = tkin
-    tracker_log["sigma(x,x')_i.....([m,rad])"] = (sigma_x,sigma_xp)
-    tracker_log["sigma(y,y')_i.....([m,rad])"] = (sigma_y,sigma_yp)
-    tracker_log["sigma(Dphi,w)_i....([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log["sigma(z,Dp2p)_i......([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
+    tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
+    tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
     tracker_log['betax_i......[m]'] = betax_i
     tracker_log['betay_i......[m]'] = betay_i
     tracker_log['betaw_i....[rad]'] = betaw
@@ -402,6 +402,7 @@ def tracker(options):
     tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
     tracker_log['lattice version......'] = PARAMS['lattice_version']
     tracker_log['mapping..............'] = PARAMS['mapping']
+    tracker_log['DT/T.................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory

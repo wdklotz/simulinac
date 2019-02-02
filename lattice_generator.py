@@ -328,13 +328,14 @@ def factory(input_file):
         if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture'] 
         if 'emitx_i'          in parameters: PARAMS['emitx_i']          = parameters['emitx_i']
         if 'emity_i'          in parameters: PARAMS['emity_i']          = parameters['emity_i']
-        if 'emitw_i'          in parameters: PARAMS['emitw_i']          = parameters['emitw_i']
         if 'betax_i'          in parameters: PARAMS['betax_i']          = parameters['betax_i']
         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
         if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
+        if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
 
+        PARAMS['lamb']           = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters

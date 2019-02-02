@@ -1,4 +1,11 @@
 """
+Version v7.1.3a4
+*) updated documents in doc-dir
+*) longitudinal phase space now initialized by DT/T kinetic energy spread
+*) new SUMMARY print-out
+*) helper: bmParams.py to calculate longitudinal parameters for comparisons
+"""
+"""
 Version v7.1.3
 *) corection of oxal-map for wrong formulas in S&H paper
 

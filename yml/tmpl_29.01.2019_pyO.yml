@@ -28,7 +28,7 @@ flags:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     # - sigma:        False           # {True} beam sizes by sigma-matrix
-    - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # - periodic:     True            # {False} treat lattice as ring
     # - express:      True            # {False} use express version of thin quads
     # - useaper:      True            # {False} use aperture check for lattice elements
@@ -45,10 +45,10 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 _TKIN       # [MeV] energy @ entrance (injection)
+    - Tkin:                 _TKIN       # [MeV] energy @ injection
+    - DT2T:                 _DT2T       # delta-T/T kinetic energy spread @ injection
     - emitx_i:      &emx    _EMITX      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    _EMITY      # [m*rad] {y,y'} emittance @ entrance
-    - emitw_i:      &emw    _EMITW      # [rad] {Dphi,w} emittance @ entrance
     - betax_i:      &btx    _BETAX      # [m] twiss beta @ entrance x
     - betay_i:      &bty    _BETAY      # [m] twiss beta @ entrance y
     - phi_sync:     &phs    _PHISY      # [deg] synchronous phase

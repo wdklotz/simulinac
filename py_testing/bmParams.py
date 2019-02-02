@@ -6,39 +6,42 @@ from setutil import tblprnt,dictprnt
 import scipy.constants as C
 
 # Vorgaben
-# freq [Hz], W [Mev}, emitw [rad], DW2W=delta-W/W []
+# freq [Hz], T [Mev}, emitw [rad], DT2T=delta-T/T [%]
 freq  = 816.0e6
-W     = 25
-emitw = 1.e-6
-DW2W  = 1.e-2
+T     = 25
+emitw = 6.56e-6
+DT2T  = 2.e-1
 
 # ------------------------------------
+DT2T   = DT2T*1.e-2    # [%] -> [1]
 clight = C.c
 m0c2   = C.value('proton mass energy equivalent in MeV')
 lamb   = clight/freq       # wavelength
-gamma  = 1.+W/m0c2         # gamma lorentz
+gamma  = 1.+T/m0c2         # gamma lorentz
 gabe   = sqrt(gamma**2-1.) # gamma*beta lorentz
 beta   = gabe/gamma        # beta lorentz
 bela   = beta*lamb         # beta*lambda
-Dgamma = (gamma-1.)*DW2W   # delta-gamma==w
+Dgamma = (gamma-1.)*DT2T   # delta-gamma==w
 sigphi = emitw/Dgamma
 z      =-bela/(2.*pi)*sigphi # [m]
+Dp2p   = 1./(gabe*beta)*Dgamma
 
 dicto = {}
 # * means Vorgabe
-dicto['frequency: f[Hz]*']                 = freq
-dicto['kinetic energy: W[MeV]*']           = W
-dicto['emittance{phi-w}: emitw[rad]*']     = emitw
-dicto['kin.energy spread=deltaW/W: DW2W*'] = DW2W
-dicto['gamma Lorentz']                     = gamma
-dicto['beta Lorentz']                      = beta
-dicto['wavelength: lamb[m]']               = lamb
-dicto['sigma_phase: sigphi[rad]']          = sigphi
-dicto['sigma_z: z[m]']                     = z
-dicto['sigma_e=w=deltaW/m0c2: Dgamma']     = Dgamma
+dicto['frequency [Hz]*']               = '{:8.3e} freq'.format(freq)
+dicto['kinetic energy T [MeV]*']       = '{:8.3e} T'.format(T)
+dicto['emit{phi-w} [rad]*']            = '{:8.3e} emitw'.format(emitw)
+dicto['delta-T/T spread*']             = '{:8.3e} DT2T'.format(DT2T)
+dicto['gamma Lorentz']                 = '{:8.3e} gamma'.format(gamma)
+dicto['beta Lorentz']                  = '{:8.3e} beta'.format(beta)
+dicto['wavelength [m]']                = '{:8.3e} lamb'.format(lamb)
+dicto['phi spread [rad]']              = '{:8.3e} Dphi'.format(sigphi)
+dicto['z spread [m]']                  = '{:8.3e} bunch'.format(z)
+dicto['w spread']                      = '{:8.3e} Dgamma, dE/E0'.format(Dgamma)
+dicto['Dp/p spread']                   = '{:8.3e} Dp2p'.format(Dp2p)
 
 
-print(dictprnt(dicto,"parameter for BMAD"))
+print(dictprnt(dicto,"parameter for BEAM Input"))
 
 
 

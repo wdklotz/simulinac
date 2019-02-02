@@ -107,7 +107,6 @@ PARAMS = dict(
         n_sigma              = 3,                # nboff beam sigmas to stay clear of aperture
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
-        emitw_i              = 0.2e-6,           # [rad] Vorgabe emittance entrance
         betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
         betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
@@ -115,7 +114,8 @@ PARAMS = dict(
         alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
         nbof_slices          = 2,                # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
-        mapping              = 'base'            # default rf gap-model      
+        mapping              = 'base',           # default rf gap-model      
+        DT2T                 = 1.e-3             # default kinetic energy spread  (T a.k.a W)
         )
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
@@ -377,7 +377,7 @@ def waccept(node):
         node: the 1st rf-gap at the linac entrance
     """
     if node is not None and FLAGS['dWf'] == 1:
-        emitw_i   = PARAMS['emitw_i']    # [rad]
+        DT2T      = PARAMS['DT2T']
         E0T       = node.EzAvg*node.ttf  # [MV/m]
         particle  = node.particle
         phis      = node.phis            # [rad]
@@ -390,8 +390,8 @@ def waccept(node):
         tkin      = particle.tkin
         conv      = WConverter(tkin)
 
-        # large amplitude oscillations (T.Wangler pp. 175)
-        # NOTE: w == Dgamma == normalized energy deviation
+        # LARGE amplitude oscillations (T.Wangler pp. 175)
+        # NOTE: w = Dgamma = DW/moc2 = normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
         wmx  = 2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis
         try:
@@ -406,15 +406,21 @@ def waccept(node):
         phi_2 = 2.*phis            # [rad] Naehrung T.Wangler pp.178
         psi   = 3.*fabs(phis)      # [rad]
 
-        # small amplitude oscillations (T.Wangler pp.184)
+        # SMALL amplitude oscillations (T.Wangler pp.184)
         omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
         omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
-        # {Dphi,w}-space   
-        # NOTE: emitw_i = Dphi0*w0 = w0root*Dphi0**2  [rad]
+        # Calulation of longitudinal parameters:
+        #     *) Vorgabe ist delta-T/T (DT2T) kinetic energy spread
+        #     *) daraus w0 als energy spread normiert auf m0c2.
+        #     *) w0root ist der Wurzelaudruck in Wangler's Formel
+        #     *) Dphi0 forlt aus DT2T und w0root
+        #     *) emittanz folgt als Produkt von Dphi0*w0
+        #     *) {Dphi,w}-space: emitw = Dphi0*w0 [rad]
+        w0       = (gamma-1.)*DT2T
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
-        Dphi0    = sqrt(emitw_i/w0root)     # delta-phase-intersect
-        w0       = w0root*Dphi0             # w-intersect 
-        betaw    = emitw_i/w0**2            # beta twiss
+        Dphi0    = (gamma-1.)/w0root*DT2T    # delta-phase-intersect
+        emitw    = Dphi0*w0
+        betaw    = emitw/w0**2            # beta twiss
         gammaw   = 1./betaw                 # gamma twiss
 
         # longitudinal acceptance check (always done)
@@ -426,17 +432,14 @@ def waccept(node):
                 'waccept()')
 
         # {z,dp/p}-space
-        # z0       = -Dphi0*beta*lamb/(2.*pi)        # z [m]
-        # Dp2p0    = w0/(beta*beta*gamma)            # delta-p/p
-        # emitz    = -z0*Dp2p0                       # emittance {z,Dp/p} [m]
-        # betaz    = emitz/Dp2p0**2                  # beta [m]
-        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw_i,betaw))
+        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-#todo: use y2,y3 from Twiss or not needed? Acceptance is correct like this!
+#todo: use y2,y3 from Twiss or not needed? Acceptance is correct lbeta twissike this!
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
-                # {Dphi(x)w}
+                # {Dphi,w}
+                emitw    = emitw,       # emittance{Dphi,w} [rad]
                 betaw    = betaw,       # beta twiss [rad]
                 gammaw   = gammaw,      # gamma twiss [1/rad]
                 wmx      = wmx,         # separatrix: max w
@@ -446,7 +449,7 @@ def waccept(node):
                 phi_2    = phi_2,       # separatrix: max neg. phase
                 psi      = psi,         # separatrix: bunch length [rad]
                 omgl0    = omgl0,       # synchrotron oscillation [Hz]
-                # {z(x)Dp2p}
+                # {z,Dp2p}
                 betaz    = betaz,       # twiss beta [m/rad]
                 gammaz   = gammaz,      # twiss gamma [1/m]
                 emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
@@ -455,9 +458,10 @@ def waccept(node):
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
                 Dp2pAcceptance = Dp2pAcceptance,
                 zAcceptance    = zAcceptance,
-                # {Dphi(x)DW}
+                # {Dphi,DW}
                 DWmx      = DWmx)       # separatrix: max W in [MeV]
 
+        PARAMS['emitw'] = emitw
         PARAMS['emitz']   = emitz
         PARAMS['betaw']   = betaw
         PARAMS['betaz']   = betaz
@@ -468,6 +472,7 @@ def waccept(node):
         PARAMS['phi_2']   = phi_2
         PARAMS['phi_1']   = phi_1
         PARAMS['Dp2p0']   = Dp2p0
+        PARAMS['Dphi0']   = Dphi0
         PARAMS['z0']      = z0
         PARAMS['omgl0']   = omgl0
         PARAMS['Dp2pmx']  = Dp2pmx
@@ -479,7 +484,7 @@ def waccept(node):
         alfaw = 0. # always for longitudinal
         twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
         twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw_i'])
+        tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw'])
         twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
         PARAMS['twiss_x_i'] = twx
         PARAMS['twiss_y_i'] = twy
@@ -638,7 +643,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['useaper']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
-    SUMMARY['wavelength [cm]']                 =  PARAMS['wellenlänge']*1.e2
+    SUMMARY['wavelength* [cm]']                 =  PARAMS['lamb']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
@@ -646,28 +651,24 @@ def collect_data_for_summary(lattice):
     SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
     SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
     SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-    SUMMARY["emit{x,x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
-    SUMMARY["emit{y,y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-    SUMMARY['emit{Dphi,w} [mrad]']             =  '{:8.2e}'.format(PARAMS['emitw_i']*1.e3)
+    SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
+    SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
+    SUMMARY['emit{phi-w}* [rad]']              =  '{:8.2e}'.format(PARAMS['emitw'])
+    SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
+    SUMMARY['(w)i spread']                     =  '{:8.2e} delta-gamma, dE/E0'.format(PARAMS['w0'])
     
     if FLAGS['dWf'] == 1:
-        SUMMARY['separatrix: DW*   [MeV]']         =  '{:8.2e}'.format(PARAMS['DWmx'])
-        SUMMARY['separatrix: w*      [%]']         =  '{:8.2e}'.format(PARAMS['wmx']*1.e2)
-        SUMMARY['separatrix: Dphi* [deg]']         =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-        SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-        SUMMARY['(sig-Dp/p)i* [%]']                =  '{:8.2e}'.format(PARAMS['Dp2p0']*1.e2)
-        SUMMARY['(sigz)i*    [cm]']                =  '{:8.2e}'.format(abs(PARAMS['z0'])*1.e2)
+        SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmx'])
+        SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmx']*1.e2)
+        SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
+        SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmx']*100.)
+        SUMMARY['emit{z-Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
+        SUMMARY['(Dp/p)i spread*']                 =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
+        SUMMARY['(phi)i spread* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
+        SUMMARY['(z)i spread*    [m]']             =  '{:8.2e} bunch'.format(abs(PARAMS['z0']))
         SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
-        SUMMARY['Dp/p-max on separatrix [%]']      =  PARAMS['Dp2pmx']*100.
     else:
-        SUMMARY['separatrix: DW*   [MeV]']         =  '{}'.format('NO acceleration')
-        SUMMARY['separatrix: w*      [%]']         =  '{}'.format('NO acceleration')
-        SUMMARY['separatrix: Dphi* [deg]']         =  '{}'.format('NO acceleration')
-        SUMMARY['emit{z,Dp/p}*  [mm]']             =  '{}'.format('NO acceleration')
-        SUMMARY['(sig-Dp/p)i* [%]']                =  '{}'.format('NO acceleration')
-        SUMMARY['(sigz)i*    [cm]']                =  '{}'.format('NO acceleration')
-        SUMMARY['sync.oscillation* [MHz]']         =  '{}'.format('NO acceleration')
-        SUMMARY['Dp/p-max on separatrix [%]']      =  '{}'.format('NO acceleration') 
+        SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
 
 def I0(x):
@@ -1041,8 +1042,8 @@ def test3():
     plt.show()
 
 if __name__ == '__main__':
-    # test0()
+    test0()
     # test1()
-    # test2()
+    test2()
     test3()
 

@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a3'
+___version___='v7.1.3a4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -294,14 +294,20 @@ def simulation(filepath):
     # full accelerator: initial values, etc...
     lattice.cell(closed = FLAGS['periodic'])
 
+    # collect results
+    collect_data_for_summary(lattice)
+
     # results
     kv_only = FLAGS['KVout']
     if kv_only: 
-        dictprnt(PARAMS,text='PARAMS',njust=1)
+        kv = {}
+        for key in PARAMS:
+            kv[key] = PARAMS[key]
+        for key in SUMMARY:
+            kv[key] = SUMMARY[key]
+        dictprnt(kv,text='KV',njust=1)
     else:
         steps = 10
-        # collect results
-        collect_data_for_summary(lattice)
         # show summary
         dictprnt(SUMMARY,text='summary')
         # generate lattice plot
