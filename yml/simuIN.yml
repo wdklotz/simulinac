@@ -45,7 +45,7 @@ sections:
 ## INPUT parameter definitions
 
 parameters:
-    - Tkin:                 25.       # [MeV] energy @ injection
+    - Tkin:                 50.       # [MeV] energy @ injection
     - DT2T:                 2.e-3       # delta-T/T kinetic energy spread @ injection
     - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
     - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance

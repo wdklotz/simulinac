@@ -8,8 +8,8 @@ import scipy.constants as C
 # Vorgaben
 # freq [Hz], T [Mev}, emitw [rad], DT2T=delta-T/T [%]
 freq  = 816.0e6
-T     = 25
-emitw = 6.56e-6
+T     = 50
+emitw = 1.34e-5
 DT2T  = 2.e-1
 
 # ------------------------------------

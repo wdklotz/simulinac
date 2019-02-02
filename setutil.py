@@ -391,7 +391,7 @@ def waccept(node):
         conv      = WConverter(tkin)
 
         # LARGE amplitude oscillations (T.Wangler pp. 175)
-        # NOTE: w = Dgamma = DW/moc2 = normalized energy deviation
+        # w = Dgamma = DW/moc2 is normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
         wmx  = 2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis
         try:
@@ -399,8 +399,9 @@ def waccept(node):
         except ValueError as ex:
             print('No energy acceptance at 1st gap! Maybe wrong frequency?')
             raise ex
-        DWmx = wmx*m0c2       # [MeV] DW on separatrix (DE = DT == DW)
-        # NOTE: Dp2pmx = gamma/(gamma*gamma-1)*wmx # Dp/p on separatrix
+        # [MeV] DW on separatrix (DE = DT a.k.a. DW)
+        DWmx = wmx*m0c2       
+        # Dp/p on separatrix, Dp2pmx = gamma/(gamma*gamma-1)*Dwmx
         Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
         phi_1 = -phis              # [rad]
         phi_2 = 2.*phis            # [rad] Naehrung T.Wangler pp.178
@@ -421,7 +422,7 @@ def waccept(node):
         Dphi0    = (gamma-1.)/w0root*DT2T    # delta-phase-intersect
         emitw    = Dphi0*w0
         betaw    = emitw/w0**2            # beta twiss
-        gammaw   = 1./betaw                 # gamma twiss
+        gammaw   = 1./betaw               # gamma twiss
 
         # longitudinal acceptance check (always done)
         if wmx <= w0:
@@ -431,7 +432,7 @@ def waccept(node):
                 UserWarning,'setutil.py',
                 'waccept()')
 
-        # {z,dp/p}-space
+        # {z-dp/p}-space
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
 #todo: use y2,y3 from Twiss or not needed? Acceptance is correct lbeta twissike this!
@@ -461,7 +462,7 @@ def waccept(node):
                 # {Dphi,DW}
                 DWmx      = DWmx)       # separatrix: max W in [MeV]
 
-        PARAMS['emitw'] = emitw
+        PARAMS['emitw']   = emitw
         PARAMS['emitz']   = emitz
         PARAMS['betaw']   = betaw
         PARAMS['betaz']   = betaz

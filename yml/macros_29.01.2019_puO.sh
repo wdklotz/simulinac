@@ -1,4 +1,4 @@
-T=25.                   # kinetic energy in [Mev]
+T=50.                   # kinetic energy in [Mev]
 DT2T=2.e-3              # delta-T/T
 
 EMITX=1.e-6             # x emittance in [m*rad]

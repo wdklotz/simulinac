@@ -395,7 +395,7 @@ def tracker(options):
     tracker_log['betaz_i..[m/rad]'] = betaz
     tracker_log['emitx_i......[m]'] = emitx_i
     tracker_log['emity_i......[m]'] = emity_i
-    tracker_log['emitw_i....[rad]'] = (emitw, wmx)
+    tracker_log['emitw_i......[rad]'] = (emitw, wmx)
     tracker_log['emitz_i......[m]'] = emitz
     tracker_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
     tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
