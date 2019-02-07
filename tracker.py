@@ -297,7 +297,7 @@ def track(lattice,bunch,options):
                 progress(tx)
                 
     live = nbpart - lbunch.nbofparticles()
-    print('TRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
+    print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
 
 def track_soll(lattice):
