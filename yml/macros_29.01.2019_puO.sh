@@ -10,7 +10,7 @@ BETAY=0.55              # twiss beta x in [m]
 
 PHISY=-25.              # synchronous phase in [deg]
 
-NCELL=100
+NCELL=10
 
 MAP=base
 

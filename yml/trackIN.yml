@@ -279,5 +279,5 @@ lattice:
     # title is MANDATORY!
     - title:   29.01.19_pyO
     # - [_NCELL,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [100,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
+    - [10,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
     # - [ 1,   MARK]

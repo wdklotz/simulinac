@@ -198,7 +198,7 @@ def progress(tx):
     """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
-    print('{}\r'.format(res),end='')
+    print('\r{}'.format(res),end="")
 
 xlim_max  = ylim_max   = zlim_max  = 10.e-3
 xplim_max = yplim_max  = zplim_max = 10.e-3
@@ -326,7 +326,7 @@ def tracker(options):
     print('-----------------------track_bunch with {} particles---'.format(npart))
 
     # !!FIRST!! make lattice
-    t0       = time.clock()
+    t0       = time.process_time()
     filepath = options['input_file']
     lattice  = factory(filepath)
 
@@ -339,7 +339,7 @@ def tracker(options):
     waccept(lattice.first_gap)
     tkin     = PARAMS['sollteilchen'].tkin
     conv     = WConverter(tkin)
-    t1       = time.clock()
+    t1       = time.process_time()
 
     # pull more options
     show     = options['show']
@@ -416,22 +416,22 @@ def tracker(options):
 
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
-    t2 = time.clock()
+    t2 = time.process_time()
     track_soll(lattice)  # <----- track soll
-    t3 = time.clock()
+    t3 = time.process_time()
     progress(('(track design)', '(track bunch)', '', ''))
     live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
-    t4 = time.clock()
+    t4 = time.process_time()
 
     # make 2D projections
     if show:
         print('FILL PLOTS')
         projections(live_lost)
-    t5 = time.clock()
+    t5 = time.process_time()
     if save:
         print('SAVE FRAMES')
         frames(lattice, skip)
-    t6 = time.clock()
+    t6 = time.process_time()
     if losses:
         print('SHOW LOSSES')
         loss_plot(lattice,live_lost)
