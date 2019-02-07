@@ -30,11 +30,11 @@ This file is part of the SIMULINAC code
 import sys
 import os
 # import subprocess
-from math import sqrt
+#from math import sqrt
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
+#from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG,DEBUG_ON,DEBUG_OFF,Twiss
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
@@ -60,22 +60,22 @@ def display0(*args):
     z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)]
     sgx   = [sigma_fun(i,'sigmax') for i in range(sigma_fun.nbpoints)]
     sgy   = [sigma_fun(i,'sigmay') for i in range(sigma_fun.nbpoints)]
-    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
+#    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
     #-------------------- trajectories (tz)
     tz=  [cos_like(i,'s')     for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')    for i in range(cos_like.nbpoints)]
-    cxp= [cos_like(i,'cxp')   for i in range(cos_like.nbpoints)]
+#    cxp= [cos_like(i,'cxp')   for i in range(cos_like.nbpoints)]
     cy=  [cos_like(i,'cy')    for i in range(cos_like.nbpoints)]
-    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
-    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
-    cdw= [cos_like(i,'cdw')   for i in range(cos_like.nbpoints)]
+#    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
+#    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
+#    cdw= [cos_like(i,'cdw')   for i in range(cos_like.nbpoints)]
 
     sx=  [sin_like(i,'sx')    for i in range(sin_like.nbpoints)]
-    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
+#    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
     sy=  [sin_like(i,'sy')    for i in range(sin_like.nbpoints)]
-    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
-    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
-    sdw= [sin_like(i,'sdw')   for i in range(sin_like.nbpoints)]
+#    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
+#    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
+#    sdw= [sin_like(i,'sdw')   for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox  = 5                  # stop viseo plot after so many [m]
     stop_viseoy  = 5                  # stop viseo plot after so many [m]
@@ -84,7 +84,7 @@ def display0(*args):
     vis_ordinate = [lat_plot(i,'viseo') for i in range(lat_plot.nbpoints)]
     #-------------------- figure frame
     width=14; height=7.6
-    fig = plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
 
     #-------------------- transverse X
     splot=plt.subplot(211)
@@ -131,24 +131,24 @@ def display1(*args):
     lat_plot  = args[3]
     ape_plot  = args[4]
     #-------------------- sigma functions
-    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
+#    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
     z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
     sgx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
     sgy   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
     #-------------------- trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
-    cxp= [cos_like(i,'cxp')*1.e3   for i in range(cos_like.nbpoints)]
+#    cxp= [cos_like(i,'cxp')*1.e3   for i in range(cos_like.nbpoints)]
     cy=  [cos_like(i,'cy')*1.e3    for i in range(cos_like.nbpoints)]
-    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
+#    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
     cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
     cdw= [cos_like(i,'cdw')        for i in range(cos_like.nbpoints)]
 
     z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
     sx=  [sin_like(i,'sx')*1.e3    for i in range(sin_like.nbpoints)]
-    sxp= [sin_like(i,'sxp')*1.e3   for i in range(sin_like.nbpoints)]
+#    sxp= [sin_like(i,'sxp')*1.e3   for i in range(sin_like.nbpoints)]
     sy=  [sin_like(i,'sy')*1.e3    for i in range(sin_like.nbpoints)]
-    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
+#    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
     sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
     sdw= [sin_like(i,'sdw')        for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
@@ -163,7 +163,7 @@ def display1(*args):
     #-------------------- figure frame
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
-    fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=True)
+    plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
 
     #-------------------- transverse X tracks
     splot=plt.subplot(311)

@@ -337,6 +337,9 @@ class Functions(object):
     def nbpoints(self):
         return self._points
     @property
+    def fnames(self):
+        return self._nmap
+    @property
     def nbfunctions(self):
         return len(self._nmap)-1
     def __getitem__(self,n):

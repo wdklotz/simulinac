@@ -749,23 +749,22 @@ def test1():
     # cl,sl = lattice.cs_traj(steps=100)sK
     disp = lattice.dispersion(steps=100,closed=True)
     # plots
-    s  = [x[Ktw.s]  for x in beta_fun]    # abzisse s
-    xs = [x[Ktw.bx] for x in beta_fun]    # betax(s)
-    ys = [x[Ktw.by] for x in beta_fun]    # betay(s)
+    s  = [beta_fun(i,'s')  for i in range(beta_fun.nbpoints)]
+    xs = [beta_fun(i,'bx') for i in range(beta_fun.nbpoints)]
+    ys = [beta_fun(i,'by') for i in range(beta_fun.nbpoints)]
     sd = [x[0] for x in disp]             # abszisse s
     ds = [x[1] for x in disp]             # dispersion(s)
     #-------------------- lattice viseo
     lat_plot, ape_plot = lattice.lattice_plot_functions()
-    vsbase = -1.
-    vis_abzisse  = [x[0] for x in lat_plot]
-    vis_ordinate = [x[1]+vsbase for x in lat_plot]
-    vzero        = [vsbase   for x in lat_plot]      # zero line
+    vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
+    vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
 
     plot(s,xs,label='betax')
     plot(s,ys,label='betay')
     plot(sd,ds,label='disp')
-    plot(vis_abzisse,vis_ordinate,label='',color='black')
-    plot(vis_abzisse,vzero,color='black')
+    plot(vis_abszisse,vis_ordinate,label='',color='black')
+    plot(vis_abszisse,vzero,color='black')
     legend(loc='upper left')
     show()
 
@@ -787,4 +786,4 @@ def test3():
 if __name__ == '__main__':
     test1()
     test2()
-    test3()
+#    test3()

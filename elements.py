@@ -53,7 +53,7 @@ class DictObject(object):
     def __setitem__(self,k,v):
         self._params[k] = v
 
-# The mother of all lattice elements (a.k.a. matrices)
+#------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(DictObject, object):
     """ Base class for transfer matrices
         i)   owns its particle instance (copy)
@@ -564,11 +564,13 @@ class RFG(I):
 
         self['viseo'] = 0.25
         # makes the T3D matrix default for RFG
-        self.t3d_g    = _T3D_G(self)
+        self.t3d_g     = _T3D_G(self)
+        self.gap_model = self.t3d_g
 
         """ set switch to gap model """
         if self.mapping == 't3d':
             # Trace3D-matrix and use linear gap-model
+            pass
             self.gap_model = self.t3d_g
         elif self.mapping == 'simple' or self.mapping == 'base':
             # PyOrbit gap-models w/o SF-data
@@ -585,7 +587,7 @@ class RFG(I):
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
             print("RFG is a kick-model and does not work with 'dyn'-mapping!",flush=True)
-            exit(1)
+#            exit(1)
             
     def adjust_energy(self, tkin):
         _params = self._params
@@ -702,6 +704,7 @@ class RFC(I):
             self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
             # in case off ... (really needed ?)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
+            self._particlef = kick.particlef
             DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
@@ -1670,8 +1673,8 @@ def test11():
     print('thin lense tests ...')
     k0     =  1.
     length =  2.
-    qf     =  QFth(k0 = k0, length = length)
-    qd     =  QDth(k0 = k0, length = length)
+    qf     =  QFth(k0 = k0)
+    qd     =  QDth(k0 = k0)
     rf     =  RFC(length = length)
     print(qf.string())
     print('soll-particle@QFT\n'+qf.particle.string())
@@ -1738,7 +1741,7 @@ def test14():
     print('\n', qf0.__dict__)
     print('\n', qd0.__dict__)
 
-# main ----------
+#------main ----------
 if __name__ == '__main__':
     FLAGS['verbose'] = 3
     test0()
