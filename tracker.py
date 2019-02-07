@@ -200,18 +200,19 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('\r{}'.format(res),end="")
 
-xlim_max  = ylim_max  = 10.e-3
-xplim_max = yplim_max = 10.e-3
-zlim_max  = 100.e-3
-zplim_max = 100.e-3
-limit = sqrt(xlim_max*xlim_max+xplim_max*xplim_max+ylim_max*ylim_max+yplim_max*yplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
+xlim_max  = ylim_max  =  10.e-3
+xplim_max = yplim_max =  10.e-3
+zlim_max  = zplim_max = 100.e-3
+limit     = \
+    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
 def track_node(node,particle,options):
     """
     Tracks a particle through a node
     """
     def norm(track):
-        track_norm = sqrt(track[0]*track[0]+track[1]*track[1]+track[2]*track[2]+track[3]*track[3]+track[4]*track[4]+track[5]*track[5])
+        track_norm = \
+        sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
         return track_norm > limit
     
     track   = particle.track
@@ -386,25 +387,25 @@ def tracker(options):
 
     # gather for print
     tracker_log = {}
-    tracker_log['tkin.......[MeV]'] = tkin
+    tracker_log['T-kin.......[MeV]']          = tkin
     tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
     tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
     tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
     tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i......[m]'] = betax_i
-    tracker_log['betay_i......[m]'] = betay_i
-    tracker_log['betaw_i....[rad]'] = betaw
-    tracker_log['betaz_i..[m/rad]'] = betaz
-    tracker_log['emitx_i......[m]'] = emitx_i
-    tracker_log['emity_i......[m]'] = emity_i
-    tracker_log['emitw_i......[rad]'] = (emitw, wmx)
-    tracker_log['emitz_i......[m]'] = emitz
-    tracker_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
-    tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
-    tracker_log['lattice version......'] = PARAMS['lattice_version']
-    tracker_log['mapping..............'] = PARAMS['mapping']
-    tracker_log['DT/T.................'] = PARAMS['DT2T']
+    tracker_log['betax_i......[m]']           = betax_i
+    tracker_log['betay_i......[m]']           = betay_i
+    tracker_log['betaw_i....[rad]']           = betaw
+    tracker_log['betaz_i..[m/rad]']           = betaz
+    tracker_log['emitx_i........[m]']         = emitx_i
+    tracker_log['emity_i........[m]']         = emity_i
+    tracker_log['emitw_i,wmx..[rad]']         = (emitw, wmx)
+    tracker_log['emitz_i........[m]']         = emitz
+    tracker_log['Dp2p,Dp2pmx..[%]']           = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    tracker_log['acceptance Dp2p...[%]']      = PARAMS['Dp2pAcceptance']*1.e2
+    tracker_log['accpetance z.....[mm]']      = PARAMS['zAcceptance']*1.e3
+    tracker_log['lattice version......']      = PARAMS['lattice_version']
+    tracker_log['mapping..............']      = PARAMS['mapping']
+    tracker_log['DT/T-kin.............']      = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
@@ -458,6 +459,7 @@ def test0(filepath):
     last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 
+#----------------main------------
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
