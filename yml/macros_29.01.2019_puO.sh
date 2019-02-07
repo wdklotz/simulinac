@@ -1,5 +1,5 @@
 T=50.                   # kinetic energy in [Mev]
-DT2T=2.e-3              # delta-T/T
+DT2T=6.0e-3             # delta-T/T kinetic%magic
 
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]

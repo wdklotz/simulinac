@@ -200,8 +200,8 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('\r{}'.format(res),end="")
 
-xlim_max  = ylim_max   = zlim_max  = 10.e-3
-xplim_max = yplim_max  = zplim_max = 10.e-3
+xlim_max  = ylim_max   = zlim_max  = 100.e-3
+xplim_max = yplim_max  = zplim_max = 100.e-3
 limit = sqrt(xlim_max*xlim_max+xplim_max*xplim_max+ylim_max*ylim_max+yplim_max*yplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
 
 def track_node(node,particle,options):
@@ -220,7 +220,7 @@ def track_node(node,particle,options):
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError) as ex:
         lost = True
-        track.removepoint(last_tp)
+        # track.removepoint(last_tp)   done in track()?
         particle.lost = lost
         return lost
 
@@ -228,7 +228,7 @@ def track_node(node,particle,options):
     if not FLAGS['useaper']:
         if norm(last_tp()):
             lost = True
-            track.removepoint(last_tp)
+            # track.removepoint(last_tp)   done in track()?
             particle.lost = lost
             return
 
