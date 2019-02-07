@@ -200,8 +200,10 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('\r{}'.format(res),end="")
 
-xlim_max  = ylim_max   = zlim_max  = 100.e-3
-xplim_max = yplim_max  = zplim_max = 100.e-3
+xlim_max  = ylim_max  = 10.e-3
+xplim_max = yplim_max = 10.e-3
+zlim_max  = 100.e-3
+zplim_max = 100.e-3
 limit = sqrt(xlim_max*xlim_max+xplim_max*xplim_max+ylim_max*ylim_max+yplim_max*yplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
 
 def track_node(node,particle,options):
