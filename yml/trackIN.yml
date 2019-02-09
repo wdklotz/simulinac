@@ -62,7 +62,7 @@ parameters:
     - gap:          &p15    0.046       # [m] RF gap
     - n_sigma:              10          # [m] sigma aperture
     - aperture:             15.e-3      # [m] global aperture setting (default = None)
-    - mapping:              oxal
+    - mapping:              simple
     # - mapping:   t3d         # Trace 3D linear map model
     # - mapping:   simple      # Shishlo/Holmes linear map model
     # - mapping:   oxal        # Shishlo/Holmes openXAL gap-model
@@ -281,6 +281,6 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   29.01.19_pyO
-    - [1,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    - [100,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
     #- [10,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
     # - [ 1,   MARK]

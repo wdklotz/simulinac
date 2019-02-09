@@ -422,11 +422,11 @@ def tracker(options):
     t2 = time.process_time()
     track_soll(lattice)  # <----- track soll
     t3 = time.process_time()
-    TmStamp.stamp('START TRACK')
+    # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
     live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
     t4 = time.process_time()
-    print(TmStamp.as_str())
+    # print(TmStamp.as_str())
 
     # make 2D projections
     if show:
@@ -494,7 +494,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 10*5
+    options['particles_per_bunch'] = 1000*5
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
