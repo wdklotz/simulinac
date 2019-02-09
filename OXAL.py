@@ -21,8 +21,10 @@ import sys
 from math import sin,cos,tan,radians,degrees,sqrt,pi
 from copy import copy
 import numpy as NP
+import time
 
 from setutil import PARAMS,DEBUG,DEBUG_ON,DEBUG_OFF,I0,I1,tblprnt,arrprnt,objprnt,Ktp,MDIM
+from setutil import TmStamp
 from Ez0 import SFdata
 
 DEBUG_SLICE = DEBUG_OFF
@@ -53,6 +55,7 @@ class _OXAL(object):
         #todo: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
             """adjust SOLL-energy dependence of slices"""
+            TmStamp.stamp('config...')
             matrix = NP.eye(MDIM,MDIM)
             tkinIN = tkin
             phIN = phis
@@ -65,6 +68,7 @@ class _OXAL(object):
             deltaPhi = phis-phIN    # total phase advance
             return deltaW, deltaPhi, matrix
 
+        TmStamp.stamp('OXAL init')
         # _OXAL attributes
         self.EzAvg    = parent.EzAvg
         self.gap      = parent.gap
@@ -123,6 +127,7 @@ class _OXAL(object):
         return f_track
 
     def soll_map(self, i_track):
+        TmStamp.stamp('soll_map')
         si,sm,sf = self.position
         f_track = copy(i_track)
         f_track[Ktp.T] += self._deltaW
@@ -132,6 +137,7 @@ class _OXAL(object):
         
     def _full_gap_map(self, slices, i_track):
         """ The wrapper to slice mappings """
+        TmStamp.stamp('full_gap_map')
         f_track = copy(i_track)
         for slice in slices:
             # map each slice
@@ -254,6 +260,7 @@ class _OXAL_slice(object):
     def adjust_slice_parameters(self, tkin, phin):
         """ Adjust SOLL-energy dpendent parameters for this slice """
         self.particle(tkin)    # UPDATE tkin
+        # TmStamp.stamp('adjust...')
         c      = PARAMS['lichtgeschwindigkeit']
         m0c2   = PARAMS['proton_mass']
         m0c3   = m0c2*c
@@ -353,6 +360,7 @@ class _OXAL_slice(object):
 
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
+        # TmStamp.stamp('slice_map')
         # z      = i_track[Ktp.z]       # [4] z~(phi-phis)
         zp       = i_track[Ktp.zp]      # [5] delta-p/p
         track    = copy(i_track)

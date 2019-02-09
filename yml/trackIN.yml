@@ -62,7 +62,13 @@ parameters:
     - gap:          &p15    0.046       # [m] RF gap
     - n_sigma:              10          # [m] sigma aperture
     - aperture:             15.e-3      # [m] global aperture setting (default = None)
-    - mapping:              base
+    - mapping:              oxal
+    # - mapping:   t3d         # Trace 3D linear map model
+    # - mapping:   simple      # Shishlo/Holmes linear map model
+    # - mapping:   oxal        # Shishlo/Holmes openXAL gap-model
+    # - mapping:   base        # Shishlo/Holmes base map model
+    # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+    # - mapping:   dyn         # Tanke/Valero RF gap-model
 #...........................................................................................
 ## ELEMENT definitions
 
@@ -78,7 +84,7 @@ elements:
         # - type:     SIXD       # SIXD class
         - length:   0.023        # [m] half cavity
         - sec:      *HE          # is part of section
-    - D10:    &D10                 # ID: &alias
+    - D10:    &D10               # ID: &alias
         - type:     D            # D class
         # - type:     SIXD       # SIXD class
         - length:   0.100        # [m]
@@ -106,9 +112,7 @@ elements:
         - sec:      *HE          # replacement of RFG by D
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
-        # - EzAvg:    2.87         # [MV/m] average E-field on axis
         - EzAvg:    1.00         # [MV/m] average E-field on axis
-        # - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
@@ -116,19 +120,17 @@ elements:
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        # - mapping:   t3d         # Trace 3D linear map model
-        # - mapping:   simple      # Shishlo/Holmes linear map model
-        # - mapping:   base        # Shishlo/Holmes base map model
-        # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
-        # - mapping:   dyn         # Tanke/Valero RF gap-model
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
         - type:     RFC          # RFC class
-        - EzAvg:    2.31         # [MV/m] average E-field on axis
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
-        - aperture: *p04         # [m] quad bore
+        #- aperture: *p04         # [m] quad bore
+        - aperture: 10.e-3         #
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
     - M:  &Mrkr                  # ID: &alias
@@ -260,6 +262,7 @@ segments:
         - *RFCH
         - *RFCH
         - *RFCH
+        - *D10    # 10cm Gap for vacuum or diagnostics between groups of ten cavities
         - *RFCH
         - *RFCH
         - *RFCH
@@ -278,6 +281,6 @@ segments:
 lattice:
     # title is MANDATORY!
     - title:   29.01.19_pyO
-    # - [_NCELL,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [10,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
+    - [1,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    #- [10,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]  # gaps
     # - [ 1,   MARK]

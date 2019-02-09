@@ -28,6 +28,7 @@ from enum import IntEnum
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import warnings
+import time
 
 # MDIM: dimension of matrices
 MDIM = 10
@@ -370,6 +371,35 @@ class SCTainer(object):
     def len(self):
         return len(SCTainer.instance)
 
+#------------- TimeStamps
+class TmStamp(object):
+    """
+    Utility to place time stamps in the program flow.
+    """
+    tmStamps = []
+    tmcnt    = 0
+    tmt0     = time.perf_counter()
+    @classmethod
+    def stamp(self,text):
+        self.tmcnt +=1
+        t = time.perf_counter()
+        dt = t-self.tmt0
+#        self._t0 = t
+        s = '{:4}:{:10.5} {:20}'.format(self.tmcnt,dt,text)
+        self.tmStamps.append(s)
+        return s
+    @classmethod
+    def as_str(self):
+        cntr=0
+        str = ''
+        for entry in self.tmStamps:
+            if cntr%3 == 0:
+                str= '{}  {}\n'.format(str,entry)
+            else:
+                str= '{}  {}'.format(str,entry)
+            cntr+=1
+        return str
+    
 ## Long. Emittance
 def waccept(node):
     """
