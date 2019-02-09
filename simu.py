@@ -187,7 +187,7 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = PARAMS['n_sigma']
+        N = PARAMS['nbsigma']
         sgx = [i*N for i in sgx]
         #label = F'{N:1}$\sigma$ [mm]'
         label = '{:1}$\sigma$ [mm]'.format(N)
@@ -214,7 +214,7 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = PARAMS['n_sigma']
+        N = PARAMS['nbsigma']
         sgy = [i*N for i in sgy]
         plt.plot(z,sgy ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')

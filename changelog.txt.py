@@ -43,9 +43,9 @@ Version v7.0.5
 *) code cleaning
 *) Marker-actions reduced from list to single variable
 *) cleaned scatter plotting
-*) n_sigma PARAMETER activated
+*) nbsigma PARAMETER activated
 *) useaper FLAG activated
-*) aperture checks with n_sigma in simu and tracker
+*) aperture checks with nbsigma in simu and tracker
 *) input of aperture improved
 
 Version v7.0.4

@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 # Python 2 and 3 print compatability
 from __future__ import print_function
 
-import sys,traceback
+import sys
 import scipy.constants as C
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 import logging, pprint
@@ -71,7 +71,7 @@ ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   # add handler to logger
 
-# DEFAULTS "FLAGS" & "PARAMS"
+#------  DEFAULT "FLAGS" & "PARAMS"
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
@@ -90,6 +90,7 @@ PARAMS = dict(
         # elementarladung      = 1.602176565e-19,  # [coulomb] const
         # proton_mass          = 938.272,          # [MeV/c**2] const
         # electron_mass        = 0.5109989,        # [MeV/c**2] const
+        clight               = C.c,              # [m/s] const
         lichtgeschwindigkeit = C.c,              # [m/s] const
         elementarladung      = C.e,              # [coulomb] const
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
@@ -104,8 +105,8 @@ PARAMS = dict(
         qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         aperture             = None,             # default aperture = no aperture
-        n_coil               = 30,               # nbof coil windings
-        n_sigma              = 3,                # nboff beam sigmas to stay clear of aperture
+        nbwindgs             = 30,               # nboff coil windings
+        nbsigma              = 3,                # nboff beam sigmas to stay clear of aperture
         emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
         betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
@@ -113,7 +114,7 @@ PARAMS = dict(
         alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
         alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
-        nbof_slices          = 2,                # default number of slices
+        nbslices             = 2,                # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
         mapping              = 'base',           # default rf gap-model      
         DT2T                 = 1.e-3             # default kinetic energy spread  (T a.k.a W)
@@ -376,6 +377,7 @@ class TmStamp(object):
     """
     Utility to place time stamps in the program flow.
     """
+    # Remark: works like a sigleton object because it uses only class-attributes and -members.
     tmStamps = []
     tmcnt    = 0
     tmt0     = time.perf_counter()
@@ -452,7 +454,7 @@ def waccept(node):
         #     *) {Dphi,w}-space: emitw = Dphi0*w0 [rad]
         w0       = (gamma-1.)*DT2T
         w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
-        Dphi0    = (gamma-1.)/w0root*DT2T    # delta-phase-intersect
+        Dphi0    = (gamma-1.)/w0root*DT2T # delta-phase-intersect
         emitw    = Dphi0*w0
         betaw    = emitw/w0**2            # beta twiss
         gammaw   = 1./betaw               # gamma twiss
@@ -679,7 +681,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
     SUMMARY['wavelength* [cm]']                 =  PARAMS['lamb']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-    SUMMARY['(N)sigma']                        =  PARAMS['n_sigma']
+    SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
     SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
     SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3

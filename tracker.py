@@ -47,7 +47,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # INITIAL DATA
     x=[]; y=[]; xlost=[]; ylost=[]
     loc = initial
-    nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
+    nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
@@ -81,7 +81,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # FINAL DATA
     x=[]; y=[]
     loc   = final
-    nbprt = live_bunch.nbofparticles()
+    nbprt = live_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
@@ -256,7 +256,7 @@ def track_node(node,particle,options):
 
     # if we look for losses we keep all track points
     if not lost:
-        if track.nbofpoints() > 1 and not options['losses']:
+        if track.nbpoints() > 1 and not options['losses']:
             # !!DISCARD!! last point
             track.removepoint(last_tp)
         track.addpoint(new_tp)
@@ -276,13 +276,13 @@ def track(lattice,bunch,options):
     Input: lattice , bunch
     """
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
-    tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbofparticles())
+    tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbparticles())
 
     ndcnt  = 0
     lnode  = len(lattice.seq)
     lmod   = int(lnode*0.05)
     nlost  = 0
-    nbpart = bunch.nbofparticles()
+    nbpart = bunch.nbparticles()
     lbunch = Bunch()    # lost particles go into this bunch
     for node in iter(lattice):              # nodes
         ndcnt +=1
@@ -299,7 +299,7 @@ def track(lattice,bunch,options):
                 tx = ('(track design)', '(track bunch)', '', tx4)
                 progress(tx)
                 
-    live = nbpart - lbunch.nbofparticles()
+    live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
 
