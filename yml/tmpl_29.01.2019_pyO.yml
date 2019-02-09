@@ -109,8 +109,6 @@ elements:
         - sec:      *HE          # replacement of RFG by D
     - RFGH:  &RFGH               # ID: &alias
         - type:     RFG          # RFG class
-        # - EzAvg:    2.87         # [MV/m] average E-field on axis
-        # - EzPeak:   4.00         # [MV/m] # corresdponds to (EzAvg = 2.87[MV/m])
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
@@ -122,18 +120,19 @@ elements:
         - sec:      *HE          # is part of section
     - RFCH:  &RFCH               # ID: &alias
         - type:     RFC          # RFC class
-        - EzAvg:    2.31         # [MV/m] average E-field on axis
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
         # - aperture: *p04         # [m] quad bore
-        - aperture: *p04         # [m] quad bore
+        - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
-    - F:  &Foil                  # ID: &alias
+    - SCF:  &SCF                 # ID: &alias
         - type:    MRK           # MRK class
-        - actions:
+        - action:
             - poincare           # action aperture check
         - sec:     *HE
 #...........................................................................................
@@ -152,7 +151,7 @@ segments:
     - SEG3H:
         - *D3
         - *QFH
-    - RFGH:
+    - RFGH:           # DKD rf-gap
         - *D5     # 1 
         - *RFGH
         - *D5
@@ -217,7 +216,7 @@ segments:
         - *RFGH
         - *D5
         #
-    - RFCAVH:
+    - RFCAVH:               # rf-cavity
         - *RFCH   # 1 
         - *RFCH   # 2
         - *RFCH   # 3
@@ -239,14 +238,15 @@ segments:
         - *RFCH   # 18
         - *RFCH   # 19
         - *RFCH   # 20
-    - MARK:
-        - *Foil
+        #
+    - F:               # poincare section for scatter plot
+        - *SCF
 #...........................................................................................
 ## LATTICE definition
 
 lattice:
     # title is MANDATORY!
     - title:   29.01.19_pyO
-    # - [_NCELL,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
-    - [_NCELL,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]         # gaps
+    - [_NCELL,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    # - [_NCELL,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]         # gaps
     - [ 1, F]
