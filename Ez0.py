@@ -215,12 +215,40 @@ def EzAvg(poly):
     Eav = sum/N               # EzAvg [MV/m]
     return Eav
 
+def tabellenTeilung(N,nt):
+        """
+        IN: N Anzahl der SF-Tabellenintervalle
+        IN: nt Anzahl der SF-Tabellenintervalle pro Integrationsintervall
+        
+        OUT: Anzahl der Integrationsintervalle
+        """
+        teilungen = { 88:[44,22,11,8,4,2],
+                      92:[46,23,4,2],
+                      96:[48,24,12.6,3,32,16,8,4,2],
+                     100:[50,25,20,10,5,4,2]}
+        try:
+            ntlist = teilungen[N]
+            nI     = ntlist[ntlist.index(nt)]
+        except (KeyError,ValueError):
+            mess1 = "Incompatible parameters for table reduction!\n"
+            mess2 = "For SFdata the table should have at least N .ge. 88 equidistant intervals.\n"
+            mess3 = "The number of SFdata-intervals per integration-interval has to be a number\n"
+            mess4 = "that divides N without a remainder.\n"
+            mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
+            print(mess1+mess2+mess3+mess4+mess5)
+            return None
+        return int(N/nI)
+
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf EzPeak)'''
+            
     def __init__(self,input_file,EzPeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
         self.EzPeak     = EzPeak
+        self.N  = None
+        self.nt = None
+        self.nI = None
         self.make_Ez_table()
         self.make_Ez_poly()
         self.EzAvg = EzAvg(self._poly)
@@ -231,9 +259,20 @@ class SFdata(object):
         zp = []
         rp = []
         ep = []
+        offset = 41
+        adjust = 0      # adjustment for N=100:[50,25,20,10,5,4,2]
         with open(self.input_file,'r') as f:
             lines = list(f)
-            for line in lines[41:-2]:
+            # remove trailing and leading lines
+            lines = lines[offset:-2]
+            # N nboff SFtable-intervals
+            self.N = len(lines)-1-adjust
+            # nt nboff SFtable-intervals per integration-interval   !!VORGABE!!
+            self.nt = 10
+            # nI nboff integration-intervals
+            self.nI = tabellenTeilung(self.N,self.nt)
+
+            for line in lines:
                 # print(line,end='')
                 stripped    = line.strip()
                 (z,sep,aft) = stripped.partition(' ')
@@ -275,13 +314,13 @@ class SFdata(object):
                 raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
             M = int(M-fmod(M,N))
             n = int(M/N)
-            print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
                 DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
         self._poly = []
-        anz = 10        # interpolate SF-data with 'anz' polynomials od 2nd order
+        anz = self.nI     # interpolate SF-data with 'anz' polynomials od 2nd order
+        print('{} intervals, {} SF-intervals, {} SF-intervals/interval'.format(anz,self.N,self.nt))
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
             DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez_table[il].z
@@ -314,7 +353,7 @@ class SFdata(object):
     def Ez_poly(self):
         """List(Polyval) of polygon approximations"""
         return self._poly
-        
+
 def pre_plt(input_file):
     """ prepare plot """
     ax  = plt.subplot(111)
