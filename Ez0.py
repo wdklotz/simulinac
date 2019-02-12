@@ -268,8 +268,8 @@ class SFdata(object):
         adjust = 0       # adjustment for N=100:[50,25,20,10,5,4,2]
         adjust = -2      # adjustment for N=98:[49,14,7,2]
         adjust = 4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
-        # nt nboff SFtable-intervals per integration-interval   !!VORGABE!!
-        self.nt = 17
+        # nt nboff SFtable-intervals per gap-slice   !!VORGABE!!
+        self.nt = 16
         with open(self.input_file,'r') as f:
             lines = list(f)
             # remove trailing and leading lines
@@ -514,4 +514,3 @@ if __name__ == '__main__':
     # test2()                         # poly-fit to NG
     test3(input_file)               # poly-fit to SF
     post_plt(ax)
-    # test4(input_file)

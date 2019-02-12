@@ -480,6 +480,7 @@ if __name__ == '__main__':
         input_file = 'yml/trackINstat.yml'
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]
+        print('input="{}"'.format(input_file))
     elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]
