@@ -17,6 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
 import matplotlib.pyplot as plt
 import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
@@ -218,9 +219,9 @@ def EzAvg(poly):
 def tabellenTeilung(N,nt):
         """
         IN: N Anzahl der SF-Tabellenintervalle
-        IN: nt Anzahl der SF-Tabellenintervalle pro Integrationsintervall
+        IN: nt Anzahl der SF-Tabellenintervalle pro gap-slice
         
-        OUT: Anzahl der Integrationsintervalle
+        OUT: Anzahl der gap-slices
         """
         teilungen = { 88:[44,22,11,8,4,2],
                       90:[45,30,18,15,10,9,6,5,3,2],
@@ -232,13 +233,15 @@ def tabellenTeilung(N,nt):
             ntlist = teilungen[N]
             nI     = ntlist[ntlist.index(nt)]
         except (KeyError,ValueError):
+            WARNING = '\033[31m'
+            ENDC    = '\033[30m'
             mess1 = "Incompatible parameters for table reduction!\n"
-            mess2 = "For SFdata the table should have at least N .ge. 88 equidistant intervals.\n"
-            mess3 = "The number of SFdata-intervals per integration-interval has to be a number\n"
+            mess2 = "For SFdata the table should have at least N equidistant intervals with N>=88.\n"
+            mess3 = "The number of SFdata-intervals per gap-slice has to be a number\n"
             mess4 = "that divides N without a remainder.\n"
             mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=90:[45,30,18,15,10,9,6,5,3,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=98:[49,14,7,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
-            print(mess1+mess2+mess3+mess4+mess5)
-            return None
+            print(WARNING+mess1+mess2+mess3+mess4+mess5+ENDC)
+            sys.exit(1)
         return int(N/nI)
 
 class SFdata(object):
@@ -266,7 +269,7 @@ class SFdata(object):
         adjust = -2      # adjustment for N=98:[49,14,7,2]
         adjust = 4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
         # nt nboff SFtable-intervals per integration-interval   !!VORGABE!!
-        self.nt = 16
+        self.nt = 17
         with open(self.input_file,'r') as f:
             lines = list(f)
             # remove trailing and leading lines
@@ -308,7 +311,7 @@ class SFdata(object):
         """ Calculate polynom coefficients from SF data """
         def indexer(nbslices,M):
             """
-                nbslices = nboff slices
+                nbslices = nboff gap-slices
                 N = nboff half-length-slices
                 M = nboff SF-points
                 n = nboff SF-points/half-length-slice
@@ -324,7 +327,7 @@ class SFdata(object):
         
         self._poly = []
         anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
-        print('{} intervals, {} SF-intervals, {} SF-intervals/interval'.format(anz,self.N,self.nt))
+        print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,self.N,self.nt))
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
             DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez_table[il].z
