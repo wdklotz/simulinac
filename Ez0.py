@@ -223,8 +223,10 @@ def tabellenTeilung(N,nt):
         OUT: Anzahl der Integrationsintervalle
         """
         teilungen = { 88:[44,22,11,8,4,2],
+                      90:[45,30,18,15,10,9,6,5,3,2],
                       92:[46,23,4,2],
                       96:[48,24,12.6,3,32,16,8,4,2],
+                      98:[49,14,7,2],
                      100:[50,25,20,10,5,4,2]}
         try:
             ntlist = teilungen[N]
@@ -234,7 +236,7 @@ def tabellenTeilung(N,nt):
             mess2 = "For SFdata the table should have at least N .ge. 88 equidistant intervals.\n"
             mess3 = "The number of SFdata-intervals per integration-interval has to be a number\n"
             mess4 = "that divides N without a remainder.\n"
-            mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
+            mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=90:[45,30,18,15,10,9,6,5,3,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=98:[49,14,7,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
             print(mess1+mess2+mess3+mess4+mess5)
             return None
         return int(N/nI)
@@ -260,15 +262,17 @@ class SFdata(object):
         rp = []
         ep = []
         offset = 41
-        adjust = 0      # adjustment for N=100:[50,25,20,10,5,4,2]
+        adjust = 0       # adjustment for N=100:[50,25,20,10,5,4,2]
+        adjust = -2      # adjustment for N=98:[49,14,7,2]
+        adjust = 4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
+        # nt nboff SFtable-intervals per integration-interval   !!VORGABE!!
+        self.nt = 16
         with open(self.input_file,'r') as f:
             lines = list(f)
             # remove trailing and leading lines
-            lines = lines[offset:-2]
+            lines = lines[offset:-2-adjust]
             # N nboff SFtable-intervals
-            self.N = len(lines)-1-adjust
-            # nt nboff SFtable-intervals per integration-interval   !!VORGABE!!
-            self.nt = 10
+            self.N = len(lines)-1
             # nI nboff integration-intervals
             self.nI = tabellenTeilung(self.N,self.nt)
 
