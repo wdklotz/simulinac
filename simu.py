@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a4'
+___version___='v7.1.3a5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -328,6 +328,7 @@ if __name__ == '__main__':
     input_file    = 'yml/simuIN.yml'        # def.input file
 
     if sys.platform   == 'win32':
+        input_file = 'yml/simuINstat.yml'
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]
     elif sys.platform == 'darwin' or sys.platform.startswith('linux'):

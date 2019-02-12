@@ -319,7 +319,7 @@ class SFdata(object):
                 yield((i,i+n,i+2*n))
         
         self._poly = []
-        anz = self.nI     # interpolate SF-data with 'anz' polynomials od 2nd order
+        anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
         print('{} intervals, {} SF-intervals, {} SF-intervals/interval'.format(anz,self.N,self.nt))
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
             DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
