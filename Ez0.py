@@ -269,7 +269,7 @@ class SFdata(object):
         adjust = -2      # adjustment for N=98:[49,14,7,2]
         adjust = 4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
         # nt nboff SFtable-intervals per gap-slice   !!VORGABE!!
-        self.nt = 16
+        self.nt = 8
         with open(self.input_file,'r') as f:
             lines = list(f)
             # remove trailing and leading lines
@@ -322,14 +322,13 @@ class SFdata(object):
             M = int(M-fmod(M,N))
             n = int(M/N)
             for i in range(0,M,2*n):
-                DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+                # DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
         self._poly = []
         anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
-        print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,self.N,self.nt))
+        print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,2*self.N,2*self.nt))
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
-            DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez_table[il].z
             z0 = self.Ez_table[i0].z
             zr = self.Ez_table[ir].z
@@ -341,6 +340,7 @@ class SFdata(object):
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             self._poly.append(pval)
+            DEBUG_ON('Ez_poly: (il,i0,ir) ({:3},{:3},{:3}),\t(zr,zl) ({},{})'.format(il,i0,ir,zl,zr))
 
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
@@ -480,19 +480,19 @@ def test3(input_file):
     c        = PARAMS['lichtgeschwindigkeit']
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
-    gap = 4.8
+    gap = 6.8
     zl  = -gap/2.
     zr  = +gap/2.
     zintval = (zl,zr)
 
     gap_data = SFdata(input_file,EzPeak=1.)
     poly     = gap_data.Ez_poly
-    display(gap_data.Ez_table,'SF-slice')
+    display(gap_data.Ez_table,'SFdata')
 
     zstep  = (zr-zl)/500.
     z      = NP.arange(zl,zr,zstep)
     Ez_tab = [(x,0.,Ipoly(x, poly)) for x in z]
-    display(Ez_tab,'SF-poly')
+    display(Ez_tab,'Ez_poly')
 
     # TTF calculations
     v0  = V0(poly,zintval)

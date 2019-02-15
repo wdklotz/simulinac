@@ -62,7 +62,7 @@ parameters:
     - gap:          &p15    0.046       # [m] RF gap
     - nbsigma:              10          # [m] sigma aperture
     - aperture:             15.e-3      # [m] global aperture setting (default = None)
-    - mapping:              base
+    - mapping:              oxal
     # - mapping:   t3d         # Trace 3D linear map model
     # - mapping:   simple      # Shishlo/Holmes linear map model
     # - mapping:   oxal        # Shishlo/Holmes openXAL gap-model
