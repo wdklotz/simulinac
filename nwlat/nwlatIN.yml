@@ -42,13 +42,13 @@ SECTIONS:
 #...........................................................................................
 ## INPUT definitions
 PARAMETERS:
-    - Tkin:                 50.         # [MeV] energy @ injection
+    - Tkin:                 50.       # [MeV] energy @ injection
     - DT2T:                 6.e-3       # delta-T/T kinetic energy spread @ injection
-    - emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
-    - betax_i:      &btx    3.3         # [m] twiss beta @ entrance x
-    - betay_i:      &bty    0.55        # [m] twiss beta @ entrance y
-    - phi_sync:     &phs    -25.        # [deg] synchronous phase
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
+    - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    0.55      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    -25.      # [deg] synchronous phase
     - alfax_i:              0.          # [] twiss alpha x @ entrance
     - alfay_i:              0.          # [] twiss alpha y @ entrance
     - frequency:    &p01    816.e+6     # [Hz] frequency
@@ -59,43 +59,43 @@ PARAMETERS:
     - gap:          &p15    0.046       # [m] RF gap
     - nbsigma:              10          # [m] sigma aperture
     - aperture:             15.e-3      # [m] global aperture setting (default = None)
-    - lattvers:    29.01.19_pyO         # lattice version
-    - mapping:              base        # [t3d, simple, oxal, base, ttf, dyn]
+    - lattvers:    29.01.19_pyO     # lattice version
+    - mapping:              oxal    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS definitions
 ELEMENTS:
 # HE
-    - D3:                        # ID: &alias
+    - D3:                     # ID: &alias
         - type:     D            # D class
         - length:   0.03         # [m]
         - sec:      *HE          # is part of section
-    - D5:                        # ID: &alias
+    - D5:                     # ID: &alias
         - type:     D            # D class
         - length:   0.023        # [m] half cavity
         - sec:      *HE          # is part of section
-    - D10:                       # ID: &alias
+    - D10:                     # ID: &alias
         - type:     D            # D class
         - length:   0.100        # [m]
         - sec:      *HE          # is part of section
-    - QFH:                       # ID: &alias
+    - QFH:                  # ID: &alias
         - type:     QF           # QF class
         - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
         - B':       &Bgrad   30. # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    - QDH:                       # ID: &alias
+    - QDH:                   # ID: &alias
         - type:     QD           # QD class
         - length:   *p02         # [m] length
         - aperture: *p04         # [m] quad bore
         - B':       *Bgrad       # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
-    - RFGHx:                     # replacement of RFG by D
+    - RFGHx:               # replacement of RFG by D
         - type:     D            # replacement of RFG by D
         - length:   0.0          # replacement of RFG by D
         - sec:      *HE          # replacement of RFG by D
-    - RFGH:                      # ID: &alias
+    - RFGH:                 # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
@@ -103,10 +103,10 @@ ELEMENTS:
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
         # - aperture: *p04         # [m] quad bore
-        - aperture: 10.e-3       # [m] quad bore
+        - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - sec:      *HE          # is part of section
-    - RFCH:                      # ID: &alias
+    - RFCH:                 # ID: &alias
         - type:     RFC          # RFC class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
@@ -114,26 +114,25 @@ ELEMENTS:
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] gap length
         # - aperture: *p04         # [m] quad bore
-        - aperture: 10.e-3       # [m] quad bore
+        - aperture: 10.e-3         #
         - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         - length:   0.044        # [m] cavity length
         - sec:      *HE          # is part of section
-    - SCF:                       # ID: &alias
+    - SCF:                   # ID: &alias
         - type:    MRK           # MRK class
         - action:
             - poincare           # action aperture check
         - sec:     *HE
-
 #...........................................................................................
-# LATTICE definition: NODE->SEGMENT->CELL->LINE->LATTICE
-#...........................................................................................NODES:  # map NODE to ELEMENT
+## LATTICE definition: NODE->SEGMENT->CELL->LINE->LATTICE
+NODES:  # map NODE to ELEMENT
 - D1:   &d1   D3
 - D2:   &d2   D5
 - D3:   &d3   D10
 - QF:   &qf   QFH
 - QD:   &qd   QDH
 - GAP:  &gap  RFGH 
-#...........................................................................................
+
 SEGMENTS:   # group NODES in SEGMENT
 - SQD:   &sqd  [*d1,*qd,*d1]  # QD +LR drifts
 - SQF1:  &sqf1 [*qf,*d1]      # 1/2QF + R drift
@@ -150,13 +149,13 @@ SEGMENTS:   # group NODES in SEGMENT
     - [*d2,*gap,*d2]          # gap 9
     - [*d2,*gap,*d2]          # gap 10
 - SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift in middle
-#...........................................................................................
+
 CELL: &cell   # conatenate SEGMENTS
 - [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
-#...........................................................................................
+
 LINE: &line # concatenate CELLS
 - [*cell]
-#...........................................................................................
+
 LATTICE:    # concatenate LINES and duplicate result _NL times
 - [100,*line]
 

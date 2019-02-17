@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a5'
+___version___='v8.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -34,7 +34,7 @@ import os
 import matplotlib.pyplot as plt
 #from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import parse_and_fabric
 from tracker import track_soll
@@ -280,7 +280,7 @@ def simulation(filepath):
     # configure elements for energy increase
     soll_track = track_soll(lattice)
     
-    # if DEBUG_LATTICE(): lattice.show_linkage()
+    if DEBUG_LATTICE(): lattice.show_linkage()
 
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
     print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))

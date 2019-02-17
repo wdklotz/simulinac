@@ -1,4 +1,8 @@
 """
+Version v8.0.0
+"""
+*) new lattice_generator.py
+"""
 Version v7.1.3a4
 *) input_files for Windows now static now
 *) Ez0.py refactored. Neue Intervalteilung

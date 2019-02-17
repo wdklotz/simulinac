@@ -30,11 +30,19 @@ if __name__ == '__main__':
                     )
             sys.exit(1)
     fileobject.close()
-    ks = indat.keys()
-    for k in ks:
+    ky = indat.keys()
+    for k in ky:
         print()
         print(k)
-        kl = indat[k]
-        print(kl)
-        print(flatten(kl))
+        klist = indat[k]
+        print(klist)
+        nlist = flatten(klist)
+        if k == 'LATTICE':
+            N = nlist[0]
+            plist = nlist[1:]
+            qlist = plist.copy()
+            for i in range(N-1):
+                qlist += plist
+            nlist=qlist
+        print(nlist)
     pass

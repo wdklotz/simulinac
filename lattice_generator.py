@@ -44,7 +44,18 @@ def get_mandatory(attributes,key,item):
         sys.exit(1)
     return res
 
-def lod2d(l):
+#---- recursive version
+def flatten(lis):
+    """Given a list, possibly nested to any level, return it flattened."""
+    new_lis = []
+    for item in lis:
+        if type(item) == type([]):
+            new_lis.extend(flatten(item))
+        else:
+            new_lis.append(item)
+    return new_lis
+
+def liofd2d(l):
     """Transform list of dicts to dict"""
     return {k:v for d in l for k,v in d.items()}
 
@@ -241,44 +252,20 @@ def instanciate_element(item):
 def factory(input_file):
     """ factory creates a lattice from input-file """
 #--------
-    def make_lattice(latticeList,segments):
-        lattice = Lattice()
-        DEBUG_MODULE('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
-        for segID in latticeList:        #loop segments in lattice
-            DEBUG_MODULE('segID in make_lattice()',segID)
-            found = False
-            for seg in segments:     #scan for segment in segment-definition
-                if segID in seg:
-                    DEBUG_MODULE('found '+segID,seg)
-                    elementList = seg[segID]
-                    found = True
-                    break    #after found
-            if found == False:
-                warnings.showwarning(
-                        'InputError: Segment {} not found - STOP'.format(segID),
-                        UserWarning,
-                        'lattice_generator.py',
-                        'make_lattice()',
-                        )
-                sys.exit(1)
-            for element in elementList: #loop over all elements
-                DEBUG_MODULE('element in '+segID,element)
-                elementClass = element['type']
-                elmItem = (elementClass,element)
-                DEBUG_MODULE('elmItem in make_lattice',elmItem)
-                (label,instance) = instanciate_element(elmItem)  # !!INSTANCIATE!!
-                section = instance.section if FLAGS['sections'] else '*'
-                DEBUG_MODULE('instance {} {} {}'.format(label,instance,section))
-                if isinstance(instance,ELM._Node):
-                    lattice.add_element(instance)  # add element instance to lattice
-                elif isinstance(instance,Lattice):
-                    lattice.concat(instance)       # concatenate partial with lattice
-        return lattice   #the complete lattice
+    def read_elements(in_data):
+        element_list = in_data['ELEMENTS']
+        elements = liofd2d(element_list)
+        # add {'ID':key} to attribute list
+        IDs = elements.keys()
+        for ID in IDs:
+            attList = elements[ID]
+            attList.append({'ID':ID})
+        return elements
 # --------
     def read_flags(in_data):
         """returns a dict of flags"""
-        flags_list = in_data['flags']
-        flags = lod2d(flags_list) if flags_list != None else {}
+        flags_list = in_data['FLAGS']
+        flags = liofd2d(flags_list) if flags_list != None else {}
         if 'accON' in flags:
             if flags['accON']:
                 FLAGS['dWf'] = 1.
@@ -303,7 +290,8 @@ def factory(input_file):
         sec_list = []
         use_sections = True
         try:     ## can fail because sections are not mandatory
-            sec_list = in_data['sections'][0]
+            sec_list = in_data['SECTIONS']
+            sec_list = flatten(sec_list)
         except:
             use_sections = False
         PARAMS['sections'] = sec_list
@@ -312,8 +300,8 @@ def factory(input_file):
 # --------
     def read_parameters(in_data):
         """ returns a dict of parameters """
-        parameter_list = in_data['parameters']
-        parameters     = lod2d(parameter_list)
+        parameter_list = in_data['PARAMETERS']
+        parameters     = liofd2d(parameter_list)
         if 'frequency'        in parameters: PARAMS['frequenz']         = parameters['frequency']
         if 'B_grad_f'         in parameters: PARAMS['qf_gradient']      = parameters['B_grad_f']
         if 'B_grad_d'         in parameters: PARAMS['qd_gradient']      = parameters['B_grad_d']
@@ -334,66 +322,47 @@ def factory(input_file):
         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
         if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
         if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
+        if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
 
         PARAMS['lamb']           = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters
-# --------
-    def expand_reduce(in_data):
-    #--------
-        def read_elements(in_data):
-            element_list = in_data['elements']         # is list of dicts
-            for elm in element_list:
-                for elmID,attList in elm.items():      # put key as ID in attribute dict
-                    attList.append(dict(ID=elmID))
-            return element_list
-    #--------
-        def read_segments(in_data):
-            segment_list = in_data['segments']
-            return segment_list
-    #--------
-        def read_lattice(in_data):
-            lattice_segment_list= in_data['lattice']
-            lattice_title = lattice_segment_list[0]['title']
-            del lattice_segment_list[0]         #pull label off
-            PARAMS['lattice_version'] = lattice_title
-            return lattice_segment_list
-    #--------
-        def reduce_seg_def(segList):
-            segs = lod2d(segList)      #{'SEG1':[...],'SEG2':[...],...}
-            DEBUG_MODULE('segs in reduce_seg_def()',segs)
-            segments=[]
-            for segID,elmList in segs.items():
-                DEBUG_MODULE(segID,elmList)
-                elements=[]
-                for elm in elmList:
-                    elm = lod2d(elm)
-                    DEBUG_MODULE('elm',elm)
-                    elements.append(elm)
-                segments.append({segID:elements})
-            DEBUG_MODULE("segments",segments)
-            return segments
-    #--------
-        elemement_def = read_elements(in_data)
-        segment_def   = read_segments(in_data)
-        lattice_def   = read_lattice(in_data)
-        DEBUG_MODULE('elemement_def in expand_reduce()',elemement_def)
-        DEBUG_MODULE('segment_def in expand_reduce()',segment_def)
-        DEBUG_MODULE('lattice_def in expand_reduce()',lattice_def)
-        segments = reduce_seg_def(segment_def)
-        DEBUG_MODULE('segments in expand_reduce()',segments)
-        latticeList=[]
-        for segSubList in lattice_def:
-            nsuper = segSubList[0]
-            del segSubList[0]              #pull nsuper off
-            DEBUG_MODULE('segSubList in expand_reduce()',segSubList)
-            for i in range(nsuper):        #expand nsuper times
-                for k in segSubList:
-                    latticeList.append(k)
-        return (latticeList,segments)
+#--------
+    def get_flattend_lattice_list(in_data):
+        """ read_and_flatten lattice from (in_data)."""
+        lattice_list = in_data['LATTICE']
+        lattice_list = flatten(lattice_list)
+        N = lattice_list[0]   # Duplikator
+        plist = lattice_list[1:]
+        qlist = plist.copy()
+        for i in range(N-1):
+            qlist += plist
+        lattice_list=qlist
+        return lattice_list
+#--------
+    def make_lattice(latticeList,in_data):
+        """ instanciate all elements from flattened node list"""
+        lattice = Lattice()
+        DEBUG_OFF('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
+        elements = read_elements(in_data)
+        for ID in lattice_list:
+            element      = elements[ID]
+            element      = liofd2d(element)
+            elementClass = element['type']
+            elmItem      = (elementClass,element)
+            # !!INSTANCIATE!!
+            (label,instance) = instanciate_element(elmItem)
+            section = instance.section if FLAGS['sections'] else '*'
+            DEBUG_MODULE('instance {} {} {}'.format(label,instance,section))
+            # add element instance to lattice
+            if isinstance(instance,ELM._Node):
+                lattice.add_element(instance)
+        #     elif isinstance(instance,Lattice):
+        #         lattice.concat(instance)       # concatenate partial with lattice
+        return lattice   # the complete lattice
 
-    ## factory body --------
+## factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -412,20 +381,20 @@ def factory(input_file):
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
-
-    (latticeList,segments) = expand_reduce(in_data)
-    DEBUG_MODULE('latticeList in factory()',latticeList)      # def of all segments in lattice
-    DEBUG_MODULE('segments in factory()',segments)            # def of all segments
-
-    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])   # __call__ sollteilchen energy
-    lattice = make_lattice(latticeList,segments)
+    
+    # lattice_list is a flat list of node IDs
+    lattice_list = get_flattend_lattice_list(in_data)
+    DEBUG_MODULE('latticeList in factory()',lattice_list)
+    # __call__ sollteilchen energy
+    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
+    lattice = make_lattice(lattice_list,in_data)
     # DEBUG_MODULE('lattice_generator >>\n',lattice.string())
-
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEBUG_MODULE('SUMMARY in factory()',SUMMARY)
-    return lattice    # end of factory(...)
+    DEBUG_OFF('SUMMARY in factory()',SUMMARY)
+    
+    # end of factory(...)
+    return lattice
 
 def parse_and_fabric(input_file):   # delegates to factory
     return factory(input_file)
@@ -439,12 +408,12 @@ def test0(input_file):
     print(yaml.dump(wfl,default_flow_style=True))
     for i,v in iter(wfl.items()):
         print(i,' =\t',v)
-    seg = wfl['segments']
+    seg = wfl['SEGMENTS']
     print(seg)
     print('=== segment ===')
     for i in seg:
         print(i)
-    lattice = wfl['lattice']
+    lattice = wfl['LATTICE']
     print('=== lattice ===')
     for l in lattice:
         for i in l:
@@ -463,6 +432,7 @@ def test1(input_file):
         
 if __name__ == '__main__':
     input_file = 'yml/simuIN.yml'
+    input_file = 'nwlat/nwlatIN.yml'
     test0(input_file)
     test1(input_file)
 
