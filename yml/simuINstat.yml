@@ -98,7 +98,7 @@ ELEMENTS:
     - RFGH:                      # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
-        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        - EzPeak:   1.40         # [MV/m] # corresponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
         - fRF:      *p01         # [Hz] frequency
         - gap:      *p15         # [m] length
@@ -149,7 +149,7 @@ SEGMENTS:   # group NODEs in SEGMENT
     - [*d2,*gap,*d2]          # gap 8
     - [*d2,*gap,*d2]          # gap 9
     - [*d2,*gap,*d2]          # gap 10
-- SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift in middle
+- SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift + cavity array
 #...........................................................................................
 CELL: &cell   # concatenate SEGMENTS
 - [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
