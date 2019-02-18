@@ -22,7 +22,7 @@
 #   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 #..........................................................................................
-## RUN switches
+# RUN switches
 FLAGS:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
@@ -36,11 +36,11 @@ FLAGS:
     # - pspace:       True            # {False} plot the twiss ellipses at entrance
     # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
-## SECTION definitions
+# SECTION definitions
 SECTIONS:
      - [&LE 5to25 , &HE 25to200]
 #...........................................................................................
-## INPUT definitions
+# INPUT definitions
 PARAMETERS:
     - Tkin:                 50.         # [MeV] energy @ injection
     - DT2T:                 6.e-3       # delta-T/T kinetic energy spread @ injection
@@ -62,7 +62,7 @@ PARAMETERS:
     - lattvers:    29.01.19_pyO         # lattice version
     - mapping:              base        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
-## ELEMENTS definitions
+# ELEMENT definitions
 ELEMENTS:
 # HE
     - D3:                        # ID: &alias
@@ -151,7 +151,7 @@ SEGMENTS:   # group NODEs in SEGMENT
     - [*d2,*gap,*d2]          # gap 10
 - SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift in middle
 #...........................................................................................
-CELL: &cell   # conatenate SEGMENTS
+CELL: &cell   # concatenate SEGMENTS
 - [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
 #...........................................................................................
 LINE: &line # concatenate CELLS
