@@ -126,7 +126,7 @@ ELEMENTS:
 #...........................................................................................
 # LATTICE definition: NODE->SEGMENT->CELL->LINE->LATTICE
 #...........................................................................................
-NODES:  # map NODE to ELEMENT
+NODES:  # mapping table: NODE: &node ==> ELEMENT
 - D1:   &d1   D3
 - D2:   &d2   D5
 - D3:   &d3   D10
@@ -135,7 +135,7 @@ NODES:  # map NODE to ELEMENT
 - GAP:  &gap  RFGH
 #...........................................................................................
 SEGMENTS:   # group NODEs in SEGMENT
-- SQD:   &sqd  [*d1,*qd,*d1]  # QD +LR drifts
+- SQD:   &sqd  [*d1,*qd,*d1]  # QD + LR drifts
 - SQF1:  &sqf1 [*qf,*d1]      # 1/2QF + R drift
 - SQF2:  &sqf2 [*d1,*qf]      # 1/2Qf + L drift
 - SFGH:  &sfgh                # rf-gap + LR drifts
@@ -149,14 +149,14 @@ SEGMENTS:   # group NODEs in SEGMENT
     - [*d2,*gap,*d2]          # gap 8
     - [*d2,*gap,*d2]          # gap 9
     - [*d2,*gap,*d2]          # gap 10
-- SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift in middle
+- SRF: &srf [*sfgh,*d3,*sfgh] # cavity-array + drift + cavity-array
 #...........................................................................................
-CELL: &cell   # conatenate SEGMENTS
-- [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
+CELL: &cell   # concatenate SEGMENTS
+- [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell with cavity-arrays
 #...........................................................................................
-LINE: &line # concatenate CELLS
+LINE: &line   # concatenate CELLS to sublattice LINE
 - [*cell]
 #...........................................................................................
-LATTICE:    # concatenate LINES and duplicate result _NL times
+LATTICE:      # concatenate LINES and duplicate result _NL times
 - [_NL,*line]
 

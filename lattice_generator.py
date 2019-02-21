@@ -396,9 +396,6 @@ def factory(input_file):
     # end of factory(...)
     return lattice
 
-def parse_and_fabric(input_file):   # delegates to factory
-    return factory(input_file)
-
 # utilities
 def test0(input_file):
     print('---------------------------------TEST0')
@@ -421,7 +418,7 @@ def test0(input_file):
 
 def test1(input_file):
     print('---------------------------------TEST1')
-    lattice = parse_and_fabric(input_file)
+    lattice = factory(input_file)
     print('%%%%%%%%%%%%%%%%%%% Left------->Right')
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
@@ -432,7 +429,7 @@ def test1(input_file):
         
 if __name__ == '__main__':
     input_file = 'yml/simuIN.yml'
-    input_file = 'nwlat/nwlatIN.yml'
+    # input_file = 'nwlat/nwlatIN.yml'
     test0(input_file)
     test1(input_file)
 

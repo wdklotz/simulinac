@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
-from lattice_generator import parse_and_fabric
+from lattice_generator import factory
 from tracker import track_soll
 
 import bucket_size
@@ -273,7 +273,7 @@ def simulation(filepath):
         plt.show()
 
     # parse input file and create a lattice
-    lattice = parse_and_fabric(filepath)
+    lattice = factory(filepath)
 
     if DEBUG_LATTICE(): lattice.show_linkage() 
     
