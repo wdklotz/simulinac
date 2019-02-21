@@ -198,8 +198,10 @@ def progress(tx):
     """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
-    print('\r{}'.format(res),end="")
+    # print('\r{}\r'.format(res),end="")
+    sys.stdout.write('{}\r'.format(res))
 
+# max track amplitudes set here!
 xlim_max  = ylim_max  =  10.e-3
 xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
@@ -496,7 +498,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 100*5
+    options['particles_per_bunch'] = 1000*3
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
