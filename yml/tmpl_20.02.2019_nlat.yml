@@ -151,7 +151,7 @@ SEGMENTS:   # group NODEs in SEGMENT
     - [*d2,*gap,*d2]          # gap 10
 - SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift in middle
 #...........................................................................................
-CELL: &cell   # conatenate SEGMENTS
+CELL: &cell   # concatenate SEGMENTS
 - [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
 #...........................................................................................
 LINE: &line # concatenate CELLS
