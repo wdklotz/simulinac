@@ -329,7 +329,7 @@ def factory(input_file):
         PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters
 #--------
-    def get_flattend_lattice_list(in_data):
+    def get_flattened_lattice_list(in_data):
         """ read_and_flatten lattice from (in_data)."""
         lattice_list = in_data['LATTICE']
         lattice_list = flatten(lattice_list)
@@ -384,7 +384,7 @@ def factory(input_file):
     DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
     
     # lattice_list is a flat list of node IDs
-    lattice_list = get_flattend_lattice_list(in_data)
+    lattice_list = get_flattened_lattice_list(in_data)
     DEBUG_MODULE('latticeList in factory()',lattice_list)
     # __call__ sollteilchen energy
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
@@ -429,10 +429,42 @@ def test1(input_file):
     lattice.toggle_iteration()
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
-        
+
+def test2(input_file):
+    print('---------------------------------TEST2')
+    with open(input_file,'r') as fileobject:
+        try:
+            indat = yaml.load(fileobject)
+        except Exception as ex:
+            warnings.showwarning(
+                    'InputError: {} - STOP'.format(str(ex)),
+                    UserWarning,
+                    'lattice_generator.py',
+                    'factory()',
+                    )
+            sys.exit(1)
+    fileobject.close()
+    ky = indat.keys()
+    for k in ky:
+        print()
+        print(k)
+        klist = indat[k]
+        print(klist)
+        if not klist: continue
+        nlist = flatten(klist)
+        if k == 'LATTICE':
+            N = nlist[0]
+            plist = nlist[1:]
+            qlist = plist.copy()
+            for i in range(N-1):
+                qlist += plist
+            nlist=qlist
+        print(nlist)
+
 if __name__ == '__main__':
-    input_file = 'yml/simuIN.yml'
-    input_file = 'nwlat/nwlatIN.yml'
+    input_file = 'yml/simuINstat.yml'
+    # input_file = 'nwlat/nwlatIN.yml'
     test0(input_file)
-    test1(input_file)
+    # test1(input_file)
+    test2(input_file)
 
