@@ -470,7 +470,7 @@ def waccept(node):
         # {z-dp/p}-space
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-#todo: use y2,y3 from Twiss or not needed? Acceptance is correct lbeta twissike this!
+#todo: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(

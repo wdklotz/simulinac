@@ -340,7 +340,7 @@ class SFdata(object):
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             self._poly.append(pval)
-            DEBUG_ON('Ez_poly: (il,i0,ir) ({:3},{:3},{:3}),\t(zr,zl) ({},{})'.format(il,i0,ir,zl,zr))
+            DEBUG_ON('Ez_poly: (il,i0,ir) ({:3},{:3},{:3}),\t(zl,zr) ({},{})'.format(il,i0,ir,zl,zr))
 
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
