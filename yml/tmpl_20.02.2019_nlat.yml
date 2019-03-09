@@ -152,7 +152,7 @@ SEGMENTS:   # group NODEs in SEGMENT
 - SRF: &srf [*sfgh,*d3,*sfgh] # cavity-array + drift + cavity-array
 #...........................................................................................
 CELL: &cell   # concatenate SEGMENTS
-- [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell with cavity-arrays
+- [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
 #...........................................................................................
 LINE: &line   # concatenate CELLS to sublattice LINE
 - [*cell]

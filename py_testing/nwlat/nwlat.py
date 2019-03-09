@@ -16,7 +16,7 @@ def flatten(lis):
 ##--------- MAIN
 if __name__ == '__main__':
     
-    input_file = 'nwlat.yml'
+    input_file = 'simuINstat.yml'
     # input_file = 'learnyaml.yaml'
     with open(input_file,'r') as fileobject:
         try:
@@ -36,6 +36,7 @@ if __name__ == '__main__':
         print(k)
         klist = indat[k]
         print(klist)
+        if not klist: continue
         nlist = flatten(klist)
         if k == 'LATTICE':
             N = nlist[0]

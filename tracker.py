@@ -337,7 +337,7 @@ def tracker(options):
 
     # No tracking without acceleration
     if FLAGS['dWf'] == 0:
-        print('{}'.format('IMPOSSIBLE: no tracking without acceleration?'))
+        print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
 
     # calculate twiss paramters at entrance
