@@ -17,8 +17,9 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from pylab import plot,show,legend,figure
+import matplotlib.pyplot as plt
 from math import cos,sin,radians,degrees
+
 '''try Ruth's symplectic integrator'''
 def display(functions,text=''):
     for function in functions:
@@ -26,13 +27,13 @@ def display(functions,text=''):
         p = [x[1] for x in function]
         q = [x[2] for x in function]
         vp= [x[3] for x in function]
-        figure(text)
-        plot(t,p,label='p')
-        plot(t,q,label='q')
-        legend(loc='lower right',fontsize='x-small')
+        plt.figure(text)
+        plt.plot(t,p,label='p')
+        plt.plot(t,q,label='q')
+        plt.legend(loc='lower right',fontsize='x-small')
         # plot(q,p,label='w(phi)',color='blue')
         # plot(q,vp,label='vp(phi)',color='red')
-    show(block=False)
+    plt.show()
 class Order2Map(object):  # from Ruth IEEE Transactions on Nuclear Science, Vol. NS-30, No. 4, August 1983
     def __init__(self,stepsize,dHdP,dHdX):
         self.h = stepsize
@@ -274,9 +275,9 @@ def test2(fmap=11.3):              # use pendulum
     ===============================================================================''')
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    # test0()
+    test0()
     test1()
-    # test2()
+    test2()
 
 
 
