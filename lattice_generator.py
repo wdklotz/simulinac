@@ -302,11 +302,7 @@ def factory(input_file):
         """ returns a dict of parameters """
         parameter_list = in_data['PARAMETERS']
         parameters     = liofd2d(parameter_list)
-        if 'frequency'        in parameters: PARAMS['frequenz']         = parameters['frequency']
-        # if 'B_grad_f'         in parameters: PARAMS['qf_gradient']      = parameters['B_grad_f']
-        # if 'B_grad_d'         in parameters: PARAMS['qd_gradient']      = parameters['B_grad_d']
         if 'Tkin'             in parameters: PARAMS['injection_energy'] = parameters['Tkin']
-        # if 'EzAvg'            in parameters: PARAMS['EzAvg']            = parameters['EzAvg']
         if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
         if 'gap'              in parameters: PARAMS['gap']              = parameters['gap']
         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
@@ -323,10 +319,6 @@ def factory(input_file):
         if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
         if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
         if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
-
-        PARAMS['lamb']           = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-        PARAMS['wellenlänge']    = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
-        # PARAMS['spalt_spannung'] = PARAMS['EzAvg']*PARAMS['gap']
         return parameters
 #--------
     def get_flattened_lattice_list(in_data):

@@ -343,7 +343,7 @@ def tracker(options):
     # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
     tkin     = PARAMS['sollteilchen'].tkin
-    conv     = WConverter(tkin)
+    conv     = WConverter(tkin,lattice.first_gap.freq)
     t1       = time.process_time()
 
     # pull more options

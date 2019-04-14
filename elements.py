@@ -469,7 +469,7 @@ class GAP(I):
     def __init__(self,
                     EzAvg      = PARAMS['EzAvg'],
                     PhiSoll    = radians(PARAMS['phisoll']),
-                    fRF        = PARAMS['frequenz'],
+                    fRF        = None,
                     label      = 'GAP',
                     particle   = PARAMS['sollteilchen'],
                     gap        = PARAMS['gap'],
@@ -487,11 +487,11 @@ class GAP(I):
 
         self['viseo']  = 0.25
 
-        lamb         = PARAMS['lichtgeschwindigkeit']/fRF    # [m] wellenlaenge
+        lamb         = PARAMS['clight']/fRF                  # [m] wellenlaenge
         beta         = self.particle.beta                    # beta Einstein
         tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
         E0L          = self.EzAvg*self.gap                   # Spaltspannung
-        self.deltaW  = E0L*tr*cos(PhiSoll)                    # delta-W T.Wrangler pp.221
+        self.deltaW  = E0L*tr*cos(PhiSoll)                   # delta-W T.Wrangler pp.221
         tkin         = self.particle.tkin
         tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
         part_center  = copy(self.particle)(tk_center)        # !!!IMPORTANT!!! particle @ gap center
@@ -542,7 +542,7 @@ class RFG(I):
             EzAvg      = PARAMS['EzAvg'],
             label      = 'RFG',
             PhiSoll    = radians(PARAMS['phisoll']),
-            fRF        = PARAMS['frequenz'],
+            fRF        = None,
             gap        = PARAMS['gap'],
             aperture   = None,
             dWf        = FLAGS['dWf'],
@@ -613,7 +613,7 @@ class RFG(I):
         return twopi*self.freq
     @property
     def lamb(self):
-        return PARAMS['lichtgeschwindigkeit']/self.freq
+        return PARAMS['clight']/self.freq
     @property
     def EzPeak(self):
         return self['EzPeak']
@@ -654,7 +654,7 @@ class RFC(I):
                 EzAvg    = PARAMS['EzAvg'],
                 label    = 'RFC',
                 PhiSoll  = radians(PARAMS['phisoll']),
-                fRF      = PARAMS['frequenz'],
+                fRF      = None,
                 gap      = PARAMS['gap'],
                 aperture = PARAMS['aperture'],
                 dWf      = FLAGS['dWf'],
@@ -780,7 +780,7 @@ class RFC(I):
         return self._ttf
     @property
     def lamb(self):
-        return PARAMS['lichtgeschwindigkeit']/self.freq
+        return PARAMS['clight']/self.freq
     @property
     def deltaW(self):
         return self._deltaW
@@ -943,7 +943,7 @@ class _PYO_G(object):
         DELTAW    = self.deltaW                       # energy kick
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # PARTICLE
-        converter = WConverter(WIN,freq=frq)
+        converter = WConverter(WIN,frq)
 #       phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
@@ -959,7 +959,7 @@ class _PYO_G(object):
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
 
-        converter = WConverter(WOUT,freq=frq)
+        converter = WConverter(WOUT,frq)
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
 #       zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)

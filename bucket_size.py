@@ -59,14 +59,13 @@ def bucket():
     phi_2 = PARAMS['phi_2']       # stable phase lower limit
     psi   = PARAMS['psi']
     anz   = int(psi/Dphi)
-
+##todo: get parameters from 1st cavity in lattice
     tkin     = PARAMS['injection_energy']
     particle = Proton(tkin=tkin)
-    gap      = PARAMS['spalt_laenge']
-    EzAvg    = PARAMS['EzAvg']
-    freq     = PARAMS['frequenz']
-    lamb     = PARAMS['wellenlänge']
-    rfg      = RFG(EzAvg=EzAvg,PhiSoll=phis,fRF=freq,label='RFG',gap=gap,particle=particle,dWf=1.)
+    gap      = PARAMS['gap']
+    EzAvg    = 1.     #PARAMS['EzAvg']
+    freq     = 800.e6 #PARAMS['frequenz']
+    lamb     = PARAMS['clight']/freq
     gamma    = particle.gamma
     beta     = particle.beta
     m0c2     = particle.e0

@@ -485,10 +485,7 @@ class Lattice(object):
         soll_test   = SollTest_OFF
 
         print('CALCULATE C+S TRAJECTORIES')
-        gamma       = PARAMS['sollteilchen'].gamma
-        beta        = PARAMS['sollteilchen'].beta
         tkin        = PARAMS['sollteilchen'].tkin
-        lamb        = PARAMS['wellenlänge']
         
         if True:
             # 2 point on the ellipse y1 & y4: intersections
@@ -520,8 +517,6 @@ class Lattice(object):
 
         # for element in self.seq:
         for element in iter(self):
-            particle = element.particle
-            gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
             try:
@@ -533,8 +528,10 @@ class Lattice(object):
                     cxp = c_0[XPKOO]
                     cy  = c_0[YKOO]
                     cyp = c_0[YPKOO]
-                    cz  = -c_0[ZKOO]*360./(beta*lamb)            # sigmaz_i --> dPhi [deg]
-                    cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
+                    # cz  = -c_0[ZKOO]*360./(beta*lamb)            # sigmaz_i --> dPhi [deg]
+                    # cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
+                    cz  = c_0[ZKOO]*1.e3      # z [mm]
+                    cdw = c_0[ZPKOO]*100.     # dp/p [%]
                     c_fun.append(s,(cx,cxp,cy,cyp,cz,cdw))
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
@@ -542,8 +539,10 @@ class Lattice(object):
                     sxp = s_0[XPKOO]
                     sy  = s_0[YKOO]
                     syp = s_0[YPKOO]
-                    sz  = -s_0[ZKOO]*360./(beta*lamb)
-                    sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
+                    # sz  = -s_0[ZKOO]*360./(beta*lamb)
+                    # sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
+                    sz  = -s_0[ZKOO]*1.e3
+                    sdw = s_0[ZPKOO]*100.
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdw))
             except ValueError as ex:
                 print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))

@@ -1,4 +1,5 @@
-T=50.                   # kinetic energy in [Mev]
+T=35.                   # kinetic energy in [Mev]
+# T=50.                   # kinetic energy in [Mev]
 T=80.                   # kinetic energy in [Mev]
 DT2T=6.0e-3             # delta-T/T kinetic
 DT2T=1.0e-3             # delta-T/T kinetic

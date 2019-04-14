@@ -328,7 +328,7 @@ class _DYN_G(object):
         gammaS    = 1.+ tkinS/m0c2
        
         # PARTICLE
-        converter = WConverter(tkinS,freq=freq)
+        converter = WConverter(tkinS,freq)
         DW        = converter.Dp2pToW(zp)
         tkin      = tkinS+DW
         gamma     = 1.+ tkin/m0c2
@@ -391,7 +391,7 @@ class _DYN_G(object):
 
         tkinS = (gammaS-1.)*m0c2
         tkin  = (gamma -1.)*m0c2
-        converter = WConverter(tkinS,freq=freq)
+        converter = WConverter(tkinS,freq)
         zp = converter.DWToDp2p(tkin-tkinS)
 
         T += self.deltaW

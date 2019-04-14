@@ -86,12 +86,7 @@ FLAGS  = dict(
         pspace               = False             # plot CS twiss ellipses at entrance
         )
 PARAMS = dict(
-        # lichtgeschwindigkeit = 299792458.,       # [m/s] const
-        # elementarladung      = 1.602176565e-19,  # [coulomb] const
-        # proton_mass          = 938.272,          # [MeV/c**2] const
-        # electron_mass        = 0.5109989,        # [MeV/c**2] const
         clight               = C.c,              # [m/s] const
-        lichtgeschwindigkeit = C.c,              # [m/s] const
         elementarladung      = C.e,              # [coulomb] const
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
         electron_mass        = C.value('electron mass energy equivalent in MeV'),
@@ -99,10 +94,9 @@ PARAMS = dict(
         gap                  = 0.022,            # [m] default
         cavity_laenge        = 0.08,             # [m] default
         phisoll              = -30.,             # [deg] default
-        frequenz             = 816.e6,           # [Hz] default
         injection_energy     = 50.,              # [MeV] default
-        qf_gradient          = 16.0,             # [T/m] default
-        qd_gradient          = 16.0,             # [T/m] default
+        # qf_gradient          = 16.0,             # [T/m] default
+        # qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         aperture             = None,             # default aperture = no aperture
         nbwindgs             = 30,               # nboff coil windings
@@ -201,11 +195,11 @@ class Particle(object):
             # sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
-        self.v          = self.beta * PARAMS['lichtgeschwindigkeit']    # velocity [m/s]
-        self.brho       = 1.e+6 / PARAMS['lichtgeschwindigkeit'] * self.gamma_beta * self.e0 # [T*m]
+        self.v          = self.beta * PARAMS['clight']    # velocity [m/s]
+        self.brho       = 1.e+6 / PARAMS['clight'] * self.gamma_beta * self.e0 # [T*m]
         self.name       = name
         self.m0c2       = self.e0
-        self.m0c3       = self.e0 * PARAMS['lichtgeschwindigkeit']
+        self.m0c3       = self.e0 * PARAMS['clight']
         self.betac      = self.v
         self.E          = self.e
         self.T          = self.tkin
@@ -223,7 +217,7 @@ class Particle(object):
                 ]]
         return tblprnt(headr,records)
     def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*fRF*gap / (self.beta* PARAMS['lichtgeschwindigkeit'])
+        teta = 2.*pi*fRF*gap / (self.beta* PARAMS['clight'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
@@ -241,13 +235,12 @@ class Electron(Particle):
 
 # Sollteichen
 PARAMS['sollteilchen'] = Proton()
-PARAMS['wellenlänge'] = PARAMS['lichtgeschwindigkeit']/PARAMS['frequenz']
 
 class WConverter(object):
     """
     Converter to switch between different longitudinal phase space coordinates
     """
-    def __init__(self,tk,freq=PARAMS['frequenz']):
+    def __init__(self,tk,freq):
         self.pi             = C.pi
         self.lamb           = C.c/freq           # [m]
         self.m0c2           = C.value('proton mass energy equivalent in MeV')
@@ -423,7 +416,7 @@ def waccept(node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
-        conv      = WConverter(tkin)
+        conv      = WConverter(tkin,freq)
 
         # LARGE amplitude oscillations (T.Wangler pp. 175)
         # w = Dgamma = DW/moc2 is normalized energy deviation
@@ -449,7 +442,7 @@ def waccept(node):
         #     *) Vorgabe ist delta-T/T (DT2T) kinetic energy spread
         #     *) daraus w0 als energy spread normiert auf m0c2.
         #     *) w0root ist der Wurzelaudruck in Wangler's Formel
-        #     *) Dphi0 forlt aus DT2T und w0root
+        #     *) Dphi0 folgt aus DT2T und w0root
         #     *) emittanz folgt als Produkt von Dphi0*w0
         #     *) {Dphi,w}-space: emitw = Dphi0*w0 [rad]
         w0       = (gamma-1.)*DT2T
@@ -679,7 +672,7 @@ def collect_data_for_summary(lattice):
     SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['useaper']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
-    SUMMARY['wavelength* [cm]']                 =  PARAMS['lamb']*1.e2
+    # SUMMARY['wavelength* [cm]']                 =  PARAMS['lamb']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']

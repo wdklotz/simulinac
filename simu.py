@@ -219,18 +219,18 @@ def display1(*args):
         plt.plot(z,sgy ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
 
-    #-------------------- longitudinal tracks dPhi, dW/W
+    #-------------------- longitudinal tracks z, dP/P
     # ax_l = left abszisse
     ax_l=plt.subplot(313)
     ax_l.set_title('longitudinal')
-    ax_l.set_ylabel(r"$\Delta\phi$ [deg]")
+    ax_l.set_ylabel(r"z [mm]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
     ax_l.plot(z1,cz,color='green')
     ax_l.plot(z2,sz,color='green',linestyle=':')
     # ax_r = right abszisse
     ax_r = ax_l.twinx()
-    ax_r.set_ylabel(r'$\Delta$w/w [%]')
+    ax_r.set_ylabel(r'$\Delta$p/p [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
     ax_r.plot(z2,cdw,color='red')
