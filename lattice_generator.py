@@ -141,7 +141,7 @@ def instanciate_element(item):
     elif key == 'RFG':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        fRF       = get_mandatory(attributes,"fRF",label)
+        freq       = get_mandatory(attributes,"freq",label)
         gap       = get_mandatory(attributes,'gap',label)
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
@@ -155,15 +155,15 @@ def instanciate_element(item):
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
             EzAvg = PARAMS[fname].EzAvg
-            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
+            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
             pass
         else:
-            instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
+            instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
-        instance['fRF']      = fRF
+        instance['freq']      = freq
         instance['gap']      = gap
         instance['aperture'] = aperture
         instance['dWf']      = dWf
@@ -172,7 +172,7 @@ def instanciate_element(item):
     elif key == 'RFC':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        fRF       = get_mandatory(attributes,"fRF",label)
+        freq       = get_mandatory(attributes,"freq",label)
         gap       = get_mandatory(attributes,'gap',label)
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
@@ -187,15 +187,15 @@ def instanciate_element(item):
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
             EzAvg = PARAMS[fname].EzAvg
-            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
+            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
             pass
         else:
-            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=fRF,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
+            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
-        instance['fRF']      = fRF
+        instance['freq']      = freq
         instance['gap']      = gap
         instance['aperture'] = aperture
         instance['dWf']      = dWf
@@ -207,15 +207,15 @@ def instanciate_element(item):
         gap       = get_mandatory(attributes,'gap',label)
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        fRF       = get_mandatory(attributes,"fRF",label)
+        freq       = get_mandatory(attributes,"freq",label)
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
-        instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=fRF,label=label,gap=gap,dWf=dWf,aperture=aperture)
+        instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
         instance['label']   = label
         instance['gap']     = gap
         instance['EzAvg']   = EzAvg
         instance['PhiSoll'] = PhiSoll
-        instance['fRF']     = fRF
+        instance['freq']     = freq
         instance['dWf']     = dWf
 
     elif key == 'MRK':

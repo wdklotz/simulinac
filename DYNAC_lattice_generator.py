@@ -428,9 +428,8 @@ if __name__ == '__main__':
     tpp1                = 4.9e-3
     
     # Parameter import
-    # Imports all the parameters and converts them to the correct units apart from the accelerating 
+    # Import all the parameters and convert them to the correct units apart from the accelerating 
     # and transport elements which are imported later on as thier parameters are not global.
-    frequency = PARAMS['frequenz']
     alphax    = PARAMS['alfax_i']
     betax     = PARAMS['betax_i']      # mm/mrad - DYNAC units
     emitx     = PARAMS['emitx_i']*1E06 # mm*mrad - DYNAC units
@@ -440,7 +439,8 @@ if __name__ == '__main__':
     emitw     = PARAMS['emitw']        # mm/mrad - DYNAC units
     rfphdeg   = PARAMS['phisoll']
     tkIN      = PARAMS['injection_energy'] # MeV
-    conv      = WConverter(tkIN)
+    freq      = lattice.first_gap.freq
+    conv      = WConverter(tkIN,freq)
     alphaz    = 0.
     # alphaz    = -0.21
     emitz     = 180.e3/pi*m0c2*emitw # deg*keV - DYNAC units
@@ -462,7 +462,7 @@ if __name__ == '__main__':
                 file=             file,
                 lattice=          lattice,
                 sections=         sections,
-                frequency=        frequency, 
+                frequency=        freq, 
                 alphax=           alphax,
                 betax=            betax,
                 emitx=            emitx,

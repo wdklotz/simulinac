@@ -101,7 +101,7 @@ ELEMENTS:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *freq        # [Hz] frequency
+        - freq:      *freq       # [Hz] frequency
         - gap:      *p15         # [m] length
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3       # [m] quad bore
@@ -112,7 +112,7 @@ ELEMENTS:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *freq        # [Hz] frequency
+        - freq:      *freq       # [Hz] frequency
         - gap:      *p15         # [m] gap length
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3         # [m] quad bore
@@ -168,8 +168,8 @@ SEGMENTS:   # group NODEs in SEGMENT
 - SRFC: &srfc [*srfcav,*d3,*srfcav]     # cavity-array + drift + cavity-array
 #...........................................................................................
 CELL: &cell   # concatenate SEGMENTS to one FODO-cell + cavity-arrays
-- [*sqf1,*srfg,*sqd,*srfg,*sqf2]
-# - [*sqf1,*srfc,*sqd,*srfc,*sqf2]
+# - [*sqf1,*srfg,*sqd,*srfg,*sqf2]
+- [*sqf1,*srfc,*sqd,*srfc,*sqf2]
 #...........................................................................................
 LINE: &line   # concatenate CELLS to sublattice LINE
 - [*cell]

@@ -95,8 +95,6 @@ PARAMS = dict(
         cavity_laenge        = 0.08,             # [m] default
         phisoll              = -30.,             # [deg] default
         injection_energy     = 50.,              # [MeV] default
-        # qf_gradient          = 16.0,             # [T/m] default
-        # qd_gradient          = 16.0,             # [T/m] default
         quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         aperture             = None,             # default aperture = no aperture
         nbwindgs             = 30,               # nboff coil windings
@@ -216,8 +214,8 @@ class Particle(object):
                 '{:8.4f}'.format(self.e)
                 ]]
         return tblprnt(headr,records)
-    def trtf(self,gap,fRF):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
-        teta = 2.*pi*fRF*gap / (self.beta* PARAMS['clight'])
+    def trtf(self,gap,freq):  # transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65)
+        teta = 2.*pi*freq*gap / (self.beta* PARAMS['clight'])
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
