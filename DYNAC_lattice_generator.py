@@ -1,5 +1,5 @@
 """ 
-Dynac_conversion v0.18 converts YAML input file (simuIN.yml) into dynac.in for Dynac v6r19.
+Dynac_conversion v0.18 converts YAML input file (simuIN.yml) into dynacIN for Dynac v6r19.
 
 Works with simulinac v7.1.3a3.
 
@@ -60,7 +60,7 @@ To DO:
 - TTF optimization
 
 """
-
+import sys
 import scipy.constants as C
 import math
 import elements as ELM
@@ -74,17 +74,21 @@ def call_INTRO(arg):
     file = arg['file']
     file.write("ALCELI\n") 
     
-def call_FIELD_T(arg):   # E.Tanke's Vorschlag
+def call_FIELD_T(arg):
+    """
+    E.Tanke's Vorschlag:
+        ...das SF-Feld mehrfach zu wiederholen funktioniert fuer ALCELI nicht wegen unabhaengiger pillboxes.
+    """
     def shift(field,z0):
         f = [[p[0]+z0,p[1]] for p in field]
         return f
     ATT           =   arg['attenuation']
     FH            =   arg['frequency']
     cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
-    EzPeak        =   arg['ezpeak']        # Mv/m
+    EzPeak        =   1.                   # Mv/m
     sfdata        =   SFdata(arg['sfdata_file'])
     sfdtable      =   sfdata._Ez0_tab
-    file_tbl_name =   'field.txt'
+    file_tbl_name =   'dynacEzTab'
     
     tmp = []
     for p in sfdtable:
@@ -116,13 +120,17 @@ def call_FIELD_T(arg):   # E.Tanke's Vorschlag
     file.write('{} ; ATT\n'.format(ATT))
 
 def call_FIELD(arg):
+    """
+    SF-field table on intervall -cavlen <= z <= +cavlen. 
+    Field maximum is at z=0 and normalized to 1 Mv/m.
+    """
     ATT           =   arg['attenuation']
     FH            =   arg['frequency']
     cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
-    EzPeak        =   arg['ezpeak']        # Mv/m
+    EzPeak        =   1.                   # Mv/m
     sfdata        =   SFdata(arg['sfdata_file'])
     sfdtable      =   sfdata._Ez0_tab
-    file_tbl_name =   'field.txt'
+    file_tbl_name =   'dynacEzTab'
     
     tmp = []
     for p in sfdtable:
@@ -155,7 +163,7 @@ def call_FIELD(arg):
         
     file = arg['file']
     file.write("FIELD\n") 
-    file.write('{}\n'.format(file_tbl_name))
+    file.write('{}\n'.format('../'+file_tbl_name))
     file.write('{} ; ATT\n'.format(ATT))
     
 def call_GEBEAM(arg):
@@ -304,7 +312,7 @@ def call_DRIFT(arg):
 def call_ALCELI(arg):    
     file = arg['file']
     file.write(";ALCELI begin\n")
-    number_of_RFQH = 0
+    nbof_RFC = 0
     limits = [1., 5., 1., 5., 1., 1.,  20., 1.]
     i = 0
     for section in sections:
@@ -329,7 +337,7 @@ def call_ALCELI(arg):
                 continue
                 
             elif isinstance(node,ELM.RFC):
-                number_of_RFQH = number_of_RFQH + 1   # dummy variable, not used in DYNAC
+                nbof_RFC = nbof_RFC + 1               # dummy variable, not used in DYNAC
                 energy = 0.                           # (MeV) dummy variable, not used in DYNAC
                 beta = 0.                             # dummy variable, not used in DYNAC
                 cell_length = node.length*100         # (cm)
@@ -340,13 +348,14 @@ def call_ALCELI(arg):
                 sp = 0.                               # dummy variable, not used in DYNAC
                 quad_length = 0.                      # (cm) dummy variable, not used in DYNAC
                 quad_strength = 0.                    # (kG/cm) (dummy variable, not used in DYNAC)
-                EzAvg  = node['EzAvg']                # (MV/m)
+                EzAvg   = node['EzAvg']               # (MV/m)
+                EzPeak  = node['EzPeak']              # (MV/m)
                 rfphdeg =  +math.degrees(node.phis)   # (deg) RF phase in the middle of the gap
                 accumulated_length = 0.               # (cm) dummy variable, not used in DYNAC
                 frequency_MHz = node.freq*1E-06       # (MHz)
                 attenuation = arg['attenuation']      # attenuation E-field   (1 usually)
                 etcell = [
-                    number_of_RFQH,
+                    nbof_RFC,
                     energy,
                     beta,
                     cell_length,
@@ -364,12 +373,16 @@ def call_ALCELI(arg):
                     attenuation
                     ]
                 # call_CAVSC(dict(file=file, ETCELL=etcell))
+                norm_epeak = 1.     # Mv/m, SF-field table is always normalized to this peak value
                 cavnum_par = dict(
                     file   = file,
-                    number = number_of_RFQH,
+                    number = nbof_RFC,
                     dphase = rfphdeg,
                     intrvl = 6,
-                    ffield = 0.
+                    # scale field table (should give correct EzPeak). 
+                    # NOTE: can be done here with ffield !=  0 or globally with attenuation in FIELD and ffield == 0 here
+                    ffield = 100*(EzPeak-norm_epeak)/norm_epeak
+                    # ffield = 0.
                     )
                 call_CAVNUM(cavnum_par)
                 i = i + 1
@@ -382,6 +395,11 @@ def call_ALCELI(arg):
                 i = i + 1
                 # call_EMITGR('{}'.format(i),arg,limits)
                 continue  
+            elif isinstance(node,ELM.RFG):
+                print("Sorry connot continue. Use RFC for DYNAC!")
+                print("Sorry connot continue. Use RFC for DYNAC!")
+                print("Sorry connot continue. Use RFC for DYNAC!")
+                sys.exit(1)
             else:
                 i = i + 1
     file.write(";ALCELI end\n")
@@ -397,8 +415,8 @@ if __name__ == '__main__':
     sections = lattice.get_sections()
     waccept(lattice.first_gap)
         
-    #Hardcoded Parameters
-    # The following pararg['title']ameters are not imported and hardcoded a specific value.
+    # Parameters
+    # The following parameters are hardcoded to a specific value.
     particles           = 3000
     tof_time_adjustment = 0 
     attenuation_factor  = 1.0
@@ -419,7 +437,7 @@ if __name__ == '__main__':
     alphay    = PARAMS['alfay_i']
     betay     = PARAMS['betay_i']
     emity     = PARAMS['emity_i']*1E06 # mm*mrad - DYNAC units
-    emitw     = PARAMS['emitw_i']      # mm/mrad - DYNAC units
+    emitw     = PARAMS['emitw']        # mm/mrad - DYNAC units
     rfphdeg   = PARAMS['phisoll']
     tkIN      = PARAMS['injection_energy'] # MeV
     conv      = WConverter(tkIN)
@@ -436,7 +454,7 @@ if __name__ == '__main__':
     limits_i = [1., 1., 1., 1., 1., 1.,  10., 1.]
     # limits_f = limits_i
     limits_f = [1., 1., 1., 1., 1., 1.,  10., 1.]
-    file     = open("dynac.in", "w") 
+    file     = open("dynacIN", "w") 
 
 ##dync_params
     dyn_params = dict(
@@ -476,7 +494,6 @@ if __name__ == '__main__':
                 ishift=           1,
                 # cavities
                 cavlen=           PARAMS['gap'], # m lentgh of cavities
-                ezpeak=           PARAMS['EzPeak'],  # Mv/m
                 # PROFGR
                 idwdp=            0,
                 iscale=           1,
@@ -485,7 +502,7 @@ if __name__ == '__main__':
                 zlim=             7.,    # deg
                 distmin=          0.01
                 )
-        # generate dynac.in
+        # generate dynacIN
     call_INTRO (dyn_params)
     call_GEBEAM(dyn_params)
     call_INPUT (dyn_params)
