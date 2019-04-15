@@ -150,6 +150,7 @@ def instanciate_element(item):
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
+            EzPeak = EzAvg
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             if fname not in PARAMS:
@@ -158,6 +159,7 @@ def instanciate_element(item):
             instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
             pass
         else:
+            EzPeak = EzAvg
             instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
@@ -182,6 +184,7 @@ def instanciate_element(item):
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
+            EzPeak = EzAvg
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             if fname not in PARAMS:
@@ -190,6 +193,7 @@ def instanciate_element(item):
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
             pass
         else:
+            EzPeak = EzAvg
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
@@ -211,9 +215,10 @@ def instanciate_element(item):
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
+        instance['EzAvg']   = EzAvg
+        instance['EzPeak']  = EzAvg
         instance['label']   = label
         instance['gap']     = gap
-        instance['EzAvg']   = EzAvg
         instance['PhiSoll'] = PhiSoll
         instance['freq']    = freq
         instance['dWf']     = dWf

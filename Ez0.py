@@ -257,6 +257,7 @@ class SFdata(object):
         self.make_Ez_table()
         self.make_Ez_poly()
         self.EzAvg = EzAvg(self._poly)
+        self.Peak2Avg = self.EzPeak/self.EzAvg
 
     def make_Ez_table(self):
         """ read data and normalize """
@@ -354,13 +355,13 @@ class SFdata(object):
 
     @property
     def Ez_table(self):
-        """List(Dpoint) of SuperFish data points"""
+        """List of SuperFish data points. [Dpoint]"""
         return self._Ez0_tab
     @property
     def Ez_poly(self):
-        """List(Polyval) of polygon approximations"""
+        """List of polygon approximations. [Polyval]"""
         return self._poly
-
+        
 def pre_plt(input_file):
     """ prepare plot """
     ax  = plt.subplot(111)

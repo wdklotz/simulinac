@@ -20,7 +20,7 @@ NL=54                   # nboff lines a.k.a. cells
 MAP=t3d
 # MAP=simple
 # MAP=oxal
-# MAP=base
+MAP=base
 # MAP=ttf
 # MAP=dyn
 

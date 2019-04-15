@@ -128,8 +128,7 @@ def call_FIELD(arg):
     ATT           =   arg['attenuation']
     FH            =   arg['frequency']
     cavlen        =   arg['cavlen']/2.     # (m) 1/2 cavity length
-    EzPeak        =   1.                   # Mv/m
-    sfdata        =   SFdata(arg['sfdata_file'])
+    sfdata        =   SFdata(arg['sfdata_file'])    # normed to EzPeak == 1
     sfdtable      =   sfdata._Ez0_tab
     file_tbl_name =   'dynacEzTab'
     
@@ -140,7 +139,7 @@ def call_FIELD(arg):
         tmp.append(p)
     sfdtable = tmp
     z0 = sfdtable[0].z
-    field = [[(p.z-z0)*1.e-2,p.Ez*EzPeak*1.e6] for p in sfdtable]   # z[m], EzPeak[V/m]
+    field = [[(p.z-z0)*1.e-2,p.Ez*1.e6] for p in sfdtable]   # z[m], EzPeak[V/m] == 1.
 
     # interpolate end-points
     # x1= field[0][0]
@@ -156,6 +155,7 @@ def call_FIELD(arg):
     # write field-file
     # for i in field:
     #     print('{:10.5}[m] {:10.5}[V/m]'.format(i[0],i[1]))
+
     with open(file_tbl_name,'w') as field_table:
         field_table.write('{}\n'.format(FH))
         for p in field:

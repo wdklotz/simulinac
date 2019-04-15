@@ -1,25 +1,32 @@
 """
+Version v8.0.0a2
+*) fixed confusing handling of cavity frequency parameter (is not global anymore)
+*) fixed confusing handling of EzPeak and EzAvg
+*) fixed regression errors in DYNAC_lattice_generator.py
+*) fixed regression errors in bucket_size.py
+*) checked all mappings
+*) checked simu.py and tracker.py
+*) checked DYNAC_lattice_generator.py
+*) reorganized Dynac files and made DYNAC-run from 80Mev to ~145MeV
+*) changed to canonical to variables {z,dP/P} for axes in longitudinal cs-trajectories
+
 Version v8.0.0
-"""
 *) new lattice_generator.py
-"""
+
 Version v7.1.3a4
-*) input_files for Windows now static now
+*) input_files for Windows static now
 *) Ez0.py refactored. Neue Intervalteilung
 *) improved speed of calculation in OXAL.py
 *) added TmStamp class in setutil.py to check program flow 
 *) removed depricated time.clock() in tracker.py
 *) removed emitw_i as initial parameter. Vorgabe is now relative kinetic energy spread DT/T @ entrance
-"""
 
-"""
 Version v7.1.3a4
 *) updated documents in doc-dir
 *) longitudinal phase space now initialized by DT/T kinetic energy spread
 *) new SUMMARY print-out
 *) helper: bmParams.py to calculate longitudinal parameters for comparisons
-"""
-"""
+
 Version v7.1.3
 *) corection of oxal-map for wrong formulas in S&H paper
 
