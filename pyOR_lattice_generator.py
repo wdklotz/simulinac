@@ -50,7 +50,7 @@ def generator(dir='yml', file='simuIN', ext='yml', EzFile=None):
 
     # transfer a selection of parameters to <PARAMS/>-tag
     parameter = dict(
-            clight           = PARAMS['lichtgeschwindigkeit'],# [m/s]
+            clight           = PARAMS['clight'],# [m/s]
             proton_mass      = PARAMS['proton_mass'],         # MeV
             # EzAvg            = PARAMS['EzAvg'],               # [MV/m]
             gap              = PARAMS['gap'],                 # [m]

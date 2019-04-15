@@ -378,7 +378,7 @@ def test0():
     
     print('-----------------------------------TEST 0----------------')
     input_file='SF_WDK2g44.TBL'
-    EzPeak = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg fuer INTG(NG(von 0 bis 2.2*sigma)
+    EzPeak = 1.4   # MV/m
     SF_tab = SFdata(input_file,EzPeak)
     
     oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
@@ -416,7 +416,7 @@ def test1():
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'
-    EzPeak = PARAMS['EzAvg']
+    EzPeak = 1.4
     SF_tab = SFdata(input_file,EzPeak)
     
     oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')

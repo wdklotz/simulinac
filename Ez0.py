@@ -426,7 +426,7 @@ def test2():
     print('----------------------------TEST2---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
-    c        = PARAMS['lichtgeschwindigkeit']
+    c        = PARAMS['clight']
     freq     = PARAMS['frequenz']
     k        = 2*pi*freq/(c*beta)*1.e-2     # [1/cm]
 
@@ -478,8 +478,8 @@ def test3(input_file):
     print('----------------------------TEST3---')
     particle = Proton(tkin=100.)
     beta     = particle.beta
-    c        = PARAMS['lichtgeschwindigkeit']
-    freq     = PARAMS['frequenz']
+    c        = PARAMS['clight']
+    freq     = 800.e6
     k        = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
     gap = 6.8
     zl  = -gap/2.

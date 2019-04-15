@@ -308,9 +308,9 @@ def test2():
 
 def test3(filepath):
     print('-----------------------------------------Test3---')
-    from lattice_generator import parse_and_fabric
+    from lattice_generator import factory
     N = 200
-    lattice = parse_and_fabric(filepath)
+    lattice = factory(filepath)
     track = EmitContour(N, random=True)
     X  = [x()[Ktp.x] for x in iter(track)]
     XP = [x()[Ktp.xp] for x in iter(track)]

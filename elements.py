@@ -467,12 +467,12 @@ class GAP(I):
     ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! 
     """
     def __init__(self,
-                    EzAvg      = PARAMS['EzAvg'],
-                    PhiSoll    = radians(PARAMS['phisoll']),
-                    fRF        = None,
+                    EzAvg      = 1.,
+                    PhiSoll    = radians(-30.),
+                    fRF        = 800.e6,
                     label      = 'GAP',
                     particle   = PARAMS['sollteilchen'],
-                    gap        = PARAMS['gap'],
+                    gap        = 0.024,
                     position   = [0, 0, 0],
                     aperture   = None,
                     dWf        = FLAGS['dWf'],
@@ -539,11 +539,11 @@ class RFG(I):
     Wrapper to zero length RF kick gap-models
     """
     def __init__(self,
-            EzAvg      = PARAMS['EzAvg'],
+            EzAvg      = 1.,
             label      = 'RFG',
-            PhiSoll    = radians(PARAMS['phisoll']),
-            fRF        = None,
-            gap        = PARAMS['gap'],
+            PhiSoll    = radians(-30.),
+            fRF        = 800.e6,
+            gap        = 0.024,
             aperture   = None,
             dWf        = FLAGS['dWf'],
             mapping    = 't3d',
@@ -651,11 +651,11 @@ class RFC(I):
     Rf cavity as product D*Kick*D (DKD-model)
     """
     def __init__(self,
-                EzAvg    = PARAMS['EzAvg'],
+                EzAvg    = 1.,
                 label    = 'RFC',
-                PhiSoll  = radians(PARAMS['phisoll']),
-                fRF      = None,
-                gap      = PARAMS['gap'],
+                PhiSoll  = radians(-30.),
+                fRF      = 800.e6,
+                gap      = 0.024,
                 aperture = PARAMS['aperture'],
                 dWf      = FLAGS['dWf'],
                 length   = 0.,
@@ -1487,7 +1487,7 @@ def test6():
     mqd = QD(k0=kqd, length=lqd, label='QD')
     mb = RD(radius=rhob, length=lb, label='B')
     md = D(length=ld)
-    rfc = RFC(length = 4*PARAMS['gap'])
+    rfc = RFC(length = 4*0.024)
 
     steps = 13
 
@@ -1563,7 +1563,7 @@ def test8():
     print('RFG.particle(f)\n'+rfg.particlef.string())
 
     input_file = 'SF_WDK2g44.TBL'
-    EzPeak     = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg
+    EzPeak     = 1.4
     SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'ttf', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
@@ -1576,7 +1576,7 @@ def test8():
     print('RFG.particle(f)\n'+rfg.particlef.string())
 
     input_file = 'SF_WDK2g44.TBL'
-    EzPeak     = PARAMS['EzAvg']*1.8055 # [Mv/m] EzPeak/EzAvg
+    EzPeak     = 1.4
     SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
     lg = Lattice()
@@ -1602,8 +1602,8 @@ def test8():
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling ...')
-    grad = PARAMS['qd_gradient']            # [T/m] gradient
-    tk  = PARAMS['injection_energy']        # [MeV]  kin. energy
+    grad = 45.                              # [T/m] gradient
+    tk  = 50.                               # [MeV]  kin. energy
     kq = k0prot(gradient = grad, tkin = tk) # quad strength [1/m**2]
     len = 0.4                               # quad len [m]
     focal = kq*len
@@ -1621,11 +1621,11 @@ def test9():
     mqf = QF(k0 = kq, length = len)
     mqd = QD(k0 = kq, length = len)
     cavity = RFC(
-        EzAvg = PARAMS['EzAvg'],
-        PhiSoll = radians(PARAMS['phisoll']),
-        fRF = PARAMS['frequenz'])
+        EzAvg = 1.,
+        PhiSoll = radians(-30.),
+        fRF = 800.e6)
     print('======================== adjust_energy QF')
-    tki = PARAMS['injection_energy']    # [MeV]  kin. energy
+    tki = 50.              # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0., 950.]:
         tkf = tki+dt
@@ -1634,7 +1634,7 @@ def test9():
         print(mqf.adjust_energy(tkf).string())
         print(mqf.particle.string())
     print('======================== adjust_energy QD')
-    tki = PARAMS['injection_energy']    # [MeV]  kin. energy
+    tki = 50. #  PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0., 950.]:
         tkf = tki+dt
@@ -1643,7 +1643,7 @@ def test9():
         print(mqd.adjust_energy(tkf).string())
         print(mqd.particle.string())
     print('======================== adjust_energy CAV')
-    tki = PARAMS['injection_energy']    # [MeV]  kin. energy
+    tki = 50.    #  PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
     for dt in [0., 950.]:
         tkf = tki+dt

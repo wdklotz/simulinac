@@ -90,12 +90,6 @@ PARAMS = dict(
         elementarladung      = C.e,              # [coulomb] const
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
         electron_mass        = C.value('electron mass energy equivalent in MeV'),
-        EzAvg                = 2.87,             # [MV/m] default average E-field on axis
-        gap                  = 0.022,            # [m] default
-        cavity_laenge        = 0.08,             # [m] default
-        phisoll              = -30.,             # [deg] default
-        injection_energy     = 50.,              # [MeV] default
-        quad_bore            = 0.02,             # [m] Vorgabe quadrupole bore radius
         aperture             = None,             # default aperture = no aperture
         nbwindgs             = 30,               # nboff coil windings
         nbsigma              = 3,                # nboff beam sigmas to stay clear of aperture
@@ -224,11 +218,11 @@ class Particle(object):
         return self
 
 class Proton(Particle):
-    def __init__(self,tkin= PARAMS['injection_energy']):
+    def __init__(self,tkin= 50.):
         super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
 
 class Electron(Particle):
-    def __init__(self,tkin= PARAMS['injection_energy']):
+    def __init__(self,tkin= 50.):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
 
 # Sollteichen

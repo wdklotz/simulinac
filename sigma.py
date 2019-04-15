@@ -102,7 +102,7 @@ class Sigma(object):
         ref: Appendix F Trace3D manual
         IN:
             self:      the sigma matrix (object) at gap exit a.k.a. sigma_f
-            rf_gap:    the gap (object) for which the emiitance growth correction is added
+            rf_gap:    the gap (object) for which the emittance growth correction is added
             sigma_i:   the sigma matrix (object) at gap entrance
             delta_phi: the half-width of phase spread [rad]
             ksi:       tuple (x,y) as bunch center offset 
@@ -122,14 +122,14 @@ class Sigma(object):
         
         Phis          = rf_gap.phis
         E0L           = rf_gap.EzAvg*rf_gap.gap
-        T             = rf_gap.tr
+        Ttf           = rf_gap.ttf
         m0c2          = rf_gap.particle.e0
         lamb          = rf_gap.lamb
         particlei     = rf_gap.particle
         particlef     = rf_gap.particlef
         gamma_beta_f  = particlef.gamma_beta
         gamma_beta_av = (particlei.gamma_beta+gamma_beta_f)/2.
-        kx            = -pi*E0L*T/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
+        kx            = -pi*E0L*Ttf/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
         cfactor1      = kx**2*(g(Phis,delta_phi)-(sin(Phis)*f(delta_phi))**2)
         ksix          = ksi[0]
         ksiy          = ksi[1]
@@ -145,7 +145,7 @@ class Sigma(object):
         DEBUG_MODULE('Phis ',degrees(Phis))
         DEBUG_MODULE('delta_phi ',degrees(delta_phi))
         DEBUG_MODULE('E0L ',E0L)
-        DEBUG_MODULE('T ',T)
+        DEBUG_MODULE('Ttf ',Ttf)
         DEBUG_MODULE('m0c2 ',m0c2)
         DEBUG_MODULE('lamb ',lamb)
         DEBUG_MODULE('gamma_beta_av ',gamma_beta_av)
