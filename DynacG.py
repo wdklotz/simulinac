@@ -115,7 +115,7 @@ class _DYN_G(object):
     """ DYNAC's RF-gap model """
     def __init__(self, parent):
         # _DYN_G attributes
-        self.c        = PARAMS['lichtgeschwindigkeit']
+        self.c        = PARAMS['clight']
         self.phis     = parent.phis
         self.freq     = parent.freq
         self.gap      = parent.gap
@@ -274,7 +274,7 @@ class _DYN_G(object):
         """
         Full step through the DYNAC intervall with its 4 parts
         """
-        c = PARAMS['lichtgeschwindigkeit']
+        c = PARAMS['clight']
         h = self.stpfac.steplen()  
         m0c2 = PARAMS['proton_mass']
         m0c3 = m0c2*c     
@@ -315,7 +315,7 @@ class _DYN_G(object):
 
         # aliases
         stpfac = self.stpfac
-        c      = PARAMS['lichtgeschwindigkeit']
+        c      = PARAMS['clight']
         h      = stpfac.steplen()  
         m0c2   = PARAMS['proton_mass']
         phiS   = self.phis

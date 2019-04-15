@@ -22,7 +22,7 @@
 #   Repeated nodes are initially denoted by an ampersand ( & )
 #   and thereafter referenced with an asterisk ( * ).
 #..........................................................................................
-# RUN switches
+## RUN switches
 FLAGS:
     # - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
@@ -33,25 +33,25 @@ FLAGS:
     # - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    # - pspace:       True            # {False} plot the twiss ellipses at entrance
+    - pspace:       True            # {False} plot the twiss ellipses at entrance
     # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
-# SECTION definitions
+## SECTION definitions
 SECTIONS:
      - [&LE 5to25 , &HE 25to200]
 #...........................................................................................
-# INPUT definitions
+## INPUT definitions
 PARAMETERS:
-    - Tkin:                 50.         # [MeV] energy @ injection
-    - DT2T:                 6.e-3       # delta-T/T kinetic energy spread @ injection
-    - emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
-    - emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
-    - betax_i:      &btx    3.3         # [m] twiss beta @ entrance x
-    - betay_i:      &bty    0.55        # [m] twiss beta @ entrance y
-    - phi_sync:     &phs    -25.        # [deg] synchronous phase
+    - Tkin:                 80.       # [MeV] energy @ injection
+    - DT2T:                 1.0e-3       # delta-T/T kinetic energy spread @ injection
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
+    - betax_i:      &btx    3.65      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    0.66      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    -30.      # [deg] synchronous phase
     - alfax_i:              0.          # [] twiss alpha x @ entrance
     - alfay_i:              0.          # [] twiss alpha y @ entrance
-    - frequency:    &p01    816.e+6     # [Hz] frequency
+    - frequency:    &freq   816.e6       # [Hz] frequency
     - ql0:          &p02    0.04        # [m] quad-length
     - ql:           &p03    0.02        # [m] 1/2 quad-length
     - quad_bore:    &p04    0.011       # [m] quad bore radius
@@ -60,9 +60,9 @@ PARAMETERS:
     - nbsigma:              10          # [m] sigma aperture
     - aperture:             15.e-3      # [m] global aperture setting (default = None)
     - lattvers:    29.01.19_pyO         # lattice version
-    - mapping:              base        # [t3d, simple, oxal, base, ttf, dyn]
+    - mapping:              t3d    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
-# ELEMENT definitions
+## ELEMENTS definitions
 ELEMENTS:
 # HE
     - D3:                        # ID: &alias
@@ -81,7 +81,7 @@ ELEMENTS:
         - type:     QF           # QF class
         - length:   *p03         # [m]
         - aperture: *p04         # [m] quad bore
-        - B':       &Bgrad   30. # [T/m] quadrupole gradient
+        - B':       &Bgrad 43.150 # [T/m] quadrupole gradient
         - slices:   0            # if slices == 0|1: one thick element else: many thin elements
         - sec:      *HE          # is part of section
     - QDH:                       # ID: &alias
@@ -98,9 +98,9 @@ ELEMENTS:
     - RFGH:                      # ID: &alias
         - type:     RFG          # RFG class
         - EzAvg:    1.00         # [MV/m] average E-field on axis
-        - EzPeak:   1.40         # [MV/m] # corresponds to (EzAvg = 1.00[MV/m])
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *p01         # [Hz] frequency
+        - freq:     *freq        # [Hz] frequency
         - gap:      *p15         # [m] length
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3       # [m] quad bore
@@ -111,7 +111,7 @@ ELEMENTS:
         - EzAvg:    1.00         # [MV/m] average E-field on axis
         - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         - PhiSync:  *phs         # [deg] synchronous phase
-        - fRF:      *p01         # [Hz] frequency
+        - freq:     *freq        # [Hz] frequency
         - gap:      *p15         # [m] gap length
         # - aperture: *p04         # [m] quad bore
         - aperture: 10.e-3         # [m] quad bore
@@ -126,19 +126,21 @@ ELEMENTS:
 #...........................................................................................
 # LATTICE definition: NODE->SEGMENT->CELL->LINE->LATTICE
 #...........................................................................................
-NODES:  # map NODE to ELEMENT
+NODES:  # mapping table: NODE: &node ==> ELEMENT
 - D1:   &d1   D3
 - D2:   &d2   D5
 - D3:   &d3   D10
 - QF:   &qf   QFH
 - QD:   &qd   QDH
-- GAP:  &gap  RFGH 
+- GAP:  &gap  RFGH
+- CAV:  &cav  RFCH
 #...........................................................................................
 SEGMENTS:   # group NODEs in SEGMENT
-- SQD:   &sqd  [*d1,*qd,*d1]  # QD +LR drifts
+- SQD:   &sqd  [*d1,*qd,*d1]  # QD + LR drifts
 - SQF1:  &sqf1 [*qf,*d1]      # 1/2QF + R drift
 - SQF2:  &sqf2 [*d1,*qf]      # 1/2Qf + L drift
-- SFGH:  &sfgh                # rf-gap + LR drifts
+# rf-gap + LR drifts
+- SRFGAP:  &srfgap
     - [*d2,*gap,*d2]          # gap 1
     - [*d2,*gap,*d2]          # gap 2
     - [*d2,*gap,*d2]          # gap 3
@@ -149,14 +151,28 @@ SEGMENTS:   # group NODEs in SEGMENT
     - [*d2,*gap,*d2]          # gap 8
     - [*d2,*gap,*d2]          # gap 9
     - [*d2,*gap,*d2]          # gap 10
-- SRF: &srf [*sfgh,*d3,*sfgh] # cavity array + drift + cavity array
+# pillbox cavities
+- SRFCAV: &srfcav
+    - [*cav]                  # cav 1
+    - [*cav]                  # cav 2
+    - [*cav]                  # cav 3
+    - [*cav]                  # cav 4
+    - [*cav]                  # cav 5
+    - [*cav]                  # cav 6
+    - [*cav]                  # cav 7
+    - [*cav]                  # cav 8
+    - [*cav]                  # cav 9
+    - [*cav]                  # cav 10
+- SRFG: &srfg [*srfgap,*d3,*srfgap]     # gap-array + drift + gap-array
+- SRFC: &srfc [*srfcav,*d3,*srfcav]     # cavity-array + drift + cavity-array
 #...........................................................................................
-CELL: &cell   # concatenate SEGMENTS
-- [*sqf1,*srf,*sqd,*srf,*sqf2]   # FODO-cell + cavity-arrays
+CELL: &cell   # concatenate SEGMENTS to one FODO-cell + cavity-arrays
+# - [*sqf1,*srfg,*sqd,*srfg,*sqf2]
+- [*sqf1,*srfc,*sqd,*srfc,*sqf2]
 #...........................................................................................
-LINE: &line # concatenate CELLS
+LINE: &line   # concatenate CELLS to sublattice LINE
 - [*cell]
 #...........................................................................................
-LATTICE:    # concatenate LINES and duplicate result _NL times
-- [100,*line]
+LATTICE:      # concatenate LINES and duplicate result _NL times
+- [54,*line]
 

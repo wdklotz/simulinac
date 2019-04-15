@@ -264,7 +264,7 @@ class _TTF_Gslice(object):
         T        = i_track[EKOO]       # [6] kinetic energy SOLL
         S        = i_track[SKOO]       # [8] position SOLL
 
-        c          = PARAMS['lichtgeschwindigkeit']
+        c          = PARAMS['clight']
         m0c2       = self.particle.e0
         m0c3       = self.particle.m0c3
         omeg       = twopi*self.freq

@@ -61,6 +61,7 @@ To DO:
 
 """
 import sys
+from colorama import Fore, Style
 import scipy.constants as C
 import math
 import elements as ELM
@@ -502,7 +503,7 @@ if __name__ == '__main__':
                 zlim=             7.,    # deg
                 distmin=          0.01
                 )
-        # generate dynacIN
+    # generate dynacIN
     call_INTRO (dyn_params)
     call_GEBEAM(dyn_params)
     call_INPUT (dyn_params)
@@ -515,6 +516,11 @@ if __name__ == '__main__':
     call_EMITGR('OUT',dyn_params,limits_f)
     call_PROFGR('OUT',dyn_params)
     call_FINISH(dyn_params)
+
+    print(Fore.RED+"Did you run simu.py first to generate the correct input file?")
+    print("Did you run simu.py first to generate the correct input file?")
+    print("Did you run simu.py first to generate the correct input file?")
+    print(Style.RESET_ALL+'Generated new: '+file.name)
 
 
 

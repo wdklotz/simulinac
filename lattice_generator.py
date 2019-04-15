@@ -141,7 +141,7 @@ def instanciate_element(item):
     elif key == 'RFG':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq       = get_mandatory(attributes,"freq",label)
+        freq      = float(get_mandatory(attributes,"freq",label))
         gap       = get_mandatory(attributes,'gap',label)
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
@@ -163,7 +163,7 @@ def instanciate_element(item):
         instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
-        instance['freq']      = freq
+        instance['freq']     = freq
         instance['gap']      = gap
         instance['aperture'] = aperture
         instance['dWf']      = dWf
@@ -172,7 +172,7 @@ def instanciate_element(item):
     elif key == 'RFC':
         label     = attributes['ID']
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq       = get_mandatory(attributes,"freq",label)
+        freq      = float(get_mandatory(attributes,"freq",label))
         gap       = get_mandatory(attributes,'gap',label)
         aperture  = get_mandatory(attributes,'aperture',label)
         dWf       = FLAGS['dWf']
@@ -195,7 +195,7 @@ def instanciate_element(item):
         instance['EzPeak']   = EzPeak
         instance['label']    = label
         instance['PhiSoll']  = PhiSoll
-        instance['freq']      = freq
+        instance['freq']     = freq
         instance['gap']      = gap
         instance['aperture'] = aperture
         instance['dWf']      = dWf
@@ -207,7 +207,7 @@ def instanciate_element(item):
         gap       = get_mandatory(attributes,'gap',label)
         EzAvg     = get_mandatory(attributes,"EzAvg",label)
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq       = get_mandatory(attributes,"freq",label)
+        freq      = float(get_mandatory(attributes,"freq",label))
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
@@ -215,7 +215,7 @@ def instanciate_element(item):
         instance['gap']     = gap
         instance['EzAvg']   = EzAvg
         instance['PhiSoll'] = PhiSoll
-        instance['freq']     = freq
+        instance['freq']    = freq
         instance['dWf']     = dWf
 
     elif key == 'MRK':

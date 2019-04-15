@@ -10,6 +10,7 @@ EMITY=1.e-6             # y emittance in [m*rad]
 BETAX=3.65              # twiss beta x in [m]
 BETAY=0.66              # twiss beta x in [m]
 
+FREQ=816.e6             # common rf-frequency [Hz]
 PHISY=-30.              # synchronous phase in [deg]
 
 BGRAD=43.150            # quad gradient [T/m]
@@ -30,6 +31,7 @@ ARGS="$ARGS -D _EMITY=$EMITY"
 ARGS="$ARGS -D _BETAX=$BETAX"
 ARGS="$ARGS -D _BETAY=$BETAY"
 ARGS="$ARGS -D _PHISY=$PHISY"
+ARGS="$ARGS -D _FREQ=$FREQ"
 ARGS="$ARGS -D _BGRAD=$BGRAD"
 ARGS="$ARGS -D _NL=$NL"
 ARGS="$ARGS -D _MAPPING=$MAP"

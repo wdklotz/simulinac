@@ -262,7 +262,7 @@ class _OXAL_slice(object):
         """ Adjust SOLL-energy dpendent parameters for this slice """
         self.particle(tkin)    # UPDATE tkin
         # TmStamp.stamp('adjust...')
-        c      = PARAMS['lichtgeschwindigkeit']
+        c      = PARAMS['clight']
         m0c2   = PARAMS['proton_mass']
         m0c3   = m0c2*c
         Wins   = self.particle.tkin
