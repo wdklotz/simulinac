@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v8.0.0a2'
+___version___='v8.0.0a3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -323,27 +323,31 @@ if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
 
     # preset files for launch with  m4
-    template_file = 'yml/tmpl.yml'          # def.template file
-    macros_file   = 'yml/macros.sh'         # def.macro definitions
-    input_file    = 'yml/simuIN.yml'        # def.input file
+    template_file = 'yml/tmpl.yml'          # def.template file     (UNIX EOL=LF)
+    macros_file   = 'yml/macros.sh'         # def.macro definitions (UNIX EOL=LF)
+    input_file    = 'yml/simuIN.yml'        # def.input file        (UNIX EOL=LF)
 
-    if sys.platform   == 'win32':
-        input_file = 'yml/simuINstat.yml'
-        if len(sys.argv) == 2:
-            input_file    = sys.argv[1]
-        print('input="{}"'.format(input_file))
-    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        if len(sys.argv) == 2:
-            input_file    = sys.argv[1]
-        else:
-            # launch m4
-            command = "chmod +x yml/macros.sh"
-            command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
-            print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
-            os.system(command)
+    if len(sys.argv) == 2:
+        input_file    = sys.argv[1]
     else:
-        print('wrong platform')
-        sys.exit(1)
+        if sys.platform   == 'win32':
+            with open(template_file,'r') as f:
+                template_file = 'yml/'+f.readline()
+                f.close()
+            with open(macros_file,'r') as f:
+                macros_file = 'yml/'+f.readline()
+                f.close()
+                # launch bash on windows
+            command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
+        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            # launch bash
+            command = "chmod +x macros_file"
+            command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+        else:
+            print('wrong platform')
+            sys.exit(1)
+        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+        os.system(command)
 
     # start the run
     simulation(input_file)
