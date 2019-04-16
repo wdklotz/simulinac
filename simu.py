@@ -341,7 +341,7 @@ if __name__ == '__main__':
             command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             # launch bash
-            command = "chmod +x macros_file"
+            command = 'chmod +x {}'.format(macros_file)
             command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
         else:
             print('wrong platform')
