@@ -320,7 +320,7 @@ def simulation(filepath):
         display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
     
 if __name__ == '__main__':
-    print('simu.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
+    print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
     # preset files for launch with  m4
     template_file = 'yml/tmpl.yml'          # def.template file     (UNIX EOL=LF)
