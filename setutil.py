@@ -50,7 +50,6 @@ def DEBUG(string='',arg='',end='\n'):
         # print('DEBUG: {} \nlist={}'.format(string,arg))
         pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
         sarg = pp.pformat(arg)
-
         print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
     elif isinstance(arg,dict):
         # print('DEBUG: {} \ndict={}'.format(string,arg))
@@ -134,7 +133,6 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
-
 
 class Twiss(object):
     def __init__(self, beta, alfa, epsi):
@@ -664,7 +662,6 @@ def collect_data_for_summary(lattice):
     SUMMARY['use express']                     =  FLAGS['express']
     SUMMARY['use aperture']                    =  FLAGS['useaper']
     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
-    # SUMMARY['wavelength* [cm]']                 =  PARAMS['lamb']*1.e2
     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
     SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
