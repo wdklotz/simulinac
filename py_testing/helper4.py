@@ -32,8 +32,7 @@ def test0():
     particle = Proton(tkin=100.)
     beta     = particle.beta
     freq     = 800.*1.e6    # Hz
-    lamb     = PARAMS['lichtgeschwindigkeit']/freq
-    gap      = PARAMS['gap']
+    lamb     = PARAMS['clight']/freq
     gap      = 0.044
     # phis     = [0, -30, -60., -90.]
     phis     = [0,-25, -50., -75.]

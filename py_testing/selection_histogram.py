@@ -1,15 +1,16 @@
-''' Present a scatter plot with linked histograms on both axes.
+''' 
+Present a scatter plot with linked histograms on both axes.
 
-Use the ``bokeh serve`` command to run the example by executing:
+Use the ``bokeh serve`` command to run the example. 
 
-    bokeh serve selection_histogram.py
+On my XPS8500/win10 in PowerShell:
+    C:\Users\wdklotz\Anaconda3\Scripts\bokeh serve .\selection_histogram.py
 
 at your command prompt. Then navigate to the URL
 
     http://localhost:5006/selection_histogram
 
 in your browser.
-
 '''
 
 import numpy as np

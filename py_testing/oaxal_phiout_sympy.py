@@ -1,7 +1,7 @@
 from sympy import *
 
 print("======================Uebung======================")
-a,b,c,d,e, f = symbols('a b c d e f')
+a,b,c,d,e,f = symbols('a b c d e f')
 x, y = symbols('x y')
 
 p=a+b*x+c*y+d*x*y+e*x**2+f*y**2
@@ -42,7 +42,7 @@ _spk  = symbols('_spk')
 _cphi = symbols('_cphi')
 _sphi = symbols('_sphi')
 _fac  = symbols('_fac')
-_fac1 =symbols('_fac1')
+_fac1 = symbols('_fac1')
 gb3   = symbols('gb3')
 _fac2 = symbols('_fac2')
 _gb3  = symbols('_gb3')
@@ -62,8 +62,8 @@ print('DPHIS= \n',expand(DPHIS),'\n')
 DPHI = FAC*(Tpk*sphi+Spk*cphi)
 print('DPHI= \n',DPHI,'\n')
 
-_tpk=Tpks-Tppks*FAC2*db2bs
-_spk=Spks-Sppks*FAC2*db2bs
+_tpk = Tpks-Tppks*FAC2*db2bs
+_spk = Spks-Sppks*FAC2*db2bs
 DPHI = DPHI.subs(Tpk,_tpk)
 DPHI = DPHI.subs(Spk,_spk)
 print('DPHI= \n',DPHI,'\n')
