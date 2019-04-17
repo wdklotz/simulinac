@@ -337,7 +337,7 @@ if __name__ == '__main__':
             with open(macros_file,'r') as f:
                 macros_file = 'yml/'+f.readline()
                 f.close()
-                # launch bash on windows
+                # launch bash on windows (https://docs.microsoft.com/de-de/windows/wsl/install-win10)
             command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             # launch bash
