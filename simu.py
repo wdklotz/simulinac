@@ -68,14 +68,14 @@ def display0(*args):
     cy=  [cos_like(i,'cy')    for i in range(cos_like.nbpoints)]
 #    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
 #    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
-#    cdw= [cos_like(i,'cdw')   for i in range(cos_like.nbpoints)]
+#    cdp= [cos_like(i,'cdp')   for i in range(cos_like.nbpoints)]
 
     sx=  [sin_like(i,'sx')    for i in range(sin_like.nbpoints)]
 #    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
     sy=  [sin_like(i,'sy')    for i in range(sin_like.nbpoints)]
 #    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
 #    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
-#    sdw= [sin_like(i,'sdw')   for i in range(sin_like.nbpoints)]
+#    sdp= [sin_like(i,'sdp')   for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox  = 5                  # stop viseo plot after so many [m]
     stop_viseoy  = 5                  # stop viseo plot after so many [m]
@@ -142,7 +142,7 @@ def display1(*args):
     cy=  [cos_like(i,'cy')*1.e3    for i in range(cos_like.nbpoints)]
 #    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
     cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
-    cdw= [cos_like(i,'cdw')        for i in range(cos_like.nbpoints)]
+    cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]
 
     z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
     sx=  [sin_like(i,'sx')*1.e3    for i in range(sin_like.nbpoints)]
@@ -150,7 +150,7 @@ def display1(*args):
     sy=  [sin_like(i,'sy')*1.e3    for i in range(sin_like.nbpoints)]
 #    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
     sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
-    sdw= [sin_like(i,'sdw')        for i in range(sin_like.nbpoints)]
+    sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox = 5                  # stop viseo plot after so many [m]
     stop_viseoy = 5                  # stop viseo plot after so many [m]
@@ -233,8 +233,8 @@ def display1(*args):
     ax_r.set_ylabel(r'$\Delta$p/p [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z2,cdw,color='red')
-    ax_r.plot(z2,sdw,color='red',linestyle=':')
+    ax_r.plot(z2,cdp,color='red')
+    ax_r.plot(z2,sdp,color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
     vscale=ax_l.axis()[3]*0.7

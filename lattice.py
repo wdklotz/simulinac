@@ -505,15 +505,15 @@ class Lattice(object):
         else:
             sigmaz_i = 0.
             Dp2p_i   = 0.
-        z1,z1p = soll_test((sigmaz_i, 0.))
-        z4,z4p = soll_test((0., Dp2p_i))
+        z1,z1p = soll_test((sigmaz_i, 0.))    # S
+        z4,z4p = soll_test((0., Dp2p_i))      # C
         # MDIMxMDIM tracking used here
         s   = 0.
-        c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
-        s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
+        c_0 = NP.array([x1, x1p, y1, y1p, z4, z4p, tkin,1,0,1])  # C
+        s_0 = NP.array([x4, x4p, y4, y4p, z1, z1p, tkin,1,0,1])  # S
         # function names
-        c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdw'))
-        s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdw'))
+        c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
+        s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
 
         # for element in self.seq:
         for element in iter(self):
@@ -531,8 +531,8 @@ class Lattice(object):
                     # cz  = -c_0[ZKOO]*360./(beta*lamb)            # sigmaz_i --> dPhi [deg]
                     # cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     cz  = c_0[ZKOO]*1.e3      # z [mm]
-                    cdw = c_0[ZPKOO]*100.     # dp/p [%]
-                    c_fun.append(s,(cx,cxp,cy,cyp,cz,cdw))
+                    cdp = c_0[ZPKOO]*100.     # dp/p [%]
+                    c_fun.append(s,(cx,cxp,cy,cyp,cz,cdp))
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
@@ -542,8 +542,8 @@ class Lattice(object):
                     # sz  = -s_0[ZKOO]*360./(beta*lamb)
                     # sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
                     sz  = -s_0[ZKOO]*1.e3
-                    sdw = s_0[ZPKOO]*100.
-                    s_fun.append(s,(sx,sxp,sy,syp,sz,sdw))
+                    sdp = s_0[ZPKOO]*100.
+                    s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
             except ValueError as ex:
                 print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))
                 # raise ex
