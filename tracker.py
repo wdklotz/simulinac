@@ -471,7 +471,7 @@ if __name__ == '__main__':
 
     # test0('yml/trackIN.yml')
 
-    print('tracker.py {} on python {}.{}.{}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro))
+    print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # preset files for launch with  m4
     template_file = 'yml/tmpl.yml'          # def.template file
