@@ -1,5 +1,6 @@
-T=35.                   # kinetic energy in [Mev]
-T=50.                   # kinetic energy in [Mev]
+T=5.                      # kinetic energy in [Mev]
+# T=35.                   # kinetic energy in [Mev]
+# T=50.                   # kinetic energy in [Mev]
 # T=80.                   # kinetic energy in [Mev]
 DT2T=6.0e-3             # delta-T/T kinetic
 DT2T=1.0e-3             # delta-T/T kinetic
@@ -7,13 +8,15 @@ DT2T=1.0e-3             # delta-T/T kinetic
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]
 
-BETAX=3.65              # twiss beta x in [m]
-BETAY=0.66              # twiss beta x in [m]
+BETAX=3.918              # twiss beta x in [m]
+BETAY=1.525              # twiss beta x in [m]
 
 FREQ=816.e6             # common rf-frequency [Hz]
 PHISY=-30.              # synchronous phase in [deg]
 
 BGRAD=43.150            # quad gradient [T/m]
+BGRAD=23.000            # quad gradient [T/m]
+BGRAD=6.7               # quad gradient [T/m]
 
 NL=54                   # nboff lines a.k.a. cells
 NL=108
@@ -21,7 +24,7 @@ NL=108
 MAP=t3d
 # MAP=simple
 # MAP=oxal
-MAP=base
+# MAP=base
 # MAP=ttf
 # MAP=dyn
 

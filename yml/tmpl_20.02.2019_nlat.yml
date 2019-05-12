@@ -24,7 +24,7 @@
 #..........................................................................................
 ## RUN switches
 FLAGS:
-    # - accON:        False           # {True} acceleration on/off flag
+    - accON:        False           # {True} acceleration on/off flag
     # - egf:          True            # {False} emittance growth flag
     # - sigma:        False           # {True} beam sizes by sigma-matrix
     # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -33,7 +33,7 @@ FLAGS:
     # - useaper:      True            # {False} use aperture check for lattice elements
     # - csTrak:       False           # {True} plot CS trajectories
     # - bucket:       True            # {False} plot the bucket
-    # - pspace:       True            # {False} plot the twiss ellipses at entrance
+    - pspace:       True            # {False} plot the twiss ellipses at entrance
     # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## SECTION definitions
@@ -49,8 +49,8 @@ PARAMETERS:
     - betax_i:      &btx    _BETAX      # [m] twiss beta @ entrance x
     - betay_i:      &bty    _BETAY      # [m] twiss beta @ entrance y
     - phi_sync:     &phs    _PHISY      # [deg] synchronous phase
-    - alfax_i:              0.          # [] twiss alpha x @ entrance
-    - alfay_i:              0.          # [] twiss alpha y @ entrance
+    - alfax_i:              0.9         # [] twiss alpha x @ entrance
+    - alfay_i:              -0.9          # [] twiss alpha y @ entrance
     - frequency:    &freq   _FREQ       # [Hz] frequency
     - ql0:          &p02    0.04        # [m] quad-length
     - ql:           &p03    0.02        # [m] 1/2 quad-length
