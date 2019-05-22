@@ -18,6 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+#todo: Calulate cell phase advance sigma by integration
 #todo: handle exceptions speziel ValueError   - more or less done
 #todo: use normalized emittances ?
 #todo: waccept results are global - each node should carry its own
