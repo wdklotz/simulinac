@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v8.0.0a3'
+___version___='v8.0.0a4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -39,12 +39,12 @@ from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 
-    Plot the scatter plots 
+    The scatter plots 
     """
     live_bunch, lost_bunch = live_lost
     txt = ('IN {}'.format(text),'OUT {}'.format(text))
     initial = 0; final   = -1
-    # INITIAL DATA
+    # IN-DATA
     x=[]; y=[]; xlost=[]; ylost=[]
     loc = initial
     nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
@@ -78,7 +78,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     plt.scatter(xlost,ylost,s=1,color='red')
     # poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
 
-    # FINAL DATA
+    # OUT-DATA
     x=[]; y=[]
     loc   = final
     nbprt = live_bunch.nbparticles()
@@ -88,8 +88,9 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         point  = tpoint()
         x.append(point[abszisse]*1e3)
         y.append(point[ordinate]*1e3)
-    xmax = max([abs(i) for i in x])*1.5
-    ymax = max([abs(i) for i in y])*1.5
+    # uncomment next two lines for individual scaling of plots
+    # xmax = max([abs(i) for i in x])*1.5
+    # ymax = max([abs(i) for i in y])*1.5
     # figure
     box = '{} {} particles'.format(txt[loc],nbprt)
     ax = plt.subplot(122)
@@ -327,7 +328,7 @@ def tracker(options):
     """ 
     Prepare and launch tracking 
     """
-    npart    = options['particles_per_bunch']
+    npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
 
     # !!FIRST!! make lattice
