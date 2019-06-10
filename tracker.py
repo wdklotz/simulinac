@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v8.0.0a4'
+___version___='v8.0.0a5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -43,10 +43,11 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """
     live_bunch, lost_bunch = live_lost
     txt = ('IN {}'.format(text),'OUT {}'.format(text))
-    initial = 0; final   = -1
+    initial = 0; final = -1
+
     # IN-DATA
-    x=[]; y=[]; xlost=[]; ylost=[]
     loc = initial
+    x=[]; y=[]; xlost=[]; ylost=[]
     nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
@@ -54,14 +55,21 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         point  = tpoint()
         x.append(point[abszisse]*1e3)
         y.append(point[ordinate]*1e3)
+    xmax0 = max([abs(i) for i in x])
+    ymax0 = max([abs(i) for i in y])
     for particle in iter(lost_bunch): # lost particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
         xlost.append(point[abszisse]*1e3)
         ylost.append(point[ordinate]*1e3)
-    xmax = max([abs(i) for i in x])*1.5
-    ymax = max([abs(i) for i in y])*1.5
+    xmax1 = max([abs(i) for i in xlost])
+    ymax1 = max([abs(i) for i in ylost])
+
+    # Axis scales
+    xmax = max(xmax0,xmax1)*1.1
+    ymax = max(ymax0,ymax1)*1.1
+    
     # figure with mapping box
     width = 12; height = 6.
     fig   = plt.figure(figsize=(width,height))
@@ -79,8 +87,8 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
 
     # OUT-DATA
+    loc = final
     x=[]; y=[]
-    loc   = final
     nbprt = live_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
@@ -88,9 +96,6 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         point  = tpoint()
         x.append(point[abszisse]*1e3)
         y.append(point[ordinate]*1e3)
-    # uncomment next two lines for individual scaling of plots
-    # xmax = max([abs(i) for i in x])*1.5
-    # ymax = max([abs(i) for i in y])*1.5
     # figure
     box = '{} {} particles'.format(txt[loc],nbprt)
     ax = plt.subplot(122)
@@ -113,7 +118,7 @@ def projections(live_lost):
     ordinate = Ktp.xp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
-    # (y,yp)
+    # (y,yp) 
     abszisse = Ktp.y
     ordinate = Ktp.yp
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
@@ -390,25 +395,26 @@ def tracker(options):
 
     # gather for print
     tracker_log = {}
-    tracker_log['T-kin.......[MeV]']          = tkin
-    tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
-    tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
-    tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i......[m]']           = betax_i
-    tracker_log['betay_i......[m]']           = betay_i
-    tracker_log['betaw_i....[rad]']           = betaw
-    tracker_log['betaz_i..[m/rad]']           = betaz
-    tracker_log['emitx_i........[m]']         = emitx_i
-    tracker_log['emity_i........[m]']         = emity_i
-    tracker_log['emitw_i,wmx..[rad]']         = (emitw, wmx)
-    tracker_log['emitz_i........[m]']         = emitz
-    tracker_log['Dp2p,Dp2pmx..[%]']           = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    tracker_log['acceptance Dp2p...[%]']      = PARAMS['Dp2pAcceptance']*1.e2
-    tracker_log['accpetance z.....[mm]']      = PARAMS['zAcceptance']*1.e3
-    tracker_log['lattice version......']      = PARAMS['lattice_version']
-    tracker_log['mapping..............']      = PARAMS['mapping']
-    tracker_log['DT/T-kin.............']      = PARAMS['DT2T']
+    tracker_log['T-kin..............[MeV]'] = tkin
+    tracker_log["sigma(x,x')i...([m,rad])"] = (sigma_x,sigma_xp)
+    tracker_log["sigma(y,y')i...([m,rad])"] = (sigma_y,sigma_yp)
+    tracker_log["sigma(Dphi,w)i..([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log["sigma(z,Dp2p)i....([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log['betax_i..............[m]'] = betax_i
+    tracker_log['betay_i..............[m]'] = betay_i
+    tracker_log['betaw_i............[rad]'] = betaw
+    tracker_log['betaz_i..........[m/rad]'] = betaz
+    tracker_log['emitx_i..............[m]'] = emitx_i
+    tracker_log['emity_i..............[m]'] = emity_i
+    tracker_log['emitw_i,wmx........[rad]'] = (emitw, wmx)
+    tracker_log['emitz_i..............[m]'] = emitz
+    # tracker_log['Dp2p,Dp2pmx..........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    tracker_log['Dp2p.................[%]'] = Dp2p0*1.e2
+    tracker_log['acceptance Dp2p......[%]'] = PARAMS['Dp2pAcceptance']*1.e2
+    tracker_log['accpetance z........[mm]'] = PARAMS['zAcceptance']*1.e3
+    tracker_log['lattice version.........'] = PARAMS['lattice_version']
+    tracker_log['mapping.................'] = PARAMS['mapping']
+    tracker_log['DT/T-kin................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
@@ -472,7 +478,7 @@ if __name__ == '__main__':
 
     # test0('yml/trackIN.yml')
 
-    print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+    print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # preset files for launch with  m4
     template_file = 'yml/tmpl.yml'          # def.template file
@@ -493,7 +499,7 @@ if __name__ == '__main__':
             command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             # launch bash
-            command = "chmod +x macros_file"
+            command = "chmod +x {}".format(macros_file)
             command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
         else:
             print('wrong platform')
@@ -503,7 +509,7 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1000*1
+    options['particles_per_bunch'] = 1750
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
