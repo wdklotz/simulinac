@@ -264,8 +264,8 @@ def simulation(filepath):
                 plots.append(bucket) # separatrix
         if FLAGS['pspace']:
             plots.append(display2)   # pspace
-    
-        # standard plots 
+
+        # standard plots
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
@@ -276,11 +276,11 @@ def simulation(filepath):
     # parse input file and create a lattice
     lattice = factory(filepath)
 
-    if DEBUG_LATTICE(): lattice.show_linkage() 
-    
+    if DEBUG_LATTICE(): lattice.show_linkage()
+
     # configure elements for energy increase
     soll_track = track_soll(lattice)
-    
+
     if DEBUG_LATTICE(): lattice.show_linkage()
 
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
@@ -288,7 +288,7 @@ def simulation(filepath):
 
     # calculate longitudinal paramters at entrance
     waccept(lattice.first_gap)
-    
+
     # count elements and make other statistics
     lattice.stats(soll_track)
 
@@ -300,7 +300,7 @@ def simulation(filepath):
 
     # results
     kv_only = FLAGS['KVout']
-    if kv_only: 
+    if kv_only:
         kv = {}
         for key in PARAMS:
             kv[key] = PARAMS[key]
@@ -319,7 +319,7 @@ def simulation(filepath):
         sigma_fun = lattice.sigmas(steps = steps)
         # make plots of functionsa
         display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
-    
+
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
@@ -352,4 +352,4 @@ if __name__ == '__main__':
 
     # start the run
     simulation(input_file)
-    
+

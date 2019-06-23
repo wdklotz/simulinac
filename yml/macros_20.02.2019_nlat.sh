@@ -9,7 +9,7 @@ DT2T=1.0e-3             # delta-T/T kinetic
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]
 EMITX=4.e-6             # x emittance in [m*rad]
-EMITY=4.e-6             # y emittance in [m*rad]
+# EMITY=4.e-6             # y emittance in [m*rad]
 
 BETAX=3.617             # twiss beta x in [m]  (T,B')=(25,23)
 BETAY=0.709             # twiss beta x in [m]  (T,B')=(25,23)
