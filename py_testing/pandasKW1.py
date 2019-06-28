@@ -7,7 +7,7 @@ from math import pi,degrees,sin,cos
 
 columns = ["x","xp","y","yp","z","zp","T",1,"S","1"]
 
-n = 100
+n = 40000
 p=[]
 index=[]
 for i in range(n+1):

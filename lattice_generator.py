@@ -364,7 +364,7 @@ def factory(input_file):
 
     with open(input_file,'r') as fileobject:
         try:
-            in_data = yaml.load(fileobject)
+            in_data = yaml.load(fileobject,Loader=yaml.Loader)
         except Exception as ex:
             warnings.showwarning(
                     'InputError: {} - STOP'.format(str(ex)),
