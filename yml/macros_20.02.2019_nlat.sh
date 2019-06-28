@@ -29,7 +29,7 @@ NL=125                  # (Ti,Tf)=(25,200)
 
 MAP=t3d
 # MAP=simple
-MAP=oxal
+# MAP=oxal
 # MAP=base
 # MAP=ttf
 # MAP=dyn

@@ -564,14 +564,14 @@ class RFG(I):
 
         self['viseo'] = 0.25
         # makes the T3D matrix default for RFG
-        self.t3d_g     = _T3D_G(self)
-        self.gap_model = self.t3d_g
+        t3d_g          = _T3D_G(self)
+        self.gap_model = t3d_g
 
         """ set switch to gap model """
         if self.mapping == 't3d':
             # Trace3D-matrix and use linear gap-model
             pass
-            self.gap_model = self.t3d_g
+            self.gap_model = t3d_g
         elif self.mapping == 'simple' or self.mapping == 'base':
             # PyOrbit gap-models w/o SF-data
             self.gap_model = _PYO_G(self, self.mapping)
