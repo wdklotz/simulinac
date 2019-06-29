@@ -12,5 +12,5 @@ while True:
     #  Wait for next request from client
     message = socket.recv()
     print("Received request: {}".format(message))
-    time.sleep (1)  
-    socket.send_string("World from server %s" % server_id)
+    time.sleep (0.1)  
+    socket.send_string("<WELCOME> from server %s" % server_id)

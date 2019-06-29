@@ -9,9 +9,9 @@ socket = context.socket(zmq.REQ)
 socket.connect ("tcp://localhost:%s" % port)
 client_id = random.randrange(1,10005)
 #  Do 10 requests, waiting each time for a response
-for request in range (1,10):
-    print ("Sending request ", request,"..." )   
-    socket.send_string("Hello from {}".format(client_id))
+for request in range (1,300):
+    print ("Sending request ", request,"...",end=" " )   
+    socket.send_string("<HELLO > from {}".format(client_id))
     #  Get the reply.
     message = socket.recv()
     print("Received reply ", request, "[", message, "]")
