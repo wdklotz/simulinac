@@ -47,4 +47,4 @@ ARGS="$ARGS -D _NL=$NL"
 ARGS="$ARGS -D _MAPPING=$MAP"
 
 # invoke m4
-m4 $ARGS $1
+m4 $ARGS $1 > $2

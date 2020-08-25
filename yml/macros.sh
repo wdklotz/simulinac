@@ -1,1 +1,0 @@
-macros_20.02.2019_nlat.sh

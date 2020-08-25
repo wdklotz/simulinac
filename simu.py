@@ -1,4 +1,4 @@
-#!/Users/klotz/anaconda3/bin/python3.6
+##!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 ___version___='v8.0.0a5'
 """
@@ -324,30 +324,26 @@ if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
     # preset files for launch with  m4
-    template_file = 'yml/tmpl.yml'          # def.template file     (UNIX EOL=LF)
-    macros_file   = 'yml/macros.sh'         # def.macro definitions (UNIX EOL=LF)
-    input_file    = 'yml/simuIN.yml'        # def.input file        (UNIX EOL=LF)
+    run_version   = '20.02.2019_nlat'
+    input_file    = 'yml/simuIN.yml'                    # def.input file        (UNIX EOL=LF)
 
     if len(sys.argv) == 2:
         input_file    = sys.argv[1]
     else:
         if sys.platform   == 'win32':
-            with open(template_file,'r') as f:
-                template_file = 'yml/'+f.readline()
-                f.close()
-            with open(macros_file,'r') as f:
-                macros_file = 'yml/'+f.readline()
-                f.close()
-                # launch bash on windows (https://docs.microsoft.com/de-de/windows/wsl/install-win10)
-            command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
+            # launch .bat script
+            command = 'yml\m4.bat '+run_version
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            macros_file   = 'yml/macros_'+run_version+'.sh'
+            template_file = 'yml/tmp_'+run_version+'.yml'
             # launch bash
             command = 'chmod +x {}'.format(macros_file)
-            command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)
         else:
             print('wrong platform')
             sys.exit(1)
-        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+        print('run Version {0}\n   macros=macros_{0}\n   template=tmpl_{0}\n   input={1}'.format(run_version,input_file))
+        # print(command)
         os.system(command)
 
     # start the run
