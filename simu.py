@@ -325,17 +325,17 @@ if __name__ == '__main__':
 
     # preset files for launch with  m4
     run_version   = '20.02.2019_nlat'
-    input_file    = 'yml/simuIN.yml'                    # def.input file        (UNIX EOL=LF)
+    input_file    = 'yml/simuIN.yml'       # default input file        (UNIX EOL=LF)
 
     if len(sys.argv) == 2:
         input_file    = sys.argv[1]
     else:
         if sys.platform   == 'win32':
             # launch .bat script
-            command = 'yml\m4.bat '+run_version
+            command = 'yml\m4_simu.bat '+run_version
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             macros_file   = 'yml/macros_'+run_version+'.sh'
-            template_file = 'yml/tmp_'+run_version+'.yml'
+            template_file = 'yml/tmpl_'+run_version+'.yml'
             # launch bash
             command = 'chmod +x {}'.format(macros_file)
             command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)

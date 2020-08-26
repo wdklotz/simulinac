@@ -57,14 +57,19 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         y.append(point[ordinate]*1e3)
     xmax0 = max([abs(i) for i in x])
     ymax0 = max([abs(i) for i in y])
-    for particle in iter(lost_bunch): # lost particles
-        track  = particle.track
-        tpoint = track.getpoints()[loc]
-        point  = tpoint()
-        xlost.append(point[abszisse]*1e3)
-        ylost.append(point[ordinate]*1e3)
-    xmax1 = max([abs(i) for i in xlost])
-    ymax1 = max([abs(i) for i in ylost])
+    
+    if lost_bunch.nbparticles() != 0:     # lost particles
+        for particle in iter(lost_bunch):
+            track  = particle.track
+            tpoint = track.getpoints()[loc]
+            point  = tpoint()
+            xlost.append(point[abszisse]*1e3)
+            ylost.append(point[ordinate]*1e3)
+        xmax1 = max([abs(i) for i in xlost])
+        ymax1 = max([abs(i) for i in ylost])
+    else:
+        xmax1=xmax0
+        ymax1=ymax0
 
     # Axis scales
     xmax = max(xmax0,xmax1)*1.1
@@ -481,30 +486,26 @@ if __name__ == '__main__':
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # preset files for launch with  m4
-    template_file = 'yml/tmpl.yml'          # def.template file
-    macros_file   = 'yml/macros.sh'         # def.macro definitions
-    input_file    = 'yml/trackIN.yml'       # def.input file
+    run_version   = '20.02.2019_nlat'
+    input_file    = 'yml/trackIN.yml'   # default input file        (UNIX EOL=LF)
 
     if len(sys.argv) == 2:
         input_file    = sys.argv[1]
     else:
         if sys.platform   == 'win32':
-            with open(template_file,'r') as f:
-                template_file = 'yml/'+f.readline()
-                f.close()
-            with open(macros_file,'r') as f:
-                macros_file = 'yml/'+f.readline()
-                f.close()
-                # launch bash on windows (https://docs.microsoft.com/de-de/windows/wsl/install-win10)
-            command = 'bash -c "{} {} > {}"'.format(macros_file, template_file, input_file)
+            # launch .bat script
+            command = 'yml\m4_track.bat '+run_version
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            macros_file   = 'yml/macros_'+run_version+'.sh'
+            template_file = 'yml/tmpl_'+run_version+'.yml'
             # launch bash
-            command = "chmod +x {}".format(macros_file)
-            command = "{};{} {} > {}".format(command,macros_file,template_file, input_file)
+            command = 'chmod +x {}'.format(macros_file)
+            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)
         else:
             print('wrong platform')
             sys.exit(1)
-        print('m4 script="{}" template="{}" input="{}"'.format(macros_file,template_file,input_file))
+        print('run Version {0}\n   macros=macros_{0}\n   template=tmpl_{0}\n   input={1}'.format(run_version,input_file))
+        # print(command)
         os.system(command)
 
     options = {}
