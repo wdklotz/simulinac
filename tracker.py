@@ -45,7 +45,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     txt = ('IN {}'.format(text),'OUT {}'.format(text))
     initial = 0; final = -1
 
-    # IN-DATA
+    # ENTRANCE-DATA
     loc = initial
     x=[]; y=[]; xlost=[]; ylost=[]
     nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
@@ -91,7 +91,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     plt.scatter(xlost,ylost,s=1,color='red')
     # poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
 
-    # OUT-DATA
+    # EXIT-DATA
     loc = final
     x=[]; y=[]
     nbprt = live_bunch.nbparticles()

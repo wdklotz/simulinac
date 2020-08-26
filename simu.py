@@ -324,7 +324,8 @@ if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
     # preset files for launch with  m4
-    run_version   = '20.02.2019_nlat'
+    # run_version   = '20.02.2019_nlat'
+    run_version   = '17.10.18_SH'
     input_file    = 'yml/simuIN.yml'       # default input file        (UNIX EOL=LF)
 
     if len(sys.argv) == 2:
