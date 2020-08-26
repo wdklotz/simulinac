@@ -31,7 +31,7 @@ MAP=t3d
 # MAP=simple
 # MAP=oxal
 # MAP=base
-# MAP=ttf
+MAP=ttf
 # MAP=dyn
 
 ARGS="-D _TKIN=$T"
