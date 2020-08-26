@@ -334,7 +334,7 @@ def track_soll(lattice):
         soll_track.addpoint(tpoint)
     return soll_track
 
-def tracker(options):
+def tracker(input_file,options):
     """ 
     Prepare and launch tracking 
     """
@@ -343,7 +343,7 @@ def tracker(options):
 
     # !!FIRST!! make lattice
     t0       = time.process_time()
-    filepath = options['input_file']
+    filepath = input_file
     lattice  = factory(filepath)
 
     # No tracking without acceleration
@@ -509,7 +509,6 @@ if __name__ == '__main__':
         os.system(command)
 
     options = {}
-    options['input_file']          = input_file
     options['particles_per_bunch'] = 1750
     options['show']                = True
     options['save']                = False
@@ -517,4 +516,4 @@ if __name__ == '__main__':
     options['losses']              = False
 
     # start the run
-    tracker(options)
+    tracker(input_file,options)
