@@ -32,6 +32,9 @@ import sys
 import os
 # import subprocess
 #from math import sqrt
+import matplotlib
+# matplotlib.use("TkAgg")
+# matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 #from matplotlib.patches import Ellipse
 
@@ -271,7 +274,8 @@ def simulation(filepath):
             [plot(*functions) for plot in plots]
     #todo: what about markers plots ?
         # lattice.marker_actions()
-        plt.show()
+        # plt.draw()
+        # plt.show()
 
     # parse input file and create a lattice
     lattice = factory(filepath)

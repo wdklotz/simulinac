@@ -4,12 +4,12 @@ T=25.                   # kinetic energy in [Mev]
 # T=80.                   # kinetic energy in [Mev]
 
 DT2T=6.0e-3             # delta-T/T kinetic
-DT2T=1.0e-3             # delta-T/T kinetic
+# DT2T=1.0e-3             # delta-T/T kinetic
 
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]
 EMITX=4.e-6             # x emittance in [m*rad]
-# EMITY=4.e-6             # y emittance in [m*rad]
+EMITY=4.e-6             # y emittance in [m*rad]
 
 BETAX=3.617             # twiss beta x in [m]  (T,B')=(25,23)
 BETAY=0.709             # twiss beta x in [m]  (T,B')=(25,23)
@@ -21,8 +21,9 @@ PHISY=-30.              # synchronous phase in [deg]
 
 BGRAD=43.150            # quad gradient [T/m] (T=25)
 BGRAD=23.000            # quad gradient [T/m] (T=25)
-# BGRAD=13.000            # quad gradient [T/m]
-# BGRAD=6.7               # quad gradient [T/m]
+BGRAD=21.000            # quad gradient [T/m] (T=25)
+#BGRAD=13.000            # quad gradient [T/m]
+#BGRAD=6.7               # quad gradient [T/m]
 
 NL=54                   # nboff lines a.k.a. cells
 NL=125                  # (Ti,Tf)=(25,200)
