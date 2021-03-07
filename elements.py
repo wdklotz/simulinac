@@ -55,9 +55,9 @@ class DictObject(object):
 
 #------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(DictObject, object):
-    """ Base class for transfer matrices
-        i)   owns its particle instance (copy)
+    """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
+        ii)  each instance holds its copy of the refrence particle (self.particle)
     """
     def __init__(self, label='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         DictObject.__init__(self)

@@ -91,8 +91,8 @@ def display0(*args):
     plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
 
     #-------------------- transverse X
-    splot=plt.subplot(211)
-    splot.set_title('transverse x')
+    splot211=plt.subplot(211)
+    splot211.set_title('transverse x')
     plt.plot(z,sgx ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cx ,label='Cx[m]', color='blue',linestyle='-')
     # plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
@@ -108,8 +108,8 @@ def display0(*args):
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- transverse Y
-    splot=plt.subplot(212)
-    splot.set_title('transverse y')
+    splot212=plt.subplot(212)
+    splot212.set_title('transverse y')
     plt.plot(z,sgy ,label=r'$\sigma$ [m]',color='green')
     plt.plot(tz,cy, label='Cy[m]', color='blue',linestyle='-')
     # plt.plot(tz,cyp,label="Cy'[m]",color='blue',linestyle=':')
@@ -170,10 +170,10 @@ def display1(*args):
     plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
 
     #-------------------- transverse X tracks
-    splot=plt.subplot(311)
-    splot.set_title('transverse x')
+    splot311=plt.subplot(311)
+    splot311.set_title('transverse x')
     # mapping box
-    splot.text(0.01, 1.1, PARAMS['mapping'],transform=splot.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot311.text(0.01, 1.1, PARAMS['mapping'],transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
@@ -199,8 +199,8 @@ def display1(*args):
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- transverse Y tracks
-    splot=plt.subplot(312)
-    splot.set_title('transverse y')
+    splot312=plt.subplot(312)
+    splot312.set_title('transverse y')
     plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
@@ -274,15 +274,19 @@ def simulation(filepath):
             [plot(*functions) for plot in plots]
     #todo: what about markers plots ?
         # lattice.marker_actions()
-        # plt.draw()
-        # plt.show()
+        # next not needed for jupyter
+        plt.show()
 
-    # parse input file and create a lattice
+    #----------------------------------------------
+    # STEP 1: parse input file and create a lattice
+    #----------------------------------------------
     lattice = factory(filepath)
 
     if DEBUG_LATTICE(): lattice.show_linkage()
 
-    # configure elements for energy increase
+    #----------------------------------------------
+    # STEP 2: configure elements for energy increase
+    #----------------------------------------------
     soll_track = track_soll(lattice)
 
     if DEBUG_LATTICE(): lattice.show_linkage()
@@ -290,16 +294,24 @@ def simulation(filepath):
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
     print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
 
-    # calculate longitudinal paramters at entrance
+    #----------------------------------------------
+    # STEP 3: calculate longitudinal paramters at entrance
+    #----------------------------------------------
     waccept(lattice.first_gap)
 
-    # count elements and make other statistics
+    #----------------------------------------------
+    # STEP 4: count elements and make other statistics
+    #----------------------------------------------
     lattice.stats(soll_track)
 
-    # full accelerator: initial values, etc...
+    #----------------------------------------------
+    # STEP 5: beam dynamics full accelerator: initial values, etc...
+    #----------------------------------------------
     lattice.cell(closed = FLAGS['periodic'])
 
-    # collect results
+    #----------------------------------------------
+    # STEP 6:collect results and display them
+    #----------------------------------------------
     collect_data_for_summary(lattice)
 
     # results

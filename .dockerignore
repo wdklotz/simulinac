@@ -1,0 +1,15 @@
+.git
+.gitattributes
+.gitignore
+.ipynb_checkpoints
+.spyproject
+.vscode
+dynac
+dynacEzTab
+dynacIN
+dynacv6_0_wdk_modifs
+jupyter.ipynb
+nb-configuration.xml
+notes.txt
+pyOR_lattice_generator.py
+weg

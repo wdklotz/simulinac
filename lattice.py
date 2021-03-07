@@ -393,7 +393,7 @@ class Lattice(object):
 
     def sigma_envelopes(self, steps = 1):
         """ 
-        Envelopes and twiss-functions from sigma-matrix mathod
+        Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes
         """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
@@ -654,7 +654,6 @@ class Lattice(object):
 
 # Sections
 # To add Sections to the lattice I augment the Lattice class with member-functions 
-# using the built-in 'setattr(..)'
 def get_section(self,sec=None):
     if not FLAGS['sections']:
         section = self       #the whole lattice is one section
@@ -687,6 +686,7 @@ def get_sections(self):
 #Lattice.get_section  = get_section                 #add method to class Lattice (the wdk way)
 #Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
 
+# using the built-in 'setattr(..)'
 setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
 setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
 
