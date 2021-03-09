@@ -1,0 +1,7 @@
+echo "docker start -a 897b1f7529ce"
+docker start -a 897b1f7529ce
+echo reset terminal[N,y]?
+read RESET
+if [ "$RESET" == "y" ]; then reset; fi
+
+
