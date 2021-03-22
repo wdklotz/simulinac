@@ -47,7 +47,7 @@ $docker run -it -v ${PWD}:/Simulinac --name simu simu:1.2
 3. `--name simu` give the container a name.
 4. `simu:1.2` the image to run.
 
-When the container has executed `CMD ["python", "simu.py"]` it will exit:
+When the container has executed `CMD ["python", "simu.py"]`, it will exit:
 ```
 $ docker container ls -l
 CONTAINER ID   IMAGE      COMMAND            CREATED         STATUS                     PORTS     NAMES
@@ -57,7 +57,7 @@ $
 
 You can run the image to create a second container with a shell and verify the `VOLUME` is mounted:
 ```
-wdklotz@xps8500:/mnt/c/Users/wdklotz/SIMULINAC$ docker run -it -v ${PWD}:/Simulinac simu:1.2 sh
+$ docker run -it -v ${PWD}:/Simulinac simu:1.2 sh
 # pwd
 /Simulinac
 # ls

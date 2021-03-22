@@ -22,16 +22,16 @@ PHISY=-30.              # synchronous phase in [deg]
 BGRAD=43.150            # quad gradient [T/m] (T=25)
 BGRAD=23.000            # quad gradient [T/m] (T=25)
 BGRAD=21.000            # quad gradient [T/m] (T=25)
-BGRAD=13.000            # quad gradient [T/m]
-#BGRAD=6.7               # quad gradient [T/m]
+# BGRAD=13.000            # quad gradient [T/m]
+# BGRAD=6.7               # quad gradient [T/m]
 
 NL=54                   # nboff lines a.k.a. cells
 NL=125                  # (Ti,Tf)=(25,200)
 
 MAP=t3d
 # MAP=simple
-MAP=oxal
-# MAP=base
+# MAP=oxal
+MAP=base
 # MAP=ttf
 # MAP=dyn
 

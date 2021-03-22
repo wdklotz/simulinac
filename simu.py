@@ -31,12 +31,12 @@ This file is part of the SIMULINAC code
 import sys
 import os
 # import subprocess
-#from math import sqrt
+# from math import sqrt
 import matplotlib
 # matplotlib.use("TkAgg")
 # matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
-#from matplotlib.patches import Ellipse
+# from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
