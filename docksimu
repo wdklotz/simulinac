@@ -1,6 +1,6 @@
 function run {
-echo "docker start -a simu"
-docker start -a simu 
+  echo "docker start -a simu"
+  docker start -a simu 
 }
 
 while true; do
@@ -12,5 +12,4 @@ while true; do
    if [ "$RESET" == "q" ]; then exit; fi
    if [ "$RESET" == "r" ]; then reset; exit; fi
 done
-
 

@@ -33,9 +33,10 @@ import os
 # import subprocess
 # from math import sqrt
 import matplotlib
-# matplotlib.use("TkAgg")
+matplotlib.use("TkAgg")
 # matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
+plt.ioff()    # interactive mode off
 # from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
