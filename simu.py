@@ -31,6 +31,8 @@ import sys
 import os
 # import subprocess
 #from math import sqrt
+import matplotlib
+matplotlib.use("TKagg")
 import matplotlib.pyplot as plt
 #from matplotlib.patches import Ellipse
 

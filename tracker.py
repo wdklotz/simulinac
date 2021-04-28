@@ -24,6 +24,8 @@ This file is part of the SIMULINAC code
 #todo: no phase damping - why?
 import sys,os
 import numpy as NP
+import matplotlib
+matplotlib.use("TKagg")
 import matplotlib.pyplot as plt
 import time
 from string import Template
