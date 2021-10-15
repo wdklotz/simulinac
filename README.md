@@ -32,7 +32,7 @@ I worked on a user friendly version of my code. Here it is!!!
        - sec:      *HE          # is part of section</pre>
 * **PARAMETERS** and **FLAGS** are similar to ELEMENTS, i.e. array of (key:value) pairs.
 
-### WARNING: _You have to follow strictly the YAML syntax in the input files!_. 
+### WARNING: _You have to follow strictly the YAML syntax in the input files!_
 * The top level blocks titled: **FLAGS:**, **SECTIONS:**, **PARAMETERS:**, **ELEMENTS:**, **NODES:**, **SEGMENTS:**, **CELL:**, **LINE:** and **LATTICE:** are mandatory. The lattice-parser will not parse correctly when you replace or rename them.
 
 -- have fun --
