@@ -349,9 +349,12 @@ def simulation(filepath):
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
+    macros_file = ''
+    template_file = ''
     # preset files for launch with  m4
-    run_version   = '20.02.2019_nlat'
+    run_version   = '20.02.2019'
     input_file    = 'yml/simuIN.yml'       # default input file        (UNIX EOL=LF)
+
 
     if len(sys.argv) == 2:
         input_file    = sys.argv[1]
