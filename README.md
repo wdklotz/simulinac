@@ -8,7 +8,7 @@ I worked on a user friendly version of my code. Here it is!!!
 * $**cd v8.0.6_latest** then run the demo:
 * $**python simu.py yml/simuIN.yml**
 * You must have python 3 (I tested with 3.4).
-* The program depends on the modules: _matplolib, numpy, scipy, pyYaml and tkinter._
+* The program depends on the modules: _matplolib, numpy, scipy, PyYaml and tkinter._
 * The demo input file is **yml/simuIN.yml**. Copy it and modify at your will.
 * You can track particle bunches:
 * **$python tracker.py yml/trackIN.yml**
@@ -26,11 +26,11 @@ I worked on a user friendly version of my code. Here it is!!!
 * A **NODE** is an **ELEMENT**: 
   <pre>- D1:   &d1   D3</pre>
 * An **ELEMENT** is an array of key:value pairs:     
-  <pre>- D3:                    # ID: &alias
-   - type:     D            # D class
-   - length:   0.03         # [m]
-   - sec:      *HE          # is part of section</pre>
-* **PARAMETRES** and **FLAGS** are similar to ELEMENTS, i.e. array of (key:value) pairs.
+  <pre>- D3:                         # ID: &alias
+       - type:     D            # D class
+       - length:   0.03         # [m]
+       - sec:      *HE          # is part of section</pre>
+* **PARAMETERS** and **FLAGS** are similar to ELEMENTS, i.e. array of (key:value) pairs.
 
 ### WARNING: _You have to follow strictly the YAML syntax in the input files!_. 
 * The top level blocks titled: **FLAGS:**, **SECTIONS:**, **PARAMETERS:**, **ELEMENTS:**, **NODES:**, **SEGMENTS:**, **CELL:**, **LINE:** and **LATTICE:** are mandatory. The lattice-parser will not parse correctly when you replace or rename them.
