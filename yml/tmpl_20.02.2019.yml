@@ -122,9 +122,9 @@ ELEMENTS:
         - sec:      *HE          # is part of section
     - SCF:                       # ID: &alias
         - type:    MRK           # MRK class
-        - action:
-            - poincare           # action aperture check
-        - sec:     *HE
+        - action:  scatter        #  phase space poincare maps
+        - prefix:  frames         # path to store frames
+        - sec:     *HE            # is part of section
 #...........................................................................................
 # LATTICE definition: NODE->SEGMENT->CELL->LINE->LATTICE
 #...........................................................................................

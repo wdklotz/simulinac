@@ -362,6 +362,7 @@ if __name__ == '__main__':
         if sys.platform   == 'win32':
             # launch .bat script
             command = 'yml\m4_simu.bat '+run_version
+            print(command)
         elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
             macros_file   = 'yml/macros_'+run_version+'.sh'
             template_file = 'yml/tmpl_'+run_version+'.yml'
