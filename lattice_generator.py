@@ -226,7 +226,7 @@ def instanciate_element(item):
     elif key == 'MRK':
         label     = attributes['ID']
         action    = get_mandatory(attributes,'action',label)
-        if 'scatter' == action:
+        if 'poincare' == action:
             prefix    = attributes['prefix'] if 'prefix' in attributes else ''
             abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
             ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
