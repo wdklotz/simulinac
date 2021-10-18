@@ -35,6 +35,7 @@ import marker_actions as MRK
 from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
 from setutil import WConverter, Functions, TmStamp
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
+from pargs import pargs
 # from trackPlot import poincarePlot
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
@@ -485,28 +486,43 @@ if __name__ == '__main__':
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
-    # preset files for launch with  m4
-    run_version   = '20.02.2019_nlat'
-    input_file    = 'yml/trackIN.yml'   # default input file        (UNIX EOL=LF)
+    # parse argv and normalize
+    # returns:
+    # Args = {  'mode'  : 'no_m4',       either with or without m4 prepocessing
+    #           'proc'  : proc,          either simu.py or tracker.py
+    #           'file'  : file,          the input file
+    #           'tmpl'  : '',            the template file
+    #           'macro' : ''             the macro script file
+    #         }
+    Args = pargs(sys.argv)
+    # print(Args)
 
-    if len(sys.argv) == 2:
-        input_file    = sys.argv[1]
-    else:
-        if sys.platform   == 'win32':
-            # launch .bat script
-            command = 'yml\m4_track.bat '+run_version
-        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-            macros_file   = 'yml/macros_'+run_version+'.sh'
-            template_file = 'yml/tmpl_'+run_version+'.yml'
-            # launch bash
-            command = 'chmod +x {}'.format(macros_file)
-            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)
+    input_file = Args['file']
+    if sys.platform == 'win32':
+        if Args['mode']   == 'no_m4':
+            pass
+        elif Args['mode'] == 'm4':
+            command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
+            os.system(command)
         else:
-            print('wrong platform')
+            print('Internal error!')
             sys.exit(1)
-        print('run Version {0}\n   macros=macros_{0}\n   template=tmpl_{0}\n   input={1}'.format(run_version,input_file))
-        # print(command)
-        os.system(command)
+    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+        if Args['mode']   == 'no_m4':
+            pass
+        elif Args['mode'] == 'm4':
+            macros_file   = Args['macro']
+            template_file = Args['tmpl']
+            # launch macros script with bash
+            command = 'chmod +x {}'.format(macros_file)
+            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+            os.system(command)
+        else:
+            print('Internal error!')
+            sys.exit(1)
+    else:
+        print('wrong platform')
+        sys.exit(1)
 
     options = {}
     options['particles_per_bunch'] = 1750
@@ -515,5 +531,5 @@ if __name__ == '__main__':
     options['skip']                = 1
     options['losses']              = False
 
-    # start the run
+    # start the tracking
     tracker(input_file,options)
