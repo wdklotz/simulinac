@@ -4,8 +4,9 @@ Is a python simulator/tracker for linac structures.
 I worked on a user friendly version of my code. Here it is!!!
 
 ## Getting started:
-* You have to _decompress the zip-archive to 'v8.0.6_latest'_ then change directory:
-* $**cd v8.0.6_latest** then run the demo:
+* You have to decompress the zip-archive `v8.0.7.zip` then change directory:
+* $**cd v8.0.7** then decompress the zip-archive `SIMULINAC.zip`:
+* then change directory **cd SIMULINAC** and run the demo:
 * $**python simu.py yml/simuIN.yml**
 * You must have python 3 (I tested with 3.4).
 * The program depends on the modules: _matplolib, numpy, scipy, PyYaml and tkinter._
