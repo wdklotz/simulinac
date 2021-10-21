@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="author" content="MarkdownViewer++" />
+        <title>README.md</title>
+        <style type="text/css">
+            
+/* Avoid page breaks inside the most common attributes, especially for exports (i.e. PDF) */
+td, h1, h2, h3, h4, h5, p, ul, ol, li {
+    page-break-inside: avoid; 
+}
+
+        </style>
+      </head>
+    <body>
+        <h1 id="simulinac">SIMULINAC</h1>
+<p>Is a python simulator/tracker for linac structures.</p>
+<p>I worked on a user friendly version of my code. Here it is!!!</p>
+<h2 id="getting-started">Getting started:</h2>
+<ul>
+<li>You have to decompress the zip-archive <code>v8.0.7.zip</code> then change directory:</li>
+<li>$<strong>cd v8.0.7</strong> then decompress the zip-archive <code>SIMULINAC.zip</code>:</li>
+<li>then change directory <strong>cd SIMULINAC</strong> and run the demo:</li>
+<li>$<strong>python simu.py yml/simuIN.yml</strong></li>
+<li>You must have python 3 (I tested with 3.4).</li>
+<li>The program depends on the modules: <em>matplolib, numpy, scipy, PyYaml and tkinter.</em></li>
+<li>The demo input file is <strong>yml/simuIN.yml</strong>. Copy it and modify at your will.</li>
+<li>You can track particle bunches:</li>
+<li><strong>$python tracker.py yml/trackIN.yml</strong></li>
+<li>The demo input file is <strong>yml/trackIN.yml</strong>. Copy it and modify at your will.</li>
+<li>You can get help from me by mail to wdklotz@gmail.com</li>
+</ul>
+<h2 id="structure-of-the-input-file">Structure of the input file:</h2>
+<ul>
+<li>A <strong>LATTICE</strong> is an array of N <strong>LINES</strong>:<pre>- [125,*line]</pre>
+</li>
+<li>A <strong>LINE</strong> is an array of <strong>CELLS</strong>:<pre>- [*cell]</pre>
+</li>
+<li>A <strong>CELL</strong> is an array of <strong>SEGMENTS</strong>:<pre>- [*sqf1,*srfc,*sqd,*srfc,*sqf2]</pre>
+</li>
+<li>A <strong>SEGMENT</strong> is an array of <strong>NODES</strong>:<pre>- SQD:   &sqd  [*d1,*qd,*d1]  # QD + LR drifts</pre>
+</li>
+<li>A <strong>NODE</strong> is an <strong>ELEMENT</strong>:<pre>- D1:   &d1   D3</pre>
+</li>
+<li>An <strong>ELEMENT</strong> is an array of key:value pairs:<pre>- D3:                         # ID: &alias
+     - type:     D            # D class
+     - length:   0.03         # [m]
+     - sec:      *HE          # is part of section</pre>
+</li>
+<li><strong>PARAMETERS</strong> and <strong>FLAGS</strong> are similar to ELEMENTS, i.e. array of (key:value) pairs.</li>
+</ul>
+<h3 id="warning-you-have-to-follow-strictly-the-yaml-syntax-in-the-input-files">WARNING: <em>You have to follow strictly the YAML syntax in the input files!</em></h3>
+<ul>
+<li>The top level blocks titled: <strong>FLAGS:</strong>, <strong>SECTIONS:</strong>, <strong>PARAMETERS:</strong>, <strong>ELEMENTS:</strong>, <strong>NODES:</strong>, <strong>SEGMENTS:</strong>, <strong>CELL:</strong>, <strong>LINE:</strong> and <strong>LATTICE:</strong> are mandatory. The lattice-parser will not parse correctly when you replace or rename them.</li>
+</ul>
+<p>-- have fun --</p>
+
+    </body>
+</html>
+            

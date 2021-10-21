@@ -11,7 +11,7 @@ WORKDIR /Simulinac
 ENV DISPLAY=192.168.1.52:0
 VOLUME /Simulinac
 
-RUN python -m pip install --no-cache-dir matplotlib numpy PyQt5 PyYAML scipy
+RUN python -m pip install --no-cache-dir matplotlib PyYAML scipy
 
 CMD ["python", "simu.py"]
 ```
@@ -21,14 +21,15 @@ CMD ["python", "simu.py"]
 4. RUN `python -m pip` installs python dependencies.
 5. CMD defines the command in `JSON syntax` the container runs when started. 
 
-Build the docker image with `-t name:tag`:
+In Cmder (*docker build seems not to work when launched from wsl-ubuntu distribution*)
+ build the docker image with a tag:
 ```
-$docker build -t simu:1.2 .
+-> docker build -t simu:1.2 .
 ```
 
 When build is done the new image should be visible:
 ```
-$docker images
+-> docker images
 REPOSITORY               TAG       IMAGE ID       CREATED        SIZE
 simu                     1.2       106c17d0c60d   5 hours ago    1.3GB
 debian                   latest    5890f8ba95f6   4 weeks ago    114MB
@@ -36,6 +37,13 @@ portainer/portainer-ce   latest    980323c8eb3f   2 months ago   196MB
 jekyll/jekyll            latest    76e17ded11d1   2 months ago   656MB
 eclipse-mosquitto        latest    131df074d5c8   2 months ago   9.54MB
 docker/getting-started   latest    021a1b85e641   3 months ago   27.6MB
+```
+Switch to wsl-ubuntu distribution.
+```
+-> wsl
+wdklotz@xps8500:~$ cd /mnt/c/Users/wdklotz (aka => g w)
+wdklotz@xps8500:/mnt/c/Users/wdklotz$ cd SIMULINAC
+wdklotz@xps8500:/mnt/c/Users/wdklotz/SIMULINAC$
 ```
 
 Start the image (1st time) using the default command given during build:

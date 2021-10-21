@@ -1,6 +1,6 @@
 ##!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v8.0.6a2'
+___version___='v8.0.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -32,17 +32,27 @@ import sys
 import os
 # import subprocess
 # from math import sqrt
+
+# for PyQt
+# import PyQt5             # works on native W10 but not on WSL2 as docker container
+# import matplotlib
+# matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
+
+# for Tk
+import tkinter             # works on native W10
 import matplotlib
-matplotlib.use("TkAgg")
-# matplotlib.use("Qt5Agg")
+matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
-plt.ioff()    # interactive mode off
+# plt.ioff()    # interactive mode off need this?
+# plt.on()      # interactive mode on need this ?
 # from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import factory
 from tracker import track_soll
+from pargs import pargs
+
 
 import bucket_size
 
@@ -340,29 +350,43 @@ def simulation(filepath):
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    # preset files for launch with  m4
-    run_version   = '20.02.2019_nlat'
-    input_file    = 'yml/simuIN.yml'       # default input file        (UNIX EOL=LF)
+    # parse argv and normalize
+    # returns:
+    # Args = {  'mode'  : 'no_m4',       either with or without m4 prepocessing
+    #           'proc'  : proc,          either simu.py or tracker.py
+    #           'file'  : file,          the input file
+    #           'tmpl'  : '',            the template file
+    #           'macro' : ''             the macro script file
+    #         }
+    Args = pargs(sys.argv)
+    print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
-    if len(sys.argv) == 2:
-        input_file    = sys.argv[1]
-    else:
-        if sys.platform   == 'win32':
-            # launch .bat script
-            command = 'yml\m4_simu.bat '+run_version
-        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-            macros_file   = 'yml/macros_'+run_version+'.sh'
-            template_file = 'yml/tmpl_'+run_version+'.yml'
-            # launch bash
-            command = 'chmod +x {}'.format(macros_file)
-            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)
+    input_file = Args['file']
+    if sys.platform == 'win32':
+        if Args['mode']   == 'no_m4':
+            pass
+        elif Args['mode'] == 'm4':
+            command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
+            os.system(command)
         else:
-            print('wrong platform')
+            print('Internal error!')
             sys.exit(1)
-        print('run Version {0}\n   macros=macros_{0}\n   template=tmpl_{0}\n   input={1}'.format(run_version,input_file))
-        # print(command)
-        os.system(command)
-
-    # start the run
+    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+        if Args['mode']   == 'no_m4':
+            pass
+        elif Args['mode'] == 'm4':
+            macros_file   = Args['macro']
+            template_file = Args['tmpl']
+            # launch macros script with bash
+            command = 'chmod +x {}'.format(macros_file)
+            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+            os.system(command)
+        else:
+            print('Internal error!')
+            sys.exit(1)
+    else:
+        print('wrong platform')
+        sys.exit(1)
+    # run the simulation
     simulation(input_file)
 

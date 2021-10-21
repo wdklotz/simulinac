@@ -1,5 +1,8 @@
-T=5.                    # kinetic energy in [Mev]
-T=25.                   # kinetic energy in [Mev]
+T=7.5                    # kinetic energy in [Mev]
+# T=8.                   # kinetic energy in [Mev]
+# T=15.                   # kinetic energy in [Mev]
+# T=20.                   # kinetic energy in [Mev]
+# T=25.                   # kinetic energy in [Mev]
 # T=50.                   # kinetic energy in [Mev]
 # T=80.                   # kinetic energy in [Mev]
 
@@ -15,20 +18,22 @@ BETAX=3.617             # twiss beta x in [m]  (T,B')=(25,23)
 BETAY=0.709             # twiss beta x in [m]  (T,B')=(25,23)
 
 FREQ=408.e6             # common rf-frequency [Hz]
-FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
+# FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 
 PHISY=-30.              # synchronous phase in [deg]
 
-BGRAD=43.150            # quad gradient [T/m] (T=25)
+# BGRAD=43.150            # quad gradient [T/m] (T=25)
 BGRAD=23.000            # quad gradient [T/m] (T=25)
-BGRAD=21.000            # quad gradient [T/m] (T=25)
+# BGRAD=21.000            # quad gradient [T/m] (T=25)
 # BGRAD=13.000            # quad gradient [T/m]
+# BGRAD=10.000            # quad gradient [T/m]
 # BGRAD=6.7               # quad gradient [T/m]
 
-NL=54                   # nboff lines a.k.a. cells
-NL=125                  # (Ti,Tf)=(25,200)
+NL=20                   # nboff lines a.k.a. cells
+# NL=54                   # nboff lines a.k.a. cells
+# NL=278                  # nboff lines a.k.a. cells
 
-MAP=t3d
+# MAP=t3d
 # MAP=simple
 # MAP=oxal
 MAP=base
