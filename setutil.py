@@ -774,7 +774,7 @@ def ellicp(xy,alfa,beta,emit):
     return (xy,a,b,tilt)
 
 # marker actions
-def elli_sxy_action(on_injection=False):
+def elli_sxy_action(node,on_injection=False):
     """ display x- and y-phase-space ellipses """
     if on_injection:
         s = 0.0
@@ -784,7 +784,6 @@ def elli_sxy_action(on_injection=False):
         by = PARAMS['betay_i']
 
     else:
-        node  = args[0]
         twiss,s = node['twiss']
 
         ax = twiss[Ktw.ax]
@@ -879,7 +878,7 @@ def dBdxprot(k0=0.,tkin=0.):
     if (tkin >= 0.):
         return k0 * Proton(tkin).brho
     else:
-        print('dBdxprot() called with negative kinetic energy?' - STOP)
+        print('dBdxprot() called with negative kinetic energy? - STOP')
         sys.exit(1)
 
 def objprnt (what,text='',filter=[]):

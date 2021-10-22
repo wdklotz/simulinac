@@ -81,6 +81,9 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
         lattice.add_element(instance)
     return lattice
 def instanciate_element(item):
+    def EzPeakToAverage(Ezpeak):
+        return 0.78 * EzPeak    # ~0.748 * EzPeak from Superfish
+
     DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
@@ -147,19 +150,19 @@ def instanciate_element(item):
         dWf       = FLAGS['dWf']
         mapping   = PARAMS['mapping']
         EzPeak    = get_mandatory(attributes,"EzPeak",label)
-        EzAvg     = get_mandatory(attributes,"EzAvg",label)
+        # EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
-            EzPeak = EzAvg
+            EzAvg = EzPeakToAverage(EzPeak)
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             if fname not in PARAMS:
                 PARAMS[fname] = SFdata(fname,EzPeak=EzPeak)
-            EzAvg = PARAMS[fname].EzAvg
+            EzAvg = EzPeakToAverage(EzPeak)
             instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
             pass
         else:
-            EzPeak = EzAvg
+            EzAvg = 0.748*EzPeak       # ~0.748*EzPeak from Superfish
             instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
@@ -181,10 +184,10 @@ def instanciate_element(item):
         length    = get_mandatory(attributes,'length',label)
         mapping   = PARAMS['mapping']
         EzPeak    = get_mandatory(attributes,"EzPeak",label)
-        EzAvg     = get_mandatory(attributes,"EzAvg",label)
+        # EzAvg     = get_mandatory(attributes,"EzAvg",label)
         if mapping == None:
             mapping = 't3d'
-            EzPeak = EzAvg
+            EzAvg = EzPeakToAverage(EzPeak)
         if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
             fname     = get_mandatory(attributes,"SFdata",label)
             if fname not in PARAMS:
@@ -193,7 +196,7 @@ def instanciate_element(item):
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
             pass
         else:
-            EzPeak = EzAvg
+            EzAvg = EzPeakToAverage(EzPeak)
             instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
         instance['EzAvg']    = EzAvg
         instance['EzPeak']   = EzPeak
@@ -209,14 +212,15 @@ def instanciate_element(item):
     elif key == 'GAP':
         label     = attributes['ID']
         gap       = get_mandatory(attributes,'gap',label)
-        EzAvg     = get_mandatory(attributes,"EzAvg",label)
+        EzPeak    = get_mandatory(attributes,"EzPeak",label)
+        EzAvg     = EzPeak
         PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
         freq      = float(get_mandatory(attributes,"freq",label))
         dWf       = FLAGS['dWf']
         aperture  = get_mandatory(attributes,'aperture',label)
         instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
         instance['EzAvg']   = EzAvg
-        instance['EzPeak']  = EzAvg
+        instance['EzPeak']  = EzPeak
         instance['label']   = label
         instance['gap']     = gap
         instance['PhiSoll'] = PhiSoll

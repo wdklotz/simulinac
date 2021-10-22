@@ -507,11 +507,18 @@ def test3(input_file):
     DEBUG_TEST3('S(k)',s)
     DEBUG_TEST3("S'(k)",sp)
 
+def test4(input_file):
+    # sfdata = SFdata(input_file,EzPeak=1.4)
+    sfdata = SFdata(input_file)
+    print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,1./sfdata.Peak2Avg))
+
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'
-    ax = pre_plt(input_file)
+    # ax = pre_plt(input_file)
     # test0(input_file)               # SF
     # test1()                         # NG
     # test2()                         # poly-fit to NG
-    test3(input_file)               # poly-fit to SF
-    post_plt(ax)
+    # test3(input_file)               # poly-fit to SF
+    # post_plt(ax)
+    test4(input_file)
+
