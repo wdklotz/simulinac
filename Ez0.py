@@ -204,33 +204,34 @@ def Sp(poly,k,zintval):
         sp.append(Spn(poly,k,i))
     return sp
 
-def tabellenTeilung(N,nt):
-        """
-        IN: N Anzahl der SF-Tabellenintervalle
-        IN: nt Anzahl der SF-Tabellenintervalle pro gap-slice
+# def tabellenTeilung(N,nt):
+#         """
+#         IN: N Anzahl der SF-Tabellenintervalle
+#         IN: nt Anzahl der SF-Tabellenintervalle pro gap-slice
         
-        OUT: Anzahl der gap-slices
-        """
-        teilungen = { 88:[44,22,11,8,4,2],
-                      90:[45,30,18,15,10,9,6,5,3,2],
-                      92:[46,23,4,2],
-                      96:[48,24,12.6,3,32,16,8,4,2],
-                      98:[49,14,7,2],
-                     100:[50,25,20,10,5,4,2]}
-        try:
-            ntlist = teilungen[N]
-            nI     = ntlist[ntlist.index(nt)]
-        except (KeyError,ValueError):
-            WARNING = '\033[31m'
-            ENDC    = '\033[30m'
-            mess1 = "Incompatible parameters for table reduction!\n"
-            mess2 = "For SFdata the table should have at least N equidistant intervals with N>=88.\n"
-            mess3 = "The number of SFdata-intervals per gap-slice has to be a number\n"
-            mess4 = "that divides N without a remainder.\n"
-            mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=90:[45,30,18,15,10,9,6,5,3,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=98:[49,14,7,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
-            print(WARNING+mess1+mess2+mess3+mess4+mess5+ENDC)
-            sys.exit(1)
-        return int(N/nI)
+#         OUT: Anzahl der gap-slices
+#         """
+#         teilungen = { 88:[44,22,11,8,4,2],
+#                       90:[45,30,18,15,10,9,6,5,3,2],
+#                       92:[46,23,4,2],
+#                       96:[48,24,12,6,3,32,16,8,4,2],
+#                       98:[49,14,7,2],
+#                      100:[50,25,20,10,5,4,2]}
+#         try:
+#             ntlist = teilungen[N]
+#             nI     = ntlist[ntlist.index(nt)]
+#             # print('N {} nt {} ntlist {} ntlist.index(nt) {} nI {}'.format(N,nt,ntlist,ntlist.index(nt),nI))
+#         except (KeyError,ValueError):
+#             WARNING = '\033[31m'
+#             ENDC    = '\033[30m'
+#             mess1 = "Incompatible parameters for table reduction!\n"
+#             mess2 = "For SFdata the table should have at least N equidistant intervals with N>=88.\n"
+#             mess3 = "The number of SFdata-intervals per gap-slice has to be a number\n"
+#             mess4 = "that divides N without a remainder.\n"
+#             mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=90:[45,30,18,15,10,9,6,5,3,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=98:[49,14,7,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
+#             print(WARNING+mess1+mess2+mess3+mess4+mess5+ENDC)
+#             sys.exit(1)
+#         return int(N/nI)
 
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (can be normiert auf EzPeak & gap)'''
@@ -241,16 +242,17 @@ class SFdata(object):
         self.EzPeak     = EzPeak
         self.gap        = gap
         self.EzAvg      = None
-        self.N          = None        # for later
-        self.nt         = None        # for later
-        self.nI         = None        # for later
+        # self.N          = None        # for later
+        # self.nt         = None        # for later
+        # self.nI         = None        # for later
         self._Ez0_tab   = []          # rtaw data from SF will never be scaled!
         self._Ez1_tab   = []          # scaled data table from SF
         self._poly      = []          # polyfit to SF data
 
         self.make_Ez_table()
         self.scale_Ez_table()
-        self.make_Ez_poly()
+        # self.make_Ez_poly()
+        self.make_polyfit()
         self.make_EzAvg()
 
     def make_Ez_table(self):
@@ -259,13 +261,13 @@ class SFdata(object):
         offset  =  41      # lines to skip from input-file
         adjust  =  0       # adjustment for N=100:[50,25,20,10,5,4,2]
         adjust  = -2       # adjustment for N=98:[49,14,7,2]
-        adjust  =  4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
-        self.nt =  8       # nt nboff SFtable-intervals per gap-slice   !!VORGABE!!
+        adjust  =  4       # adjustment for N=96:[48,24,12,6,3,32,16,8,4,2]
+        # self.nt =  8       # nt nboff SFtable-intervals per gap-slice   !!VORGABE!!
         with open(self.input_file,'r') as f:
             lines = list(f)
             lines = lines[offset:-2-adjust]           # remove trailing and leading lines
-            self.N = len(lines)-1                     # N nboff SFtable-intervals from input-file
-            self.nI = tabellenTeilung(self.N,self.nt) # nI nboff integration-intervals
+            # self.N = len(lines)-1                     # N nboff SFtable-intervals from input-file
+            # self.nI = tabellenTeilung(self.N,self.nt) # nI nboff integration-intervals
 
             for line in lines:
                 # print(line,end='')
@@ -312,39 +314,76 @@ class SFdata(object):
             self._Ez1_tab.append(Dpoint(z,r,e))
         return self.Ez_table
 
-    def make_Ez_poly(self):
-        """ Calculate polynom coefficients from scaled SF data """
-        def indexer(nbslices,M):
-            """
-                nbslices = nboff gap-slices
-                N = nboff half-length-slices
-                M = nboff SF-points
-                n = nboff SF-points/half-length-slice
-            """
-            N=2*nbslices    # factor 2 more intervals than slices
-            if N>M: 
-                raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
-            M = int(M-fmod(M,N))
-            n = int(M/N)
-            for i in range(0,M,2*n):
-                # DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
-                yield((i,i+n,i+2*n))
+    # def make_Ez_poly(self):
+    #     """ Calculate polynom coefficients from scaled SF data """
+    #     def indexer(nbslices,M):
+    #         """
+    #             nbslices = nboff gap-slices
+    #             N = nboff half-length-slices
+    #             M = nboff SF-points
+    #             n = nboff SF-points/half-length-slice
+    #         """
+    #         N=2*nbslices    # factor 2 more intervals than slices
+    #         if N>M: 
+    #             raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
+    #         M = int(M-fmod(M,N))
+    #         n = int(M/N)
+    #         for i in range(0,M,2*n):
+    #             # DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
+    #             yield((i,i+n,i+2*n))
         
-        anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
-        print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,2*self.N,2*self.nt))
-        for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
+    #     anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
+    #     print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,2*self.N,2*self.nt))
+    #     for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
+    #         zl = self.Ez_table[il].z
+    #         z0 = self.Ez_table[i0].z
+    #         zr = self.Ez_table[ir].z
+    #         El = self.Ez_table[il].Ez
+    #         E0 = self.Ez_table[i0].Ez
+    #         Er = self.Ez_table[ir].Ez
+    #         dz = z0-zl
+    #         b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+    #         a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
+    #         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
+    #         self._poly.append(pval)
+    #         DEBUG_ON('Ez_poly: (il,i0,ir) ({:3},{:3},{:3}),  (zl,zr) ({:6.3f},{:6.3f})'.format(il,i0,ir,zl,zr))
+
+    def make_polyfit(self): 
+        # Polynomial fits to raw data according to Shislo&Holmes
+        # In here M adjacent raw intervals are taken as one single interval and fitted with a polynomial
+        sf_tab = self.Ez_table   # SF-table scales applied
+        N      = len(sf_tab)     # stuetzpunkte in raw table
+        M      = 8               # raw intervalls/poly interval (must be even number [2,4,6,8,....])
+        polies = []              # PolyFit: list(Polyvals)
+
+        DEBUG_HERE = DEBUG_OFF
+
+        DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: raw function values: {} in '.format(N),range(N-1))
+        DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
+        DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
+
+        i=0
+        while(True):
+            il = i
+            i0 = i+int(M/2)
+            ir = i+M
+            if i>N-1 or i0>N-1 or ir>N-1: break
             zl = self.Ez_table[il].z
             z0 = self.Ez_table[i0].z
             zr = self.Ez_table[ir].z
             El = self.Ez_table[il].Ez
             E0 = self.Ez_table[i0].Ez
             Er = self.Ez_table[ir].Ez
+            i = ir   # next intewrval
             dz = z0-zl
             b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
-            self._poly.append(pval)
-            DEBUG_ON('Ez_poly: (il,i0,ir) ({:3},{:3},{:3}),\t(zl,zr) ({:6.3f},{:6.3f})'.format(il,i0,ir,zl,zr))
+            polies.append(pval)
+            DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
+        print('Ez0_poly::SFdata::make_polyfit: {} poly intervals'.format(len(polies)))
+        self._poly = polies
+        return polies
 
     def make_EzAvg(self):
         """ Average E-field in gap """
@@ -540,13 +579,18 @@ def test4(input_file):
     sfdata = SFdata(input_file, EzPeak=3.)
     print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
 
+def test5(input_file):
+    sfdata = SFdata(input_file, EzPeak=3.)
+    sfdata.make_polyfit()
+
 if __name__ == '__main__':
     input_file='SF_WDK2g44.TBL'
     ax = pre_plt(input_file)
     test0(input_file)               # get raw data and do scaling
     # test1()                         # NG 
     # test2()                         # poly-fit to NG
-    # test3(input_file)                 # poly-fit to scaled SF
-    # test4(input_file)                 # Average/Peak ratio
+    test3(input_file)               # poly-fit to scaled SF
+    test4(input_file)               # Average/Peak ratio
+    test5(input_file)                # check polyfit
     post_plt(ax)
 

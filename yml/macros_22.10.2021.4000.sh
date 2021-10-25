@@ -21,7 +21,7 @@ BETAY=0.709             # twiss beta x in [m]  (T,B')=(25,23)
 
 #============== RF
 # EZAVG=1.05              # average Ez [MV/m] ~ 0.748 * EZPEAK   needed??
-EZPEAK=1.00             # peak Ez [MV/m]
+EZPEAK=1.25             # peak Ez [MV/m]
 PHISY=-30.              # synchronous phase in [deg]
 GAP=0.023                # cavity gap in [m]
 # FREQ=408.e6             # common rf-frequency [Hz]
@@ -40,11 +40,12 @@ NL=20                   # nboff lines a.k.a. cells
 NL=54
 # NL=278
 # NL=636                  # Ef ~ 203 MeV
+
 #============== cavity mapping
 # MAP=t3d
 MAP=simple
 # MAP=oxal
-# MAP=base
+MAP=base
 MAP=ttf
 # MAP=dyn
 
