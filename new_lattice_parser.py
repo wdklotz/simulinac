@@ -42,7 +42,7 @@ def expandItems(segs):
         try:
             items = v['ITEMS']
         except KeyError:
-            print('No ITEMS!')    # no ITEMS
+            print('No ITEMS!')      # no ITEMS
             sys.exit(1)
         try:
             nitems = v['NITEMS']    # expand  to get NTIMES 'ITEMS'
@@ -114,9 +114,10 @@ print(HR)
 print('LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE')
 print(HR)
 lattice = in_data['LATTICE']
+# pp.pprint(lattice)
 # the linear sequence of elements in the lattice as a python list:
 listOfElementsinLattice = []
 extract_elements(lattice,listOfElementsinLattice)
 print('Number of elements in lattice: {}'.format(len(listOfElementsinLattice)))
-pprint.PrettyPrinter(compact=True).pprint(listOfElementsinLattice)
+pprint.PrettyPrinter(width=200,compact=True).pprint(listOfElementsinLattice)
 

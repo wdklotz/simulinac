@@ -136,7 +136,7 @@ SEGMENTS:   # group NODEs in SEGMENTs: order given by [...] syntax
       ITEMS:  [*d1,*qf]         # 1/2Qf + L drift
     SRFGAP: &srfgap       
       ITEMS:  [*d2,*gap,*d2]
-      NITEMS: 1
+      NITEMS: 10
       DESC: 'RF-gap array'     # rf-gap array
     SRFCAV: &srfcav
       ITEMS:  [*cav]
@@ -145,12 +145,8 @@ SEGMENTS:   # group NODEs in SEGMENTs: order given by [...] syntax
 # #...........................................................................................
 CELLS:    # concatenate SEGMENTS to CELL: order given by [...] syntax
 # #...........................................................................................
-    Cavities: &cavities  
-      - ITEMS:  [*sqf1,*srfcav,*sqd,*srfcav,*sqf2]
-        DESC: 'FODO cell with 2 cavity blocks'  
-    Gaps:     &gaps
-      - ITEMS:  [*sqf1,*srfgap,*sqd,*srfgap,*sqf2]
-        DESC: 'FODO cell with 2 gap blocks'
+    Cavities: &cavities  [ITEMS:  [*sqf1,*srfcav,*sqd,*srfcav,*sqf2], DESC: 'FODO 2 RF blocks']  
+    Gaps:     &gaps      [ITEMS:  [*sqf1,*srfgap,*sqd,*srfgap,*sqf2], DESC: 'FODO 2 RF blocks']
 # #...........................................................................................
 SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
 # #...........................................................................................
