@@ -1,0 +1,4 @@
+*) LatticeKetten: neue KLassenstruktur Sections.Lattice.Line.Cell.Segment.Element
+*) mehr 'namedtupel' benutzen
+*) nochmal YAML Nutzung ueberpruefen
+*) ??

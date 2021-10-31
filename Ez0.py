@@ -241,7 +241,7 @@ class SFdata(object):
         self.input_file = input_file
         self.EzPeak     = EzPeak
         self.gap        = gap
-        self.EzAvg      = None
+        self.EzAvg      = None        # for later
         # self.N          = None        # for later
         # self.nt         = None        # for later
         # self.nI         = None        # for later
@@ -374,7 +374,7 @@ class SFdata(object):
             El = self.Ez_table[il].Ez
             E0 = self.Ez_table[i0].Ez
             Er = self.Ez_table[ir].Ez
-            i = ir   # next intewrval
+            i = ir   # next interval
             dz = z0-zl
             b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier

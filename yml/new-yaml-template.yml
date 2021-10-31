@@ -1,0 +1,170 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+
+#..........................................................................................
+## RUN switches
+#..........................................................................................
+FLAGS:
+    # accON:        False           # {True} acceleration on/off flag
+    # egf:          True            # {False} emittance growth flag
+    sigma:        False           # {True} beam sizes by sigma-matrix
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # periodic:     True            # {False} treat lattice as ring
+    # express:      True            # {False} use express version of thin quads
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # csTrak:       False           # {True} plot CS trajectories
+    # bucket:       True            # {False} plot the bucket
+    # pspace:       True            # {False} plot the twiss ellipses at entrance
+    # verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
+#...........................................................................................
+## INPUT definitions
+#...........................................................................................
+PARAMETERS:
+    Tkin:                 4.0       # [MeV] energy @ injection
+    DT2T:                 1.0e-3       # delta-T/T kinetic energy spread @ injection
+    emitx_i:      &emx    4.e-6      # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    4.e-6      # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    3.617      # [m] twiss beta @ entrance x
+    betay_i:      &bty    0.709      # [m] twiss beta @ entrance y
+    phi_sync:     &phs    -30.      # [deg] synchronous phase
+    frequency:    &freq   816.e6       # [Hz] frequency
+    mapping:              ttf    # [t3d, simple, oxal, base, ttf, dyn]
+    # alfax_i:              0.0         # [] twiss alpha x @ entrance
+    # alfay_i:              -0.0        # [] twiss alpha y @ entrance
+    alfax_i:              0.9         # [] twiss alpha x @ entrance
+    alfay_i:              -0.9        # [] twiss alpha y @ entrance
+    ql0:          &p02    0.04        # [m] quad-length
+    ql:           &p03    0.02        # [m] 1/2 quad-length
+    quad_bore:    &p04    0.011       # [m] quad bore radius
+    windings:             30          # [] quad-coil windings
+    gap:          &p15    0.023        # [m] RF gap
+    EzPeak:       &p17    1.25     # [MV/m] peak gap field Strengy
+    nbsigma:              3           # [m] sigma aperture
+    aperture:             15.e-3      # [m] global aperture setting (default = None)
+    lattvers:    22.10.21_0           # lattice version
+#...........................................................................................
+## ELEMENTS definitions
+#...........................................................................................
+ELEMENTS:
+    Dip3:                        # ID: &alias
+        type:     D            # D class
+        length:   0.03         # [m]
+    Dip5:                        # ID: &alias
+        type:     D            # D class
+        length:   0.023        # [m] half cavity
+    Dip10:                       # ID: &alias
+        type:     D            # D class
+        length:   0.100        # [m]
+    QuadFH:                       # ID: &alias
+        type:     QF           # QF class
+        length:   *p03         # [m]
+        aperture: *p04         # [m] quad bore
+        B':       &Bgrad 23.000 # [T/m] quadrupole gradient
+        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+    QuadDH:                       # ID: &alias
+        type:     QD           # QD class
+        length:   *p02         # [m] length
+        aperture: *p04         # [m] quad bore
+        B':       *Bgrad       # [T/m] quadrupole gradient
+        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+    RFGapHx:                     # replacement of RFG by D
+        type:     D            # replacement of RFG by D
+        length:   0.0          # replacement of RFG by D
+    RFGapH:                      # ID: &alias
+        type:     RFG          # RFG class
+        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        gap:      *p15         # [m] length
+        # aperture: *p04         # [m] quad bore
+        aperture: 10.e-3       # [m] quad bore
+        SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+    RFCavL:                      # ID: &alias
+        type:     RFC          # RFC class
+        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        gap:      *p15         # [m] gap length
+        # aperture: *p04         # [m] quad bore
+        aperture: 10.e-3         # [m] quad bore
+        SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        length:   0.044        # [m] cavity length
+    Screen:                       # ID: &alias
+        type:    MRK           # MRK class
+        action:  poincare        #  phase space poincare maps
+        prefix:  frames         # path to store frames
+#...........................................................................................
+# LATTICE definition from bottom to top:  Element alias Node->Segment->Cell->Section->Lattice
+#...........................................................................................
+NODES:  # mapping table: NODE: &node ==> ELEMENT
+    D1:   &d1   Dip3
+    D2:   &d2   Dip5
+    D3:   &d3   Dip10
+    QF:   &qf   QuadFH
+    QD:   &qd   QuadDH
+    GAP:  &gap  RFGapH
+    CAV:  &cav  RFCavL
+# #...........................................................................................
+SEGMENTS:   # group NODEs in SEGMENTs: order given by [...] syntax
+# #...........................................................................................
+    SQD:    &sqd
+      ITEMS:  [*d1,*qd,*d1]     # QD + LR drifts
+    SQF1:   &sqf1
+      ITEMS:  [*qf,*d1]         # 1/2QF + R drift
+    SQF2:   &sqf2
+      ITEMS:  [*d1,*qf]         # 1/2Qf + L drift
+    SRFGAP: &srfgap       
+      ITEMS:  [*d2,*gap,*d2]
+      NITEMS: 1
+      DESC: 'RF-gap array'     # rf-gap array
+    SRFCAV: &srfcav
+      ITEMS:  [*cav]
+      NITEMS: 10
+      DESC: 'Pillbox array'    # pillbox array
+# #...........................................................................................
+CELLS:    # concatenate SEGMENTS to CELL: order given by [...] syntax
+# #...........................................................................................
+    Cavities: &cavities  
+      - ITEMS:  [*sqf1,*srfcav,*sqd,*srfcav,*sqf2]
+        DESC: 'FODO cell with 2 cavity blocks'  
+    Gaps:     &gaps
+      - ITEMS:  [*sqf1,*srfgap,*sqd,*srfgap,*sqf2]
+        DESC: 'FODO cell with 2 gap blocks'
+# #...........................................................................................
+SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
+# #...........................................................................................
+  LE:  &sect_le   
+    ITEMS:  *cavities
+    NITEMS:  20
+    DESC:  'low enery section'
+  HE:  &sect_he   
+    ITEMS:  *gaps
+    NITEMS:  20
+    DESC:  'high energy section'
+# #........................................................................................... 
+# concatenate SECTIONs to LATTICE:
+# LATTICE:  [LE:  *sect_le] #  order given by [...] syntax
+LATTICE:  [LE:  *sect_le, HE:  *sect_he] #  order given by [...] syntax
+  
+

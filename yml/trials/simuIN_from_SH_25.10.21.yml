@@ -1,0 +1,258 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+#..........................................................................................
+## RUN configuration
+
+flags:
+    # - accON:        False           # {True} acceleration on/off flag
+    # - egf:          True            # {False} emittance growth flag
+    # - sigma:        False           # {True} beam sizes by sigma-matrix
+    # - KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # - periodic:     True            # {False} treat lattice as ring
+    # - express:      True            # {False} use express version of thin quads
+     - useaper:      True            # {False} use aperture check for lattice elements
+    # - csTrak:       False           # {True} plot CS trajectories
+    # - bucket:       True            # {False} plot the bucket
+    # - pspace:       True            # {False} plot the twiss ellipses at entrance
+    # - verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
+#...........................................................................................
+## SECTION definitions
+
+sections:
+     - [&LE 5to25 , &HE 25to200]
+#...........................................................................................
+## INPUT parameter definitions
+
+parameters:
+    - Tkin:                 6.       # [MeV] energy @ injection
+    - DT2T:                 1.0e-3       # delta-T/T kinetic energy spread @ injection
+    - emitx_i:      &emx    1.e-6      # [m*rad] {x,x'} emittance @ entrance
+    - emity_i:      &emy    1.e-6      # [m*rad] {y,y'} emittance @ entrance
+    - betax_i:      &btx    3.3      # [m] twiss beta @ entrance x
+    - betay_i:      &bty    0.55      # [m] twiss beta @ entrance y
+    - phi_sync:     &phs    -25.      # [deg] synchronous phase
+    - alfax_i:              0.          # [1] twiss alpha x @ entrance
+    - alfay_i:              0.          # [1] twiss alpha y @ entrance
+    - frequency:    &p01    816.e+6     # [Hz] frequency
+    - ql0:          &p02    0.04        # [m] quad-length
+    - ql:           &p03    0.02        # [m] 1/2 quad-length
+    - quad_bore:    &p04    0.011       # [m] quad bore radius
+    - windings:             30          # [1] quad-coil windings
+    - gap:          &p15    0.024       # [m] RF gap
+    - nbsigma:              2           # [m] sigma aperture
+    - aperture:             15.e-3      # [m] global aperture setting (default = None)
+    - mapping:              base
+    # - mapping:   t3d         # Trace 3D linear map model
+    # - mapping:   simple      # Shishlo/Holmes linear map model
+    # - mapping:   oxal        # Shishlo/Holmes openXAL gap-model
+    # - mapping:   base        # Shishlo/Holmes base map model
+    # - mapping:   ttf         # Shishlo/Holmes three point TTF RF gap-model
+    # - mapping:   dyn         # Tanke/Valero RF gap-model
+#...........................................................................................
+## ELEMENT definitions
+
+elements:
+# LE
+    - D3L:        &D3L           # ID: &alias
+        - type:     D            # D class
+        - length:   0.03         # [m]
+        - sec:      *LE          # is part of section
+    - D10L:    &D10L             # ID: &alias
+        - type:     D            # D class
+        - length:   0.100        # [m]
+        - sec:      *LE          # is part of section
+    - QFL:   &QFL                # ID: &alias
+        - type:     QF           # QF class
+        - length:   .04          # [m]
+        - aperture: .011         # [m] quad bore
+        - B':       12.0         # [T/m] quadrupole gradient
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *LE          # is part of section
+    - QDL:   &QDL                # ID: &alias
+        - type:     QD           # QD class
+        - length:   .08          # [m] length
+        - aperture: .011         # [m] quad bore
+        - B':       12.0         # [T/m] quadrupole gradient
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *LE          # is part of section
+    - RFCL:  &RFCL               # ID: &alias
+        - type:     RFC          # RFC class
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        - PhiSync:  -30          # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      0.026        # [m] gap length
+        - aperture: 10.e-3       #
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        - length:   0.026        # [m] cavity length
+        - sec:      *LE          # is part of section
+# HE
+    - D3:        &D3             # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.03         # [m]
+        - sec:      *HE          # is part of section
+    - D5:    &D5                 # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.012        # [m] half cavity
+        - sec:      *HE          # is part of section
+    - D10:    &D10                 # ID: &alias
+        - type:     D            # D class
+        # - type:     SIXD       # SIXD class
+        - length:   0.100        # [m]
+        - sec:      *HE          # is part of section
+    - QFH:   &QFH                # ID: &alias
+        - type:     QF           # QF class
+        - length:   0.02         # [m] 1/2 length
+        - aperture: 0.011        # [m] quad bore
+        - B':       20.          # [T/m] quadrupole gradient
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *HE          # is part of section
+    - QDH:   &QDH                # ID: &alias
+        - type:     QD           # QD class
+        - length:   0.04         # [m] length
+        - aperture: 0.011        # [m] quad bore
+        - B':       20.          # [T/m] quadrupole gradient
+        - slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        - sec:      *HE          # is part of section
+    - RFGHx:    &RFGHx           # replacement of RFG by D
+        - type:     D            # replacement of RFG by D
+        - length:   0.0          # replacement of RFG by D
+        - sec:      *HE          # replacement of RFG by D
+    - RFGH:  &RFGH               # ID: &alias
+        - type:     RFG          # RFG class
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        - PhiSync:  *phs         # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      0.046         # [m] length
+        - aperture: 10.e-3         #
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        - sec:      *HE          # is part of section
+    - RFCH:  &RFCH               # ID: &alias
+        - type:     RFC          # RFC class
+        - EzAvg:    1.00         # [MV/m] average E-field on axis
+        - EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        - PhiSync:  *phs         # [deg] synchronous phase
+        - fRF:      *p01         # [Hz] frequency
+        - gap:      0.046         # [m] gap length
+        - aperture: 10.e-3         #
+        - SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        - length:   0.046        # [m] cavity length
+        - sec:      *HE          # is part of section
+    - SCF:  &SCF                 # ID: &alias
+        - type:    MRK           # MRK class
+        - action:
+            - poincare           # action aperture check
+        - sec:     *HE
+#...........................................................................................
+## SEGMENT definitions
+
+segments:
+# LE            # empty section
+    - SEG1L:
+        - *QFL
+        - *D3L
+    - SEG2L:
+        - *D3L
+        - *QDL
+        - *D3L
+    - SEG3L:
+        - *D3L
+        - *QFL
+    - RFCAVL:               # rf-cavity
+        - *RFCL   # 1 
+        - *RFCL   # 2
+        - *RFCL   # 3
+        - *RFCL   # 4
+        - *RFCL   # 5
+        - *RFCL   # 6
+        - *RFCL   # 7
+        - *RFCL   # 8
+        - *RFCL   # 9
+        - *RFCL   # 10
+        - *RFCL   # 11
+        - *RFCL   # 12
+        - *D10L   # 10cm Gap for vacuum or diagnostics between groups of ten cavities
+        - *RFCL   # 13
+        - *RFCL   # 14
+        - *RFCL   # 15
+        - *RFCL   # 16
+        - *RFCL   # 17
+        - *RFCL   # 18
+        - *RFCL   # 19
+        - *RFCL   # 20
+        - *RFCL   # 21
+        - *RFCL   # 22
+        - *RFCL   # 23
+        - *RFCL   # 24
+#        - *RFCL   # 25
+#        - *RFCL   # 26
+# HE            # high energy section
+    - SEG1H:
+        - *QFH
+        - *D3
+    - SEG2H:
+        - *D3
+        - *QDH
+        - *D3
+    - SEG3H:
+        - *D3
+        - *QFH
+    - RFCAVH:               # rf-cavity
+        - *RFCH   # 1 
+        - *RFCH   # 2
+        - *RFCH   # 3
+        - *RFCH   # 4
+        - *RFCH   # 5
+        - *RFCH   # 6
+        - *RFCH   # 7
+        - *RFCH   # 8
+        - *RFCH   # 9
+        - *RFCH   # 10
+        - *D10    # 10cm Gap for vacuum or diagnostics between groups of ten cavities
+        - *RFCH   # 11
+        - *RFCH   # 12
+        - *RFCH   # 13
+        - *RFCH   # 14
+        - *RFCH   # 15
+        - *RFCH   # 16
+        - *RFCH   # 17
+        - *RFCH   # 18
+        - *RFCH   # 19
+        - *RFCH   # 20
+        #
+    - F:               # poincare section for scatter plot
+        - *SCF
+#...........................................................................................
+## LATTICE definition
+
+lattice:
+    # title is MANDATORY!
+    - title:   29.01.19_pyO
+    - [10,   SEG1L, RFCAVL, SEG2L, RFCAVL, SEG3L]   # cavities
+    # - [20,   SEG1H, RFCAVH, SEG2H, RFCAVH, SEG3H]   # cavities
+    # - [_NCELL,   SEG1H, RFGH, SEG2H, RFGH, SEG3H]         # gaps
+    - [ 1, F]
