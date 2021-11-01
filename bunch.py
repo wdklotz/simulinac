@@ -22,15 +22,12 @@ import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
 
-from setutil import DEBUG, Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
+from setutil import DEB, Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
 from trackPlot import histPlot, poincarePlot
 
 # DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
+DEBUG_OFF = DEB.get('OFF')
+DEBUG_ON  = DEB.get('ON')
 
 #todo: uniform bucket fill ?
 class Tpoint(object):
@@ -291,8 +288,8 @@ def test2():
     sigma, sigmap = sigmas(alfax, betax, emitx)
     x      = sigma  * NP.random.randn(N)
     xp     = sigmap * NP.random.randn(N)
-    DEBUG_OFF('x: ', x)
-    DEBUG_OFF('x\':',xp)
+    DEBUG_OFF('x: {}'.format(x))
+    DEBUG_OFF('x\': {}'.format(xp))
 
     fig1 = plt.figure('test2:figure 1')
     h1   = plt.subplot2grid((2,1),(0,0))

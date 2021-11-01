@@ -25,20 +25,13 @@ from copy import copy
 import warnings
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEBUG,sigmas, objprnt, Ktw, Ktp
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEB,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions
 import elements as ELM
 import TTFG as TTF
 from sigma import Sigma
 
-# DEBUGING
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
-
-DEBUG_MODULE = DEBUG_OFF
+DEBUG_MODULE = DEB.get('OFF')
 
 # Lattice
 class Lattice(object):
@@ -785,4 +778,4 @@ def test3():
 if __name__ == '__main__':
     test1()
     test2()
-#    test3()
+    test3()

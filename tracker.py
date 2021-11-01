@@ -32,8 +32,8 @@ from math import sqrt, degrees, radians
 from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
-from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
-from setutil import WConverter, Functions, TmStamp
+from setutil import DEB, PARAMS, FLAGS, dictprnt, Ktp, PARAMS, waccept
+from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs
 # from trackPlot import poincarePlot
@@ -478,9 +478,9 @@ def test0(filepath):
 
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TRACK       = DEBUG_OFF
-    DEBUG_SOLL_TRACK  = DEBUG_OFF
-    DEBUG_TEST0       = DEBUG_ON
+    DEBUG_TRACK       = DEB.get('OFF')
+    DEBUG_SOLL_TRACK  = DEB.get('OFF')
+    DEBUG_TEST0       = DEB.get('ON')
 
     # test0('yml/trackIN.yml')
 

@@ -30,11 +30,11 @@ NL=54                   # nboff lines a.k.a. cells
 NL=125                  # (Ti,Tf)=(25,200)
 
 MAP=t3d
-# MAP=simple
-MAP=oxal
+# MAP=siSmple
+# MAP=Soxal
 # MAP=base
 # MAP=ttf
-# MAP=dyn
+# MAPS=dyn
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"

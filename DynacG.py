@@ -23,16 +23,12 @@ import math as MATH
 from functools import partial
 import warnings
 
-from setutil import DEBUG, arrprnt, PARAMS, tblprnt, Ktp, WConverter
+from setutil import DEB, arrprnt, PARAMS, tblprnt, Ktp, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from Ez0 import SFdata, Ipoly
 
-# DEBUG__*
-def DEBUG_ON(string,arg = '',end = '\n'):
-    DEBUG(string,arg,end)
-    return True
-def DEBUG_OFF(string,arg = '',end = '\n'):
-    return False
+DEBUG_OFF = DEB.get('OFF')
+DEBUG_ON  = DEB.get('ON')
 
 twopi = 2.*MATH.pi
 
@@ -172,7 +168,7 @@ class _DYN_G(object):
         f_track = copy(i_track)
         f_track[Ktp.T] += self._deltaW
         f_track[Ktp.S]  = si
-        DEBUG_OFF('dyn-soll ',f_track)
+        DEBUG_OFF('dyn-soll {}'.format(f_track))
         return f_track
 
     @property
@@ -369,7 +365,7 @@ class _DYN_G(object):
             time    = tarr[4] + Dtime # PARTICLE time at z4
             gamma  += Dgamma          # PARTICLE gamma at z4
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
-            DEBUG_OFF('time-timeS ', time-timeS)
+            DEBUG_OFF('time-timeS {}'.format(time-timeS))
             z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: nach 1 Woche Arbeit!)
 
             # transverse
@@ -398,8 +394,8 @@ class _DYN_G(object):
         S += self.length
 
         f_track = NP.array([ x, xp, y, yp, z, zp, T, 1., S, 1.])
-        DEBUG_OFF('dyn-map ',i_track)
-        DEBUG_OFF('dyn-map ',f_track)
+        DEBUG_OFF('dyn-map {}'.format(i_track))
+        DEBUG_OFF('dyn-map {}'.format(f_track))
         return f_track
             
 def test0():
@@ -422,10 +418,10 @@ def test0():
     dyng = ELM.RFC(gap=0.048, SFdata=SF_tab, mapping='dyn')
     
     f_track = dyng.soll_map(i_track1)
-    DEBUG_TEST0('dyn-soll:i_track:\n', str(i_track1))
-    DEBUG_TEST0('dyn-soll:f_track:\n', str(f_track))
+    DEBUG_TEST0('dyn-soll:i_track:\n{}'.format(str(i_track1)))
+    DEBUG_TEST0('dyn-soll:f_track:\n{}'.format(str(f_track)))
 
-    DEBUG_TEST0('dyn-map:i_track:\n', str(i_track2))
+    DEBUG_TEST0('dyn-map:i_track:\n{}'.format(str(i_track2)))
     tracks = []
     for i in range(10):
         f_track = dyng.map(i_track2)
@@ -433,7 +429,7 @@ def test0():
         i_track2 = f_track
     DEBUG_TEST0('dyn-map:f_track:')
     for track in tracks:
-        print('{:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} '.format(track[0],track[1],track[2],track[3],track[4],track[5],track[6],track[7],track[8],track[9]))
+        DEBUG_TEST0('{:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} '.format(track[0],track[1],track[2],track[3],track[4],track[5],track[6],track[7],track[8],track[9]))
 
 if __name__ == '__main__':
     test0()

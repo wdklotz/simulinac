@@ -21,14 +21,15 @@ import sys
 from math import sin,cos,tan,sqrt,pi
 from copy import copy
 import numpy as NP
-import time
+# import time
 
-from setutil import PARAMS,DEBUG_ON,DEBUG_OFF,Ktp,MDIM,TmStamp
+from setutil import PARAMS,DEB,Ktp,MDIM
 from Ez0 import SFdata
 
-DEBUG_SLICE = DEBUG_OFF
-DEBUG_TEST0 = DEBUG_ON
-DEBUG_TEST1 = DEBUG_ON
+DEBUG_OFF   = DEB.get('OFF')
+DEBUG_SLICE = DEB.get('OFF')
+DEBUG_TEST0 = DEB.get('ON')
+DEBUG_TEST1 = DEB.get('ON')
 
 twopi          = 2*pi
 
@@ -123,7 +124,7 @@ class _OXAL(object):
         f_track = self._full_gap_map(self.slices, f_track)
         # add SOLL-energy increase
         f_track[Ktp.T] += self._deltaW
-        DEBUG_OFF('oxal-map ',f_track)
+        DEBUG_OFF('oxal-map {}'.format(f_track))
         return f_track
 
     def soll_map(self, i_track):
@@ -133,7 +134,7 @@ class _OXAL(object):
         f_track = i_track
         f_track[Ktp.T] += self._deltaW
         f_track[Ktp.S]  = sm
-        DEBUG_OFF('oxal-soll ',f_track)
+        DEBUG_OFF('oxal-soll {}'.format(f_track))
         return f_track
         
     def _full_gap_map(self, slices, i_track):
@@ -155,7 +156,7 @@ class _OXAL(object):
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
         t  = f1*f2
-        # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
+        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
         return t
 
     def _S(self, poly, k):
@@ -167,7 +168,7 @@ class _OXAL(object):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz/tan(k*dz)
         s  = f1*f2
-        # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
+        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
         return s
 
     def _Tp(self, poly, k):
@@ -384,7 +385,7 @@ def test0():
     oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
     tkin = 50.
     oxal.adjust_energy(tkin=tkin)
-    if DEBUG_TEST0():
+    if False:
         print('TTFG: oxal.__dict__',oxal.__dict__)      # for DEBUGGING
         slices = oxal['slices']
         for slice in slices:
@@ -402,11 +403,11 @@ def test0():
     track.addpoint(tpoint)
     ti = track.getpoints()[-1]
     for i in range(1):
-        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
+        DEBUG_TEST0('MAP:\n {}'.format(track.getpoints()[-1].as_str()))
         tf = oxal.map(ti())
         tpf = Tpoint(tf)
         track.addpoint(tpf)
-        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
+        DEBUG_TEST0('MAP:\n {}'.format(track.getpoints()[-1].as_str()))
         oxal.adjust_energy(tf[Ktp.T])    #enery adaptation
         ti = tpf
 
@@ -422,7 +423,7 @@ def test1():
     oxal = RFG(gap=0.048,SFdata=SF_tab,mapping='oxal')
     tkin = 150.
     oxal.adjust_energy(tkin=tkin)
-    DEBUG_TEST1('TTFG: oxal.__dict__',oxal.__dict__)      # for DEBUGGING
+    DEBUG_TEST1('TTFG: oxal.__dict__ {}'.format(oxal.__dict__))      # for DEBUGGING
     
     von = 0.
     bis = 1.
@@ -444,7 +445,7 @@ def test1():
         z += delta
         tf[4] = z
         ti = Tpoint(tf)
-    DEBUG_TEST1('TRACK-POINTS:\n',track.as_table())
+    DEBUG_TEST1('TRACK-POINTS:\n {}'.format(track.as_table()))
 
 if __name__ == '__main__':
     test0()

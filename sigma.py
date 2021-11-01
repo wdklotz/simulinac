@@ -21,16 +21,16 @@ from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
 from copy import copy,deepcopy
 
-from setutil import Proton, DEBUG, mxprnt, PARAMS, Ktw
+from setutil import Proton, DEB, mxprnt, PARAMS, Ktw
 
 DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
 # DEBUG MODULE
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
+# def DEBUG_ON(*args):
+#     DEBUG(*args)
+#     return True
+# def DEBUG_OFF(*args):
+#     return False
 
 class Sigma(object):
     """ Utility class for handling the sigma-matrix """
@@ -142,23 +142,23 @@ class Sigma(object):
         self.matrix[1,1] += delta_xp2_av
         self.matrix[3,3] += delta_yp2_av
         self.matrix[5,5] += delta_dp2_av
-        DEBUG_MODULE('Phis ',degrees(Phis))
-        DEBUG_MODULE('delta_phi ',degrees(delta_phi))
-        DEBUG_MODULE('E0L ',E0L)
-        DEBUG_MODULE('Ttf ',Ttf)
-        DEBUG_MODULE('m0c2 ',m0c2)
-        DEBUG_MODULE('lamb ',lamb)
-        DEBUG_MODULE('gamma_beta_av ',gamma_beta_av)
-        DEBUG_MODULE('gamma_beta_f ',gamma_beta_f)
-        DEBUG_MODULE('gamma_av ',gamma_av)
-        DEBUG_MODULE('kx ',kx)
-        DEBUG_MODULE('kz ',kz)
-        DEBUG_MODULE('cfactor1 ',cfactor1)
-        DEBUG_MODULE('cfactor2 ',cfactor2)
-        DEBUG_MODULE('ksi ',ksi)
-        DEBUG_MODULE('delta_xp2_av ',delta_xp2_av)
-        DEBUG_MODULE('delta_yp2_av ',delta_yp2_av)
-        DEBUG_MODULE('delta_dp2_av ',delta_dp2_av)
+        DEBUG_MODULE('Phis {}'.format(degrees(Phis)))
+        DEBUG_MODULE('delta_phi {}'.format(degrees(delta_phi)))
+        DEBUG_MODULE('E0L {}'.format(E0L))
+        DEBUG_MODULE('Ttf {}'.format(Ttf))
+        DEBUG_MODULE('m0c2 {}'.format(m0c2))
+        DEBUG_MODULE('lamb {}'.format(lamb))
+        DEBUG_MODULE('gamma_beta_av {}'.format(gamma_beta_av))
+        DEBUG_MODULE('gamma_beta_f {}'.format(gamma_beta_f))
+        DEBUG_MODULE('gamma_av {}'.format(gamma_av))
+        DEBUG_MODULE('kx {}'.format(kx))
+        DEBUG_MODULE('kz {}'.format(kz))
+        DEBUG_MODULE('cfactor1 {}'.format(cfactor1))
+        DEBUG_MODULE('cfactor2 {}'.format(cfactor2))
+        DEBUG_MODULE('ksi {}'.format(ksi))
+        DEBUG_MODULE('delta_xp2_av {}'.format(delta_xp2_av))
+        DEBUG_MODULE('delta_yp2_av {}'.format(delta_yp2_av))
+        DEBUG_MODULE('delta_dp2_av {}'.format(delta_dp2_av))
         return self
 def test0():
     print('-----------------------------Test0--')
@@ -196,15 +196,16 @@ def test1():
     s1 = sigma_i.matrix
     sigma_f = sigma_i.RSRT(R)   ## apply map to sigma
     s2 = sigma_f.matrix
-    DEBUG('{sigma}\n',mxprnt(s1.A))
-    DEBUG('{sigma_f} = {R}*{sigma}*{RT}\n',mxprnt(s2.A))
+    DEBUG_TEST1('{{sigma}}\n{}'.format(mxprnt(s1.A)))
+    DEBUG_TEST1('{{sigma_f}} = {{R}}*{{sigma}}*{{RT}}\n{}'.format(mxprnt(s2.A)))
 
     sigma_fc = deepcopy(sigma_f)
     sigma_fc.apply_eg_corr(R,sigma_f,radians(25.),ksi=(0.01,0.01))
     s3 = sigma_fc.matrix
-    DEBUG('{sigma_f}_corrected minus {sigma_f}_uncorrected\n',mxprnt((s3-s2).A))
+    DEBUG_TEST1('{{sigma_f}}_corrected minus {{sigma_f}}_uncorrected\n{}'.format(mxprnt((s3-s2).A)))
 # main ----------
 if __name__ == '__main__':
-    DEBUG_MODULE = DEBUG_ON
+    DEBUG_MODULE = DEB.get('ON')
+    DEBUG_TEST1  = DEB.get('ON')
     test0()    
     test1()

@@ -23,17 +23,16 @@ from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, WConverter
+from setutil import DEB, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, sigmas, Ktw, Ktp
-from Ez0 import SFdata
-from TTFG import _TTF_G
-from DynacG import _DYN_G
-from OXAL import _OXAL
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
+from Ez0     import SFdata
+from TTFG    import _TTF_G
+from DynacG  import _DYN_G
+from OXAL    import _OXAL
 
-DEBUG_MODULE = DEBUG_OFF
-DEBUG_MAP    = DEBUG_OFF
-DEBUG_PYO_G  = DEBUG_OFF
+DEBUG_MAP    = False
+DEBUG_PYO_G  = False
 
 twopi = 2.*pi     # used about everywhere
 
@@ -240,7 +239,7 @@ class _Node(DictObject, object):
         f_track = NP.dot(self.matrix,f_track)
 
         # for DEBUGGING
-        if DEBUG_MAP():
+        if DEBUG_MAP:
             f = f_track.copy() # !!!IMPORTANT!!!
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
@@ -440,13 +439,13 @@ class RD(SD):
         self.matrix = rd.matrix
 
     def make_slices(self, anz=PARAMS['nbslices']):
-        # DEBUG_MODULE('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
+        DEB.get('OFF')('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
         shortSD = self.shorten(self.length/anz)
         slices = [self.wd]          # wedge @ entrance
         for i in range(anz):
             slices.append(shortSD)
         slices.append(self.wd)      # wedge @ exit
-        # DEBUG_MODULE('slices', slices)
+        DEB.get('OFF')('slices {}'.format(slices))
         return slices
 
 class _wedge(I):
@@ -705,7 +704,7 @@ class RFC(I):
             # in case off ... (really needed ?)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
             self._particlef = kick.particlef
-            DEBUG_OFF("det[RFC.matrix] ",(NP.linalg.det(self.matrix)))
+            DEB.get('OFF')("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # This is no DKD-model. 
@@ -748,7 +747,7 @@ class RFC(I):
         for node in iter(self.triplet):
             f_track = node.map(track)
             track = f_track
-        DEBUG_OFF('rfc-map ',f_track)
+        DEB.get('OFF')('rfc-map {}'.format(f_track))
         return f_track
 
     def soll_map(self,i_track):
@@ -758,7 +757,7 @@ class RFC(I):
             f_track = node.soll_map(track)
             track = f_track
         f_track[SKOO] += sm
-        DEBUG_OFF('rfc-soll ',f_track)
+        DEB.get('OFF')('rfc-soll {}'.format(f_track))
         return f_track
 
     def make_slices(self, anz = PARAMS['nbslices']):
@@ -865,7 +864,7 @@ class _PYO_G(object):
         phis      = self.phis
         
 
-        DEBUG_PYO_G('simple_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,1.,phis))
+        DEB.get('OFF')('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
 
         DW         = deltaW
         WOUT       = WIN + DW
@@ -899,7 +898,7 @@ class _PYO_G(object):
         f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G():
+        if DEBUG_PYO_G:
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -952,7 +951,7 @@ class _PYO_G(object):
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
 
-        DEBUG_PYO_G('base_map: (deltaW,qE0LT,i0,phis)',(deltaW,qE0LT,i0,phis))
+        DEB.get('OFF')('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
         particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
         betaf     = particlef.beta
@@ -975,7 +974,7 @@ class _PYO_G(object):
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G():
+        if DEBUG_PYO_G:
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -1047,7 +1046,7 @@ class _T3D_G(object):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
         f_track = NP.dot(self.matrix,f_track)
-        DEBUG_OFF('t3d-map ',f_track)
+        DEB.get('OFF')('t3d-map {}'.format(f_track))
         return f_track
 
     def soll_map(self, i_track):
@@ -1055,7 +1054,7 @@ class _T3D_G(object):
         f_track = copy(i_track)
         f_track[EKOO] += self.deltaW
         f_track[SKOO] = sm
-        DEBUG_OFF('t3d-soll ',f_track)
+        DEB.get('OFF')('t3d-soll {}'.format(f_track))
         return f_track
 
 class _thin(_Node):
@@ -1070,7 +1069,7 @@ class _thin(_Node):
         """ 
         Stepping routine through the triplet
         """
-        # DEBUG_MODULE('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
+        DEB.get('OFF')('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]
@@ -1083,7 +1082,7 @@ class _thin(_Node):
         slices.append(kik)      # the Kick
         for i in range(anz1):
             slices.append(d2)
-        # DEBUG_MODULE('slices', slices)
+        DEB.get('OFF')('slices {}'.format(slices))
         return slices
 
 class QFth(_thin):
@@ -1308,11 +1307,11 @@ class SIXD(D):
 
         # body map
         f_track     = t3d2six(i_track)
-        DEBUG_MODULE('t3d-->six\n', f_track)
+        DEB.get('OFF')('t3d-->six\n{}'.format(f_track))
         f_track     = rps_map(f_track, self.length)
-        DEBUG_MODULE('SIXD.map\n', f_track)
+        DEB.get('OFF')('SIXD.map\n{}'.format(f_track))
         f_track     = six2t3d(f_track)
-        DEBUG_MODULE('six-->t3d\n', f_track)
+        DEB.get('OFF')('six-->t3d\n{}'.format(f_track))
         # nicht vergessen! adjust total lattice length
         f_track[SKOO] += self.length
         return f_track

@@ -38,7 +38,7 @@ def I0(x):
         res+= 0.2659732*t2*t2*t2*t2
         res+= 0.0360768*t2*t2*t2*t2*t2
         res+= 0.0045813*t2*t2*t2*t2*t2*t2
-        # DEBUG_MODULE('(I0,x )',(res,x))
+        print('(I0,x )',(res,x))
     elif 3.75 <= x:
         tm1 = 1./t
         res = 0.39894228
@@ -52,7 +52,7 @@ def I0(x):
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         try:
             res = res*exp(x)/sqrt(x)
-            # DEBUG_MODULE('(I0,x )',(res,x))
+            print('(I0,x )',(res,x))
         except OverflowError as ex:
             print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
             sys.exit(1)

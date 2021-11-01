@@ -29,37 +29,20 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import warnings
 import time
+import pprint
+
 
 # MDIM: dimension of matrices
 MDIM = 10
 
-# DEBUG
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
-def DEBUG(string='',arg='',end='\n'):
-    """
-    Print debug message
-    IN:
-        string: text to print
-        arg:  values to print
-    """
-    if isinstance(arg,list):
-        # print('DEBUG: {} \nlist={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4)  # use pprint module
-        sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(list) {}'.format(string,sarg),end=end)
-    elif isinstance(arg,dict):
-        # print('DEBUG: {} \ndict={}'.format(string,arg))
-        pp   = pprint.PrettyPrinter(indent=4,width=60)  # use pprint module
-        sarg = pp.pformat(arg)
-        print('DEBUG: {} typ(dict) {}'.format(string,sarg),end=end)
-    else:
-        print('DEBUG: {}{}'.format(string,arg),end=end)
-
-DEBUG_MODULE = DEBUG_OFF
+###
+# new DEBUG facility (replaces old DEBUG_ON,DEBUG_OFF and DEBUG)
+###
+def PRINT_PRETTY(obj):
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB=dict(OFF=PASS,ON=PRINT_PRETTY)
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
@@ -705,7 +688,7 @@ def I0(x):
         res+= 0.2659732*t2*t2*t2*t2
         res+= 0.0360768*t2*t2*t2*t2*t2
         res+= 0.0045813*t2*t2*t2*t2*t2*t2
-        # DEBUG_MODULE('(I0,x )',(res,x))
+        DEB.get('OFF')('(I0,x )=({},{})'.format(res,x))
     elif 3.75 <= x:
         tm1 = 1./t
         res = 0.39894228
@@ -719,7 +702,6 @@ def I0(x):
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         try:
             res = res*exp(x)/sqrt(x)
-            # DEBUG_MODULE('(I0,x )',(res,x))
         except OverflowError as ex:
             print('Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
             # sys.exit(1)
@@ -743,7 +725,7 @@ def I1(x):
         res+= 0.00301532*t2*t2*t2*t2*t2
         res+= 0.00032411*t2*t2*t2*t2*t2*t2
         res = res*x
-        # DEBUG_MODULE('(I1,x )',(res,x))
+        DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
     elif 3.75 <= x:
         tm1 = 1/t
         res = 0.39894228
@@ -757,7 +739,7 @@ def I1(x):
         res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         try:
             res = res*exp(x)/sqrt(x)
-            # DEBUG_MODULE('(I1,x )',(res,x))
+            DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
         except OverflowError as ex:
             print('Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
             # sys.exit(1)
@@ -1061,7 +1043,7 @@ def test3():
 
 if __name__ == '__main__':
     test0()
-    # test1()
+    test1()
     test2()
     test3()
 

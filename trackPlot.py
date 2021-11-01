@@ -19,6 +19,7 @@ This file is part of the SIMULINAC code
 """
 import numpy as NP
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 # DEBUGGING
 def DEBUG_ON(*args):
@@ -33,9 +34,9 @@ def histPlot(x,mu,sigma):
 
     num_bins = 50
     # the histogram of the data
-    (n, bins, patches) = plt.hist(x, num_bins, normed=1, facecolor='green', alpha=0.5)
+    (n, bins, patches) = plt.hist(x, num_bins, density=1, facecolor='green', alpha=0.5)
     # add a 'best fit' line
-    y = mlab.normpdf(bins, mu, sigma)
+    y = norm.pdf(bins, mu, sigma)
     plt.plot(bins, y, 'r--')
     # plt.xlabel('Smarts')
     # plt.ylabel('Probability')

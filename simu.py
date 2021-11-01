@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 # plt.on()      # interactive mode on need this ?
 # from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEBUG_OFF,DEBUG_ON
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import factory
 from tracker import track_soll
@@ -56,8 +56,7 @@ from pargs import pargs
 
 import bucket_size
 
-DEBUG_MODULE   = DEBUG_OFF
-DEBUG_LATTICE  = DEBUG_OFF
+DEBUG_LATTICE  = False
 
 def bucket(*args):
     bucket_size.bucket()
@@ -293,14 +292,14 @@ def simulation(filepath):
     #----------------------------------------------
     lattice = factory(filepath)
 
-    if DEBUG_LATTICE(): lattice.show_linkage()
+    if DEBUG_LATTICE: lattice.show_linkage()
 
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
     soll_track = track_soll(lattice)
 
-    if DEBUG_LATTICE(): lattice.show_linkage()
+    if DEBUG_LATTICE: lattice.show_linkage()
 
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
     print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))

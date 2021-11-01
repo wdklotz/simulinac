@@ -23,23 +23,17 @@ import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
 
-from setutil import PARAMS,DEBUG,Proton
+from setutil import PARAMS,DEB,Proton
 
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  _Ez0_tab is list(Dpoint)
 Dpoint  = namedtuple('Dpoint',['z','R','Ez'])
 
-# DEBUGING
-def DEBUG_ON(*args):
-    DEBUG(*args)
-    return True
-def DEBUG_OFF(*args):
-    return False
-
-DEBUG_MODULE = DEBUG_OFF
-DEBUG_TEST2  = DEBUG_OFF
-DEBUG_TEST3  = DEBUG_OFF
+DEBUG_MODULE = DEB.get('OFF')
+DEBUG_TEST2  = DEB.get('ON')
+DEBUG_TEST3  = DEB.get('ON')
+DEBUG_OFF    = DEB.get('OFF')
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
@@ -358,7 +352,7 @@ class SFdata(object):
 
         DEBUG_HERE = DEBUG_OFF
 
-        DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: raw function values: {} in '.format(N),range(N-1))
+        DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: raw function values: {} in {}'.format(N,range(N-1)))
         DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
         DEBUG_HERE('Ez0_poly::SFdata::make_polyfit: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
 
@@ -567,11 +561,11 @@ def test3(input_file):
     s   = S(poly,k,zintval)
     tp  = Tp(poly,k,zintval)
     sp  = Sp(poly,k,zintval)
-    DEBUG_TEST3('V0',v0)
-    DEBUG_TEST3('T(k)',t)
-    DEBUG_TEST3("T'(k)",tp)
-    DEBUG_TEST3('S(k)',s)
-    DEBUG_TEST3("S'(k)",sp)
+    DEBUG_TEST3('V0 {}'.format(v0))
+    DEBUG_TEST3('T(k) {}'.format(t))
+    DEBUG_TEST3("T'(k) {}".format(tp))
+    DEBUG_TEST3('S(k) {}'.format(s))
+    DEBUG_TEST3("S'(k) {}".format(sp))
 
 def test4(input_file):
     # Avergae/Peak ratio

@@ -22,13 +22,11 @@ from math import radians
 import yaml
 import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,DEBUG,DEBUG_ON,DEBUG_OFF,Twiss
+from setutil import PARAMS,FLAGS,SUMMARY,DEB
 import elements as ELM
 from lattice import Lattice
-from Ez0 import SFdata,V0
+from Ez0 import SFdata
 import marker_actions as MRK
-
-DEBUG_MODULE = DEBUG_OFF
 
 # parse and generate latttice
 def get_mandatory(attributes,key,item):
@@ -84,7 +82,7 @@ def instanciate_element(item):
     def EzPeakToAverage(Ezpeak):
         return 0.78 * EzPeak    # ~0.748 * EzPeak from Superfish
 
-    DEBUG_MODULE('instanciate_element: instanciate {}'.format(item))
+    DEB.get('OFF')('instanciate_element: instanciate {}'.format(item))
     key = item[0]
     attributes = item[1]
     # aperture   = PARAMS['aperture']    # default aperture
@@ -345,7 +343,7 @@ def factory(input_file):
     def make_lattice(latticeList,in_data):
         """ instanciate all elements from flattened node list"""
         lattice = Lattice()
-        DEBUG_OFF('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
+        DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
         elements = read_elements(in_data)
         for ID in lattice_list:
             element      = elements[ID]
@@ -355,7 +353,7 @@ def factory(input_file):
             # !!INSTANCIATE!!
             (label,instance) = instanciate_element(elmItem)
             section = instance.section if FLAGS['sections'] else '*'
-            DEBUG_MODULE('instance {} {} {}'.format(label,instance,section))
+            DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
             # add element instance to lattice
             if isinstance(instance,ELM._Node):
                 lattice.add_element(instance)
@@ -382,17 +380,17 @@ def factory(input_file):
     read_flags(in_data)
     read_sections(in_data)
     read_parameters(in_data)
-    DEBUG_MODULE('PARAMS after read_parameters()',PARAMS)
+    DEB.get('OFF')('PARAMS after read_parameters(): {}'.format(PARAMS))
     
     # lattice_list is a flat list of node IDs
     lattice_list = get_flattened_lattice_list(in_data)
-    DEBUG_MODULE('latticeList in factory()',lattice_list)
+    DEB.get('OFF')(lattice_list)
     # __call__ sollteilchen energy
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
     lattice = make_lattice(lattice_list,in_data)
-    # DEBUG_MODULE('lattice_generator >>\n',lattice.string())
+    DEB.get('OFF')('lattice_generator >>\n{}'.format(lattice.string()))
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEBUG_OFF('SUMMARY in factory()',SUMMARY)
+    DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))
     
     # end of factory(...)
     return lattice
@@ -460,9 +458,9 @@ def test2(input_file):
         print(nlist)
 
 if __name__ == '__main__':
-    input_file = 'yml/simuINstat.yml'
+    input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
     test0(input_file)
-    # test1(input_file)
+    test1(input_file)
     test2(input_file)
 

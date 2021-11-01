@@ -23,14 +23,14 @@ from math import pi as PI
 from copy import copy
 import numpy as NP
 
-from setutil import PARAMS,DEBUG,DEBUG_ON,DEBUG_OFF,I0,I1,tblprnt,arrprnt
+from setutil import PARAMS,DEB,I0,I1,tblprnt,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
-DEBUG_TEST0    = DEBUG_ON
-DEBUG_TEST1    = DEBUG_OFF
-DEBUG_SLICE    = DEBUG_OFF
-DEBUG_TTF_G    = DEBUG_OFF
+DEBUG_TEST0    = DEB.get('OFF')
+DEBUG_TEST1    = DEB.get('OFF')
+DEBUG_SLICE    = DEB.get('OFF')
+DEBUG_TTF_G    = DEB.get('OFF')
 
 twopi          = 2*PI
 
@@ -64,7 +64,7 @@ class _TTF_G(object):
                 slice.adjust_slice_parameters(next_tkin)
                 next_phase = slice.PHOUT       # slice OUT as next slice IN
                 next_tkin  = slice.WOUT        # slice OUT as next slice IN
-                DEBUG_TTF_G('_TTF_G: {}\n'.format(self),self.__dict__)
+                DEBUG_TTF_G('_TTF_G: {}\n'.format(self.__dict__))
             deltaW  = next_tkin-tkin # total energy kick as sum over slices
             return deltaW
 
@@ -112,7 +112,7 @@ class _TTF_G(object):
         # full map through sliced TTF-gap
         f_track = self._full_gap_map(self.slices, f_track)
         f_track[EKOO] += self._deltaW
-        DEBUG_OFF('ttf-map ',f_track)
+        DEB.get('OFF')('ttf-map {}'.format(f_track))
         return f_track
 
     def soll_map(self, i_track):
@@ -120,7 +120,7 @@ class _TTF_G(object):
         f_track = copy(i_track)
         f_track[EKOO] += self._deltaW
         f_track[SKOO]  = sm
-        DEBUG_OFF('ttf-soll ',f_track)
+        DEB.get('OFF')('ttf-soll {}'.format(f_track))
         return f_track
         
     def _full_gap_map(self, slices, i_track):
@@ -171,7 +171,7 @@ class _TTF_Gslice(object):
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
         t  = f1*f2
-        # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
+        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
         return t
 
     def _S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
@@ -182,7 +182,7 @@ class _TTF_Gslice(object):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz/tan(k*dz)
         s  = f1*f2
-        # DEBUG_SLICE('_TTF_Gslice:_T: (T,k)',(t,k))
+        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
         return s
 
     def _Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
@@ -242,7 +242,7 @@ class _TTF_Gslice(object):
         self.PHIN     = PHIN
         self.PHOUT    = PHOUT
         self.deltaPHI = DPHI
-        DEBUG_SLICE('_TTF_Gslice: {}\n'.format(self),self.__dict__)
+        DEBUG_SLICE('_TTF_Gslice: {}\n'.format(self.__dict__))
         return 
 
     def wout_minus_win(self, fac, i0, tk, sk, phi):
@@ -333,7 +333,7 @@ def test0():
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 50.
     ttfg.adjust_energy(tkin=tkin)
-    if DEBUG_TEST0():
+    if False:
         print('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
         slices = ttfg['slices']
         for slice in slices:
@@ -351,11 +351,11 @@ def test0():
     track.addpoint(tpoint)
     ti = track.getpoints()[-1]
     for i in range(1):
-        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
+        DEBUG_TEST0('MAP: {}'.format(track.getpoints()[-1].as_str()))
         tf = ttfg.map(ti())
         tpf = Tpoint(tf)
         track.addpoint(tpf)
-        DEBUG_TEST0('MAP:\n',track.getpoints()[-1].as_str())
+        DEBUG_TEST0('MAP: {}'.format(track.getpoints()[-1].as_str()))
         ttfg.adjust_energy(tf[EKOO])    #enery adaptation
         ti = tpf
 
@@ -371,7 +371,7 @@ def test1():
     ttfg = ELM.RFG(gap=0.048,SFdata=SF_tab,mapping='ttf')
     tkin = 150.
     ttfg.adjust_energy(tkin=tkin)
-    DEBUG_TEST1('TTFG: ttfg.__dict__',ttfg.__dict__)      # for DEBUGGING
+    DEBUG_TEST1('TTFG: ttfg.__dict__'.format(ttfg.__dict__))      # for DEBUGGING
     
     von = 0.
     bis = 1.
@@ -393,7 +393,7 @@ def test1():
         z += delta
         tf[4] = z
         ti = Tpoint(tf)
-    DEBUG_TEST1('TRACK-POINTS:\n',track.as_table())
+    DEBUG_TEST1('TRACK-POINTS:\n{}'.format(track.as_table()))
 
 if __name__ == '__main__':
     test0()
