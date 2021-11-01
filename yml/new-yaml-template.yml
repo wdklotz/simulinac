@@ -152,11 +152,11 @@ SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
 # #...........................................................................................
   LE:  &sect_le   
     ITEMS:  *cavities
-    NITEMS:  20
+    NITEMS:  3
     DESC:  'low enery section'
   HE:  &sect_he   
     ITEMS:  *gaps
-    NITEMS:  20
+    NITEMS:  3
     DESC:  'high energy section'
 # #........................................................................................... 
 # concatenate SECTIONs to LATTICE:

@@ -34,11 +34,12 @@ elements = in_data['ELEMENTS']
 nodes = in_data['NODES']
 # pp.pprint(nodes), print()
 
-def expandItems(segs):
+def expand_single_to_many_items(segs):
     '''
     An algorithm to expand the 'ITEMS' lists in 'SEGMENTS' and 'SECTIONS' 'NTIMES' times.
     '''
     for k,v in segs.items():
+        seg = segs[k]   # segment {k:v}
         try:
             items = v['ITEMS']
         except KeyError:
@@ -48,17 +49,22 @@ def expandItems(segs):
             nitems = v['NITEMS']    # expand  to get NTIMES 'ITEMS'
             if nitems == 0:         # ignore 0 ITEMS
                 pass
-            else:                   # assemble NITEMS ITEMS
+            else:                   # repeat ITEMS NITEMS times
                 itemsNtimes = []
                 for _ in range(nitems):
                     itemsNtimes += items
                 items = itemsNtimes
-            del(segs[k]['NITEMS'])   # we don't need this key anymore
+            del(seg['NITEMS'])   # we don't need this key anymore
         except KeyError:
             pass
-        segs[k]['ITEMS'] = items     # thios is the expanded structure
+        seg['ITEMS'] = items     # replace single with expanded structure
 
-def extract_elements(lattice,elements):
+def is_string_like(obj):
+    try: obj+'x'
+    except TypeError: return False
+    else: return True
+
+def unnest_elements(lattice,elements):
     '''
     A recursive algorithm to pull the element-IDs out of the structure that
     the YAML parser has produced.
@@ -72,7 +78,7 @@ def extract_elements(lattice,elements):
         for count, itm in enumerate(root):
             # print('list_index: {}'.format(count))
             # pp.pprint(itm),print()
-            extract_elements(itm,elements)
+            unnest_elements(itm,elements)
     # is next item a hash?
     elif isinstance(root,dict):
         # print('dict_len: {}'.format(len(root)))
@@ -80,9 +86,10 @@ def extract_elements(lattice,elements):
             if key == "DESC": continue
             # print('key: {}'.format(key))
             # pp.pprint(root[key]),print()
-            extract_elements(root[key],elements)
+            unnest_elements(root[key],elements)
     # is next item a string?
-    elif isinstance(root,str):
+    # elif isinstance(root,str): works, but Cookbook prefers
+    elif is_string_like(root):
         # print('element {}'.format(root))
         elements.append(root)
     else:
@@ -93,7 +100,7 @@ def extract_elements(lattice,elements):
 # print(HR)
 segments = in_data['SEGMENTS']
 # pp.pprint(segments), print()
-expandItems(segments)
+expand_single_to_many_items(segments)
 # pp.pprint(segments), print()
 
 # print(HR)
@@ -107,7 +114,7 @@ cells = in_data['CELLS']
 # print(HR)
 sections = in_data['SECTIONS']
 # pp.pprint(sections), print()
-expandItems(sections)
+expand_single_to_many_items(sections)
 # pp.pprint(sections), print()
 
 print(HR)
@@ -116,8 +123,8 @@ print(HR)
 lattice = in_data['LATTICE']
 # pp.pprint(lattice)
 # the linear sequence of elements in the lattice as a python list:
-listOfElementsinLattice = []
-extract_elements(lattice,listOfElementsinLattice)
-print('Number of elements in lattice: {}'.format(len(listOfElementsinLattice)))
-pprint.PrettyPrinter(width=200,compact=True).pprint(listOfElementsinLattice)
+list_of_elements_in_lattice = []
+unnest_elements(lattice,list_of_elements_in_lattice)
+print('Number of elements in lattice: {}'.format(len(list_of_elements_in_lattice)))
+pprint.PrettyPrinter(width=200,compact=True).pprint(list_of_elements_in_lattice)
 
