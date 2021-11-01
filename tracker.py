@@ -487,13 +487,6 @@ if __name__ == '__main__':
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # parse argv and normalize
-    # returns:
-    # Args = {  'mode'  : 'no_m4',       either with or without m4 prepocessing
-    #           'proc'  : proc,          either simu.py or tracker.py
-    #           'file'  : file,          the input file
-    #           'tmpl'  : '',            the template file
-    #           'macro' : ''             the macro script file
-    #         }
     Args = pargs(sys.argv)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 

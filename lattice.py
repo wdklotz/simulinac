@@ -76,7 +76,7 @@ class Lattice(object):
         self.accel  = 0.
         # default: iterating lattice left-right
         self.iteration = "LR"
-    
+
     def __iter__(self):
         if self.iteration == "RL":
             iterator = self.RLiterator(self)
@@ -341,18 +341,25 @@ class Lattice(object):
             # each node has its tuple of average sigmas
             node['sigxy'] = tuple(means)
             # aperture check
-            if FLAGS['useaper']:
-                nbsigma = PARAMS['nbsigma']
-                if node.aperture != None:
-                    aperture = node.aperture
-                    sigx, sigxp, sigy, sigyp = node['sigxy']
+            self.aperture_check(node,twiss=True)
+        return twfun
+    
+    def aperture_check(self,node,twiss=True):
+        # aperture check
+        fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
+        s,sm,sf = node.position
+        if FLAGS['useaper']:
+            nbsigma = PARAMS['nbsigma']
+            if node.aperture != None:
+                aperture = node.aperture
+                sigx, sigxp, sigy, sigyp = node['sigxy']
+                if PARAMS['warnmx']:
                     if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
                         warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),
-                            UserWarning,'lattice.py',
-                            'twiss_functions()')
-        return twfun
-        
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
+                        PARAMS['warnmx'] -= 1
+                        if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
+    
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
         #todo: analytical sigmas for 'dyn' mapping as best estimates ?
@@ -398,7 +405,7 @@ class Lattice(object):
         sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
         for node in iter(self): # loop nodes
             # sigma-matrices for a single node
-            sigmas = node.sigma_beam(steps = steps, sg = sg0) 
+            sigmas = node.sigma_beam(steps = steps, sg = sg0)   # note: sets node['sigxy']
             # prep plot list of ftn's
             for sg,s in sigmas:
                 v = sg.twiss()      # twiss from Sigma object
@@ -407,17 +414,7 @@ class Lattice(object):
             sg0 = sg          # loop back nodes
 
             # aperture check
-            if FLAGS['useaper']:
-                nbsigma = PARAMS['nbsigma']
-                if node.aperture != None:
-                    aperture = node.aperture
-                    sigx, sigxp, sigy, sigyp = node['sigxy']
-                    si,sm,sf                 = node.position
-                    if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
-                        warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),
-                            UserWarning,'lattice.py',
-                            'sigma_functions()')
+            self.aperture_check(node,twiss=False)
         return sigma_fun
 
     def dispersion(self,steps=10,closed=True):
@@ -567,16 +564,6 @@ class Lattice(object):
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
     
-    @property
-    def first_gap(self):
-        node = None
-        # for elm in self.seq:
-        for elm in iter(self):
-            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
-                node = elm
-                break
-        return node
-
     def show_linkage(self):
         """ Show left-right links of lattice nodes. Iterate in both directions """
         print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
@@ -590,6 +577,16 @@ class Lattice(object):
             next = next.next
         self.toggle_iteration()
         
+    @property
+    def first_gap(self):
+        node = None
+        # for elm in self.seq:
+        for elm in iter(self):
+            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
+                node = elm
+                break
+        return node
+
 # The commented code is *legacy*. No use to define a new
 # subclass and to cast from base class to subclass
 # although it worked well!
@@ -718,7 +715,7 @@ def make_wille():
     lattice.add_element(mbr2)
     lattice.add_element(md4)
     lattice.add_element(mqf2)
-#     DEBUG('lattice: ',lattice.string())
+    DEB.get('OFF')('lattice: {}'.format(lattice.string()))
     top = Lattice()
     top.concat(lattice)
     top.concat(lattice)

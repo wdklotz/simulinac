@@ -85,7 +85,8 @@ PARAMS = dict(
         nbslices             = 2,                # default number of slices
         mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
         mapping              = 'base',           # default rf gap-model      
-        DT2T                 = 1.e-3             # default kinetic energy spread  (T a.k.a W)
+        DT2T                 = 1.e-3,            # default kinetic energy spread  (T a.k.a W)
+        warnmx               = 5                 # limit nbof warnings
         )
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
@@ -353,7 +354,7 @@ class TmStamp(object):
         self.tmcnt +=1
         t = time.perf_counter()
         dt = t-self.tmt0
-#        self._t0 = t
+    #    self._t0 = t
         s = '{:4}:{:10.5} {:20}'.format(self.tmcnt,dt,text)
         self.tmStamps.append(s)
         return s
@@ -437,7 +438,7 @@ def waccept(node):
         # {z-dp/p}-space
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-#todo: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
+    # todo: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(

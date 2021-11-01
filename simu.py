@@ -74,22 +74,22 @@ def display0(*args):
     z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)]
     sgx   = [sigma_fun(i,'sigmax') for i in range(sigma_fun.nbpoints)]
     sgy   = [sigma_fun(i,'sigmay') for i in range(sigma_fun.nbpoints)]
-#    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
+    #    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
     #-------------------- trajectories (tz)
     tz=  [cos_like(i,'s')     for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')    for i in range(cos_like.nbpoints)]
-#    cxp= [cos_like(i,'cxp')   for i in range(cos_like.nbpoints)]
+    #    cxp= [cos_like(i,'cxp')   for i in range(cos_like.nbpoints)]
     cy=  [cos_like(i,'cy')    for i in range(cos_like.nbpoints)]
-#    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
-#    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
-#    cdp= [cos_like(i,'cdp')   for i in range(cos_like.nbpoints)]
+    #    cyp= [cos_like(i,'cyp')   for i in range(cos_like.nbpoints)]
+    #    cz=  [cos_like(i,'cz')    for i in range(cos_like.nbpoints)]
+    #    cdp= [cos_like(i,'cdp')   for i in range(cos_like.nbpoints)]
 
     sx=  [sin_like(i,'sx')    for i in range(sin_like.nbpoints)]
-#    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
+    #    sxp= [sin_like(i,'sxp')   for i in range(sin_like.nbpoints)]
     sy=  [sin_like(i,'sy')    for i in range(sin_like.nbpoints)]
-#    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
-#    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
-#    sdp= [sin_like(i,'sdp')   for i in range(sin_like.nbpoints)]
+    #    syp= [sin_like(i,'syp')   for i in range(sin_like.nbpoints)]
+    #    sz=  [sin_like(i,'sz')    for i in range(sin_like.nbpoints)]
+    #    sdp= [sin_like(i,'sdp')   for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
     stop_viseox  = 5                  # stop viseo plot after so many [m]
     stop_viseoy  = 5                  # stop viseo plot after so many [m]
@@ -145,24 +145,24 @@ def display1(*args):
     lat_plot  = args[3]
     ape_plot  = args[4]
     #-------------------- sigma functions
-#    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
+    #    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
     z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
     sgx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
     sgy   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
     #-------------------- trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
-#    cxp= [cos_like(i,'cxp')*1.e3   for i in range(cos_like.nbpoints)]
+    #    cxp= [cos_like(i,'cxp')*1.e3   for i in range(cos_like.nbpoints)]
     cy=  [cos_like(i,'cy')*1.e3    for i in range(cos_like.nbpoints)]
-#    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
+    #    cyp= [cos_like(i,'cyp')*1.e3   for i in range(cos_like.nbpoints)]
     cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
     cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]
 
     z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
     sx=  [sin_like(i,'sx')*1.e3    for i in range(sin_like.nbpoints)]
-#    sxp= [sin_like(i,'sxp')*1.e3   for i in range(sin_like.nbpoints)]
+    #    sxp= [sin_like(i,'sxp')*1.e3   for i in range(sin_like.nbpoints)]
     sy=  [sin_like(i,'sy')*1.e3    for i in range(sin_like.nbpoints)]
-#    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
+    #    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
     sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
     sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
     #-------------------- lattice viseo
@@ -350,13 +350,6 @@ if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
     # parse argv and normalize
-    # returns:
-    # Args = {  'mode'  : 'no_m4',       either with or without m4 prepocessing
-    #           'proc'  : proc,          either simu.py or tracker.py
-    #           'file'  : file,          the input file
-    #           'tmpl'  : '',            the template file
-    #           'macro' : ''             the macro script file
-    #         }
     Args = pargs(sys.argv)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 

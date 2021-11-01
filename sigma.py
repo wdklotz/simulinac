@@ -26,11 +26,7 @@ from setutil import Proton, DEB, mxprnt, PARAMS, Ktw
 DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
 # DEBUG MODULE
-# def DEBUG_ON(*args):
-#     DEBUG(*args)
-#     return True
-# def DEBUG_OFF(*args):
-#     return False
+DEBUG_MODULE = DEB.get('OFF')
 
 class Sigma(object):
     """ Utility class for handling the sigma-matrix """
@@ -205,7 +201,6 @@ def test1():
     DEBUG_TEST1('{{sigma_f}}_corrected minus {{sigma_f}}_uncorrected\n{}'.format(mxprnt((s3-s2).A)))
 # main ----------
 if __name__ == '__main__':
-    DEBUG_MODULE = DEB.get('ON')
     DEBUG_TEST1  = DEB.get('ON')
     test0()    
     test1()

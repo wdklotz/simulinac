@@ -36,7 +36,7 @@ DEBUG_PYO_G  = False
 
 twopi = 2.*pi     # used about everywhere
 
-# pretty printing
+# numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
 class DictObject(object):
@@ -586,7 +586,7 @@ class RFG(I):
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
             print("RFG is a kick-model and does not work with 'dyn'-mapping!")
             print("RFG is a kick-model and does not work with 'dyn'-mapping!",flush=True)
-#            exit(1)
+        #    exit(1)
             
     def adjust_energy(self, tkin):
         _params = self._params
@@ -943,10 +943,10 @@ class _PYO_G(object):
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # PARTICLE
         converter = WConverter(WIN,frq)
-#       phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
+    #   phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
-#       win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
+    #   win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
         win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
@@ -960,7 +960,7 @@ class _PYO_G(object):
 
         converter = WConverter(WOUT,frq)
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
-#       zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
+    #   zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
 
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
@@ -1345,8 +1345,7 @@ def k0test(gradient = 0., beta = 0., energy = 0.):
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
         sys.exit(1)
-
-
+        
 def test0():
     print('--------------------------------Test0---')
     print('trivial test 0 ...')
