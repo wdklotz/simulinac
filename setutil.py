@@ -31,13 +31,10 @@ import warnings
 import time
 import pprint
 
-
 # MDIM: dimension of matrices
 MDIM = 10
 
-###
 # new DEBUG facility (replaces old DEBUG_ON,DEBUG_OFF and DEBUG)
-###
 def PRINT_PRETTY(obj):
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
@@ -90,6 +87,7 @@ PARAMS = dict(
         )
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
+# todo: besser mit namedtupel ?
 class Ktp(IntEnum):
     """ Koordinaten fuer track points (1x10)"""
     x  = 0     # x

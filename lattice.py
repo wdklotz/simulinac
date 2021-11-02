@@ -355,8 +355,8 @@ class Lattice(object):
                 sigx, sigxp, sigy, sigyp = node['sigxy']
                 if PARAMS['warnmx']:
                     if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
-                        warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
+                        # warnings.showwarning('{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
+                        print(warnings.formatwarning('{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm),UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
     
