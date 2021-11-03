@@ -47,12 +47,12 @@ import matplotlib.pyplot as plt
 # plt.on()      # interactive mode on need this ?
 # from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB
 from setutil import collect_data_for_summary, waccept, elli_sxy_action
 from lattice_generator import factory
 from tracker import track_soll
 from pargs import pargs
-
+from new_lattice_parser import parse as parser
 
 import bucket_size
 
@@ -291,6 +291,12 @@ def simulation(filepath):
     # STEP 1: parse input file and create a lattice
     #----------------------------------------------
     lattice = factory(filepath)
+    DEB.get('ON')([x.label for x in lattice.seq])
+    new_segments, new_lattice = parser('yml/new-yaml-template.yml')
+    DEB.get('ON')(new_segments)
+    DEB.get('ON')(new_lattice)
+
+
 
     if DEBUG_LATTICE: lattice.show_linkage()
 

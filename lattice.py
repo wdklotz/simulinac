@@ -36,7 +36,7 @@ DEBUG_MODULE = DEB.get('OFF')
 # Lattice
 class Lattice(object):
     """
-    The Lattice object is a list of elements: ELM.<element> in self.seq
+    The Lattice object is a list of elements: ELM.<element> in self.seq  ??
     """
     class LRiterator(object):
         def __init__(self,lattice):
@@ -69,11 +69,13 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration
-## lattice body        
+    
+    ## lattice body        
     def __init__(self):
         self.seq    = []
         self.length = 0.
         self.accel  = 0.
+        self.sectns = []
         # default: iterating lattice left-right
         self.iteration = "LR"
 
@@ -577,6 +579,13 @@ class Lattice(object):
             next = next.next
         self.toggle_iteration()
         
+    @property
+    def new_sections(self):
+        return self.sectns
+    @new_sections.setter
+    def new_sections(self, scns):
+        self.sectns = scns
+
     @property
     def first_gap(self):
         node = None
