@@ -215,11 +215,11 @@ SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
 #...........................................................................................
   S-LE:     
     ITEMS:  *celll
-    NITEMS:  1 #0
+    NITEMS:  20
     DESC:  'low enery section'
   S-HE:   
     ITEMS:  *cellh
-    NITEMS:  1 #10
+    NITEMS:  110
     DESC:  'high energy section'
   S-DUMMY:     
     ITEMS:  *cellh
