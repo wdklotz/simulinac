@@ -434,7 +434,7 @@ def factory_new(input_file):
         # TODO sections
         """does nothing"""
         sctn_list = list(sections.keys())
-        DEB.get('ON')(sctn_list)
+        DEB.get('OFF')(sctn_list)
         PARAMS['sections'] = sctn_list
         FLAGS['sections'] = True
         return sections
@@ -468,7 +468,7 @@ def factory_new(input_file):
     def make_lattice(lattice_list,elements):
         """ instanciate all elements from lattice_list """
         lattice = Lattice()
-        DEB.get('ON')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
+        DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
         for ID in lattice_list:
             element      = elements.get(ID)
             elementClass = element['type']
@@ -504,33 +504,33 @@ def factory_new(input_file):
     results = parse(in_data)
 
     flags = proces_flags(results.FLAGS)
-    DEB.get('ON')('global FLAGS after proces_flags():')
+    DEB.get('OFF')('global FLAGS after proces_flags():')
     DEB.get('OFF')(FLAGS)
 
     parameters = proces_parameters(results.PARAMETERS)
-    DEB.get('ON')('global PARAMS after proces_parameters():')
+    DEB.get('OFF')('global PARAMS after proces_parameters():')
     DEB.get('OFF')(PARAMS)
     
     elements = proces_elements(results.ELEMENTS)
-    DEB.get('ON')('ELEMENTS after proces_elements():')
-    DEB.get('ON')(elements)
+    DEB.get('OFF')('ELEMENTS after proces_elements():')
+    DEB.get('OFF')(elements)
 
     sections = proces_sections(results.SECTIONS)
-    DEB.get('ON')('SECTIONS after proces_sections():')
-    DEB.get('ON')(sections)
+    DEB.get('OFF')('SECTIONS after proces_sections():')
+    DEB.get('OFF')(sections)
 
     # lattice_list is a flat list of node IDs
     lattice_list = proces_lattice(results.LATTICE)
-    DEB.get('ON')('LATTICE after proces_lattice():')
+    DEB.get('OFF')('LATTICE after proces_lattice():')
     DEB.get('OFF')(lattice_list)
 
     # __call__ sollteilchen energy
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
 
     lattice = make_lattice(lattice_list,elements)
-    DEB.get('ON')('lattice_generator >>{}'.format(lattice.string()))
+    DEB.get('OFF')('lattice_generator >>{}'.format(lattice.string()))
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEB.get("ON")('SUMMARY in factory() {}'.format(SUMMARY))
+    DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))
     
     # end of factory(...)
     return lattice
