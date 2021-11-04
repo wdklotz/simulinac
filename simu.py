@@ -47,10 +47,12 @@ import matplotlib.pyplot as plt
 # plt.on()      # interactive mode on need this ?
 # from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB
-from setutil import collect_data_for_summary, waccept, elli_sxy_action
-from lattice_generator import factory_new as factory
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept, elli_sxy_action
+# from setutil import collect_data_for_summary
 # from lattice_generator import factory
+from setutil import collect_data_for_summary_new as collect_data_for_summary
+from lattice_generator import factory_new as factory
+
 from tracker import track_soll
 from pargs import pargs
 from new_lattice_parser import parse as parser

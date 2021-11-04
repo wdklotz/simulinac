@@ -651,7 +651,7 @@ class Lattice(object):
 #             sys.exit(1)
 #         obj.__class__ = Section
 
-# Sections
+# Sections TODO
 # To add Sections to the lattice I augment the Lattice class with member-functions 
 def get_section(self,sec=None):
     if not FLAGS['sections']:

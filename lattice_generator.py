@@ -431,7 +431,12 @@ def factory_new(input_file):
         return flags
     # --------
     def proces_sections(sections):
+        # TODO sections
         """does nothing"""
+        sctn_list = list(sections.keys())
+        DEB.get('ON')(sctn_list)
+        PARAMS['sections'] = sctn_list
+        FLAGS['sections'] = True
         return sections
     # --------
     def proces_lattice(lattice):
@@ -471,7 +476,7 @@ def factory_new(input_file):
             """INSTANCIATE!!"""
             (label,instance) = instanciate_element(elmItem)
             # TODO section
-            # section = instance.section if FLAGS['sections'] else '*'    
+            section = instance.section if FLAGS['sections'] else '*'    
             # DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
             # add element instance to lattice
             if isinstance(instance,ELM._Node):

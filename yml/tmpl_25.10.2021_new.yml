@@ -69,28 +69,29 @@ ELEMENTS:
     D3L:                        # ID: &alias
         type:     D            # D class
         length:   0.03         # [m]
-        sec:      LE          # is part of section
+        sec:      S-LE          # is part of section
     Dip5:                        # ID: &alias
         type:     D            # D class
         length:   0.023        # [m] half cavity
+        sec:      S-LE          # is part of section
     D10L:                       # ID: &alias
         type:     D            # D class
         length:   0.100        # [m]
-        sec:      LE          # is part of section
+        sec:      S-LE          # is part of section
     QFL:                       # ID: &alias
         type:     QF           # QF class
         length:   .04         # [m]
         aperture: .011         # [m] quad bore
         B':       12.0         # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        sec:      LE          # is part of section
+        sec:      S-LE          # is part of section
     QDL:                       # ID: &alias
         type:     QD           # QD class
         length:   0.08         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       12.0       # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        sec:      LE          # is part of section
+        sec:      S-LE          # is part of section
     RFCL:                 # ID: &alias
         type:     RFC          # RFC class
         EzAvg:    1.00         # [MV/m] average E-field on axis
@@ -101,34 +102,34 @@ ELEMENTS:
         aperture: 10.e-3       
         SFdata:   SF_WDK2g22.TBL # superfish tbl-data file
         length:   0.026        # [m] cavity length
-        sec:      LE          # is part of section
+        sec:      S-LE          # is part of section
 #HE
     D3H:                     # ID: &alias
         type:     D            # D class
         length:   0.03         # [m]
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     D10H:                   # ID: &alias
         type:     D            # D class
         length:   0.100        # [m]
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     QFH:                   # ID: &alias
         type:     QF           # QF class
         length:   0.02         # [m]
         aperture: 0.011        # [m] quad bore
         B':       &Bgrad 20.   # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     QDH:                   # ID: &alias
         type:     QD           # QD class
         length:   0.04         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       *Bgrad       # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     RFGHx:               # replacement of RFG by D
         type:     D            # replacement of RFG by D
         length:   0.0          # replacement of RFG by D
-        sec:      HE          # replacement of RFG by D
+        sec:      S-HE          # replacement of RFG by D
     RFGH:                # ID: &alias
         type:     RFG          # RFG class
         EzAvg:    1.00         # [MV/m] average E-field on axis
@@ -138,7 +139,7 @@ ELEMENTS:
         gap:      *p15         # [m] length
         aperture: 10.e-3       # [m] quad bore
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     RFCH:                 # ID: &alias
         type:     RFC          # RFC class
         EzAvg:    1.00         # [MV/m] average E-field on axis
@@ -149,12 +150,12 @@ ELEMENTS:
         aperture: 10.e-3       # [m] quad bore
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         length:   *p15         # [m] cavity length
-        sec:      HE          # is part of section
+        sec:      S-HE          # is part of section
     SCF:                   # ID: &alias
         type:    MRK           # MRK class
         action:  poincare      #  phase space poincare maps
         # - prefix:  frames       # path to store frames
-        sec:     HE            # is part of section
+        sec:     S-HE            # is part of section
 #...........................................................................................
 # LATTICE definition from bottom to top:  Element alias Node->Segment->Cell->Section->Lattice
 #...........................................................................................
