@@ -49,8 +49,8 @@ import matplotlib.pyplot as plt
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept, elli_sxy_action
 # from setutil import collect_data_for_summary
-# from lattice_generator import factory
 from setutil import collect_data_for_summary_new as collect_data_for_summary
+# from lattice_generator import factory
 from lattice_generator import factory_new as factory
 
 from tracker import track_soll

@@ -400,15 +400,6 @@ def factory(input_file):
 def factory_new(input_file):
     """ factory creates a lattice from input-file """
     #--------
-    def proces_elements(elements):
-        # TODO   trigger on k  not on ID later on
-        """does nothing"""
-        elements_modified = {}
-        for k,v in elements.items():
-            v['ID'] = k
-            elements_modified[k] = v
-        return elements_modified
-    # --------
     def proces_flags(flags):
         """fills global FLAGS"""
         if 'accON' in flags:
@@ -429,19 +420,6 @@ def factory_new(input_file):
         if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
         if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
         return flags
-    # --------
-    def proces_sections(sections):
-        # TODO sections
-        """does nothing"""
-        sctn_list = list(sections.keys())
-        DEB.get('OFF')(sctn_list)
-        PARAMS['sections'] = sctn_list
-        FLAGS['sections'] = True
-        return sections
-    # --------
-    def proces_lattice(lattice):
-        """does nothing"""
-        return lattice
     # --------
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
@@ -465,24 +443,64 @@ def factory_new(input_file):
         if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
         return parameters
     #--------
-    def make_lattice(lattice_list,elements):
-        """ instanciate all elements from lattice_list """
+    def proces_elements(elements):
+        # TODO   trigger on k  not on ID later on
+        """does nothing"""
+        elements_modified = {}
+        for k,v in elements.items():
+            v['ID'] = k
+            elements_modified[k] = v
+        return elements_modified
+    # --------
+    def proces_sections(sections):
+        """does nothing"""
+        # TODO sections
+        # section_list = list(sections.keys())
+        # DEB.get('OFF')(section_list)
+        # PARAMS['sections'] = section_list
+        # FLAGS['sections'] = True
+        return sections
+    # --------
+    def proces_lattice(lattice):
+        """does nothing"""
+        return lattice
+    # --------
+    def make_lattice(section_list,sections,elements):
+        """ instanciate all elements from lattice_list
+        IN  section_list: a list of section IDs
+            sections: a dict of sections {id1:[element,...], id2:[element,...],...}
+            elements: a dict elements {id1:[attribute,...],id2:[attributes,...]...}
+        OUT lattice: the full listof ELM._Node objects
+        """
         lattice = Lattice()
+        lattice.sectns = sections              # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+        DEB.get('OFF')(lattice.sectns)
+        lattice.secIds = section_list          # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        DEB.get('OFF')(lattice.secIds)
+        
         DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
-        for ID in lattice_list:
-            element      = elements.get(ID)
-            elementClass = element['type']
-            elmItem      = (elementClass,element)
-            """INSTANCIATE!!"""
-            (label,instance) = instanciate_element(elmItem)
-            # TODO section
-            section = instance.section if FLAGS['sections'] else '*'    
-            # DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
-            # add element instance to lattice
-            if isinstance(instance,ELM._Node):
-                lattice.add_element(instance)
+
+        for sctn_id in section_list:
+            element_ids = sections.get(sctn_id)
+            for element_id in element_ids:
+                element = elements.get(element_id)
+                element['sec'] = sctn_id         # tag element with section-id
+                elementClass   = element['type']
+                """INSTANCIATE!!"""
+                elmItem = (elementClass,element)
+                (label,instance) = instanciate_element(elmItem)
+                # TODO section
+                # section = instance.section if FLAGS['sections'] else '*'    
+                # DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
+                # add element instance to lattice
+                if isinstance(instance,ELM._Node):
+                    lattice.add_element(instance)
+        
         return lattice   # the complete lattice
 
+    ## factory body --------
+    ## factory body --------
+    ## factory body --------
     ## factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
@@ -519,15 +537,14 @@ def factory_new(input_file):
     DEB.get('OFF')('SECTIONS after proces_sections():')
     DEB.get('OFF')(sections)
 
-    # lattice_list is a flat list of node IDs
-    lattice_list = proces_lattice(results.LATTICE)
+    section_list = proces_lattice(results.LATTICE)
     DEB.get('OFF')('LATTICE after proces_lattice():')
-    DEB.get('OFF')(lattice_list)
+    DEB.get('OFF')(section_list)
 
     # __call__ sollteilchen energy
     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
 
-    lattice = make_lattice(lattice_list,elements)
+    lattice = make_lattice(section_list,sections,elements)
     DEB.get('OFF')('lattice_generator >>{}'.format(lattice.string()))
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
     DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))

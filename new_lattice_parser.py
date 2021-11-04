@@ -68,8 +68,6 @@ def unnest_elements(lattice,elements):
         return
 
 def parse(in_data):
-    hash_of_sections = {}    # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
-
     DEB.get('OFF')(in_data)
     # print(HR)
     # print('FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS    FLAGS    FLAGS')
@@ -110,7 +108,9 @@ def parse(in_data):
     DEB.get('OFF')(sections)
     expand_single_to_many_items(sections)    # expand 'ITEMS'
     DEB.get('OFF')(sections)
-    for k in list(sections):        # sections is hash: loop section IDs
+
+    hash_of_sections = {}    # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
+    for k in list(sections):        # sections is hash
         section = sections.get(k)   # section is list
         element_list_per_section = []
         unnest_elements(section,element_list_per_section)
@@ -124,24 +124,12 @@ def parse(in_data):
     lattice = in_data['LATTICE']
     DEB.get('OFF')(lattice)
     
-    # the linear sequence of elements in the lattice as a python list:
-    # list_of_elements_in_lattice = []
-    # unnest_elements(lattice,list_of_elements_in_lattice)
-    # DEB.get('OFF')('Number of elements in lattice: {}'.format(len(list_of_elements_in_lattice)))
-    # DEB.get('OFF')(list_of_elements_in_lattice)
-    # hash_of_sections.setdefault('LATTICE',[]).append(list_of_elements_in_lattice)
-    
-    full_lattice = []
-    # we need only the in order list of section-IDs to make the lattice from the sections
-    for itm in lattice:
-        full_lattice += hash_of_sections.get(itm)
-
     ParseResult = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
     ParseResult.FLAGS      = flags
     ParseResult.PARAMETERS = parameters
-    ParseResult.SECTIONS   = hash_of_sections
-    ParseResult.LATTICE    = full_lattice
     ParseResult.ELEMENTS   = elements
+    ParseResult.SECTIONS   = hash_of_sections
+    ParseResult.LATTICE    = lattice
     return ParseResult
 
 def test0(input_file):
@@ -150,11 +138,16 @@ def test0(input_file):
         in_data = yaml.load(f,Loader=yaml.Loader)
     # segments, lattice = parse('yml/new-yaml-template.yml')
     results = parse(in_data)
-    DEB.get('OFF')(results.SECTIONS)
+    print('\tFLAGS')
+    DEB.get('ON')(results.FLAGS)
+    print('\tPARAMETERS')
+    DEB.get('ON')(results.PARAMETERS)
+    print('\tELEMENTS')
+    DEB.get('ON')(results.ELEMENTS)
+    print('\tSECTIONS')
+    DEB.get('ON')(results.SECTIONS)
+    print('\tLATTICE')
     DEB.get('ON')(results.LATTICE)
-    DEB.get('OFF')(results.FLAGS)
-    DEB.get('OFF')(results.PARAMETERS)
-    DEB.get('OFF')(results.ELEMENTS)
 
 if __name__ == '__main__':
     test0('yml/tmpl_25.10.2021_new.yml')
