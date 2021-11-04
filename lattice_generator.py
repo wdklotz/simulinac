@@ -27,6 +27,8 @@ import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
 import marker_actions as MRK
+from new_lattice_parser import parse
+from collections import namedtuple
 
 # parse and generate latttice
 def get_mandatory(attributes,key,item):
@@ -258,7 +260,7 @@ def instanciate_element(item):
 
 def factory(input_file):
     """ factory creates a lattice from input-file """
-#--------
+    #--------
     def read_elements(in_data):
         element_list = in_data['ELEMENTS']
         elements = liofd2d(element_list)
@@ -268,7 +270,7 @@ def factory(input_file):
             attList = elements[ID]
             attList.append({'ID':ID})
         return elements
-# --------
+    # --------
     def read_flags(in_data):
         """returns a dict of flags"""
         flags_list = in_data['FLAGS']
@@ -291,7 +293,7 @@ def factory(input_file):
         if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
         if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
         return flags
-# --------
+    # --------
     def read_sections(in_data):
         """ returns a list of section names """
         sec_list = []
@@ -304,7 +306,7 @@ def factory(input_file):
         PARAMS['sections'] = sec_list
         FLAGS['sections']  = use_sections
         return sec_list
-# --------
+    # --------
     def read_parameters(in_data):
         """ returns a dict of parameters """
         parameter_list = in_data['PARAMETERS']
@@ -327,7 +329,7 @@ def factory(input_file):
         if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
         if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
         return parameters
-#--------
+    #--------
     def get_flattened_lattice_list(in_data):
         """ read_and_flatten lattice from (in_data)."""
         lattice_list = in_data['LATTICE']
@@ -339,7 +341,7 @@ def factory(input_file):
             qlist += plist
         lattice_list=qlist
         return lattice_list
-#--------
+    #--------
     def make_lattice(latticeList,in_data):
         """ instanciate all elements from flattened node list"""
         lattice = Lattice()
@@ -361,7 +363,7 @@ def factory(input_file):
         #         lattice.concat(instance)       # concatenate partial with lattice
         return lattice   # the complete lattice
 
-## factory body --------
+    ## factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -391,6 +393,139 @@ def factory(input_file):
     DEB.get('OFF')('lattice_generator >>\n{}'.format(lattice.string()))
     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
     DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))
+    
+    # end of factory(...)
+    return lattice
+
+def factory_new(input_file):
+    """ factory creates a lattice from input-file """
+    #--------
+    def proces_elements(elements):
+        # TODO   trigger on k  not on ID later on
+        """does nothing"""
+        elements_modified = {}
+        for k,v in elements.items():
+            v['ID'] = k
+            elements_modified[k] = v
+        return elements_modified
+    # --------
+    def proces_flags(flags):
+        """fills global FLAGS"""
+        if 'accON' in flags:
+            if flags['accON']:
+                FLAGS['dWf'] = 1.
+                SUMMARY['accON'] = True
+            else:
+                FLAGS['dWf'] = 0.
+                SUMMARY['accON'] = False
+        if 'periodic'    in flags: FLAGS['periodic'] = flags['periodic']
+        if 'egf'         in flags: FLAGS['egf']      = flags['egf']
+        if 'sigma'       in flags: FLAGS['sigma']    = flags['sigma']
+        if 'KVout'       in flags: FLAGS['KVout']    = flags['KVout']
+        if 'verbose'     in flags: FLAGS['verbose']  = flags['verbose']
+        if 'express'     in flags: FLAGS['express']  = flags['express']
+        if 'useaper'     in flags: FLAGS['useaper']  = flags['useaper']
+        if 'bucket'      in flags: FLAGS['bucket']   = flags['bucket']
+        if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
+        if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
+        return flags
+    # --------
+    def proces_sections(sections):
+        """does nothing"""
+        return sections
+    # --------
+    def proces_lattice(lattice):
+        """does nothing"""
+        return lattice
+    # --------
+    def proces_parameters(parameters):
+        """ fills global PARAMETERS"""
+        if 'Tkin'             in parameters: PARAMS['injection_energy'] = parameters['Tkin']
+        if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
+        if 'gap'              in parameters: PARAMS['gap']              = parameters['gap']
+        if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
+        if 'frequency'        in parameters: PARAMS['frequency']        = parameters['frequency']
+        if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
+        if 'windings'         in parameters: PARAMS['nbwindgs']         = parameters['windings']
+        if 'nbsigma'          in parameters: PARAMS['nbsigma']          = parameters['nbsigma']
+        if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture'] 
+        if 'emitx_i'          in parameters: PARAMS['emitx_i']          = parameters['emitx_i']
+        if 'emity_i'          in parameters: PARAMS['emity_i']          = parameters['emity_i']
+        if 'betax_i'          in parameters: PARAMS['betax_i']          = parameters['betax_i']
+        if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
+        if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
+        if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
+        if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
+        if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
+        if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
+        return parameters
+    #--------
+    def make_lattice(lattice_list,elements):
+        """ instanciate all elements from lattice_list """
+        lattice = Lattice()
+        DEB.get('ON')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
+        for ID in lattice_list:
+            element      = elements.get(ID)
+            elementClass = element['type']
+            elmItem      = (elementClass,element)
+            """INSTANCIATE!!"""
+            (label,instance) = instanciate_element(elmItem)
+            # TODO section
+            # section = instance.section if FLAGS['sections'] else '*'    
+            # DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
+            # add element instance to lattice
+            if isinstance(instance,ELM._Node):
+                lattice.add_element(instance)
+        return lattice   # the complete lattice
+
+    ## factory body --------
+    SUMMARY['input file'] = PARAMS['input_file'] = input_file
+
+    with open(input_file,'r') as fileobject:
+        try:
+            in_data = yaml.load(fileobject,Loader=yaml.Loader)
+        except Exception as ex:
+            warnings.showwarning(
+                    'InputError: {} - STOP'.format(str(ex)),
+                    UserWarning,
+                    'lattice_generator.py',
+                    'factory()',
+                    )
+            sys.exit(1)
+    fileobject.close()
+    DEB.get('OFF')(in_data)
+
+    results = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    results = parse(in_data)
+
+    flags = proces_flags(results.FLAGS)
+    DEB.get('ON')('global FLAGS after proces_flags():')
+    DEB.get('OFF')(FLAGS)
+
+    parameters = proces_parameters(results.PARAMETERS)
+    DEB.get('ON')('global PARAMS after proces_parameters():')
+    DEB.get('OFF')(PARAMS)
+    
+    elements = proces_elements(results.ELEMENTS)
+    DEB.get('ON')('ELEMENTS after proces_elements():')
+    DEB.get('ON')(elements)
+
+    sections = proces_sections(results.SECTIONS)
+    DEB.get('ON')('SECTIONS after proces_sections():')
+    DEB.get('ON')(sections)
+
+    # lattice_list is a flat list of node IDs
+    lattice_list = proces_lattice(results.LATTICE)
+    DEB.get('ON')('LATTICE after proces_lattice():')
+    DEB.get('OFF')(lattice_list)
+
+    # __call__ sollteilchen energy
+    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
+
+    lattice = make_lattice(lattice_list,elements)
+    DEB.get('ON')('lattice_generator >>{}'.format(lattice.string()))
+    SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
+    DEB.get("ON")('SUMMARY in factory() {}'.format(SUMMARY))
     
     # end of factory(...)
     return lattice
@@ -458,9 +593,10 @@ def test2(input_file):
         print(nlist)
 
 if __name__ == '__main__':
-    input_file = 'yml/simuIN.yml'
+    input_file = 'yml/tmpl_25.10.2021_new.yml'
+    # input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
     test0(input_file)
-    test1(input_file)
-    test2(input_file)
+    # test1(input_file)
+    # test2(input_file)
 

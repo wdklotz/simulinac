@@ -26,9 +26,9 @@
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    # accON:        False           # {True} acceleration on/off flag
+    accON:        True           # {True} acceleration on/off flag
     # egf:          True            # {False} emittance growth flag
-    # sigma:        False           # {True} beam sizes by sigma-matrix
+    sigma:        False           # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
     # express:      True            # {False} use express version of thin quads
@@ -212,16 +212,20 @@ CELLS:    # concatenate SEGMENTS to CELL: order given by [...] syntax
 #...........................................................................................
 SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
 #...........................................................................................
-  S-LE:  &sle   
+  S-LE:     
     ITEMS:  *celll
-    NITEMS:  10
+    NITEMS:  1 #0
     DESC:  'low enery section'
-  S-HE:  &she   
+  S-HE:   
     ITEMS:  *cellh
-    NITEMS:  110
+    NITEMS:  1 #10
     DESC:  'high energy section'
+  S-DUMMY:     
+    ITEMS:  *cellh
+    NITEMS:  1 #10
+    DESC:  'dummy section'
 #........................................................................................... 
 # concatenate SECTIONs to LATTICE:
-LATTICE:  [LE:  *sle, HE:  *she] #  order given by [...] syntax
+LATTICE:  [S-LE, S-HE]  #  order given by [...] syntax
   
 

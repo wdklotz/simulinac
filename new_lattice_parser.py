@@ -1,7 +1,8 @@
 import sys
 import yaml
+from collections import namedtuple
 
-from setutil import DEB
+from setutil import DEB, FLAGS
 
 HR = '============================================================================================='
 
@@ -66,10 +67,8 @@ def unnest_elements(lattice,elements):
     else:
         return
 
-def parse(input_file):
-    hash_sections_with_element_list = {}    # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
-    with open(input_file, 'r') as f:
-        in_data = yaml.load(f,Loader=yaml.Loader)
+def parse(in_data):
+    hash_of_sections = {}    # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
 
     DEB.get('OFF')(in_data)
     # print(HR)
@@ -115,38 +114,47 @@ def parse(input_file):
         section = sections.get(k)   # section is list
         element_list_per_section = []
         unnest_elements(section,element_list_per_section)
-        DEB.get('ON')('Number of elements in {}: {}'.format(section.get('DESC'),len(element_list_per_section)))
+        DEB.get('OFF')('Number of elements in {}: {}'.format(section.get('DESC'),len(element_list_per_section)))
         DEB.get('OFF')(element_list_per_section)
-        hash_sections_with_element_list.setdefault(k,element_list_per_section)
+        hash_of_sections.setdefault(k,element_list_per_section)
 
     # print(HR)
     # print('LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE')
     # print(HR)
     lattice = in_data['LATTICE']
     DEB.get('OFF')(lattice)
-    """
+    
     # the linear sequence of elements in the lattice as a python list:
     # list_of_elements_in_lattice = []
     # unnest_elements(lattice,list_of_elements_in_lattice)
     # DEB.get('OFF')('Number of elements in lattice: {}'.format(len(list_of_elements_in_lattice)))
     # DEB.get('OFF')(list_of_elements_in_lattice)
-    # hash_sections_with_element_list.setdefault('LATTICE',[]).append(list_of_elements_in_lattice)
-    """
-    list_of_sections_IDs_in_lattice = []   # we need only the section IDs to make the lattice from the sections
+    # hash_of_sections.setdefault('LATTICE',[]).append(list_of_elements_in_lattice)
+    
+    full_lattice = []
+    # we need only the in order list of section-IDs to make the lattice from the sections
     for itm in lattice:
-        if len(list(itm)) != 1:
-            print("Internal error: check your input-file for correct syntax!")
-            sys.exit(1)
-        list_of_sections_IDs_in_lattice.append(list(itm)[0])
+        full_lattice += hash_of_sections.get(itm)
 
-    return hash_sections_with_element_list, list_of_sections_IDs_in_lattice
+    ParseResult = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    ParseResult.FLAGS      = flags
+    ParseResult.PARAMETERS = parameters
+    ParseResult.SECTIONS   = hash_of_sections
+    ParseResult.LATTICE    = full_lattice
+    ParseResult.ELEMENTS   = elements
+    return ParseResult
 
-def test0():
+def test0(input_file):
     print(HR+'> test0')
+    with open(input_file, 'r') as f:
+        in_data = yaml.load(f,Loader=yaml.Loader)
     # segments, lattice = parse('yml/new-yaml-template.yml')
-    segments, lattice = parse('yml/tmpl_25.10.2021_new.yml')
-    DEB.get('ON')(segments)
-    DEB.get('ON')(lattice)
+    results = parse(in_data)
+    DEB.get('OFF')(results.SECTIONS)
+    DEB.get('ON')(results.LATTICE)
+    DEB.get('OFF')(results.FLAGS)
+    DEB.get('OFF')(results.PARAMETERS)
+    DEB.get('OFF')(results.ELEMENTS)
 
 if __name__ == '__main__':
-    test0()
+    test0('yml/tmpl_25.10.2021_new.yml')

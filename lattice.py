@@ -72,12 +72,12 @@ class Lattice(object):
     
     ## lattice body        
     def __init__(self):
-        self.seq    = []
+        self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
+        self.sectns = []       # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+        self.secIds = []       # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        self.iteration = "LR"  # default: iterating lattice left-right
         self.length = 0.
         self.accel  = 0.
-        self.sectns = []
-        # default: iterating lattice left-right
-        self.iteration = "LR"
 
     def __iter__(self):
         if self.iteration == "RL":
