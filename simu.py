@@ -43,8 +43,6 @@ import tkinter             # works on native W10
 import matplotlib
 matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
-# plt.ioff()    # interactive mode off need this?
-# plt.on()      # interactive mode on need this ?
 # from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept, elli_sxy_action
@@ -168,10 +166,7 @@ def display1(*args):
     #    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
     sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
     sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
-    #-------------------- lattice viseo
-    stop_viseox = 5                  # stop viseo plot after so many [m]
-    stop_viseoy = 5                  # stop viseo plot after so many [m]
-    stop_viseoz = 5                  # stop viseo plot after so many [m]
+    #-------------------- lattice viseo TODO
     vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
     vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
     vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
@@ -180,10 +175,11 @@ def display1(*args):
     #-------------------- figure frame
     width=14; height=7.6
     # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
-    plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
+    fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
 
     #-------------------- transverse X tracks
     splot311=plt.subplot(311)
+    # splot311=plt.subplot(10,1,(1,3))
     splot311.set_title('transverse x')
     # mapping box
     splot311.text(0.01, 1.1, PARAMS['mapping'],transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
@@ -192,15 +188,6 @@ def display1(*args):
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
     # plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
-    # lattice elements
-    vscale=plt.axis()[3]*0.4
-    viseox = [x*vscale for x in vis_ordinate]
-    # stop lattice plotting after stop_viseo meters
-    for i,s in enumerate(vis_abszisse):
-        if s > stop_viseox:
-            viseox[i] = 0.
-    plt.plot(vis_abszisse,viseox,label='',color='black')
-    plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
@@ -209,36 +196,32 @@ def display1(*args):
         #label = F'{N:1}$\sigma$ [mm]'
         label = '{:1}$\sigma$ [mm]'.format(N)
         plt.plot(z,sgx ,label=label,color='green',linestyle=':')
+    # zero line
+    splot311.plot(vis_abszisse,vzero,color='green',linestyle='--')
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- transverse Y tracks
     splot312=plt.subplot(312)
+    # splot312=plt.subplot(10,1,(4,6))
     splot312.set_title('transverse y')
     plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sy, label="S  [mm]",color='red' ,linestyle='-')
-    # plt.plot(z2,syp,label="S' [mr]",color='red' ,linestyle=':')
-    # lattice elements
-    vscale=plt.axis()[3]*0.4
-    viseoy = [x*vscale for x in vis_ordinate]
-    # stop lattice plotting after stop_viseo meters
-    for i,s in enumerate(vis_abszisse):
-        if s > stop_viseoy:
-            viseoy[i] = 0.
-    plt.plot(vis_abszisse,viseoy,label='',color='black')
-    plt.plot(vis_abszisse,vzero,color='black')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
         N = PARAMS['nbsigma']
         sgy = [i*N for i in sgy]
         plt.plot(z,sgy ,label=label,color='green',linestyle=':')
+    # zero line
+    splot312.plot(vis_abszisse,vzero,color='green',linestyle='--')
     plt.legend(loc='lower right',fontsize='x-small')
 
     #-------------------- longitudinal tracks z, dP/P
     # ax_l = left abszisse
     ax_l=plt.subplot(313)
+    # ax_l=plt.subplot(10,1,(7,9))
     ax_l.set_title('longitudinal')
     ax_l.set_ylabel(r"z [mm]")
     ax_l.tick_params(axis='y', colors='green')
@@ -254,17 +237,26 @@ def display1(*args):
     ax_r.plot(z2,sdp,color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     # lattice elements
-    vscale=ax_l.axis()[3]*0.7
+    vscale=ax_l.axis()[3]*0.25
     viseoz = [x*vscale for x in vis_ordinate]
-    # stop lattice plotting after stop_viseo meters
-    for i,s in enumerate(vis_abszisse):
-        if s > stop_viseoz:
-            viseoz[i] = 0.
-    ax_l.plot(vis_abszisse,viseoz,label='',color='black')
-    ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    # splot414=fig.add_subplot(414)
+    # splot414=fig.add_subplot(10,1,10)
+    splot414 = ax_l
+    splot414.plot(vis_abszisse,viseoz,label='',color='black')
+    splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
 def display2(*args):
     elli_sxy_action(on_injection=True)
+    # lattice elements
+    # vscale=ax_l.axis()[3]*0.7
+    # viseoz = [x*vscale for x in vis_ordinate]
+    # stop lattice plotting after stop_viseo meters
+    # TODO
+    # for i,s in enumerate(vis_abszisse):
+    #     if s > stop_viseoz:
+    #         viseoz[i] = 0.
+    # ax_l.plot(vis_abszisse,viseoz,label='',color='black')
+    # ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
 #                            |----------------------- |
 # -------------------------  | everything starts here |
@@ -285,7 +277,7 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-    #todo: what about markers plots ?
+    #TODO: what about markers plots ?
         # lattice.marker_actions()
         # next not needed for jupyter
         plt.show()

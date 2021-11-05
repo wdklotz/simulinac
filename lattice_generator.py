@@ -81,6 +81,11 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
         lattice.add_element(instance)
     return lattice
 def instanciate_element(item):
+    """
+    Instanciate ELM._Node objects
+    IN
+        item: the element's ID
+    """
     def EzPeakToAverage(Ezpeak):
         return 0.78 * EzPeak    # ~0.748 * EzPeak from Superfish
 
@@ -398,7 +403,9 @@ def factory(input_file):
     return lattice
 
 def factory_new(input_file):
-    """ factory creates a lattice from input-file """
+    """ 
+    factory creates a lattice from input-file 
+    """
     #--------
     def proces_flags(flags):
         """fills global FLAGS"""
@@ -444,7 +451,7 @@ def factory_new(input_file):
         return parameters
     #--------
     def proces_elements(elements):
-        # TODO   trigger on k  not on ID later on
+        # TODO   trigger on ID not neeeded
         """does nothing"""
         elements_modified = {}
         for k,v in elements.items():
@@ -455,10 +462,6 @@ def factory_new(input_file):
     def proces_sections(sections):
         """does nothing"""
         # TODO sections
-        # section_list = list(sections.keys())
-        # DEB.get('OFF')(section_list)
-        # PARAMS['sections'] = section_list
-        # FLAGS['sections'] = True
         return sections
     # --------
     def proces_lattice(lattice):
@@ -477,7 +480,7 @@ def factory_new(input_file):
         DEB.get('OFF')(lattice.sectns)
         lattice.secIds = section_list          # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
         DEB.get('OFF')(lattice.secIds)
-        
+
         DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
 
         for sctn_id in section_list:
@@ -498,10 +501,9 @@ def factory_new(input_file):
         
         return lattice   # the complete lattice
 
-    ## factory body --------
-    ## factory body --------
-    ## factory body --------
-    ## factory body --------
+    ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
+    ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
+    ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
@@ -569,8 +571,9 @@ def test0(input_file):
     lattice = wfl['LATTICE']
     print('=== lattice ===')
     for l in lattice:
-        for i in l:
-            print(i)
+        # for i in l:
+        #     print(i)
+        print(l)
 
 def test1(input_file):
     print('---------------------------------TEST1')

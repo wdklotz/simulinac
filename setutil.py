@@ -101,7 +101,7 @@ class Ktp(IntEnum):
     S  = 8     # S = Integral(dS)
     dS = 9     # const 1
     
-# for compatability with elder code
+# for compatability with elder code TODO: replace by namedtupel
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 
 class Ktw(IntEnum):
@@ -673,13 +673,8 @@ def collect_data_for_summary(lattice):
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
 
-
-
-
-
-
-
 def collect_data_for_summary_new(lattice):
+    # TODO: this activity should be split and distributed in corresponding objects
     class Filter:
         def __init__(self,func):
             self.func = func
@@ -694,18 +689,18 @@ def collect_data_for_summary_new(lattice):
             return self.func(iterable)
 
     def elements_in_lattice():
-        '''
-        Filter elements of class <typ> and section <sec> from lattice
-        IN:
-            lattice = object        [Lattice]
-            typ     = element class [string]
-            sec     = section name  [string]
-        OUT:
-            list of filtered elements
+        # '''
+        # Filter elements of class <typ> and section <sec> from lattice
+        # IN:
+        #     lattice = object        [Lattice]
+        #     typ     = element class [string]
+        #     sec     = section name  [string]
+        # OUT:
+        #     list of filtered elements
 
-        NOTE: this functional implementation is taken from:
-            https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
-        '''
+        # NOTE: this functional implementation is taken from:
+        #     https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
+        # '''
         def predicate(element):
             try:
                 test = (type(element).__name__ == typ and element.section == sec)
@@ -732,10 +727,12 @@ def collect_data_for_summary_new(lattice):
                 new_elements.append(itm)
         return new_elements
 
-    # body
+    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
+    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
+    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # TODO sections
-    sections =  PARAMS['sections']                   # comes from INPUT
-    if not FLAGS['sections']: sections = ['*']       # section wildcart
+    # sections =  PARAMS['sections']                   # comes from INPUT
+    sections = lattice.secIds                   # lattice has now the list of sections as attribue
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
     for sec in sections:
         for typ in types:
@@ -826,13 +823,6 @@ def collect_data_for_summary_new(lattice):
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
-
-
-
-
-
-
-
 
 def I0(x):
     """
@@ -961,7 +951,7 @@ def elli_sxy_action(node,on_injection=False):
     plt.xlim(-xmax*scale, xmax*scale)
     plt.ylim(-ymax*scale, ymax*scale)
 
-#todo: more marker-actions
+#TODO: more marker-actions
 # def sigma_x_action(*args):
 #     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
 #     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
