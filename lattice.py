@@ -73,8 +73,8 @@ class Lattice(object):
     ## lattice body        
     def __init__(self):
         self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
-        self.sectns = []       # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
-        self.secIds = []       # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        # self.sectns = []       # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+        self.secIDs = []       # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
         self.iteration = "LR"  # default: iterating lattice left-right
         self.length = 0.
         self.accel  = 0.
@@ -580,13 +580,6 @@ class Lattice(object):
         self.toggle_iteration()
         
     @property
-    def new_sections(self):
-        return self.sectns
-    @new_sections.setter
-    def new_sections(self, scns):
-        self.sectns = scns
-
-    @property
     def first_gap(self):
         node = None
         # for elm in self.seq:
@@ -653,41 +646,41 @@ class Lattice(object):
 
 # Sections TODO
 # To add Sections to the lattice I augment the Lattice class with member-functions 
-def get_section(self,sec=None):
-    if not FLAGS['sections']:
-        section = self       #the whole lattice is one section
-        section.name = 'LINAC'
-        return section
-    else:
-        section = Lattice()
-        # for elm in self.seq:
-        for elm in iter(self):
-            try:
-                elmsec = elm.section
-            except AttributeError as ex:
-                print('WARNING: element {} w/o section attribute!'.format(elm.label))
-                continue
-            if elmsec == sec:
-                section.add_element(elm)
-    section.name = sec
-    return section
+# def get_section(self,sec=None):
+#     if not FLAGS['sections']:
+#         section = self       #the whole lattice is one section
+#         section.name = 'LINAC'
+#         return section
+#     else:
+#         section = Lattice()
+#         # for elm in self.seq:
+#         for elm in iter(self):
+#             try:
+#                 elmsec = elm.section
+#             except AttributeError as ex:
+#                 print('WARNING: element {} w/o section attribute!'.format(elm.label))
+#                 continue
+#             if elmsec == sec:
+#                 section.add_element(elm)
+#     section.name = sec
+#     return section
 
-def get_sections(self):
-    sections = []
-    if not FLAGS['sections']:
-        sections.append(self.get_section())
-    else:
-        for isec in PARAMS['sections']:
-            sectn = self.get_section(sec=isec)
-            sections.append(sectn)
-    return sections
+# def get_sections(self):
+#     sections = []
+#     if not FLAGS['sections']:
+#         sections.append(self.get_section())
+#     else:
+#         for isec in PARAMS['sections']:
+#             sectn = self.get_section(sec=isec)
+#             sections.append(sectn)
+#     return sections
 
 #Lattice.get_section  = get_section                 #add method to class Lattice (the wdk way)
 #Lattice.get_sections = get_sections                #add method to class Lattice (the wdk way)
 
 # using the built-in 'setattr(..)'
-setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
-setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
+# setattr(Lattice,get_section.__name__,get_section)   #add method to class Lattice (the python way)
+# setattr(Lattice,get_sections.__name__,get_sections) #add method to class Lattice (the python way)
 
 
 ## utilities

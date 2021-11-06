@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v8.0.9'
+___version___='v9.0.x'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -29,10 +29,11 @@ import time
 from string import Template
 from math import sqrt, degrees, radians
 
-from lattice_generator import factory
+# from lattice_generator import factory
+from lattice_generator import factory_new as factory
 import elements as ELM
 import marker_actions as MRK
-from setutil import DEB, PARAMS, FLAGS, dictprnt, Ktp, PARAMS, waccept
+from setutil import DEB, PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs

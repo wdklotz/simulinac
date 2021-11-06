@@ -131,9 +131,9 @@ ELEMENTS:
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
     RFCH:                 # ID: &alias
         type:     RFC          # RFC class
-        EzAvg:    1.00         # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-        PhiSync:  *phs         # [deg] synchronous phase
+        # EzAvg:    2.00         # [MV/m] average E-field on axis
+        EzPeak:    2.0         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  -10.         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      *p15         # [m] gap length
         aperture: 10.e-3       # [m] quad bore
