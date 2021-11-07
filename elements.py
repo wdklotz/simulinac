@@ -51,6 +51,12 @@ class DictObject(object):
         
     def __setitem__(self,k,v):
         self._params[k] = v
+    
+    def toString(self):
+        ret = repr(self)
+        for k,v in self.__dict__.items():
+            ret+= '\n{}:{}'.format(k,v)
+        return ret
 
 #------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(DictObject, object):
@@ -101,7 +107,7 @@ class _Node(DictObject, object):
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
 
-    def string(self):
+    def prmatrix(self):
         n  = 42
         nx = 300
         if len(self.label) > nx:

@@ -1,6 +1,6 @@
 ##!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v9.0.x'
+___version___='v9yml.0.x'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -377,4 +377,5 @@ if __name__ == '__main__':
         sys.exit(1)
     # run the simulation
     simulation(input_file)
+    # simulation('yml/tmpl_25.10.2021_new.yml')
 

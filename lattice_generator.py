@@ -22,7 +22,7 @@ from math import radians
 import yaml
 import warnings
 
-from setutil import PARAMS,FLAGS,SUMMARY,DEB
+import setutil as util
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
@@ -30,6 +30,8 @@ import marker_actions as MRK
 from new_lattice_parser import parse
 from collections import namedtuple
 
+DEBUG_ON  = util.DEB.get('ON')
+DEBUG_OFF = util.DEB.get('OFF')
 
 # parse and generate latttice
 def get_mandatory(attributes,key,item):
@@ -46,25 +48,25 @@ def get_mandatory(attributes,key,item):
     return res
 
 #---- recursive version
-def flatten(lis):
-    """Given a list, possibly nested to any level, return it flattened."""
-    new_lis = []
-    for item in lis:
-        if type(item) == type([]):
-            new_lis.extend(flatten(item))
-        else:
-            new_lis.append(item)
-    return new_lis
+# def flatten(lis):
+#     """Given a list, possibly nested to any level, return it flattened."""
+#     new_lis = []
+#     for item in lis:
+#         if type(item) == type([]):
+#             new_lis.extend(flatten(item))
+#         else:
+#             new_lis.append(item)
+#     return new_lis
 
-def liofd2d(l):
-    """Transform list of dicts to dict"""
-    return {k:v for d in l for k,v in d.items()}
+# def liofd2d(l):
+#     """Transform list of dicts to dict"""
+#     return {k:v for d in l for k,v in d.items()}
 
 def replace_QF_with_QFth_lattice(slices,k0,length,label,particle,aperture):
     lattice = Lattice()
     thinlen = length/slices
     for nb in range(slices):
-        if FLAGS['express']:
+        if util.FLAGS['express']:
             instance = ELM.QFthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         else:
             instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
@@ -75,446 +77,288 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
     lattice = Lattice()
     thinlen = length/slices
     for nb in range(slices):
-        if FLAGS['express']:
+        if util.FLAGS['express']:
             instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         else:
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
 def instanciate_element(item):
-    """
-    Instanciate ELM._Node objects
-    IN
-        item: the element's ID
-    """
+    """ item: {ID:{attrinutes}} for each element """
     def EzPeakToAverage(Ezpeak):
         return 0.78 * EzPeak    # ~0.748 * EzPeak from Superfish
 
-    DEB.get('OFF')('instanciate_element: instanciate {}'.format(item))
-    key = item[0]
-    attributes = item[1]
-    # aperture   = PARAMS['aperture']    # default aperture
-    if key == 'D':
-        label    = attributes['ID']
-        length   = get_mandatory(attributes,'length',label)
-        aperture = attributes['aperture'] if 'aperture' in attributes else None
-        instance =  ELM.D(length=length,label=label,aperture=aperture)
-        instance['label']    = label
-        instance['length']   = length
-        instance['aperture'] = aperture
+    DEBUG_OFF(item)
+    for ID,attributes in item.items():
+        DEBUG_OFF(ID)
+        DEBUG_OFF(attributes)
+        # aperture   = PARAMS['aperture']    # default aperture
+        key = attributes.get('type')
+        if key == 'D':
+            label    = ID
+            length   = get_mandatory(attributes,'length',label)
+            aperture = attributes['aperture'] if 'aperture' in attributes else None
+            instance =  ELM.D(length=length,label=label,aperture=aperture)
+            instance['label']    = label
+            instance['length']   = length
+            instance['aperture'] = aperture
 
-    elif key == 'SIXD':
-        label     = attributes['ID']+'#'
-        length    = get_mandatory(attributes,'length',label)
-        aperture = attributes['aperture'] if 'aperture' in attributes else None
-        instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
-        instance['label']    = label
-        instance['length']   = length
-        instance['aperture'] = aperture
+        elif key == 'SIXD':
+            label     = attributes['ID']+'#'
+            length    = get_mandatory(attributes,'length',label)
+            aperture = attributes['aperture'] if 'aperture' in attributes else None
+            instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
+            instance['label']    = label
+            instance['length']   = length
+            instance['aperture'] = aperture
 
-    elif key == 'QF':
-        label    = attributes['ID']
-        length   = get_mandatory(attributes,'length',label)
-        dBdz     = get_mandatory(attributes,"B'",label)
-        slices   = get_mandatory(attributes,'slices',label)
-        aperture = get_mandatory(attributes,'aperture',label)
-        kq       = dBdz/PARAMS['sollteilchen'].brho
-        Bpole    = dBdz*aperture
-        if slices > 1:
-            instance = replace_QF_with_QFth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
-        elif slices <= 1:
-            instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
-        instance['label']  = label
-        instance['dBdz']   = dBdz
-        instance['bore']   = aperture
-        instance['Bpole']  = Bpole
-        pass
+        elif key == 'QF':
+            label    = attributes['ID']
+            length   = get_mandatory(attributes,'length',label)
+            dBdz     = get_mandatory(attributes,"B'",label)
+            slices   = get_mandatory(attributes,'slices',label)
+            aperture = get_mandatory(attributes,'aperture',label)
+            kq       = dBdz/util.PARAMS['sollteilchen'].brho
+            Bpole    = dBdz*aperture
+            if slices > 1:
+                instance = replace_QF_with_QFth_lattice(slices,kq,length,label,util.PARAMS['sollteilchen'],aperture)
+            elif slices <= 1:
+                instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
+            instance['label']  = label
+            instance['dBdz']   = dBdz
+            instance['bore']   = aperture
+            instance['Bpole']  = Bpole
+            pass
 
-    elif key == 'QD':
-        label    = attributes['ID']
-        length   = get_mandatory(attributes,'length',label)
-        dBdz     = get_mandatory(attributes,"B'",label)
-        slices   = get_mandatory(attributes,'slices',label)
-        aperture = get_mandatory(attributes,'aperture',label)
-        kq       = dBdz/PARAMS['sollteilchen'].brho
-        Bpole    = dBdz*aperture
-        if slices > 1:
-            instance = replace_QD_with_QDth_lattice(slices,kq,length,label,PARAMS['sollteilchen'],aperture)
-        elif slices <= 1:
-            instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
-        instance['label']  = label
-        instance['dBdz']   = dBdz
-        instance['bore']   = aperture
-        instance['Bpole']  = Bpole
+        elif key == 'QD':
+            label    = attributes['ID']
+            length   = get_mandatory(attributes,'length',label)
+            dBdz     = get_mandatory(attributes,"B'",label)
+            slices   = get_mandatory(attributes,'slices',label)
+            aperture = get_mandatory(attributes,'aperture',label)
+            kq       = dBdz/util.PARAMS['sollteilchen'].brho
+            Bpole    = dBdz*aperture
+            if slices > 1:
+                instance = replace_QD_with_QDth_lattice(slices,kq,length,label,util.PARAMS['sollteilchen'],aperture)
+            elif slices <= 1:
+                instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
+            instance['label']  = label
+            instance['dBdz']   = dBdz
+            instance['bore']   = aperture
+            instance['Bpole']  = Bpole
 
-    elif key == 'RFG':
-        label     = attributes['ID']
-        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq      = float(get_mandatory(attributes,"freq",label))
-        gap       = get_mandatory(attributes,'gap',label)
-        aperture  = get_mandatory(attributes,'aperture',label)
-        dWf       = FLAGS['dWf']
-        mapping   = PARAMS['mapping']
-        EzPeak    = get_mandatory(attributes,"EzPeak",label)
-        if mapping == None:
-            mapping = 't3d'
-            EzAvg = EzPeakToAverage(EzPeak)
-        if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-            fname     = get_mandatory(attributes,"SFdata",label)
-            if fname not in PARAMS:
-                half_gap_cm = gap*50     # Watch out!
-                PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
-            EzAvg = PARAMS[fname].EzAvg
-            instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=PARAMS[fname])
+        elif key == 'RFG':
+            label     = attributes['ID']
+            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+            freq      = float(get_mandatory(attributes,"freq",label))
+            gap       = get_mandatory(attributes,'gap',label)
+            aperture  = get_mandatory(attributes,'aperture',label)
+            dWf       = util.FLAGS['dWf']
+            mapping   = util.PARAMS['mapping']
+            EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            if mapping == None:
+                mapping = 't3d'
+                EzAvg = EzPeakToAverage(EzPeak)
+            if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
+                fname     = get_mandatory(attributes,"SFdata",label)
+                if fname not in util.PARAMS:
+                    half_gap_cm = gap*50     # Watch out!
+                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
+                EzAvg = util.PARAMS[fname].EzAvg
+                instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=util.PARAMS[fname])
+                pass
+            else:
+                EzAvg = EzPeakToAverage(EzPeak)
+                instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
+            instance['EzAvg']    = EzAvg
+            instance['EzPeak']   = EzPeak
+            instance['label']    = label
+            instance['PhiSoll']  = PhiSoll
+            instance['freq']     = freq
+            instance['gap']      = gap
+            instance['aperture'] = aperture
+            instance['dWf']      = dWf
+            instance['mapping']  = mapping
+
+        elif key == 'RFC':
+            label     = attributes['ID']
+            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+            freq      = float(get_mandatory(attributes,"freq",label))
+            gap       = get_mandatory(attributes,'gap',label)
+            aperture  = get_mandatory(attributes,'aperture',label)
+            dWf       = util.FLAGS['dWf']
+            length    = get_mandatory(attributes,'length',label)
+            mapping   = util.PARAMS['mapping']
+            EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            if mapping == None:
+                mapping = 't3d'
+                EzAvg = EzPeakToAverage(EzPeak)
+            if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
+                fname     = get_mandatory(attributes,"SFdata",label)
+                if fname not in util.PARAMS:
+                    half_gap_cm = gap*50     # Watch out!
+                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
+                EzAvg = util.PARAMS[fname].EzAvg
+                instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
+                pass
+            else:
+                EzAvg = EzPeakToAverage(EzPeak)
+                instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
+            instance['EzAvg']    = EzAvg
+            instance['EzPeak']   = EzPeak
+            instance['label']    = label
+            instance['PhiSoll']  = PhiSoll
+            instance['freq']     = freq
+            instance['gap']      = gap
+            instance['aperture'] = aperture
+            instance['dWf']      = dWf
+            instance['length']   = length
+            instance['mapping']  = mapping
+
+        elif key == 'GAP':
+            label     = attributes['ID']
+            gap       = get_mandatory(attributes,'gap',label)
+            EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            EzAvg     = EzPeak
+            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
+            freq      = float(get_mandatory(attributes,"freq",label))
+            dWf       = util.FLAGS['dWf']
+            aperture  = get_mandatory(attributes,'aperture',label)
+            instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
+            instance['EzAvg']   = EzAvg
+            instance['EzPeak']  = EzPeak
+            instance['label']   = label
+            instance['gap']     = gap
+            instance['PhiSoll'] = PhiSoll
+            instance['freq']    = freq
+            instance['dWf']     = dWf
+
+        elif key == 'MRK':
+            label     = attributes['ID']
+            action    = get_mandatory(attributes,'action',label)
+            if 'poincare' == action:
+                prefix    = attributes['prefix'] if 'prefix' in attributes else ''
+                abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
+                ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
+                instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
+                instance['prefix']     = prefix
+                instance['abszisse']   = abszisse
+                instance['ordinate']   = ordinate
+            else:
+                instance  = ELM.MRK(label=label,action=action)
+            instance['label']      = label
+            instance['action']     = action
+        else:
+            warnings.showwarning(
+                    'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
+                    UserWarning,
+                    'lattice_generator.py',
+                    'instanciate_element()',
+                    )
+            sys.exit(1)
+        try:
+            sec = attributes['sec']    #can fail because sections are not mandatory
+        except:
             pass
         else:
-            EzAvg = EzPeakToAverage(EzPeak)
-            instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
-        instance['EzAvg']    = EzAvg
-        instance['EzPeak']   = EzPeak
-        instance['label']    = label
-        instance['PhiSoll']  = PhiSoll
-        instance['freq']     = freq
-        instance['gap']      = gap
-        instance['aperture'] = aperture
-        instance['dWf']      = dWf
-        instance['mapping']  = mapping
-
-    elif key == 'RFC':
-        label     = attributes['ID']
-        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq      = float(get_mandatory(attributes,"freq",label))
-        gap       = get_mandatory(attributes,'gap',label)
-        aperture  = get_mandatory(attributes,'aperture',label)
-        dWf       = FLAGS['dWf']
-        length    = get_mandatory(attributes,'length',label)
-        mapping   = PARAMS['mapping']
-        EzPeak    = get_mandatory(attributes,"EzPeak",label)
-        if mapping == None:
-            mapping = 't3d'
-            EzAvg = EzPeakToAverage(EzPeak)
-        if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-            fname     = get_mandatory(attributes,"SFdata",label)
-            if fname not in PARAMS:
-                half_gap_cm = gap*50     # Watch out!
-                PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
-            EzAvg = PARAMS[fname].EzAvg
-            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=PARAMS[fname])
-            pass
-        else:
-            EzAvg = EzPeakToAverage(EzPeak)
-            instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
-        instance['EzAvg']    = EzAvg
-        instance['EzPeak']   = EzPeak
-        instance['label']    = label
-        instance['PhiSoll']  = PhiSoll
-        instance['freq']     = freq
-        instance['gap']      = gap
-        instance['aperture'] = aperture
-        instance['dWf']      = dWf
-        instance['length']   = length
-        instance['mapping']  = mapping
-
-    elif key == 'GAP':
-        label     = attributes['ID']
-        gap       = get_mandatory(attributes,'gap',label)
-        EzPeak    = get_mandatory(attributes,"EzPeak",label)
-        EzAvg     = EzPeak
-        PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-        freq      = float(get_mandatory(attributes,"freq",label))
-        dWf       = FLAGS['dWf']
-        aperture  = get_mandatory(attributes,'aperture',label)
-        instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
-        instance['EzAvg']   = EzAvg
-        instance['EzPeak']  = EzPeak
-        instance['label']   = label
-        instance['gap']     = gap
-        instance['PhiSoll'] = PhiSoll
-        instance['freq']    = freq
-        instance['dWf']     = dWf
-
-    elif key == 'MRK':
-        label     = attributes['ID']
-        action    = get_mandatory(attributes,'action',label)
-        if 'poincare' == action:
-            prefix    = attributes['prefix'] if 'prefix' in attributes else ''
-            abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
-            ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
-            instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
-            instance['prefix']     = prefix
-            instance['abszisse']   = abszisse
-            instance['ordinate']   = ordinate
-        else:
-            instance  = ELM.MRK(label=label,action=action)
-        instance['label']      = label
-        instance['action']     = action
-    else:
-        warnings.showwarning(
-                'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
-                UserWarning,
-                'lattice_generator.py',
-                'instanciate_element()',
-                )
-        sys.exit(1)
-    try:
-        sec = attributes['sec']    #can fail because sections are not mandatory
-    except:
-        pass
-    else:
-        instance.section = sec
-    # return instance,label        TODO?
+            instance.section = sec
+        break
     return instance
 
-# def factory(input_file):
-#     """ factory creates a lattice from input-file """
-#     #--------
-#     def read_elements(in_data):
-#         element_list = in_data['ELEMENTS']
-#         elements = liofd2d(element_list)
-#         # add {'ID':key} to attribute list
-#         IDs = elements.keys()
-#         for ID in IDs:
-#             attList = elements[ID]
-#             attList.append({'ID':ID})
-#         return elements
-#     # --------
-#     def read_flags(in_data):
-#         """returns a dict of flags"""
-#         flags_list = in_data['FLAGS']
-#         flags = liofd2d(flags_list) if flags_list != None else {}
-#         if 'accON' in flags:
-#             if flags['accON']:
-#                 FLAGS['dWf'] = 1.
-#                 SUMMARY['accON'] = True
-#             else:
-#                 FLAGS['dWf'] = 0.
-#                 SUMMARY['accON'] = False
-#         if 'periodic'    in flags: FLAGS['periodic'] = flags['periodic']
-#         if 'egf'         in flags: FLAGS['egf']      = flags['egf']
-#         if 'sigma'       in flags: FLAGS['sigma']    = flags['sigma']
-#         if 'KVout'       in flags: FLAGS['KVout']    = flags['KVout']
-#         if 'verbose'     in flags: FLAGS['verbose']  = flags['verbose']
-#         if 'express'     in flags: FLAGS['express']  = flags['express']
-#         if 'useaper'     in flags: FLAGS['useaper']  = flags['useaper']
-#         if 'bucket'      in flags: FLAGS['bucket']   = flags['bucket']
-#         if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
-#         if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
-#         return flags
-#     # --------
-#     def read_sections(in_data):
-#         """ returns a list of section names """
-#         sec_list = []
-#         use_sections = True
-#         try:     ## can fail because sections are not mandatory
-#             sec_list = in_data['SECTIONS']
-#             sec_list = flatten(sec_list)
-#         except:
-#             use_sections = False
-#         PARAMS['sections'] = sec_list
-#         FLAGS['sections']  = use_sections
-#         return sec_list
-#     # --------
-#     def read_parameters(in_data):
-#         """ returns a dict of parameters """
-#         parameter_list = in_data['PARAMETERS']
-#         parameters     = liofd2d(parameter_list)
-#         if 'Tkin'             in parameters: PARAMS['injection_energy'] = parameters['Tkin']
-#         if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
-#         if 'gap'              in parameters: PARAMS['gap']              = parameters['gap']
-#         if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
-#         if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
-#         if 'windings'         in parameters: PARAMS['nbwindgs']         = parameters['windings']
-#         if 'nbsigma'          in parameters: PARAMS['nbsigma']          = parameters['nbsigma']
-#         if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture'] 
-#         if 'emitx_i'          in parameters: PARAMS['emitx_i']          = parameters['emitx_i']
-#         if 'emity_i'          in parameters: PARAMS['emity_i']          = parameters['emity_i']
-#         if 'betax_i'          in parameters: PARAMS['betax_i']          = parameters['betax_i']
-#         if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
-#         if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
-#         if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
-#         if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
-#         if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
-#         if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
-#         return parameters
-#     #--------
-#     def get_flattened_lattice_list(in_data):
-#         """ read_and_flatten lattice from (in_data)."""
-#         lattice_list = in_data['LATTICE']
-#         lattice_list = flatten(lattice_list)
-#         N = lattice_list[0]   # Duplikator
-#         plist = lattice_list[1:]
-#         qlist = plist.copy()
-#         for i in range(N-1):
-#             qlist += plist
-#         lattice_list=qlist
-#         return lattice_list
-#     #--------
-#     def make_lattice(latticeList,in_data):
-#         """ instanciate all elements from flattened node list"""
-#         lattice = Lattice()
-#         DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
-#         elements = read_elements(in_data)
-#         for ID in lattice_list:
-#             element      = elements[ID]
-#             element      = liofd2d(element)
-#             elementClass = element['type']
-#             elmItem      = (elementClass,element)
-#             # !!INSTANCIATE!!
-#             (label,instance) = instanciate_element(elmItem)
-#             section = instance.section if FLAGS['sections'] else '*'
-#             DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
-#             # add element instance to lattice
-#             if isinstance(instance,ELM._Node):
-#                 lattice.add_element(instance)
-#         #     elif isinstance(instance,Lattice):
-#         #         lattice.concat(instance)       # concatenate partial with lattice
-#         return lattice   # the complete lattice
-
-#     ## factory body --------
-#     SUMMARY['input file'] = PARAMS['input_file'] = input_file
-
-#     with open(input_file,'r') as fileobject:
-#         try:
-#             in_data = yaml.load(fileobject,Loader=yaml.Loader)
-#         except Exception as ex:
-#             warnings.showwarning(
-#                     'InputError: {} - STOP'.format(str(ex)),
-#                     UserWarning,
-#                     'lattice_generator.py',
-#                     'factory()',
-#                     )
-#             sys.exit(1)
-#     fileobject.close()
-
-#     read_flags(in_data)
-#     read_sections(in_data)
-#     read_parameters(in_data)
-#     DEB.get('OFF')('PARAMS after read_parameters(): {}'.format(PARAMS))
-    
-#     # lattice_list is a flat list of node IDs
-#     lattice_list = get_flattened_lattice_list(in_data)
-#     DEB.get('OFF')(lattice_list)
-#     # __call__ sollteilchen energy
-#     PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
-#     lattice = make_lattice(lattice_list,in_data)
-#     DEB.get('OFF')('lattice_generator >>\n{}'.format(lattice.string()))
-#     SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-#     DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))
-    
-#     # end of factory(...)
-#     return lattice
 
 def factory_new(input_file):
-    """ 
-    factory creates a lattice from input-file 
-    """
+    """ factory creates a lattice from input-file """
     #--------
     def proces_flags(flags):
         """fills global FLAGS"""
         if 'accON' in flags:
             if flags['accON']:
-                FLAGS['dWf'] = 1.
-                SUMMARY['accON'] = True
+                util.FLAGS['dWf'] = 1.
+                util.SUMMARY['accON'] = True
             else:
-                FLAGS['dWf'] = 0.
-                SUMMARY['accON'] = False
-        if 'periodic'    in flags: FLAGS['periodic'] = flags['periodic']
-        if 'egf'         in flags: FLAGS['egf']      = flags['egf']
-        if 'sigma'       in flags: FLAGS['sigma']    = flags['sigma']
-        if 'KVout'       in flags: FLAGS['KVout']    = flags['KVout']
-        if 'verbose'     in flags: FLAGS['verbose']  = flags['verbose']
-        if 'express'     in flags: FLAGS['express']  = flags['express']
-        if 'useaper'     in flags: FLAGS['useaper']  = flags['useaper']
-        if 'bucket'      in flags: FLAGS['bucket']   = flags['bucket']
-        if 'csTrak'      in flags: FLAGS['csTrak']   = flags['csTrak']
-        if 'pspace'      in flags: FLAGS['pspace']   = flags['pspace']
+                util.FLAGS['dWf'] = 0.
+                util.SUMMARY['accON'] = False
+        if 'periodic'    in flags: util.FLAGS['periodic'] = flags['periodic']
+        if 'egf'         in flags: util.FLAGS['egf']      = flags['egf']
+        if 'sigma'       in flags: util.FLAGS['sigma']    = flags['sigma']
+        if 'KVout'       in flags: util.FLAGS['KVout']    = flags['KVout']
+        if 'verbose'     in flags: util.FLAGS['verbose']  = flags['verbose']
+        if 'express'     in flags: util.FLAGS['express']  = flags['express']
+        if 'useaper'     in flags: util.FLAGS['useaper']  = flags['useaper']
+        if 'bucket'      in flags: util.FLAGS['bucket']   = flags['bucket']
+        if 'csTrak'      in flags: util.FLAGS['csTrak']   = flags['csTrak']
+        if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
         return flags
     # --------
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
-        if 'Tkin'             in parameters: PARAMS['injection_energy'] = parameters['Tkin']
-        if 'phi_sync'         in parameters: PARAMS['phisoll']          = parameters['phi_sync']
-        if 'gap'              in parameters: PARAMS['gap']              = parameters['gap']
-        if 'cav_len'          in parameters: PARAMS['cavity_laenge']    = parameters['cav_len']
-        if 'frequency'        in parameters: PARAMS['frequency']        = parameters['frequency']
-        if 'ql'               in parameters: PARAMS['ql']               = parameters['ql']
-        if 'windings'         in parameters: PARAMS['nbwindgs']         = parameters['windings']
-        if 'nbsigma'          in parameters: PARAMS['nbsigma']          = parameters['nbsigma']
-        if 'aperture'         in parameters: PARAMS['aperture']         = parameters['aperture'] 
-        if 'emitx_i'          in parameters: PARAMS['emitx_i']          = parameters['emitx_i']
-        if 'emity_i'          in parameters: PARAMS['emity_i']          = parameters['emity_i']
-        if 'betax_i'          in parameters: PARAMS['betax_i']          = parameters['betax_i']
-        if 'betay_i'          in parameters: PARAMS['betay_i']          = parameters['betay_i']
-        if 'alfax_i'          in parameters: PARAMS['alfax_i']          = parameters['alfax_i']
-        if 'alfay_i'          in parameters: PARAMS['alfay_i']          = parameters['alfay_i']
-        if 'mapping'          in parameters: PARAMS['mapping']          = parameters['mapping']
-        if 'DT2T'             in parameters: PARAMS['DT2T']             = parameters['DT2T']
-        if 'lattvers'         in parameters: PARAMS['lattice_version']  = parameters['lattvers']
+        if 'Tkin'             in parameters: util.PARAMS['injection_energy'] = parameters['Tkin']
+        if 'phi_sync'         in parameters: util.PARAMS['phisoll']          = parameters['phi_sync']
+        if 'gap'              in parameters: util.PARAMS['gap']              = parameters['gap']
+        if 'cav_len'          in parameters: util.PARAMS['cavity_laenge']    = parameters['cav_len']
+        if 'frequency'        in parameters: util.PARAMS['frequency']        = parameters['frequency']
+        if 'ql'               in parameters: util.PARAMS['ql']               = parameters['ql']
+        if 'windings'         in parameters: util.PARAMS['nbwindgs']         = parameters['windings']
+        if 'nbsigma'          in parameters: util.PARAMS['nbsigma']          = parameters['nbsigma']
+        if 'aperture'         in parameters: util.PARAMS['aperture']         = parameters['aperture'] 
+        if 'emitx_i'          in parameters: util.PARAMS['emitx_i']          = parameters['emitx_i']
+        if 'emity_i'          in parameters: util.PARAMS['emity_i']          = parameters['emity_i']
+        if 'betax_i'          in parameters: util.PARAMS['betax_i']          = parameters['betax_i']
+        if 'betay_i'          in parameters: util.PARAMS['betay_i']          = parameters['betay_i']
+        if 'alfax_i'          in parameters: util.PARAMS['alfax_i']          = parameters['alfax_i']
+        if 'alfay_i'          in parameters: util.PARAMS['alfay_i']          = parameters['alfay_i']
+        if 'mapping'          in parameters: util.PARAMS['mapping']          = parameters['mapping']
+        if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
+        if 'lattvers'         in parameters: util.PARAMS['lattice_version']  = parameters['lattvers']
         return parameters
     #--------
     def proces_elements(elements):
         # TODO   trigger on ID not neeeded
-        """does nothing"""
-        elements_modified = {}
-        for k,v in elements.items():
-            v['ID'] = k
-            elements_modified[k] = v
-        return elements_modified
+        """fills global ELEMENTS"""
+        util.ELEMENTS = elements
+        return elements
     # --------
-    def proces_sections(sections):
-        """does nothing"""
+    def proces_sections(results):
+        """fills global SECTIONS"""
         # TODO sections
+        sections = results.SECTIONSx
+        util.SECTIONS={"allIDs":results.SECTIONSx, "uniqueIDs":results.SECTIONSu}
         return sections
     # --------
     def proces_lattice(lattice):
-        """does nothing"""
+        """fills global LATTICE"""
+        util.LATTICE = lattice
         return lattice
     # --------
-    def make_lattice(sectionIDs,sections,elements):
-        """ instanciate all elements from lattice_list
-        IN  sectionIDs: a list of section IDs
-            sections: a dict of sections {id1:[element,...], id2:[element,...],...}
-            elements: a dict elements {id1:[attribute,...],id2:[attributes,...]...}
-        OUT lattice: the full listof ELM._Node objects
-        """
+    def make_lattice():
         lattice = Lattice()
-        lattice.sectns = sections              # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
-        DEB.get('OFF')(lattice.sectns)
-        lattice.secIds = sectionIDs          # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
-        DEB.get('OFF')(lattice.secIds)
+        sections = util.SECTIONS['allIDs'] # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+        DEBUG_OFF(sections)
+        sectionIDs = util.LATTICE # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        DEBUG_OFF(sectionIDs)
+        DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
 
-        DEB.get('OFF')('make_lattice for sollteilchen\n'+PARAMS['sollteilchen'].string())
-
-        for sctnID in sectionIDs:
-            elementIDs = sections.get(sctnID)
+        for sectionID in sectionIDs:
+            elementIDs = sections.get(sectionID)
             for elementID in elementIDs:
-                element        = elements.get(elementID)
-                """This element belongs to this section!!"""
-                element['sec'] = sctnID 
-                elementClass   = element['type']
+                element        = util.ELEMENTS.get(elementID)
+                """add sectionID and elementID"""
+                element['sec'] = sectionID 
+                element['ID']  = elementID 
+                item           = {elementID:element}  # repack {ID:{attributes}}
                 """INSTANCIATE ELM._Node objects"""
-                elmItem = (elementClass,element)
-                # instance,label = instanciate_element(elmItem)   TODO ?
-                instance = instanciate_element(elmItem)
-                # TODO section
-                # section = instance.section if FLAGS['sections'] else '*'    
-                # DEB.get('OFF')('instance {} {} {}'.format(label,instance,section))
-                # add element instance to lattice
+                instance = instanciate_element(item)
                 if isinstance(instance,ELM._Node):
                     lattice.add_element(instance)
-        
         return lattice   # the complete lattice
-
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
-    SUMMARY['input file'] = PARAMS['input_file'] = input_file
+    util.SUMMARY['input file'] = util.PARAMS['input_file'] = input_file
 
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)
-            """dict PARAMS has the yaml-parsed in_data"""
-            PARAMS['in_data'] = in_data
         except Exception as ex:
             warnings.showwarning(
                     'InputError: {} - STOP'.format(str(ex)),
@@ -524,42 +368,37 @@ def factory_new(input_file):
                     )
             sys.exit(1)
     fileobject.close()
-    DEB.get('OFF')(in_data)
+    DEBUG_OFF(in_data)
 
-    results = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    results = namedtuple('InputParseResult',['SECTIONSx','SECTIONSu','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
     results = parse(in_data)
 
     flags = proces_flags(results.FLAGS)
-    DEB.get('OFF')('global FLAGS after proces_flags():')
-    DEB.get('OFF')(FLAGS)
+    DEBUG_OFF('global FLAGS after proces_flags():')
+    DEBUG_OFF(util.FLAGS)
 
     parameters = proces_parameters(results.PARAMETERS)
-    DEB.get('OFF')('global PARAMS after proces_parameters():')
-    DEB.get('OFF')(PARAMS)
+    DEBUG_OFF('global PARAMS after proces_parameters():')
+    DEBUG_OFF(util.PARAMS)
     
     elements = proces_elements(results.ELEMENTS)
-    DEB.get('OFF')('ELEMENTS after proces_elements():')
-    DEB.get('OFF')(elements)
+    DEBUG_OFF('ELEMENTS after proces_elements():')
+    DEBUG_OFF(util.ELEMENTS)
 
-    sections = proces_sections(results.SECTIONS)
-    DEB.get('OFF')('SECTIONS after proces_sections():')
-    DEB.get('OFF')(sections)
+    sections = proces_sections(results)
+    DEBUG_OFF('SECTIONS after proces_sections():')
+    DEBUG_OFF(util.SECTIONS)
 
     sectionIDs = proces_lattice(results.LATTICE)
-    DEB.get('ON')('LATTICE after proces_lattice():')
-    DEB.get('ON')(sectionIDs)
+    DEBUG_OFF('LATTICE after proces_lattice():')
+    DEBUG_OFF(util.LATTICE)
 
-    # __call__ sollteilchen energy
-    PARAMS['sollteilchen'](tkin=PARAMS['injection_energy'])
+    util.PARAMS['sollteilchen'](tkin=util.PARAMS['injection_energy'])
 
-    lattice = make_lattice(sectionIDs,sections,elements)
-    DEB.get('OFF')('lattice_generator >>{}'.format(lattice.string()))
-    SUMMARY['lattice length [m]'] = PARAMS['lattice_length']  = lattice.length
-    DEB.get("OFF")('SUMMARY in factory() {}'.format(SUMMARY))
-
-    """The lattice has a list of section-IDs"""
-    lattice.sectionIDs = sectionIDs
-
+    lattice = make_lattice()
+    DEBUG_OFF('lattice_generator >>{}'.format(lattice.string()))
+    util.SUMMARY['lattice length [m]'] = util.PARAMS['lattice_length']  = lattice.length
+    DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)
     return lattice
 

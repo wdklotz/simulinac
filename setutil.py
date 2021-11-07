@@ -30,7 +30,6 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import pprint
-# import new_lattice_parser
 from new_lattice_parser import parse
 from collections import namedtuple
 
@@ -43,6 +42,8 @@ def PRINT_PRETTY(obj):
 def PASS(obj):
     pass
 DEB=dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
@@ -53,7 +54,7 @@ ch.setFormatter(formatter)              # set handler's format
 logger    = logging.getLogger("logger")
 logger.addHandler(ch)                   # add handler to logger
 
-#------  DEFAULT "FLAGS" & "PARAMS"
+#------  DEFAULT "FLAGS" & "PARAMS" and global dicts
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
@@ -88,6 +89,9 @@ PARAMS = dict(
         DT2T                 = 1.e-3,            # default kinetic energy spread  (T a.k.a W)
         warnmx               = 5                 # limit nbof warnings
         )
+ELEMENTS = {}
+SECTIONS = {}
+LATTICE  = []
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
 # todo: besser mit namedtupel ?
@@ -528,304 +532,77 @@ def sigmas(alfa,beta,epsi):
 # (global) SUMMARY: dictionary for summary
 SUMMARY = {}
 
-# def collect_data_for_summary(lattice):
-#     class Filter:
-#         def __init__(self,func):
-#             self.func = func
-#         def __ror__(self,iterable):     # INFIX "|" operator
-#             for obj in iterable:
-#                 if self.func(obj):
-#                     yield obj
-#     class Apply:
-#         def __init__(self,func):
-#             self.func = func
-#         def __ror__(self,iterable):     # INFIX "|" operator
-#             return self.func(iterable)
-
-#     def elements_in_lattice():
-#         '''
-#         Filter elements of class <typ> and section <sec> from lattice
-#         IN:
-#             lattice = object        [Lattice]
-#             typ     = element class [string]
-#             sec     = section name  [string]
-#         OUT:
-#             list of filtered elements
-
-#         NOTE: this functional implementation is taken from:
-#             https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
-#         '''
-#         def predicate(element):
-#             try:
-#                 test = (type(element).__name__ == typ and element.section == sec)
-#             except AttributeError:
-#                 test = (type(element).__name__ == typ)  # no section tag? take all!
-#             return test
-
-#         # NOTE: here I use the INFIX operator '|' like a UNIX pipe
-#         List     = Apply(list)
-#         Selector = Filter(predicate)
-#         return lattice.seq | Selector | List
-
-#     def elements_in_section():
-#         """Remove duplicate elements of same type in a section"""
-#         elements = elements_in_lattice()
-#         new_elements = []
-#         seen = set()             # helper to eliminate duplicate entries
-#         for itm in elements:
-#             label = itm.label
-#             if label in seen:
-#                 continue
-#             else:
-#                 seen.add(label)
-#                 new_elements.append(itm)
-#         return new_elements
-
-#     # body
-#     # TODO sections
-#     sections =  PARAMS['sections']                   # comes from INPUT
-#     if not FLAGS['sections']: sections = ['*']       # section wildcart
-#     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
-#     for sec in sections:
-#         for typ in types:
-#             elements = elements_in_section()
-#             for itm in elements:
-#                 k0       = itm.k0
-#                 dBdz     = k0*itm.particle.brho
-#                 length   = itm.length
-#                 aperture = itm.aperture
-#                 # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
-#                 SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,typ,itm.label)] = dBdz
-#                 SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*aperture
-#                 SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
-#                 SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
-
-#     types = ['RFG']
-#     for sec in sections:
-#         for typ in types:
-#             elements = elements_in_section()
-#             for itm in elements:
-#                 gap      = itm.gap
-#                 EzAvg    = itm.EzAvg
-#                 PhiSoll  = degrees(itm.phis)
-#                 mapping  = itm.mapping
-#                 EzPeak   = itm.EzPeak
-#                 aperture = itm.aperture
-#                 freq     = itm.freq
-#                 SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
-#                 SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
-#                 SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-#                 SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-#                 SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
-#                 SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
-#                 SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
-
-#     types = ['RFC']
-#     for sec in sections:
-#         for typ in types:
-#             elements = elements_in_section()
-#             for itm in elements:
-#                 gap      = itm.gap
-#                 EzAvg    = itm.EzAvg
-#                 PhiSoll  = degrees(itm.phis)
-#                 length   = itm.length
-#                 mapping  = itm.mapping
-#                 EzPeak   = itm.EzPeak
-#                 aperture = itm.aperture
-#                 freq     = itm.freq
-#                 SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
-#                 SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
-#                 SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
-#                 SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-#                 SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-#                 SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
-#                 SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
-#                 SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
-
-#     SUMMARY['use emittance growth']            =  FLAGS['egf']
-#     SUMMARY['use sigma tracking']              =  FLAGS['sigma']
-#     SUMMARY['use emittance growth']            =  FLAGS['egf']
-#     SUMMARY['use ring lattice']                =  FLAGS['periodic']
-#     SUMMARY['use express']                     =  FLAGS['express']
-#     SUMMARY['use aperture']                    =  FLAGS['useaper']
-#     SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
-#     SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-#     SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
-#     SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-#     SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-#     SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-#     SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-#     SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-#     SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
-#     SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-#     SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
-    
-#     if FLAGS['dWf'] == 1:
-#         SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmx'])
-#         SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmx']*1.e2)
-#         SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-#         SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmx']*100.)
-#         SUMMARY['emit{z-Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-#         SUMMARY['emit{phi-w}*  [rad]']             =  '{:8.2e}'.format(PARAMS['emitw'])
-#         SUMMARY['(Dp/p)i spread*']                 =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
-#         SUMMARY['(phi)i spread* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
-#         SUMMARY['(z)i spread*    [m]']             =  '{:8.2e} bunch'.format(abs(PARAMS['z0']))
-#         SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
-#         SUMMARY['(w)i spread']                     =  '{:8.2e} delta-gamma, dE/E0'.format(PARAMS['w0'])
-#     else:
-#         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
-#     return
-
 def collect_data_for_summary_new(lattice):
-    # TODO: this activity should be split and distributed in corresponding objects
-    class Filter:
-        def __init__(self,func):
-            self.func = func
-        def __ror__(self,iterable):     # INFIX "|" operator
-            for obj in iterable:
-                if self.func(obj):
-                    yield obj
-    class Apply:
-        def __init__(self,func):
-            self.func = func
-        def __ror__(self,iterable):     # INFIX "|" operator
-            return self.func(iterable)
-
-    def elements_in_lattice():
-        # '''
-        # Filter elements of class <typ> and section <sec> from lattice
-        # IN:
-        #     lattice = object        [Lattice]
-        #     typ     = element class [string]
-        #     sec     = section name  [string]
-        # OUT:
-        #     list of filtered elements
-
-        # NOTE: this functional implementation is taken from:
-        #     https://code.activestate.com/recipes/580625-collection-pipeline-in-python/
-        # '''
-        def predicate(element):
-            try:
-                test = (type(element).__name__ == typ and element.section == sec)
-            except AttributeError:
-                test = (type(element).__name__ == typ)  # no section tag? take all!
-            return test
-
-        # NOTE: here I use the INFIX operator '|' like a UNIX pipe
-        List     = Apply(list)
-        Selector = Filter(predicate)
-        return lattice.seq | Selector | List
-
-    # def elements_in_section_XXX():
-    #     """Remove duplicate elements of same type in a section"""
-    #     elements = elements_in_lattice()
-    #     new_elements = []
-    #     seen = set()             # helper to eliminate duplicate entries
-    #     for itm in elements:
-    #         label = itm.label
-    #         if label in seen:
-    #             continue
-    #         else:
-    #             seen.add(label)
-    #             new_elements.append(itm)
-    #     return new_elements
-
-    def remove_dup_IDs_from_sections():
-        """Remove duplicate elementIDs in a section"""
-        results = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
-        results = parse(PARAMS['in_data'])
-        sections = results.SECTIONS
-        DEB.get('OFF')(sections)
-        eIDsps = {}
-        for sctn in lattice.sectionIDs:
-            DEB.get('OFF')(sctn)
-            elementIDs = sections.get(sctn)
-            seen = set()
-            for element in elementIDs:
-                if element in seen:
-                    continue
-                else:
-                    seen.add(element)
-            eIDsps[sctn] = seen
-        DEB.get('ON')(eIDsps)
-        return eIDsps
-
-        # elements = elements_in_lattice()
-        # new_elements = []
-        # seen = set()             # helper to eliminate duplicate entries
-        # for itm in elements:
-        #     label = itm.label
-        #     if label in seen:
-        #         continue
-        #     else:
-        #         seen.add(label)
-        #         new_elements.append(itm)
-        # return new_elements
-
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # TODO sections
     # sections =  PARAMS['sections']                   # comes from INPUT
-    sections = lattice.sectionIDs                   # lattice has now the list of sections as attribue
-    eIDsps = remove_dup_IDs_from_sections()
-    sys.exit()
+    sectionIDs = LATTICE                  # lattice has now the list of sections as attribue
+    eIDsps = SECTIONS['uniqueIDs']
+    DEBUG_OFF(sectionIDs)
+    DEBUG_OFF(eIDsps)
+    DEBUG_OFF(ELEMENTS)
     types = ['QF','QD','QFth','QDth','QFthx','QDthx']
-    for sec in sections:
-        for typ in types:
-            elementIDs = eIDsps[sec]
-            for ID in elementIDs:
-                k0       = itm.k0
-                dBdz     = k0*itm.particle.brho
-                length   = itm.length
-                aperture = itm.aperture
-                # SUMMARY['{2} [{1}.{0}]    k0 [m^-2]'.format(sec,typ,itm.label)] = k0
-                SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,typ,itm.label)] = dBdz
-                SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,typ,itm.label)] = dBdz*aperture
-                SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,typ,itm.label)] = length
-                SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,typ,itm.label)] = aperture
+    for sec in sectionIDs:
+        elementIDs = eIDsps[sec]        
+        for type in types:
+            for elementID in elementIDs:
+                element = ELEMENTS[elementID]
+                if type == element['type']:
+                    dBdz     = element["B'"]
+                    length   = element['length']
+                    aperture = element['aperture']
+                    SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,type,elementID)] = dBdz
+                    SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,type,elementID)] = dBdz*aperture
+                    SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,type,elementID)] = length
+                    SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,type,elementID)] = aperture
 
     types = ['RFG']
-    for sec in sections:
-        for typ in types:
-            elementIDs = eIDsps[sec]
-            for itm in elementIDs:
-                gap      = itm.gap
-                EzAvg    = itm.EzAvg
-                PhiSoll  = degrees(itm.phis)
-                mapping  = itm.mapping
-                EzPeak   = itm.EzPeak
-                aperture = itm.aperture
-                freq     = itm.freq
-                SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-                SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
-                SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
-                SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
+    for sec in sectionIDs:
+        elementIDs = eIDsps[sec]        
+        for type in types:
+            for elementID in elementIDs:
+                element = ELEMENTS[elementID]
+                if type == element['type']:
+                    gap      = element['gap']
+                    # EzAvg    = element['EzAvg']   TODO
+                    PhiSoll  = element['PhiSync']
+                    # mapping  = element['mapping']   TODO
+                    EzPeak   = element['EzPeak']
+                    aperture = element['aperture']
+                    freq     = element['freq']
+                    SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
+                    SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
+                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg   TODO
+                    SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
+                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping  TODO
+                    SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
+                    SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
 
     types = ['RFC']
-    for sec in sections:
-        for typ in types:
-            elementIDs = eIDsps[sec]
-            for itm in elementIDs:
-                gap      = itm.gap
-                EzAvg    = itm.EzAvg
-                PhiSoll  = degrees(itm.phis)
-                length   = itm.length
-                mapping  = itm.mapping
-                EzPeak   = itm.EzPeak
-                aperture = itm.aperture
-                freq     = itm.freq
-                SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,typ,itm.label)] = gap
-                SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,typ,itm.label)] = length
-                SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,typ,itm.label)] = aperture
-                SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,typ,itm.label)] = EzAvg
-                SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,typ,itm.label)] = PhiSoll
-                SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,typ,itm.label)] = mapping
-                SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,typ,itm.label)] = EzPeak
-                SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,typ,itm.label)] = freq*1.e-6
+    for sec in sectionIDs:
+        elementIDs = eIDsps[sec]        
+        for type in types:
+            for elementID in elementIDs:
+                element = ELEMENTS[elementID]
+                if type == element['type']:
+                    gap      = element['gap']
+                    # EzAvg    = element['EzAvg']   TODO
+                    PhiSoll  = element['PhiSync']
+                    length   = element['length']
+                    # mapping  = element['mapping'] TODO
+                    EzPeak   = element['EzPeak']
+                    aperture = element['aperture']
+                    freq     = element['freq']
+                    SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
+                    SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,type,elementID)] = length
+                    SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
+                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg   TODO
+                    SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
+                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping   TODO
+                    SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
+                    SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
 
     SUMMARY['use emittance growth']            =  FLAGS['egf']
     SUMMARY['use sigma tracking']              =  FLAGS['sigma']

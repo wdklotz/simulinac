@@ -74,7 +74,7 @@ class Lattice(object):
     def __init__(self):
         self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         # self.sectns = []       # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
-        self.secIDs = []       # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        # self.sectionIDs = []       # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
         self.iteration = "LR"  # default: iterating lattice left-right
         self.length = 0.
         self.accel  = 0.
@@ -115,7 +115,7 @@ class Lattice(object):
             # ACHTUNG: Reihenfolge im Produkt ist wichtig!
             mcell = element * mcell   
         mcell.section = '<= full lattice map'
-        return mcell.string()
+        return mcell.prmatrix()
 
     def stats(self,soll_track):
         """ gather lattice statistics """
@@ -192,7 +192,7 @@ class Lattice(object):
         self.accel = mcell    # the full cell: isinstance(self.accel,Lattice)==True
         # if verbose:
         printv(0,'Full Accelerator Matrix (f)<==(i)')
-        printv(0,self.accel.string())
+        printv(0,self.accel.prmatrix())
         det = LA.det(self.accel.matrix)
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))

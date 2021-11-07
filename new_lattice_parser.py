@@ -12,7 +12,7 @@ DEBUG_OFF = PASS
 
 HR = '============================================================================================='
 
-def expand_single_to_many_items(segs):
+def apply_NTIMES(segs):
     '''
     An algorithm to expand the 'ITEMS' lists in 'SEGMENTS' and 'SECTIONS' 'NTIMES' times.
     '''
@@ -42,7 +42,7 @@ def is_string_like(obj):
     except TypeError: return False
     else: return True
 
-def unnest_elements(lattice,elements):
+def unnest_ITEMS(lattice,elements):
     '''
     A recursive algorithm to pull the element-IDs out of the structure that
     the YAML parser has produced.
@@ -56,7 +56,7 @@ def unnest_elements(lattice,elements):
         for count, itm in enumerate(root):
             # print('list_index: {}'.format(count))
             DEBUG_OFF(itm)
-            unnest_elements(itm,elements)
+            unnest_ITEMS(itm,elements)
     # is next item a hash?
     elif isinstance(root,dict):
         # print('dict_len: {}'.format(len(root)))
@@ -64,7 +64,7 @@ def unnest_elements(lattice,elements):
             if key == "DESC": continue
             # print('key: {}'.format(key))
             DEBUG_OFF(root[key])
-            unnest_elements(root[key],elements)
+            unnest_ITEMS(root[key],elements)
     # is next item a string?
     # elif isinstance(root,str): works, but Cookbook prefers
     elif is_string_like(root):
@@ -72,6 +72,26 @@ def unnest_elements(lattice,elements):
         elements.append(root)
     else:
         return
+
+def remove_duplicates(sectionIDs,sections):
+    """Remove duplicate elementIDs in a section"""
+    # results = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    # results = parse(PARAMS['in_data'])
+    # sections = results.SECTIONS
+    DEBUG_OFF(sections)
+    eIDsps = {}
+    for sctn in sectionIDs:
+        DEBUG_OFF(sctn)
+        elementIDs = sections.get(sctn)
+        seen = set()
+        for element in elementIDs:
+            if element in seen:
+                continue
+            else:
+                seen.add(element)
+        eIDsps[sctn] = seen
+    DEBUG_OFF(eIDsps)
+    return eIDsps
 
 def parse(in_data):
     DEBUG_OFF(in_data)
@@ -100,7 +120,7 @@ def parse(in_data):
     # print(HR)
     segments = in_data['SEGMENTS']
     DEBUG_OFF(segments)
-    expand_single_to_many_items(segments)   # expand 'ITEMS'
+    apply_NTIMES(segments)   # expand 'ITEMS'
     DEBUG_OFF(segments)
     # print(HR)
     # print('CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  ')
@@ -111,31 +131,33 @@ def parse(in_data):
     # print('SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS')
     # print(HR)
     sections = in_data['SECTIONS']
+    DEBUG_OFF(sections)     # this shows what the YAML parser has done
+    apply_NTIMES(sections)  # expand 'ITEMS'
     DEBUG_OFF(sections)
     
-    expand_single_to_many_items(sections)    # expand 'ITEMS'
-    DEBUG_OFF(sections)
-
-    hash_of_sections = {}    # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
-    for k in list(sections):        # sections is hash
-        section = sections.get(k)   # section is list
+    dict_sections = {} # {ID:[element-ID,...],...} hash of segments (k,v)=(ID,[element,...])
+    for k in list(sections):        # sections is dict
+        section = sections.get(k)   # section is deeply nested dict of dict with ITEMS
         element_list_per_section = []
-        unnest_elements(section,element_list_per_section)
+        unnest_ITEMS(section,element_list_per_section)  # recursive unnesting ITEMS
         DEBUG_OFF('Number of elements in {}: {}'.format(section.get('DESC'),len(element_list_per_section)))
         DEBUG_OFF(element_list_per_section)
-        hash_of_sections.setdefault(k,element_list_per_section)
+        dict_sections.setdefault(k,element_list_per_section)
 
+    dict_sections_unique = remove_duplicates(list(sections),dict_sections)
+    DEBUG_OFF(dict_sections_unique)
     # print(HR)
     # print('LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE')
     # print(HR)
     lattice = in_data['LATTICE']
     DEBUG_OFF(lattice)
     
-    ParseResult = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    ParseResult = namedtuple('InputParseResult',['SECTIONSx','SECTIONSu','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
     ParseResult.FLAGS      = flags
     ParseResult.PARAMETERS = parameters
     ParseResult.ELEMENTS   = elements
-    ParseResult.SECTIONS   = hash_of_sections
+    ParseResult.SECTIONSx  = dict_sections
+    ParseResult.SECTIONSu  = dict_sections_unique
     ParseResult.LATTICE    = lattice
     return ParseResult
 
@@ -145,15 +167,17 @@ def test0(input_file):
         in_data = yaml.load(f,Loader=yaml.Loader)
     # segments, lattice = parse('yml/new-yaml-template.yml')
     results = parse(in_data)
-    print('\tFLAGS')
+    DEBUG_ON('==================================dict of FLAGS')
     DEBUG_ON(results.FLAGS)
-    print('\tPARAMETERS')
+    DEBUG_ON('==================================dict of PARAMETERS')
     DEBUG_ON(results.PARAMETERS)
-    print('\tELEMENTS')
+    DEBUG_ON('==================================dict of ELEMENTS')
     DEBUG_ON(results.ELEMENTS)
-    print('\tSECTIONS')
-    DEBUG_ON(results.SECTIONS)
-    print('\tLATTICE')
+    DEBUG_ON('==================================dict of SECTIONS: ITEMS NTIMES expanded in-order')
+    DEBUG_ON(results.SECTIONSx)
+    DEBUG_ON('==================================dict of SECTIONS with unique ITEMS only')
+    DEBUG_ON(results.SECTIONSu)
+    DEBUG_ON('==================================LATTICE: dict of actual SECTIONS')
     DEBUG_ON(results.LATTICE)
 
 if __name__ == '__main__':
