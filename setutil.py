@@ -529,11 +529,8 @@ def sigmas(alfa,beta,epsi):
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
 
-def collect_data_for_summary_new(lattice):
-    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
-    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
-    # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
-    sectionIDs = LATTICE                  # lattice has now the list of sections as attribue
+def show_data_from_elements():
+    sectionIDs = LATTICE      # lATTICE has now the list of sectionIDs
     eIDsps = SECTIONS['uniqueIDs']
     DEBUG_OFF(sectionIDs)
     DEBUG_OFF(eIDsps)
@@ -545,71 +542,9 @@ def collect_data_for_summary_new(lattice):
             for elementID in elementIDs:
                 element = ELEMENTS[elementID]
                 if type == element['type']:
-                    dictprnt(element,text=elementID)
+                    dictprnt(element,text=elementID,sep='')
 
-    # types = ['QF','QD','QFth','QDth','QFthx','QDthx']
-    # for sec in sectionIDs:
-    #     elementIDs = eIDsps[sec]        
-    #     for type in types:
-    #         for elementID in elementIDs:
-    #             element = ELEMENTS[elementID]
-    #             if type == element['type']:
-    #                 dictprnt(element,text=elementID,njust=20)
-                    # dBdz     = element["B'"]
-                    # length   = element['length']
-                    # aperture = element['aperture']
-                    # SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,type,elementID)] = dBdz
-                    # SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,type,elementID)] = dBdz*aperture
-                    # SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,type,elementID)] = length
-                    # SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,type,elementID)] = aperture
-
-    # types = ['RFG']
-    # for sec in sectionIDs:
-    #     elementIDs = eIDsps[sec]        
-    #     for type in types:
-    #         for elementID in elementIDs:
-    #             element = ELEMENTS[elementID]
-    #             if type == element['type']:
-    #                 dictprnt(element,text=elementID,njust=20)
-                    # gap      = element['gap']
-                    # EzAvg    = element['EzAvg']
-                    # PhiSoll  = element['PhiSync']
-                    # mapping  = element['mapping']
-                    # EzPeak   = element['EzPeak']
-                    # aperture = element['aperture']
-                    # freq     = element['freq']
-                    # SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
-                    # SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
-                    # SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
-                    # SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
-                    # SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
-
-    # types = ['RFC']
-    # for sec in sectionIDs:
-    #     elementIDs = eIDsps[sec]        
-    #     for type in types:
-    #         for elementID in elementIDs:
-    #             element = ELEMENTS[elementID]
-    #             if type == element['type']:
-    #                 dictprnt(element,text=elementID,njust=20)
-                    # gap      = element['gap']
-                    # EzAvg    = element['EzAvg']
-                    # PhiSoll  = element['PhiSync']
-                    # length   = element['length']
-                    # mapping  = element['mapping']
-                    # EzPeak   = element['EzPeak']
-                    # aperture = element['aperture']
-                    # freq     = element['freq']
-                    # SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
-                    # SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,type,elementID)] = length
-                    # SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
-                    # SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
-                    # SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
-                    # SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
+def collect_data_for_summary(lattice):
     if True:
         SUMMARY['use emittance growth']            =  FLAGS['egf']
         SUMMARY['use sigma tracking']              =  FLAGS['sigma']
@@ -856,7 +791,7 @@ def objprnt (what,text='',filter=[]):
             print(k.rjust(30),':',v)
     return
 
-def dictprnt(what,text='',filter=[],njust=35):
+def dictstring(what,text='',filter=[],njust=35):
     """Custom helper to print dictionaries (clever!?)"""
     def asString(v):
         txt = ''
@@ -874,6 +809,7 @@ def dictprnt(what,text='',filter=[],njust=35):
         return txt
 
     template = '=============================================='
+    res = ''
     lt  = len(template)
     lx  = len(text)
     p1 = int((lt-lx)/2)
@@ -882,7 +818,8 @@ def dictprnt(what,text='',filter=[],njust=35):
         ueberschrift = text
     else:
         ueberschrift = template[:p1]+' {} '.format(text)+template[p2:]
-    print('\n          '+ueberschrift)
+    # print('            '+ueberschrift)
+    res+= '            {}\n'.format(ueberschrift)
 
     fmt  = '{:>'+'{}s'.format(njust)+'} : '
     for k,v in sorted(what.items()):
@@ -893,8 +830,12 @@ def dictprnt(what,text='',filter=[],njust=35):
             for i in v: vars += asString(i)
         else:
             vars += asString(v)
-        print(fmt.format(k)+vars)
-    return
+        # print(fmt.format(k)+vars)
+        res+=fmt.format(k)+'{}\n'.format(vars)
+    return res
+
+def dictprnt(what,text='',filter=[],njust=35,sep='\n'):
+    print(dictstring(what,text,filter,njust),end=sep)
 
 def printv(level,*args):
     """Multilevel printing with verbose flag"""

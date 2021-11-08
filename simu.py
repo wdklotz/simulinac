@@ -46,9 +46,7 @@ import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept, elli_sxy_action
-# from setutil import collect_data_for_summary
-from setutil import collect_data_for_summary_new as collect_data_for_summary
-# from lattice_generator import factory
+from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory_new as factory
 
 from tracker import track_soll
@@ -320,12 +318,14 @@ def simulation(filepath):
             kv[key] = SUMMARY[key]
         dictprnt(kv,text='KV',njust=1)
     else:
-        steps = 10
+        # show ELEMENT attributes
+        show_data_from_elements()
         # show summary
-        dictprnt(SUMMARY,text='summary')
+        dictprnt(SUMMARY,text='Summary')
         # generate lattice plot
         (lat_plot, ape_plot) = lattice.lattice_plot_functions()
         # track sin- and cos-like trajectories
+        steps = 10
         (c_like,s_like) = lattice.cs_traj(steps = steps)
         # calculate envelope functions
         sigma_fun = lattice.sigmas(steps = steps)
