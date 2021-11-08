@@ -542,7 +542,7 @@ def show_data_from_elements():
             for elementID in elementIDs:
                 element = ELEMENTS[elementID]
                 if type == element['type']:
-                    dictprnt(element,text=elementID,end='')
+                    dictprnt(element,text=elementID+' [MKSA]',end='')
 
 def collect_data_for_summary(lattice):
     if True:
