@@ -321,7 +321,6 @@ def factory_new(input_file):
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
-        # util.dictprnt(elements,text='ELEMENTS',njust=5)
         return elements
     # --------
     def proces_sections(results):
