@@ -41,15 +41,14 @@ FLAGS:
 ## INPUT definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 4.0       # [MeV] energy @ injection
-    DT2T:                 1.0e-3       # delta-T/T kinetic energy spread @ injection
-    emitx_i:      &emx    4.e-6      # [m*rad] {x,x'} emittance @ entrance
-    emity_i:      &emy    4.e-6      # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    3.617      # [m] twiss beta @ entrance x
-    betay_i:      &bty    0.709      # [m] twiss beta @ entrance y
-    phi_sync:     &phs    -30.      # [deg] synchronous phase
-    frequency:    &freq   816.e6       # [Hz] frequency
-    mapping:              ttf    # [t3d, simple, oxal, base, ttf, dyn]
+    Tkin:                 4.0         # [MeV] energy @ injection
+    DT2T:                 1.0e-3      # delta-T/T kinetic energy spread @ injection
+    emitx_i:      &emx    4.e-6       # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    4.e-6       # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    3.617       # [m] twiss beta @ entrance x
+    betay_i:      &bty    0.709       # [m] twiss beta @ entrance y
+    phi_sync:     &phs    -30.        # [deg] synchronous phase
+    frequency:    &freq   816.e6      # [Hz] frequency
     # alfax_i:              0.0         # [] twiss alpha x @ entrance
     # alfay_i:              -0.0        # [] twiss alpha y @ entrance
     alfax_i:              0.9         # [] twiss alpha x @ entrance
@@ -58,11 +57,12 @@ PARAMETERS:
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
     windings:             30          # [] quad-coil windings
-    gap:          &p15    0.023        # [m] RF gap
-    EzPeak:       &p17    1.25     # [MV/m] peak gap field Strengy
+    gap:          &p15    0.023       # [m] RF gap
+    EzPeak:       &p17    1.25        # [MV/m] peak gap field Strengy
     nbsigma:              3           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:    22.10.21_0           # lattice version
+    mapping:              ttf         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS definitions
 #...........................................................................................

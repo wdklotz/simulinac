@@ -1,6 +1,6 @@
 ##!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v9yml.0.x'
+___version___='v9.0.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -166,7 +166,7 @@ def display1(*args):
     #    syp= [sin_like(i,'syp')*1.e3   for i in range(sin_like.nbpoints)]
     sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
     sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
-    #-------------------- lattice viseo TODO
+    #-------------------- lattice viseo
     vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
     vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
     vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
@@ -245,19 +245,9 @@ def display1(*args):
     splot414.plot(vis_abszisse,viseoz,label='',color='black')
     splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
+# TODO should become part of marker actions
 def display2(*args):
-    elli_sxy_action(on_injection=True)
-    # lattice elements
-    # vscale=ax_l.axis()[3]*0.7
-    # viseoz = [x*vscale for x in vis_ordinate]
-    # stop lattice plotting after stop_viseo meters
-    # TODO
-    # for i,s in enumerate(vis_abszisse):
-    #     if s > stop_viseoz:
-    #         viseoz[i] = 0.
-    # ax_l.plot(vis_abszisse,viseoz,label='',color='black')
-    # ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-
+    elli_sxy_action(None,on_injection=True)
 #                            |----------------------- |
 # -------------------------  | everything starts here |
 #                            |----------------------- |

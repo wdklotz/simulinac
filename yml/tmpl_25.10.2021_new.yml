@@ -26,7 +26,7 @@
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    accON:        True           # {True} acceleration on/off flag
+    # accON:        False           # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
     sigma:        False           # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -60,7 +60,7 @@ PARAMETERS:
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:             25.10.21_SH # lattice version
-    mapping:              t3d         # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS definitions
 #...........................................................................................
@@ -96,6 +96,7 @@ ELEMENTS:
         gap:      0.026        # [m] gap length
         aperture: 10.e-3       
         SFdata:   SF_WDK2g22.TBL # superfish tbl-data file
+        mapping:  *map         # mapping in cavities
         length:   0.026        # [m] cavity length
 #HE
     D3H:                     # ID: &alias
@@ -119,10 +120,9 @@ ELEMENTS:
     RFGHx:               # replacement of RFG by D
         type:     D            # replacement of RFG by D
         length:   0.0          # replacement of RFG by D
-        # sec:      S-HE          # replacement of RFG by D
     RFGH:                # ID: &alias
         type:     RFG          # RFG class
-        EzAvg:    1.00         # [MV/m] average E-field on axis
+        # EzAvg:    1.00         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
@@ -138,6 +138,7 @@ ELEMENTS:
         gap:      *p15         # [m] gap length
         aperture: 10.e-3       # [m] quad bore
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        mapping:  base         # mapping in cavities
         length:   *p15         # [m] cavity length
     SCF:                   # ID: &alias
         type:    MRK           # MRK class

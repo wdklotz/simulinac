@@ -1,9 +1,9 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
+"""Gauss normal distribution"""
 sys.path.insert(0,'..')
-from setutil import PARAMS,Proton,DEBUG
+from setutil import PARAMS,Proton
 
 def NGauss(x,sigma,mu):    # Gauss Normalverteilung
     res = np.exp(-(((x-mu)/sigma)**2/2.))

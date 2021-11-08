@@ -154,11 +154,12 @@ def instanciate_element(item):
             gap       = get_mandatory(attributes,'gap',label)
             aperture  = get_mandatory(attributes,'aperture',label)
             dWf       = util.FLAGS['dWf']
-            mapping   = util.PARAMS['mapping']
+            mapping   = get_mandatory(attributes,'mapping',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             if mapping == None:
                 mapping = 't3d'
-                EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak)
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname     = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
@@ -168,8 +169,10 @@ def instanciate_element(item):
                 instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=util.PARAMS[fname])
                 pass
             else:
-                EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak)
                 instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
+            element = util.ELEMENTS[label]
+            element['EzAvg']     = EzAvg
             instance['EzAvg']    = EzAvg
             instance['EzPeak']   = EzPeak
             instance['label']    = label
@@ -188,11 +191,12 @@ def instanciate_element(item):
             aperture  = get_mandatory(attributes,'aperture',label)
             dWf       = util.FLAGS['dWf']
             length    = get_mandatory(attributes,'length',label)
-            mapping   = util.PARAMS['mapping']
+            mapping   = get_mandatory(attributes,'mapping',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
+            EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             if mapping == None:
                 mapping = 't3d'
-                EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak)
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname     = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
@@ -202,8 +206,10 @@ def instanciate_element(item):
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
                 pass
             else:
-                EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak)
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
+            element = util.ELEMENTS[label]
+            element['EzAvg']     = EzAvg
             instance['EzAvg']    = EzAvg
             instance['EzPeak']   = EzPeak
             instance['label']    = label
@@ -313,14 +319,12 @@ def factory_new(input_file):
         return parameters
     #--------
     def proces_elements(elements):
-        # TODO   trigger on ID not neeeded
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
         return elements
     # --------
     def proces_sections(results):
         """fills global SECTIONS"""
-        # TODO sections
         sections = results.SECTIONSx
         util.SECTIONS={"allIDs":results.SECTIONSx, "uniqueIDs":results.SECTIONSu}
         return sections
@@ -332,9 +336,9 @@ def factory_new(input_file):
     # --------
     def make_lattice():
         lattice = Lattice()
-        sections = util.SECTIONS['allIDs'] # Hash of sections and their key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+        sections = util.SECTIONS['allIDs'] # dict of sections and their expanded key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
         DEBUG_OFF(sections)
-        sectionIDs = util.LATTICE # List of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+        sectionIDs = util.LATTICE # list of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
         DEBUG_OFF(sectionIDs)
         DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
 
@@ -345,7 +349,7 @@ def factory_new(input_file):
                 """add sectionID and elementID"""
                 element['sec'] = sectionID 
                 element['ID']  = elementID 
-                item           = {elementID:element}  # repack {ID:{attributes}}
+                item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
                 """INSTANCIATE ELM._Node objects"""
                 instance = instanciate_element(item)
                 if isinstance(instance,ELM._Node):
@@ -402,7 +406,6 @@ def factory_new(input_file):
     # end of factory(...)
     return lattice
 
-# utilities
 def test0(input_file):
     print('---------------------------------TEST0')
     wfl= []
@@ -422,10 +425,9 @@ def test0(input_file):
         # for i in l:
         #     print(i)
         print(l)
-
 def test1(input_file):
     print('---------------------------------TEST1')
-    lattice = factory(input_file)
+    lattice = factory_new(input_file)
     print('%%%%%%%%%%%%%%%%%%% Left------->Right')
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
@@ -434,42 +436,10 @@ def test1(input_file):
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
 
-def test2(input_file):
-    print('---------------------------------TEST2')
-    with open(input_file,'r') as fileobject:
-        try:
-            indat = yaml.load(fileobject)
-        except Exception as ex:
-            warnings.showwarning(
-                    'InputError: {} - STOP'.format(str(ex)),
-                    UserWarning,
-                    'lattice_generator.py',
-                    'factory()',
-                    )
-            sys.exit(1)
-    fileobject.close()
-    ky = indat.keys()
-    for k in ky:
-        print()
-        print(k)
-        klist = indat[k]
-        print(klist)
-        if not klist: continue
-        nlist = flatten(klist)
-        if k == 'LATTICE':
-            N = nlist[0]
-            plist = nlist[1:]
-            qlist = plist.copy()
-            for i in range(N-1):
-                qlist += plist
-            nlist=qlist
-        print(nlist)
-
 if __name__ == '__main__':
     input_file = 'yml/tmpl_25.10.2021_new.yml'
     # input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
-    test0(input_file)
-    # test1(input_file)
-    # test2(input_file)
+    # test0(input_file)
+    test1(input_file)
 

@@ -536,8 +536,6 @@ def collect_data_for_summary_new(lattice):
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
-    # TODO sections
-    # sections =  PARAMS['sections']                   # comes from INPUT
     sectionIDs = LATTICE                  # lattice has now the list of sections as attribue
     eIDsps = SECTIONS['uniqueIDs']
     DEBUG_OFF(sectionIDs)
@@ -566,17 +564,17 @@ def collect_data_for_summary_new(lattice):
                 element = ELEMENTS[elementID]
                 if type == element['type']:
                     gap      = element['gap']
-                    # EzAvg    = element['EzAvg']   TODO
+                    EzAvg    = element['EzAvg']
                     PhiSoll  = element['PhiSync']
-                    # mapping  = element['mapping']   TODO
+                    mapping  = element['mapping']
                     EzPeak   = element['EzPeak']
                     aperture = element['aperture']
                     freq     = element['freq']
                     SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
                     SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg   TODO
+                    SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
                     SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping  TODO
+                    SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
                     SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
                     SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
 
@@ -588,19 +586,19 @@ def collect_data_for_summary_new(lattice):
                 element = ELEMENTS[elementID]
                 if type == element['type']:
                     gap      = element['gap']
-                    # EzAvg    = element['EzAvg']   TODO
+                    EzAvg    = element['EzAvg']
                     PhiSoll  = element['PhiSync']
                     length   = element['length']
-                    # mapping  = element['mapping'] TODO
+                    mapping  = element['mapping']
                     EzPeak   = element['EzPeak']
                     aperture = element['aperture']
                     freq     = element['freq']
                     SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
                     SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,type,elementID)] = length
                     SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg   TODO
+                    SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
                     SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping   TODO
+                    SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
                     SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
                     SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
 
@@ -720,7 +718,7 @@ def ellicp(xy,alfa,beta,emit):
     # return matplot.patches.Ellipse(origin=xy,width=a,height=b,angle=tilt) arguments
     return (xy,a,b,tilt)
 
-# marker actions
+# TODO move marker actions to own module
 def elli_sxy_action(node,on_injection=False):
     """ display x- and y-phase-space ellipses """
     if on_injection:
