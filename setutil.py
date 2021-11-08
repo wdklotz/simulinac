@@ -90,8 +90,7 @@ PARAMS = dict(
 ELEMENTS = {}
 SECTIONS = {}
 LATTICE  = []
-# (global) SUMMARY: dictionary for summary
-SUMMARY = {}
+SUMMARY  = {}
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
 # TODO: besser mit namedtupel ?
