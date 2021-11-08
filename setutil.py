@@ -30,8 +30,6 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import pprint
-from new_lattice_parser import parse
-from collections import namedtuple
 
 # MDIM: dimension of matrices
 MDIM = 10
@@ -41,7 +39,7 @@ def PRINT_PRETTY(obj):
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
-DEB=dict(OFF=PASS,ON=PRINT_PRETTY)
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
@@ -92,9 +90,11 @@ PARAMS = dict(
 ELEMENTS = {}
 SECTIONS = {}
 LATTICE  = []
+# (global) SUMMARY: dictionary for summary
+SUMMARY = {}
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
-# todo: besser mit namedtupel ?
+# TODO: besser mit namedtupel ?
 class Ktp(IntEnum):
     """ Koordinaten fuer track points (1x10)"""
     x  = 0     # x
@@ -443,7 +443,7 @@ def waccept(node):
         # {z-dp/p}-space
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-    # todo: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
+    # TODO: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
         Dp2pAcceptance = Dp2pmx
         zAcceptance    = abs(conv.DphiToz(psi))
         res =  dict(
@@ -521,16 +521,13 @@ def waccept(node):
 
     return res
     
-#todo: integrate sigmas into Twiss
+#TODO: integrate sigmas into Twiss
 def sigmas(alfa,beta,epsi):
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
     sigma  = sqrt(epsi*beta)
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
-
-# (global) SUMMARY: dictionary for summary
-SUMMARY = {}
 
 def collect_data_for_summary_new(lattice):
     # body -----------body -----------body -----------body -----------body -----------body -----------body -----------
@@ -541,84 +538,96 @@ def collect_data_for_summary_new(lattice):
     DEBUG_OFF(sectionIDs)
     DEBUG_OFF(eIDsps)
     DEBUG_OFF(ELEMENTS)
-    types = ['QF','QD','QFth','QDth','QFthx','QDthx']
+    types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC']
     for sec in sectionIDs:
         elementIDs = eIDsps[sec]        
         for type in types:
             for elementID in elementIDs:
                 element = ELEMENTS[elementID]
                 if type == element['type']:
-                    dBdz     = element["B'"]
-                    length   = element['length']
-                    aperture = element['aperture']
-                    SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,type,elementID)] = dBdz
-                    SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,type,elementID)] = dBdz*aperture
-                    SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,type,elementID)] = length
-                    SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,type,elementID)] = aperture
+                    dictprnt(element,text=elementID)
 
-    types = ['RFG']
-    for sec in sectionIDs:
-        elementIDs = eIDsps[sec]        
-        for type in types:
-            for elementID in elementIDs:
-                element = ELEMENTS[elementID]
-                if type == element['type']:
-                    gap      = element['gap']
-                    EzAvg    = element['EzAvg']
-                    PhiSoll  = element['PhiSync']
-                    mapping  = element['mapping']
-                    EzPeak   = element['EzPeak']
-                    aperture = element['aperture']
-                    freq     = element['freq']
-                    SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
-                    SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
-                    SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
-                    SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
-                    SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
+    # types = ['QF','QD','QFth','QDth','QFthx','QDthx']
+    # for sec in sectionIDs:
+    #     elementIDs = eIDsps[sec]        
+    #     for type in types:
+    #         for elementID in elementIDs:
+    #             element = ELEMENTS[elementID]
+    #             if type == element['type']:
+    #                 dictprnt(element,text=elementID,njust=20)
+                    # dBdz     = element["B'"]
+                    # length   = element['length']
+                    # aperture = element['aperture']
+                    # SUMMARY['{2} [{1}.{0}]    dBdz[T/m]'.format(sec,type,elementID)] = dBdz
+                    # SUMMARY['{2} [{1}.{0}]       B0*[T]'.format(sec,type,elementID)] = dBdz*aperture
+                    # SUMMARY['{2} [{1}.{0}]    length[m]'.format(sec,type,elementID)] = length
+                    # SUMMARY['{2} [{1}.{0}]  aperture[m]'.format(sec,type,elementID)] = aperture
 
-    types = ['RFC']
-    for sec in sectionIDs:
-        elementIDs = eIDsps[sec]        
-        for type in types:
-            for elementID in elementIDs:
-                element = ELEMENTS[elementID]
-                if type == element['type']:
-                    gap      = element['gap']
-                    EzAvg    = element['EzAvg']
-                    PhiSoll  = element['PhiSync']
-                    length   = element['length']
-                    mapping  = element['mapping']
-                    EzPeak   = element['EzPeak']
-                    aperture = element['aperture']
-                    freq     = element['freq']
-                    SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
-                    SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,type,elementID)] = length
-                    SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
-                    SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
-                    SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
-                    SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
-                    SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
-                    SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
+    # types = ['RFG']
+    # for sec in sectionIDs:
+    #     elementIDs = eIDsps[sec]        
+    #     for type in types:
+    #         for elementID in elementIDs:
+    #             element = ELEMENTS[elementID]
+    #             if type == element['type']:
+    #                 dictprnt(element,text=elementID,njust=20)
+                    # gap      = element['gap']
+                    # EzAvg    = element['EzAvg']
+                    # PhiSoll  = element['PhiSync']
+                    # mapping  = element['mapping']
+                    # EzPeak   = element['EzPeak']
+                    # aperture = element['aperture']
+                    # freq     = element['freq']
+                    # SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
+                    # SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
+                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
+                    # SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
+                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
+                    # SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
+                    # SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
 
-    SUMMARY['use emittance growth']            =  FLAGS['egf']
-    SUMMARY['use sigma tracking']              =  FLAGS['sigma']
-    SUMMARY['use emittance growth']            =  FLAGS['egf']
-    SUMMARY['use ring lattice']                =  FLAGS['periodic']
-    SUMMARY['use express']                     =  FLAGS['express']
-    SUMMARY['use aperture']                    =  FLAGS['useaper']
-    SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
-    SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-    SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
-    SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-    SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-    SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-    SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-    SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-    SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
-    SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-    SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
+    # types = ['RFC']
+    # for sec in sectionIDs:
+    #     elementIDs = eIDsps[sec]        
+    #     for type in types:
+    #         for elementID in elementIDs:
+    #             element = ELEMENTS[elementID]
+    #             if type == element['type']:
+    #                 dictprnt(element,text=elementID,njust=20)
+                    # gap      = element['gap']
+                    # EzAvg    = element['EzAvg']
+                    # PhiSoll  = element['PhiSync']
+                    # length   = element['length']
+                    # mapping  = element['mapping']
+                    # EzPeak   = element['EzPeak']
+                    # aperture = element['aperture']
+                    # freq     = element['freq']
+                    # SUMMARY['{2} [{1}.{0}]         gap[m]'.format(sec,type,elementID)] = gap
+                    # SUMMARY['{2} [{1}.{0}]      length[m]'.format(sec,type,elementID)] = length
+                    # SUMMARY['{2} [{1}.{0}]    aperture[m]'.format(sec,type,elementID)] = aperture
+                    # SUMMARY['{2} [{1}.{0}]    EzAvg[MV/m]'.format(sec,type,elementID)] = EzAvg
+                    # SUMMARY['{2} [{1}.{0}]      phis[deg]'.format(sec,type,elementID)] = PhiSoll
+                    # SUMMARY['{2} [{1}.{0}]        mapping'.format(sec,type,elementID)] = mapping
+                    # SUMMARY['{2} [{1}.{0}]   EzPeak[MV/m]'.format(sec,type,elementID)] = EzPeak
+                    # SUMMARY['{2} [{1}.{0}] frequency[MHz]'.format(sec,type,elementID)] = freq
+    if True:
+        SUMMARY['use emittance growth']            =  FLAGS['egf']
+        SUMMARY['use sigma tracking']              =  FLAGS['sigma']
+        SUMMARY['use emittance growth']            =  FLAGS['egf']
+        SUMMARY['use ring lattice']                =  FLAGS['periodic']
+        SUMMARY['use express']                     =  FLAGS['express']
+        SUMMARY['use aperture']                    =  FLAGS['useaper']
+        SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
+        SUMMARY['lattice version']                 =  PARAMS['lattice_version']
+        SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
+        SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
+        SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+        SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+        SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+        SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+        SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
+        SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
+        SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
         SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmx'])
@@ -849,7 +858,7 @@ def objprnt (what,text='',filter=[]):
 
 def dictprnt(what,text='',filter=[],njust=35):
     """Custom helper to print dictionaries (clever!?)"""
-    def asstrng(v):
+    def asString(v):
         txt = ''
         fmt0  = '{:8.6g} '
         fmt1 = '{} '
@@ -864,7 +873,7 @@ def dictprnt(what,text='',filter=[],njust=35):
             txt += fmt1.format(v)
         return txt
 
-    template = '==============================================='
+    template = '=============================================='
     lt  = len(template)
     lx  = len(text)
     p1 = int((lt-lx)/2)
@@ -872,7 +881,7 @@ def dictprnt(what,text='',filter=[],njust=35):
     if p1 < 0:
         ueberschrift = text
     else:
-        ueberschrift = template[:p1]+text+template[p2:]
+        ueberschrift = template[:p1]+' {} '.format(text)+template[p2:]
     print('\n          '+ueberschrift)
 
     fmt  = '{:>'+'{}s'.format(njust)+'} : '
@@ -881,9 +890,9 @@ def dictprnt(what,text='',filter=[],njust=35):
             continue
         vars = ''
         if isinstance(v,tuple):
-            for i in v: vars += asstrng(i)
+            for i in v: vars += asString(i)
         else:
-            vars += asstrng(v)
+            vars += asString(v)
         print(fmt.format(k)+vars)
     return
 

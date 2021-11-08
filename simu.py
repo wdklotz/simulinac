@@ -1,6 +1,6 @@
 ##!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v9.0.2'
+___version___='v9.0.x'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -18,15 +18,15 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#todo: Calulate cell phase advance sigma by integration
-#todo: handle exceptions speziel ValueError   - more or less done
-#todo: use normalized emittances ?
-#todo: waccept results are global - each node should carry its own
-#todo: make new simu_manual.tex, README.md, check conversions.tex
-#todo: rework the KVout - done in parts
-#todo: rework verbose printing levels
-#todo: C.K.Allen's matrices which are XAL as well?
-#todo: slices as sub-lattice attribute to thick element
+#TODO: Calulate cell phase advance sigma by integration
+#TODO: handle exceptions speziel ValueError   - more or less done
+#TODO: use normalized emittances ?
+#TODO: waccept results are global - each node should carry its own
+#TODO: make new simu_manual.tex, README.md, check conversions.tex
+#TODO: rework the KVout - done in parts
+#TODO: rework verbose printing levels
+#TODO: C.K.Allen's matrices which are XAL as well?
+#TODO: slices as sub-lattice attribute to thick element
 
 import sys
 import os

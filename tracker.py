@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v9.0.2'
+___version___='v9.0.x'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -18,10 +18,10 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#todo: statistical analalysis of bunch: position, size, etc ...
-#todo: how to get the hokey stick?
-#todo: check w-acceptance at each node entrance
-#todo: no phase damping - why?
+#TODO: statistical analalysis of bunch: position, size, etc ...
+#TODO: how to get the hokey stick?
+#TODO: check w-acceptance at each node entrance
+#TODO: no phase damping - why?
 import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt
