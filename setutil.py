@@ -887,7 +887,6 @@ def wille():
         'dipole_length':1.5,
         'drift_length':0.55
     }
-
 def test0():
     print('--------------------------Test0---')
     dictprnt( PARAMS,text=' PARAMS')
@@ -902,7 +901,6 @@ def test0():
     headr = ['kq[1/m^2]','tk[Mev]','dBdxprot(kqf,tk)[T/m]']
     records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
     print('\n'+tblprnt(headr,records))
-
 def test1():
     print('--------------------------Test1---')
     args = ellicp((0,0),0.5,100.,1.e-6)
@@ -920,7 +918,6 @@ def test1():
     ax.set_xlim(-width*scale, width*scale)
     ax.set_ylim(-height*scale, height*scale)
     plt.show()
-
 def test2():
     print('--------------------------Test2---')
     print('test particle energy adjustment...')
@@ -934,7 +931,6 @@ def test2():
         p2 = p(-10.)
     except ValueError:
         print("This was a test: Particle energy deliberately set negative!")
-
 def test3():
     print('--------------------------Test3---')
     names = ('t','SIN','COS')
