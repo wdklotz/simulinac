@@ -542,7 +542,7 @@ def show_data_from_elements():
             for elementID in elementIDs:
                 element = ELEMENTS[elementID]
                 if type == element['type']:
-                    dictprnt(element,text=elementID,sep='')
+                    dictprnt(element,text=elementID,end='')
 
 def collect_data_for_summary(lattice):
     if True:
@@ -834,8 +834,8 @@ def dictstring(what,text='',filter=[],njust=35):
         res+=fmt.format(k)+'{}\n'.format(vars)
     return res
 
-def dictprnt(what,text='',filter=[],njust=35,sep='\n'):
-    print(dictstring(what,text,filter,njust),end=sep)
+def dictprnt(what,text='',filter=[],njust=35,end='\n'):
+    print(dictstring(what,text,filter,njust),end=end)
 
 def printv(level,*args):
     """Multilevel printing with verbose flag"""
