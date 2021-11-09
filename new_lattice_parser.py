@@ -181,4 +181,4 @@ def test0(input_file):
     DEBUG_ON(results.LATTICE)
 
 if __name__ == '__main__':
-    test0('yml/tmpl_25.10.2021_new.yml')
+    test0('yml/new_lattice_parser_IN.yml')
