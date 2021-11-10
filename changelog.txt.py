@@ -1,4 +1,49 @@
 """
+Version v9.0.2
+*) V9.0.2
+    *) new working version using new lattice with sections
+    *) some TODOs removed
+    *) minor improvements/corrections
+*) 2a: better print-out in 'collect_data_for_summary_new'
+*) 2b: reduced  collect_data_for_summary and added show_data_from_elements
+*) new UserManual9.0.2
+
+Version v9.0.0
+*) V9.0.0
+    This is a major version what changed?
+    *) completely new lattice definition file
+    *) completely new lattice parser
+    *) new DEBUG facility with DEB.get()
+    *) SECTIONS are now better integrated
+    *) various improvements/bug fixes
+    *) a reference input-file with two sections is included:
+    yml/tmpl_25.10.2021_new.yml
+    NOTE: the code of the old version is still available in the code base
+    and can be activated by changing imports in simy.py
+
+Version v8.0.9
+*)  much better & elegant interval generation for polifit from raw data
+*) new_lattice_parser.py and yml/new-yaml-template.yml tested: 1st version seems to be still ok
+*) changed from DEBUG to DEB.get('ON' | 'OFF') for debugging. Using pprint.PrettyPrinter for all debugging
+*) full run with new_lattice_parser.py, tmpl_25.10.2021_new.yml as input OK. Moving from elder version to this will probaly need to remove elder code. Up to this the elder version is still functional
+*) Full run with new_lattice_parser.py, tmpl_25.10.2021_new.yml as input OK.
+    Moving from elder version to this will probaly need to remove elder code.
+    Up to this the elder version is still functional
+
+Version v8.0.8
+*) Wichtige Verbesserung: Die SF-Daten-Tabelle ( Ez0.py) kann jetzt in beiden Axen (Ez,z) skaliert werden, um sie an EzPeak und gap anzupassen.
+
+Version v8.0.7
+*)  refactored the input preprocessing, pargs.py normalizes sys.argv
+*) checked and cleaned UserManual8.0.7.html
+*) 7a: documentation corrected
+*) 7b: EzAvg calculated from EzPeak, --run 4500, --tmpl 22.10.2021, 4.5MeV!
+
+Version v8.0.6
+*) remake of m4 launching in W*10 (tested) & L*X (not yet tested)
+*) a3: added Dockerfile and tested on w10 and wsl-ubuntu
+*) a5: added new README.html and README.md
+
 Version v8.0.0a2
 *) fixed confusing handling of cavity frequency parameter (is not global anymore)
 *) fixed confusing handling of EzPeak and EzAvg
