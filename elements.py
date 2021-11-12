@@ -23,7 +23,7 @@ from copy import copy, deepcopy
 import numpy as NP
 
 from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEB, WConverter
+from setutil import DEB, DEBUG_ON, DEBUG_OFF, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
 from Ez0     import SFdata
@@ -273,21 +273,18 @@ class MRK(I):
     """ 
     Marker element 
     """
-    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, action=""):
+    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, action=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self.action  = action
+        self.actions = []
+        if action != None: self.add(action)
     
-    def has_action(self,key):
-        """ test if key and action are bound to this marker """
-        return key == self.action
-        
-    def get_action_key(self):
-        """ return the action-key for this marker """
-        return self.action
-        
-    def do_action(self):
-        """ must be implemented by subclass """
-        pass
+    def add(self,action):
+        self.actions += [action]
+
+    def do_actions(self):
+        """ invoke all actions bound to this marker """
+        for action in self.actions:
+            action.do_action()
         
     def adjust_energy(self, tkin):
         _params = self._params
