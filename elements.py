@@ -271,25 +271,27 @@ class I(_Node):
 
 class MRK(I):
     """ 
-    Marker element 
+    Marker node a.k.a element: owns a list of agents that do the actions
     """
-    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, action=None):
+    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, agent=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self.actions = []
-        if action != None: self.add(action)
+        self._agents = []   # the agent-list
+        if agent != None: self.add(agent)
     
-    def add(self,action):
-        self.actions += [action]
+    def add(self,agent):
+        self._agents += [agent]
 
     def do_actions(self):
         """ invoke all actions bound to this marker """
-        for action in self.actions:
-            action.do_action()
+        for agent in self._agents:
+            agent.do_action()
         
     def adjust_energy(self, tkin):
         _params = self._params
-        self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture,  next=self.next, prev=self.prev, action=self.action)
+        _agents = self._agents
+        self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture,  next=self.next, prev=self.prev)
         self._params = _params
+        self._agents = _agents
         return self
 
 class D(I):
