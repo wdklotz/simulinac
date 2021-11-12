@@ -271,7 +271,7 @@ class I(_Node):
 
 class MRK(I):
     """ 
-    Marker node a.k.a elemen: owns a list of agents that do the actions
+    Marker node (a.k.a element): owns a list of agents that do the actions
     """
     def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, agent=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
