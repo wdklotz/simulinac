@@ -32,7 +32,7 @@ def unnest(dictionary,scalarp,result=None):
         DEBUG_OFF('{}:{} is scalar? {}'.format(k,v,scalarp(v)))
         if not scalarp(v):
             for key in v:
-                unnest({key:PARTS[key]},scalarp,result)
+                unnest({key:PARTS[key]},scalarp,result)  # recursive call !!
         else:
             result.append(v)
     return result
@@ -43,31 +43,32 @@ LATTICE = {}
 
 def parse(in_data):
     DEBUG_OFF(in_data)
+
     global PARTS, ELEMENTS, LATTICE
 
-    DEBUG_ON(HR)
-    DEBUG_ON('FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS    FLAGS    FLAGS')
-    DEBUG_ON(HR)
+    DEBUG_OFF(HR)
+    DEBUG_OFF('FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS    FLAGS    FLAGS')
+    DEBUG_OFF(HR)
     flags = in_data['FLAGS']
-    DEBUG_ON(flags)
+    DEBUG_OFF(flags)
 
-    DEBUG_ON(HR)
-    DEBUG_ON('PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS')
-    DEBUG_ON(HR)
+    DEBUG_OFF(HR)
+    DEBUG_OFF('PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS')
+    DEBUG_OFF(HR)
     parameters = in_data['PARAMETERS']
-    DEBUG_ON(parameters)
+    DEBUG_OFF(parameters)
 
-    DEBUG_ON(HR)
-    DEBUG_ON('ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS')
-    DEBUG_ON(HR)
+    DEBUG_OFF(HR)
+    DEBUG_OFF('ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS')
+    DEBUG_OFF(HR)
     ELEMENTS = in_data['ELEMENTS']
-    DEBUG_ON(ELEMENTS)
+    DEBUG_OFF(ELEMENTS)
 
-    DEBUG_ON(HR)
-    DEBUG_ON('NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  ')
-    DEBUG_ON(HR)
+    DEBUG_OFF(HR)
+    DEBUG_OFF('NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  ')
+    DEBUG_OFF(HR)
     nodes = list(ELEMENTS)
-    DEBUG_ON(nodes)
+    DEBUG_OFF(nodes)
 
     DEBUG_OFF(HR)
     DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
@@ -129,12 +130,12 @@ def parse(in_data):
     LATTICE = expand(LATTICE)# apply_NTIMES(sections)  # expand 'ITEMS'
     DEBUG_OFF(LATTICE)
 
-    DEBUG_ON(HR)
-    DEBUG_ON('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_ON(HR)
+    DEBUG_OFF(HR)
+    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+    DEBUG_OFF(HR)
     for k,v in LATTICE.items():
         PARTS[k]=v
-    DEBUG_ON(PARTS)
+    DEBUG_OFF(PARTS)
 
 def test0(input_file):
     print(HR+'> test0')
