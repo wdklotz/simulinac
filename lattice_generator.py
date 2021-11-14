@@ -321,6 +321,7 @@ def factory_new(input_file):
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
+        DEBUG_ON(util.ELEMENTS)
         return elements
     # --------
     def proces_sections(results):
@@ -334,16 +335,38 @@ def factory_new(input_file):
         util.LATTICE = lattice
         return lattice
     # --------
+    # def make_lattice():
+    #     lattice = Lattice()
+    #     sections = util.SECTIONS['allIDs'] # dict of sections and their expanded key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
+    #     DEBUG_OFF(sections)
+    #     sectionIDs = util.LATTICE # list of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
+    #     DEBUG_ON(sectionIDs)
+    #     DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
+
+    #     for sectionID in sectionIDs:
+    #         elementIDs = sections.get(sectionID)
+    #         for elementID in elementIDs:
+    #             element        = util.ELEMENTS.get(elementID)
+    #             """add sectionID and elementID"""
+    #             element['sec'] = sectionID 
+    #             element['ID']  = elementID 
+    #             item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
+    #             """INSTANCIATE ELM._Node objects"""
+    #             instance = instanciate_element(item)
+    #             if isinstance(instance,ELM._Node):
+    #                 lattice.add_element(instance)
+    #     return lattice   # the complete lattice
     def make_lattice():
         lattice = Lattice()
         sections = util.SECTIONS['allIDs'] # dict of sections and their expanded key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
         DEBUG_OFF(sections)
         sectionIDs = util.LATTICE # list of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
-        DEBUG_OFF(sectionIDs)
+        DEBUG_ON(sectionIDs)
         DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
 
         for sectionID in sectionIDs:
             elementIDs = sections.get(sectionID)
+            DEBUG_ON(elementIDs)
             for elementID in elementIDs:
                 element        = util.ELEMENTS.get(elementID)
                 """add sectionID and elementID"""

@@ -101,19 +101,20 @@ ELEMENTS:
         aperture: 10.e-3       # [m] quad bore
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
     RFCavL:                      # ID: &alias
-        type:     RFC          # RFC class
-        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-        PhiSync:  *phs         # [deg] synchronous phase
-        freq:     *freq        # [Hz] frequency
-        gap:      *p15         # [m] gap length
-        # aperture: *p04         # [m] quad bore
+        type:     RFC            # RFC class
+        EzPeak:   *p17           # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  *phs           # [deg] synchronous phase
+        freq:     *freq          # [Hz] frequency
+        gap:      *p15           # [m] gap length
+        # aperture: *p04          # [m] quad bore
         aperture: 10.e-3         # [m] quad bore
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        length:   0.044        # [m] cavity length
-    Screen:                       # ID: &alias
-        type:    MRK           # MRK class
-        action:  poincare        #  phase space poincare maps
-        prefix:  frames         # path to store frames
+        length:   0.044          # [m] cavity length
+    PsMkr:                       # ID
+        type:    MRK             # MRK class
+        action:  pspace          # phase space marker actions
+        which:   no_plot         #  {transvers} phase space ellipses
+        # prefix:  frames         # path to store frames
 #...........................................................................................
 # LATTICE definition from bottom to top:  Element alias Node->Segment->Cell->Section->Lattice
 #...........................................................................................
@@ -125,6 +126,7 @@ NODES:  # mapping table: NODE: &node ==> ELEMENT
     QD:   &qd   QuadDH
     GAP:  &gap  RFGapH
     CAV:  &cav  RFCavL
+    # M:    &mk   PsMkr
 # #...........................................................................................
 SEGMENTS:   # group NODEs in SEGMENTs: order given by [...] syntax
 # #...........................................................................................
@@ -160,7 +162,7 @@ SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
     DESC:  'high energy section'
 # #........................................................................................... 
 # concatenate SECTIONs to LATTICE:
-# LATTICE:  [LE:  *sect_le] #  order given by [...] syntax
-LATTICE:  [LE:  *sect_le, HE:  *sect_he] #  order given by [...] syntax
+# LATTICE:  [Marker: PsMkr, LE:  *sect_le, Marker: PsMkr, HE:  *sect_he, Marker: PsMkr] #  order given by [...] syntax
+LATTICE:  [PsMkr, *sect_le, PsMkr, *sect_he, PsMkr] #  order given by [...] syntax
   
 

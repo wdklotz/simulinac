@@ -45,9 +45,10 @@ matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept, elli_sxy_action
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory_new as factory
+from PsMarkerAgent import ellipse_plot
 
 from tracker import track_soll
 from pargs import pargs
@@ -245,7 +246,7 @@ def display1(*args):
 
 # TODO should become part of marker actions
 def display2(*args):
-    elli_sxy_action(None,on_injection=True)
+    ellipse_plot(None,on_injection=True)
 #                            |----------------------- |
 # -------------------------  | everything starts here |
 #                            |----------------------- |

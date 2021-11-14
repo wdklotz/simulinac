@@ -26,7 +26,7 @@ class PsMarkerAgent(object):
         """ action without plotting """
         DEBUG_ON(self.__dict__)
 
-def ellipse_plot(node,on_injection=False):
+def ellipse_plot(node,on_injection=False):   # TODO
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """
         gamma = (1.+alfa**2)/beta
@@ -47,7 +47,7 @@ def ellipse_plot(node,on_injection=False):
         by = PARAMS['betay_i']
 
     else:
-        twiss,s = node['twiss']
+        twiss,s = node['twiss']   # TODO
 
         ax = twiss[Ktw.ax]
         bx = twiss[Ktw.bx]
