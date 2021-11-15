@@ -27,7 +27,7 @@ import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
 import marker_actions as MRK
-from new_lattice_parser import parse
+from lattice_parser_2 import parse
 from collections import namedtuple
 
 DEBUG_ON  = util.DEB.get('ON')
@@ -46,21 +46,6 @@ def get_mandatory(attributes,key,item):
                 )
         sys.exit(1)
     return res
-
-#---- recursive version
-# def flatten(lis):
-#     """Given a list, possibly nested to any level, return it flattened."""
-#     new_lis = []
-#     for item in lis:
-#         if type(item) == type([]):
-#             new_lis.extend(flatten(item))
-#         else:
-#             new_lis.append(item)
-#     return new_lis
-
-# def liofd2d(l):
-#     """Transform list of dicts to dict"""
-#     return {k:v for d in l for k,v in d.items()}
 
 def replace_QF_with_QFth_lattice(slices,k0,length,label,particle,aperture):
     lattice = Lattice()
@@ -271,7 +256,6 @@ def instanciate_element(item):
         break
     return instance
 
-
 def factory_new(input_file):
     """ factory creates a lattice from input-file """
     #--------
@@ -321,62 +305,20 @@ def factory_new(input_file):
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
-        DEBUG_ON(util.ELEMENTS)
+        DEBUG_OFF(util.ELEMENTS)
         return elements
-    # --------
-    def proces_sections(results):
-        """fills global SECTIONS"""
-        sections = results.SECTIONSx
-        util.SECTIONS={"allIDs":results.SECTIONSx, "uniqueIDs":results.SECTIONSu}
-        return sections
-    # --------
-    def proces_lattice(lattice):
-        """fills global LATTICE"""
-        util.LATTICE = lattice
-        return lattice
-    # --------
-    # def make_lattice():
-    #     lattice = Lattice()
-    #     sections = util.SECTIONS['allIDs'] # dict of sections and their expanded key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
-    #     DEBUG_OFF(sections)
-    #     sectionIDs = util.LATTICE # list of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
-    #     DEBUG_ON(sectionIDs)
-    #     DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
 
-    #     for sectionID in sectionIDs:
-    #         elementIDs = sections.get(sectionID)
-    #         for elementID in elementIDs:
-    #             element        = util.ELEMENTS.get(elementID)
-    #             """add sectionID and elementID"""
-    #             element['sec'] = sectionID 
-    #             element['ID']  = elementID 
-    #             item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
-    #             """INSTANCIATE ELM._Node objects"""
-    #             instance = instanciate_element(item)
-    #             if isinstance(instance,ELM._Node):
-    #                 lattice.add_element(instance)
-    #     return lattice   # the complete lattice
-    def make_lattice():
+    def make_lattice(elementIDs):
         lattice = Lattice()
-        sections = util.SECTIONS['allIDs'] # dict of sections and their expanded key-list z.B. {LE:[id1,id2,...],He:[id1,id2,...],...}
-        DEBUG_OFF(sections)
-        sectionIDs = util.LATTICE # list of section keys in a Lattice z.B. [lE,HE,...], in order from left=entance to right=exut
-        DEBUG_ON(sectionIDs)
-        DEBUG_OFF('make_lattice for sollteilchen\n'+util.PARAMS['sollteilchen'].string())
-
-        for sectionID in sectionIDs:
-            elementIDs = sections.get(sectionID)
-            DEBUG_ON(elementIDs)
-            for elementID in elementIDs:
-                element        = util.ELEMENTS.get(elementID)
-                """add sectionID and elementID"""
-                element['sec'] = sectionID 
-                element['ID']  = elementID 
-                item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
-                """INSTANCIATE ELM._Node objects"""
-                instance = instanciate_element(item)
-                if isinstance(instance,ELM._Node):
-                    lattice.add_element(instance)
+        for elementID in elementIDs:
+            element        = util.ELEMENTS.get(elementID)
+            """add sectionID and elementID"""
+            element['ID']  = elementID 
+            item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
+            """INSTANCIATE ELM._Node objects"""
+            instance = instanciate_element(item)
+            if isinstance(instance,ELM._Node):
+                lattice.add_element(instance)
         return lattice   # the complete lattice
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
@@ -397,7 +339,7 @@ def factory_new(input_file):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    results = namedtuple('InputParseResult',['SECTIONSx','SECTIONSu','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
+    results = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
     results = parse(in_data)
 
     flags = proces_flags(results.FLAGS)
@@ -407,22 +349,14 @@ def factory_new(input_file):
     parameters = proces_parameters(results.PARAMETERS)
     DEBUG_OFF('global PARAMS after proces_parameters():')
     DEBUG_OFF(util.PARAMS)
+    util.PARAMS['sollteilchen'](tkin=util.PARAMS['injection_energy'])
     
     elements = proces_elements(results.ELEMENTS)
     DEBUG_OFF('ELEMENTS after proces_elements():')
     DEBUG_OFF(util.ELEMENTS)
 
-    sections = proces_sections(results)
-    DEBUG_OFF('SECTIONS after proces_sections():')
-    DEBUG_OFF(util.SECTIONS)
-
-    sectionIDs = proces_lattice(results.LATTICE)
-    DEBUG_OFF('LATTICE after proces_lattice():')
-    DEBUG_OFF(util.LATTICE)
-
-    util.PARAMS['sollteilchen'](tkin=util.PARAMS['injection_energy'])
-
-    lattice = make_lattice()
+    lat_elementIDs = results.LAT_ELMIDs
+    lattice = make_lattice(lat_elementIDs)
     DEBUG_OFF('lattice_generator >>{}'.format(lattice.string()))
     util.SUMMARY['lattice length [m]'] = util.PARAMS['lattice_length']  = lattice.length
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))

@@ -30,6 +30,7 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import pprint
+from lattice_parser_2 import ParserResult
 
 # MDIM: dimension of matrices
 MDIM = 10
@@ -88,8 +89,6 @@ PARAMS = dict(
         warnmx               = 5                 # limit nbof warnings
         )
 ELEMENTS = {}
-SECTIONS = {}
-LATTICE  = []
 SUMMARY  = {}
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
@@ -529,19 +528,13 @@ def sigmas(alfa,beta,epsi):
     return sigma,sigmap
 
 def show_data_from_elements():
-    sectionIDs = LATTICE      # lATTICE has now the list of sectionIDs
-    eIDsps = SECTIONS['uniqueIDs']
-    DEBUG_OFF(sectionIDs)
-    DEBUG_OFF(eIDsps)
-    DEBUG_OFF(ELEMENTS)
+    eIDsps = ParserResult.ELMIDs
     types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC']
-    for sec in sectionIDs:
-        elementIDs = eIDsps[sec]        
+    for elementID in eIDsps:      
         for type in types:
-            for elementID in elementIDs:
-                element = ELEMENTS[elementID]
-                if type == element['type']:
-                    dictprnt(element,text=elementID+' [MKSA]',end='')
+            element = ELEMENTS[elementID]
+            if type == element['type']:
+                dictprnt(element,text=elementID+' [MKSA]',end='')
 
 def collect_data_for_summary(lattice):
     if True:
