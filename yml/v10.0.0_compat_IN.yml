@@ -198,10 +198,10 @@ SECTIONS:   # group CELLs into SECTIONS
   S-HE:      [80,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
-LATTICE:    # group SECTIONs into a LATTICE: here the LATTICE is one single LINE 
-            # with 2 Secions and 1 Marker in between and Markers at the entrance and the 
-            # end.
-#........................................................................................... 
+LATTICE:    # group SECTIONs into a LATTICE
+            # (ex: the LINE definition below makes a  LATTICE  with 2 Secions 
+            # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
+#........................................................................................... 
   LINE:   [1,[S-LE, S-HE]]
   

@@ -28,12 +28,10 @@ from lattice import Lattice
 from Ez0 import SFdata
 import marker_actions as MRK
 from lattice_parser_2 import parse
-from collections import namedtuple
 
 DEBUG_ON  = util.DEB.get('ON')
 DEBUG_OFF = util.DEB.get('OFF')
 
-# parse and generate latttice
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -68,6 +66,7 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
             instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
         lattice.add_element(instance)
     return lattice
+
 def instanciate_element(item):
     """ item: {ID:{attrinutes}} for each element """
     def EzPeakToAverage(Ezpeak):
@@ -339,8 +338,7 @@ def factory_new(input_file):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    results = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
-    results = parse(in_data)
+    results = util.ParserResult = parse(in_data)   # call lattice-parser
 
     flags = proces_flags(results.FLAGS)
     DEBUG_OFF('global FLAGS after proces_flags():')

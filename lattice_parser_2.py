@@ -11,7 +11,6 @@ DEBUG_ON  = PRINT_PRETTY
 DEBUG_OFF = PASS
 
 HR = '============================================================================================='
-ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
 
 def is_string_like(obj):
     try: obj+'x'
@@ -153,7 +152,7 @@ def parse(in_data):
     elmIDs = remove_duplicates(lat_elmIDs)
     DEBUG_OFF(elmIDs)
 
-    # ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
+    ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
     ParserResult.FLAGS          = flags
     ParserResult.PARAMETERS     = parameters
     ParserResult.ELEMENTS       = elements

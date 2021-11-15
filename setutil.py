@@ -30,7 +30,7 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import pprint
-from lattice_parser_2 import ParserResult
+from collections import namedtuple
 
 # MDIM: dimension of matrices
 MDIM = 10
@@ -90,6 +90,7 @@ PARAMS = dict(
         )
 ELEMENTS = {}
 SUMMARY  = {}
+ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
 
 # using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
 # TODO: besser mit namedtupel ?
@@ -528,9 +529,9 @@ def sigmas(alfa,beta,epsi):
     return sigma,sigmap
 
 def show_data_from_elements():
-    eIDsps = ParserResult.ELMIDs
+    eIDs = ParserResult.ELMIDs
     types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC']
-    for elementID in eIDsps:      
+    for elementID in eIDs:      
         for type in types:
             element = ELEMENTS[elementID]
             if type == element['type']:
