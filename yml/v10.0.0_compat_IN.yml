@@ -55,12 +55,12 @@ PARAMETERS:
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
     windings:             30          # [] quad-coil windings
-    gap:          &p15    0.046       # [m] RF gap
-    EzPeak:       &p17    1.4         # [MV/m] peak gap field Strengy
+    gap:          &p15    0.044       # [m] RF gap
+    EzPeak:       &p17    1.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
-    lattvers:             25.10.21_SH # lattice version
-    mapping:      &map    t3d         # [t3d, simple, oxal, base, ttf, dyn]
+    lattvers:             '6-200 MEV' # lattice version
+    mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -94,14 +94,14 @@ ELEMENTS:
         sec:      LE           # section 
     RFCL:                      # ID: &alias
         type:     RFC          # RFC class
-        EzAvg:    1.00         # [MV/m] average E-field on axis
-        EzPeak:   1.40         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
+        # EzAvg:    1.00         # [MV/m] average E-field on axis
+        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         PhiSync:  -30.         # [deg] synchronous phase
         freq:      *freq       # [Hz] frequency
-        gap:      0.026        # [m] gap length
+        gap:      0.022        # [m] gap length
         aperture: 10.e-3       
-        SFdata:   SF_WDK2g22.TBL # superfish tbl-data file
-        mapping:  *map         # mapping in cavities
+        SFdata:   SF/SF_WDK2g22.TBL # superfish tbl-data file
+        mapping:  *map          # mapping in cavities
         length:   0.026        # [m] cavity length
         sec:      LE           # section 
 # Nodes in high energy section
@@ -137,20 +137,20 @@ ELEMENTS:
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        gap:      *p15         # [m] length
+        gap:      0.044        # [m] length
         aperture: 10.e-3       # [m] quad bore
-        SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
         sec:      HE           # section 
     RFCH:                      # ID: &alias
         type:     RFC          # RFC class
         # EzAvg:    2.00         # [MV/m] average E-field on axis
-        EzPeak:    2.0         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        EzPeak:    *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  -10.         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      *p15         # [m] gap length
         aperture: 10.e-3       # [m] quad bore
-        SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
-        mapping:  base         # mapping in cavities
+        SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
+        mapping:  *map         # mapping in cavities
         length:   *p15         # [m] cavity length
         sec:      HE           # section 
     # PsMkr:                     # ID
@@ -184,7 +184,7 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QD+D-H:               [1,[D3H, QDH, D3H]]
     D+QF-H:                 [1,[D3H, QFH]]
 # pillbox cavities
-    CavitiesH:              [10,[RFCH]]
+    CavitiesH:              [12,[RFCH]]
     RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
@@ -195,7 +195,7 @@ CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
 SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
   S-LE:      [20,[CELL-L]]
-  S-HE:      [80,[CELL-H]]
+  S-HE:      [112,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LATTICE
