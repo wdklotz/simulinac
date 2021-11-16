@@ -28,6 +28,7 @@ from lattice import Lattice
 from Ez0 import SFdata
 import marker_actions as MRK
 from lattice_parser_2 import parse
+import PsMarkerAgent as psmkr
 
 DEBUG_ON  = util.DEB.get('ON')
 DEBUG_OFF = util.DEB.get('OFF')
@@ -77,8 +78,8 @@ def instanciate_element(item):
         DEBUG_OFF(ID)
         DEBUG_OFF(attributes)
         # aperture   = PARAMS['aperture']    # default aperture
-        key = attributes.get('type')
-        if key == 'D':
+        type = attributes.get('type')
+        if type == 'D':
             label    = ID
             length   = get_mandatory(attributes,'length',label)
             aperture = attributes['aperture'] if 'aperture' in attributes else None
@@ -87,7 +88,7 @@ def instanciate_element(item):
             instance['length']   = length
             instance['aperture'] = aperture
 
-        elif key == 'SIXD':
+        elif type == 'SIXD':
             label     = attributes['ID']+'#'
             length    = get_mandatory(attributes,'length',label)
             aperture = attributes['aperture'] if 'aperture' in attributes else None
@@ -96,7 +97,7 @@ def instanciate_element(item):
             instance['length']   = length
             instance['aperture'] = aperture
 
-        elif key == 'QF':
+        elif type == 'QF':
             label    = attributes['ID']
             length   = get_mandatory(attributes,'length',label)
             dBdz     = get_mandatory(attributes,"B'",label)
@@ -114,7 +115,7 @@ def instanciate_element(item):
             instance['Bpole']  = Bpole
             pass
 
-        elif key == 'QD':
+        elif type == 'QD':
             label    = attributes['ID']
             length   = get_mandatory(attributes,'length',label)
             dBdz     = get_mandatory(attributes,"B'",label)
@@ -131,7 +132,7 @@ def instanciate_element(item):
             instance['bore']   = aperture
             instance['Bpole']  = Bpole
 
-        elif key == 'RFG':
+        elif type == 'RFG':
             label     = attributes['ID']
             PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
             freq      = float(get_mandatory(attributes,"freq",label))
@@ -167,7 +168,7 @@ def instanciate_element(item):
             instance['dWf']      = dWf
             instance['mapping']  = mapping
 
-        elif key == 'RFC':
+        elif type == 'RFC':
             label     = attributes['ID']
             PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
             freq      = float(get_mandatory(attributes,"freq",label))
@@ -205,7 +206,7 @@ def instanciate_element(item):
             instance['length']   = length
             instance['mapping']  = mapping
 
-        elif key == 'GAP':
+        elif type == 'GAP':
             label     = attributes['ID']
             gap       = get_mandatory(attributes,'gap',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
@@ -223,36 +224,41 @@ def instanciate_element(item):
             instance['freq']    = freq
             instance['dWf']     = dWf
 
-        elif key == 'MRK':
+        elif type == 'MRK':
             label     = attributes['ID']
             action    = get_mandatory(attributes,'action',label)
-            if 'poincare' == action:
-                prefix    = attributes['prefix'] if 'prefix' in attributes else ''
-                abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
-                ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
-                instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
-                instance['prefix']     = prefix
-                instance['abszisse']   = abszisse
-                instance['ordinate']   = ordinate
+            if 'pspace' == action:
+                which = attributes['which'] if 'which' in attributes else 'transvers'
+                agent = psmkr.PsMarkerAgent(which_action=which)
+                DEBUG_OFF(agent.__dict__)
+                instance = ELM.MRK(label=label,agent=agent)
+                # TODO sec for all instances
+                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?'
+                DEBUG_OFF(instance.__dict__)
+            # elif 'poincare' == action:
+            #     prefix    = attributes['prefix']   if 'prefix'   in attributes else ''
+            #     abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
+            #     ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
+            #     instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
+            #     instance['prefix']     = prefix
+            #     instance['abszisse']   = abszisse
+            #     instance['ordinate']   = ordinate
             else:
-                instance  = ELM.MRK(label=label,action=action)
-            instance['label']      = label
-            instance['action']     = action
+                warnings.showwarning(
+                        'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
+                        UserWarning,
+                        'lattice_generator.py',
+                        'instanciate_element()',
+                        )
+                sys.exit(1)
         else:
             warnings.showwarning(
-                    'InputError: Unknown element type encountered: "{}" - STOP'.format(key),
+                    'InputError: Unknown element TYPE encountered: "{}" - STOP'.format(type),
                     UserWarning,
                     'lattice_generator.py',
                     'instanciate_element()',
                     )
             sys.exit(1)
-        try:
-            sec = attributes['sec']    #can fail because sections are not mandatory
-        except:
-            pass
-        else:
-            instance.section = sec
-        break
     return instance
 
 def factory_new(input_file):
@@ -308,6 +314,7 @@ def factory_new(input_file):
         return elements
 
     def make_lattice(elementIDs):
+        DEBUG_OFF(elementIDs)
         lattice = Lattice()
         for elementID in elementIDs:
             element        = util.ELEMENTS.get(elementID)
@@ -366,19 +373,20 @@ def test0(input_file):
     wfl= []
     fileobject=open(input_file,'r')
     wfl= yaml.load(fileobject)
+    print('======================= yaml.dump(wfl,default_flow_style=True)')
     print(yaml.dump(wfl,default_flow_style=True))
+    print('\n======================= wfl.items()')
     for i,v in iter(wfl.items()):
-        print(i,' =\t',v)
+        print(i,' ==> ',v)
     seg = wfl['SEGMENTS']
+    print("\n======================= seg = wfl['SEGMENTS']")
     print(seg)
-    print('=== segment ===')
+    print('\n======================= segment')
     for i in seg:
         print(i)
     lattice = wfl['LATTICE']
-    print('=== lattice ===')
+    print('\n======================= lattice')
     for l in lattice:
-        # for i in l:
-        #     print(i)
         print(l)
 def test1(input_file):
     print('---------------------------------TEST1')
@@ -392,9 +400,9 @@ def test1(input_file):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
 
 if __name__ == '__main__':
-    input_file = 'yml/tmpl_25.10.2021_new.yml'
+    input_file = 'yml/v10.0.0_compat_IN.yml'
     # input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
-    # test0(input_file)
-    test1(input_file)
+    test0(input_file)
+    # test1(input_file)
 

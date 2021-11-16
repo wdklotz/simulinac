@@ -530,7 +530,7 @@ def sigmas(alfa,beta,epsi):
 
 def show_data_from_elements():
     eIDs = ParserResult.ELMIDs
-    types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC']
+    types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC','MRK']
     for elementID in eIDs:      
         for type in types:
             element = ELEMENTS[elementID]
@@ -843,6 +843,15 @@ def test0():
     print('\n'+tblprnt(headr,records))
 def test1():
     print('--------------------------Test1---')
+    def ellicp(xy,alfa,beta,emit):
+        """ convert twiss parameters to plot parameters """
+        gamma = (1.+alfa**2)/beta
+        H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
+        a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+        b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+        tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
+        # return plot prameters as  (origin,width,height,tilt)
+        return (xy,a,b,tilt)
     args = ellicp((0,0),0.5,100.,1.e-6)
     ells = [Ellipse(*args,fill=False,color='red')]
 

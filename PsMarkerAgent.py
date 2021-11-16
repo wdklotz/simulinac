@@ -1,6 +1,6 @@
 from math import degrees, sqrt, atan
 from elements import MRK
-from setutil import Twiss, DEBUG_ON, DEBUG_OFF, PARAMS
+from setutil import Twiss, DEBUG_ON, DEBUG_OFF, PARAMS, Ktw
 
 class PsMarkerAgent(object):
     """ 
@@ -8,7 +8,7 @@ class PsMarkerAgent(object):
     Action is selectable by the which_action argument. 
     Default action is 'transvers'. 
     """
-    def __init__(self, label="Mark1", position=[1,1,1], values=(0.5,0.5), which_action="transvers"):
+    def __init__(self, label="ps", position=[1,1,1], values=(0.5,0.5), which_action="transvers"):
         self.label = label
         self.position = position
         self.twiss_values = values

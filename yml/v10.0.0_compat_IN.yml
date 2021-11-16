@@ -66,33 +66,33 @@ PARAMETERS:
 #...........................................................................................
 ELEMENTS:
 # Nodes in low energy section
-    D3L:                       # ID: &alias
+    D3L:                       # ID
         type:     D            # D class
         length:   0.03         # [m]
         sec:      LE           # section 
-    Dip5:                        # ID: &alias
+    Dip5:                        # ID
         type:     D            # D class
         length:   0.023        # [m] half cavity
         sec:      LE           # section 
-    D10L:                      # ID: &alias
+    D10L:                      # ID
         type:     D            # D class
         length:   0.100        # [m]
         sec:      LE           # section 
-    QFL:                       # ID: &alias
+    QFL:                       # ID
         type:     QF           # QF class
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
         B':       12.0         # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
-    QDL:                       # ID: &alias
+    QDL:                       # ID
         type:     QD           # QD class
         length:   0.08         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       12.0         # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
-    RFCL:                      # ID: &alias
+    RFCL:                      # ID
         type:     RFC          # RFC class
         # EzAvg:    1.00         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
@@ -105,22 +105,22 @@ ELEMENTS:
         length:   0.026        # [m] cavity length
         sec:      LE           # section 
 # Nodes in high energy section
-    D3H:                       # ID: &alias
+    D3H:                       # ID
         type:     D            # D class
         length:   0.03         # [m]
         sec:      HE           # section 
-    D10H:                      # ID: &alias
+    D10H:                      # ID
         type:     D            # D class
         length:   0.100        # [m]
         sec:      HE           # section 
-    QFH:                       # ID: &alias
+    QFH:                       # ID
         type:     QF           # QF class
         length:   0.02         # [m]
         aperture: 0.011        # [m] quad bore
         B':       &Bgrad 20.   # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      HE           # section 
-    QDH:                       # ID: &alias
+    QDH:                       # ID
         type:     QD           # QD class
         length:   0.04         # [m] length
         aperture: 0.011        # [m] quad bore
@@ -131,7 +131,7 @@ ELEMENTS:
         type:     D            # replacement of RFG by D
         length:   0.0          # replacement of RFG by D
         sec:      HE           # section 
-    RFGH:                      # ID: &alias
+    RFGH:                      # ID
         type:     RFG          # RFG class
         # EzAvg:    1.00         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
@@ -141,7 +141,7 @@ ELEMENTS:
         aperture: 10.e-3       # [m] quad bore
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
         sec:      HE           # section 
-    RFCH:                      # ID: &alias
+    RFCH:                      # ID
         type:     RFC          # RFC class
         # EzAvg:    2.00         # [MV/m] average E-field on axis
         EzPeak:    *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
@@ -153,15 +153,18 @@ ELEMENTS:
         mapping:  *map         # mapping in cavities
         length:   *p15         # [m] cavity length
         sec:      HE           # section 
-    # PsMkr:                     # ID
-    #     type:     MRK          # MRK class
-    #     action:   pspace       # phase space marker actions
-    #     which:    no_plot      #  {transvers} phase space ellipses
+    PsMkr:                     # ID
+        type:     MRK          # MRK class
+        action:   pspace       # phase space marker actions
+        # which:    no_plot      #  {transvers} phase space ellipses
     #     sec:                   # section 
-    # SCF:                     # ID: &alias
-    #     type:    MRK         # MRK class
-    #     action:  poincare    #  phase space poincare maps
-        # - prefix:  frames    # path to store frames
+    # SCF:                       # ID
+    #     type:    MRK           # MRK class
+    #     action:  poincare      #  phase space poincare maps
+    #     prefix:  frames        # path to store frames
+    #     abscissa: z            # horizontal variable
+    #     ordinate: zp           # vertical variable
+    #     sec:                   # section
 # ...........................................................................................
 # LATTICE definition starts here:  
          # Node is part of Segment is part of Cell is part of Section is part of LINE
@@ -177,14 +180,16 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QD+D-L:              [1,[D3L, QDL, D3L]]
     D+QF-L:                [1,[D3L, QFL]]
 # pillbox cavities
-    CavitiesL:             [12,[RFCL]]
+    # CavitiesL:             [12,[RFCL]]
+    CavitiesL:             [1,[RFCL]]
     RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
 # HE section segments
     QF+D-H:                 [1,[QFH, D3H]]
     D+QD+D-H:               [1,[D3H, QDH, D3H]]
     D+QF-H:                 [1,[D3H, QFH]]
 # pillbox cavities
-    CavitiesH:              [12,[RFCH]]
+    # CavitiesH:              [12,[RFCH]]
+    CavitiesH:              [1,[RFCH]]
     RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
@@ -194,8 +199,10 @@ CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
-  S-LE:      [20,[CELL-L]]
-  S-HE:      [112,[CELL-H]]
+#   S-LE:      [20,[CELL-L]]
+  S-LE:      [1,[CELL-L]]
+#   S-HE:      [112,[CELL-H]]
+  S-HE:      [1,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LATTICE
@@ -203,5 +210,5 @@ LATTICE:    # group SECTIONs into a LATTICE
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
-  LINE:   [1,[S-LE, S-HE]]
+  LINE:   [1,[S-LE, PsMkr, S-HE]]
   
