@@ -181,7 +181,7 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QF-L:                [1,[D3L, QFL]]
 # pillbox cavities
     # CavitiesL:             [12,[RFCL]]
-    CavitiesL:             [1,[RFCL]]
+    CavitiesL:             [12,[RFCL]]
     RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
 # HE section segments
     QF+D-H:                 [1,[QFH, D3H]]
@@ -189,7 +189,7 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QF-H:                 [1,[D3H, QFH]]
 # pillbox cavities
     # CavitiesH:              [12,[RFCH]]
-    CavitiesH:              [1,[RFCH]]
+    CavitiesH:              [12,[RFCH]]
     RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
@@ -210,5 +210,5 @@ LATTICE:    # group SECTIONs into a LATTICE
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
-  LINE:   [1,[S-LE, PsMkr, S-HE]]
+  LINE:   [1,[S-LE, PsMkr, S-LE]]
   

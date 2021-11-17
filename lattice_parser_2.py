@@ -17,7 +17,8 @@ def is_string_like(obj):
     except TypeError: return False
     else: return True
 
-def expand(segments):
+def nlists(segments):
+    """ make n*[...] """
     _segments = {}
     for k,v in segments.items():
         n = int(v[0])
@@ -26,6 +27,7 @@ def expand(segments):
     return _segments
 
 def unnest(dictionary,scalarp,PARTS,result=None):
+    """ unnest tree of lists down to leaves  (recursive function)"""
     if result is None: result = []
     for k,v in dictionary.items():
         DEBUG_OFF('{}:{} is scalar? {}'.format(k,v,scalarp(v)))
@@ -91,7 +93,7 @@ def parse(in_data):
     DEBUG_OFF(HR)
     segments = in_data['SEGMENTS']
     DEBUG_OFF(segments)
-    segments=expand(segments)
+    segments=nlists(segments)
     DEBUG_OFF(segments)
 
     DEBUG_OFF(HR)
@@ -106,7 +108,7 @@ def parse(in_data):
     DEBUG_OFF(HR)
     cells = in_data['CELLS']
     DEBUG_OFF(cells)
-    cells = expand(cells)
+    cells = nlists(cells)
     DEBUG_OFF(cells)
 
     DEBUG_OFF(HR)
@@ -121,7 +123,7 @@ def parse(in_data):
     DEBUG_OFF(HR)
     sections = in_data['SECTIONS']
     DEBUG_OFF(sections)     # this shows what the YAML parser has done
-    sections = expand(sections)# apply_NTIMES(sections)  # expand 'ITEMS'
+    sections = nlists(sections)# apply_NTIMES(sections)  # nlists 'ITEMS'
     DEBUG_OFF(sections)
 
     DEBUG_OFF(HR)
@@ -136,7 +138,7 @@ def parse(in_data):
     DEBUG_OFF(HR)
     lattice = in_data['LATTICE']
     DEBUG_OFF(lattice)     # this shows what the YAML parser has done
-    lattice = expand(lattice)# apply_NTIMES(sections)  # expand 'ITEMS'
+    lattice = nlists(lattice)
     DEBUG_OFF(lattice)
 
     DEBUG_OFF(HR)
@@ -153,6 +155,14 @@ def parse(in_data):
     DEBUG_OFF(elmIDs)
 
     ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
+    """
+    FLAGS: dict of all flags
+    PARAMETERS: dict of all parameters
+    ELEMENTS: dict of all ELEMENT types
+    LATTICE: list result of appling n*[] for lattice
+    LAT_ELMIDs: list result of all elementIDs after unnesting
+    ELMIDs: list result of element IDs after removal of duplicate items in LAT_ELMIDs
+    """
     ParserResult.FLAGS          = flags
     ParserResult.PARAMETERS     = parameters
     ParserResult.ELEMENTS       = elements

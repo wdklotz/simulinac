@@ -32,11 +32,14 @@ import time
 import pprint
 from collections import namedtuple
 
+import yaml
+
 # MDIM: dimension of matrices
 MDIM = 10
 
 # new DEBUG facility (replaces old DEBUG_ON,DEBUG_OFF and DEBUG)
 def PRINT_PRETTY(obj):
+    print('==============>  '+__file__)
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
@@ -290,9 +293,7 @@ class WConverter(object):
         return (z,Dp2p,emitz,betaz)
 
 class Functions(object):
-    """
-    A class to gather function-values (Ordinaten) over a common independent variable (Abszisse)
-    """
+    """ A class to gather function-values (Ordinaten) over a common independent variable (Abszisse) """
     def __init__(self,names):
         self._values  = [] # [(abzisse, ordinate-1, ordinate-2, ordinate-3,...)]
         self._points = 0
@@ -528,14 +529,11 @@ def sigmas(alfa,beta,epsi):
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
 
-def show_data_from_elements():
+def show_data_from_elements():  #TODO better get data fron lattice objects
     eIDs = ParserResult.ELMIDs
-    types = ['QF','QD','QFth','QDth','QFthx','QDthx','RFG','RFC','MRK']
     for elementID in eIDs:      
-        for type in types:
-            element = ELEMENTS[elementID]
-            if type == element['type']:
-                dictprnt(element,text=elementID+' [MKSA]',end='')
+        element = ELEMENTS[elementID]
+        dictprnt(element,' {} (MKSA units)'.format(elementID),end='')
 
 def collect_data_for_summary(lattice):
     if True:

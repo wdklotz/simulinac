@@ -69,14 +69,15 @@ class _Node(DictObject, object):
         self.matrix    = NP.zeros([MDIM,MDIM])   # MDIMxMDIM zero matrix used here
         # !!!IMPORTANT!!! local copy of the particle object
         self.particle  = copy(particle)
-        self.position  = position         # [entrance, middle, exit]
-        self.length    = length           # default - thin
-        self.label     = label            # default - unlabeled
-        self.aperture  = aperture         # default - infinite aperture
-        self.next      = next             # right link
-        self.prev      = prev             # left link
-        self['slice_min'] = 0.001         # default - minimal slice length
-        self['viseo']     = 0             # default - invisible
+        self.position  = position           # [entrance, middle, exit]
+        self.length    = length             # default - thin
+        self.label     = label              # default - unlabeled
+        self.aperture  = aperture           # default - infinite aperture
+        self.next      = next               # right link
+        self.prev      = prev               # left link
+        self['slice_min'] = 0.001           # default - minimal slice length
+        self['viseo']     = 0               # default - invisible
+        self.type = self.__class__.__name__ # node type
 
     def adjust_energy(self, tkin):
         _params = self._params
@@ -98,12 +99,14 @@ class _Node(DictObject, object):
         return self.matrix[:n, :m]
 
     def __mul__(self, other):
+        """ define the * operator for _Node objects """
         res = _Node()
         if (self.label == ''):
             res.label = other.label
         else:
             res.label = self.label+'*'+other.label
         res.length = self.length + other.length
+        """ matrix product """
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
 
@@ -277,6 +280,7 @@ class MRK(I):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self._agents = []   # the agent-list
         if agent != None: self.add(agent)
+        self['viseo'] = 4.
     
     def add(self,agent):
         self._agents += [agent]

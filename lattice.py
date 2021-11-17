@@ -79,6 +79,7 @@ class Lattice(object):
         self.accel  = 0.
 
     def __iter__(self):
+        """ iterator using the linked list of element """
         if self.iteration == "RL":
             iterator = self.RLiterator(self)
         elif self.iteration == "LR":
@@ -91,10 +92,10 @@ class Lattice(object):
             s0 = 0.
             element.prev = None
         else:
-            previous = self.seq[-1]
-            previous.next = element
-            element.prev  = previous
-            s0 = element.prev.position[2]
+            previous = self.seq[-1]  
+            previous.next = element   # forward link
+            element.prev  = previous  # back link
+            s0 = element.prev.position[2]  # end of previous
         self.seq.append(element)
         l = element.length
         si = s0
@@ -105,6 +106,7 @@ class Lattice(object):
         self.length = sf
 
     def string(self):
+        # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
         # for element in self.seq:
@@ -124,7 +126,7 @@ class Lattice(object):
         ttfx = +1.e-50
         tk_i = soll_track.getpoints()[0]()[6]
         tk_f = soll_track.getpoints()[-1]()[6]
-        # for element in self.seq:
+        """ loop over all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 q_counter += 1
@@ -151,7 +153,7 @@ class Lattice(object):
             twiss prameters beta, alpha, gamma for periodic lattices
         """
         mcell = ELM.I(label=' <==')   #  chain matrices for full cell
-        # for count,element in enumerate(self.seq):
+        """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):
             if count == 0:
                 mcell = element
@@ -271,7 +273,8 @@ class Lattice(object):
                 sys.exit(1)
         else:
             ## transversale twiss parameter fuer transfer lines
-            # alfa, beta und emittance definieren den beam @ entrance, NOTE: transfer lattices need not to be stable!
+            # alfa, beta und emittance definieren den beam @ entrance, 
+            # NOTE: transfer lattices need not to be stable!
             bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
             bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
@@ -279,6 +282,7 @@ class Lattice(object):
         return(self)
 
     def report(self):
+        # TODO needs more work
         """ report lattice layout (may not work!) """
         raise RuntimeWarning('Lattice.report() not ready')
         reprt = ''
@@ -301,27 +305,28 @@ class Lattice(object):
         return reprt
 
     def toggle_iteration(self):
-      if self.iteration == "LR":
-          self.iteration = "RL"
-      elif self.iteration == "RL":
-          self.iteration = "LR"
+        """ toggle l->R or L<-R sweep through linked list of elements"""
+        if self.iteration == "LR":
+            self.iteration = "RL"
+        elif self.iteration == "RL":
+            self.iteration = "LR"
 
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
+        # TODO check correctness again
         for element in iter(lattice):
             element = copy(element)
             self.add_element(element)
         
     def twiss_envelopes(self,steps=1):
-        """
-        Calulate envelopes from initial twiss-vector with beta-matrices
-        """
+        """ Calulate envelopes from initial twiss-vector with beta-matrices """
         twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twv0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
+        twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
         B_matrix = NP.eye(9)                            # cumulated beta-matrix
+        """ loop over all nodes in the lattice """
         for node in iter(self):
             slices = node.make_slices(anz = steps)
             means = []
@@ -329,11 +334,12 @@ class Lattice(object):
             for slice in slices:
                 beta_matrix = slice.beta_matrix()
                 B_matrix    = NP.dot(beta_matrix,B_matrix)
-                twv         = NP.dot(B_matrix,twv0)     # track twiss-vector
-                s          += slice.length
-                twfun.append(s,tuple(twv))
-                bx    = twv[Ktw.bx]; ax = twv[Ktw.ax]; gx = twv[Ktw.gx]
-                by    = twv[Ktw.by]; ay = twv[Ktw.ay]; gy = twv[Ktw.gy]
+                twiss_vector= NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                s += slice.length
+                twfun.append(s,tuple(twiss_vector))
+                node['twiss'] = tuple(twiss_vector)
+                bx    = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
+                by    = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
                 sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 means.append(sigxy)
                 
@@ -346,7 +352,7 @@ class Lattice(object):
         return twfun
     
     def aperture_check(self,node,twiss=True):
-        # aperture check
+        """ check sigmas against apertures """
         fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
         s,sm,sf = node.position
         if FLAGS['useaper']:
@@ -363,7 +369,7 @@ class Lattice(object):
     
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
-        #todo: analytical sigmas for 'dyn' mapping as best estimates ?
+        #TODO: analytical sigmas for 'dyn' mapping as best estimates ?
         def envelopes(function, steps = 10):
             """ calc. envelopes using function """
             twfunc     = function(steps = steps)
@@ -393,15 +399,13 @@ class Lattice(object):
         return sigma_fun
 
     def sigma_envelopes(self, steps = 1):
-        """ 
-        Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes
-        """
+        """ Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
-        sg0      = Sigma(twv0,epsx,epsy,epsz)              # sigma object IN lattice
+        twiss_vector0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
+        sg0      = Sigma(twiss_vector0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
         for node in iter(self): # loop nodes
@@ -444,6 +448,11 @@ class Lattice(object):
         return traj
 
     def lattice_plot_functions(self):
+        """
+        generate the functions to plot the lattice
+        viseo:    shows elements
+        aperture: shows the physical apertures of elements
+        """
         fun = Functions(('s','viseo'))
         ape = Functions(('s','aperture'))
         # for element in self.seq:
@@ -473,11 +482,12 @@ class Lattice(object):
             return 0.
         def SollTest_OFF(arg):
             return arg
-        soll_test   = SollTest_OFF
+        soll_test = SollTest_OFF
 
         print('CALCULATE C+S TRAJECTORIES')
-        tkin        = PARAMS['sollteilchen'].tkin
+        tkin = PARAMS['sollteilchen'].tkin
         
+        """ injektion parmarers """
         if True:
             # 2 point on the ellipse y1 & y4: intersections
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
@@ -506,7 +516,7 @@ class Lattice(object):
         c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
         s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
 
-        # for element in self.seq:
+        """ loop through lattice """
         for element in iter(self):
             # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
@@ -523,6 +533,7 @@ class Lattice(object):
                     # cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     cz  = c_0[ZKOO]*1.e3      # z [mm]
                     cdp = c_0[ZPKOO]*100.     # dp/p [%]
+                    # TODO use Function class
                     c_fun.append(s,(cx,cxp,cy,cyp,cz,cdp))
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
@@ -537,7 +548,7 @@ class Lattice(object):
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
             except ValueError as ex:
                 print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))
-                # raise ex
+                #TODO  raise ex
                 break
         return (c_fun,s_fun)
 
@@ -566,7 +577,7 @@ class Lattice(object):
         return(res)
     
     def show_linkage(self):
-        """ Show left-right links of lattice nodes. Iterate in both directions """
+        """ Show left-right links of doubly linked element list of the lattice. Iterate in both directions """
         print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
         for next in iter(self):
             print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
@@ -580,6 +591,7 @@ class Lattice(object):
         
     @property
     def first_gap(self):
+        """ return the 1st RF gap"""
         node = None
         # for elm in self.seq:
         for elm in iter(self):
@@ -587,61 +599,6 @@ class Lattice(object):
                 node = elm
                 break
         return node
-
-# The commented code is *legacy*. No use to define a new
-# subclass and to cast from base class to subclass
-# although it worked well!
-# 
-#     def get_section(self,sec):    *legacy*
-#         if not FLAGS['sections']:
-#             section = self
-#             Section.cast(section)             #the whole lattice is one section
-#             setction.set_name('LINAC')
-#         else:
-#             section = Section(name=sec)
-#             for elm in self.seq:
-#                 try:
-#                     elmsec = elm.get_section()
-#                 except AttributeError:
-#                     print('WARNING: element {} w/o section attribute. - STOP!'.format(elm.label))
-#                     continue
-#                 if elmsec == sec:
-#                     section.add_element(elm)
-#         return section
-#     def get_sections(self):
-#         sections = []
-#         if not FLAGS['sections']:
-#             section = self
-#             Section.cast(section)             #the whole lattice is one section
-#             section.set_name('LINAC')
-#             sections.append(section)
-#         else:
-#             for isec in PARAMS['sections']:
-#                 sec = self.get_section(isec)
-#                 sections.append(sec)
-#         return sections
-#        
-# class Section(Lattice):
-#     """
-#     A Lattice with a name
-#     """
-#     def __init__(self,name='LINAC'):
-#         super().__init__()
-#         self.name = name
-#     def get_name(self):
-#         return self.name
-#     def set_name(self,name):
-#         self.name = name
-#     @classmethod
-#     def cast(cls,obj):
-#         """
-#         Convert a BaseClass object into a SubClass object ==> der Trick:
-#         ==> cast 'obj' (must be of class Lattice) to object of class Section.
-#         """
-#         if not isinstance(obj,Lattice):
-#             print('ERROR: cast to class Section not possible. -- STOP!')
-#             sys.exit(1)
-#         obj.__class__ = Section
 
 ## utilities
 def make_wille():
@@ -683,7 +640,6 @@ def make_wille():
     top.concat(lattice)
     top.concat(lattice)
     return top
-
 def test1():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test1--')
@@ -718,7 +674,6 @@ def test1():
     plot(vis_abszisse,vzero,color='black')
     legend(loc='upper left')
     show()
-
 def test2():
     print('-------------------------------------Test2--')
     print('lattice tags test ...')
@@ -728,7 +683,6 @@ def test2():
     lattice.label = 'LABEL'
     lattice.section = 'SECTION'
     print(lattice.__dict__)
-
 def test3():
     print('-------------------------------------Test3--')
     lattice = make_wille()

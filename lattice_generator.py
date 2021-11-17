@@ -230,11 +230,12 @@ def instanciate_element(item):
             if 'pspace' == action:
                 which = attributes['which'] if 'which' in attributes else 'transvers'
                 agent = psmkr.PsMarkerAgent(which_action=which)
-                DEBUG_OFF(agent.__dict__)
                 instance = ELM.MRK(label=label,agent=agent)
+                agent.__dict__['parent'] = instance   #TODO use __dict__ to add attributes for _Node class
                 # TODO sec for all instances
                 instance['sec'] = attributes['sec'] if 'sec' in attributes else '?'
                 DEBUG_OFF(instance.__dict__)
+                DEBUG_ON(agent.__dict__)
             # elif 'poincare' == action:
             #     prefix    = attributes['prefix']   if 'prefix'   in attributes else ''
             #     abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
@@ -320,7 +321,8 @@ def factory_new(input_file):
             element        = util.ELEMENTS.get(elementID)
             """add sectionID and elementID"""
             element['ID']  = elementID 
-            item           = {elementID:element}  # repack {ID:{attributes}} for instanciate_element(...)
+            # repack {ID:{attributes}} for instanciate_element(...)
+            item           = {elementID:element}
             """INSTANCIATE ELM._Node objects"""
             instance = instanciate_element(item)
             if isinstance(instance,ELM._Node):

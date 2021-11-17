@@ -52,11 +52,12 @@ from PsMarkerAgent import ellipse_plot
 
 from tracker import track_soll
 from pargs import pargs
-from new_lattice_parser import parse as parser
 
 import bucket_size
 
-DEBUG_LATTICE  = False
+DEBUG_ON       = DEB.get('ON')
+DEBUG_OFF      = DEB.get('OFF')
+DEBUG_LINKGAGE  = False
 
 def bucket(*args):
     bucket_size.bucket()
@@ -270,46 +271,38 @@ def simulation(filepath):
         # lattice.marker_actions()
         # next not needed for jupyter
         plt.show()
-
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #----------------------------------------------
     lattice = factory(filepath)
     DEB.get('OFF')([x.label for x in lattice.seq])
-
-    if DEBUG_LATTICE: lattice.show_linkage()
-
+    if DEBUG_LINKGAGE: lattice.show_linkage()
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
     soll_track = track_soll(lattice)
-
-    if DEBUG_LATTICE: lattice.show_linkage()
-
+    if DEBUG_LINKGAGE: lattice.show_linkage()
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
     print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
-
     #----------------------------------------------
     # STEP 3: calculate longitudinal paramters at entrance
     #----------------------------------------------
     waccept(lattice.first_gap)
-
     #----------------------------------------------
     # STEP 4: count elements and make other statistics
     #----------------------------------------------
     lattice.stats(soll_track)
-
     #----------------------------------------------
     # STEP 5: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
     lattice.cell(closed = FLAGS['periodic'])
-
     #----------------------------------------------
-    # STEP 6:collect results and display them
+    # STEP 6:collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
-
-    # results
+    #----------------------------------------------
+    # STEP 7:display results and display them
+    #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
         kv = {}
@@ -332,6 +325,12 @@ def simulation(filepath):
         sigma_fun = lattice.sigmas(steps = steps)
         # make plots of functionsa
         display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
+
+        # TODO need a function to filter/print lattice elements
+        if True:
+            for node in lattice.seq:
+                if node.type != "MRK": continue
+                DEBUG_ON(node.toString())
 
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))

@@ -75,6 +75,7 @@ def unnest_ITEMS(lattice,elements):
 
 def remove_duplicates(sectionIDs,sections):
     """Remove duplicate elementIDs in a section"""
+    #TODO don't need this funtion if lattice objet's type is used
     # results = namedtuple('InputParseResult',['SECTIONS','LATTICE','FLAGS','PARAMETERS','ELEMENTS'])
     # results = parse(PARAMS['in_data'])
     # sections = results.SECTIONS
