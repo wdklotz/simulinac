@@ -22,15 +22,26 @@ from math import sin,cos,tan,radians,degrees,sqrt
 from math import pi as PI
 from copy import copy
 import numpy as NP
+import pprint, inspect
 
-from setutil import PARAMS,DEB,I0,I1,tblprnt,arrprnt
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
+from setutil import PARAMS,I0,I1,tblprnt,arrprnt
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 
-DEBUG_TEST0    = DEB.get('OFF')
-DEBUG_TEST1    = DEB.get('OFF')
-DEBUG_SLICE    = DEB.get('OFF')
-DEBUG_TTF_G    = DEB.get('OFF')
+DEBUG_TEST0    = DEBUG_OFF
+DEBUG_TEST1    = DEBUG_OFF
+DEBUG_SLICE    = DEBUG_OFF
+DEBUG_TTF_G    = DEBUG_OFF
 
 twopi          = 2*PI
 
@@ -326,7 +337,7 @@ def test0():
     from bunch import Tpoint, Track
     
     print('-----------------------------------TEST 0----------------')
-    input_file='SF_WDK2g44.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
     EzPeak = 1.4
     SF_tab = SFdata(input_file,EzPeak)
     
@@ -364,7 +375,7 @@ def test1():
     from bunch import Tpoint, Track
     
     print('-----------------------------------TEST 1----------------')
-    input_file='SF_WDK2g44.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
     EzPeak = 1.4
     SF_tab = SFdata(input_file,EzPeak)
     

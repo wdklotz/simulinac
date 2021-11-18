@@ -20,13 +20,24 @@ This file is part of the SIMULINAC code
 from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
 from copy import copy,deepcopy
+import pprint, inspect
 
-from setutil import Proton, DEB, mxprnt, PARAMS, Ktw
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
+from setutil import Proton, mxprnt, PARAMS, Ktw
 
 DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
 
 # DEBUG MODULE
-DEBUG_MODULE = DEB.get('OFF')
+DEBUG_MODULE = DEBUG_OFF
 
 class Sigma(object):
     """ Utility class for handling the sigma-matrix """
@@ -201,6 +212,6 @@ def test1():
     DEBUG_TEST1('{{sigma_f}}_corrected minus {{sigma_f}}_uncorrected\n{}'.format(mxprnt((s3-s2).A)))
 # main ----------
 if __name__ == '__main__':
-    DEBUG_TEST1  = DEB.get('ON')
+    DEBUG_TEST1  = DEBUG_ON
     test0()    
     test1()

@@ -22,14 +22,24 @@ from math import sin,cos,tan,sqrt,pi
 from copy import copy
 import numpy as NP
 # import time
+import pprint, inspect
 
-from setutil import PARAMS,DEB,Ktp,MDIM
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
+from setutil import PARAMS,Ktp,MDIM
 from Ez0 import SFdata
 
-DEBUG_OFF   = DEB.get('OFF')
-DEBUG_SLICE = DEB.get('OFF')
-DEBUG_TEST0 = DEB.get('ON')
-DEBUG_TEST1 = DEB.get('ON')
+DEBUG_SLICE = DEBUG_OFF
+DEBUG_TEST0 = DEBUG_ON
+DEBUG_TEST1 = DEBUG_ON
 
 twopi          = 2*pi
 
@@ -378,7 +388,7 @@ def test0():
     from elements import RFG
     
     print('-----------------------------------TEST 0----------------')
-    input_file='SF_WDK2g44.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
     EzPeak = 1.4   # MV/m
     SF_tab = SFdata(input_file,EzPeak)
     
@@ -416,7 +426,7 @@ def test1():
     from elements import RFG
     
     print('-----------------------------------TEST 1----------------')
-    input_file='SF_WDK2g44.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
     EzPeak = 1.4
     SF_tab = SFdata(input_file,EzPeak)
     

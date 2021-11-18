@@ -28,12 +28,23 @@ import matplotlib.pyplot as plt
 import time
 from string import Template
 from math import sqrt, degrees, radians
+import pprint, inspect
+
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
 
 # from lattice_generator import factory
 from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
-from setutil import DEB, PARAMS, FLAGS, dictprnt, Ktp, waccept
+from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs
@@ -479,9 +490,9 @@ def test0(filepath):
 
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TRACK       = DEB.get('OFF')
-    DEBUG_SOLL_TRACK  = DEB.get('OFF')
-    DEBUG_TEST0       = DEB.get('ON')
+    DEBUG_TRACK       = DEBUG_OFF
+    DEBUG_SOLL_TRACK  = DEBUG_OFF
+    DEBUG_TEST0       = DEBUG_ON
 
     # test0('yml/trackIN.yml')
 

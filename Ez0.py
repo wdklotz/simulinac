@@ -22,18 +22,28 @@ import matplotlib.pyplot as plt
 import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
+import pprint, inspect
 
-from setutil import PARAMS,DEB,Proton
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
+from setutil import PARAMS,Proton
 
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  _Ez0_tab is list(Dpoint)
 Dpoint  = namedtuple('Dpoint',['z','R','Ez'])
 
-DEBUG_MODULE = DEB.get('OFF')
-DEBUG_TEST2  = DEB.get('ON')
-DEBUG_TEST3  = DEB.get('ON')
-DEBUG_OFF    = DEB.get('OFF')
+DEBUG_MODULE = DEBUG_OFF
+DEBUG_TEST2  = DEBUG_ON
+DEBUG_TEST3  = DEBUG_ON
 
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
@@ -578,7 +588,7 @@ def test5(input_file):
     sfdata.make_polyfit()
 
 if __name__ == '__main__':
-    input_file='SF_WDK2g44.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
     ax = pre_plt(input_file)
     test0(input_file)               # get raw data and do scaling
     # test1()                         # NG 

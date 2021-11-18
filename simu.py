@@ -44,14 +44,6 @@ import matplotlib
 matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
-
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
-from setutil import collect_data_for_summary, show_data_from_elements
-from lattice_generator import factory
-from PsMarkerAgent import ellipse_plot
-from tracker import track_soll
-from pargs import pargs
-import bucket_size
 import pprint, inspect
 
 def PRINT_PRETTY(obj):
@@ -63,6 +55,14 @@ def PASS(obj):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
+from setutil import collect_data_for_summary, show_data_from_elements
+from lattice_generator import factory
+from PsMarkerAgent import ellipse_plot
+from tracker import track_soll
+from pargs import pargs
+import bucket_size
 
 DEBUG_LINKS = False
 

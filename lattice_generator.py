@@ -21,14 +21,6 @@ import sys
 from math import radians
 import yaml
 import warnings
-
-import setutil as util
-import elements as ELM
-from lattice import Lattice
-from Ez0 import SFdata
-# import marker_actions as MRK
-from lattice_parser2 import parse
-import PsMarkerAgent as psmkr
 import pprint, inspect
 
 def PRINT_PRETTY(obj):
@@ -40,6 +32,14 @@ def PASS(obj):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+
+import setutil as util
+import elements as ELM
+from lattice import Lattice
+from Ez0 import SFdata
+# import marker_actions as MRK
+from lattice_parser2 import parse
+import PsMarkerAgent as psmkr
 
 def get_mandatory(attributes,key,item):
     try:
@@ -152,7 +152,7 @@ def instanciate_element(item):
             EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             if mapping == None:
                 mapping = 't3d'
-                # EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak) TODO ??
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname     = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
@@ -162,7 +162,7 @@ def instanciate_element(item):
                 instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=util.PARAMS[fname])
                 pass
             else:
-                # EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak) TODO ??
                 instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
             element = util.ELEMENTS[label]
             element['EzAvg']     = EzAvg
@@ -199,7 +199,7 @@ def instanciate_element(item):
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
                 pass
             else:
-                # EzAvg = EzPeakToAverage(EzPeak)
+                # EzAvg = EzPeakToAverage(EzPeak)  TODO ??
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
             element = util.ELEMENTS[label]
             element['EzAvg']     = EzAvg
@@ -243,6 +243,8 @@ def instanciate_element(item):
                 instance['sec'] = attributes['sec'] if 'sec' in attributes else '?' # TODO sec for all instances
                 DEBUG_OFF(instance.__dict__)
                 DEBUG_OFF(agent.__dict__)
+
+            # TODO !!
             # elif 'poincare' == action:
             #     prefix    = attributes['prefix']   if 'prefix'   in attributes else ''
             #     abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
@@ -251,6 +253,7 @@ def instanciate_element(item):
             #     instance['prefix']     = prefix
             #     instance['abszisse']   = abszisse
             #     instance['ordinate']   = ordinate
+
             else:
                 warnings.showwarning(
                         'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
@@ -319,7 +322,6 @@ def factory(input_file):
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
-        DEBUG_OFF(util.ELEMENTS)
         return elements
 
     def make_lattice(elementIDs):
@@ -336,6 +338,7 @@ def factory(input_file):
             if isinstance(instance,ELM._Node):
                 lattice.add_element(instance)
         return lattice   # the complete lattice
+        
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
@@ -377,7 +380,6 @@ def factory(input_file):
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)
     return lattice
-
 def test0(input_file):
     print('---------------------------------TEST0')
     wfl= []
