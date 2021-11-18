@@ -26,12 +26,20 @@ import setutil as util
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
-import marker_actions as MRK
+# import marker_actions as MRK
 from lattice_parser_2 import parse
 import PsMarkerAgent as psmkr
+import pprint, inspect
 
-DEBUG_ON  = util.DEB.get('ON')
-DEBUG_OFF = util.DEB.get('OFF')
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
 
 def get_mandatory(attributes,key,item):
     try:
@@ -231,11 +239,10 @@ def instanciate_element(item):
                 which = attributes['which'] if 'which' in attributes else 'transvers'
                 agent = psmkr.PsMarkerAgent(which_action=which)
                 instance = ELM.MRK(label=label,agent=agent)
-                agent.__dict__['parent'] = instance   #TODO use __dict__ to add attributes for _Node class
-                # TODO sec for all instances
-                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?'
+                agent.set_parent(instance)
+                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?' # TODO sec for all instances
                 DEBUG_OFF(instance.__dict__)
-                DEBUG_ON(agent.__dict__)
+                DEBUG_OFF(agent.__dict__)
             # elif 'poincare' == action:
             #     prefix    = attributes['prefix']   if 'prefix'   in attributes else ''
             #     abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
@@ -264,7 +271,7 @@ def instanciate_element(item):
 
 def factory_new(input_file):
     """ factory creates a lattice from input-file """
-    #--------
+
     def proces_flags(flags):
         """fills global FLAGS"""
         if 'accON' in flags:
@@ -283,9 +290,10 @@ def factory_new(input_file):
         if 'useaper'     in flags: util.FLAGS['useaper']  = flags['useaper']
         if 'bucket'      in flags: util.FLAGS['bucket']   = flags['bucket']
         if 'csTrak'      in flags: util.FLAGS['csTrak']   = flags['csTrak']
+        if 'marker'      in flags: util.FLAGS['marker']   = flags['marker']
         if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
         return flags
-    # --------
+
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
         if 'Tkin'             in parameters: util.PARAMS['injection_energy'] = parameters['Tkin']
@@ -307,7 +315,7 @@ def factory_new(input_file):
         if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
         if 'lattvers'         in parameters: util.PARAMS['lattice_version']  = parameters['lattvers']
         return parameters
-    #--------
+
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements

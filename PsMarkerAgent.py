@@ -1,6 +1,20 @@
 from math import degrees, sqrt, atan
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+import pprint, inspect
+
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
 from elements import MRK
-from setutil import Twiss, DEBUG_ON, DEBUG_OFF, PARAMS, Ktw
+from setutil import Twiss, PARAMS, Ktw
 
 class PsMarkerAgent(object):
     """ 
@@ -13,20 +27,30 @@ class PsMarkerAgent(object):
         self.position = position
         self.twiss_values = values
         self.which_action = which_action
+        self.parent = None
         self.my_actions=dict(transvers=self.action_transvers, no_plot=self.action_no_plot)  # dispatcher
+
+
+    # def __setitem__(self,k,v):  TODO for _Nodes?
+    #     self.__dict__[k]=v
+    # def __getitem__(self,k):
+    #     return self.__dict__[k]
+    
+    def set_parent(self,obj):
+        self.parent = obj
 
     def do_action(self):
         self.my_actions.get(self.which_action)()   # dispatch which_action
 
     def action_transvers(self):
         """ the default action: plot transvers ellipses """
-        ellipse_plot(None,on_injection=True)
+        node = self.parent
+        ellipse_plot(node,on_injection=False,scale=0.5)
 
     def action_no_plot(self):
         """ action without plotting """
-        DEBUG_ON(self.__dict__)
 
-def ellipse_plot(node,on_injection=False):   # TODO
+def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """
         gamma = (1.+alfa**2)/beta
@@ -47,7 +71,9 @@ def ellipse_plot(node,on_injection=False):   # TODO
         by = PARAMS['betay_i']
 
     else:
-        twiss,s = node['twiss']   # TODO
+        twiss = node['twiss']   # TODO
+        DEBUG_OFF(node.__dict__)
+        s = node.position[1]
 
         ax = twiss[Ktw.ax]
         bx = twiss[Ktw.bx]
@@ -76,10 +102,9 @@ def ellipse_plot(node,on_injection=False):   # TODO
     y1 = sqrt(PARAMS['emitx_i']*gammax)
     y2 = sqrt(PARAMS['emity_i']*gammay)
     ymax = max(y1,y2)
-    # scale = 0.6
-    scale = 2.0
     plt.xlim(-xmax*scale, xmax*scale)
     plt.ylim(-ymax*scale, ymax*scale)
+    plt.show()
 
 def test0():
     print('----------------------------------------- test0')
@@ -95,7 +120,5 @@ def test1():
     markr.do_actions()
     plt.show()
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    from matplotlib.patches import Ellipse
     test0()
     test1()

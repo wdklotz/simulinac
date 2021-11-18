@@ -36,6 +36,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
+    marker:       True            # {False} activate Markers in the lattice
     # verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT definitions
@@ -199,10 +200,10 @@ CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
-#   S-LE:      [20,[CELL-L]]
-  S-LE:      [1,[CELL-L]]
-#   S-HE:      [112,[CELL-H]]
-  S-HE:      [1,[CELL-H]]
+  S-LE:      [20,[CELL-L]]
+#   S-LE:      [1,[CELL-L]]
+  S-HE:      [112,[CELL-H]]
+#   S-HE:      [1,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LATTICE

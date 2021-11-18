@@ -21,9 +21,22 @@ import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
 from copy import copy, deepcopy
 import numpy as NP
+import pprint, inspect
 
-from setutil import wille, PARAMS, FLAGS, dictprnt, objprnt, Proton, Electron
-from setutil import DEB, DEBUG_ON, DEBUG_OFF, WConverter
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+DEBUG_MAP    = False
+DEBUG_PYO_G  = False
+
+from setutil import wille, PARAMS, FLAGS
+from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
 from Ez0     import SFdata
@@ -31,15 +44,12 @@ from TTFG    import _TTF_G
 from DynacG  import _DYN_G
 from OXAL    import _OXAL
 
-DEBUG_MAP    = False
-DEBUG_PYO_G  = False
-
 twopi = 2.*pi     # used about everywhere
 
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
-class DictObject(object):
+class DictObject(object):      #TODO use __dict__ to add attributes for _Node class
     """
     Class. An object that has key:value parameters
     """
@@ -448,13 +458,13 @@ class RD(SD):
         self.matrix = rd.matrix
 
     def make_slices(self, anz=PARAMS['nbslices']):
-        DEB.get('OFF')('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
+        DEBUG_OFF('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
         shortSD = self.shorten(self.length/anz)
         slices = [self.wd]          # wedge @ entrance
         for i in range(anz):
             slices.append(shortSD)
         slices.append(self.wd)      # wedge @ exit
-        DEB.get('OFF')('slices {}'.format(slices))
+        DEBUG_OFF('slices {}'.format(slices))
         return slices
 
 class _wedge(I):
@@ -713,7 +723,7 @@ class RFC(I):
             # in case off ... (really needed ?)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
             self._particlef = kick.particlef
-            DEB.get('OFF')("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
+            DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # This is no DKD-model. 
@@ -756,7 +766,7 @@ class RFC(I):
         for node in iter(self.triplet):
             f_track = node.map(track)
             track = f_track
-        DEB.get('OFF')('rfc-map {}'.format(f_track))
+        DEBUG_OFF('rfc-map {}'.format(f_track))
         return f_track
 
     def soll_map(self,i_track):
@@ -766,7 +776,7 @@ class RFC(I):
             f_track = node.soll_map(track)
             track = f_track
         f_track[SKOO] += sm
-        DEB.get('OFF')('rfc-soll {}'.format(f_track))
+        DEBUG_OFF('rfc-soll {}'.format(f_track))
         return f_track
 
     def make_slices(self, anz = PARAMS['nbslices']):
@@ -873,7 +883,7 @@ class _PYO_G(object):
         phis      = self.phis
         
 
-        DEB.get('OFF')('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
+        DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
 
         DW         = deltaW
         WOUT       = WIN + DW
@@ -960,7 +970,7 @@ class _PYO_G(object):
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
 
-        DEB.get('OFF')('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+        DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
         particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
         betaf     = particlef.beta
@@ -1055,7 +1065,7 @@ class _T3D_G(object):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
         f_track = NP.dot(self.matrix,f_track)
-        DEB.get('OFF')('t3d-map {}'.format(f_track))
+        DEBUG_OFF('t3d-map {}'.format(f_track))
         return f_track
 
     def soll_map(self, i_track):
@@ -1063,7 +1073,7 @@ class _T3D_G(object):
         f_track = copy(i_track)
         f_track[EKOO] += self.deltaW
         f_track[SKOO] = sm
-        DEB.get('OFF')('t3d-soll {}'.format(f_track))
+        DEBUG_OFF('t3d-soll {}'.format(f_track))
         return f_track
 
 class _thin(_Node):
@@ -1078,7 +1088,7 @@ class _thin(_Node):
         """ 
         Stepping routine through the triplet
         """
-        DEB.get('OFF')('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
+        DEBUG_OFF('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
         anz1 = int(ceil(anz/2))
         di   = self.triplet[0]
         df   = self.triplet[2]
@@ -1091,7 +1101,7 @@ class _thin(_Node):
         slices.append(kik)      # the Kick
         for i in range(anz1):
             slices.append(d2)
-        DEB.get('OFF')('slices {}'.format(slices))
+        DEBUG_OFF('slices {}'.format(slices))
         return slices
 
 class QFth(_thin):
@@ -1316,11 +1326,11 @@ class SIXD(D):
 
         # body map
         f_track     = t3d2six(i_track)
-        DEB.get('OFF')('t3d-->six\n{}'.format(f_track))
+        DEBUG_OFF('t3d-->six\n{}'.format(f_track))
         f_track     = rps_map(f_track, self.length)
-        DEB.get('OFF')('SIXD.map\n{}'.format(f_track))
+        DEBUG_OFF('SIXD.map\n{}'.format(f_track))
         f_track     = six2t3d(f_track)
-        DEB.get('OFF')('six-->t3d\n{}'.format(f_track))
+        DEBUG_OFF('six-->t3d\n{}'.format(f_track))
         # nicht vergessen! adjust total lattice length
         f_track[SKOO] += self.length
         return f_track
@@ -1364,7 +1374,6 @@ def test0():
     print(b.string())
     print((a*b).string())
     print((b*a).string())
-
 def test1():
     print('--------------------------------Test1---')
     print('trivial test 1 ...')
@@ -1372,7 +1381,6 @@ def test1():
     i2 = i1*i1
     print(i1.string())
     print(i2.string())
-
 def test2():
     print('--------------------------------Test2---')
     print('trivial test 2 ...')
@@ -1387,7 +1395,6 @@ def test2():
     print((d1*d2).string())
     d3 = D(length=90., label = '')
     print((d2*d3).string())
-
 def test3():
     print('--------------------------------Test3---')
     print('test product of _Node class ...')
@@ -1402,7 +1409,6 @@ def test3():
     qd = QD(k0 = k, length = 1.2)
     print("QD-->", qd.string())
     print("QF*QD-->", (qf*qd).string())
-
 def test4():
     print('--------------------------------Test4---')
     def doit(elm, anz):
@@ -1449,7 +1455,6 @@ def test4():
     doit(qfthx, anz)
     doit(qdthx, anz)
     doit(rfc, anz)
-
 def test5():
     print('--------------------------------Test5---')
     print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
@@ -1477,7 +1482,6 @@ def test5():
     mz = mz *md
     mz = mz *mqf
     print(mz.string())
-
 def test6():
     print('--------------------------------Test6---')
     print('test step_through elements ...')
@@ -1511,7 +1515,6 @@ def test6():
             m_end = m_end*mi
         print(m_end, '\n'+m_end.string())
         print(m_anfang, '\n'+m_anfang.string())
-
 def test7():
     print('--------------------------------Test7---')
     print('test Rechteckmagnet ...')
@@ -1521,7 +1524,6 @@ def test7():
     mr  = RD(radius = rhob, length = lb, label = 'RD')
     print(mb.string())
     print(mr.string())
-
 def test8():
     from lattice import Lattice
     from tracker import track_soll
@@ -1605,7 +1607,6 @@ def test8():
     print(solltrack)
     print('CAV.particle(i)\n'+cav.particle.string())
     print('CAV.particle(f)\n'+cav.particlef.string())
-
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling ...')
@@ -1658,7 +1659,6 @@ def test9():
         print('(tki, kq) ({},{:.3f}) --> (tkf, k_scaled) ({},{:.3f})'.format(tki, kq, tkf, k_scaled))
         print(cavity.adjust_energy(tkf).string())
         print(cavity.particle.string())
-
 def test10():
     print('--------------------------------Test10---')
     print('Particle class test ...')
@@ -1674,7 +1674,6 @@ def test10():
     print(Electron(50.).string())
     print(Electron(200.).string())
     print(Electron(1.e3).string())
-
 def test11():
     print('--------------------------------Test11---')
     print('thin lense tests ...')
@@ -1698,7 +1697,6 @@ def test11():
     print('------ RF cavity test & step through --------')
     for elm in rf.make_slices():
         print(elm.string())
-
 def test12():
     print('--------------------------------Test12---')
     print('test12 adjust_energy change ...')
@@ -1710,7 +1708,6 @@ def test12():
     qd.adjust_energy(tkin = 200.);    print('id >>', qd);    print(qd.string())
     rfc = RFC(length = 1.23);         print('id >>', rfc);   print(rfc.string())
     rfc.adjust_energy(tkin = 200.);   print('id >>', rfc);   print(rfc.string())
-
 def test13():
     print('--------------------------------Test13---')
     print('test SIXD node tracking ...')
@@ -1725,7 +1722,6 @@ def test13():
     f_track = sixd.map(i_track)
     print(i_track)
     print(f_track)
-
 def test14():
     print('--------------------------------Test14---')
     print('test MRO for QF, QD ...')

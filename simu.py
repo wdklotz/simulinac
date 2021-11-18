@@ -45,19 +45,26 @@ matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
 
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,DEB,waccept
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory_new as factory
 from PsMarkerAgent import ellipse_plot
-
 from tracker import track_soll
 from pargs import pargs
-
 import bucket_size
+import pprint, inspect
 
-DEBUG_ON       = DEB.get('ON')
-DEBUG_OFF      = DEB.get('OFF')
-DEBUG_LINKGAGE  = False
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+
+DEBUG_LINKS = False
 
 def bucket(*args):
     bucket_size.bucket()
@@ -276,12 +283,12 @@ def simulation(filepath):
     #----------------------------------------------
     lattice = factory(filepath)
     DEB.get('OFF')([x.label for x in lattice.seq])
-    if DEBUG_LINKGAGE: lattice.show_linkage()
+    if DEBUG_LINKS: lattice.show_linkage()
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
     soll_track = track_soll(lattice)
-    if DEBUG_LINKGAGE: lattice.show_linkage()
+    if DEBUG_LINKS: lattice.show_linkage()
     #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
     print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
     #----------------------------------------------
@@ -325,12 +332,13 @@ def simulation(filepath):
         sigma_fun = lattice.sigmas(steps = steps)
         # make plots of functionsa
         display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
-
-        # TODO need a function to filter/print lattice elements
-        if True:
+        # any MARKER with actions?
+        if FLAGS['marker']:
+            # TODO need a function to filter/print lattice elements
             for node in lattice.seq:
                 if node.type != "MRK": continue
-                DEBUG_ON(node.toString())
+                DEBUG_OFF(node.toString())
+                node.do_actions()
 
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))

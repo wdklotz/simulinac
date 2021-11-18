@@ -23,15 +23,25 @@ from numpy import linalg as LA
 import numpy as NP
 from copy import copy
 import warnings
+import pprint, inspect
+
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
+DEBUG_MODULE = DEB.get('OFF')
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,DEB,sigmas, objprnt, Ktw, Ktp
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions
 import elements as ELM
-import TTFG as TTF
+# import TTFG as TTF
 from sigma import Sigma
-
-DEBUG_MODULE = DEB.get('OFF')
 
 # Lattice
 class Lattice(object):

@@ -29,23 +29,22 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import warnings
 import time
-import pprint
 from collections import namedtuple
+# import yaml
+import pprint, inspect
 
-import yaml
-
-# MDIM: dimension of matrices
-MDIM = 10
-
-# new DEBUG facility (replaces old DEBUG_ON,DEBUG_OFF and DEBUG)
 def PRINT_PRETTY(obj):
-    print('==============>  '+__file__)
+    file = inspect.stack()[0].filename
+    print('==============>  '+file)
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+
+# MDIM: dimension of matrices
+MDIM = 10
 
 # Logger
 ch        = logging.StreamHandler()     # console handler
@@ -68,6 +67,7 @@ FLAGS  = dict(
         useaper              = False,            # use aperture check for quads and rf-gaps
         bucket               = False,            # plot bucket
         csTrak               = True,             # plot CS trajectories
+        marker               = False,            # activate marker in lattice
         pspace               = False             # plot CS twiss ellipses at entrance
         )
 PARAMS = dict(
