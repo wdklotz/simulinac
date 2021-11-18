@@ -27,6 +27,7 @@ This file is part of the SIMULINAC code
 #TODO: rework verbose printing levels
 #TODO: C.K.Allen's matrices which are XAL as well?
 #TODO: slices as sub-lattice attribute to thick element
+#TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 
 import sys
 import os
@@ -252,7 +253,6 @@ def display1(*args):
     splot414.plot(vis_abszisse,viseoz,label='',color='black')
     splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
-# TODO should become part of marker actions
 def display2(*args):
     ellipse_plot(None,on_injection=True)
 #                            |----------------------- |

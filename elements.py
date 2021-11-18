@@ -68,7 +68,7 @@ class _Node(object):
         self.prev      = prev               # left link
         self['slice_min'] = 0.001           # default - minimal slice length
         self['viseo']     = 0               # default - invisible
-
+        # a class is a dictionary
         self.type = self.__class__.__name__ # self's node type
         self._params = self.__dict__        # make legacy code compatible
 
@@ -583,7 +583,6 @@ class RFG(I):
         """ set switch to gap model """
         if self.mapping == 't3d':
             # Trace3D-matrix and use linear gap-model
-            pass
             self.gap_model = t3d_g
         elif self.mapping == 'simple' or self.mapping == 'base':
             # PyOrbit gap-models w/o SF-data
@@ -647,7 +646,7 @@ class RFG(I):
     @property
     def particlef(self):
         """ delegate to gap-model """
-        #todo: better don't use particlef - only deltaW
+        #TODO: better don't use particlef - only deltaW
         return self.gap_model.particlef
 
     def map(self, i_track):

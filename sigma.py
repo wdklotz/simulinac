@@ -102,7 +102,7 @@ class Sigma(object):
         sigma.matrix = r6 @ sigma.matrix @ r6.T # NP matrix multiplication
         return sigma
 
-#todo: check eg_corr again - still with global delta-phi
+    #TODO: check eg_corr again - still with global delta-phi
     def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         """
         Apply emmittance growth correction after passage through RF gap 

@@ -41,7 +41,7 @@ DEBUG_SLICE = DEBUG_OFF
 DEBUG_TEST0 = DEBUG_ON
 DEBUG_TEST1 = DEBUG_ON
 
-twopi          = 2*pi
+twopi = 2*pi
 
 class _OXAL(object):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
@@ -62,7 +62,7 @@ class _OXAL(object):
                 slices.append(slice)
             return slices
 
-        #todo: need adjustment of phis to middle of gap ??
+        # TODO: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
             """adjust SOLL-energy dependence of slices"""
             # TmStamp.stamp('config...')

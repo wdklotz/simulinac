@@ -240,7 +240,8 @@ def instanciate_element(item):
                 agent = psmkr.PsMarkerAgent(which_action=which)
                 instance = ELM.MRK(label=label,agent=agent)
                 agent.set_parent(instance)
-                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?' # TODO sec for all instances
+                # TODO sec for all instances: not done yet?
+                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?'
                 DEBUG_OFF(instance.__dict__)
                 DEBUG_OFF(agent.__dict__)
 
