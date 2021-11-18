@@ -28,7 +28,7 @@ This file is part of the SIMULINAC code
 #TODO: C.K.Allen's matrices which are XAL as well?
 #TODO: slices as sub-lattice attribute to thick element
 #TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-
+#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
 import sys
 import os
 # import subprocess
@@ -69,7 +69,6 @@ DEBUG_LINKS = False
 
 def bucket(*args):
     bucket_size.bucket()
-
 def display0(*args):
     """
     C&S-Tracks w/o longitudinal motion
@@ -142,7 +141,6 @@ def display0(*args):
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
-
 def display1(*args):
     """
     C&S-Tracks with longitudinal motion
@@ -252,7 +250,6 @@ def display1(*args):
     splot414 = ax_l
     splot414.plot(vis_abszisse,viseoz,label='',color='black')
     splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
-
 def display2(*args):
     ellipse_plot(None,on_injection=True)
 #                            |----------------------- |
