@@ -170,8 +170,8 @@ def parse(in_data):
     ParserResult.PARAMETERS     = parameters
     ParserResult.ELEMENTS       = elements
     ParserResult.LATTICE        = lattice
-    ParserResult.LAT_ELMIDs     = lat_elmIDs
-    ParserResult.ELMIDs         = elmIDs
+    ParserResult.LAT_ELMIDs     = lat_elmIDs   
+    ParserResult.ELMIDs         = elmIDs   #TODO not neede anymore?
     return ParserResult
 
 def test0(input_file):

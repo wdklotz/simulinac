@@ -49,33 +49,14 @@ twopi = 2.*pi     # used about everywhere
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
-class DictObject(object):      #TODO use __dict__ to add attributes for _Node class
-    """
-    Class. An object that has key:value parameters
-    """
-    def __init__(self):
-        self._params = {}
-        
-    def __getitem__(self,k):
-        return self._params[k]
-        
-    def __setitem__(self,k,v):
-        self._params[k] = v
-    
-    def toString(self):
-        ret = repr(self)
-        for k,v in self.__dict__.items():
-            ret+= '\n{}:{}'.format(k,v)
-        return ret
-
 #------- The mother of all lattice elements (a.k.a. matrices)
-class _Node(DictObject, object):
+class _Node(object):
     """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
     def __init__(self, label='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
-        DictObject.__init__(self)
+        # DictObject.__init__(self)
         self.matrix    = NP.zeros([MDIM,MDIM])   # MDIMxMDIM zero matrix used here
         # !!!IMPORTANT!!! local copy of the particle object
         self.particle  = copy(particle)
@@ -87,8 +68,22 @@ class _Node(DictObject, object):
         self.prev      = prev               # left link
         self['slice_min'] = 0.001           # default - minimal slice length
         self['viseo']     = 0               # default - invisible
-        self.type = self.__class__.__name__ # node type
 
+        self.type = self.__class__.__name__ # self's node type
+        self._params = self.__dict__        # make legacy code compatible
+
+    def __getitem__(self,k):
+        return self.__dict__[k]
+        
+    def __setitem__(self,k,v):
+        self.__dict__[k] = v
+    
+    def toString(self):
+        ret = repr(self)
+        for k,v in self.__dict__.items():
+            ret+= '\n{}:{}'.format(k,v)
+        return ret
+    
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture= self.aperture, next=self.next, prev=self.prev)
