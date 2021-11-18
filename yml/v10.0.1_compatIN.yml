@@ -202,7 +202,7 @@ SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
   S-LE:      [20,[CELL-L]]
 #   S-LE:      [1,[CELL-L]]
-  S-HE:      [56,[CELL-H]]
+  S-HE:      [28,[CELL-H]]
 #   S-HE:      [1,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
@@ -211,5 +211,5 @@ LATTICE:    # group SECTIONs into a LATTICE
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
-  LINE:   [1,[S-LE, PsMkr, S-HE, PsMkr, S-HE]]
+  LINE:   [1,[S-LE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE]]
   

@@ -277,7 +277,7 @@ def simulation(filepath):
     #TODO: what about markers plots ?
         # lattice.marker_actions()
         # next not needed for jupyter
-        plt.show()
+        # plt.show()
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #----------------------------------------------
@@ -339,6 +339,8 @@ def simulation(filepath):
                 if node.type != "MRK": continue
                 DEBUG_OFF(node.toString())
                 node.do_actions()
+        """ show all figures - (must be the only one!) """
+        plt.show()
 
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))

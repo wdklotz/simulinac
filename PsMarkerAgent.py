@@ -50,7 +50,7 @@ class PsMarkerAgent(object):
     def action_no_plot(self):
         """ action without plotting """
 
-def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
+def ellipse_plot(node,on_injection=False,scale=1.):   
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """
         gamma = (1.+alfa**2)/beta
@@ -63,6 +63,7 @@ def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
 #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
 #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
     """ display x- and y-phase-space ellipses """
+    # TODO for tracker.py:  Plot a confidence ellipse of a two-dimensional dataset ==> https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
     if on_injection:
         s = 0.0
         ax = PARAMS['alfax_i']
@@ -71,9 +72,8 @@ def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
         by = PARAMS['betay_i']
 
     else:
-        twiss = node['twiss']   # TODO
-        DEBUG_OFF(node.__dict__)
-        s = node.position[1]
+        twiss = node['twiss']   # alpha, beta, gamma
+        s = node.position[1]    # position
 
         ax = twiss[Ktw.ax]
         bx = twiss[Ktw.bx]
@@ -81,17 +81,20 @@ def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
         by = twiss[Ktw.by]
 
     org = (0,0)
-    ellix = convert(org,ax,bx,PARAMS['emitx_i'])
+    ellix = convert(org,ax,bx,PARAMS['emitx_i'])  # emittance
     elliy = convert(org,ay,by,PARAMS['emity_i'])
 
-    ellipses = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]
+    ellipses = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]   # classicla Snyder&Courant ellipse
 
     fig, ax = plt.subplots()
     fig.suptitle('phase-space {{[m],[rad]}} @ s={:6.2f}[m]'.format(s))
     fig.legend(ellipses,("{x,x'}","{y,y'}"),loc=1)
-
+    fig.suptitle('phase-space {{[m],[rad]}} @ s={:6.2f}[m]'.format(s))
+    fig.legend(ellipses,("{x,x'}","{y,y'}"),loc=1)
+    
     for e in ellipses:
-        ax.add_artist(e)
+        # ax.add_artist(e)
+        ax.add_patch(e)
         e.set_clip_box(ax.bbox)
 
     x1 = sqrt(PARAMS['emitx_i']*PARAMS['betax_i'])
@@ -104,7 +107,8 @@ def ellipse_plot(node,on_injection=False,scale=1.):   # TODO
     ymax = max(y1,y2)
     plt.xlim(-xmax*scale, xmax*scale)
     plt.ylim(-ymax*scale, ymax*scale)
-    plt.show()
+    # plt.show()    # do not show now! will be done by simu.py
+    return
 
 def test0():
     print('----------------------------------------- test0')
