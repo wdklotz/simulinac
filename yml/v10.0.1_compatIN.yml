@@ -211,5 +211,5 @@ LATTICE:    # group SECTIONs into a LATTICE
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
-  LINE:   [1,[S-LE, PsMkr, S-LE]]
+  LINE:   [1,[S-LE, PsMkr, S-HE]]
   
