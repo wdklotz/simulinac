@@ -27,7 +27,7 @@ import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
 # import marker_actions as MRK
-from lattice_parser_2 import parse
+from lattice_parser2 import parse
 import PsMarkerAgent as psmkr
 import pprint, inspect
 
@@ -269,7 +269,7 @@ def instanciate_element(item):
             sys.exit(1)
     return instance
 
-def factory_new(input_file):
+def factory(input_file):
     """ factory creates a lattice from input-file """
 
     def proces_flags(flags):

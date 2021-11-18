@@ -1,14 +1,17 @@
 import sys
 import yaml
 from collections import namedtuple
-import pprint
+import pprint, inspect
 
 def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
-DEBUG_ON  = PRINT_PRETTY
-DEBUG_OFF = PASS
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
 
 HR = '============================================================================================='
 

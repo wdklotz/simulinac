@@ -30,7 +30,7 @@ from string import Template
 from math import sqrt, degrees, radians
 
 # from lattice_generator import factory
-from lattice_generator import factory_new as factory
+from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
 from setutil import DEB, PARAMS, FLAGS, dictprnt, Ktp, waccept

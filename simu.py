@@ -47,7 +47,7 @@ import matplotlib.pyplot as plt
 
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
-from lattice_generator import factory_new as factory
+from lattice_generator import factory
 from PsMarkerAgent import ellipse_plot
 from tracker import track_soll
 from pargs import pargs
