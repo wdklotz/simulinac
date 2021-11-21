@@ -46,7 +46,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE." />
 <link id="faviconLink" rel="shortcut icon" href="favicon.ico">
-<title>SIMULINAC User_Manual — v9.0.2     Author: W.D.Kloz</title>
+<title>SIMULINAC User_Manual — Author: W.D.Kloz</title>
 <!--~~ This is a Tiddlywiki file. The points of interest in the file are marked with this pattern ~~--><!--~~ Raw markup ~~-->
 
 
@@ -151,6 +151,8 @@ Error message and password prompt
 
 <li>$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/close-others</li>
 
+<li>$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/delete</li>
+
 <li>$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/fold</li>
 
 <li>$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/fold-bar</li>
@@ -175,13 +177,29 @@ Error message and password prompt
 
 <li>$:/SiteTitle</li>
 
+<li>$:/state/folded/$:/TagManager</li>
+
+<li>$:/state/folded/Appendix</li>
+
+<li>$:/state/folded/Appendix A</li>
+
+<li>$:/state/folded/Appendix B</li>
+
+<li>$:/state/folded/Bibliography</li>
+
+<li>$:/state/folded/Cells</li>
+
 <li>$:/state/folded/Draft of 'Elements' by wdklotz</li>
 
 <li>$:/state/folded/Elements</li>
 
+<li>$:/state/folded/Flags</li>
+
 <li>$:/state/folded/Getting Started</li>
 
 <li>$:/state/folded/Input File Structure</li>
+
+<li>$:/state/folded/Introduction</li>
 
 <li>$:/state/folded/Lattice</li>
 
@@ -189,19 +207,33 @@ Error message and password prompt
 
 <li>$:/state/folded/Parameters</li>
 
+<li>$:/state/folded/Preparing Input and Start</li>
+
+<li>$:/state/folded/Preparing Input with m4 Macro Processor</li>
+
 <li>$:/state/folded/Sections</li>
 
 <li>$:/state/folded/Segments</li>
 
 <li>$:/state/folded/simuIN.yml</li>
 
+<li>$:/state/folded/Special Input Parameters</li>
+
+<li>$:/state/folded/User Manual for simu.py/tracker.py</li>
+
 <li>$:/state/sidebar</li>
 
+<li>$:/state/tab--1963855381</li>
+
 <li>$:/state/tab-1163638994</li>
+
+<li>$:/state/tab-1749438307</li>
 
 <li>$:/state/tab/moresidebar-1850697562</li>
 
 <li>$:/state/tab/sidebar--595412856</li>
+
+<li>$:/state/tag-manager/getting started</li>
 
 <li>$:/status/IsAnonymous</li>
 
@@ -214,6 +246,8 @@ Error message and password prompt
 <li>$:/StoryList</li>
 
 <li>$:/temp/info-plugin</li>
+
+<li>$:/temp/search</li>
 
 <li>$:/themes/tiddlywiki/snowwhite</li>
 
@@ -235,9 +269,7 @@ Error message and password prompt
 
 <li>Elements</li>
 
-<li>Getting Started</li>
-
-<li>Input File Structure</li>
+<li>Flags</li>
 
 <li>Introduction</li>
 
@@ -260,6 +292,8 @@ Error message and password prompt
 <li>simuIN.yml</li>
 
 <li>Special Input Parameters</li>
+
+<li>User Manual for simu.py/tracker.py</li>
 
 </ul>
 </p>
@@ -299,6 +333,9 @@ Error message and password prompt
 </div>
 <div bag="default" created="20190112133733778" creator="wdklotz" modified="20190112133734848" modifier="wdklotz" revision="0" title="$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/close-others" type="text/vnd.tiddlywiki">
 <pre>show</pre>
+</div>
+<div created="20211121162425449" creator="wdklotz" modified="20211121162426981" modifier="wdklotz" title="$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/delete">
+<pre>hide</pre>
 </div>
 <div bag="default" created="20190112082656789" modified="20190112110933476" revision="0" title="$:/config/ViewToolbarButtons/Visibility/$:/core/ui/Buttons/fold" type="text/vnd.tiddlywiki">
 <pre>show</pre>
@@ -9191,8 +9228,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div bag="default" created="20190112084702954" creator="wdklotz" modified="20190112132046525" modifier="wdklotz" revision="0" title="$:/DefaultTiddlers" type="text/vnd.tiddlywiki">
-<pre>[[Getting Started]]
+<div bag="default" created="20190112084702954" creator="wdklotz" modified="20211121152806889" modifier="wdklotz" revision="0" title="$:/DefaultTiddlers" type="text/vnd.tiddlywiki">
+<pre>[[User Manual for simu.py/tracker.py]]
 </pre>
 </div>
 <div bag="default" revision="0" title="$:/isEncrypted">
@@ -9267,16 +9304,37 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div bag="default" created="20190112082203213" creator="wdklotz" modified="20211109123214723" modifier="wdklotz" revision="0" title="$:/SiteSubtitle" type="text/vnd.tiddlywiki">
-<pre>v9.0.2     Author: W.D.Kloz</pre>
+<div bag="default" created="20190112082203213" creator="wdklotz" modified="20211121152217142" modifier="wdklotz" revision="0" title="$:/SiteSubtitle" type="text/vnd.tiddlywiki">
+<pre>Author: W.D.Kloz</pre>
 </div>
 <div bag="default" created="20190112082125324" creator="wdklotz" modified="20190112111125042" modifier="wdklotz" revision="0" title="$:/SiteTitle" type="text/vnd.tiddlywiki">
 <pre>SIMULINAC User_Manual</pre>
 </div>
+<div created="20211121163243186" creator="wdklotz" modified="20211121163327155" modifier="wdklotz" title="$:/state/folded/$:/TagManager">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121164131204" modifier="wdklotz" title="$:/state/folded/Appendix">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121164334859" modifier="wdklotz" title="$:/state/folded/Appendix A">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121164410996" modifier="wdklotz" title="$:/state/folded/Appendix B">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121164146290" modifier="wdklotz" title="$:/state/folded/Bibliography">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121164047102" modifier="wdklotz" title="$:/state/folded/Cells">
+<pre>show</pre>
+</div>
 <div created="20211016212732740" creator="wdklotz" modified="20211016212744394" modifier="wdklotz" title="$:/state/folded/Draft of 'Elements' by wdklotz">
 <pre>hide</pre>
 </div>
-<div created="20211016163520340" creator="wdklotz" modified="20211019070246077" modifier="wdklotz" title="$:/state/folded/Elements">
+<div created="20211016163520340" creator="wdklotz" modified="20211121164001056" modifier="wdklotz" title="$:/state/folded/Elements">
+<pre>show</pre>
+</div>
+<div created="20211121163011068" creator="wdklotz" modified="20211121163931639" modifier="wdklotz" title="$:/state/folded/Flags">
 <pre>show</pre>
 </div>
 <div created="20211016131750735" creator="wdklotz" modified="20211109215712039" modifier="wdklotz" title="$:/state/folded/Getting Started">
@@ -9285,35 +9343,59 @@ Error message and password prompt
 <div created="20211016155549903" creator="wdklotz" modified="20211019070021590" modifier="wdklotz" title="$:/state/folded/Input File Structure">
 <pre>show</pre>
 </div>
-<div bag="default" created="20190113160244618" creator="wdklotz" modified="20190113210818789" modifier="wdklotz" revision="2" title="$:/state/folded/Lattice">
+<div created="20211121162326108" creator="wdklotz" modified="20211121163841985" modifier="wdklotz" title="$:/state/folded/Introduction">
 <pre>show</pre>
 </div>
-<div created="20211016214241188" creator="wdklotz" modified="20211016214251791" modifier="wdklotz" title="$:/state/folded/Nodes">
+<div bag="default" created="20190113160244618" creator="wdklotz" modified="20211121164119619" modifier="wdklotz" revision="2" title="$:/state/folded/Lattice">
 <pre>show</pre>
 </div>
-<div created="20211016212732740" creator="wdklotz" modified="20211019073113996" modifier="wdklotz" title="$:/state/folded/Parameters">
+<div created="20211016214241188" creator="wdklotz" modified="20211121164015210" modifier="wdklotz" title="$:/state/folded/Nodes">
 <pre>show</pre>
 </div>
-<div created="20211016212732740" creator="wdklotz" modified="20211019070150214" modifier="wdklotz" title="$:/state/folded/Sections">
+<div created="20211016212732740" creator="wdklotz" modified="20211121163946338" modifier="wdklotz" title="$:/state/folded/Parameters">
 <pre>show</pre>
 </div>
-<div bag="default" created="20190113160238161" creator="wdklotz" modified="20211019071730536" modifier="wdklotz" revision="2" title="$:/state/folded/Segments">
+<div created="20211121163011067" creator="wdklotz" modified="20211121163909141" modifier="wdklotz" title="$:/state/folded/Preparing Input and Start">
 <pre>show</pre>
 </div>
-<div bag="default" created="20190113160614014" creator="wdklotz" modified="20190113160907039" modifier="wdklotz" revision="2" title="$:/state/folded/simuIN.yml">
+<div created="20211121163011067" creator="wdklotz" modified="20211121163011067" modifier="wdklotz" title="$:/state/folded/Preparing Input with m4 Macro Processor">
+<pre>hide</pre>
+</div>
+<div created="20211016212732740" creator="wdklotz" modified="20211121164103174" modifier="wdklotz" title="$:/state/folded/Sections">
+<pre>show</pre>
+</div>
+<div bag="default" created="20190113160238161" creator="wdklotz" modified="20211121164033444" modifier="wdklotz" revision="2" title="$:/state/folded/Segments">
+<pre>show</pre>
+</div>
+<div bag="default" created="20190113160614014" creator="wdklotz" modified="20211121164314450" modifier="wdklotz" revision="2" title="$:/state/folded/simuIN.yml">
+<pre>show</pre>
+</div>
+<div created="20211121163011067" creator="wdklotz" modified="20211121163011067" modifier="wdklotz" title="$:/state/folded/Special Input Parameters">
+<pre>hide</pre>
+</div>
+<div created="20211121162326108" creator="wdklotz" modified="20211121163707581" modifier="wdklotz" title="$:/state/folded/User Manual for simu.py/tracker.py">
 <pre>show</pre>
 </div>
 <div created="20211016124558933" creator="wdklotz" modified="20211016124600247" modifier="wdklotz" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
+<div created="20211121162353615" creator="wdklotz" modified="20211121162527932" modifier="wdklotz" title="$:/state/tab--1963855381">
+<pre>$:/themes/tiddlywiki/vanilla/themetweaks</pre>
+</div>
 <div bag="default" created="20190113213812673" creator="wdklotz" modified="20190113213818084" modifier="wdklotz" revision="2" title="$:/state/tab-1163638994">
 <pre>$:/core/ui/MoreSideBar/Plugins/Theme</pre>
 </div>
-<div bag="default" created="20190113213545479" creator="wdklotz" modified="20211019141153152" modifier="wdklotz" revision="11" title="$:/state/tab/moresidebar-1850697562">
-<pre>$:/core/ui/MoreSideBar/Plugins</pre>
+<div created="20211121162349263" creator="wdklotz" modified="20211121163358152" modifier="wdklotz" title="$:/state/tab-1749438307">
+<pre>$:/core/ui/ControlPanel/Settings</pre>
 </div>
-<div bag="default" created="20190113212303296" creator="wdklotz" modified="20211109172652626" modifier="wdklotz" revision="9" title="$:/state/tab/sidebar--595412856">
+<div bag="default" created="20190113213545479" creator="wdklotz" modified="20211121163549129" modifier="wdklotz" revision="11" title="$:/state/tab/moresidebar-1850697562">
+<pre>$:/core/ui/MoreSideBar/Tags</pre>
+</div>
+<div bag="default" created="20190113212303296" creator="wdklotz" modified="20211121164738668" modifier="wdklotz" revision="9" title="$:/state/tab/sidebar--595412856">
 <pre>$:/core/ui/SideBar/Open</pre>
+</div>
+<div created="20211121163055498" creator="wdklotz" modified="20211121163615339" modifier="wdklotz" title="$:/state/tag-manager/getting started">
+<pre>open</pre>
 </div>
 <div bag="default" revision="1" title="$:/status/IsAnonymous">
 <pre>no</pre>
@@ -9327,7 +9409,7 @@ Error message and password prompt
 <div bag="default" revision="1" title="$:/status/UserName">
 <pre>wdklotz</pre>
 </div>
-<div created="20211120152845636" creator="wdklotz" list="[[Getting Started]] Introduction" modified="20211120152845636" modifier="wdklotz" title="$:/StoryList">
+<div created="20211121164308048" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]]" modified="20211121164404406" modifier="wdklotz" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -9383,6 +9465,9 @@ Error message and password prompt
         }
     }
 }</pre>
+</div>
+<div created="20211121161011185" creator="wdklotz" modified="20211121161012109" modifier="wdklotz" title="$:/temp/search">
+<pre>flags</pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-priority="0" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.19">
 <pre>{
@@ -9499,15 +9584,15 @@ Error message and password prompt
 <div bag="default" created="20190112082613174" modified="20190112110933509" revision="0" title="$:/themes/tiddlywiki/vanilla/options/sidebarlayout" type="text/vnd.tiddlywiki">
 <pre>fluid-fixed</pre>
 </div>
-<div bag="default" created="20190113105006289" creator="wdklotz" modified="20211019105555379" modifier="wdklotz" revision="10" tags="simu" title="Appendix" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190113105006289" creator="wdklotz" modified="20211121164201978" modifier="wdklotz" revision="10" tags="tracker simu" title="Appendix" type="text/vnd.tiddlywiki">
 <pre>* [[Full input file|simuIN.yml]]
 * [[Units|Appendix A]]
 * [[Elements|Appendix B]]
 
-[[top|Getting Started]] [[next|Bibliography]]
+[[previous|Lattice]] [[top|User Manual for simu.py/tracker.py]] [[next|Bibliography]]
 </pre>
 </div>
-<div bag="default" created="20190113161435812" creator="wdklotz" modified="20211109225607041" modifier="wdklotz" revision="10" tags="simu" title="Appendix A">
+<div bag="default" created="20190113161435812" creator="wdklotz" modified="20211121164343439" modifier="wdklotz" revision="10" tags="tracker simu" title="Appendix A">
 <pre>!! Internal units [MKSA] system:
 |length|m|
 |energy|~MeV|
@@ -9526,7 +9611,7 @@ Error message and password prompt
 [[back|Appendix]]
 </pre>
 </div>
-<div bag="default" created="20190113163216331" creator="wdklotz" modified="20211109225713272" modifier="wdklotz" revision="50" tags="simu" title="Appendix B">
+<div bag="default" created="20190113163216331" creator="wdklotz" modified="20211121164421518" modifier="wdklotz" revision="50" tags="tracker simu" title="Appendix B">
 <pre>!! Complete list of Elements accepted by this version:
 @@font-size:small; TODO: check for correctness@@
 &lt;table style=&quot;width:100%&quot;&gt;
@@ -9830,17 +9915,17 @@ Error message and password prompt
 [[back|Appendix]]
 </pre>
 </div>
-<div bag="default" created="20190113124721009" creator="wdklotz" modified="20211019105605437" modifier="wdklotz" revision="2" tags="simu" title="Bibliography" type="text/vnd.tiddlywiki">
-<pre>* [ext[Trace 3D|TRACE3-D_Manual.pdf]]
-* [ext[pyOrbit|A.Shislo_J.Holmes_Pub55859.pdf]]
+<div bag="default" created="20190113124721009" creator="wdklotz" modified="20211121164252793" modifier="wdklotz" revision="2" tags="tracker simu" title="Bibliography" type="text/vnd.tiddlywiki">
+<pre>* [ext[Trace 3D|doc/TRACE3-D_Manual.pdf]]
+* [ext[pyOrbit|doc/A.Shislo_J.Holmes_Pub55859.pdf]]
 * [[XAL|https://docs.google.com/viewer?url=https%3A%2F%2Faccelconf.web.cern.ch%2Faccelconf%2Fe04%2FPAPERS%2FTHPLT168.PDF]]
-* [ext[DYNAC|E.Tanke_S.Valero_cavity_bode_2016_10_03.pdf]]
+* [ext[DYNAC|doc/E.Tanke_S.Valero_cavity_bode_2016_10_03.pdf]]
 
 
-[[top|Getting Started]]
+[[top|User Manual for simu.py/tracker.py]]
 </pre>
 </div>
-<div created="20211016215637189" creator="wdklotz" modified="20211109172116757" modifier="wdklotz" tags="" title="Cells">
+<div created="20211016215637189" creator="wdklotz" modified="20211121164215655" modifier="wdklotz" tags="tracker simu" title="Cells">
 <pre>The `CELLS`-block is used to group `SEGMENT`s into larger  named quantities. Typically like lattice cells which are usually repeated many times in a lattice. The example given below defines a FODO cell with 2 embedded arrays of cavities (ex: 1/2Fquad+Drift+12 Cavities+Drift+Dquad+Drift+12 Caviities+Drift+1/2Fquad).  
 
 @@color:red;Note: Due to the YAML-parser's handling of lists and dictionaries, the syntax to define a cell must follow exactly the given  example. If not: boooom!@@
@@ -9852,9 +9937,9 @@ CELLS:    # concatenate SEGMENTS to CELL: order given by [...] syntax
     CELL-H: &amp;cellh  [ITEMS:  [*seg1H,*rfcavH,*seg2H,*rfcavH,*seg3H], DESC: 'FODO with 2 RF arrays']  
 &lt;/pre&gt;
 
-[[previous|Segments]] [[top|Getting Started]]  [[next|Sections]] </pre>
+[[previous|Segments]] [[top|User Manual for simu.py/tracker.py]]  [[next|Sections]] </pre>
 </div>
-<div bag="default" created="20190112170418435" creator="wdklotz" modified="20211109223200517" modifier="wdklotz" revision="0" tags="simu" title="Elements" type="">
+<div bag="default" created="20190112170418435" creator="wdklotz" modified="20211121164248115" modifier="wdklotz" revision="0" tags="tracker simu" title="Elements" type="">
 <pre>The `ELEMENTS`-block defines the elements (a.k.a `nodes`) in the lattice with their physical attributes.
 
 Example:
@@ -9983,39 +10068,11 @@ Notes:
  have a single action attached. Actions can/will have attributes to control them.  
 @@color:red; Marker nodes are still experimental and not well defined in this version.@@ @@color: brown;The current version implements only ''one''  action: 'poincare'.@@ @@font-size:small; (TODO: more actions).@@
 
-[[previous|Parameters]] [[top|Getting Started]]  [[next|Nodes]] </pre>
+[[previous|Parameters]] [[top|User Manual for simu.py/tracker.py]]  [[next|Nodes]] </pre>
 </div>
-<div bag="default" created="20190112083229656" creator="wdklotz" modified="20211120151428438" modifier="wdklotz" revision="4" tags="[[getting started]] simu" title="Getting Started" type="text/vnd.tiddlywiki">
-<pre>! ''User Manual for simu.py/tracker.py'' @@font-size: small; describes the program  version 10.0.1@@
-
-
-All files should be installed in a root directory like `$HOME/SIMULINAC`. The `Python3` executable should be on your PATH environment variable. The Python installation must provide the packages `matplotlib`, `numpy`, `scipy`, `PyYaml` and `tkinter` as dependencies to SIMULINAC.
-The main module for envelope calculations is `simu.py`. The main module for tracking is `tracker.py`. Both will print results on your terminal and before finishing will show some results in figures.
-
-''Getting started:''
-
-*[[Introduction]]
-*[[Preparing Input and Start]]
-*[[Preparing Input with m4 Macro Processor]]
-*[[Special Input Parameters]] @@color: red; //experimental!//@@
-*[[Input File Structure]]
-**[[Flags|Input File Structure]]
-**[[Parameters]]
-**[[Elements]]
-**[[Nodes]]
-**[[Segments]]
-**[[Cells]]
-**[[Sections]]
-**[[Lattice]]
-*[[Appendix]]
-*[[Bibliography]]
-
-[[previous|Introduction]] [[top|Introduction]] [[next|Preparing Input and Start]]</pre>
-</div>
-<div bag="default" created="20190112154101734" creator="wdklotz" modified="20211109221716721" modifier="wdklotz" revision="1" tags="simu" title="Input File Structure" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112154101734" creator="wdklotz" modified="20211121164241009" modifier="wdklotz" revision="1" tags="tracker simu" title="Flags" type="text/vnd.tiddlywiki">
 <pre>In what follows the structure of the standard input-file is discussed.
 
-! Flags
 The `FLAGS`-block is used to select different features the programs provides. Both programs have access to the flag-settings but make different use of them or ignore them. The current set of flags is given below. If the flag is not given (line commented out) its default value, indicated in ''{...}'' brackets, will be used.
 Example:&lt;pre&gt;FLAGS:
     # - accON:        False           # {True} acceleration on/off flag
@@ -10056,10 +10113,10 @@ Notes:
 * useaper: in envelope calculation the transverse 3-sigma beam envelope is checked against aperture limitations.
 * pspace plots the two transverse phase-space ellipses to check for transverse beam matching.
 
-[[previous|Special Input Parameters]] [[top|Getting Started]] [[next|Parameters]] 
+[[previous|Special Input Parameters]] [[top|User Manual for simu.py/tracker.py]] [[next|Parameters]] 
 </pre>
 </div>
-<div created="20211119164613580" creator="wdklotz" modified="20211120165945386" modifier="wdklotz" tags="" title="Introduction">
+<div created="20211119164613580" creator="wdklotz" modified="20211121163837836" modifier="wdklotz" tags="tracker simu" title="Introduction">
 <pre>''SIMULINAC'' are two python3 modules to simulate a proton beam in a LINAC lattice. ''simu.py'' calculates beam envelopes in linear approximation according to Courant/Snyder theory. ''tracker.py'' is a module that tracks a bunch of particles through the same lattice using linear approximation for the focussing elements but using different nonlinear mappings for the traversal of accelerating RF-cavities.
 
 !!simu.py
@@ -10092,9 +10149,9 @@ The tracker.py module uses the same mappings (linear and nonlinear) as simu.py, 
 
 [img[img/track_ttf.png]]
 
-[[next|Getting Started]]</pre>
+[[prevoius|User Manual for simu.py/tracker.py]] [[top|User Manual for simu.py/tracker.py]] [[next|Preparing Input and Start]]  </pre>
 </div>
-<div bag="default" created="20190113095455245" creator="wdklotz" modified="20211109172037320" modifier="wdklotz" revision="0" tags="simu" title="Lattice" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190113095455245" creator="wdklotz" modified="20211121164206640" modifier="wdklotz" revision="0" tags="tracker simu" title="Lattice" type="text/vnd.tiddlywiki">
 <pre>The `LATTICE`-block finally defines the complete lattice as a list of  `section IDs`. The order of sections is important and it goes from left `lattice start` to right `lattice end`.
 
 Example:
@@ -10103,7 +10160,7 @@ LATTICE:  [S-LE,S-HE]  #  # concatenate SECTIONs to a LATTICE: order is given by
 &lt;/pre&gt;
 
 
-[[previous|Sections]] [[top|Getting Started]]  [[next|Appendix]] 
+[[previous|Sections]] [[top|User Manual for simu.py/tracker.py]]  [[next|Appendix]] 
 </pre>
 </div>
 <div created="20211016220326589" creator="wdklotz" modified="20211019105536744" modifier="wdklotz" title="Line">
@@ -10115,7 +10172,7 @@ Example:&lt;pre&gt;LINE: &amp;line   # concatenate CELLS to sublattice LINE
 
 [[previous|Cell]] [[top|Getting Started]]  [[next|Lattice]] </pre>
 </div>
-<div created="20211016212838301" creator="wdklotz" modified="20211109223823384" modifier="wdklotz" tags="" title="Nodes">
+<div created="20211016212838301" creator="wdklotz" modified="20211121164025843" modifier="wdklotz" tags="tracker simu" title="Nodes">
 <pre>The `NODES`-block is a map that binds an ID and an alias (ex: `F_Quad1: &amp;qfl`) to an existing element (ex:`QFL`). That allows to reference the element a.k.a node by its new ID or as `*qfl` in the following lattice definition.
 
 Example:
@@ -10134,9 +10191,9 @@ RF_CavityH:  &amp;cavh  RFCH
 Foil:        &amp;foil  SCF
 &lt;/pre&gt;
 
-[[previous|Elements]] [[top|Getting Started]]  [[next|Segments]] </pre>
+[[previous|Elements]] [[top|User Manual for simu.py/tracker.py]]  [[next|Segments]] </pre>
 </div>
-<div bag="default" created="20190112164426274" creator="wdklotz" modified="20211109222407368" modifier="wdklotz" revision="0" tags="simu" title="Parameters" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112164426274" creator="wdklotz" modified="20211121164244671" modifier="wdklotz" revision="0" tags="tracker simu" title="Parameters" type="text/vnd.tiddlywiki">
 <pre>The `PARAMETERS`-block defines global parameters as //key:value// pairs. Some parameters are defined with fixed values others by macro-variables. The 1st column is the name of the parameter variable in the program code (Ex: DT2T is the python variable for the energy spread at injection). The 2nd column are parameter //aliases//, i.e. the &amp;emx is an alias for the parameter emitx_i and can be referenced in the yaml file as *emx. The 3rd column is the parameters's value. It can be a static value or a macro referene (Ex: phy_sync  &amp;phs _PHISY is the value of the synchronous phase and will be given by the value of the _PHISY macro).
 
 Example:&lt;pre&gt;
@@ -10175,17 +10232,18 @@ Notes:
 * YAML syntax:
 **lines with `key:  &amp;alias  value` definitions: All three items must be separated by at least 1 space character and indented by at least 2 space charcters (no tabs!).
 
-[[previous|Input File Structure]] [[top|Getting Started]] [[next|Elements]] 
+[[previous|Flags]] [[top|User Manual for simu.py/tracker.py]] [[next|Elements]] 
 </pre>
 </div>
-<div created="20211016133239324" creator="wdklotz" modified="20211119174937775" modifier="wdklotz" tags="" title="Preparing Input and Start">
-<pre>To start simu.py open a terminal window and type: `python simu.py [input-file]`. 
+<div created="20211016133239324" creator="wdklotz" modified="20211121163904528" modifier="wdklotz" tags="tracker simu" title="Preparing Input and Start">
+<pre>All files should be installed in a root directory like `$HOME/SIMULINAC`. The `Python3` executable should be on your PATH environment variable. The Python installation must provide the packages `matplotlib`, `numpy`, `scipy`, `PyYaml` and `tkinter` as dependencies to SIMULINAC.
+The main module for envelope calculations is `simu.py`. The main module for tracking is `tracker.py`. Both will print results on your terminal and before finishing will show some results in figures.To start simu.py open a terminal window and type: `python simu.py [input-file]`. 
 To start tracker.py type: `python tracker.py [input-file]`.  Argument input-file is optional. If not given the default files `yml/simuIN.yml` or `yml/tackIN.yml` will be used.  The syntax of input-files is [[YAML|https://learn.getgrav.org/16/advanced/yaml]]. Both files are more or less identical. You should backup copies of these files and edit them with a standard text editor according to your needs
 
 
-[[previous|Getting Started]]  [[top|Introduction]]  [[next|Preparing Input with m4 Macro Processor]] </pre>
+[[previous|Introduction]]  [[top|User Manual for simu.py/tracker.py]]  [[next|Preparing Input with m4 Macro Processor]] </pre>
 </div>
-<div bag="default" created="20190112134226323" creator="wdklotz" modified="20211109220834041" modifier="wdklotz" revision="1" tags="simu" title="Preparing Input with m4 Macro Processor" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112134226323" creator="wdklotz" modified="20211121154534410" modifier="wdklotz" revision="1" tags="simu" title="Preparing Input with m4 Macro Processor" type="text/vnd.tiddlywiki">
 <pre>\define lt() &lt;$text text='&lt;'/&gt;
 Input to the two programs (simu.py and tracker.py) have to be given from a text file written in [[YAML|https://learn.getgrav.org/16/advanced/yaml]] syntax. The input-file `yml/simuIN.yml` can be generated from a ''template-file'' also written in YAML. The template-file can be constructed from a standard input-file with static parameters and a lattice definition in which some parameters are replaced by `m4` macros. 
 Before each program reads its input-file it invokes the m4 macro processor which reads a ''macro-definition-file'' and replaces the macros in the template-file.
@@ -10204,10 +10262,10 @@ On //Windows// preprocessing with `m4` is is more complicated. Before simu.py st
 
 This processing allows a more rapid and flexible handling of different ''parameter runs''  distinguishable by `runID` with different ''lattice versions''  distinguishable  by `templateID`.
 
-[[previous|Preparing Input and Start]] [[top|Getting Started]]  [[next|Special Input Parameters]] 
+[[previous|Preparing Input and Start]] [[top|User Manual for simu.py/tracker.py]]  [[next|Special Input Parameters]] 
 </pre>
 </div>
-<div bag="default" created="20190112162623679" creator="wdklotz" modified="20211109225009490" modifier="wdklotz" revision="0" tags="simu" title="Sections" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112162623679" creator="wdklotz" modified="20211121164208763" modifier="wdklotz" revision="0" tags="tracker simu" title="Sections" type="text/vnd.tiddlywiki">
 <pre>The `SECTIONS`-block finally is the place to define different parts a.k.a `sections` of the lattice. A section defines its ID (ex: `S-LE`) and how many (ex: `NTIMES: 20`) repetitive cells (ex: `ITEMS: *cell`) are in this section. The example below defines 3 sections (ex: S-LE, S-HE and S-DUMMY). The first two consisting each of 20 (ex: `NITEMS 20`) cells. The `DESC` atrribute is optional.
 
 Example:
@@ -10229,10 +10287,10 @@ SECTIONS:   # CELLS to SECTIONS: NTIMES cells per section
 
 @@font-size:small;The YAML-parser can be quite mind-blowing and we have to follow its rules. So please again: keep in mind to follow excatly the syntax in the given example to avoid `crashes!`@@
 
-[[previous|Cells]] [[top|Getting Started]]  [[next|Lattice]] 
+[[previous|Cells]] [[top|User Manual for simu.py/tracker.py]]  [[next|Lattice]] 
 </pre>
 </div>
-<div bag="default" created="20190113083727186" creator="wdklotz" modified="20211109224253682" modifier="wdklotz" revision="0" tags="simu" title="Segments" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190113083727186" creator="wdklotz" modified="20211121164217738" modifier="wdklotz" revision="0" tags="tracker simu" title="Segments" type="text/vnd.tiddlywiki">
 <pre>The `SEGMENTS`-block is used to group individual nodes into larger named entities like LEGO blocks (ex: `CavitiesL: &amp;cav_block_L` as  an array of 12 (ex: `NITEMS: 12`) rf-cavities (ex: `ITEMS: [*cavl]`) mapped by the NODES map (ex: `RF_Cavities_l: &amp;cavl RFCL`),
 
 Example:
@@ -10276,10 +10334,10 @@ Second example: `D+QD+D-L: &amp;seg2L` is a segment made of a drift  followed by
 Segments can be concatenated to even longer segments (ex:  `ITEMS:  [*cav_block_L,*d10l,*cav_block_L]`).
 Each segment is also given an alias to be used as pointer in the lattice definition that follows (ex:  `CavitiesL:  &amp;cav_block_L` or  `RF_Cavity_ArrayL:  &amp;rfcavL`)
 
-[[previous|Nodes]] [[top|Getting Started]]  [[next|Cells]] 
+[[previous|Nodes]] [[top|User Manual for simu.py/tracker.py]]  [[next|Cells]] 
 </pre>
 </div>
-<div bag="default" created="20190113102513274" creator="wdklotz" modified="20211109225400834" modifier="wdklotz" revision="1" tags="simu" title="simuIN.yml" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190113102513274" creator="wdklotz" modified="20211121164324870" modifier="wdklotz" revision="1" tags="tracker simu" title="simuIN.yml" type="text/vnd.tiddlywiki">
 <pre>A full input-file for a lattice with `2 sections` and without `m4` variables compatible with v9.0.2:
 
 ```
@@ -10507,7 +10565,7 @@ LATTICE:  [S-LE,S-HE]  #  order given by [...] syntax
 [[back|Appendix]]
 </pre>
 </div>
-<div bag="default" created="20190112140255125" creator="wdklotz" modified="20211109221431299" modifier="wdklotz" revision="0" tags="simu" title="Special Input Parameters" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112140255125" creator="wdklotz" modified="20211121164237085" modifier="wdklotz" revision="0" tags="tracker simu" title="Special Input Parameters" type="text/vnd.tiddlywiki">
 <pre>@@background-color:red;
 experimental feature which can be removed in future versions
 @@
@@ -10524,8 +10582,28 @@ The //particles_per_bunch// and the three flags //show//, //save// and //losses/
 
 @@font-size: small;TODO: explain //skip-flag//@@
 
-[[previous|Preparing Input with m4 Macro Processor]] [[top|Getting Started]]  [[next|Input File Structure]] 
+[[previous|Preparing Input with m4 Macro Processor]] [[top|User Manual for simu.py/tracker.py]]  [[next|Flags]] 
 </pre>
+</div>
+<div created="20211121152600901" creator="wdklotz" modified="20211121163815668" modifier="wdklotz" tags="tracker simu" title="User Manual for simu.py/tracker.py">
+<pre>@@font-size: small; This manual describes the program  version 10.0.1@@
+
+*[[Introduction]]
+*[[Preparing Input and Start]]
+*[[Preparing Input with m4 Macro Processor]]
+*[[Special Input Parameters]] @@color: red; //experimental!//@@
+*[[Flags]]
+*[[Parameters]]
+*[[Elements]]
+*[[Nodes]]
+*[[Segments]]
+*[[Cells]]
+*[[Sections]]
+*[[Lattice]]
+*[[Appendix]]
+*[[Bibliography]]
+
+[[next|Introduction]]</pre>
 </div>
 
 </div>
