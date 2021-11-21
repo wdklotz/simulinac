@@ -39,7 +39,7 @@ FLAGS:
     marker:       True            # {False} activate Markers in the lattice
     # verbose:      2               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
-## INPUT definitions
+## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
     Tkin:                 6.          # [MeV] energy @ injection
@@ -169,10 +169,11 @@ ELEMENTS:
 # ...........................................................................................
 # LATTICE definition starts here:  
          # Node is part of Segment is part of Cell is part of Section is part of LINE
+         # LATTICE is LINE
 # ...........................................................................................
 SEGMENTS:   # group ELEMENTs into SEGMENTs:
             # Syntax: [number[node,...,node]]
-            # list [node,...,node] is repeated number times
+            # the list [node,...,node] is repeated number times
 #...........................................................................................
 # Marker segment
     # Psmarker:              [1,[PsMkr]]
@@ -180,20 +181,18 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     QF+D-L:                [1,[QFL, D3L]]
     D+QD+D-L:              [1,[D3L, QDL, D3L]]
     D+QF-L:                [1,[D3L, QFL]]
-# pillbox cavities
-    # CavitiesL:             [12,[RFCL]]
+    # pillbox cavities
     CavitiesL:             [12,[RFCL]]
     RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
 # HE section segments
     QF+D-H:                 [1,[QFH, D3H]]
     D+QD+D-H:               [1,[D3H, QDH, D3H]]
     D+QF-H:                 [1,[D3H, QFH]]
-# pillbox cavities
-    # CavitiesH:              [12,[RFCH]]
+    # pillbox cavities
     CavitiesH:              [12,[RFCH]]
     RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
 #...........................................................................................
-CELLS:    # group SEGMENTS into CELLs: order given by [...] syntax
+CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     CELL-L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
     CELL-H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
@@ -206,8 +205,8 @@ SECTIONS:   # group CELLs into SECTIONS
 #   S-HE:      [1,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
-LATTICE:    # group SECTIONs into a LATTICE
-            # (ex: the LINE definition below makes a  LATTICE  with 2 Secions 
+LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
+            # (ex: the LINE definition below makes a  LATTICE with 2 Secions 
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
