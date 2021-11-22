@@ -61,7 +61,7 @@ PARAMETERS:
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:             '6-200 MEV' # lattice version
-    mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    ttf         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -83,14 +83,15 @@ ELEMENTS:
         type:     QF           # QF class
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
-        B':       12.0         # [T/m] quadrupole gradient
+        # B':       &bgrad 12.0        # [T/m] quadrupole gradient
+        B':       &bgrad 15.5        # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
         length:   0.08         # [m] length
         aperture: 0.011        # [m] quad bore
-        B':       12.0         # [T/m] quadrupole gradient
+        B':       *bgrad         # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     RFCL:                      # ID
@@ -201,7 +202,7 @@ SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
   S-LE:      [20,[CELL-L]]
 #   S-LE:      [1,[CELL-L]]
-  S-HE:      [28,[CELL-H]]
+  S-HE:      [29,[CELL-H]]
 #   S-HE:      [1,[CELL-H]]
   S-DUMMY:   [1,[CELL-H]]
 #........................................................................................... 
@@ -211,4 +212,5 @@ LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
 #   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
 #........................................................................................... 
   LINE:   [1,[S-LE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE]]
+#   LINE:   [1,[S-LE, PsMkr]]
   
