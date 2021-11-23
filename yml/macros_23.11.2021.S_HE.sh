@@ -20,10 +20,10 @@ FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 BGRAD=23.000            # quad gradient [T/m] (T=25)
 
 #============== cavity mapping
-# MAP=t3d
-MAP=simple
+MAP=t3d
+# MAP=simple
 # MAP=oxal
-MAP=base
+# MAP=base
 # MAP=ttf
 # MAP=dyn
 

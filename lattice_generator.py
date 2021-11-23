@@ -401,7 +401,7 @@ def test0(input_file):
         print(l)
 def test1(input_file):
     print('---------------------------------TEST1')
-    lattice = factory_new(input_file)
+    lattice = factory(input_file)
     print('%%%%%%%%%%%%%%%%%%% Left------->Right')
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))

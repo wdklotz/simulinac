@@ -9331,8 +9331,8 @@ Error message and password prompt
 <div created="20211016212732740" creator="wdklotz" modified="20211016212744394" modifier="wdklotz" title="$:/state/folded/Draft of 'Elements' by wdklotz">
 <pre>hide</pre>
 </div>
-<div created="20211016163520340" creator="wdklotz" modified="20211121171810944" modifier="wdklotz" title="$:/state/folded/Elements">
-<pre>hide</pre>
+<div created="20211016163520340" creator="wdklotz" modified="20211123223339578" modifier="wdklotz" title="$:/state/folded/Elements">
+<pre>show</pre>
 </div>
 <div created="20211121163011068" creator="wdklotz" modified="20211121171341122" modifier="wdklotz" title="$:/state/folded/Flags">
 <pre>hide</pre>
@@ -9352,8 +9352,8 @@ Error message and password prompt
 <div created="20211016214241188" creator="wdklotz" modified="20211121171700561" modifier="wdklotz" title="$:/state/folded/Nodes">
 <pre>hide</pre>
 </div>
-<div created="20211016212732740" creator="wdklotz" modified="20211121171808307" modifier="wdklotz" title="$:/state/folded/Parameters">
-<pre>hide</pre>
+<div created="20211016212732740" creator="wdklotz" modified="20211123223518545" modifier="wdklotz" title="$:/state/folded/Parameters">
+<pre>show</pre>
 </div>
 <div created="20211121163011067" creator="wdklotz" modified="20211121171746297" modifier="wdklotz" title="$:/state/folded/Preparing Input and Start">
 <pre>hide</pre>
@@ -9409,7 +9409,7 @@ Error message and password prompt
 <div bag="default" revision="1" title="$:/status/UserName">
 <pre>wdklotz</pre>
 </div>
-<div created="20211121221313138" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]] Appendix [[Appendix B]]" modified="20211121221315445" modifier="wdklotz" title="$:/StoryList">
+<div created="20211123223336903" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]] Elements Parameters" modified="20211123223516328" modifier="wdklotz" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -9941,7 +9941,7 @@ CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
 
 [[previous|Segments]] [[top|User Manual for simu.py/tracker.py]]  [[next|Sections]] </pre>
 </div>
-<div bag="default" created="20190112170418435" creator="wdklotz" modified="20211121171632615" modifier="wdklotz" revision="0" tags="tracker simu" title="Elements" type="">
+<div bag="default" created="20190112170418435" creator="wdklotz" modified="20211123224602376" modifier="wdklotz" revision="0" tags="tracker simu" title="Elements" type="">
 <pre>The `ELEMENTS`-block defines the elements (a.k.a `nodes`) in the lattice with their physical attributes.
 
 Example:
@@ -10062,7 +10062,7 @@ Notes:
         aperture: 0.011        # [m] quad bore
         B':       *bgrad       # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
-&lt;/pre&gt;''type: QD'' defines a x-defocussing quadrupole of class ''QD''  with ID ''QDL''. It has the same attributes as the focussing quadrupole but can have different attribute values. @@color:red; Note the usage of pointers in the YAML syntax. This node gets the value for the attribute B' via pointer(*bgrad) from the alias definition(&amp;bgrad) in the ''QFL'' node.@@
+&lt;/pre&gt;''type: QD'' defines a x-defocussing quadrupole of class ''QD''  with ID ''QDL''. It has the same attributes as the focussing quadrupole but can have different attribute values. @@color:red; Note the usage of pointers in the YAML syntax. This node gets the value for the attribute B' via pointer(*bgrad) from the anchor definition(&amp;bgrad) in the ''QFL'' node.@@
 &lt;pre&gt;
     RFCH:                      # ID
         type:     RFC          # RFC class
@@ -10075,7 +10075,7 @@ Notes:
         SFdata:   SF_WDK2g44.TBL # superfish tbl-data file
         mapping:  base         # mapping in cavities
         length:   *p15         # [m] cavity length
-&lt;/pre&gt;''type: RFC'' defines a rf-cavity of class ''RFC''. The node has the ID ''RFCH''. It receives its values for freq and gap  via pointers to values defined before (see [[Parameters]]). The electric field strength is defined by attribute ~EzPeak. The average field stregth in the gap ~EzAvg will be calculated from the field distribution if not entered here. The attribute SFdata defines the field distribution on axis. It is given by a table read from the file ''SF_WDK2gg44.TBL'' (table calculated with the ~SuperFish code). This attribute will be ignored for cavity-models that do not need ~SuperFish-data.&lt;$transclude tiddler=&quot;#:rfc_mapping_1&quot; mode=&quot;block&quot;/&gt;
+&lt;/pre&gt;''type: RFC'' defines a rf-cavity of class ''RFC''. The node has the ID ''RFCH''. It receives its values for freq, gap and length  via pointers to values defined before (see [[Parameters]]). The electric field strength is defined by attribute ~EzPeak. The average field stregth in the gap ~EzAvg will be calculated from the field distribution if not entered here. The field distributions for the  mappings `t3d`,`simple` and `base` are are constant over the gap (rectangular). For them `EzAvg` will be set to `EzPeak` if not entered.  The attribute SFdata defines the field distribution on axis. It is given by a table read from the file ''SF_WDK2gg44.TBL'' (table calculated with the ~SuperFish code). This attribute will be ignored for cavity-models that do not need ~SuperFish-data.&lt;$transclude tiddler=&quot;#:rfc_mapping_1&quot; mode=&quot;block&quot;/&gt;
 &lt;pre&gt;
     SCF:                       # ID: &amp;alias
         type:    MRK           # MRK class
