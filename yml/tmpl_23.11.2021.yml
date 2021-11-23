@@ -43,7 +43,7 @@ FLAGS:
 #...........................................................................................
 PARAMETERS:
     # Tkin:                 6.          # [MeV] energy @ injection
-    Tkin:                 16.5        # [MeV] energy @ injection
+    Tkin:                 _TKIN        # [MeV] energy @ injection
     DT2T:                 1.0e-3      # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
@@ -61,11 +61,11 @@ PARAMETERS:
     EzPeak:       &p17    2.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
-    lattvers:             '6-200 MEV' # lattice version
+    lattvers:             '17 IN HE' # lattice version
     # mapping:      &map    t3d         # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal         # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf         # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    _MAPPING        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
