@@ -220,10 +220,9 @@ class SFdata(object):
         self._EzPeak    = EzPeak
         self._gap       = gap           # full gap !!
         self._EzAvg     = None          # for later
-        self._Ez0_tab_raw    = self.make_Ez_table()  # rtaw data from SF will never be scaled!
-        self._Ez0_tab_scaled = self.scale_Ez_table(EzPeak=self._EzPeak,gap=self._gap)
-        self._poly           = self.make_polyfit(self._Ez0_tab_scaled)
-        self._EzAvg          = self.make_EzAvg(self._poly)
+        self._Ez0_tab_raw,EzAvg = self.make_Ez_table()  # rtaw data from SF will never be scaled!
+        self._Ez0_tab_scaled,self._EzAvg = self.scale_Ez_table(EzAvg,EzPeak=self._EzPeak,gap=self._gap) # scale EzAvg and profile
+        self._poly = self.make_polyfit(self._Ez0_tab_scaled)
 
     @property
     def gap(self):
@@ -234,6 +233,9 @@ class SFdata(object):
     @property
     def EzPeak(self):
         return self._EzPeak
+    @property
+    def EzPoly(self):
+        return self._poly
 
     def make_Ez_table(self):
         """ read raw data and scale to self.EzPeak and self.gap """
@@ -265,25 +267,31 @@ class SFdata(object):
         rp = rprev+rp
         eprev = [x for x in reversed(ep[1:])]
         ep = eprev+ep
-        for i in range(len(zp)):  
+        N = len(zp)
+        EzAvg = 0
+        for i in range(N):  
             raw_tab.append(Dpoint(zp[i],rp[i],ep[i]))
-        return raw_tab
+            EzAvg += ep[i]
+        EzAvg = EzAvg/N
+        return raw_tab,EzAvg
 
-    def scale_Ez_table(self,EzPeak=0.,gap=0.):   # NOTE: full gap!
+    def scale_Ez_table(self,EzAvg,EzPeak=0.,gap=0.):   # NOTE: full gap!
         # scales Ez-axis and z-axis of raw SF-data-table
         EzMax = max([x.Ez for x in self._Ez0_tab_raw])
         self._EzPeak = EzMax if EzPeak == 0. else EzPeak
         zmax  = max([x.z  for x in self._Ez0_tab_raw])
         self._gap = 2.*zmax if gap == 0. else gap
-        tab = []
 
+        tab = []
         half_gap = self._gap*0.5
         for i in range(len(self._Ez0_tab_raw)):  
             z = self._Ez0_tab_raw[i].z*(half_gap/zmax)       # scale z-axis
             e = self._Ez0_tab_raw[i].Ez*(self._EzPeak/EzMax)  # sclae Ez-axis
             r = self._Ez0_tab_raw[i].R*(half_gap/zmax)       # scale R same as Z
             tab.append(Dpoint(z,r,e))
-        return tab
+
+        EzAvg = EzAvg*(self._EzPeak/EzMax)
+        return tab,EzAvg
 
     def make_polyfit(self,Ez_table): 
         # Polynomial fits to raw data according to Shislo&Holmes
@@ -322,22 +330,6 @@ class SFdata(object):
         # self._poly = polies
         return polies
 
-    def make_EzAvg(self,poly_data):
-        """ Average E-field in gap """
-        sum = 0.
-        poly = poly_data
-        N   = len(poly)
-        # DEBUG_ON(poly)
-        for n in range(N):
-            if n == 0: v00=V0n(poly,n)   # base-line subtraction TODO: the worst thing to do ever?
-            # v00 = 0.
-            dz  = poly[n].dz         # [cm]
-            v0  = V0n(poly,n)-v00    # [MV]
-            Eav = v0/dz              # [Mv/cm]
-            sum = sum + Eav
-        EzAvg = sum/N                # [MV/cm]
-        return EzAvg*1.e2            # [MV/m]
-
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
         res = Ipoly(z,self.Ez_poly) * cos(omega*t+phis)
@@ -348,17 +340,6 @@ class SFdata(object):
         res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phis)
         return res
         
-def pre_plt(input_file):
-    # prepare plot
-    ax  = plt.subplot(111)
-    ax.set_ylabel('Ez0 [MV/m]')
-    ax.set_xlabel('z [cm]')
-    ax.set_title(input_file)
-    return ax
-def post_plt(ax):
-    # finish plot
-    plt.legend(loc='lower right',fontsize='x-small')
-    plt.show()
 def displayLR(table,legend):
     # display left (L) and right (R) table data
     zp   = [+float(x[0]) for x in table]
@@ -377,7 +358,7 @@ def test0(input_file):
     # sfdata  = SFdata(input_file)
     Ez0_tab = sfdata._Ez0_tab_raw
     Ez1_tab = sfdata._Ez0_tab_scaled
-    Ez2_tab = sfdata.scale_Ez_table(EzPeak=0.8,gap=6.)
+    Ez2_tab, dummy = sfdata.scale_Ez_table(sfdata._EzAvg,EzPeak=0.8,gap=6.)
 
     display(Ez0_tab,'SF-raw')
     display(Ez1_tab,'SF-scaled.1')
@@ -499,12 +480,21 @@ def test4(input_file,EzPeak,gap):
     print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
 
 if __name__ == '__main__':
-    input_file='SF/PILL-3_6CM.TBL'
-    ax = pre_plt(input_file)
+    ax  = plt.subplot(111)
+    ax.set_ylabel('Ez0 [MV/m]')
+    ax.set_xlabel('z [cm]')
+
+    input_file='SF/PILL-2CM.TBL'
+    input_file='SF/SF_WDK2g44.TBL'
+    ax.set_title(input_file)
+
     test0(input_file)               # get raw data and do scaling
     # test1()                         # NG 
     # test2()                         # poly-fit to NG
-    test3(input_file,0.,0.)          # poly-fit to scaled SF
-    test4(input_file,0.,0.)          # Average/Peak ratio
-    post_plt(ax)
+    test3(input_file,1.2,0.)          # poly-fit to scaled SF
+    test4(input_file,1.2,0.)          # Average/Peak ratio
+   
+    # finish plot
+    plt.legend(loc='upper right',fontsize='x-small')
+    plt.show()
 

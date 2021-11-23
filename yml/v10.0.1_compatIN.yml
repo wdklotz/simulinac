@@ -42,26 +42,30 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 6.          # [MeV] energy @ injection
+    # Tkin:                 6.          # [MeV] energy @ injection
+    Tkin:                 16.5        # [MeV] energy @ injection
     DT2T:                 1.0e-3      # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    3.3         # [m] twiss beta @ entrance x
     betay_i:      &bty    0.55        # [m] twiss beta @ entrance y
-    phi_sync:     &phs    -25.        # [deg] synchronous phase
+    phi_sync:     &phs    -30.        # [deg] synchronous phase
     frequency:    &freq   816.e6      # [Hz] frequency
     alfax_i:              0.0         # [] twiss alpha x @ entrance
-    alfay_i:              -0.0        # [] twiss alpha y @ entrance
+    alfay_i:              0.0         # [] twiss alpha y @ entrance
     ql0:          &p02    0.04        # [m] quad-length
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
     windings:             30          # [] quad-coil windings
     gap:          &p15    0.036       # [m] RF gap
-    EzPeak:       &p17    1.2         # [MV/m] peak gap field Strengy
+    EzPeak:       &p17    2.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:             '6-200 MEV' # lattice version
+    # mapping:      &map    t3d         # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    oxal         # [t3d, simple, oxal, base, ttf, dyn]
     mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    ttf         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -83,25 +87,30 @@ ELEMENTS:
         type:     QF           # QF class
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
-        B':       12.0         # [T/m] quadrupole gradient
+        B':       &bgrad 12.0        # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
         length:   0.08         # [m] length
         aperture: 0.011        # [m] quad bore
-        B':       12.0         # [T/m] quadrupole gradient
+        B':       *bgrad         # [T/m] quadrupole gradient
         slices:   0            # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
+    DgapL:
+        type:     D
+        length:   0.012
+        sec:      LE
     RFCL:                      # ID
         type:     RFC          # RFC class
-        # EzAvg:    1.00         # [MV/m] average E-field on axis
+        EzAvg:    0.786409         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
         PhiSync:  -30.         # [deg] synchronous phase
         freq:      *freq       # [Hz] frequency
         gap:      0.020        # [m] gap length
         aperture: 10.e-3       
-        SFdata:   SF/PILL-2CM.TBL # superfish tbl-data file
+        # SFdata:   SF/PILL-2CM.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g22.TBL
         mapping:  *map          # mapping in cavities
         length:   0.024        # [m] cavity length
         sec:      LE           # section 
@@ -132,32 +141,40 @@ ELEMENTS:
         type:     D            # replacement of RFG by D
         length:   0.0          # replacement of RFG by D
         sec:      HE           # section 
+    DgapH:                     # ID    (drift for d-k-d gap triple)
+        type:     D            # type
+        length:   0.020        # [m]
+        sec:      HE           # section
     RFGH:                      # ID
         type:     RFG          # RFG class
-        # EzAvg:    1.00         # [MV/m] average E-field on axis
+        EzAvg:    0.786409         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        # EzPeak:   2.00         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        gap:      *p15         # [m] length
+        gap:      0.036        # [m] length
         aperture: 10.e-3       # [m] quad bore
-        SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
+        # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g44.TBL
+        mapping:  *map         # mapping in cavities
         sec:      HE           # section 
     RFCH:                      # ID
         type:     RFC          # RFC class
-        # EzAvg:    2.00         # [MV/m] average E-field on axis
-        EzPeak:    *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-        PhiSync:  -10.          # [deg] synchronous phase
-        freq:     *freq         # [Hz] frequency
-        gap:      *p15          # [m] gap length
-        aperture: 10.e-3        # [m] quad bore
-        SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
-        mapping:  *map          # mapping in cavities
-        length:   0.040         # [m] cavity length
-        sec:      HE            # section 
-    PsMkr:                      # ID
-        type:     MRK           # MRK class
-        action:   pspace        # phase space marker actions
-        # which:    no_plot      #  {transvers} phase space ellipses
+        EzAvg:    0.786409         # [MV/m] average E-field on axis
+        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        gap:      0.036        # [m] gap length
+        aperture: 10.e-3       # [m] quad bore
+        # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g44.TBL
+        mapping:  *map         # mapping in cavities
+        length:   0.040        # [m] cavity length
+        sec:      HE           # section 
+    PsMkr:                     # ID
+        type:     MRK          # MRK class
+        action:   pspace       # phase space marker actions
+        # which:    no_plot     #  {transvers} phase space ellipses
     #     sec:                   # section 
     # SCF:                       # ID
     #     type:    MRK           # MRK class
@@ -183,6 +200,7 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QF-L:                [1,[D3L, QFL]]
     # pillbox cavities
     CavitiesL:             [12,[RFCL]]
+    GapsL:                 [12,[]]
     RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
 # HE section segments
     QF+D-H:                 [1,[QFH, D3H]]
@@ -190,25 +208,33 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
     D+QF-H:                 [1,[D3H, QFH]]
     # pillbox cavities
     CavitiesH:              [12,[RFCH]]
-    RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
+    GapsH:                  [12,[DgapH,RFGH,DgapH]]
+    # RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
+    RF_Cavity_ArrayH:       [1,[GapsH, D10H, GapsH]]
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
-    CELL-L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
-    CELL-H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
+    CELL_L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
+    CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
 #...........................................................................................
-  S-LE:      [20,[CELL-L]]
-#   S-LE:      [1,[CELL-L]]
-  S-HE:      [28,[CELL-H]]
-#   S-HE:      [1,[CELL-H]]
-  S-DUMMY:   [1,[CELL-H]]
+  S_LE:      [20,[CELL_L]]
+#   S_LE:      [1,[CELL_L]]
+  S_HE:      [148,[CELL_H]]
+#   S_HE:      [1,[CELL_H]]
+  S_END:     [3,[CELL_H]]
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
             # (ex: the LINE definition below makes a  LATTICE with 2 Secions 
             # and 1 Marker in between and Markers at the entrance and the end)
-#   LINE:   [1,[Psmarker, S-LE, PsMkr, S-HE, Psmarker]]
+#   LINE:   [1,[Psmarker, S_LE, PsMkr, S_HE, Psmarker]]
 #........................................................................................... 
-  LINE:   [1,[S-LE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE, PsMkr, S-HE]]
+# LE+HE 6-200
+#   LINE:   [1,[S_LE,PsMkr,CELL_L,PsMkr,CELL_H,PsMkr,S_HE,S_END,PsMkr]]
+# LE 6 IN
+#   LINE:   [1,[PsMkr,S_LE,CELL_L,PsMkr]]
+#   HE 16.5 IN
+  LINE:   [1,[PsMkr,CELL_H,S_HE,S_END,PsMkr]]
+
   

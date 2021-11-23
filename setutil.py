@@ -531,9 +531,10 @@ def sigmas(alfa,beta,epsi):
 
 def show_data_from_elements():  #TODO better get data fron lattice objects
     eIDs = ParserResult.ELMIDs
-    for elementID in eIDs:      
+    for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]
-        dictprnt(element,' {} (MKSA units)'.format(elementID),end='')
+        print('{} '.format(elementID),end='')
+        dictprnt(element,'(MKSA units)',end='')
 
 def collect_data_for_summary(lattice):
     if True:

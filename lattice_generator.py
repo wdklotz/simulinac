@@ -79,7 +79,8 @@ def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
 def instanciate_element(item):
     """ item: {ID:{attrinutes}} for each element """
     def EzPeakToAverage(Ezpeak):
-        return 0.78 * EzPeak    # ~0.748 * EzPeak from Superfish
+        # return 0.40 * EzPeak    # Pi mal Daumen: about 0.4*EzPeak from Superfish
+        return EzPeak
 
     DEBUG_OFF(item)
     for ID,attributes in item.items():
@@ -152,17 +153,15 @@ def instanciate_element(item):
             EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             if mapping == None:
                 mapping = 't3d'
-                # EzAvg = EzPeakToAverage(EzPeak) TODO ??
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname     = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
-                    half_gap_cm = gap*50     # Watch out!
-                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
+                    gap_cm = gap*100     # Watch out!
+                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
                 EzAvg = util.PARAMS[fname].EzAvg
                 instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=util.PARAMS[fname])
                 pass
             else:
-                # EzAvg = EzPeakToAverage(EzPeak) TODO ??
                 instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
             element = util.ELEMENTS[label]
             element['EzAvg']     = EzAvg
@@ -189,12 +188,11 @@ def instanciate_element(item):
             EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             if mapping == None:
                 mapping = 't3d'
-                # EzAvg = EzPeakToAverage(EzPeak)
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname     = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
-                    half_gap_cm = gap*50     # Watch out!
-                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=half_gap_cm)
+                    gap_cm = gap*100     # Watch out!
+                    util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
                 EzAvg = util.PARAMS[fname].EzAvg
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
                 pass

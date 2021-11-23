@@ -53,7 +53,7 @@ class _OXAL(object):
             zr = -zl
 #            E0z = 0.
 #            z = 0.
-            for poly in SFdata.Ez_poly:
+            for poly in SFdata.EzPoly:
                 zil = poly.zl
                 zir = poly.zr
                 if zil < zl or zir > zr: continue
