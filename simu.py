@@ -115,12 +115,12 @@ def display0(*args):
     # plt.plot(tz,cxp,label="Cx'[m]",color='blue',linestyle=':')
     plt.plot(tz,sx, label='Sx[m]', color='red' ,linestyle='-')
     # plt.plot(tz,sxp,label="Sx'[m]",color='red' ,linestyle=':')
-    vscale=plt.axis()[3]*0.1
-    viseox = [x*vscale for x in vis_ordinate]
-    for i,s in enumerate(vis_abszisse):
-        if s > stop_viseox:
-            viseox[i] = 0.
-    plt.plot(vis_abszisse,viseox,label='',color='black')
+    # vscale=plt.axis()[3]*0.1
+    # viseox = [x*vscale for x in vis_ordinate]
+    # for i,s in enumerate(vis_abszisse):
+    #     if s > stop_viseox:
+    #         viseox[i] = 0.
+    # plt.plot(vis_abszisse,viseox,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 
@@ -134,9 +134,9 @@ def display0(*args):
     # plt.plot(tz,syp,label="Sy'[m]",color='red' ,linestyle=':')
     vscale=plt.axis()[3]*0.1
     viseoy = [x*vscale for x in vis_ordinate]
-    for i,s in enumerate(vis_abszisse):
-        if s > stop_viseoy:
-            viseoy[i] = 0.
+    # for i,s in enumerate(vis_abszisse):
+    #     if s > stop_viseoy:
+    #         viseoy[i] = 0.
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')

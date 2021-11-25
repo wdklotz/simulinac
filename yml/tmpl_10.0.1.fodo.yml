@@ -47,8 +47,8 @@ PARAMETERS:
     DT2T:                 1.0e-3      # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    3.3         # [m] twiss beta @ entrance x
-    betay_i:      &bty    0.55        # [m] twiss beta @ entrance y
+    betax_i:      &btx    _BETAX         # [m] twiss beta @ entrance x
+    betay_i:      &bty    _BETAY        # [m] twiss beta @ entrance y
     phi_sync:     &phs    -30.        # [deg] synchronous phase
     frequency:    &freq   816.e6      # [Hz] frequency
     alfax_i:              0.0         # [] twiss alpha x @ entrance
@@ -56,6 +56,7 @@ PARAMETERS:
     ql0:          &p02    0.04        # [m] quad-length
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
+    Bgrad:        &bgrad  _BGRAD
     windings:             30          # [] quad-coil windings
     thins:        &ths    3           # nbof thin quads replacing one thick quad
     gap:          &p15    0.036       # [m] RF gap
@@ -81,16 +82,15 @@ ELEMENTS:
         type:     QF           # QF class
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
-        # B':       &bgrad 12.0        # [T/m] quadrupole gradient
-        B':       &bgrad 9.0        # [T/m] quadrupole gradient
-        thins:   *ths          # if thins == 0|1: one thick element else: many thin elements
+        B':       *bgrad       # [T/m] quadrupole gradient
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
         length:   0.04         # [m] length
         aperture: 0.011        # [m] quad bore
-        B':       *bgrad         # [T/m] quadrupole gradient
-        thins:   *ths          # if thins == 0|1: one thick element else: many thin elements
+        B':       *bgrad       # [T/m] quadrupole gradient
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     PsMkr:                     # ID
         type:     MRK          # MRK class
@@ -114,6 +114,7 @@ CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
     NIL_SEC:    [1,[NIL_CELL]]   # empty section
+    SEC:        [100,[QFL,DXX,QDL,QDL,DXX,QFL]]
 #...........................................................................................
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
@@ -121,6 +122,6 @@ LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S_LE, PsMkr, S_HE, Psmarker]]
 #........................................................................................... 
-   LINE:  [300,[QFL,DXX,QDL,QDL,DXX,QFL]]
+   LINE:  [1,[PsMkr,SEC]]
 
   
