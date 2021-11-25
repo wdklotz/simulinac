@@ -18,15 +18,15 @@ DT2T=1.0e-3             # delta-T/T kinetic
 # EMITY=1.e-6             # y emittance in [m*rad]
 EMITX=4.e-6             # x emittance in [m*rad]
 EMITY=4.e-6             # y emittance in [m*rad]
-BETAX=3.617             # twiss beta x in [m]  (T,B')=(25,23)
-BETAY=0.709             # twiss beta x in [m]  (T,B')=(25,23)
+BETAX=3.024             # twiss beta x in [m]     FOFO matched
+BETAY=0.343            # twiss beta x in [m]      FODO matched
 
 #============== RF
 PHISY=-30.              # synchronous phase in [deg]
 FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 
 #============== Quad gradients
-BGRAD=23.000            # quad gradient [T/m] (T=25)
+BGRAD=9.000            # quad gradient     FODO matched
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"
