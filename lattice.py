@@ -32,15 +32,13 @@ def PRINT_PRETTY(obj):
 def PASS(obj):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
+DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-DEBUG_MODULE = DEB.get('OFF')
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions
 import elements as ELM
-# import TTFG as TTF
 from sigma import Sigma
 
 # Lattice
@@ -63,7 +61,6 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration
-            
     class RLiterator(object):
         def __init__(self,lattice):
             self.lattice = lattice
@@ -87,7 +84,6 @@ class Lattice(object):
         self.iteration = "LR"  # default: iterating lattice left-right
         self.length = 0.
         self.accel  = 0.
-
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -95,7 +91,6 @@ class Lattice(object):
         elif self.iteration == "LR":
             iterator = self.LRiterator(self)
         return iterator
-    
     def add_element(self,element):
         """ add element to lattice """
         if len(self.seq) == 0:
@@ -114,7 +109,6 @@ class Lattice(object):
         position = (si,sm,sf)
         element.position = position 
         self.length = sf
-
     def string(self):
         # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
@@ -122,12 +116,11 @@ class Lattice(object):
         # for element in self.seq:
         for element in iter(self):
         # for element in iter(self):
-            DEBUG_MODULE('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
+            DEBUG_OFF('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
             # ACHTUNG: Reihenfolge im Produkt ist wichtig!
             mcell = element * mcell   
         mcell.section = '<= full lattice map'
         return mcell.prmatrix()
-
     def stats(self,soll_track):
         """ gather lattice statistics """
         cav_counter = 0
@@ -151,7 +144,6 @@ class Lattice(object):
         SUMMARY['nbof cavities*']        = cav_counter
         SUMMARY['(ttf)min,(ttf)max*']    = (ttfm,ttfx)
         SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
-
     def cell(self,closed=True):
         """
         Construct the full accelerator lattice-cell matrix and extract standard quantities:
@@ -290,7 +282,6 @@ class Lattice(object):
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return(self)
-
     def report(self):
         # TODO needs more work
         """ report lattice layout (may not work!) """
@@ -313,21 +304,18 @@ class Lattice(object):
                 header = row = ''
         reprt += header+' \n'+row+' \n'
         return reprt
-
     def toggle_iteration(self):
         """ toggle l->R or L<-R sweep through linked list of elements"""
         if self.iteration == "LR":
             self.iteration = "RL"
         elif self.iteration == "RL":
             self.iteration = "LR"
-
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         # TODO check correctness again
         for element in iter(lattice):
             element = copy(element)
             self.add_element(element)
-        
     def twiss_envelopes(self,steps=1):
         """ Calulate envelopes from initial twiss-vector with beta-matrices """
         twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
@@ -360,7 +348,6 @@ class Lattice(object):
             # aperture check
             self.aperture_check(node,twiss=True)
         return twfun
-    
     def aperture_check(self,node,twiss=True):
         """ check sigmas against apertures """
         fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
@@ -376,7 +363,6 @@ class Lattice(object):
                         print(warnings.formatwarning('{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm),UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
-    
     def sigmas(self,steps = 10):
         """ dispatch to different envelope functions """
         #TODO: analytical sigmas for 'dyn' mapping as best estimates ?
@@ -407,7 +393,6 @@ class Lattice(object):
             print(mess)
             sigma_fun = envelopes(function, steps = steps)
         return sigma_fun
-
     def sigma_envelopes(self, steps = 1):
         """ Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes """
         # initials
@@ -431,7 +416,6 @@ class Lattice(object):
             # aperture check
             self.aperture_check(node,twiss=False)
         return sigma_fun
-
     def dispersion(self,steps=10,closed=True):
         """ track the dispersion function """
         traj = []
@@ -456,7 +440,6 @@ class Lattice(object):
                 dp = v_0[1]
                 traj.append((s,d,dp))
         return traj
-
     def lattice_plot_functions(self):
         """
         generate the functions to plot the lattice
@@ -485,7 +468,6 @@ class Lattice(object):
             if aperture == None: continue
             ape.append(sm,(aperture,))
         return fun,ape
-
     def cs_traj(self,steps=10):
         """ track cos- & sin-trajectories """
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
@@ -497,7 +479,7 @@ class Lattice(object):
         print('CALCULATE C+S TRAJECTORIES')
         tkin = PARAMS['sollteilchen'].tkin
         
-        """ injektion parmarers """
+        """ injektion parameters """
         if True:
             # 2 point on the ellipse y1 & y4: intersections
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
@@ -532,6 +514,8 @@ class Lattice(object):
             slices = element.make_slices(anz=steps)
             try:
                 for i_element in slices:
+                    # if i_element.type == 'QFth' : print(i_element.type,i_element.matrix)
+                    # if i_element.type == 'QDth' : print(i_element.type,i_element.matrix)
                     s += i_element.length
                     ## COSine_like
                     c_0 = i_element.map(c_0)   # map!!!
@@ -561,7 +545,6 @@ class Lattice(object):
                 #TODO  raise ex
                 break
         return (c_fun,s_fun)
-
     def symplecticity(self):
         """ test symplecticity """
         s = NP.array([
@@ -585,20 +568,18 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    
     def show_linkage(self):
         """ Show left-right links of doubly linked element list of the lattice. Iterate in both directions """
         print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
         for next in iter(self):
-            print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
+            print('{:38s}\t{:38s}'.format(repr(next),repr(next.next)))
             next = next.next
         self.toggle_iteration()
         print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
         for next in iter(self):
-            print('{:38s} {:38s} {:38s}'.format(repr(next.prev),repr(next),repr(next.next)))
+            print('{:38s}\t{:38s}'.format(repr(next),repr(next.prev)))
             next = next.next
         self.toggle_iteration()
-        
     @property
     def first_gap(self):
         """ return the 1st RF gap"""
@@ -609,7 +590,6 @@ class Lattice(object):
                 node = elm
                 break
         return node
-
 ## utilities
 def make_wille():
     """

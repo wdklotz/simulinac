@@ -30,10 +30,8 @@ def PRINT_PRETTY(obj):
 def PASS(obj):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
+DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-DEBUG_MAP    = False
-DEBUG_PYO_G  = False
 
 from setutil import wille, PARAMS, FLAGS
 from setutil import WConverter, dictprnt, objprnt, Proton, Electron
@@ -45,7 +43,6 @@ from DynacG  import _DYN_G
 from OXAL    import _OXAL
 
 twopi = 2.*pi     # used about everywhere
-
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
@@ -253,7 +250,7 @@ class _Node(object):
         f_track = NP.dot(self.matrix,f_track)
 
         # for DEBUGGING
-        if DEBUG_MAP:
+        if 0:
             f = f_track.copy() # !!!IMPORTANT!!!
             for i in range(len(f_track)-4):
                 f[i]  = f[i]*1.e3
@@ -596,10 +593,10 @@ class RFG(I):
         elif self.mapping == 'dyn':
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # self.gap_model = _DYN_G(self)  not for RFG anymore!
-            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
-            print("RFG is a kick-model and does not work with 'dyn'-mapping!")
-            print("RFG is a kick-model and does not work with 'dyn'-mapping!",flush=True)
-        #    exit(1)
+            info = "INFO: RFG is a kick-model and does not work with 'dyn'-mapping!"
+            DEBUG_ON(info)
+            print('"{}"'.format(info))
+            exit(1)
             
     def adjust_energy(self, tkin):
         _params = self._params
@@ -911,7 +908,7 @@ class _PYO_G(object):
         f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G:
+        if 0:
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -946,6 +943,7 @@ class _PYO_G(object):
         phis     = self.phis
         qE0LT    = self.qE0LT
         
+        # DEBUG_ON(i_track)
         r      = sqrt(x**2+y**2)                      # radial coordinate
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
@@ -987,7 +985,7 @@ class _PYO_G(object):
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
         # for DEBUGGING
-        if DEBUG_PYO_G:
+        if 0:
             itr = i_track.copy()
             ftr = f_track.copy()
             for i in range(len(f_track)-4):
@@ -1079,79 +1077,97 @@ class _thin(_Node):
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
 
     def make_slices(self, anz = PARAMS['nbslices']):  
-        """ 
-        Stepping routine through the triplet
-        """
-        DEBUG_OFF('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
-        anz1 = int(ceil(anz/2))
-        di   = self.triplet[0]
-        df   = self.triplet[2]
-        kik  = self.triplet[1]
-        d1   = di.shorten(di.length/anz1)
-        d2   = df.shorten(df.length/anz1)
-        slices = []
-        for i in range(anz1):
-            slices.append(d1)
-        slices.append(kik)      # the Kick
-        for i in range(anz1):
-            slices.append(d2)
-        DEBUG_OFF('slices {}'.format(slices))
-        return slices
-
-class QFth(_thin):
-    """ 
-    Thin F-Quad 
-    """
-    def __init__(self, k0=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
-        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self.k0        = k0
-        self['viseo']  = +0.5
-        di = D(length  = 0.5*self.length, particle = self.particle)
-        df = di
-        kick = _kick(self, particle=self.particle, position=self.position, aperture=self.aperture)
-        lens = df * (kick * di) # matrix produkt df*kick*di
-        self.matrix = lens.matrix
-        self.triplet = (di, kick, df)
-
-    def adjust_energy(self, tkin):
-        cpi = self.particle.gamma_beta
-        self.particle(tkin)
-        cpf = self.particle.gamma_beta
-        ki = self.k0
-        kf = ki*cpi/cpf # scale quad strength with new impulse
-        _params = self._params
-        self.__init__(k0=kf, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
-        self._params = _params
-        return self
+        return [self]
+    # def make_slices(self, anz = PARAMS['nbslices']):  TODO: make a better 'make-_slices' ????
+    #     """ 
+    #     Stepping routine through the triplet
+    #     """
+    #     DEBUG_OFF('_thin.make_slices: {} {:8.4f}'.format(self.label, self.length))
+    #     anz1 = int(ceil(anz/2))
+    #     di   = self.triplet[0]
+    #     df   = self.triplet[2]
+    #     kik  = self.triplet[1]
+    #     d1   = di.shorten(di.length/anz1)
+    #     d2   = df.shorten(df.length/anz1)
+    #     slices = []
+    #     for i in range(anz1):
+    #         slices.append(d1)
+    #     slices.append(kik)      # the Kick
+    #     for i in range(anz1):
+    #         slices.append(d2)
+    #     DEBUG_OFF('slices {}'.format(slices))
+    #     return slices
 
 class _kick(I):
     """ 
     Matrix for thin lens quad 
     """
-    def __init__(self, quad, particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None):
-        super().__init__(label='k', particle=particle, position=position, aperture=aperture)
+    def __init__(self, k0l):
+        super().__init__(label='k')
         m = self.matrix
-        m[XPKOO, XKOO] = -quad.k0*quad.length
-        m[YPKOO, YKOO] = -m[XPKOO, XKOO]
+        m[XPKOO, XKOO] = -k0l
+        m[YPKOO, YKOO] = +k0l
+
+class QFth(_thin):
+    """ 
+    Thin F-Quad 
+    """
+    def __init__(self, k0, length, label='QFth', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
+        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
+        self.k0 = k0
+        self.length = length
+        self['viseo']  = +0.5
+        df = di = D(length = 0.5*self.length, particle = self.particle)
+        k0l = self.k0*self.length
+        if isinstance(self,QFth) and not isinstance(self,QDth):
+            kick = _kick(k0l)
+        elif isinstance(self,QDth):
+            kick = _kick(-k0l)
+        else:
+            raise RuntimeError('QFth: neither QFth nor QDth! should never happen! - STOP')
+
+        lens = df * (kick * di) # matrix produkt df*kick*di
+        # matrix = NP.dot(df.matrix,(NP.dot(kick.matrix, di.matrix)))
+        self.matrix = lens.matrix
+        # self.triplet = (di, kick, df)
+
+    def adjust_energy(self, tkin):             #TODO the bug must be here ??????
+        ki = self.k0
+        cpi = self.particle.gamma_beta
+        self.particle(tkin)
+        cpf = self.particle.gamma_beta
+        kf = ki*cpi/cpf # scale quad strength with new impulse
+        _params = self._params
+        self.__init__(kf, self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
+        self._params = _params
+        return self
 
 class QDth(QFth):
     """ 
     Thin D-Quad 
     """
-    def __init__(self, k0=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
-        super().__init__(k0=-k0, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self['viseo']  = -0.5
+    def __init__(self, k0, length, label='QDth', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
+        super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
+        self['viseo']= -0.5
 
 class QFthx(D):
     """ 
     Thin F-Quad   (express version of QFth) 
     """
-    def __init__(self, k0=0., label='QFT', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=PARAMS['aperture'], next=None, prev=None):
+    def __init__(self, k0, length, label='QFthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self.k0       = k0
         self['viseo'] = +0.5
+        self.length   = length
         L = self.length
         m = self.matrix
+        if isinstance(self,QFthx) and not isinstance(self,QDthx):
+            pass
+        elif isinstance(self,QDthx):
+            k0 = -k0
+        else:
+            raise RuntimeError('QFthx: neither QFthx nor QDthx! should never happen! - STOP')
+
         # thin lens quad matrix (by hand calculation)
         m[0, 0]  = 1. - k0*(L**2)/2.
         m[0, 1]  = L - k0*(L**3)/4.
@@ -1163,33 +1179,32 @@ class QFthx(D):
         m[3, 3]  = m[2, 2]
 
     def adjust_energy(self, tkin):
+        ki  = self.k0
         cpi = self.particle.gamma_beta
         self.particle(tkin) # PARTICLE energy adjusted
         cpf = self.particle.gamma_beta
-        ki  = self.k0
         kf  = ki*cpi/cpf # scale quad strength with new impulse
         _params = self._params
-        self.__init__(k0=kf, label=self.label, particle=self.particle, position=self.position,length=self.length, aperture=self.aperture, next=self.next, prev=self.prev)
+        self.__init__(kf, self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
         return self
 
     def make_slices(self, anz=PARAMS['nbslices']):
-        slices = [self]
-        return slices
+        return [self]
 
 class QDthx(QFthx):
     """ 
     Thin D-Quad   (express version of QDth) 
     """
-    def __init__(self, k0=0., label='QDT', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
-        super().__init__(k0=-k0, label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
+    def __init__(self, k0, length, label='QDthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None):
+        super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
         self['viseo'] = -0.5
 
 class SIXD(D):
     """ 
     Drift with Sixtrack mapping (experimental!) 
     """
-    def __init__(self, label="D#", particle=PARAMS['sollteilchen'], position=[0., 0., 0.], length=0., aperture=PARAMS['aperture'], next=None, prev=None):
+    def __init__(self, label="Dsix", particle=PARAMS['sollteilchen'], position=[0., 0., 0.], length=0., aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self['viseo'] = 0.
         self.off_soll = copy(self.particle) # !!!IMPORTANT!!!
@@ -1345,7 +1360,6 @@ class Test(_Node):
                               [0., 0., 0., 0., 0., 0., 0., 0., 0., 1.],
                               ])
         self.label = label
-
 def k0test(gradient = 0., beta = 0., energy = 0.):
     """
         quad strength as function of energy and gradient
@@ -1357,8 +1371,7 @@ def k0test(gradient = 0., beta = 0., energy = 0.):
         return 0.2998*gradient/(beta*energy)
     else:
         raise RuntimeError('zero gradient or energy or beta in quad strength!')
-        sys.exit(1)
-        
+        sys.exit(1)        
 def test0():
     print('--------------------------------Test0---')
     print('trivial test 0 ...')

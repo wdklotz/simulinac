@@ -57,12 +57,12 @@ PARAMETERS:
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
     windings:             30          # [] quad-coil windings
-    # thins:        &ths    3          # nbof thin quads replacing one thick quad
+    thins:        &ths    3           # nbof thin quads replacing one thick quad
     gap:          &p15    0.036       # [m] RF gap
     EzPeak:       &p17    2.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
-    lattvers:             'LE or HE'  # lattice version
+    lattvers:             'FODO'  # lattice version
     mapping:      &map    _MAPPING        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
@@ -77,111 +77,26 @@ ELEMENTS:
         length:   0.5        # replacement
         sec:      HE           # section 
 # Nodes in low energy section
-    # D3L:                       # ID
-    #     type:     D            # D class
-    #     length:   0.03         # [m]
-    #     sec:      LE           # section 
-    # D10L:                      # ID
-    #     type:     D            # D class
-    #     length:   0.100        # [m]
-    #     sec:      LE           # section 
     QFL:                       # ID
         type:     QF           # QF class
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
         # B':       &bgrad 12.0        # [T/m] quadrupole gradient
         B':       &bgrad 9.0        # [T/m] quadrupole gradient
-        slices:   2            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths          # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
         length:   0.04         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       *bgrad         # [T/m] quadrupole gradient
-        slices:   2            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths          # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
-    # DgapL:
-    #     type:     D
-    #     length:   0.012
-    #     sec:      LE
-    # RFCL:                      # ID
-    #     type:     RFC          # RFC class
-    #     EzAvg:    0.786409         # [MV/m] average E-field on axis
-    #     EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.00[MV/m])
-    #     PhiSync:  -30.         # [deg] synchronous phase
-    #     freq:      *freq       # [Hz] frequency
-    #     gap:      0.020        # [m] gap length
-    #     aperture: 10.e-3       
-    #     # SFdata:   SF/PILL-2CM.TBL # superfish tbl-data file
-    #     SFdata:   SF/SF_WDK2g22.TBL
-    #     mapping:  *map          # mapping in cavities
-    #     length:   0.024        # [m] cavity length
-    #     sec:      LE           # section 
-# Nodes in high energy section
-    # D3H:                       # ID
-    #     type:     D            # D class
-    #     length:   0.03         # [m]
-    #     sec:      HE           # section 
-    # D10H:                      # ID
-    #     type:     D            # D class
-    #     length:   0.100        # [m]
-    #     sec:      HE           # section 
-    # QFH:                       # ID
-    #     type:     QF           # QF class
-    #     length:   0.02         # [m]
-    #     aperture: 0.011        # [m] quad bore
-    #     B':       &Bgrad 20.   # [T/m] quadrupole gradient
-    #     slices:   0            # if slices == 0|1: one thick element else: many thin elements
-    #     sec:      HE           # section 
-    # QDH:                       # ID
-    #     type:     QD           # QD class
-    #     length:   0.04         # [m] length
-    #     aperture: 0.011        # [m] quad bore
-    #     B':       *Bgrad       # [T/m] quadrupole gradient
-    #     slices:   0            # if slices == 0|1: one thick element else: many thin elements
-    #     sec:      HE           # section 
-    # DgapH:                     # ID    (drift for d-k-d gap triple)
-    #     type:     D            # type
-    #     length:   0.020        # [m]
-    #     sec:      HE           # section
-    # RFGH:                      # ID
-    #     type:     RFG          # RFG class
-    #     EzAvg:    0.786409         # [MV/m] average E-field on axis
-    #     EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-    #     # EzPeak:   2.00         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-    #     PhiSync:  *phs         # [deg] synchronous phase
-    #     freq:     *freq        # [Hz] frequency
-    #     gap:      0.036        # [m] length
-    #     aperture: 10.e-3       # [m] quad bore
-    #     # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
-    #     SFdata:   SF/SF_WDK2g44.TBL
-    #     mapping:  *map         # mapping in cavities
-    #     sec:      HE           # section 
-    # RFCH:                      # ID
-    #     type:     RFC          # RFC class
-    #     EzAvg:    0.786409         # [MV/m] average E-field on axis
-    #     EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-    #     PhiSync:  *phs         # [deg] synchronous phase
-    #     freq:     *freq        # [Hz] frequency
-    #     gap:      0.036        # [m] gap length
-    #     aperture: 10.e-3       # [m] quad bore
-    #     # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
-    #     SFdata:   SF/SF_WDK2g44.TBL
-    #     mapping:  *map         # mapping in cavities
-    #     length:   0.040        # [m] cavity length
-    #     sec:      HE           # section 
     PsMkr:                     # ID
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
         # which:    no_plot     #  {transvers} phase space ellipses
     #     sec:                   # section 
-    # SCF:                       # ID
-    #     type:    MRK           # MRK class
-    #     action:  poincare      #  phase space poincare maps
-    #     prefix:  frames        # path to store frames
-    #     abscissa: z            # horizontal variable
-    #     ordinate: zp           # vertical variable
-    #     sec:                   # section
 # ...........................................................................................
 # LATTICE definition starts here:  
          # Node is part of Segment is part of Cell is part of Section is part of LINE
@@ -190,57 +105,22 @@ ELEMENTS:
 SEGMENTS:   # group ELEMENTs into SEGMENTs:
             # Syntax: [number[node,...,node]]
             # the list [node,...,node] is repeated number times
-    NIL_SEG:     [1,[]]
+    NIL_SEG:     [1,[]]    # empty segment
 #...........................................................................................
-# Marker segment
-    # Psmarker:              [1,[PsMkr]]
-# LE section segment
-    # QF+D-L:                [1,[QFL, D3L]]
-    # D+QD+D-L:              [1,[D3L, QDL, D3L]]
-    # D+QF-L:                [1,[D3L, QFL]]
-    # # pillbox cavities
-    # CavitiesL:             [12,[RFCL]]
-    # CavitiesL:             [12,[RFX]]
-    # CavitiesL:             [12,[RFX]]
-    # RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
-# HE section segments
-    # QF+D-H:                 [1,[QFH, D3H]]
-    # D+QD+D-H:               [1,[D3H, QDH, D3H]]
-    # D+QF-H:                 [1,[D3H, QFH]]
-    # pillbox cavities
-    # CavitiesH:              [12,[RFCH]]
-    # GapsH:                  [12,[DgapH,RFGH,DgapH]]
-    # RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
-    # RF_Cavity_ArrayH:       [1,[GapsH, D10H, GapsH]]
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
-    NIL_CELL:    [1,[NIL_SEG]]
+    NIL_CELL:    [1,[NIL_SEG]]    # empty cell
 #...........................................................................................
-    # CELL_L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
-    # CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
-    NIL_SEC:    [1,[NIL_CELL]]
+    NIL_SEC:    [1,[NIL_CELL]]   # empty section
 #...........................................................................................
-#   S_LE:      [20,[CELL_L]]
-#   S_LE:      [1,[CELL_L]]
-#   S_LE:      [3,[CELL_L]]
-#   S_HE:      [148,[CELL_H]]
-#   S_HE:      [1,[CELL_H]]
-#   S_END:     [3,[CELL_H]]
 #........................................................................................... 
 LATTICE:    # group SECTIONs into a LINE a.k.a. LATTICE
             # (ex: the LINE definition below makes a  LATTICE with 2 Secions 
             # and 1 Marker in between and Markers at the entrance and the end)
 #   LINE:   [1,[Psmarker, S_LE, PsMkr, S_HE, Psmarker]]
 #........................................................................................... 
-# LE+HE 6-200
-#   LINE:   [1,[S_LE,PsMkr,CELL_L,PsMkr,CELL_H,PsMkr,S_HE,S_END,PsMkr]]
-# LE 6 IN
-#   LINE:   [1,[PsMkr,S_LE,CELL_L,PsMkr]]
-#   LINE:   [1,[PsMkr,S_LE,PsMkr]]
-#   HE 16.5 IN
-#   LINE:   [1,[PsMkr,CELL_H,S_HE,S_END,PsMkr]]
-   LINE:  [30,[QFL,DXX,QDL,QDL,DXX,QFL]]
+   LINE:  [300,[QFL,DXX,QDL,QDL,DXX,QFL]]
 
   

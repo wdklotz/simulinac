@@ -30,14 +30,13 @@ def PRINT_PRETTY(obj):
 def PASS(obj):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
+DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 import setutil as util
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
-# import marker_actions as MRK
 from lattice_parser2 import parse
 import PsMarkerAgent as psmkr
 
@@ -53,29 +52,26 @@ def get_mandatory(attributes,key,item):
                 )
         sys.exit(1)
     return res
-
-def replace_QF_with_QFth_lattice(slices,k0,length,label,particle,aperture):
-    lattice = Lattice()
-    thinlen = length/slices
-    for nb in range(slices):
+def replace_QF_with_QFth_lattice(thins,k0,length,label,particle,aperture):
+    instances = []
+    thinlen = length/thins
+    for nb in range(thins):
         if util.FLAGS['express']:
-            instance = ELM.QFthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
+            instance = ELM.QFthx(k0,thinlen,label=label,particle=particle,aperture=aperture)
         else:
-            instance = ELM.QFth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
-        lattice.add_element(instance)
-    return lattice
-
-def replace_QD_with_QDth_lattice(slices,k0,length,label,particle,aperture):
-    lattice = Lattice()
-    thinlen = length/slices
-    for nb in range(slices):
+            instance = ELM.QFth(k0,thinlen,label=label,particle=particle,aperture=aperture)
+        instances.append(instance)
+    return instances
+def replace_QD_with_QDth_lattice(thins,k0,length,label,particle,aperture):
+    instances = []
+    thinlen = length/thins
+    for nb in range(thins):
         if util.FLAGS['express']:
-            instance = ELM.QDthx(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
+            instance = ELM.QDthx(k0,thinlen,label=label,particle=particle,aperture=aperture)
         else:
-            instance = ELM.QDth(k0=k0,length=thinlen,label=label,particle=particle,aperture=aperture)
-        lattice.add_element(instance)
-    return lattice
-
+            instance = ELM.QDth(k0,thinlen,label=label,particle=particle,aperture=aperture)
+        instances.append(instance)
+    return instances
 def instanciate_element(item):
     """ item: {ID:{attrinutes}} for each element """
     def EzPeakToAverage(Ezpeak):
@@ -110,36 +106,35 @@ def instanciate_element(item):
             label    = attributes['ID']
             length   = get_mandatory(attributes,'length',label)
             dBdz     = get_mandatory(attributes,"B'",label)
-            slices   = get_mandatory(attributes,'slices',label)
+            thins    = get_mandatory(attributes,'thins',label)
             aperture = get_mandatory(attributes,'aperture',label)
             kq       = dBdz/util.PARAMS['sollteilchen'].brho
             Bpole    = dBdz*aperture
-            if slices > 1:
-                instance = replace_QF_with_QFth_lattice(slices,kq,length,label,util.PARAMS['sollteilchen'],aperture)
-            elif slices <= 1:
+            if thins > 1:
+                instance = replace_QF_with_QFth_lattice(thins,kq,length,label,util.PARAMS['sollteilchen'],aperture)
+            elif thins <= 1:
                 instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
-            instance['label']  = label
-            instance['dBdz']   = dBdz
-            instance['bore']   = aperture
-            instance['Bpole']  = Bpole
-            pass
+                instance['label']  = label
+                instance['dBdz']   = dBdz
+                instance['bore']   = aperture
+                instance['Bpole']  = Bpole
 
         elif type == 'QD':
             label    = attributes['ID']
             length   = get_mandatory(attributes,'length',label)
             dBdz     = get_mandatory(attributes,"B'",label)
-            slices   = get_mandatory(attributes,'slices',label)
+            thins    = get_mandatory(attributes,'thins',label)
             aperture = get_mandatory(attributes,'aperture',label)
             kq       = dBdz/util.PARAMS['sollteilchen'].brho
             Bpole    = dBdz*aperture
-            if slices > 1:
-                instance = replace_QD_with_QDth_lattice(slices,kq,length,label,util.PARAMS['sollteilchen'],aperture)
-            elif slices <= 1:
+            if thins > 1:
+                instance = replace_QD_with_QDth_lattice(thins,kq,length,label,util.PARAMS['sollteilchen'],aperture)
+            elif thins <= 1:
                 instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
-            instance['label']  = label
-            instance['dBdz']   = dBdz
-            instance['bore']   = aperture
-            instance['Bpole']  = Bpole
+                instance['label']  = label
+                instance['dBdz']   = dBdz
+                instance['bore']   = aperture
+                instance['Bpole']  = Bpole
 
         elif type == 'RFG':
             label     = attributes['ID']
@@ -270,7 +265,6 @@ def instanciate_element(item):
                     )
             sys.exit(1)
     return instance
-
 def factory(input_file):
     """ factory creates a lattice from input-file """
 
@@ -295,7 +289,6 @@ def factory(input_file):
         if 'marker'      in flags: util.FLAGS['marker']   = flags['marker']
         if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
         return flags
-
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
         if 'Tkin'             in parameters: util.PARAMS['injection_energy'] = parameters['Tkin']
@@ -314,35 +307,50 @@ def factory(input_file):
         if 'alfax_i'          in parameters: util.PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: util.PARAMS['alfay_i']          = parameters['alfay_i']
         if 'mapping'          in parameters: util.PARAMS['mapping']          = parameters['mapping']
+        if 'thins'            in parameters: util.PARAMS['thins']            = parameters['thins']
         if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
         if 'lattvers'         in parameters: util.PARAMS['lattice_version']  = parameters['lattvers']
         return parameters
-
     def proces_elements(elements):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
         return elements
-
     def make_lattice(elementIDs):
-        DEBUG_OFF(elementIDs)
+        # DEBUG_ON(elementIDs)
         lattice = Lattice()
+        instances = []
         for elementID in elementIDs:
-            element        = util.ELEMENTS.get(elementID)
+            # print("A")
+            # DEBUG_ON(elementID)
+            element = util.ELEMENTS.get(elementID)
+            # print("B")
+            # DEBUG_ON(element)
             """add sectionID and elementID"""
             element['ID']  = elementID 
             # repack {ID:{attributes}} for instanciate_element(...)
-            item           = {elementID:element}
+            item = {elementID:element}
             """INSTANCIATE ELM._Node objects"""
             instance = instanciate_element(item)
-            if isinstance(instance,ELM._Node):
-                lattice.add_element(instance)
+            # print("C")
+            # DEBUG_ON(instance)
+            if isinstance(instance, ELM._Node):
+                # lattice.add_element(instance)
+                instances.append(instance)
+            # list of thin quad instances
+            elif isinstance(instance,list):
+                # [lattice.add_element(x) for x in instance]
+                instances += instance
+        # print("D")
+        # DEBUG_ON(instances)
+        for instance in instances:
+            # print('E')
+            # DEBUG_ON(instance.__dict__)
+            lattice.add_element(instance)
         return lattice   # the complete lattice
-        
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     util.SUMMARY['input file'] = util.PARAMS['input_file'] = input_file
-
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)
@@ -409,11 +417,22 @@ def test1(input_file):
     lattice.toggle_iteration()
     for cnt,node in enumerate(iter(lattice)):
         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
+def test2():
+    util.FLAGS['express'] = False
+    thins = 3
+    kq = 10.
+    length = 3
+    aperture = 1
+    instance = replace_QF_with_QFth_lattice(thins,kq,length,'FOC',util.PARAMS['sollteilchen'],aperture)
+    DEBUG_ON(instance)
+    instance = replace_QD_with_QDth_lattice(thins,kq,length,'DFOC',util.PARAMS['sollteilchen'],aperture)
+    DEBUG_ON(instance)
 
 if __name__ == '__main__':
     input_file = 'yml/v10.0.0_compat_IN.yml'
     # input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
-    test0(input_file)
+    # test0(input_file)
     # test1(input_file)
+    test2()
 

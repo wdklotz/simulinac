@@ -9334,8 +9334,8 @@ Error message and password prompt
 <div created="20211016163520340" creator="wdklotz" modified="20211123223339578" modifier="wdklotz" title="$:/state/folded/Elements">
 <pre>show</pre>
 </div>
-<div created="20211121163011068" creator="wdklotz" modified="20211121171341122" modifier="wdklotz" title="$:/state/folded/Flags">
-<pre>hide</pre>
+<div created="20211121163011068" creator="wdklotz" modified="20211123225643325" modifier="wdklotz" title="$:/state/folded/Flags">
+<pre>show</pre>
 </div>
 <div created="20211016131750735" creator="wdklotz" modified="20211109215712039" modifier="wdklotz" title="$:/state/folded/Getting Started">
 <pre>show</pre>
@@ -9409,7 +9409,7 @@ Error message and password prompt
 <div bag="default" revision="1" title="$:/status/UserName">
 <pre>wdklotz</pre>
 </div>
-<div created="20211123223336903" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]] Elements Parameters" modified="20211123223516328" modifier="wdklotz" title="$:/StoryList">
+<div created="20211123225841965" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]] Parameters" modified="20211123225841965" modifier="wdklotz" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -9425,7 +9425,7 @@ Error message and password prompt
         },
         &quot;$:/info/url/full&quot;: {
             &quot;title&quot;: &quot;$:/info/url/full&quot;,
-            &quot;text&quot;: &quot;file:///C:/Users/wdklotz/Downloads/UserManual/UserManual10.0.1.html&quot;
+            &quot;text&quot;: &quot;file:///C:/Users/wdklotz/SIMULINAC/doc/UserManual/UserManual10.0.1.html&quot;
         },
         &quot;$:/info/url/host&quot;: {
             &quot;title&quot;: &quot;$:/info/url/host&quot;,
@@ -9445,7 +9445,7 @@ Error message and password prompt
         },
         &quot;$:/info/url/pathname&quot;: {
             &quot;title&quot;: &quot;$:/info/url/pathname&quot;,
-            &quot;text&quot;: &quot;/C:/Users/wdklotz/Downloads/UserManual/UserManual10.0.1.html&quot;
+            &quot;text&quot;: &quot;/C:/Users/wdklotz/SIMULINAC/doc/UserManual/UserManual10.0.1.html&quot;
         },
         &quot;$:/info/url/search&quot;: {
             &quot;title&quot;: &quot;$:/info/url/search&quot;,
@@ -10222,7 +10222,7 @@ Foil:        &amp;foil  SCF
 
 [[previous|Elements]] [[top|User Manual for simu.py/tracker.py]]  [[next|Segments]] </pre>
 </div>
-<div bag="default" created="20190112164426274" creator="wdklotz" modified="20211121171800801" modifier="wdklotz" revision="0" tags="tracker simu" title="Parameters" type="text/vnd.tiddlywiki">
+<div bag="default" created="20190112164426274" creator="wdklotz" modified="20211123225935641" modifier="wdklotz" revision="0" tags="tracker simu" title="Parameters" type="text/vnd.tiddlywiki">
 <pre>The `PARAMETERS`-block defines global parameters as //key:value// pairs. Some parameters are defined with fixed values others by macro-variables. The 1st column is the name of the parameter variable in the program code (Ex: DT2T is the python variable for the energy spread at injection). The 2nd column are parameter //anchors//, i.e. the &amp;emx is an anchor for the parameter emitx_i and can be referenced in the yaml file as *emx. The 3rd column is the parameters's value. It can be a static value or a macro referene (Ex: phy_sync  &amp;phs _PHISY is the value of the synchronous phase and will be given by the value of the _PHISY macro).
 
 Example:
@@ -10256,12 +10256,12 @@ Notes:
 * Parameter `mapping` determines which mapping will be used for cavity modeling. Valid mappings are:
 ** `t3d`: [[Trace 3D |Bibliography]] matrices (linear, ~EzAvg)
 ** `simple`: simple [[pyOrbit |Bibliography]] matrix model (linear, ~EzAvg)
-** `opal`: SNS [[XAL |Bibliography]] on-line model (linear, ~SuperFish data, ~EzPeak)
+** `oxal`: SNS [[XAL |Bibliography]] on-line model (linear, ~SuperFish data, ~EzPeak)
 ** `base`: pyOrbit's base model (nonlinear, ~EzAvg)
 ** `ttf`: pyOrbit's transition time factor model (nonlinear, ~SuperFish data, ~EzPeak)
 ** `dyn:` CERN's [[DYNAC |Bibliography]] model based on Boole's 5 point approximation (nonlinear, ~SuperFish data, ~EzPeak)
 * YAML syntax:
-**lines with `key:  &amp;alias  value` definitions: All three items must be separated by at least 1 space character and indented by at least 2 space charcters (no tabs!).
+**lines with `key:  &amp;anchor  value` definitions: All three items must be separated by at least 1 space character and indented by at least 2 space charcters (no tabs!).
 
 [[previous|Flags]] [[top|User Manual for simu.py/tracker.py]] [[next|Elements]] 
 </pre>

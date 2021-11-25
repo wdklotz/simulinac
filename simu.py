@@ -47,12 +47,13 @@ import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
 import pprint, inspect
 
-def PRINT_PRETTY(obj):
+def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
+    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+    return True
+def PASS(obj=None):
+    return False
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
@@ -64,8 +65,6 @@ from PsMarkerAgent import ellipse_plot
 from tracker import track_soll
 from pargs import pargs
 import bucket_size
-
-DEBUG_LINKS = False
 
 def bucket(*args):
     bucket_size.bucket()
@@ -252,6 +251,14 @@ def display1(*args):
     splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
 def display2(*args):
     ellipse_plot(None,on_injection=True)
+def lattice_check(lattice):
+    for x in lattice.seq:
+        DEBUG_ON(x.label)
+        if x.type == 'QFth' : print(x.type,x.matrix)
+        if x.type == 'QDth' : print(x.type,x.matrix)
+def link_check(lattice):
+    DEBUG_ON()
+    lattice.show_linkage()
 #                            |----------------------- |
 # -------------------------  | everything starts here |
 #                            |----------------------- |
@@ -271,23 +278,20 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-    #TODO: what about markers plots ?
-        # lattice.marker_actions()
-        # next not needed for jupyter
-        # plt.show()
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #----------------------------------------------
     lattice = factory(filepath)
-    DEB.get('OFF')([x.label for x in lattice.seq])
-    if DEBUG_LINKS: lattice.show_linkage()
+    if 0: lattice_check(lattice)
+    if 0: link_check(lattice)
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
     soll_track = track_soll(lattice)
-    if DEBUG_LINKS: lattice.show_linkage()
-    #print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]')
-    print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
+    if 0: lattice_check(lattice)
+    if 0: link_check(lattice)
+    print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]') # print(F'') formating
+    # print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
     #----------------------------------------------
     # STEP 3: calculate longitudinal paramters at entrance
     #----------------------------------------------

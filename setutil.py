@@ -514,7 +514,7 @@ def waccept(node):
         PARAMS['twiss_w_i'] = tww
         PARAMS['twiss_z_i'] = twz
         
-    PARAMS['twiss_x_i()'] = twx()
+    PARAMS['twiss_x_i()'] = twx()   # function pointers
     PARAMS['twiss_xyi()'] = twy()
     PARAMS['twiss_w_i()'] = tww()
     PARAMS['twiss_z_i()'] = twz()
@@ -599,13 +599,12 @@ def I0(x):
         res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-        try:
-            res = res*exp(x)/sqrt(x)
-        except OverflowError as ex:
-            print('Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
-            # sys.exit(1)
-            raise ex
-            
+    try:
+        res = res*exp(x)/sqrt(x)
+    except OverflowError as ex:
+        print('Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
+        sys.exit(1)
+        # raise ex
     return res
 
 def I1(x):
@@ -636,13 +635,13 @@ def I1(x):
         res-= 0.02895312*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.01787654*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-        try:
-            res = res*exp(x)/sqrt(x)
-            DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-        except OverflowError as ex:
-            print('Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
-            # sys.exit(1)
-            raise ex
+    try:
+        res = res*exp(x)/sqrt(x)
+        DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
+    except OverflowError as ex:
+        print('Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
+        sys.exit(1)
+        # raise ex
     return res
 
 #TODO: more marker-actions

@@ -332,12 +332,12 @@ class SFdata(object):
 
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
-        res = Ipoly(z,self.Ez_poly) * cos(omega*t+phis)
+        res = Ipoly(z,self.EzPoly) * cos(omega*t+phis)
         return res
 
     def dEz0tdt(self, z, t, omega, phis):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
-        res = - omega * Ipoly(z,self.Ez_poly) * sin(omega*t+phis)
+        res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
         return res
         
 def displayLR(table,legend):

@@ -68,7 +68,7 @@ class StepFactory(object):
         self.zl = -gap*100./2. # [cm]
         self.zr = -self.zl
         polyvals = []
-        for poly in SFdata.Ez_poly:
+        for poly in SFdata.EzPoly:
             zil = poly.zl
             zir = poly.zr
             if zil < self.zl or zir > self.zr: 
