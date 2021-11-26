@@ -816,6 +816,9 @@ class _PYO_G(object):
             x = gap/(beta*lamb)
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
             return ttf
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
         self.particle   = parent.particle
         self.phis       = parent.phis
         self.lamb       = parent.lamb
@@ -954,10 +957,10 @@ class _PYO_G(object):
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # PARTICLE
         converter = WConverter(WIN,frq)
-    #   phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
+        # phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
-    #   win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
+        # win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
         win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
@@ -971,7 +974,7 @@ class _PYO_G(object):
 
         converter = WConverter(WOUT,frq)
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
-    #   zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
+        # zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
 
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
@@ -998,7 +1001,7 @@ class _PYO_G(object):
         self._particlef = particlef
         return f_track
 
-class _T3D_G(object):
+class _T3D_G(object):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
     def __init__(self, parent):
         def trtf(lamb, gap, beta):
@@ -1021,8 +1024,10 @@ class _T3D_G(object):
             # UPDATE linear NODE matrix with deltaW
             m[EKOO, DEKOO] = deltaW
             return
-
-        # from parent
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # parameters from parent
         matrix         = parent.matrix
         particle       = parent.particle
         EzAvg          = parent.EzAvg
@@ -1030,7 +1035,7 @@ class _T3D_G(object):
         gap            = parent.gap
         lamb           = parent.lamb
         position       = parent.position
-        # function scope
+        # paramaeters in function scope
         beta           = particle.beta
         ttf            = trtf(lamb, gap, beta)       # Panofski
         deltaW         = EzAvg*gap*ttf*cos(phis)     # deltaW energy kick Trace3D
@@ -1116,22 +1121,22 @@ class QFth(_thin):
         super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
         self.k0 = k0
         self.length = length
-        self['viseo']  = +0.5
         df = di = D(length = 0.5*self.length, particle = self.particle)
         k0l = self.k0*self.length
         if isinstance(self,QFth) and not isinstance(self,QDth):
             kick = _kick(k0l)
+            self['viseo']  = +0.5
         elif isinstance(self,QDth):
             kick = _kick(-k0l)
+            self['viseo']= -0.5
         else:
             raise RuntimeError('QFth: neither QFth nor QDth! should never happen! - STOP')
 
         lens = df * (kick * di) # matrix produkt df*kick*di
-        # matrix = NP.dot(df.matrix,(NP.dot(kick.matrix, di.matrix)))
         self.matrix = lens.matrix
         # self.triplet = (di, kick, df)
 
-    def adjust_energy(self, tkin):             #TODO the bug must be here ??????
+    def adjust_energy(self, tkin):
         ki = self.k0
         cpi = self.particle.gamma_beta
         self.particle(tkin)
@@ -1148,7 +1153,6 @@ class QDth(QFth):
     """
     def __init__(self, k0, length, label='QDth', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self['viseo']= -0.5
 
 class QFthx(D):
     """ 
@@ -1157,14 +1161,14 @@ class QFthx(D):
     def __init__(self, k0, length, label='QFthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self.k0       = k0
-        self['viseo'] = +0.5
         self.length   = length
         L = self.length
         m = self.matrix
         if isinstance(self,QFthx) and not isinstance(self,QDthx):
-            pass
+            self['viseo'] = +0.5
         elif isinstance(self,QDthx):
             k0 = -k0
+            self['viseo'] = -0.5
         else:
             raise RuntimeError('QFthx: neither QFthx nor QDthx! should never happen! - STOP')
 
@@ -1198,7 +1202,6 @@ class QDthx(QFthx):
     """
     def __init__(self, k0, length, label='QDthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None):
         super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self['viseo'] = -0.5
 
 class SIXD(D):
     """ 

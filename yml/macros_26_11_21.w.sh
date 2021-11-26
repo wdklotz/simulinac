@@ -31,12 +31,13 @@ BETAX=9.729             # twiss beta x in [m]
 BETAY=2.685             # twiss beta y in [m]
 ALFAX=0.184             # twiss alfa x []
 ALFAY=0.149             # twiss alfa y []
+
 #============== RF
 PHISY=-30.              # synchronous phase in [deg]
 FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 
 #============== Quad gradients
-BGRAD=9.000            # quad gradient     FODO matched
+BGRAD=9.000            # quad gradient - FODO matched
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"
