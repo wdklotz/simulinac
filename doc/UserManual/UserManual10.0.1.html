@@ -9343,8 +9343,8 @@ Error message and password prompt
 <div created="20211016155549903" creator="wdklotz" modified="20211019070021590" modifier="wdklotz" title="$:/state/folded/Input File Structure">
 <pre>show</pre>
 </div>
-<div created="20211121162326108" creator="wdklotz" modified="20211121171743325" modifier="wdklotz" title="$:/state/folded/Introduction">
-<pre>hide</pre>
+<div created="20211121162326108" creator="wdklotz" modified="20211126094149958" modifier="wdklotz" title="$:/state/folded/Introduction">
+<pre>show</pre>
 </div>
 <div bag="default" created="20190113160244618" creator="wdklotz" modified="20211121164119619" modifier="wdklotz" revision="2" title="$:/state/folded/Lattice">
 <pre>show</pre>
@@ -9409,7 +9409,7 @@ Error message and password prompt
 <div bag="default" revision="1" title="$:/status/UserName">
 <pre>wdklotz</pre>
 </div>
-<div created="20211125102535210" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]]" modified="20211125103443395" modifier="wdklotz" title="$:/StoryList">
+<div created="20211126094147652" creator="wdklotz" list="[[User Manual for simu.py/tracker.py]] Introduction" modified="20211126094147652" modifier="wdklotz" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -9425,7 +9425,7 @@ Error message and password prompt
         },
         &quot;$:/info/url/full&quot;: {
             &quot;title&quot;: &quot;$:/info/url/full&quot;,
-            &quot;text&quot;: &quot;file:///C:/Users/wdklotz/Downloads/UserManual/UserManual10.0.1.html&quot;
+            &quot;text&quot;: &quot;file:///C:/Users/wdklotz/SIMULINAC/doc/UserManual/UserManual10.0.1.html&quot;
         },
         &quot;$:/info/url/host&quot;: {
             &quot;title&quot;: &quot;$:/info/url/host&quot;,
@@ -9445,7 +9445,7 @@ Error message and password prompt
         },
         &quot;$:/info/url/pathname&quot;: {
             &quot;title&quot;: &quot;$:/info/url/pathname&quot;,
-            &quot;text&quot;: &quot;/C:/Users/wdklotz/Downloads/UserManual/UserManual10.0.1.html&quot;
+            &quot;text&quot;: &quot;/C:/Users/wdklotz/SIMULINAC/doc/UserManual/UserManual10.0.1.html&quot;
         },
         &quot;$:/info/url/search&quot;: {
             &quot;title&quot;: &quot;$:/info/url/search&quot;,
@@ -10138,7 +10138,7 @@ Notes:
 [[previous|Special Input Parameters]] [[top|User Manual for simu.py/tracker.py]] [[next|Parameters]] 
 </pre>
 </div>
-<div created="20211119164613580" creator="wdklotz" modified="20211121163837836" modifier="wdklotz" tags="tracker simu" title="Introduction">
+<div created="20211119164613580" creator="wdklotz" modified="20211126094412161" modifier="wdklotz" tags="tracker simu" title="Introduction">
 <pre>''SIMULINAC'' are two python3 modules to simulate a proton beam in a LINAC lattice. ''simu.py'' calculates beam envelopes in linear approximation according to Courant/Snyder theory. ''tracker.py'' is a module that tracks a bunch of particles through the same lattice using linear approximation for the focussing elements but using different nonlinear mappings for the traversal of accelerating RF-cavities.
 
 !!simu.py
@@ -10153,7 +10153,7 @@ The emittance ''ε'' is  a conserved quantity in linear theory and is a measure 
 
 For the envelope calculation the RF-cavities in the lattice are replaced by ''drift-kick-drift'' triplets , where the kick is a linear matrix approximating the acceleration in the cavity gap taking into account the //relativistic dynamics// of the protons. The details of the kick matrix are described in the //Trace3D documentation//.
 
-!!!Tracking of Sine- and Cosine-like Trajectories
+!!!Tracking of Sine- and Cosine-like Trajectories a.k.a. ''Principal Trajectories''
 The general transfer matrix for trajectories is given by linear-combinations of the linear independent Sine- and Cosine -like  
 solutions of the equations of motion. By selecting for instance the track with initial conditions ''(x,,0,,,0)'' the program calculates a plot of the Cosine-like trajectory ''x,,0,,*C,,x,,(s)'' along the lattice. Similar for the Sine-like trajectory ''x',,0,,*S,,x,,(s)'' with initial conditions ''(0,x',,0,,)''.
 [img[img/gen_tmx.png]]

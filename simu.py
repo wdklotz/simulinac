@@ -356,7 +356,11 @@ if __name__ == '__main__':
             pass
         elif Args['mode'] == 'm4':
             command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
-            os.system(command)
+            stat = os.system(command)
+            if stat != 0:
+                print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
         else:
             print('Internal error!')
             sys.exit(1)
@@ -369,7 +373,7 @@ if __name__ == '__main__':
             # launch macros script with bash
             command = 'chmod +x {}'.format(macros_file)
             command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
-            os.system(command)
+            stat = os.system(command)
         else:
             print('Internal error!')
             sys.exit(1)

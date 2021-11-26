@@ -5,8 +5,8 @@ T=6.
 #============== cavity mapping
 MAP=t3d
 # MAP=simple
-MAP=oxal
-MAP=base
+# MAP=oxal
+# MAP=base
 # MAP=ttf
 # MAP=dyn
 
@@ -18,9 +18,19 @@ DT2T=1.0e-3             # delta-T/T kinetic
 # EMITY=1.e-6             # y emittance in [m*rad]
 EMITX=4.e-6             # x emittance in [m*rad]
 EMITY=4.e-6             # y emittance in [m*rad]
-BETAX=3.024             # twiss beta x in [m]     FOFO matched
-BETAY=0.343            # twiss beta x in [m]      FODO matched
 
+
+#============== twiss parameters
+# FODO matched
+BETAX=3.024             # twiss beta x in [m]
+BETAY=0.343             # twiss beta y in [m]
+ALFAX=0.000             # twiss alfa x []
+ALFAY=0.000             # twiss alfa y []
+# 12 cav matched
+BETAX=9.729             # twiss beta x in [m]
+BETAY=2.685             # twiss beta y in [m]
+ALFAX=0.184             # twiss alfa x []
+ALFAY=0.149             # twiss alfa y []
 #============== RF
 PHISY=-30.              # synchronous phase in [deg]
 FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
@@ -34,6 +44,8 @@ ARGS="$ARGS -D _EMITX=$EMITX"
 ARGS="$ARGS -D _EMITY=$EMITY"
 ARGS="$ARGS -D _BETAX=$BETAX"
 ARGS="$ARGS -D _BETAY=$BETAY"
+ARGS="$ARGS -D _ALFAX=$ALFAX"
+ARGS="$ARGS -D _ALFAY=$ALFAY"
 ARGS="$ARGS -D _PHISY=$PHISY"
 ARGS="$ARGS -D _FREQ=$FREQ"
 ARGS="$ARGS -D _BGRAD=$BGRAD"
