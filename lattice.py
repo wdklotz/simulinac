@@ -25,11 +25,11 @@ from copy import copy
 import warnings
 import pprint, inspect
 
-def PRINT_PRETTY(obj):
+def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
+    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj=None):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
@@ -476,6 +476,13 @@ class Lattice(object):
             return arg
         soll_test = SollTest_OFF
 
+        def DEBUG_TRACKs(elm,c,s):
+            DEBUG_ON()
+            print('{} cosine {} sine {}'.format(elm.type,c,s))
+            pass
+# function body --------------- function body --------------- function body --------------- 
+# function body --------------- function body --------------- function body --------------- 
+# function body --------------- function body --------------- function body --------------- 
         print('CALCULATE C+S TRAJECTORIES')
         tkin = PARAMS['sollteilchen'].tkin
         
@@ -527,7 +534,6 @@ class Lattice(object):
                     # cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     cz  = c_0[ZKOO]*1.e3      # z [mm]
                     cdp = c_0[ZPKOO]*100.     # dp/p [%]
-                    # TODO use Function class
                     c_fun.append(s,(cx,cxp,cy,cyp,cz,cdp))
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
@@ -540,6 +546,7 @@ class Lattice(object):
                     sz  = -s_0[ZKOO]*1.e3
                     sdp = s_0[ZPKOO]*100.
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
+                    if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
             except ValueError as ex:
                 print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))
                 #TODO  raise ex

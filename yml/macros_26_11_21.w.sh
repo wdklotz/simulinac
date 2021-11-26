@@ -4,9 +4,9 @@ T=6.
 
 #============== cavity mapping
 MAP=t3d
-# MAP=simple
+MAP=simple
 # MAP=oxal
-# MAP=base
+MAP=base
 # MAP=ttf
 # MAP=dyn
 
@@ -38,6 +38,7 @@ FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 
 #============== Quad gradients
 BGRAD=9.000            # quad gradient - FODO matched
+BGRAD=10.8
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"

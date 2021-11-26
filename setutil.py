@@ -578,6 +578,7 @@ def I0(x):
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     t = x/3.75
+    # DEBUG_ON(t)
     if 0. <= x and x < 3.75:
         t2 = t*t
         res = 1.

@@ -23,11 +23,11 @@ from copy import copy, deepcopy
 import numpy as NP
 import pprint, inspect
 
-def PRINT_PRETTY(obj):
+def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
+    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj=None):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
@@ -45,6 +45,10 @@ from OXAL    import _OXAL
 twopi = 2.*pi     # used about everywhere
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
+
+class OutOfBoundException(Exception):
+    def __init__(self,ID,max_r):
+        self.message = "STOP: in '{}' out of {} cm max radial excursion.".format(ID,max_r*100.)
 
 #------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(object):
@@ -590,13 +594,11 @@ class RFG(I):
         elif self.mapping == 'oxal':
             # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
             self.gap_model = _OXAL(self)
-        elif self.mapping == 'dyn':
+        else:
             # DYNAC gap model with SF-data (E.Tanke, S.Valero)
             # self.gap_model = _DYN_G(self)  not for RFG anymore!
-            info = "INFO: RFG is a kick-model and does not work with 'dyn'-mapping!"
-            DEBUG_ON(info)
-            print('"{}"'.format(info))
-            exit(1)
+            info = "INFO: RFG is a kick-model and does not work with '{}' mapping! Use 't3d' instead"
+            print(info.format(self.mapping))
             
     def adjust_energy(self, tkin):
         _params = self._params
@@ -648,7 +650,11 @@ class RFG(I):
 
     def map(self, i_track):
         """ delegate to gap-model """
-        return self.gap_model.map(i_track)
+        try:
+            return self.gap_model.map(i_track)
+        except OutOfBoundException as ex:
+            print(ex.message)
+            sys.exit(1)
 
     def soll_map(self, i_track):
         """ delegate to gap-model """
@@ -925,6 +931,11 @@ class _PYO_G(object):
         return f_track
 
     def base_map(self, i_track):
+        def DEBUG_TRACK(inout,track):
+            print('{} {} {}'.format('base_map',inout,track))
+# function body ================= function body ================= function body ================= 
+# function body ================= function body ================= function body ================= 
+# function body ================= function body ================= function body ================= 
         """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -946,11 +957,17 @@ class _PYO_G(object):
         phis     = self.phis
         qE0LT    = self.qE0LT
         
-        # DEBUG_ON(i_track)
-        r      = sqrt(x**2+y**2)                      # radial coordinate
+        if 0: 
+            DEBUG_ON()
+            DEBUG_TRACK('tr_i',i_track)
+        max_r  = 0.05              # max radial excursion
+        r      = sqrt(x**2+y**2)  # radial coordinate
+        if r > max_r:
+            raise OutOfBoundException('_PYO_G',max_r)
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
         i1     = I1(Kr)                               # bessel function I1
+        if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
         # SOLL
         WIN       = tki                               # energy (i)
         DELTAW    = self.deltaW                       # energy kick
@@ -976,6 +993,7 @@ class _PYO_G(object):
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
         # zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
+        if 0: print('z ',z,'zpf ',zpf)
 
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
         if r > 0.:
@@ -987,17 +1005,19 @@ class _PYO_G(object):
 
         f_track = NP.array([x, xp, y, yp, z, zpf, T, 1., S, 1.])
 
-        # for DEBUGGING
-        if 0:
-            itr = i_track.copy()
-            ftr = f_track.copy()
-            for i in range(len(f_track)-4):
-                itr[i]  = itr[i]*1.e3
-                ftr[i]  = ftr[i]*1.e3
-            arrprnt(itr, fmt = '{:6.3g},', txt = 'base_map:i_track:')
-            arrprnt(ftr, fmt = '{:6.3g},', txt = 'base_map:f_track:')
+        if 0: DEBUG_TRACK('tr_f',f_track)
 
-        # the parent delegates reading these properties from here
+        # for DEBUGGING
+        # if 0:
+        #     itr = i_track.copy()
+        #     ftr = f_track.copy()
+        #     for i in range(len(f_track)-4):
+        #         itr[i]  = itr[i]*1.e3
+        #         ftr[i]  = ftr[i]*1.e3
+        #     arrprnt(itr, fmt = '{:6.3g},', txt = 'base_map:i_track:')
+        #     arrprnt(ftr, fmt = '{:6.3g},', txt = 'base_map:f_track:')
+
+        # the parent reads these attributes below
         self._particlef = particlef
         return f_track
 
