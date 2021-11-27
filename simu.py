@@ -58,13 +58,14 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
+import bucket_size
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory
 from PsMarkerAgent import ellipse_plot
 from tracker import track_soll
 from pargs import pargs
-import bucket_size
+from lattice_parser2 import Parser
 
 def bucket(*args):
     bucket_size.bucket()
@@ -273,7 +274,6 @@ def simulation(filepath):
                 plots.append(bucket) # separatrix
         if FLAGS['pspace']:
             plots.append(display2)   # pspace
-
         # standard plots
         if len(plots) != 0:
             print('PREPARE DISPLAY')
@@ -284,6 +284,7 @@ def simulation(filepath):
     lattice = factory(filepath)
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
+    print(Parser().result.DESCRIPTOR)
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------

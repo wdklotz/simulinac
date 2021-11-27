@@ -18,12 +18,12 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sqrt,fabs,acos,degrees
-from numpy import linalg as LA
 import numpy as NP
-from copy import copy
 import warnings
 import pprint, inspect
+from math import sqrt,fabs,acos,degrees
+from numpy import linalg as LA
+from copy import copy
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
@@ -35,12 +35,11 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
+import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions
-import elements as ELM
 from sigma import Sigma
-
 # Lattice
 class Lattice(object):
     """
@@ -76,9 +75,6 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
-    # lattice body --------------- lattice body --------------- lattice body --------------- lattice body --------------- lattice body ---------------        
-    # lattice body --------------- lattice body --------------- lattice body --------------- lattice body --------------- lattice body ---------------        
-    # lattice body --------------- lattice body --------------- lattice body --------------- lattice body --------------- lattice body ---------------        
     def __init__(self):
         self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         self.iteration = "LR"  # default: iterating lattice left-right
@@ -229,7 +225,9 @@ class Lattice(object):
                 #  [m21,m22] = [     -gamma * sin(mu)    , cos(mu) - alpha * sin(mu)]
                 #  und: beta * gamma - alpha^2 = 1
                 sin2mu = -(((m11-m22)**2)/4.+m12*m21)
-                # print('sin(mux)^2={:4.4f}'.format(sin2mu))
+                if sin2mu < 0.: 
+                    print('STOP: unstable in X: sin(mux)^2={:4.4f}'.format(sin2mu))
+                    sys,exit(1)
                 sinmu = sqrt(sin2mu)
                 if m12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
                     sinmu = -sinmu
@@ -241,7 +239,9 @@ class Lattice(object):
                 print('betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
                 ## betay,alphay,gammay from transfer matrix
                 sin2mu = -((n11-n22)**2/4.+n12*n21)
-                # print('sin(muy)^2={:4.4f}'.format(sin2mu))
+                if sin2mu < 0.: 
+                    print('STOP: unstable in Y: sin(muy)^2={:4.4f}'.format(sin2mu))
+                    sys.exit(1)
                 sinmu = sqrt(sin2mu)
                 if n12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
                     sinmu = -sinmu
@@ -271,7 +271,7 @@ class Lattice(object):
                 SUMMARY['(sigy )i*   [mm]'] =  PARAMS['twiss_y_i'].sigmaH()*1.e3
                 SUMMARY["(sigy')i* [mrad]"] =  PARAMS['twiss_y_i'].sigmaV()*1.e3
             else:
-                print('unstable lattice - STOP')
+                print('STOP: unstable lattice!')
                 sys.exit(1)
         else:
             ## transversale twiss parameter fuer transfer lines
@@ -480,9 +480,9 @@ class Lattice(object):
             DEBUG_ON()
             print('{} cosine {} sine {}'.format(elm.type,c,s))
             pass
-# function body --------------- function body --------------- function body --------------- 
-# function body --------------- function body --------------- function body --------------- 
-# function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
         print('CALCULATE C+S TRAJECTORIES')
         tkin = PARAMS['sollteilchen'].tkin
         
@@ -548,7 +548,7 @@ class Lattice(object):
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
             except ValueError as ex:
-                print('STOP C+S TRAJECTORIES at s = {:6.2f} [m]'.format(s))
+                print('STOP: C+S TRAJECTORIES at s = {:6.2f} [m]!'.format(s))
                 #TODO  raise ex
                 break
         return (c_fun,s_fun)
@@ -684,7 +684,6 @@ def test3():
     print('-------------------------------------Test3--')
     lattice = make_wille()
     lattice.show_linkage()
-    
 if __name__ == '__main__':
     test1()
     test2()

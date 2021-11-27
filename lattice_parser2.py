@@ -3,11 +3,11 @@ import yaml
 from collections import namedtuple
 import pprint, inspect
 
-def PRINT_PRETTY(obj):
+def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    if obj != None: print('DEBUG_ON ==============>  '+file)
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
+def PASS(obj=None):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
@@ -15,11 +15,12 @@ DEBUG_OFF = DEB.get('OFF')
 
 HR = '============================================================================================='
 
+ParserResult = namedtuple('ParserResult','DESCRIPTOR, FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
+
 def is_string_like(obj):
     try: obj+'x'
     except TypeError: return False
     else: return True
-
 def nlists(segments):
     """ make n*[...] """
     _segments = {}
@@ -28,7 +29,6 @@ def nlists(segments):
         l = v[1]
         _segments[k] = n*l
     return _segments
-
 def unnest(dictionary,scalarp,PARTS,result=None):
     """ unnest tree of lists down to leaves  (recursive function)"""
     if result is None: result = []
@@ -40,7 +40,6 @@ def unnest(dictionary,scalarp,PARTS,result=None):
         else:
             result.append(v)
     return result
-
 def remove_duplicates(elementIDs):
     """Remove duplicate elementIDs in a sequence"""
     DEBUG_OFF(elementIDs)
@@ -51,141 +50,152 @@ def remove_duplicates(elementIDs):
         else:
             seen.add(elementID)
     return list(seen)
+class Borg(object):
+    _shared_state = dict()
+    def __init__(self):
+        self.__dict__ = self._shared_state
+class Parser(Borg):
+    def __init__(self,in_data=None):
+        Borg.__init__(self)
+        if in_data != None:
+            DEBUG_OFF(in_data)
+            PARTS = {}            
+            descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else "No descriptor for this input file"
+            DEBUG_OFF(descriptor)
 
-# ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    
-# ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    
-# ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    ------------ parser body    
-def parse(in_data):
-    DEBUG_OFF(in_data)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS    FLAGS    FLAGS')
+            DEBUG_OFF(HR)
+            flags = in_data['FLAGS']
+            DEBUG_OFF(flags)
 
-    PARTS = {}
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS')
+            DEBUG_OFF(HR)
+            parameters = in_data['PARAMETERS']
+            DEBUG_OFF(parameters)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS  FLAGS    FLAGS    FLAGS')
-    DEBUG_OFF(HR)
-    flags = in_data['FLAGS']
-    DEBUG_OFF(flags)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS')
+            DEBUG_OFF(HR)
+            elements = in_data['ELEMENTS']
+            DEBUG_OFF(elements)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS  PARAMETERS')
-    DEBUG_OFF(HR)
-    parameters = in_data['PARAMETERS']
-    DEBUG_OFF(parameters)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  ')
+            DEBUG_OFF(HR)
+            elementIDs = list(elements)
+            DEBUG_OFF(elements)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS  ELEMENTS')
-    DEBUG_OFF(HR)
-    elements = in_data['ELEMENTS']
-    DEBUG_OFF(elements)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+            DEBUG_OFF(HR)
+            for elementID in elementIDs:
+                PARTS[elementID] = elementID
+            DEBUG_OFF(PARTS)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  NODES  ')
-    DEBUG_OFF(HR)
-    elementIDs = list(elements)
-    DEBUG_OFF(elements)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS')
+            DEBUG_OFF(HR)
+            segments = in_data['SEGMENTS']
+            DEBUG_OFF(segments)
+            segments=nlists(segments)
+            DEBUG_OFF(segments)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_OFF(HR)
-    for elementID in elementIDs:
-        PARTS[elementID] = elementID
-    DEBUG_OFF(PARTS)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+            DEBUG_OFF(HR)
+            for k,v in segments.items():
+                PARTS[k]=v
+            DEBUG_OFF(PARTS)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS  SEGMENTS')
-    DEBUG_OFF(HR)
-    segments = in_data['SEGMENTS']
-    DEBUG_OFF(segments)
-    segments=nlists(segments)
-    DEBUG_OFF(segments)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS')
+            DEBUG_OFF(HR)
+            cells = in_data['CELLS']
+            DEBUG_OFF(cells)
+            cells = nlists(cells)
+            DEBUG_OFF(cells)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_OFF(HR)
-    for k,v in segments.items():
-        PARTS[k]=v
-    DEBUG_OFF(PARTS)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+            DEBUG_OFF(HR)
+            for k,v in cells.items():
+                PARTS[k]=v
+            DEBUG_OFF(PARTS)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS  CELLS')
-    DEBUG_OFF(HR)
-    cells = in_data['CELLS']
-    DEBUG_OFF(cells)
-    cells = nlists(cells)
-    DEBUG_OFF(cells)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS')
+            DEBUG_OFF(HR)
+            sections = in_data['SECTIONS']
+            DEBUG_OFF(sections)     # this shows what the YAML parser has done
+            sections = nlists(sections)# apply_NTIMES(sections)  # nlists 'ITEMS'
+            DEBUG_OFF(sections)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_OFF(HR)
-    for k,v in cells.items():
-        PARTS[k]=v
-    DEBUG_OFF(PARTS)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+            DEBUG_OFF(HR)
+            for k,v in sections.items():
+                PARTS[k]=v
+            DEBUG_OFF(PARTS)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS  SECTIONS')
-    DEBUG_OFF(HR)
-    sections = in_data['SECTIONS']
-    DEBUG_OFF(sections)     # this shows what the YAML parser has done
-    sections = nlists(sections)# apply_NTIMES(sections)  # nlists 'ITEMS'
-    DEBUG_OFF(sections)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE')
+            DEBUG_OFF(HR)
+            lattice = in_data['LATTICE']
+            DEBUG_OFF(lattice)     # this shows what the YAML parser has done
+            lattice = nlists(lattice)
+            DEBUG_OFF(lattice)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_OFF(HR)
-    for k,v in sections.items():
-        PARTS[k]=v
-    DEBUG_OFF(PARTS)
+            DEBUG_OFF(HR)
+            DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
+            DEBUG_OFF(HR)
+            for k,v in lattice.items():
+                PARTS[k]=v
+            DEBUG_OFF(PARTS)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE  LATTICE')
-    DEBUG_OFF(HR)
-    lattice = in_data['LATTICE']
-    DEBUG_OFF(lattice)     # this shows what the YAML parser has done
-    lattice = nlists(lattice)
-    DEBUG_OFF(lattice)
+            lat_elmIDs = unnest(lattice, is_string_like, PARTS)
+            DEBUG_OFF(lat_elmIDs)
 
-    DEBUG_OFF(HR)
-    DEBUG_OFF('PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS  PARTS')
-    DEBUG_OFF(HR)
-    for k,v in lattice.items():
-        PARTS[k]=v
-    DEBUG_OFF(PARTS)
+            elmIDs = remove_duplicates(lat_elmIDs)
+            DEBUG_OFF(elmIDs)
 
-    lat_elmIDs = unnest(lattice, is_string_like, PARTS)
-    DEBUG_OFF(lat_elmIDs)
-
-    elmIDs = remove_duplicates(lat_elmIDs)
-    DEBUG_OFF(elmIDs)
-
-    ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
-    """
-    FLAGS: dict of all flags
-    PARAMETERS: dict of all parameters
-    ELEMENTS: dict of all ELEMENT types
-    LATTICE: list result of appling n*[] for lattice
-    LAT_ELMIDs: list result of all elementIDs after unnesting
-    ELMIDs: list result of element IDs after removal of duplicate items in LAT_ELMIDs
-    """
-    ParserResult.FLAGS          = flags
-    ParserResult.PARAMETERS     = parameters
-    ParserResult.ELEMENTS       = elements
-    ParserResult.LATTICE        = lattice
-    ParserResult.LAT_ELMIDs     = lat_elmIDs   
-    ParserResult.ELMIDs         = elmIDs   #TODO not neede anymore?
-    return ParserResult
+            """
+            DESCRIPTOR: some text to describe the INput
+            FLAGS: dict of all flags
+            PARAMETERS: dict of all parameters
+            ELEMENTS: dict of all ELEMENT types
+            LATTICE: list result of appling n*[] for lattice
+            LAT_ELMIDs: list result of all elementIDs after unnesting
+            ELMIDs: list result of element IDs after removal of duplicate items in LAT_ELMIDs
+            parserResult.DESCRIPTOR     = descriptor
+            parserResult.FLAGS          = flags
+            parserResult.PARAMETERS     = parameters
+            parserResult.ELEMENTS       = elements
+            parserResult.LATTICE        = lattice
+            parserResult.LAT_ELMIDs     = lat_elmIDs   
+            parserResult.ELMIDs         = elmIDs   #TODO not neede anymore?
+            """
+            self.parserResult = ParserResult(descriptor,flags,parameters,elements,lattice,lat_elmIDs,elmIDs)
+    @property
+    def result(self):
+        return self.parserResult
 
 def test0(input_file):
     print(HR+'> test0')
     with open(input_file, 'r') as f:
         in_data = yaml.load(f,Loader=yaml.Loader)
-    results = parse(in_data)
+    results = Parser(in_data).result
+    DEBUG_ON(results.DESCRIPTOR)
     DEBUG_OFF(results.FLAGS)
     DEBUG_OFF(results.PARAMETERS)
-    DEBUG_ON(results.ELEMENTS)
+    DEBUG_OFF(results.ELEMENTS)
     DEBUG_OFF(results.LATTICE)
-    DEBUG_ON(results.LAT_ELMIDs)
-    DEBUG_ON(results.ELMIDs)
+    DEBUG_OFF(results.LAT_ELMIDs)
+    DEBUG_OFF(results.ELMIDs)
 
 if __name__ == '__main__':
+    args = sys.argv
+    input_file = args[1]
     # test0('yml/lattice_parser_2testIN.yml')
-    test0('yml/lattice_parser2_compatIN.yml')
+    test0(input_file)

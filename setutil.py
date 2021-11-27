@@ -22,39 +22,61 @@ from __future__ import print_function
 
 import sys
 import scipy.constants as C
-from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
-import logging, pprint
-from enum import IntEnum
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
+import logging
 import warnings
 import time
-from collections import namedtuple
-# import yaml
-import pprint, inspect
+import pprint
+import inspect
+import matplotlib.pyplot as plt
+from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
+from enum import IntEnum
+from matplotlib.patches import Ellipse
+from lattice_parser2 import Parser
 
-def PRINT_PRETTY(obj):
+def LOGGER():
+    console_handler = logging.StreamHandler() # console handler
+    logger = logging.getLogger("logger")
+    console_handler.setLevel(logging.DEBUG)  # set handler level
+    console_handler.setFormatter(logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s"))              # set handler's format
+    logger.addHandler(console_handler) # add handler to logger
+    return logger
+def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
+    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj=None):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-
 # MDIM: dimension of matrices
 MDIM = 10
-
 # Logger
-ch        = logging.StreamHandler()     # console handler
-ch.setLevel(logging.DEBUG)              # set handler level
-formatter = \
-    logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s")
-ch.setFormatter(formatter)              # set handler's format
-logger    = logging.getLogger("logger")
-logger.addHandler(ch)                   # add handler to logger
-
+logger = LOGGER()
+class Ktp(IntEnum):
+    """ Koordinaten fuer track points (1x10)"""
+    x  = 0     # x
+    xp = 1     # x'
+    y  = 2     # y
+    yp = 3     # y'
+    z  = 4     # z
+    zp = 5     # z' = Dp/p
+    T  = 6     # T(s) = Ingegral(dT)
+    dT = 7     # const 1
+    S  = 8     # S = Integral(dS)
+    dS = 9     # const 
+class Ktw(IntEnum):
+    """ Koordinaten fuer twiss vector (1x10) """
+    bx = 0      # twiss-beta
+    ax = 1      # twiss-alpha
+    gx = 2      # twiss-gamma
+    by = 3
+    ay = 4
+    gy = 5
+    bz = 6
+    az = 7
+    gz = 8
+    s  = 9      # abszisse for twiss functions
 #------  DEFAULT "FLAGS" & "PARAMS" and global dicts
 FLAGS  = dict(
         periodic             = False,            # periodic lattice? default
@@ -93,38 +115,9 @@ PARAMS = dict(
         )
 ELEMENTS = {}
 SUMMARY  = {}
-ParserResult = namedtuple('ParserResult','FLAGS, PARAMETERS, ELEMENTS, LATTICE, LAT_ELMIDs, ELMIDs')
 
-# using enum.IntEnum (since Python 3.4) fuer Koordinatenindizees
-# TODO: besser mit namedtupel ?
-class Ktp(IntEnum):
-    """ Koordinaten fuer track points (1x10)"""
-    x  = 0     # x
-    xp = 1     # x'
-    y  = 2     # y
-    yp = 3     # y'
-    z  = 4     # z
-    zp = 5     # z' = Dp/p
-    T  = 6     # T(s) = Ingegral(dT)
-    dT = 7     # const 1
-    S  = 8     # S = Integral(dS)
-    dS = 9     # const 1
-    
 # for compatability with elder code TODO: replace by namedtupel
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-
-class Ktw(IntEnum):
-    """ Koordinaten fuer twiss vector (1x10) """
-    bx = 0      # twiss-beta
-    ax = 1      # twiss-alpha
-    gx = 2      # twiss-gamma
-    by = 3
-    ay = 4
-    gy = 5
-    bz = 6
-    az = 7
-    gz = 8
-    s  = 9      # abszisse for twiss functions
 
 class Twiss(object):
     def __init__(self, beta, alfa, epsi):
@@ -155,7 +148,6 @@ class Twiss(object):
     def sigmaV(self):
         (x,y) = self.y3()
         return y
-
 class Particle(object):
     """
         A particle class
@@ -206,11 +198,9 @@ class Particle(object):
     def __call__(self,tkin):  # make callable to change energy
         self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
-
 class Proton(Particle):
     def __init__(self,tkin= 50.):
         super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
-
 class Electron(Particle):
     def __init__(self,tkin= 50.):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
@@ -291,7 +281,6 @@ class WConverter(object):
         emitz = self.emitwToemitz(emitw)
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
-
 class Functions(object):
     """ A class to gather function-values (Ordinaten) over a common independent variable (Abszisse) """
     def __init__(self,names):
@@ -324,7 +313,6 @@ class Functions(object):
         value = self._values[npoint][nf]
         return value
     pass
-    
 class SCTainer(object):
     """
     A (singleton) container for objects
@@ -344,8 +332,6 @@ class SCTainer(object):
         SCTainer.instance.objects.append(obj)
     def len(self):
         return len(SCTainer.instance)
-
-#------------- TimeStamps
 class TmStamp(object):
     """
     Utility to place time stamps in the program flow.
@@ -374,8 +360,6 @@ class TmStamp(object):
                 str= '{}  {}'.format(str,entry)
             cntr+=1
         return str
-    
-## Long. Emittance
 def waccept(node):
     """
     Central to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
@@ -520,7 +504,6 @@ def waccept(node):
     PARAMS['twiss_z_i()'] = twz()
 
     return res
-    
 #TODO: integrate sigmas into Twiss
 def sigmas(alfa,beta,epsi):
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
@@ -528,14 +511,12 @@ def sigmas(alfa,beta,epsi):
     sigma  = sqrt(epsi*beta)
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
-
 def show_data_from_elements():  #TODO better get data fron lattice objects
-    eIDs = ParserResult.ELMIDs
+    eIDs = Parser().result.ELMIDs
     for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]
         print('{} '.format(elementID),end='')
         dictprnt(element,'(MKSA units)',end='')
-
 def collect_data_for_summary(lattice):
     if True:
         SUMMARY['use emittance growth']            =  FLAGS['egf']
@@ -571,14 +552,12 @@ def collect_data_for_summary(lattice):
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
-
 def I0(x):
     """
     Modified Bessel function I of integer order 0
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     t = x/3.75
-    # DEBUG_ON(t)
     if 0. <= x and x < 3.75:
         t2 = t*t
         res = 1.
@@ -603,11 +582,9 @@ def I0(x):
     try:
         res = res*exp(x)/sqrt(x)
     except OverflowError as ex:
-        print('Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
+        print('STOP: Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
         sys.exit(1)
-        # raise ex
     return res
-
 def I1(x):
     """
     Modified Bessel function I of integer order 1
@@ -640,11 +617,9 @@ def I1(x):
         res = res*exp(x)/sqrt(x)
         DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
     except OverflowError as ex:
-        print('Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
+        print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
         sys.exit(1)
-        # raise ex
     return res
-
 #TODO: more marker-actions
 # def sigma_x_action(*args):
 #     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
@@ -667,8 +642,6 @@ def I1(x):
 #             Tkin        = tkin_action,
 #             show_elli   = elli_sxy_action,
 #             )
-
-# utilities
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -685,14 +658,12 @@ def k0prot(gradient=0.,tkin=0.):
     else:
         print('k0prot() called with negative kinetic energy? - STOP')
         sys.exit(1)
-
 def scalek0prot(k0=0.,tki=0.,tkf=0.):
     """Scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)"""
     bgi  = Proton(tki).gamma_beta
     bgf  = Proton(tkf).gamma_beta
     k= k0 * bgi/bgf
     return k
-
 def dBdxprot(k0=0.,tkin=0.):
     """
     B-field gradient from quadrupole gradient for given quadrupole strength k0 and kin. energy tkin (only for protons!)
@@ -707,7 +678,6 @@ def dBdxprot(k0=0.,tkin=0.):
     else:
         print('dBdxprot() called with negative kinetic energy? - STOP')
         sys.exit(1)
-
 def objprnt (what,text='',filter=[]):
     """Custom helper to print objects as dictionary"""
     template = '============================================'
@@ -728,7 +698,6 @@ def objprnt (what,text='',filter=[]):
         else:
             print(k.rjust(30),':',v)
     return
-
 def dictstring(what,text='',filter=[],njust=35):
     """Custom helper to print dictionaries (clever!?)"""
     def asString(v):
@@ -771,16 +740,13 @@ def dictstring(what,text='',filter=[],njust=35):
         # print(fmt.format(k)+vars)
         res+=fmt.format(k)+'{}\n'.format(vars)
     return res
-
 def dictprnt(what,text='',filter=[],njust=35,end='\n'):
     print(dictstring(what,text,filter,njust),end=end)
-
 def printv(level,*args):
     """Multilevel printing with verbose flag"""
     verbose = FLAGS['verbose']
     if verbose >= level and not FLAGS['KVout']:
         print(*args)
-
 def tblprnt(headr,records):
     """
     Custom helper to print a nice table to memory (clever!?)
@@ -799,7 +765,6 @@ def tblprnt(headr,records):
     for row in rows:
             s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
     return s
-
 def mxprnt(matrix):
     """Simple matrix print"""
     s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
@@ -807,14 +772,12 @@ def mxprnt(matrix):
     fmt = ''.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
     return '\n'.join(table)
-
 def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     """Simple array print"""
     print(txt,end='')
     for val in array:
         print(fmt.format(val),end='')
     print('')
-
 def wille():
     return {
         'k_quad_f':1.2,
@@ -896,7 +859,6 @@ def test3():
     
     plt.plot(S,C)
     plt.show()
-
 if __name__ == '__main__':
     test0()
     test1()

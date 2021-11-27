@@ -49,7 +49,6 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 class OutOfBoundException(Exception):
     def __init__(self,ID,max_r):
         self.message = "STOP: in '{}' out of {} cm max radial excursion.".format(ID,max_r*100.)
-
 #------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(object):
     """ Base class for transfer matrices (linear map)
@@ -269,7 +268,6 @@ class _Node(object):
     def shorten(self, length):
         """ nothing to shorten """
         return self
-
 class I(_Node):
     """ 
     Unity matrix
@@ -277,7 +275,6 @@ class I(_Node):
     def __init__(self, label='I', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self.matrix    = NP.eye(MDIM,MDIM)     # MDIMxMDIM unit matrix used here
-
 class MRK(I):
     """ 
     Marker node (a.k.a element): owns a list of agents that do the actions
@@ -303,7 +300,6 @@ class MRK(I):
         self._params = _params
         self._agents = _agents
         return self
-
 class D(I):
     """ 
     Trace3D drift space 
@@ -327,7 +323,6 @@ class D(I):
         shortD =  D(label=self.label, particle=self.particle, length=length, aperture=self.aperture)
         shortD._params = self._params
         return shortD
-
 class QF(D):
     """ 
     Trace3D focussing quad 
@@ -384,7 +379,6 @@ class QF(D):
             sys.exit(1)
         m[SKOO, LKOO]  = self.length # length increase
         return m
-
 class QD(QF):
     """ 
     Trace3D defocussing quad 
@@ -397,7 +391,6 @@ class QD(QF):
         shortQD = QD(k0=self.k0, length=length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture)
         shortQD._params = self._params
         return shortQD
-
 class SD(D):
     """ 
     Trace3d sector dipole in x-plane 
@@ -440,7 +433,6 @@ class SD(D):
         m[ZKOO, XKOO] = -sx;   m[ZKOO, XPKOO] = -rho*(1.-cx);   m[ZKOO, ZPKOO] = rho*sx-self.length*b*b
         m[SKOO, LKOO] = self.length # length increase
         return m
-
 class RD(SD):
     """ 
     Trace3D rectangular dipole x-plane 
@@ -462,7 +454,6 @@ class RD(SD):
         slices.append(self.wd)      # wedge @ exit
         DEBUG_OFF('slices {}'.format(slices))
         return slices
-
 class _wedge(I):
     """ 
     Trace3d dipole wedge x-plane 
@@ -474,7 +465,6 @@ class _wedge(I):
         # MDIMxMDIM matrix
         m[XPKOO, XKOO] = +ckp
         m[YPKOO, YKOO] = -ckp
-
 class GAP(I):
     """ 
     Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
@@ -547,7 +537,6 @@ class GAP(I):
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
         m[EKOO, DEKOO] = self.deltaW # energy increase
-
 class RFG(I):
     """ 
     Wrapper to zero length RF kick gap-models
@@ -660,7 +649,6 @@ class RFG(I):
         """ delegate to gap-model """
         f_track = self.gap_model.soll_map(i_track)
         return f_track
-
 class RFC(I):
     """ 
     Rf cavity as product D*Kick*D (DKD-model)
@@ -811,7 +799,6 @@ class RFC(I):
     @property
     def particlef(self):
         return self._particlef
-
 class _PYO_G(object):
     """ 
     PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) 
@@ -933,9 +920,9 @@ class _PYO_G(object):
     def base_map(self, i_track):
         # def DEBUG_TRACK(inout,track):
         #     print('{} {} {}'.format('base_map',inout,track))
-# function body ================= function body ================= function body ================= 
-# function body ================= function body ================= function body ================= 
-# function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
         """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -1013,7 +1000,6 @@ class _PYO_G(object):
         # the parent reads these attributes below
         self._particlef = particlef
         return f_track
-
 class _T3D_G(object):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
     def __init__(self, parent):
@@ -1085,7 +1071,6 @@ class _T3D_G(object):
         f_track[SKOO] = sm
         DEBUG_OFF('t3d-soll {}'.format(f_track))
         return f_track
-
 class _thin(_Node):
     """ 
     Base class for thin elements implemented as triplet D*Kick*D 
@@ -1115,7 +1100,6 @@ class _thin(_Node):
     #         slices.append(d2)
     #     DEBUG_OFF('slices {}'.format(slices))
     #     return slices
-
 class _kick(I):
     """ 
     Matrix for thin lens quad 
@@ -1125,7 +1109,6 @@ class _kick(I):
         m = self.matrix
         m[XPKOO, XKOO] = -k0l
         m[YPKOO, YKOO] = +k0l
-
 class QFth(_thin):
     """ 
     Thin F-Quad 
@@ -1159,14 +1142,12 @@ class QFth(_thin):
         self.__init__(kf, self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
         return self
-
 class QDth(QFth):
     """ 
     Thin D-Quad 
     """
     def __init__(self, k0, length, label='QDth', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-
 class QFthx(D):
     """ 
     Thin F-Quad   (express version of QFth) 
@@ -1208,14 +1189,12 @@ class QFthx(D):
 
     def make_slices(self, anz=PARAMS['nbslices']):
         return [self]
-
 class QDthx(QFthx):
     """ 
     Thin D-Quad   (express version of QDth) 
     """
     def __init__(self, k0, length, label='QDthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None):
         super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-
 class SIXD(D):
     """ 
     Drift with Sixtrack mapping (experimental!) 
@@ -1359,7 +1338,6 @@ class SIXD(D):
         # nicht vergessen! adjust total lattice length
         f_track[SKOO] += self.length
         return f_track
-
 ## Utilities 
 class Test(_Node):
     def __init__(self, a, b, c, d, e, f, label = 'test'):
@@ -1766,8 +1744,6 @@ def test14():
     print('qd0["viseo"]= ', qd0['viseo'])
     print('\n', qf0.__dict__)
     print('\n', qd0.__dict__)
-
-#------main ----------
 if __name__ == '__main__':
     FLAGS['verbose'] = 3
     test0()
