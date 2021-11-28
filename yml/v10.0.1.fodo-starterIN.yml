@@ -65,7 +65,7 @@ PARAMETERS:
     EzPeak:       &p17    2.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
-    lattvers:             'LE or HE'  # lattice version
+    lattvers:             'FODO-starter'  # lattice version
     mapping:      &map    t3d        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
