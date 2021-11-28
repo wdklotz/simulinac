@@ -23,6 +23,8 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #..........................................................................................
+DESCRIPTOR:  v10.0.1 compatible, Q+12CAV+Q+12CAV+Q cell with RFCL/RXX replacement, pure FODO starter
+#..........................................................................................
 ## RUN switches
 #..........................................................................................
 FLAGS:
@@ -42,20 +44,20 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 _TKIN        # [MeV] energy @ injection
+    Tkin:                 6.        # [MeV] energy @ injection
     DT2T:                 1.0e-3      # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6       # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6       # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    _BETAX      # [m] twiss beta @ entrance x
-    betay_i:      &bty    _BETAY      # [m] twiss beta @ entrance y
+    betax_i:      &btx    0.692      # [m] twiss beta @ entrance x
+    betay_i:      &bty    1.600      # [m] twiss beta @ entrance y
     phi_sync:     &phs    -30.        # [deg] synchronous phase
     frequency:    &freq   816.e6      # [Hz] frequency
-    alfax_i:              _ALFAX      # [] twiss alpha x @ entrance
-    alfay_i:              _ALFAY      # [] twiss alpha y @ entrance
+    alfax_i:              0.000      # [] twiss alpha x @ entrance
+    alfay_i:              0.000      # [] twiss alpha y @ entrance
     ql0:          &p02    0.04        # [m] quad-length
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
-    Bgrad:        &bgrad  _BGRAD
+    Bgrad:        &bgrad  9.000
     windings:             30          # [] quad-coil windings
     thins:        &ths    0           # nbof thin quads replacing one thick quad
     gap:          &p15    0.036       # [m] RF gap
@@ -64,7 +66,7 @@ PARAMETERS:
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:             'LE or HE'  # lattice version
-    mapping:      &map    _MAPPING        # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -172,8 +174,6 @@ ELEMENTS:
     PsMkr:                     # ID
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
-        # which:    no_plot     #  {transvers} phase space ellipses
-    #     sec:                   # section 
     # SCF:                       # ID
     #     type:    MRK           # MRK class
     #     action:  poincare      #  phase space poincare maps
@@ -233,7 +233,7 @@ SECTIONS:
 # group CELLs into SECTIONS
 #...........................................................................................
     SCle:      [30,[CELL]]
-    SCle:      [_NC,[CELL]]
+    SCle:      [300,[CELL]]
 #   S_HE:      [148,[CELL_H]]
 #   S_END:     [3,[CELL_H]]
 # ===========================================================================================

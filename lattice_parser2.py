@@ -60,7 +60,7 @@ class Parser(Borg):
         if in_data != None:
             DEBUG_OFF(in_data)
             PARTS = {}            
-            descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else "No descriptor for this input file"
+            descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else None
             DEBUG_OFF(descriptor)
 
             DEBUG_OFF(HR)

@@ -284,7 +284,8 @@ def simulation(filepath):
     lattice = factory(filepath)
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
-    print(Parser().result.DESCRIPTOR)
+    descriptor = Parser().result.DESCRIPTOR
+    if descriptor != None: print(descriptor)  # show DESCRIPTOR
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
