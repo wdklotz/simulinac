@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
-from lattice_parser2 import Parser
+import lattice_parser2 as parser
 
 def LOGGER():
     console_handler = logging.StreamHandler() # console handler
@@ -512,7 +512,7 @@ def sigmas(alfa,beta,epsi):
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
 def show_data_from_elements():  #TODO better get data fron lattice objects
-    eIDs = Parser().result.ELMIDs
+    eIDs = parser.parse().ELMIDs
     for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]
         print('{} '.format(elementID),end='')

@@ -65,7 +65,7 @@ from lattice_generator import factory
 from PsMarkerAgent import ellipse_plot
 from tracker import track_soll
 from pargs import pargs
-from lattice_parser2 import Parser
+import lattice_parser2 as parser
 
 def bucket(*args):
     bucket_size.bucket()
@@ -284,7 +284,8 @@ def simulation(filepath):
     lattice = factory(filepath)
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
-    descriptor = Parser().result.DESCRIPTOR
+    # descriptor = Parser().result.DESCRIPTOR
+    descriptor = parser.parse().DESCRIPTOR
     if descriptor != None: print(descriptor)  # show DESCRIPTOR
     #----------------------------------------------
     # STEP 2: configure elements for energy increase

@@ -37,7 +37,7 @@ import setutil as util
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
-from lattice_parser2 import Parser
+import lattice_parser2 as parser
 import PsMarkerAgent as psmkr
 
 def get_mandatory(attributes,key,item):
@@ -365,7 +365,8 @@ def factory(input_file):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    results = Parser(in_data).result   # call lattice-parser
+    # results = Parser(in_data).result   # call lattice-parser
+    results = parser.parse(in_data)  # call lattice-parser
 
     flags = proces_flags(results.FLAGS)
     DEBUG_OFF('global FLAGS after proces_flags():')
