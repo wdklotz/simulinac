@@ -194,6 +194,10 @@ def display1(*args):
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
     # plt.plot(z2,sxp,label="S' [mr]",color='red' ,linestyle=':')
+    vscale=splot311.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    plt.plot(vis_abszisse,viseoz,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
@@ -214,6 +218,10 @@ def display1(*args):
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sy, label="S  [mm]",color='red' ,linestyle='-')
+    vscale=splot312.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    plt.plot(vis_abszisse,viseoz,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
@@ -232,24 +240,23 @@ def display1(*args):
     ax_l.set_ylabel(r"z [mm]")
     ax_l.tick_params(axis='y', colors='green')
     ax_l.yaxis.label.set_color('green')
-    ax_l.plot(z1,cz,color='green')
-    ax_l.plot(z2,sz,color='green',linestyle=':')
+    ax_l.plot(z1,cz,label='C',color='green')
+    ax_l.plot(z2,sz,label='S',color='green',linestyle=':')
+    plt.legend(loc='lower left',fontsize='x-small')
     # ax_r = right abszisse
     ax_r = ax_l.twinx()
     ax_r.set_ylabel(r'$\Delta$p/p [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z2,cdp,color='red')
-    ax_r.plot(z2,sdp,color='red',linestyle=':')
+    ax_r.plot(z2,cdp,label='C',color='red')
+    ax_r.plot(z2,sdp,label='S',color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
+    plt.legend(loc='lower right',fontsize='x-small')
     # lattice elements
     vscale=ax_l.axis()[3]*0.25
     viseoz = [x*vscale for x in vis_ordinate]
-    # splot414=fig.add_subplot(414)
-    # splot414=fig.add_subplot(10,1,10)
-    splot414 = ax_l
-    splot414.plot(vis_abszisse,viseoz,label='',color='black')
-    splot414.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    ax_l.plot(vis_abszisse,viseoz,label='',color='black')
+    ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 def display2(*args):
     ellipse_plot(None,on_injection=True)
 def lattice_check(lattice):
@@ -284,9 +291,8 @@ def simulation(filepath):
     lattice = factory(filepath)
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
-    # descriptor = Parser().result.DESCRIPTOR
-    descriptor = parser.parse().DESCRIPTOR
-    if descriptor != None: print(descriptor)  # show DESCRIPTOR
+    descriptor = parser.parse().DESCRIPTOR  # get DESCRIPTOR from parsed results
+    if descriptor != None: print(descriptor)
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------

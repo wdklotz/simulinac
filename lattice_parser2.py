@@ -186,8 +186,8 @@ def test0(input_file):
     print(HR+'> test0')
     with open(input_file, 'r') as f:
         in_data = yaml.load(f,Loader=yaml.Loader)
-    results = parse(in_data)
-    results = parse()
+    results = parse(in_data)    # this parses the IN-file and returns the  results of parsing the IN-file
+    results = parse()           # this only returns the results of parsing the IN-file
     DEBUG_ON(results.DESCRIPTOR)
     DEBUG_OFF(results.FLAGS)
     DEBUG_OFF(results.PARAMETERS)
@@ -199,5 +199,4 @@ def test0(input_file):
 if __name__ == '__main__':
     args = sys.argv
     input_file = args[1]
-    # test0('yml/lattice_parser_2testIN.yml')
     test0(input_file)

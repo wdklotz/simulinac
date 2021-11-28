@@ -5,7 +5,7 @@ T=6.
 #============== cavity mapping
 MAP=t3d
 # MAP=simple
-# MAP=oxal
+MAP=oxal
 # MAP=base
 # MAP=ttf
 # MAP=dyn

@@ -512,7 +512,7 @@ def sigmas(alfa,beta,epsi):
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
 def show_data_from_elements():  #TODO better get data fron lattice objects
-    eIDs = parser.parse().ELMIDs
+    eIDs = parser.parse().ELMIDs    # get field from parser results
     for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]
         print('{} '.format(elementID),end='')

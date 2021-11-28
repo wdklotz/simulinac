@@ -365,8 +365,7 @@ def factory(input_file):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    # results = Parser(in_data).result   # call lattice-parser
-    results = parser.parse(in_data)  # call lattice-parser
+    results = parser.parse(in_data)  # call lattice-parser, get results
 
     flags = proces_flags(results.FLAGS)
     DEBUG_OFF('global FLAGS after proces_flags():')
