@@ -37,7 +37,7 @@ import setutil as util
 import elements as ELM
 from lattice import Lattice
 from Ez0 import SFdata
-import lattice_parser2 as parser
+from lattice_parser2 import parse as doInputParser
 import PsMarkerAgent as psmkr
 
 def get_mandatory(attributes,key,item):
@@ -87,7 +87,8 @@ def instanciate_element(item):
         if type == 'D':
             label    = ID
             length   = get_mandatory(attributes,'length',label)
-            aperture = attributes['aperture'] if 'aperture' in attributes else None
+            # aperture = attributes['aperture'] if 'aperture' in attributes else None
+            aperture = attributes.get('aperture')
             instance =  ELM.D(length=length,label=label,aperture=aperture)
             instance['label']    = label
             instance['length']   = length
@@ -96,7 +97,8 @@ def instanciate_element(item):
         elif type == 'SIXD':
             label     = attributes['ID']+'#'
             length    = get_mandatory(attributes,'length',label)
-            aperture = attributes['aperture'] if 'aperture' in attributes else None
+            # aperture = attributes['aperture'] if 'aperture' in attributes else None
+            aperture = attributes.get('aperture')
             instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
             instance['label']    = label
             instance['length']   = length
@@ -145,7 +147,8 @@ def instanciate_element(item):
             dWf       = util.FLAGS['dWf']
             mapping   = get_mandatory(attributes,'mapping',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
+            # EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
+            EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
             if mapping == None:
                 mapping = 't3d'
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
@@ -180,7 +183,8 @@ def instanciate_element(item):
             length    = get_mandatory(attributes,'length',label)
             mapping   = get_mandatory(attributes,'mapping',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
+            # EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
+            EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
             if mapping == None:
                 mapping = 't3d'
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
@@ -365,7 +369,7 @@ def factory(input_file):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    results = parser.parse(in_data)  # call lattice-parser, get results
+    results = doInputParser(in_data)  # call lattice parser, get results
 
     flags = proces_flags(results.FLAGS)
     DEBUG_OFF('global FLAGS after proces_flags():')

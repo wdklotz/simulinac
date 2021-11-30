@@ -177,7 +177,7 @@ class Particle(object):
         self.betac      = self.v
         self.E          = self.e
         self.T          = self.tkin
-    def string(self):
+    def toString(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
                 '{:8s}'.format(self.name),
@@ -793,9 +793,9 @@ def test0():
     print('--------------------------Test0---')
     dictprnt( PARAMS,text=' PARAMS')
 
-    print('Sollteilchen\n'+ PARAMS['sollteilchen'].string())
-    print('Proton(tkin=5.)\n'+Proton(tkin=5.).string())
-    print('Electron(tkin=5.)\n'+Electron(tkin=5.).string())
+    print('Sollteilchen\n'+ PARAMS['sollteilchen'].toString())
+    print('Proton(tkin=5.)\n'+Proton(tkin=5.).toString())
+    print('Electron(tkin=5.)\n'+Electron(tkin=5.).toString())
 
     dictprnt(wille(),text='wille')
     kqf = wille()['k_quad_f']
@@ -834,10 +834,10 @@ def test2():
     print('test particle energy adjustment...')
     p = PARAMS['sollteilchen']
     print(repr(p)+':')
-    print(p.string())
+    print(p.toString())
     p1 = p(100.)
     print(repr(p1)+':')
-    print(p1.string())
+    print(p1.toString())
     try:
         p2 = p(-10.)
     except ValueError:

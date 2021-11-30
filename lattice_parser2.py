@@ -50,18 +50,19 @@ def remove_duplicates(elementIDs):
         else:
             seen.add(elementID)
     return list(seen)
-parserResult = None    # parser results kept as global module variable
+__parserResult = None    # parser results kept as global module variable
 def parse(in_data=None):
     """
     # Module with global.
     # Simpler than the Singleton pattern or BORG idiom.
     # Recommended by Python Cookbook pp.209
     """
-    global parserResult
+    global __parserResult
     if in_data != None:
         DEBUG_OFF(in_data)
         PARTS = {}            
-        descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else None
+        # descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else None
+        descriptor = in_data.get('DESCRIPTOR')  # doing the dame as line above
         DEBUG_OFF(descriptor)
 
         DEBUG_OFF(HR)
@@ -169,18 +170,18 @@ def parse(in_data=None):
         LATTICE: list result of appling n*[] for lattice
         LAT_ELMIDs: list result of all elementIDs after unnesting
         ELMIDs: list result of element IDs after removal of duplicate items in LAT_ELMIDs
-        parserResult.DESCRIPTOR     = descriptor
-        parserResult.FLAGS          = flags
-        parserResult.PARAMETERS     = parameters
-        parserResult.ELEMENTS       = elements
-        parserResult.LATTICE        = lattice
-        parserResult.LAT_ELMIDs     = lat_elmIDs   
-        parserResult.ELMIDs         = elmIDs   #TODO not neede anymore?
+        __parserResult.DESCRIPTOR     = descriptor
+        __parserResult.FLAGS          = flags
+        __parserResult.PARAMETERS     = parameters
+        __parserResult.ELEMENTS       = elements
+        __parserResult.LATTICE        = lattice
+        __parserResult.LAT_ELMIDs     = lat_elmIDs   
+        __parserResult.ELMIDs         = elmIDs   #TODO not neede anymore?
         """
-        parserResult = ParserResult(descriptor,flags,parameters,elements,lattice,lat_elmIDs,elmIDs)
+        __parserResult = ParserResult(descriptor,flags,parameters,elements,lattice,lat_elmIDs,elmIDs)
     else:
         pass
-    return parserResult
+    return __parserResult
 
 def test0(input_file):
     print(HR+'> test0')

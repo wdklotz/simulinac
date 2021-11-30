@@ -1370,32 +1370,32 @@ def test0():
     print('--------------------------------Test0---')
     print('trivial test 0 ...')
     a = Test(1, 2, 3, 4, 5, 6, label = 'a')
-    print(a.string())
+    print(a.toString())
     b = Test(1, 1, 1, 1, 1, 1, label = 'b')
-    print(b.string())
-    print((a*b).string())
-    print((b*a).string())
+    print(b.toString())
+    print((a*b).toString())
+    print((b*a).toString())
 def test1():
     print('--------------------------------Test1---')
     print('trivial test 1 ...')
     i1 = I()
     i2 = i1*i1
-    print(i1.string())
-    print(i2.string())
+    print(i1.toString())
+    print(i2.toString())
 def test2():
     print('--------------------------------Test2---')
     print('trivial test 2 ...')
     i1 = I()
     d1 = D(length=10., label='D1')
-    print(d1.string())
-    print((d1*d1).string())
-    print((d1*d1*d1).string())
-    print((d1*i1*d1).string())
+    print(d1.toString())
+    print((d1*d1).toString())
+    print((d1*d1*d1).toString())
+    print((d1*i1*d1).toString())
     d2 = D(length=90, label='D2')
-    print(d2.string())
-    print((d1*d2).string())
+    print(d2.toString())
+    print((d1*d2).toString())
     d3 = D(length=90., label = '')
-    print((d2*d3).string())
+    print((d2*d3).toString())
 def test3():
     print('--------------------------------Test3---')
     print('test product of _Node class ...')
@@ -1405,11 +1405,11 @@ def test3():
     print('gradient[Tesla/m] {:.3f}; beta[v/c] {:.3f}; energy[Gev] {:.3f}'.format(gradient, beta, energy))
     k = k0test(gradient = gradient, energy = energy, beta = beta)
     qf = QF(k0 = k, length = 1.1)
-    print("QF-->", qf.string())
+    print("QF-->", qf.toString())
     # test product of _Node class
     qd = QD(k0 = k, length = 1.2)
-    print("QD-->", qd.string())
-    print("QF*QD-->", (qf*qd).string())
+    print("QD-->", qd.toString())
+    print("QF*QD-->", (qf*qd).toString())
 def test4():
     print('--------------------------------Test4---')
     def doit(elm, anz):
@@ -1418,8 +1418,8 @@ def test4():
         elmx = elm_slices[0]
         for slice in elm_slices[1:]:
             elmx = elmx*slice
-        print(elmx.string())
-        print(elm.string())
+        print(elmx.toString())
+        print(elm.toString())
 
     print('test slicing of elements ...')
     gradient = 1.
@@ -1435,10 +1435,10 @@ def test4():
     rd     = RD(radius = 10., length = x)
     gp     = GAP()
     rg     = RFG()
-    qfth   = QFth(k0 = k)
-    qdth   = QDth(k0 = k)
-    qfthx  = QFthx(k0 = k, length = x)
-    qdthx  = QDthx(k0 = k, length = x)
+    qfth   = QFth(k,x)
+    qdth   = QDth(k,x)
+    qfthx  = QFthx(k,x)
+    qdthx  = QDthx(k,x)
     rfc    = RFC(length = x)
     sixd   = SIXD(length = x)
     # slicing
@@ -1482,7 +1482,7 @@ def test5():
     mz = mz *mb
     mz = mz *md
     mz = mz *mqf
-    print(mz.string())
+    print(mz.toString())
 def test6():
     print('--------------------------------Test6---')
     print('test step_through elements ...')
@@ -1512,10 +1512,10 @@ def test6():
         print('======================================')
         for count, mi in enumerate(slices):
             print('step ', count+1, end = '  ')
-            print(mi.string())
+            print(mi.toString())
             m_end = m_end*mi
-        print(m_end, '\n'+m_end.string())
-        print(m_anfang, '\n'+m_anfang.string())
+        print(m_end, '\n'+m_end.toString())
+        print(m_anfang, '\n'+m_anfang.toString())
 def test7():
     print('--------------------------------Test7---')
     print('test Rechteckmagnet ...')
@@ -1523,13 +1523,13 @@ def test7():
     lb  = wille()['dipole_length']
     mb  = SD(radius = rhob, length = lb, label = 'SD')
     mr  = RD(radius = rhob, length = lb, label = 'RD')
-    print(mb.string())
-    print(mr.string())
+    print(mb.toString())
+    print(mr.toString())
 def test8():
     from lattice import Lattice
     from tracker import track_soll
     print('--------------------------------Test8---')
-    print('soll-particle\n'+PARAMS['sollteilchen'].string())
+    print('soll-particle\n'+PARAMS['sollteilchen'].toString())
     print('test rf-gap ...')
 
     gap = GAP()
@@ -1539,8 +1539,8 @@ def test8():
     # objprnt(rfg, 'GAP', filter = 'matrix')
     objprnt(gap, 'GAP')
     print(solltrack)
-    print('GAP.particle(i)\n'+gap.particle.string())
-    print('GAP.particle(f)\n'+gap.particlef.string())
+    print('GAP.particle(i)\n'+gap.particle.toString())
+    print('GAP.particle(f)\n'+gap.particlef.toString())
 
     rfg = RFG()
     lg = Lattice()
@@ -1549,8 +1549,8 @@ def test8():
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
-    print('RFG.particle(i)\n'+rfg.particle.string())
-    print('RFG.particle(f)\n'+rfg.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.toString())
+    print('RFG.particle(f)\n'+rfg.particlef.toString())
 
     rfg = RFG(mapping = 'simple')
     lg = Lattice()
@@ -1559,8 +1559,8 @@ def test8():
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
-    print('RFG.particle(i)\n'+rfg.particle.string())
-    print('RFG.particle(f)\n'+rfg.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.toString())
+    print('RFG.particle(f)\n'+rfg.particlef.toString())
 
     rfg =  RFG(mapping = 'base')
     lg = Lattice()
@@ -1569,10 +1569,10 @@ def test8():
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
-    print('RFG.particle(i)\n'+rfg.particle.string())
-    print('RFG.particle(f)\n'+rfg.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.toString())
+    print('RFG.particle(f)\n'+rfg.particlef.toString())
 
-    input_file = 'SF_WDK2g44.TBL'
+    input_file = 'SF/SF_WDK2g44.TBL'
     EzPeak     = 1.4
     SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'ttf', gap = 0.048, SFdata = SF_tab)
@@ -1582,10 +1582,10 @@ def test8():
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
-    print('RFG.particle(i)\n'+rfg.particle.string())
-    print('RFG.particle(f)\n'+rfg.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.toString())
+    print('RFG.particle(f)\n'+rfg.particlef.toString())
 
-    input_file = 'SF_WDK2g44.TBL'
+    input_file = 'SF/SF_WDK2g44.TBL'
     EzPeak     = 1.4
     SF_tab    = SFdata(input_file, EzPeak = EzPeak)
     rfg = RFG(mapping = 'dyn', gap = 0.048, SFdata = SF_tab)
@@ -1595,8 +1595,8 @@ def test8():
     # objprnt(rfg, 'RFG', filter = 'matrix')
     objprnt(rfg, 'RFG')
     print(solltrack)
-    print('RFG.particle(i)\n'+rfg.particle.string())
-    print('RFG.particle(f)\n'+rfg.particlef.string())
+    print('RFG.particle(i)\n'+rfg.particle.toString())
+    print('RFG.particle(f)\n'+rfg.particlef.toString())
 
     print('test cavity ...')
     cav = RFC()
@@ -1606,8 +1606,8 @@ def test8():
     # objprnt(cav, 'RFC', filter = 'matrix')
     objprnt(cav, 'RFC')
     print(solltrack)
-    print('CAV.particle(i)\n'+cav.particle.string())
-    print('CAV.particle(f)\n'+cav.particlef.string())
+    print('CAV.particle(i)\n'+cav.particle.toString())
+    print('CAV.particle(f)\n'+cav.particlef.toString())
 def test9():
     print('--------------------------------Test9---')
     print('test: quad k-faktor and quad scaling ...')
@@ -1618,7 +1618,7 @@ def test9():
     focal = kq*len
     focal = 1./focal  # focal len [m]
 
-    print('soll-particle\n'+PARAMS['sollteilchen'].string())
+    print('soll-particle\n'+PARAMS['sollteilchen'].toString())
     print('kq [1/m**2]\t{:3f}'.format(kq))
     print('dB/dz[T/m]\t{:.3f}'.format(grad))
     print('len[m]\t\t{:.3f}'.format(len))
@@ -1640,8 +1640,8 @@ def test9():
         tkf = tki+dt
         k_scaled = scalek0prot(kq, tki, tkf)
         print('(tki, kq) ({},{:.3f}) --> (tkf, k_scaled) ({},{:.3f})'.format(tki, kq, tkf, k_scaled))
-        print(mqf.adjust_energy(tkf).string())
-        print(mqf.particle.string())
+        print(mqf.adjust_energy(tkf).toString())
+        print(mqf.particle.toString())
     print('======================== adjust_energy QD')
     tki = 50. #  PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
@@ -1649,8 +1649,8 @@ def test9():
         tkf = tki+dt
         k_scaled = scalek0prot(kq, tki, tkf)
         print('(tki, kq) ({},{:.3f}) --> (tkf, k_scaled) ({},{:.3f})'.format(tki, kq, tkf, k_scaled))
-        print(mqd.adjust_energy(tkf).string())
-        print(mqd.particle.string())
+        print(mqd.adjust_energy(tkf).toString())
+        print(mqd.particle.toString())
     print('======================== adjust_energy CAV')
     tki = 50.    #  PARAMS['injection_energy']    # [MeV]  kin. energy
     PARAMS['sollteilchen'] = Proton(tki)
@@ -1658,57 +1658,57 @@ def test9():
         tkf = tki+dt
         k_scaled = scalek0prot(kq, tki, tkf)
         print('(tki, kq) ({},{:.3f}) --> (tkf, k_scaled) ({},{:.3f})'.format(tki, kq, tkf, k_scaled))
-        print(cavity.adjust_energy(tkf).string())
-        print(cavity.particle.string())
+        print(cavity.adjust_energy(tkf).toString())
+        print(cavity.particle.toString())
 def test10():
     print('--------------------------------Test10---')
     print('Particle class test ...')
     dictprnt(PARAMS, text = 'setutil.PARAMS')
     # particle class
     print()
-    print(Proton(0.).string())
-    print(Proton(50.).string())
-    print(Proton(200.).string())
-    print(Proton(1.e3).string())
+    print(Proton(0.).toString())
+    print(Proton(50.).toString())
+    print(Proton(200.).toString())
+    print(Proton(1.e3).toString())
     print()
-    print(Electron(0.).string())
-    print(Electron(50.).string())
-    print(Electron(200.).string())
-    print(Electron(1.e3).string())
+    print(Electron(0.).toString())
+    print(Electron(50.).toString())
+    print(Electron(200.).toString())
+    print(Electron(1.e3).toString())
 def test11():
     print('--------------------------------Test11---')
     print('thin lense tests ...')
     k0     =  1.
     length =  2.
-    qf     =  QFth(k0 = k0)
-    qd     =  QDth(k0 = k0)
+    qf     =  QFth(k0,0.0)
+    qd     =  QDth(k0,0.0)
     rf     =  RFC(length = length)
-    print(qf.string())
-    print('soll-particle@QFT\n'+qf.particle.string())
-    print(qd.string())
-    print('soll-particle@QDT\n'+qf.particle.string())
-    print(rf.string())
-    print('soll-particle@RFC\n'+qf.particle.string())
+    print(qf.toString())
+    print('soll-particle@QFT\n'+qf.particle.toString())
+    print(qd.toString())
+    print('soll-particle@QDT\n'+qf.particle.toString())
+    print(rf.toString())
+    print('soll-particle@RFC\n'+qf.particle.toString())
     print('---------------- step through ---------------')
     for elm in qf.make_slices(anz = 8):
-        print(elm.string())
+        print(elm.toString())
     print('---------------- step through ---------------')
     for elm in qd.make_slices(anz = 7):
-        print(elm.string())
+        print(elm.toString())
     print('------ RF cavity test & step through --------')
     for elm in rf.make_slices():
-        print(elm.string())
+        print(elm.toString())
 def test12():
     print('--------------------------------Test12---')
     print('test12 adjust_energy change ...')
-    d = D(length = 99.);              print('id >>', d);     print(d.string())
-    d.adjust_energy(tkin = 1000.);    print('id >>', d);     print(d.string())
-    qf = QF(k0 = 1.5, length = 0.3);  print('id >>', qf);    print(qf.string())
-    qf.adjust_energy(tkin = 200.);    print('id >>', qf);    print(qf.string())
-    qd = QD(k0 = 1.5, length = 0.3);  print('id >>', qd);    print(qd.string())
-    qd.adjust_energy(tkin = 200.);    print('id >>', qd);    print(qd.string())
-    rfc = RFC(length = 1.23);         print('id >>', rfc);   print(rfc.string())
-    rfc.adjust_energy(tkin = 200.);   print('id >>', rfc);   print(rfc.string())
+    d = D(length = 99.);              print('id >>', d);     print(d.toString())
+    d.adjust_energy(tkin = 1000.);    print('id >>', d);     print(d.toString())
+    qf = QF(k0 = 1.5, length = 0.3);  print('id >>', qf);    print(qf.toString())
+    qf.adjust_energy(tkin = 200.);    print('id >>', qf);    print(qf.toString())
+    qd = QD(k0 = 1.5, length = 0.3);  print('id >>', qd);    print(qd.toString())
+    qd.adjust_energy(tkin = 200.);    print('id >>', qd);    print(qd.toString())
+    rfc = RFC(length = 1.23);         print('id >>', rfc);   print(rfc.toString())
+    rfc.adjust_energy(tkin = 200.);   print('id >>', rfc);   print(rfc.toString())
 def test13():
     print('--------------------------------Test13---')
     print('test SIXD node tracking ...')

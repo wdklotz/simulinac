@@ -45,7 +45,10 @@ class PsMarkerAgent(object):
     def action_transvers(self):
         """ the default action: plot transvers ellipses """
         node = self.parent
-        ellipse_plot(node,on_injection=False,scale=0.5)
+        if node == None: 
+            ellipse_plot(node,on_injection=True,scale=0.5)
+        else:
+            ellipse_plot(node,on_injection=False,scale=0.5)
 
     def action_no_plot(self):
         """ action without plotting """
