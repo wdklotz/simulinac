@@ -1,10 +1,11 @@
 import sys
-sys.path.insert(0,'..')
+sys.path.append('.')
+print(sys.path)
 
 from math import sqrt
 from setutil import tblprnt,Proton,PARAMS
 
-c = PARAMS['lichtgeschwindigkeit']
+c = PARAMS['clight']
 def BetaGamma(particle):
     vclassic   = sqrt(2.*particle.tkin/particle.e0*c**2)
     beta       = particle.beta

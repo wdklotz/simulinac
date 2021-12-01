@@ -386,7 +386,7 @@ def factory(input_file):
 
     lat_elementIDs = results.LAT_ELMIDs
     lattice = make_lattice(lat_elementIDs)
-    DEBUG_OFF('lattice_generator >>{}'.format(lattice.string()))
+    DEBUG_OFF('lattice_generator >>{}'.format(lattice.toString()))
     util.SUMMARY['lattice length [m]'] = util.PARAMS['lattice_length']  = lattice.length
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)

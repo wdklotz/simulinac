@@ -105,7 +105,7 @@ class Lattice(object):
         position = (si,sm,sf)
         element.position = position 
         self.length = sf
-    def string(self):
+    def toString(self):
         # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
@@ -631,7 +631,7 @@ def make_wille():
     lattice.add_element(mbr2)
     lattice.add_element(md4)
     lattice.add_element(mqf2)
-    DEB.get('OFF')('lattice: {}'.format(lattice.string()))
+    DEB.get('OFF')('lattice: {}'.format(lattice.toString()))
     top = Lattice()
     top.concat(lattice)
     top.concat(lattice)

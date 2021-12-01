@@ -25,13 +25,12 @@ def input_error():
     sys.exit(1)
 
 def pargs(args):
-    # print(args)
     proc    = args[0]   
     # either simu.py or tracker.py
-    if proc != 'simu.py' and proc != 'tracker.py':
+    if "simu" not in proc and "tracker" not in proc:
         input_error()
     command = 'python'
-    file    = 'yml/simuIN.yml' if proc == 'simu.py' else 'yml/trackIN.yml'
+    file    = 'yml/simuIN.yml' if 'simu.py' in proc  else 'yml/trackIN.yml'
     # args normalized
     Args = {  'mode'  : 'no_m4',
               'proc'  : proc,
