@@ -23,7 +23,7 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #..........................................................................................
-DESCRIPTOR:  'This input: v10.0.1 compatible, Q+12CAV+Q+12CAV+Q cell with RFCL/RXX replacement, pure FODO starter'
+DESCRIPTOR:  'This input: v10.0.1 compatible, pure FODO starter, D-G12-F-G12-D'
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
@@ -57,7 +57,7 @@ PARAMETERS:
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius
-    Bgrad:        &bgrad  _BGRAD          # [T/m]
+    Bgrad:        &bgrad  16.5          # [T/m]
     windings:             30              # [] quad-coil windings
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     gap:          &p15    0.036           # [m] RF gap
@@ -66,7 +66,7 @@ PARAMETERS:
     nbsigma:              2               # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'FODO-starter'  # lattice version
-    mapping:      &map    _MAPPING        # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d        # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -234,7 +234,7 @@ SECTIONS:
 # group CELLs into SECTIONS
 #...........................................................................................
     # SCle:      [30,[CELL]]
-    SCle:      [1,[CELL]]
+    SCle:      [20,[CELL]]
 #   S_HE:      [148,[CELL_H]]
 #   S_END:     [3,[CELL_H]]
 # ===========================================================================================

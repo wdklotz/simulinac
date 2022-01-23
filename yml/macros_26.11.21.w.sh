@@ -1,23 +1,23 @@
 #============== Injektion energy
-T=17.5                     # kinetic energy in [Mev]
-T=6.
+# T=17.5                     # kinetic energy in [Mev]
+# T=6.
 
 #============== cavity mapping
 MAP=t3d
 # MAP=simple
-MAP=oxal
+# MAP=oxal
 # MAP=base
 # MAP=ttf
 # MAP=dyn
 
 #============== Injektion energy spread
-DT2T=1.0e-3             # delta-T/T kinetic
+# DT2T=1.0e-3             # delta-T/T kinetic
 
 #============== X,Y emittances
-# EMITX=1.e-6             # x emittance in [m*rad]
-# EMITY=1.e-6             # y emittance in [m*rad]
-EMITX=4.e-6             # x emittance in [m*rad]
-EMITY=4.e-6             # y emittance in [m*rad]
+EMITX=1.e-6             # x emittance in [m*rad]
+EMITY=1.e-6             # y emittance in [m*rad]
+# EMITX=4.e-6             # x emittance in [m*rad]
+# EMITY=4.e-6             # y emittance in [m*rad]
 
 
 #============== twiss parameters
@@ -42,14 +42,14 @@ ALFAY=0.000             # twiss alfa y []
 # ALFAY=0.1310
 # ALFAY=0.05
 
-NC=300
+# NC=300
 #============== RF
 PHISY=-30.              # synchronous phase in [deg]
 FREQ=816.e6             # common rf-frequency [Hz] (T>=25)
 
 #============== Quad gradients
 BGRAD=9.000            # quad gradient - FODO matched
-# BGRAD=23
+BGRAD=16.5
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"

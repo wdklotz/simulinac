@@ -382,7 +382,6 @@ if __name__ == '__main__':
             # launch macros script with bash
             command = 'chmod +x {}'.format(macros_file)
             command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
-            stat = os.system(command)
         else:
             print('Internal error!')
             sys.exit(1)
@@ -392,4 +391,3 @@ if __name__ == '__main__':
     # run the simulation
     simulation(input_file)
     # simulation('yml/tmpl_25.10.2021_new.yml')
-

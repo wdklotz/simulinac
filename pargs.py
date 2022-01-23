@@ -25,9 +25,9 @@ def input_error():
     sys.exit(1)
 
 def pargs(args):
-    proc    = args[0]   
+    proc    = args[0]
     # either simu.py or tracker.py
-    if "simu" not in proc and "tracker" not in proc:
+    if "simu.py" not in proc and "tracker.py" not in proc:
         input_error()
     command = 'python'
     file    = 'yml/simuIN.yml' if 'simu.py' in proc  else 'yml/trackIN.yml'
@@ -53,7 +53,7 @@ def pargs(args):
         if opt == '--tmpl':
             Args['tmpl'] = 'yml/tmpl_{}.yml'.format(tmpl)
             Args['macro']= 'yml/macros_{}.sh'.format(tmpl)
-        else: 
+        else:
             input_error()
     elif len(args) == 5:
         # python simu.py --tmpl Number --run Number
