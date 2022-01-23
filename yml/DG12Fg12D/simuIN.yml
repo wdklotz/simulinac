@@ -57,7 +57,9 @@ PARAMETERS:
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius
-    Bgrad:        &bgrad  16.5          # [T/m]
+    # Bgrad:        &bgrad  14.7          # [T/m]  Minimum
+    Bgrad:        &bgrad  17.0          # [T/m]
+    # Bgrad:        &bgrad  25.7          # [T/m]  Maximum
     windings:             30              # [] quad-coil windings
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     gap:          &p15    0.036           # [m] RF gap
@@ -196,10 +198,14 @@ SEGMENTS:
 #...........................................................................................
 # Marker segment
     # Psmarker:              [1,[PsMkr]]
-# LE section segment
+# LE section segment   DOFOD
     SGi:                [1,[QDL, D3L]]               # QF+D
     SGm:                [1,[D3L, QFL, QFL, D3L]]     # D+QD+D
     SGf:                [1,[D3L, QDL]]               # D+QF
+# exchanged quads   FODOF
+    # SGi:                [1,[QFL, D3L]]               # QF+D
+    # SGm:                [1,[D3L, QDL, QDL, D3L]]     # D+QD+D
+    # SGf:                [1,[D3L, QFL]]               # D+QF
     # pillbox cavities
     CAVs:               [1,[RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ]] # 0xRFCL
     # CAVs:               [1,[ 1 ,  2 ,  3 ,  4 ,  5  , 6 ,  7 ,  8 ,  9 , 10,  11,  12]]
@@ -234,7 +240,7 @@ SECTIONS:
 # group CELLs into SECTIONS
 #...........................................................................................
     # SCle:      [30,[CELL]]
-    SCle:      [20,[CELL]]
+    SCle:      [250,[CELL]]
 #   S_HE:      [148,[CELL_H]]
 #   S_END:     [3,[CELL_H]]
 # ===========================================================================================
