@@ -226,7 +226,7 @@ class WConverter(object):
         self.twopi          = 2.*self.pi
 
     def DphiToz(self,Dphi):
-        """ dela-phi [rad] to z [m] """
+        """ delta-phi [rad] to z [m] """
         z = -self.bl/self.twopi*Dphi
         return z    # [m]
     def zToDphi(self,z):
@@ -270,7 +270,7 @@ class WConverter(object):
         return betaw # [rad]
     
     def wtoz(self,args):
-        # conversion {Dpi(x)w} to {z(x)Dp2p}
+        # conversion phase-space coordinates {Dpi(x)w} to {z(x)Dp2p}
         """ 
         IN: args is tuple = (Delta-phi, w (== dT/m0c2), emittance-w, beta-w)
         OUT:     is tuple = (z, Dp2p, emittance-z, beta=z)

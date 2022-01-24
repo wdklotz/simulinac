@@ -23,6 +23,8 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #..........................................................................................
+DESCRIPTOR:  'v10.0.1 compat, oxal, QF+2xG12+QD+2xG12+QF, 16.5-218.7 MeV, HE candidate?'
+#..........................................................................................
 ## RUN switches
 #..........................................................................................
 FLAGS:
@@ -57,14 +59,15 @@ PARAMETERS:
     ql:           &p03    0.02        # [m] 1/2 quad-length
     quad_bore:    &p04    0.011       # [m] quad bore radius
     windings:             30          # [] quad-coil windings
+    thins:        &ths    1           # thick quad
     gap:          &p15    0.036       # [m] RF gap
     EzPeak:       &p17    2.2         # [MV/m] peak gap field Strengy
     nbsigma:              2           # [m] sigma aperture
     aperture:             15.e-3      # [m] global aperture setting (default = None)
     lattvers:             '6-200 MEV' # lattice version
     # mapping:      &map    t3d         # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    oxal         # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal         # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    base         # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf         # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
@@ -88,14 +91,14 @@ ELEMENTS:
         length:   .04          # [m]
         aperture: .011         # [m] quad bore
         B':       &bgrad 12.0        # [T/m] quadrupole gradient
-        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths         # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
         length:   0.08         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       *bgrad         # [T/m] quadrupole gradient
-        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths         # if slices == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     DgapL:
         type:     D
@@ -128,14 +131,14 @@ ELEMENTS:
         length:   0.02         # [m]
         aperture: 0.011        # [m] quad bore
         B':       &Bgrad 20.   # [T/m] quadrupole gradient
-        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths         # if slices == 0|1: one thick element else: many thin elements
         sec:      HE           # section 
     QDH:                       # ID
         type:     QD           # QD class
         length:   0.04         # [m] length
         aperture: 0.011        # [m] quad bore
         B':       *Bgrad       # [T/m] quadrupole gradient
-        slices:   0            # if slices == 0|1: one thick element else: many thin elements
+        thins:   *ths         # if slices == 0|1: one thick element else: many thin elements
         sec:      HE           # section 
     RFGHx:                     # replacement of RFG by D
         type:     D            # replacement of RFG by D
@@ -147,9 +150,8 @@ ELEMENTS:
         sec:      HE           # section
     RFGH:                      # ID
         type:     RFG          # RFG class
-        EzAvg:    0.786409         # [MV/m] average E-field on axis
+        # EzAvg:    0.786409         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-        # EzPeak:   2.00         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.036        # [m] length
@@ -160,7 +162,7 @@ ELEMENTS:
         sec:      HE           # section 
     RFCH:                      # ID
         type:     RFC          # RFC class
-        EzAvg:    0.786409         # [MV/m] average E-field on axis
+        # EzAvg:    0.786409         # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
@@ -195,13 +197,13 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
 # Marker segment
     # Psmarker:              [1,[PsMkr]]
 # LE section segment
-    QF+D-L:                [1,[QFL, D3L]]
-    D+QD+D-L:              [1,[D3L, QDL, D3L]]
-    D+QF-L:                [1,[D3L, QFL]]
+    # QF+D-L:                [1,[QFL, D3L]]
+    # D+QD+D-L:              [1,[D3L, QDL, D3L]]
+    # D+QF-L:                [1,[D3L, QFL]]
     # pillbox cavities
-    CavitiesL:             [12,[RFCL]]
-    GapsL:                 [12,[]]
-    RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
+    # CavitiesL:             [12,[RFCL]]
+    # GapsL:                 [12,[]]
+    # RF_Cavity_ArrayL:      [1,[CavitiesL, D10L, CavitiesL]]
 # HE section segments
     QF+D-H:                 [1,[QFH, D3H]]
     D+QD+D-H:               [1,[D3H, QDH, D3H]]
@@ -214,12 +216,12 @@ SEGMENTS:   # group ELEMENTs into SEGMENTs:
 #...........................................................................................
 CELLS:    # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
-    CELL_L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
+    # CELL_L:   [1,[QF+D-L, RF_Cavity_ArrayL, D+QD+D-L, RF_Cavity_ArrayL, D+QF-L]] 
     CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 #...........................................................................................
 SECTIONS:   # group CELLs into SECTIONS
-#...........................................................................................
-  S_LE:      [20,[CELL_L]]
+# ...........................................................................................
+#   S_LE:      [20,[CELL_L]]
 #   S_LE:      [1,[CELL_L]]
   S_HE:      [148,[CELL_H]]
 #   S_HE:      [1,[CELL_H]]

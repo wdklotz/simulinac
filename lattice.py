@@ -547,10 +547,10 @@ class Lattice(object):
                     sdp = s_0[ZPKOO]*100.
                     s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
-            except ValueError as ex:
-                print('STOP: C+S TRAJECTORIES at s = {:6.2f} [m]!'.format(s))
-                #TODO  raise ex
-                break
+            except (ValueError,ELM.OutOfRadialBoundEx) as ex:
+                reason = ex.__class__.__name__
+                print('@map in cs_traj: {} at s={:6.2f} [m]'.format(reason,s))
+                sys.exit(1)
         return (c_fun,s_fun)
     def symplecticity(self):
         """ test symplecticity """

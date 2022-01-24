@@ -46,9 +46,9 @@ twopi = 2.*pi     # used about everywhere
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
-class OutOfBoundException(Exception):
-    def __init__(self,ID,max_r):
-        self.message = "STOP: in '{}' out of {} cm max radial excursion.".format(ID,max_r*100.)
+class OutOfRadialBoundEx(Exception):
+    def __init__(self,max_r,ID=''):
+        self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
 #------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(object):
     """ Base class for transfer matrices (linear map)
@@ -639,12 +639,7 @@ class RFG(I):
 
     def map(self, i_track):
         """ delegate to gap-model """
-        try:
-            return self.gap_model.map(i_track)
-        except OutOfBoundException as ex:
-            print(ex.message)
-            sys.exit(1)
-
+        return self.gap_model.map(i_track)
     def soll_map(self, i_track):
         """ delegate to gap-model """
         f_track = self.gap_model.soll_map(i_track)
@@ -879,7 +874,7 @@ class _PYO_G(object):
         gammaf     = particlef.gamma
         gbf        = particlef.gamma_beta
 
-        # the long. 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
+        # the longitudinal 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
         m11 = gbf/gbi
         m12 = 0.
         m21 = qE0LT*twopi/(lamb*betai)*sin(phis)
@@ -918,8 +913,8 @@ class _PYO_G(object):
         return f_track
 
     def base_map(self, i_track):
-        # def DEBUG_TRACK(inout,track):
-        #     print('{} {} {}'.format('base_map',inout,track))
+        def DEBUG_TRACK(inout,track):
+            print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
         # function body ================= function body ================= function body ================= 
         # function body ================= function body ================= function body ================= 
@@ -947,10 +942,10 @@ class _PYO_G(object):
         # if 0: 
         #     DEBUG_ON()
         #     DEBUG_TRACK('tr_i',i_track)
-        max_r  = 0.05              # max radial excursion
+        max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)  # radial coordinate
         if r > max_r:
-            raise OutOfBoundException('_PYO_G:base_map',max_r)
+            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
         i1     = I1(Kr)                               # bessel function I1
@@ -961,10 +956,10 @@ class _PYO_G(object):
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # PARTICLE
         converter = WConverter(WIN,frq)
-        # phin      = -z * twopi/(betai*lamb) + phis       # phase (i)  alte methode
+        # phin      = -z * twopi/(betai*lamb) + phis     # phase (i)  alte methode
         phin      = converter.zToDphi(z) + phis          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
-        # win       = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
+        # win     = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
         win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
@@ -978,7 +973,7 @@ class _PYO_G(object):
 
         converter = WConverter(WOUT,frq)
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
-        # zpf       = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
+        # zpf     = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
         # if 0: print('z ',z,'zpf ',zpf)
 

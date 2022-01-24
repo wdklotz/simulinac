@@ -30,16 +30,6 @@ from string import Template
 from math import sqrt, degrees, radians
 import pprint, inspect
 
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
-
 # from lattice_generator import factory
 from lattice_generator import factory
 import elements as ELM
@@ -49,6 +39,16 @@ from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs
 # from trackPlot import poincarePlot
+
+def PRINT_PRETTY(obj):
+    file = inspect.stack()[0].filename
+    print('DEBUG_ON ==============>  '+file)
+    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(obj):
+    pass
+DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON = DEB.get('ON')
+DEBUG_OFF = DEB.get('OFF')
 
 def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     """ 
@@ -125,7 +125,6 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     plt.scatter(x,y,s=1)
     # poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
     return
-    
 def projections(live_lost):
     """ 
     2D phase space projections IN and OUT
@@ -152,7 +151,6 @@ def projections(live_lost):
     text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     plt.show()
-
 def frames(lattice, skip):
     """
     2D phase space projection at marker position
@@ -175,7 +173,6 @@ def frames(lattice, skip):
     # invoke the marker's action
     for nscnt,node in iter(scatter_mrkr):
         node.do_action(nscnt,xmax,ymax)
-
 def loss_plot(lattice,live_lost):
     """
     Plot losses along the lattice
@@ -215,7 +212,6 @@ def loss_plot(lattice,live_lost):
     ax2.plot(vis_abszisse,vis_zero,color='gray')
     plt.show()
     return
-    
 def progress(tx):
     """
     Show progress
@@ -247,7 +243,10 @@ def track_node(node,particle,options):
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
-    except (ValueError,OverflowError) as ex:
+    except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
+        reason = ex.__class__.__name__
+        s = last_tp()[8]
+        print('@map in track_node: {} at s={:6.2f} [m]'.format(reason,s))
         lost = True
         # track.removepoint(last_tp)   done in track()?
         particle.lost = lost
@@ -290,7 +289,6 @@ def track_node(node,particle,options):
             node.add_track_point(new_tp)
     particle.lost = lost
     return lost
-    
 def track(lattice,bunch,options):
     """
     Tracks a bunch of particles through the lattice using maps
@@ -328,7 +326,6 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
-
 def track_soll(lattice):
     """
     Track the reference particle through the lattice and redefines the lattice 
@@ -346,7 +343,6 @@ def track_soll(lattice):
         tpoint = Tpoint(pf)               # Tpoint at exit
         soll_track.addpoint(tpoint)
     return soll_track
-
 def tracker(input_file,options):
     """ 
     Prepare and launch tracking 
@@ -451,6 +447,7 @@ def tracker(input_file,options):
     t3 = time.process_time()
     # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
+
     live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
     t4 = time.process_time()
     # print(TmStamp.as_str())
@@ -477,7 +474,6 @@ def tracker(input_file,options):
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
-
 def test0(filepath):
     print('-----------------------------------------Test0---')
     lattice = factory(filepath)
@@ -487,7 +483,6 @@ def test0(filepath):
     first = sollTrack[0]
     last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
-
 #----------------main------------
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
