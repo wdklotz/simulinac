@@ -22,15 +22,15 @@ from __future__ import print_function
 
 import sys
 import scipy.constants as C
-import logging
+from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
+import logging, pprint
+from enum import IntEnum
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
 import warnings
 import time
-import pprint
+# import pprint
 import inspect
-import matplotlib.pyplot as plt
-from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
-from enum import IntEnum
-from matplotlib.patches import Ellipse
 import lattice_parser2 as parser
 
 def LOGGER():
@@ -64,7 +64,7 @@ class Ktp(IntEnum):
     T  = 6     # T(s) = Ingegral(dT)
     dT = 7     # const 1
     S  = 8     # S = Integral(dS)
-    dS = 9     # const 
+    dS = 9     # const 1
 class Ktw(IntEnum):
     """ Koordinaten fuer twiss vector (1x10) """
     bx = 0      # twiss-beta
@@ -199,9 +199,9 @@ class Particle(object):
         self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 class Proton(Particle):
-    def __init__(self,tkin= 50.):
+    def __init__(self,tkin=50.):
         super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
-class Electron(Particle):
+class Electron(Particle):    #TODO is it used?
     def __init__(self,tkin= 50.):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
 
@@ -211,7 +211,10 @@ PARAMS['sollteilchen'] = Proton()
 class WConverter(object):
     """
     Converter to switch between different longitudinal phase space coordinates
+    W is kin energy (Wangler 1.2) (gamma-1)*m0c2
+    w is Dgamma (Wangler 6.13)  DW=w*m0c2
     """
+    #TODO extend to other particles not only protons
     def __init__(self,tk,freq):
         self.pi             = C.pi
         self.lamb           = C.c/freq           # [m]
@@ -227,7 +230,7 @@ class WConverter(object):
 
     def DphiToz(self,Dphi):
         """ delta-phi [rad] to z [m] """
-        z = -self.bl/self.twopi*Dphi
+        z = -self.bl/self.twopi*Dphi  # trace-3d pp 4
         return z    # [m]
     def zToDphi(self,z):
         """ z [m] to delta-phi [rad] """
@@ -236,7 +239,7 @@ class WConverter(object):
 
     def wToDp2p(self,w):
         """ w=DW/m0c2(a.k.a. Dgamma) [] to Dp2p [] """
-        Dp2p = self.g/(self.g2-1.)*w
+        Dp2p = self.g/(self.g2-1.)*w   # CERN Formelsammlung tab. 1.3
         return Dp2p # []
     def Dp2pTow(self,Dp2p):
         """ Dp2p [] to w=DW/m0c2(a.k.a. Dgamma) [] """
@@ -272,7 +275,7 @@ class WConverter(object):
     def wtoz(self,args):
         # conversion phase-space coordinates {Dpi(x)w} to {z(x)Dp2p}
         """ 
-        IN: args is tuple = (Delta-phi, w (== dT/m0c2), emittance-w, beta-w)
+        IN: args is tuple = (Dphi, w (== dT/m0c2), emittance-w, beta-w)
         OUT:     is tuple = (z, Dp2p, emittance-z, beta=z)
         """
         Dphi, w, emitw, betaw = args
@@ -345,7 +348,7 @@ class TmStamp(object):
         self.tmcnt +=1
         t = time.perf_counter()
         dt = t-self.tmt0
-    #    self._t0 = t
+        # self._t0 = t
         s = '{:4}:{:10.5} {:20}'.format(self.tmcnt,dt,text)
         self.tmStamps.append(s)
         return s
@@ -383,7 +386,7 @@ def waccept(node):
         conv      = WConverter(tkin,freq)
 
         # LARGE amplitude oscillations (T.Wangler pp. 175)
-        # w = Dgamma = DW/moc2 is normalized energy deviation
+        # w = Dgamma = DW/m0c2 is normalized energy deviation
         factor_phis = phis*cos(phis)-sin(phis)
         wmx  = 2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis
         try:
@@ -579,16 +582,16 @@ def I0(x):
         res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    try:
-        res = res*exp(x)/sqrt(x)
-    except OverflowError as ex:
-        print('STOP: Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
-        sys.exit(1)
+        try:
+            res = res*exp(x)/sqrt(x)
+        except OverflowError as ex:
+            print('STOP: Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
+            sys.exit(1)
     return res
 def I1(x):
     """
     Modified Bessel function I of integer order 1
-    ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
+    ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun pp.379
     """
     t = x/3.75
     if 0. <= x and x < 3.75:
@@ -613,12 +616,12 @@ def I1(x):
         res-= 0.02895312*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.01787654*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    try:
-        res = res*exp(x)/sqrt(x)
-        DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-    except OverflowError as ex:
-        print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
-        sys.exit(1)
+        try:
+            res = res*exp(x)/sqrt(x)
+            DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
+        except OverflowError as ex:
+            print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
+            sys.exit(1)
     return res
 #TODO: more marker-actions
 # def sigma_x_action(*args):

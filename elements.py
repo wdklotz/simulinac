@@ -23,6 +23,15 @@ from copy import copy, deepcopy
 import numpy as NP
 import pprint, inspect
 
+from setutil import wille, PARAMS, FLAGS
+from setutil import WConverter, dictprnt, objprnt, Proton, Electron
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
+from Ez0     import SFdata
+from TTFG    import _TTF_G
+from DynacG  import _DYN_G
+from OXAL    import _OXAL
+
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
@@ -33,15 +42,6 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-from setutil import wille, PARAMS, FLAGS
-from setutil import WConverter, dictprnt, objprnt, Proton, Electron
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
-from Ez0     import SFdata
-from TTFG    import _TTF_G
-from DynacG  import _DYN_G
-from OXAL    import _OXAL
-
 twopi = 2.*pi     # used about everywhere
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
@@ -50,59 +50,52 @@ class OutOfRadialBoundEx(Exception):
     def __init__(self,max_r,ID=''):
         self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
 #------- The mother of all lattice elements (a.k.a. matrices)
+#------- The mother of all lattice elements (a.k.a. matrices)
+#------- The mother of all lattice elements (a.k.a. matrices)
 class _Node(object):
     """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
     def __init__(self, label='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
-        # DictObject.__init__(self)
         self.matrix    = NP.zeros([MDIM,MDIM])   # MDIMxMDIM zero matrix used here
-        # !!!IMPORTANT!!! local copy of the particle object
-        self.particle  = copy(particle)
-        self.position  = position           # [entrance, middle, exit]
-        self.length    = length             # default - thin
-        self.label     = label              # default - unlabeled
-        self.aperture  = aperture           # default - infinite aperture
-        self.next      = next               # right link
-        self.prev      = prev               # left link
-        self['slice_min'] = 0.001           # default - minimal slice length
-        self['viseo']     = 0               # default - invisible
-        # a class is a dictionary
-        self.type = self.__class__.__name__ # self's node type
-        self._params = self.__dict__        # make legacy code compatible
-
+        self.particle  = copy(particle)          # !!!IMPORTANT!!! local copy of the particle object
+        self.position  = position                # [entrance, middle, exit]
+        self.length    = length                  # default - thin
+        self.label     = label                   # default - unlabeled
+        self.aperture  = aperture                # default - infinite aperture
+        self.next      = next                    # right link
+        self.prev      = prev                    # left link
+        self.type      = self.__class__.__name__ # self's node type
+        self._params   = self.__dict__           # make legacy code compatible
+        self.slice_min = 0.001                   # default - minimal slice length
+        # ...................................... # class is a dictionary! use it to attach [key:value]-pairs
+        self['slice_min'] = self.slice_min       # default - minimal slice length
+        self['viseo']     = 0                    # default - invisible
     def __getitem__(self,k):
         return self.__dict__[k]
-        
     def __setitem__(self,k,v):
         self.__dict__[k] = v
-    
     def toString(self):
         ret = repr(self)
         for k,v in self.__dict__.items():
             ret+= '\n{}:{}'.format(k,v)
         return ret
-    
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture= self.aperture, next=self.next, prev=self.prev)
         self._params = _params
         return self
-
     @property
     def twiss(self):
         return self['twiss']
-
     @property
     def particlef(self):
          # !!!IMPORTANT!!! return a copy with updated energy
         return copy(self.particle)(self.particle.tkin + self.deltaW)
-
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
         return self.matrix[:n, :m]
-
     def __mul__(self, other):
         """ define the * operator for _Node objects """
         res = _Node()
@@ -114,10 +107,9 @@ class _Node(object):
         """ matrix product """
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
-
     def prmatrix(self):
-        n  = 42
-        nx = 300
+        n  = 1000
+        nx = 1000
         if len(self.label) > nx:
             # make short when too long
             label = self.label[:n]+'.....'+self.label[-n:]
@@ -133,30 +125,24 @@ class _Node(object):
                 s+='{:8.4g} '.format(self.matrix[i, j])
             s+='\n'
         return s
-
     def reverse(self):
         raise RuntimeError('_Node:reverse not implemented!')
         sys.exit()
-
     def inverse(self):
         raise RuntimeError('_Node:inverse not implemented!')
         sys.exit(1)
-
     def trace(self):
         return self.tracex()+self.tracey
-
     def tracex(self):
         res = 0.
         for i in range(2):
             res += self.matrix[i, i]
         return res
-
     def tracey(self):
         res = 0.
         for i in range(2, 4):
             res += self.matrix[i, i]
         return res
-
     def make_slices(self, anz = PARAMS['nbslices']):
         # ignore the very small rest
         mr = None
@@ -186,7 +172,6 @@ class _Node(object):
                 slices.append(mx)
         if mr != None: slices += [mr]
         return slices
-
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
         # Aliases
@@ -211,7 +196,6 @@ class _Node(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
-
     def sigma_beam(self, steps=1, sg=None):
         """ 
         Track the Sigma object through a node
@@ -246,7 +230,6 @@ class _Node(object):
         # each node has its tuple of average sigmas     
         self['sigxy'] = sigxy
         return sigmas
-
     def map(self, i_track):
         """ Linear mapping of trajectory from (i) to (f) """
         f_track = copy(i_track)
@@ -259,12 +242,10 @@ class _Node(object):
                 f[i]  = f[i]*1.e3
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
         return f_track
-
     def soll_map(self, i_track):
         f_track = copy(i_track)
         f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
         return f_track
-
     def shorten(self, length):
         """ nothing to shorten """
         return self
@@ -274,7 +255,7 @@ class I(_Node):
     """
     def __init__(self, label='I', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self.matrix    = NP.eye(MDIM,MDIM)     # MDIMxMDIM unit matrix used here
+        self.matrix    = NP.eye(MDIM,MDIM) # set the NODE's member variable
 class MRK(I):
     """ 
     Marker node (a.k.a element): owns a list of agents that do the actions
@@ -306,15 +287,14 @@ class D(I):
     """
     def __init__(self, label='D', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0.,aperture=PARAMS['aperture'], next=None, prev=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        # linear NODE matrix
-        m = self.matrix
+        m = self.matrix # set the NODE's member variable
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
         m[ZKOO, ZPKOO] = self.length/(g*g)
-        m[SKOO, LKOO]  = self.length        # length increase
+        m[SKOO, LKOO]  = self.length # length increase
 
     def adjust_energy(self, tkin):
-        _params = self._params
+        _params = self._params # the extra [key,value]-pairs not ininitalised by __ini__()
         self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture, next=self.next, prev=self.prev)
         self._params = _params
         return self
@@ -564,31 +544,21 @@ class RFG(I):
         self.dWf      = dWf
         self.mapping  = mapping            # map model
         self.SFdata   = SFdata             # SuperFish data
-
         self['viseo'] = 0.25
-        # makes the T3D matrix default for RFG
-        t3d_g          = _T3D_G(self)
-        self.gap_model = t3d_g
 
         """ set switch to gap model """
-        if self.mapping == 't3d':
-            # Trace3D-matrix and use linear gap-model
-            self.gap_model = t3d_g
+        # makes the T3D matrix default for RFG
+        self.gap_model = _T3D_G(self)                   # Trace3D-matrix and use linear gap-model
+        if self.mapping == 't3d': pass
         elif self.mapping == 'simple' or self.mapping == 'base':
-            # PyOrbit gap-models w/o SF-data
-            self.gap_model = _PYO_G(self, self.mapping)
+            self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
-            self.gap_model = _TTF_G(self)
+            self.gap_model = _TTF_G(self)               # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
         elif self.mapping == 'oxal':
-            # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
-            self.gap_model = _OXAL(self)
+            self.gap_model = _OXAL(self)                # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
         else:
-            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
-            # self.gap_model = _DYN_G(self)  not for RFG anymore!
-            info = "INFO: RFG is a kick-model and does not work with '{}' mapping! Use 't3d' instead"
+            info = "INFO: RFG is a kick-model and does not work with '{}' mapping! Use one of [t3d,simple,base,ttf,oxal]."
             print(info.format(self.mapping))
-            
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(
@@ -825,7 +795,7 @@ class _PYO_G(object):
         if self.mapping == 'simple':
             self.which_map = self.simple_map
         elif self.mapping == 'base':
-            self.which_map = self.base_map
+            self.which_map = self.base_map_1
             
     @property
     def deltaW(self):
@@ -833,15 +803,12 @@ class _PYO_G(object):
     @property
     def particlef(self):
         return self._particlef
-            
     def map(self, i_track):
         return self.which_map(i_track)
-
     def soll_map(self, i_track):
         f_track       = copy(i_track)
         f_track[EKOO] = f_track[EKOO] + self.deltaW
         return f_track
-
     def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
         xi        = i_track[XKOO]       # [0]
@@ -911,8 +878,8 @@ class _PYO_G(object):
         # the parent delegates reading these properties from here
         self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
         return f_track
-
-    def base_map(self, i_track):
+    def base_map_0(self, i_track):
+        """alte map version bis 02.02.2022"""
         def DEBUG_TRACK(inout,track):
             print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
@@ -971,7 +938,7 @@ class _PYO_G(object):
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
 
-        converter = WConverter(WOUT,frq)
+        # converter = WConverter(WOUT,frq)
         z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
         # zpf     = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
         zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
@@ -994,6 +961,93 @@ class _PYO_G(object):
             arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
         # the parent reads these attributes below
         self._particlef = particlef
+        return f_track
+    def base_map_1(self, i_track):
+        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen."""
+        def DEBUG_TRACK(inout,track):
+            print('{} {} {}'.format('base_map',inout,track))
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        """ Mapping (i) to (O) in Base RF-Gap Model. (A.Shislo 4.2) """
+        x        = i_track[XKOO]       # [0]
+        xp       = i_track[XPKOO]      # [1]
+        y        = i_track[YKOO]       # [2]
+        yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4] z
+        zp       = i_track[ZPKOO]      # [5] dp/p
+        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
+        S        = i_track[SKOO]       # [8] position gap
+
+        particleRi = self.particle   # ref Teilchen (I)
+        m0c2       = particleRi.e0
+        betai      = particleRi.beta
+        gammai     = particleRi.gamma
+        gbi        = particleRi.gamma_beta
+        wRi        = particleRi.tkin
+        frq        = self.freq
+        lamb       = self.lamb
+        phis       = self.phis
+        qE0LT      = self.qE0LT
+        
+        # if 0: 
+        #     DEBUG_ON()
+        #     DEBUG_TRACK('tr_i',i_track)
+
+        max_r  = 0.05              # max radial excursion [m]
+        r      = sqrt(x**2+y**2)   # radial coordinate
+        if r > max_r:
+            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
+        Kr     = (twopi*r)/(lamb*gbi)
+        i0     = I0(Kr)            # bessel function I0
+        i1     = I1(Kr)            # bessel function I1
+
+        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
+
+        # ref Teilchen
+        wRo = wRi + self.deltaW                           # ref Teilchen energy (O)
+ 
+        # Teilchen
+        converter   = WConverter(wRi,frq)
+        phiin       = converter.zToDphi(z) + phis         # Teilchen phase (I)
+        wo_wi       = qE0LT*i0*cos(phiin)                 # energy kick (Shislo 4.2.3)
+        wi          =  converter.Dp2pToW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
+        wo          = wi + wo_wi                          # Teilchen energy (O)   
+        dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
+
+        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+
+        """ !!!IMPORTANT!!! SOLL particle (O) """        
+        particleRo = copy(particleRi)(tkin = wRo)
+        betao      = particleRo.beta
+        gammao     = particleRo.gamma
+        gbo        = particleRo.gamma_beta
+
+        zo         = betao/betai*z                     # z (O) (4.2.5) A.Shishlo/J.Holmes
+        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
+
+        # if 0: print('z ',z,'zpf ',zpf)
+
+        factor = qE0LT/(m0c2*gbi*gbo)*i1               # common factor
+        if r > 0.:
+            xp  = gbi/gbo*xp - x/r*factor*sin(phiin)   # Formel 4.2.6 A.Shishlo/J.Holmes
+            yp  = gbi/gbo*yp - y/r*factor*sin(phiin)
+        elif r == 0.:
+            xp  = gbi/gbo*xp
+            yp  = gbi/gbo*yp
+
+        T = wRo
+        f_track = NP.array([x, xp, y, yp, zo, zpo, T, 1., S, 1.])
+
+        # for DEBUGGING
+        # if 0: DEBUG_TRACK('tr_f',f_track)
+        # if 0:
+        #     arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+        #     arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+
+        """ the parent reads these attributes below """
+        self._particlef = particleRo
+
         return f_track
 class _T3D_G(object):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """

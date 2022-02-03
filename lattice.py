@@ -25,6 +25,12 @@ from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 from copy import copy
 
+import elements as ELM
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
+from setutil import Twiss, Functions
+from sigma import Sigma
+
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
@@ -34,12 +40,6 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-
-import elements as ELM
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
-from setutil import Twiss, Functions
-from sigma import Sigma
 # Lattice
 class Lattice(object):
     """
@@ -468,7 +468,7 @@ class Lattice(object):
             if aperture == None: continue
             ape.append(sm,(aperture,))
         return fun,ape
-    def cs_traj(self,steps=10):
+    def cs_traj(self,steps=1):
         """ track cos- & sin-trajectories """
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
             return 0.
@@ -509,14 +509,16 @@ class Lattice(object):
         z4,z4p = soll_test((0., Dp2p_i))      # C
         # MDIMxMDIM tracking used here
         s   = 0.
-        c_0 = NP.array([x1, x1p, y1, y1p, z4, z4p, tkin,1,0,1])  # C
-        s_0 = NP.array([x4, x4p, y4, y4p, z1, z1p, tkin,1,0,1])  # S
+        c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
+        s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
         # function names
         c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
         s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
 
         """ loop through lattice """
         for element in iter(self):
+            particle = element.particle
+            gamma = particle.gamma
             # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
             try:
@@ -524,8 +526,9 @@ class Lattice(object):
                     # if i_element.type == 'QFth' : print(i_element.type,i_element.matrix)
                     # if i_element.type == 'QDth' : print(i_element.type,i_element.matrix)
                     s += i_element.length
+                    """ begin map """
                     ## COSine_like
-                    c_0 = i_element.map(c_0)   # map!!!
+                    c_0 = i_element.map(c_0)   
                     cx  = c_0[XKOO]
                     cxp = c_0[XPKOO]
                     cy  = c_0[YKOO]
@@ -534,7 +537,8 @@ class Lattice(object):
                     # cdw = c_0[ZPKOO]*(gamma+1.)/gamma*100.       # dp/p --> dW/W [%]
                     cz  = c_0[ZKOO]*1.e3      # z [mm]
                     cdp = c_0[ZPKOO]*100.     # dp/p [%]
-                    c_fun.append(s,(cx,cxp,cy,cyp,cz,cdp))
+                    c_1 = NP.array([cx, cxp, cy, cyp, cz, cdp, tkin,1,0,1])  # C
+
                     ## SINus_like
                     s_0 = i_element.map(s_0)   # map!!!
                     sx  = s_0[XKOO]
@@ -545,7 +549,13 @@ class Lattice(object):
                     # sdw = s_0[ZPKOO]*(gamma+1.)/gamma*100.
                     sz  = -s_0[ZKOO]*1.e3
                     sdp = s_0[ZPKOO]*100.
-                    s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
+                    s_1 = NP.array([sx, sxp, sy, syp, sz, sdp, tkin,1,0,1])  # S
+
+                    # c_fun.append(s,(cx,cxp,cy,cyp,cz,cdp))
+                    # s_fun.append(s,(sx,sxp,sy,syp,sz,sdp))
+                    c_fun.append(s,c_1)
+                    s_fun.append(s,s_1)
+                    """ end map """
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
             except (ValueError,ELM.OutOfRadialBoundEx) as ex:
                 reason = ex.__class__.__name__

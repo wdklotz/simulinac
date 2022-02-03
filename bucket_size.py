@@ -49,7 +49,6 @@ def display_bucket(functions,phis,tkin,gap,EzAvg,freq,name):
     plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
     # figure title
     plt.title('longitudinal bucket')
-
 def bucket():
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
     phis = radians(PARAMS['phisoll'])           # KNOB: soll phase
@@ -59,7 +58,7 @@ def bucket():
     phi_2 = PARAMS['phi_2']       # stable phase lower limit
     psi   = PARAMS['psi']
     anz   = int(psi/Dphi)
-##todo: get parameters from 1st cavity in lattice
+    #TODO: get parameters from 1st cavity in lattice
     tkin     = PARAMS['injection_energy']
     particle = Proton(tkin=tkin)
     gap      = PARAMS['gap']

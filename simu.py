@@ -47,6 +47,15 @@ import matplotlib.pyplot as plt
 # from matplotlib.patches import Ellipse
 import pprint, inspect
 
+import bucket_size
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
+from setutil import collect_data_for_summary, show_data_from_elements
+from lattice_generator import factory
+from PsMarkerAgent import ellipse_plot
+from tracker import track_soll
+from pargs import pargs
+from lattice_parser2 import parse as getParseResult
+
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
@@ -57,15 +66,6 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-
-import bucket_size
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
-from setutil import collect_data_for_summary, show_data_from_elements
-from lattice_generator import factory
-from PsMarkerAgent import ellipse_plot
-from tracker import track_soll
-from pargs import pargs
-from lattice_parser2 import parse as getParseResult
 
 def bucket(*args):
     bucket_size.bucket()
@@ -267,9 +267,9 @@ def lattice_check(lattice):
 def link_check(lattice):
     DEBUG_ON()
     lattice.show_linkage()
-#                            |----------------------- |
-# -------------------------  | everything starts here |
-#                            |----------------------- |
+# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
         plots   = []
@@ -300,7 +300,6 @@ def simulation(filepath):
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
     print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]') # print(F'') formating
-    # print('FINAL kinetic energy {} [MeV]'.format(lattice.seq[-1].particle.T))
     #----------------------------------------------
     # STEP 3: calculate longitudinal paramters at entrance
     #----------------------------------------------
@@ -329,21 +328,13 @@ def simulation(filepath):
             kv[key] = SUMMARY[key]
         dictprnt(kv,text='KV',njust=1)
     else:
-        # show ELEMENT attributes
-        show_data_from_elements()
-        # show summary
-        dictprnt(SUMMARY,text='Summary')
-        # generate lattice plot
-        (lat_plot, ape_plot) = lattice.lattice_plot_functions()
-        # track sin- and cos-like trajectories
-        steps = 10
-        (c_like,s_like) = lattice.cs_traj(steps = steps)
-        # calculate envelope functions
-        sigma_fun = lattice.sigmas(steps = steps)
-        # make plots of functionsa
-        display(sigma_fun,c_like,s_like,lat_plot,ape_plot)
-        # any MARKER with actions?
-        if FLAGS['marker']:
+        show_data_from_elements() #..................................show ELEMENT attributes
+        dictprnt(SUMMARY,text='Summary') #...........................show summary
+        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
+        (c_like,s_like) = lattice.cs_traj(steps = 10) #..............track sin- and cos-like trajectories
+        sigma_fun = lattice.sigmas(steps = 10) #.,,,.................calculate envelope functions
+        display(sigma_fun,c_like,s_like,lat_plot,ape_plot) #.........make plots of functionsa
+        if FLAGS['marker']: #........................................any MARKER with actions?
             # TODO need a function to filter/print lattice elements
             for node in lattice.seq:
                 if node.type != "MRK": continue
@@ -351,11 +342,11 @@ def simulation(filepath):
                 node.do_actions()
         """ show all figures - (must be the only one!) """
         plt.show()
-
 if __name__ == '__main__':
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
     # parse argv and normalize
+    print("sys.argv: {}".format(sys.argv))
     Args = pargs(sys.argv)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 

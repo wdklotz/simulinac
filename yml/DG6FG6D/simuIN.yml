@@ -30,7 +30,7 @@ DESCRIPTOR:  'v10.0.1 compatible, pure FODO starter, DG6FG6D, base, 6-21 MeV'
 FLAGS:
     # accON:        False           # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
-    sigma:        False           # {True} beam sizes by sigma-matrix
+    # sigma:        False           # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
     # express:      True            # {False} use express version of thin quads
@@ -44,84 +44,116 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 6.              # [MeV] energy @ injection
-    DT2T:                 1.0e-3          # delta-T/T kinetic energy spread @ injection
+    # Tkin:                 6.              # [MeV] energy @ injection
+    Tkin:                 50.              # [MeV] energy @ injection
+    # DT2T:                 1.0e-3          # delta-T/T kinetic energy spread @ injection
+    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    0.692           # [m] twiss beta @ entrance x
-    betay_i:      &bty    1.600           # [m] twiss beta @ entrance y
-    phi_sync:     &phs    -30.            # [deg] synchronous phase
-    frequency:    &freq   816.e6          # [Hz] frequency
+    # betax_i:      &btx    0.692           # [m] twiss beta @ entrance x
+    betax_i:      &btx    3.3           # [m] twiss beta @ entrance x
+    # betay_i:      &bty    1.600           # [m] twiss beta @ entrance y
+    betay_i:      &bty    0.55           # [m] twiss beta @ entrance y
+    # phi_sync:     &phs    -30.            # [deg] synchronous phase
+    phi_sync:     &phs    -25.            # [deg] synchronous phase
+    frequency:    &freq   816.e+6          # [Hz] frequency
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius
+    windings:             30              # [] quad-coil windings
+    gap:          &p15    0.046           # [m] RF gap
     # Bgrad:        &bgrad  14.7          # [T/m]  Minimum
     # Bgrad:        &bgrad  17.0          # [T/m]
     # Bgrad:        &bgrad  25.7          # [T/m]  Maximum
-    Bgrad:        &bgrad  29.5          # [T/m]  base mapping
-    windings:             30              # [] quad-coil windings
+    # Bgrad:        &bgrad  29.5          # [T/m]  base mapping
+    Bgrad:        &bgrad  30.          # [T/m]  base mapping
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
-    gap:          &p15    0.036           # [m] RF gap
-    EzAvg:        &p16    0.786409        # [MV/m]
-    EzPeak:       &p17    2.2             # [MV/m] peak gap field Strengy
-    nbsigma:              2               # [m] sigma aperture
+    # EzAvg:        &p16    0.786409        # [MV/m]
+    EzAvg:        &p16    1.0        # [MV/m]
+    # EzPeak:       &p17    2.2             # [MV/m] peak gap field Strengy
+    EzPeak:       &p17    1.40             # [MV/m] peak gap field Strengy
+    # nbsigma:              2               # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'FODO-starter'  # lattice version
-    mapping:      &map    base        # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
 ELEMENTS:
-    RFX:                       # replacement of RF by D
-        type:     D            # replacement
-        length:   0.024        # replacement
-        sec:      HE           # section 
-    DXX:          #12xRFX      # replacement of RF by D
-        type:     D            # replacement
-        length:   0.288        # replacement
-        sec:      HE           # section 
+    # RFX:                       # replacement of RF by D
+    #     type:     D            # replacement
+    #     length:   0.024        # replacement
+    #     sec:      HE           # section 
+    # DXX:          #12xRFX      # replacement of RF by D
+    #     type:     D            # replacement
+    #     length:   0.288        # replacement
+    #     sec:      HE           # section 
 # Nodes in low energy section
     D3L:                       # ID
         type:     D            # D class
         length:   0.03         # [m]
         sec:      LE           # section 
+    # D5L:                       # ID: &alias
+    #     type:     D            # D class
+    #     length:   0.012        # [m] half cavity
+    #     sec:      LE           # is part of section
     D10L:                      # ID
         type:     D            # D class
         length:   0.100        # [m]
         sec:      LE           # section 
     QFL:                       # ID
         type:     QF           # QF class
-        length:   .04          # [m]
-        aperture: .011         # [m] quad bore
+        # length:   .04          # [m]
+        length:   *p03          # [m]
+        # aperture: .011         # [m] quad bore
+        aperture: *p04         # [m] quad bore
         B':       *bgrad       # [T/m] quadrupole gradient
         thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
     QDL:                       # ID
         type:     QD           # QD class
-        length:   0.04         # [m] length
-        aperture: 0.011        # [m] quad bore
+        # length:   .04          # [m]
+        length:   *p03          # [m]
+        # aperture: .011         # [m] quad bore
+        aperture: *p04         # [m] quad bore
         B':       *bgrad       # [T/m] quadrupole gradient
         thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
         sec:      LE           # section 
-    DgapL:
-        type:     D
-        length:   0.012
-        sec:      LE
-    RFCL:                      # ID
-        type:     RFC          # RFC class
+    DgapL:                        # ID: &alias
+        type:     D            # D class
+        length:   0.023        # [m] half cavity
+        sec:      LE          # is part of section
+    RFGL:                        # ID: &alias
+        type:     RFG            # RFG class
         # EzAvg:    *p16         # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
-        PhiSync:  -30.         # [deg] synchronous phase
-        freq:      *freq       # [Hz] frequency
-        gap:      0.020        # [m] gap length
+        # EzAvg:    *p16         # [MV/m] average E-field on axis
+        EzPeak:   *p17           # [MV/m] # corresponds to (EzAvg = 1.00[MV/m])
+        # PhiSync:  -30.           # [deg] synchronous phase
+        PhiSync:  *phs           # [deg] synchronous phase
+        freq:     *freq          # [Hz] frequency
+        # gap:      0.020          # [m] length
+        gap:      *p15          # [m] length
+        aperture: 10.e-3         # [m] quad bore
+        # SFdata:   SF/SF_WDK2g22.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
+        mapping:  *map           # mapping in cavities
+        sec:      LE             # is part of section
+    RFCL:                        # ID
+        type:     RFC            # RFC class
+        # EzAvg:    *p16         # [MV/m] average E-field on axis
+        EzPeak:   *p17           # [MV/m] 
+        PhiSync:  *phs           # [deg] synchronous phase
+        freq:     *freq          # [Hz] frequency
+        gap:      0.020          # [m] gap length
         aperture: 10.e-3       
         # SFdata:   SF/PILL-2CM.TBL # superfish tbl-data file
-        SFdata:   SF/SF_WDK2g22.TBL
-        mapping:  *map          # mapping in cavities
-        length:   0.024        # [m] cavity length
-        sec:      LE           # section 
+        # SFdata:   SF/SF_WDK2g22.TBL
+        # SFdata:   SF/SF_WDK2g44.TBL
+        mapping:  *map           # mapping in cavities
+        length:   0.024          # [m] cavity length
+        sec:      LE             # section 
 # Nodes in high energy section
     # D3H:                       # ID
     #     type:     D            # D class
@@ -200,9 +232,9 @@ SEGMENTS:
 # Marker segment
     # Psmarker:              [1,[PsMkr]]
 # LE section segment   DOFOD
-    SGi:                [1,[QDL, D3L]]               # QF+D
-    SGm:                [1,[D3L, QFL, QFL, D3L]]     # D+QD+D
-    SGf:                [1,[D3L, QDL]]               # D+QF
+    SGi:                [1,[QFL, D3L]]               # QF+D
+    SGm:                [1,[D3L, QDL, QDL, D3L]]     # D+QD+D
+    SGf:                [1,[D3L, QFL]]               # D+QF
 # exchanged quads   FODOF
     # SGi:                [1,[QFL, D3L]]               # QF+D
     # SGm:                [1,[D3L, QDL, QDL, D3L]]     # D+QD+D
@@ -217,10 +249,11 @@ SEGMENTS:
     # CAVs:               [1,[RFX ,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFX ]] # 10xRFCL
     # CAVs:               [1,[RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL]] # 12xRFCL
 
-    CAVs:               [1,[RFCL]]
+    GAP:                [1,[DgapL,RFGL,DgapL]]    # gaps
+    # CAVs:               [1,[RFCL]]            # cavities
 #
-    # CAVsarr:            [1,[CAVs, D10L, CAVs]] # CAVs+D+CAVs
-    CAVsarr:            [6,[CAVs]] # CAVs+D+CAVs
+    GAPsarr:            [6,[GAP]] # CAVs+D+CAVs
+    # CAVsarr:            [6,[CAVs]] # CAVs+D+CAVs
 # HE section segments
     # QF+D-H:                 [1,[QFH, D3H]]
     # D+QD+D-H:               [1,[D3H, QDH, D3H]]
@@ -235,14 +268,15 @@ CELLS:
     NIL_CELL:    [1,[NIL_SEG]]
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
-    CELL:   [1,[SGi, CAVsarr, SGm, CAVsarr, SGf]] 
+    CELL:   [1,[SGi, GAPsarr, D10L, GAPsarr, SGm, GAPsarr, D10L, GAPsarr , SGf]] 
     # CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 # ===========================================================================================
 SECTIONS:
     NIL_SEC:    [1,[NIL_CELL]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    SCle:      [40,[CELL]]       
+    # SCle:      [40,[CELL]]       
+    SCle:      [100,[CELL]]       
 #   S_HE:      [148,[CELL_H]]
 #   S_END:     [3,[CELL_H]]
 # ===========================================================================================

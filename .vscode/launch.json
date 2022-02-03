@@ -4,24 +4,23 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
-            "name": "simu.py",
+            "name": "simu",
             "type": "python",
             "request": "launch",
-            // "program": "${workspaceRoot}\\py_testing\\beta_proton.py",
-            "program": "${workspaceRoot}\\simu.py",
+            "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "console": "integratedTerminal"
+            "program": "simu.py",
+            "args": ["yml\\DG6FG6D\\simuIN_copy.yml"]
         },
         {
-            "name": "KW.py",
+            "name": "setutil",
             "type": "python",
             "request": "launch",
-            // "program": "${workspaceRoot}\\py_testing\\beta_proton.py",
-            "program": "${workspaceRoot}\\KW.py",
+            "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "console": "integratedTerminal"
+            // "program": "${workspaceRoot}\\py_testing\\beta_proton.py",
+            "program": "setutil.py",
         }
     ]
 }
