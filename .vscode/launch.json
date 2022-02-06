@@ -11,7 +11,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["yml\\DG6FG6D\\simuIN_copy.yml"]
+            "args": ["REF-Läufe/DG6FG6D-v10.0.1-ref/simuIN.yml"]
         },
         {
             "name": "setutil",
