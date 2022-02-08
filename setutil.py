@@ -149,9 +149,7 @@ class Twiss(object):
         (x,y) = self.y3()
         return y
 class Particle(object):
-    """
-        A particle class
-    """
+    """ A particle class """
     def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
