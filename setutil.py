@@ -173,8 +173,8 @@ class Particle(object):
         self.m0c2       = self.e0
         self.m0c3       = self.e0 * PARAMS['clight']
         self.betac      = self.v
-        self.E          = self.e
-        self.T          = self.tkin
+        # self.E          = self.e
+        # self.T          = self.tkin
     def toString(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
