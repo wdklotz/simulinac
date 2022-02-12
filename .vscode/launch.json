@@ -19,8 +19,15 @@
             "request": "launch",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            // "program": "${workspaceRoot}\\py_testing\\beta_proton.py",
             "program": "setutil.py",
+        },
+        {
+            "name": "elements",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "elements.py",
         }
     ]
 }
