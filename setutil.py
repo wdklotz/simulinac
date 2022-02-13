@@ -779,17 +779,6 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     for val in array:
         print(fmt.format(val),end='')
     print('')
-def wille():
-    return {
-        'k_quad_f':1.2,
-        'length_quad_f':0.2,
-        'k_quad_d':1.2,
-        'length_quad_d':0.4,
-        'bending_radius':3.8197,
-        # 'bending_radius':1.e4,
-        'dipole_length':1.5,
-        'drift_length':0.55
-    }
 def test0():
     print('--------------------------Test0---')
     dictprnt( PARAMS,text=' PARAMS')
