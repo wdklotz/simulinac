@@ -86,9 +86,9 @@ class Node(object):
     def twiss(self):
         return self['twiss']
     @property
-    def particlef(self):
-         # !!!IMPORTANT!!! return a copy with updated energy
-        return copy(self.particle)(self.particle.tkin + self.deltaW)
+    # def particlef(self):
+    #      # !!!IMPORTANT!!! return a copy with updated energy
+    #     return copy(self.particle)(self.particle.tkin + self.deltaW)
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
         return self.matrix[:n, :m]
@@ -246,39 +246,29 @@ class Node(object):
         """ nothing to shorten """
         return self
 class I(Node):
-    """ 
-    Unity matrix: the unity Node
-    """
+    """  Unity matrix: the unity Node """
     def __init__(self, label):
         super().__init__()
         self.label    = label
         self.matrix   = NP.eye(MDIM,MDIM) # set the NODE's member variable
         self.length   = 0.
 class MRK(I):
-    """ 
-    Marker node (a.k.a element): owns a list of agents that do the actions
-    """
-    def __init__(self, label='MRK', particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=None, next=None, prev=None, agent=None):
-        super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self._agents = []   # the agent-list
-        if agent != None: self.add(agent)
+    """ Marker node (a.k.a element): owns a list of agents that do the actions """
+    def __init__(self, label, agents=[], particle=PARAMS['sollteilchen'], position=[0, 0, 0]):
+        super().__init__(label)
+        self.agents = agents   # the agent-list
+        self.particle = copy(particle)
+        self.position = position
         self['viseo'] = 4.
-    
     def add(self,agent):
-        self._agents += [agent]
-
+        self.agents.append(agent)
     def do_actions(self):
         """ invoke all actions bound to this marker """
-        for agent in self._agents:
+        for agent in self.agents:
             agent.do_action()
-        
     def adjust_energy(self, tkin):
-        _params = self._params
-        _agents = self._agents
-        self.__init__(label=self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture,  next=self.next, prev=self.prev)
-        self._params = _params
-        self._agents = _agents
-        return self
+        adjusted = MRK(self.label, agents=self.agents, particle=self.particle(tkin), position=self.position)
+        return adjusted
 class D(Node):
     """ 
     Trace3D drift space 
@@ -470,138 +460,87 @@ class _wedge(Node):
         mx[XPKOO, XKOO] = mxpx
         mx[YPKOO, YKOO] = -mypy
         self.matrix = mx
-class GAP(I):
-    """ 
-    Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-    ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG! 
-    """
-    def __init__(self,
-                    EzAvg      = 1.,
-                    PhiSoll    = radians(-30.),
-                    fRF        = 800.e6,
-                    label      = 'GAP',
-                    particle   = PARAMS['sollteilchen'],
-                    gap        = 0.024,
-                    position   = [0, 0, 0],
-                    aperture   = None,
-                    dWf        = FLAGS['dWf'],
-                    next       = None,
-                    prev       = None):
-        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self.EzAvg    = EzAvg*dWf    # [MV/m] av. gap field strength
-        self.phis     = PhiSoll      # [radians] soll phase
-        self.freq     = fRF          # [Hz]  RF frequenz
-        self.gap      = gap          # [m] eff. gap-length
+class GAP(Node):
+    """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
+    ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
+    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, dWf=FLAGS['dWf']):
+        """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
+        super().__init__()
+        self.label    = label
+        self.EzAvg    = EzAvg*dWf
+        self.phisoll  = phisoll
+        self.gap      = gap
+        self.freq     = freq
+        self.particle = copy(particle)
+        self.position = position
+        self.aperture = aperture
         self.dWf      = dWf
-
-        self['viseo']  = 0.25
-
-        lamb         = PARAMS['clight']/fRF                  # [m] wellenlaenge
-        beta         = self.particle.beta                    # beta Einstein
-        tr           = self._trtf_(beta, lamb, gap)          # time-transition factor
-        E0L          = self.EzAvg*self.gap                   # Spaltspannung
-        self.deltaW  = E0L*tr*cos(PhiSoll)                   # delta-W T.Wrangler pp.221
-        tkin         = self.particle.tkin
-        tk_center    = self.deltaW*0.5 + tkin                # energy in gap center
-        part_center  = copy(self.particle)(tk_center)        # !!!IMPORTANT!!! particle @ gap center
-        bg           = part_center.gamma_beta                # beta*gamma @ gap center
-        matrix       = self.matrix
-        m0c2         = self.particle.e0
-        # linear matrix
-        self._mx_(matrix, m0c2, E0L, tr, PhiSoll, lamb, bg)
-
-    def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-            EzAvg       = self.EzAvg,
-            PhiSoll     = self.phis,
-            fRF         = self.freq,
-            label       = self.label,
-            particle    = self.particle(tkin),
-            gap         = self.gap,
-            position    = self.position,
-            dWf         = self.dWf,
-            aperture    = self.aperture, 
-            next        = self.next, 
-            prev        = self.prev)
-        self._params = _params
-        return self
-
-    def deltaW(self):
-        return self.deltaW
-
-    def _trtf_(self, beta, lamb, gap):
-        """ tt-factor nach Panofsky (Lapostolle CERN-97-09 pp.65) """
-        teta = gap / (beta*lamb)
-        res = NP.sinc(teta)/teta
-        return res
-
-    def _mx_(self, m, m0c2, E0L, tr, phis, lamb, bg):
+        self.viseo    = 0.25
+        self.length   = 0.
+        E0L           = self.EzAvg*self.gap            # Spaltspannung
+        self.deltaW,self.matrix = self._mx(E0L)
+    def _mx(self,E0L):
         """ cavity nach Dr.Tiede pp.33 """
-        cyp = cxp = -pi*E0L*tr*sin(phis)/(m0c2*lamb*bg**3)
+        lamb   = PARAMS['clight']/self.freq            # [m] wellenlaenge
+        beta   = self.particle.beta                    # beta Einstein
+        ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
+        bg     = self.particle.gamma_beta
+        m0c2   = self.particle.e0
+        deltaW = E0L*ttf*cos(self.phisoll)                   # delta-W T.Wrangler pp.221
+        m      = NP.eye(MDIM,MDIM)
+        cyp = cxp = -pi*E0L*ttf*sin(self.phisoll)/(m0c2*lamb*bg**3)
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
-        m[EKOO, DEKOO] = self.deltaW # energy increase
-class RFG(I):
-    """ 
-    Wrapper to zero length RF kick gap-models
-    """
-    def __init__(self,
-            EzAvg      = 1.,
-            label      = 'RFG',
-            PhiSoll    = radians(-30.),
-            fRF        = 800.e6,
-            gap        = 0.024,
-            aperture   = None,
-            dWf        = FLAGS['dWf'],
-            mapping    = 't3d',
-            SFdata     = None,  # return of SFdata (SuperFish data)
-            particle   = PARAMS['sollteilchen'],
-            position   = [0, 0, 0],
-            next       = None,
-            prev       = None):
-        super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-        self._EzAvg   = EzAvg*dWf          # [MV/m] average gap field
-        self['EzAvg'] = self._EzAvg
-        self.phis     = PhiSoll            # [radians] soll phase
-        self.freq     = fRF                # [Hz]  RF frequenz
-        self.gap      = gap                # [m] rf-gap
-        self.dWf      = dWf
-        self.mapping  = mapping            # map model
-        self.SFdata   = SFdata             # SuperFish data
-        self['viseo'] = 0.25
+        m[EKOO, DEKOO] = deltaW    # energy increase
+        return deltaW,m
+    def ttf(self, beta, lamb, gap):
+        """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+        x = pi*gap/(beta*lamb)
+        ttf = NP.sinc(x/pi)
+        return ttf
+    def adjust_energy(self, tkin):
+        adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        return adjusted
+class RFG(Node):
+    """  Wrapper to zero length RF kick gap-models """
+    def __init__(self, label, EzAvg, phisoll, gap, freq, mapping='t3d', SFdata = None, particle=PARAMS['sollteilchen'], position=[0,0,0], aperture=None, dWf=FLAGS['dWf']):
+        super().__init__()
+        self.label     = label
+        self.EzAvg     = EzAvg*dWf          # [MV/m] average gap field
+        self.phisoll   = phisoll            # [radians] soll phase
+        self.freq      = freq               # [Hz]  RF frequenz
+        self.gap       = gap                # [m] rf-gap
+        self.mapping   = mapping            # map model
+        self.SFdata    = SFdata             # SuperFish data
+        self.particle  = copy(particle)
+        self.position  = position
+        self.aperture  = aperture
+        self.length    = 0.
+        self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
+        self.matrix    = None
+        self.viseo     = 0.25
+        self.gap_model = _T3D_G(parent=self) # T3D matrix default for RFG
 
-        """ set switch to gap model """
-        # makes the T3D matrix default for RFG
-        self.gap_model = _T3D_G(self)                   # Trace3D-matrix and use linear gap-model
+        """ set dispatching to gap model """
         if self.mapping == 't3d': pass
         elif self.mapping == 'simple' or self.mapping == 'base':
             self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self)               # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _TTF_G(self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
         elif self.mapping == 'oxal':
-            self.gap_model = _OXAL(self)                # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _OXAL(self) # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
         else:
-            info = "INFO: RFG is a kick-model and does not work with '{}' mapping! Use one of [t3d,simple,base,ttf,oxal]."
-            print(info.format(self.mapping))
+            print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
+
     def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-            EzAvg      = self.EzAvg,
-            PhiSoll    = self.phis,
-            fRF        = self.freq,
-            label      = self.label,
-            particle   = self.particle(tkin),
-            gap        = self.gap,
-            position   = self.position,
-            aperture   = self.aperture,
-            mapping    = self.mapping,
-            SFdata     = self.SFdata,
-            dWf        = self.dWf,
-            next       = self.next,
-            prev       = self.prev)
-        self._params = _params
-        return self
+        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        return adjusted
+
+    """ delegate mapping to gap-model """
+    def map(self, i_track):
+        return self.gap_model.map(i_track)
+    def soll_map(self, i_track):
+        return self.gap_model.soll_map(i_track)
 
     @property
     def omega(self):
@@ -609,15 +548,6 @@ class RFG(I):
     @property
     def lamb(self):
         return PARAMS['clight']/self.freq
-    @property
-    def EzPeak(self):
-        return self['EzPeak']
-    @property
-    def EzAvg(self):
-        return self._EzAvg
-    @EzAvg.setter
-    def EzAvg(self,value):
-        self._EzAvg = self['EzAvg'] = value
     @property
     def ttf(self):
         """ delegate to gap-model """
@@ -629,16 +559,67 @@ class RFG(I):
     @property
     def particlef(self):
         """ delegate to gap-model """
-        #TODO: better don't use particlef - only deltaW
         return self.gap_model.particlef
+class _T3D_G(Node):   
+    """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
+    def __init__(self, parent=None):
+        super().__init__()
+        def ttf(lamb, gap, beta):
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
+            x = pi*gap/(beta*lamb)
+            return NP.sinc(x/pi)   # sinc(x) = sin(pi*x)/(pi*x)
+        def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW):
+            """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
+            m = NP.eye(MDIM,MDIM)
+            beta    = particlei.beta
+            gamma   = particlei.gamma
+            m0c2    = particlei.e0
+            kz      = 2.*pi*E0L*ttf*sin(phisoll)/(m0c2*beta*beta*lamb)
+            ky      = kx = -0.5*kz/(gamma*gamma)
+            bgi     = particlei.gamma_beta
+            bgf     = particlef.gamma_beta
+            bgi2bgf = bgi/bgf
+            m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
+            m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
+            m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
+            # UPDATE NODE matrix with deltaW
+            m[EKOO, DEKOO] = deltaW
+            return m
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # function body starts here -------------function body starts here -------------function body starts here -------------
+        # parameters from parent
+        self.label     = parent.label
+        self.particle  = parent.particle
+        self.EzAvg     = parent.EzAvg
+        self.phisoll   = parent.phisoll
+        self.gap       = parent.gap
+        self.lamb      = parent.lamb
+        self.position  = parent.position
+        self.length    = parent.length
+        self.viseo     = parent.viseo
+        beta           = self.particle.beta
+        self.ttf       = ttf(self.lamb,self.gap,beta)
+        E0L            = self.EzAvg*self.gap
+        self.deltaW    = E0L*self.ttf*cos(self.phisoll) # deltaW energy kick Trace3D
+        tkin           = self.particle.tkin
+        self.particlef = copy(self.particle)(tkin+self.deltaW) # !!!IMPORTANT!!! particle @ (f)
+        self.matrix    = mx(self.ttf,self.particle,self.particlef,E0L,self.phisoll,self.lamb,self.deltaW)
 
     def map(self, i_track):
-        """ delegate to gap-model """
-        return self.gap_model.map(i_track)
-    def soll_map(self, i_track):
-        """ delegate to gap-model """
-        f_track = self.gap_model.soll_map(i_track)
+        """ Mapping from (i) to (f) with linear Trace3D matrix """
+        f_track = copy(i_track)
+        f_track = NP.dot(self.matrix,f_track)
+        DEBUG_OFF('t3d-map {}'.format(f_track))
         return f_track
+    def soll_map(self, i_track):
+        si,sm,sf = self.position
+        f_track = copy(i_track)
+        f_track[EKOO] = self.particlef.tkin
+        f_track[SKOO] = sf
+        DEBUG_OFF('t3d-soll {}'.format(f_track))
+        return f_track
+
 class RFC(I):
     """ 
     Rf cavity as product D*Kick*D (DKD-model)
@@ -1074,77 +1055,6 @@ class _PYO_G(object):
         self._particlef = particleRo
 
         return f_track
-class _T3D_G(object):   
-    """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
-    def __init__(self, parent):
-        def trtf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
-            x = gap/(beta*lamb)
-            ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
-            return ttf
-
-        def mx(m, ttf, beta, gamma, particlei, particlef, E0L, phis, lamb, deltaW):
-            """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-            e0 = particlei.e0
-            kz = 2.*pi*E0L*ttf*sin(phis)/(e0*beta*beta*lamb)
-            ky = kx = -0.5*kz/(gamma*gamma)
-            bgi = particlei.gamma_beta
-            bgf = particlef.gamma_beta
-            bgi2bgf = bgi/bgf
-            m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
-            m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-            m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-            # UPDATE linear NODE matrix with deltaW
-            m[EKOO, DEKOO] = deltaW
-            return
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        # parameters from parent
-        matrix         = parent.matrix
-        particle       = parent.particle
-        EzAvg          = parent.EzAvg
-        phis           = parent.phis
-        gap            = parent.gap
-        lamb           = parent.lamb
-        position       = parent.position
-        # paramaeters in function scope
-        beta           = particle.beta
-        ttf            = trtf(lamb, gap, beta)       # Panofski
-        deltaW         = EzAvg*gap*ttf*cos(phis)     # deltaW energy kick Trace3D
-        tkin           = particle.tkin
-        tk_center      = deltaW*0.5+tkin             # energy in gap center
-        part_center    = copy(particle)(tk_center)   # !!!IMPORTANT!!! particle @ gap center
-        beta_mid       = part_center.beta            # beta @ gap cemter
-        gamma_mid      = part_center.gamma           # gamma @ gap center
-        particlef      = copy(particle)(tkin+deltaW) # !!!IMPORTANT!!! particle @ (f)
-        E0L            = EzAvg*gap
-
-        # the linear NODE matrix for rf gaps
-        mx(matrix, ttf, beta_mid, gamma_mid, particle, particlef, E0L, phis, lamb, deltaW)
-
-        # class scope
-        # parent may delegate reading these properties from here
-        self.matrix     = matrix
-        self.ttf        = ttf
-        self.deltaW     = deltaW
-        self.particlef  = particlef
-        self.position   = position
-
-    def map(self, i_track):
-        """ Mapping from (i) to (f) with linear Trace3D matrix """
-        f_track = copy(i_track)
-        f_track = NP.dot(self.matrix,f_track)
-        DEBUG_OFF('t3d-map {}'.format(f_track))
-        return f_track
-
-    def soll_map(self, i_track):
-        si,sm,sf = self.position
-        f_track = copy(i_track)
-        f_track[EKOO] += self.deltaW
-        f_track[SKOO] = sm
-        DEBUG_OFF('t3d-soll {}'.format(f_track))
-        return f_track
 class _kick(I):
     """ 
     Matrix for thin lens quad 
@@ -1578,7 +1488,7 @@ class TestElementMethods(unittest.TestCase):
         QDnode = QD("QDfoc",gradient,particle=p,length=length)
         mx = matrix(gradient,length,p,QDnode.isThin())
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"matrix")
-    def test_wille_Nodes(self):
+    def test_Wille_Nodes(self):
         print("\b----------------------------------------test_Wille_Nodes")
         kqf  = -1.20    # [1/m**2]
         kqd  = -kqf
@@ -1700,6 +1610,52 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(rd.matrix[i,j],rdx.matrix[i,j])
+    def test_MRK_Node(self):
+        print("\b----------------------------------------test_MRK_Node")
+        class Agent(object):
+            counter = 1
+            def __init__(self):
+                self.counter = Agent.counter
+                Agent.counter += 1
+            def do_action(self):
+                print(F"Agent # {self.counter} here!")
+        a = Agent()
+        mrk = MRK("MRK",[a,a])
+        mrk.add(Agent())
+        mrk.add(Agent())
+        mrk.add(Agent())
+        # mrk.do_actions()
+        self.assertEqual(len(mrk.agents),5)
+        mrk.adjust_energy(75.)
+        self.assertEqual(len(mrk.agents),5)
+    def test_GAP_Node(self):
+        print("\b----------------------------------------test_GAP_Node")
+        EzAvg   = 2.1             #[MV/m]
+        phisoll = radians(-30.)
+        gap     = 0.022           #[m]
+        freq    = 816.e6          #[Hz]
+        gap = GAP("GAP",EzAvg,phisoll,gap,freq,dWf=1) # tkin=500 default
+        # print(gap.matrix)
+        self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.03766,delta=1.e-4)
+        gap = gap.adjust_energy(6.) # tkin=6
+        # print(gap.matrix)
+        self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.023817,delta=1.e-4)
+    def test_RFG_Node(self):
+        print("\b----------------------------------------test_RFG_Node:_T3D_G map")
+        EzAvg = 2.1; phisoll = radians(-30.); gap = 0.044; freq = 816.e6
+        rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
+        # print(rfg.__dict__)
+        # print(rfg.gap_model.__dict__)
+        # print(rfg.gap_model.matrix)
+        self.assertEqual(rfg.mapping,"t3d")
+        self.assertEqual(rfg.gap_model.label,"RFG")
+        self.assertEqual(rfg.gap_model.type,"_T3D_G")
+        self.assertEqual(rfg.gap_model.EzAvg,2.1)
+        self.assertEqual(rfg.gap_model.phisoll,radians(-30.))
+        self.assertAlmostEqual(rfg.gap_model.deltaW,0.062206,delta=1.e-4)
+        rfg = rfg.adjust_energy(250.)
+        self.assertAlmostEqual(rfg.gap_model.deltaW,0.0751,delta=1.e-4)
+        
 if __name__ == '__main__':
     FLAGS['verbose'] = 3
     unittest.main()
