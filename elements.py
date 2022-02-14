@@ -620,156 +620,6 @@ class _T3D_G(Node):
         DEBUG_OFF('t3d-soll {}'.format(f_track))
         return f_track
 
-class RFC(I):
-    """ 
-    Rf cavity as product D*Kick*D (DKD-model)
-    """
-    def __init__(self,
-                EzAvg    = 1.,
-                label    = 'RFC',
-                PhiSoll  = radians(-30.),
-                fRF      = 800.e6,
-                gap      = 0.024,
-                aperture = PARAMS['aperture'],
-                dWf      = FLAGS['dWf'],
-                length   = 0.,
-                mapping  = 't3d',
-                SFdata   = None,
-                particle = PARAMS['sollteilchen'],
-                position = [0, 0, 0],
-                next     = None,
-                prev     = None):
-        if length > 0:
-            self.length = length
-        else:
-            self.length = gap   # die ideale pillbox
-        super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self._EzAvg   = EzAvg*dWf
-        self.phis     = PhiSoll
-        self.freq     = fRF
-        self.gap      = gap
-        self.E0L      = self._EzAvg*self.gap
-        self.dWf      = dWf
-        self.mapping  = mapping
-        self.SFdata   = SFdata 
-        self._ttf     = None
-        self._deltaW  = None
-        
-        self['viseo']   = 0.25
-        
-        if self.mapping != 'dyn':
-            # ---> DKD models <--- uses RFG for t3d, simple, base, ttf mappings
-            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            kick  = RFG(EzAvg     = self._EzAvg,
-                        PhiSoll   = self.phis,
-                        fRF       = self.freq,
-                        gap       = self.gap,
-                        aperture  = self.aperture,
-                        dWf       = self.dWf,
-                        mapping   = self.mapping,
-                        SFdata    = self.SFdata,
-                        particle  = self.particle)
-            self.triplet = (dri, kick, drf)
-            self._deltaW = kick.deltaW
-            tkin_f       = self.particle.tkin + self._deltaW   # tkin after acc. gap
-            # UPDATE energy for downstream drift after gap
-            drf.adjust_energy(tkin_f)
-            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
-            # in case off ... (really needed ?)
-            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
-            self._particlef = kick.particlef
-            DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
-        elif self.mapping == 'dyn':
-            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
-            # This is no DKD-model. 
-            cav             = _DYN_G(self)
-            self.triplet    = (cav,)
-            self._deltaW    = cav.deltaW
-            self._particlef = cav.particlef
-            self._ttf       = cav.ttf
-            # ACHTUNG! _DYN_G has no matrix, so use DKD with _T3D_G-matrix instead
-            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            kick  = _T3D_G(self)
-            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
-            # correct energy increase in Node.matrix
-            self.matrix[Ktp.T,Ktp.dT] = self._deltaW
-
-            
-    def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-                    EzAvg         = self.EzAvg,
-                    label         = self.label,
-                    PhiSoll       = self.phis,
-                    fRF           = self.freq,
-                    gap           = self.gap,
-                    aperture      = self.aperture,
-                    dWf           = self.dWf,
-                    length        = self.length,
-                    mapping       = self.mapping,
-                    SFdata        = self.SFdata,
-                    particle      = self.particle(tkin),
-                    position      = self.position,
-                    next          = self.next,
-                    prev          = self.prev)
-        self._params = _params
-        return self
-
-    def map(self,i_track):
-        track = copy(i_track)
-        for node in iter(self.triplet):
-            f_track = node.map(track)
-            track = f_track
-        DEBUG_OFF('rfc-map {}'.format(f_track))
-        return f_track
-
-    def soll_map(self,i_track):
-        si,sm,sf = self.position
-        track = copy(i_track)
-        for node in iter(self.triplet):
-            f_track = node.soll_map(track)
-            track = f_track
-        f_track[SKOO] += sm
-        DEBUG_OFF('rfc-soll {}'.format(f_track))
-        return f_track
-
-    def make_slices(self, anz = PARAMS['nbslices']):
-        slices = []
-        if len(self.triplet) == 3:
-            dri,kick,drf = self.triplet
-            anz = anz/2 if anz != 0 else 1
-            dri_slices = dri.make_slices(anz=anz)
-            drf_slices = drf.make_slices(anz=anz)
-            slices += dri_slices
-            slices.append(kick)
-            slices += drf_slices
-        else:
-            slices.append(self)
-        return slices
-
-    @property
-    def ttf(self):
-        return self._ttf
-    @property
-    def lamb(self):
-        return PARAMS['clight']/self.freq
-    @property
-    def deltaW(self):
-        return self._deltaW
-    @property
-    def EzPeak(self):
-        return self['EzPeak']
-    @property
-    def EzAvg(self):
-        return self._EzAvg
-    @EzAvg.setter
-    def EzAvg(self,value):
-        self._EzAvg = self['EzAvg'] = value
-    @property
-    def particlef(self):
-        return self._particlef
 class _PYO_G(object):
     """ 
     PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) 
@@ -1055,101 +905,156 @@ class _PYO_G(object):
         self._particlef = particleRo
 
         return f_track
-class _kick(I):
+class RFC(I):
     """ 
-    Matrix for thin lens quad 
+    Rf cavity as product D*Kick*D (DKD-model)
     """
-    def __init__(self, k0l):
-        super().__init__(label='k')
-        m = self.matrix
-        m[XPKOO, XKOO] = -k0l
-        m[YPKOO, YKOO] = +k0l
-class QFth(Node):
-    """ 
-    Thin F-Quad 
-    """
-    def __init__(self, k0, label, grad, particle=PARAMS['sollteilchen'], position=[0, 0, 0], length=0., aperture=PARAMS['aperture']):
-        super().__init__()
-        self.k0 = k0
-        self.length = length
-        df = di = D(length = 0.5*self.length, particle = self.particle)
-        k0l = self.k0*self.length
-        if isinstance(self,QFth) and not isinstance(self,QDth):
-            kick = _kick(k0l)
-            self['viseo']  = +0.5
-        elif isinstance(self,QDth):
-            kick = _kick(-k0l)
-            self['viseo']= -0.5
+    def __init__(self,
+                EzAvg    = 1.,
+                label    = 'RFC',
+                PhiSoll  = radians(-30.),
+                fRF      = 800.e6,
+                gap      = 0.024,
+                aperture = PARAMS['aperture'],
+                dWf      = FLAGS['dWf'],
+                length   = 0.,
+                mapping  = 't3d',
+                SFdata   = None,
+                particle = PARAMS['sollteilchen'],
+                position = [0, 0, 0],
+                next     = None,
+                prev     = None):
+        if length > 0:
+            self.length = length
         else:
-            raise RuntimeError('QFth: neither QFth nor QDth! should never happen! - STOP')
-
-        lens = df * (kick * di) # matrix produkt df*kick*di
-        self.matrix = lens.matrix
-        # self.triplet = (di, kick, df)
-
-    def adjust_energy(self, tkin):
-        ki = self.k0
-        cpi = self.particle.gamma_beta
-        self.particle(tkin)
-        cpf = self.particle.gamma_beta
-        kf = ki*cpi/cpf # scale quad strength with new impulse
-        _params = self._params
-        self.__init__(kf, self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
-        self._params = _params
-        return self
-class QDth(QFth):
-    """ 
-    Thin D-Quad 
-    """
-    def __init__(self, k0, length, label='QDth', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
-        super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
-class QFthx(D):
-    """ 
-    Thin F-Quad   (express version of QFth) 
-    """
-    def __init__(self, k0, length, label='QFthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=PARAMS['aperture'], next=None, prev=None):
+            self.length = gap   # die ideale pillbox
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self.k0       = k0
-        self.length   = length
-        L = self.length
-        m = self.matrix
-        if isinstance(self,QFthx) and not isinstance(self,QDthx):
-            self['viseo'] = +0.5
-        elif isinstance(self,QDthx):
-            k0 = -k0
-            self['viseo'] = -0.5
-        else:
-            raise RuntimeError('QFthx: neither QFthx nor QDthx! should never happen! - STOP')
+        self._EzAvg   = EzAvg*dWf
+        self.phis     = PhiSoll
+        self.freq     = fRF
+        self.gap      = gap
+        self.E0L      = self._EzAvg*self.gap
+        self.dWf      = dWf
+        self.mapping  = mapping
+        self.SFdata   = SFdata 
+        self._ttf     = None
+        self._deltaW  = None
+        
+        self['viseo']   = 0.25
+        
+        if self.mapping != 'dyn':
+            # ---> DKD models <--- uses RFG for t3d, simple, base, ttf mappings
+            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            kick  = RFG(EzAvg     = self._EzAvg,
+                        PhiSoll   = self.phis,
+                        fRF       = self.freq,
+                        gap       = self.gap,
+                        aperture  = self.aperture,
+                        dWf       = self.dWf,
+                        mapping   = self.mapping,
+                        SFdata    = self.SFdata,
+                        particle  = self.particle)
+            self.triplet = (dri, kick, drf)
+            self._deltaW = kick.deltaW
+            tkin_f       = self.particle.tkin + self._deltaW   # tkin after acc. gap
+            # UPDATE energy for downstream drift after gap
+            drf.adjust_energy(tkin_f)
+            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
+            # in case off ... (really needed ?)
+            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
+            self._particlef = kick.particlef
+            DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
+        elif self.mapping == 'dyn':
+            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
+            # This is no DKD-model. 
+            cav             = _DYN_G(self)
+            self.triplet    = (cav,)
+            self._deltaW    = cav.deltaW
+            self._particlef = cav.particlef
+            self._ttf       = cav.ttf
+            # ACHTUNG! _DYN_G has no matrix, so use DKD with _T3D_G-matrix instead
+            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
+            kick  = _T3D_G(self)
+            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
+            # correct energy increase in Node.matrix
+            self.matrix[Ktp.T,Ktp.dT] = self._deltaW
 
-        # thin lens quad matrix (by hand calculation)
-        m[0, 0]  = 1. - k0*(L**2)/2.
-        m[0, 1]  = L - k0*(L**3)/4.
-        m[1, 0]  = -k0*L
-        m[1, 1]  = m[0, 0]
-        m[2, 2]  = 1. + k0*(L**2)/2.
-        m[2, 3]  = L + k0*(L**3)/4.
-        m[3, 2]  = +k0*L
-        m[3, 3]  = m[2, 2]
-
+            
     def adjust_energy(self, tkin):
-        ki  = self.k0
-        cpi = self.particle.gamma_beta
-        self.particle(tkin) # PARTICLE energy adjusted
-        cpf = self.particle.gamma_beta
-        kf  = ki*cpi/cpf # scale quad strength with new impulse
         _params = self._params
-        self.__init__(kf, self.length, label=self.label, particle=self.particle, position=self.position, aperture=self.aperture, next=self.next, prev=self.prev)
+        self.__init__(
+                    EzAvg         = self.EzAvg,
+                    label         = self.label,
+                    PhiSoll       = self.phis,
+                    fRF           = self.freq,
+                    gap           = self.gap,
+                    aperture      = self.aperture,
+                    dWf           = self.dWf,
+                    length        = self.length,
+                    mapping       = self.mapping,
+                    SFdata        = self.SFdata,
+                    particle      = self.particle(tkin),
+                    position      = self.position,
+                    next          = self.next,
+                    prev          = self.prev)
         self._params = _params
         return self
 
-    def make_slices(self, anz=PARAMS['nbslices']):
-        return [self]
-class QDthx(QFthx):
-    """ 
-    Thin D-Quad   (express version of QDth) 
-    """
-    def __init__(self, k0, length, label='QDthx', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None):
-        super().__init__(k0, length, label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
+    def map(self,i_track):
+        track = copy(i_track)
+        for node in iter(self.triplet):
+            f_track = node.map(track)
+            track = f_track
+        DEBUG_OFF('rfc-map {}'.format(f_track))
+        return f_track
+
+    def soll_map(self,i_track):
+        si,sm,sf = self.position
+        track = copy(i_track)
+        for node in iter(self.triplet):
+            f_track = node.soll_map(track)
+            track = f_track
+        f_track[SKOO] += sm
+        DEBUG_OFF('rfc-soll {}'.format(f_track))
+        return f_track
+
+    def make_slices(self, anz = PARAMS['nbslices']):
+        slices = []
+        if len(self.triplet) == 3:
+            dri,kick,drf = self.triplet
+            anz = anz/2 if anz != 0 else 1
+            dri_slices = dri.make_slices(anz=anz)
+            drf_slices = drf.make_slices(anz=anz)
+            slices += dri_slices
+            slices.append(kick)
+            slices += drf_slices
+        else:
+            slices.append(self)
+        return slices
+
+    @property
+    def ttf(self):
+        return self._ttf
+    @property
+    def lamb(self):
+        return PARAMS['clight']/self.freq
+    @property
+    def deltaW(self):
+        return self._deltaW
+    @property
+    def EzPeak(self):
+        return self['EzPeak']
+    @property
+    def EzAvg(self):
+        return self._EzAvg
+    @EzAvg.setter
+    def EzAvg(self,value):
+        self._EzAvg = self['EzAvg'] = value
+    @property
+    def particlef(self):
+        return self._particlef
 class SIXD(D):
     """ 
     Drift with Sixtrack mapping (experimental!) 
