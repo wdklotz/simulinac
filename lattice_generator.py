@@ -52,26 +52,6 @@ def get_mandatory(attributes,key,item):
                 )
         sys.exit(1)
     return res
-def replace_QF_with_QFth_lattice(thins,k0,length,label,particle,aperture):
-    instances = []
-    thinlen = length/thins
-    for nb in range(thins):
-        if util.FLAGS['express']:
-            instance = ELM.QFthx(k0,thinlen,label=label,particle=particle,aperture=aperture)
-        else:
-            instance = ELM.QFth(k0,thinlen,label=label,particle=particle,aperture=aperture)
-        instances.append(instance)
-    return instances
-def replace_QD_with_QDth_lattice(thins,k0,length,label,particle,aperture):
-    instances = []
-    thinlen = length/thins
-    for nb in range(thins):
-        if util.FLAGS['express']:
-            instance = ELM.QDthx(k0,thinlen,label=label,particle=particle,aperture=aperture)
-        else:
-            instance = ELM.QDth(k0,thinlen,label=label,particle=particle,aperture=aperture)
-        instances.append(instance)
-    return instances
 def instanciate_element(item):
     """ item: {ID:{attrinutes}} for each element """
     def EzPeakToAverage(Ezpeak):
@@ -85,93 +65,56 @@ def instanciate_element(item):
         # aperture   = PARAMS['aperture']    # default aperture
         type = attributes.get('type')
         if type == 'D':
-            label    = ID
-            length   = get_mandatory(attributes,'length',label)
-            # aperture = attributes['aperture'] if 'aperture' in attributes else None
-            aperture = attributes.get('aperture')
-            instance =  ELM.D(length=length,label=label,aperture=aperture)
-            instance['label']    = label
-            instance['length']   = length
-            instance['aperture'] = aperture
+            length       = get_mandatory(attributes,'length',ID)
+            aperture     = attributes.get('aperture')
+            instance     =  ELM.D(ID,length=length,aperture=aperture)
+            instance.sec = attributes.get('sec','?')
 
         elif type == 'SIXD':
-            label     = attributes['ID']+'#'
-            length    = get_mandatory(attributes,'length',label)
-            # aperture = attributes['aperture'] if 'aperture' in attributes else None
-            aperture = attributes.get('aperture')
-            instance  = ELM.SIXD(length=length,label=label,aperture=aperture)
-            instance['label']    = label
-            instance['length']   = length
-            instance['aperture'] = aperture
+            length       = get_mandatory(attributes,'length',ID)
+            aperture     = attributes.get('aperture')
+            instance     = ELM.SIXD(ID,length=length,aperture=aperture)
+            instance.sec = attributes.get('sec','?')
 
         elif type == 'QF':
-            label    = attributes['ID']
-            length   = get_mandatory(attributes,'length',label)
-            dBdz     = get_mandatory(attributes,"B'",label)
-            thins    = get_mandatory(attributes,'thins',label)
-            aperture = get_mandatory(attributes,'aperture',label)
-            kq       = dBdz/util.PARAMS['sollteilchen'].brho
-            Bpole    = dBdz*aperture
-            if thins > 1:
-                instance = replace_QF_with_QFth_lattice(thins,kq,length,label,util.PARAMS['sollteilchen'],aperture)
-            elif thins <= 1:
-                instance = ELM.QF(k0=kq,length=length,label=label,aperture=aperture)
-                instance['label']  = label
-                instance['dBdz']   = dBdz
-                instance['bore']   = aperture
-                instance['Bpole']  = Bpole
+            length        = get_mandatory(attributes,'length',ID)
+            dBdz          = get_mandatory(attributes,"B'",ID)
+            aperture      = get_mandatory(attributes,'aperture',ID)
+            instance      = ELM.QF(ID,dBdz,length=length,aperture=aperture)
+            instance.Bpole = dBdz*aperture      # Bpole
+            instance.sec   = attributes.get('sec','?')
 
         elif type == 'QD':
-            label    = attributes['ID']
-            length   = get_mandatory(attributes,'length',label)
-            dBdz     = get_mandatory(attributes,"B'",label)
-            thins    = get_mandatory(attributes,'thins',label)
-            aperture = get_mandatory(attributes,'aperture',label)
-            kq       = dBdz/util.PARAMS['sollteilchen'].brho
-            Bpole    = dBdz*aperture
-            if thins > 1:
-                instance = replace_QD_with_QDth_lattice(thins,kq,length,label,util.PARAMS['sollteilchen'],aperture)
-            elif thins <= 1:
-                instance = ELM.QD(k0=kq,length=length,label=label,aperture=aperture)
-                instance['label']  = label
-                instance['dBdz']   = dBdz
-                instance['bore']   = aperture
-                instance['Bpole']  = Bpole
+            length         = get_mandatory(attributes,'length',ID)
+            dBdz           = get_mandatory(attributes,"B'",ID)
+            aperture       = get_mandatory(attributes,'aperture',ID)
+            instance       = ELM.QD(ID,dBdz,length=length,aperture=aperture)
+            instance.Bpole = dBdz*aperture      # Bpole
+            instance.sec   = attributes.get('sec','?')
 
         elif type == 'RFG':
-            label     = attributes['ID']
-            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-            freq      = float(get_mandatory(attributes,"freq",label))
-            gap       = get_mandatory(attributes,'gap',label)
-            aperture  = get_mandatory(attributes,'aperture',label)
+            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            freq      = float(get_mandatory(attributes,"freq",ID))
+            gap       = get_mandatory(attributes,'gap',ID)
+            aperture  = get_mandatory(attributes,'aperture',ID)
             dWf       = util.FLAGS['dWf']
-            mapping   = get_mandatory(attributes,'mapping',label)
-            EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            # EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
+            mapping   = get_mandatory(attributes,'mapping',ID)
+            EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
-            if mapping == None:
-                mapping = 't3d'
+            mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fname     = get_mandatory(attributes,"SFdata",label)
+                fname = get_mandatory(attributes,"SFdata",ID)
                 if fname not in util.PARAMS:
                     gap_cm = gap*100     # Watch out!
                     util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
                 EzAvg = util.PARAMS[fname].EzAvg
-                instance  =  ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture,SFdata=util.PARAMS[fname])
-                pass
+                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
             else:
-                instance  = ELM.RFG(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,mapping=mapping,dWf=dWf,aperture=aperture)
-            element = util.ELEMENTS[label]
-            element['EzAvg']     = EzAvg
-            instance['EzAvg']    = EzAvg
-            instance['EzPeak']   = EzPeak
-            instance['label']    = label
-            instance['PhiSoll']  = PhiSoll
-            instance['freq']     = freq
-            instance['gap']      = gap
-            instance['aperture'] = aperture
-            instance['dWf']      = dWf
-            instance['mapping']  = mapping
+                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
+            element = util.ELEMENTS[ID]
+            element['EzAvg'] = EzAvg
+            instance.EzPeak  = EzPeak
+            instance.sec     = attributes.get('sec','?')
 
         elif type == 'RFC':
             label     = attributes['ID']
@@ -200,6 +143,7 @@ def instanciate_element(item):
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
             element = util.ELEMENTS[label]
             element['EzAvg']     = EzAvg
+            instance.sec = attributes.get('sec','?')
             instance['EzAvg']    = EzAvg
             instance['EzPeak']   = EzPeak
             instance['label']    = label
@@ -212,33 +156,26 @@ def instanciate_element(item):
             instance['mapping']  = mapping
 
         elif type == 'GAP':
-            label     = attributes['ID']
-            gap       = get_mandatory(attributes,'gap',label)
-            EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            EzAvg     = EzPeak
-            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-            freq      = float(get_mandatory(attributes,"freq",label))
+            gap       = get_mandatory(attributes,'gap',ID)
+            EzAvg     = get_mandatory(attributes,"EzAvg",ID)
+            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            freq      = float(get_mandatory(attributes,"freq",ID))
             dWf       = util.FLAGS['dWf']
-            aperture  = get_mandatory(attributes,'aperture',label)
-            instance  =  ELM.GAP(EzAvg=EzAvg,PhiSoll=PhiSoll,fRF=freq,label=label,gap=gap,dWf=dWf,aperture=aperture)
-            instance['EzAvg']   = EzAvg
-            instance['EzPeak']  = EzPeak
-            instance['label']   = label
-            instance['gap']     = gap
-            instance['PhiSoll'] = PhiSoll
-            instance['freq']    = freq
-            instance['dWf']     = dWf
+            aperture  = get_mandatory(attributes,'aperture',ID)
+            instance  =  ELM.GAP(ID,EzAvg,phiSoll,gap,freq,aperture=aperture,dWf=dWf)
+            element = util.ELEMENTS[ID]
+            element['EzPeak'] = EzAvg
+            instance.EzPeak   = EzPeak
+            instance.sec      = attributes.get('sec','?')
 
         elif type == 'MRK':
-            label     = attributes['ID']
-            action    = get_mandatory(attributes,'action',label)
+            action = get_mandatory(attributes,'action',ID)
             if 'pspace' == action:
-                which = attributes['which'] if 'which' in attributes else 'transvers'
-                agent = psmkr.PsMarkerAgent(which_action=which)
-                instance = ELM.MRK(label=label,agent=agent)
+                which        = attributes.get('which','transvers')
+                agent        = psmkr.PsMarkerAgent(which_action=which)
+                instance     = ELM.MRK(ID,agents=[agent])
+                instance.sec = attributes.get('sec','?')
                 agent.set_parent(instance)
-                # TODO sec for all instances: not done yet?
-                instance['sec'] = attributes['sec'] if 'sec' in attributes else '?'
                 DEBUG_OFF(instance.__dict__)
                 DEBUG_OFF(agent.__dict__)
 
@@ -269,7 +206,7 @@ def instanciate_element(item):
                     )
             sys.exit(1)
     return instance
-def factory(input_file):
+def factory(input_file,stop=None):
     """ factory creates a lattice from input-file """
 
     def proces_flags(flags):
@@ -337,7 +274,7 @@ def factory(input_file):
             instance = instanciate_element(item)
             # print("C")
             # DEBUG_ON(instance)
-            if isinstance(instance, ELM._Node):
+            if isinstance(instance, ELM.Node):
                 # lattice.add_element(instance)
                 instances.append(instance)
             # list of thin quad instances
@@ -394,8 +331,8 @@ def factory(input_file):
 def test0(input_file):
     print('---------------------------------TEST0')
     wfl= []
-    fileobject=open(input_file,'r')
-    wfl= yaml.load(fileobject)
+    fileobject = open(input_file,'r')
+    wfl = yaml.load(fileobject)
     print('======================= yaml.dump(wfl,default_flow_style=True)')
     print(yaml.dump(wfl,default_flow_style=True))
     print('\n======================= wfl.items()')
@@ -411,32 +348,21 @@ def test0(input_file):
     print('\n======================= lattice')
     for l in lattice:
         print(l)
-def test1(input_file):
-    print('---------------------------------TEST1')
-    lattice = factory(input_file)
-    print('%%%%%%%%%%%%%%%%%%% Left------->Right')
-    for cnt,node in enumerate(iter(lattice)):
-        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
-    print('\n%%%%%%%%%%%%%%%%%%% Right------->Left')
-    lattice.toggle_iteration()
-    for cnt,node in enumerate(iter(lattice)):
-        print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
-def test2():
-    util.FLAGS['express'] = False
-    thins = 3
-    kq = 10.
-    length = 3
-    aperture = 1
-    instance = replace_QF_with_QFth_lattice(thins,kq,length,'FOC',util.PARAMS['sollteilchen'],aperture)
-    DEBUG_ON(instance)
-    instance = replace_QD_with_QDth_lattice(thins,kq,length,'DFOC',util.PARAMS['sollteilchen'],aperture)
-    DEBUG_ON(instance)
+# def test1(input_file):
+#     print('---------------------------------TEST1')
+#     lattice = factory(input_file)
+#     print('%%%%%%%%%%%%%%%%%%% Left------->Right')
+#     for cnt,node in enumerate(iter(lattice)):
+#         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
+#     print('\n%%%%%%%%%%%%%%%%%%% Right------->Left')
+#     lattice.toggle_iteration()
+#     for cnt,node in enumerate(iter(lattice)):
+#         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
 
 if __name__ == '__main__':
-    input_file = 'yml/v10.0.0_compat_IN.yml'
+    input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+    # input_file = 'yml/v10.0.0_compat_IN.yml'
     # input_file = 'yml/simuIN.yml'
     # input_file = 'nwlat/nwlatIN.yml'
-    # test0(input_file)
+    test0(input_file)
     # test1(input_file)
-    test2()
-

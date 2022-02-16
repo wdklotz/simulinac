@@ -509,6 +509,8 @@ class RFG(Node):
         self.EzAvg     = EzAvg*dWf          # [MV/m] average gap field
         self.phisoll   = phisoll            # [radians] soll phase
         self.freq      = freq               # [Hz]  RF frequenz
+        self.omega     = twopi*self.freq
+        self.lamb      = PARAMS['clight']/self.freq
         self.gap       = gap                # [m] rf-gap
         self.mapping   = mapping            # map model
         self.SFdata    = SFdata             # SuperFish data
@@ -517,21 +519,21 @@ class RFG(Node):
         self.aperture  = aperture
         self.length    = 0.
         self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
-        self.matrix    = None
         self.viseo     = 0.25
-        self.gap_model = _T3D_G(parent=self) # T3D matrix default for RFG
-
-        """ set dispatching to gap model """
+        self.matrix    = None
+        self.ttf       = None
+        """ RFG 'hosts' gap_model - which is a ref. to the 'client' class, i.e. _T3D_G as default """
+        self.gap_model = _T3D_G(host=self) 
+        """ set dispatching to gap models """
         if self.mapping == 't3d': pass
         elif self.mapping == 'simple' or self.mapping == 'base':
-            self.gap_model = _PYO_G(self, self.mapping) # PyOrbit gap-models w/o SF-data
+            self.gap_model = _PYO_G(host=self) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _TTF_G(host=self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
         elif self.mapping == 'oxal':
-            self.gap_model = _OXAL(self) # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.gap_model = _OXAL(host=self) # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
-
     def adjust_energy(self, tkin):
         adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
@@ -541,71 +543,43 @@ class RFG(Node):
         return self.gap_model.map(i_track)
     def soll_map(self, i_track):
         return self.gap_model.soll_map(i_track)
-
-    @property
-    def omega(self):
-        return twopi*self.freq
-    @property
-    def lamb(self):
-        return PARAMS['clight']/self.freq
-    @property
-    def ttf(self):
-        """ delegate to gap-model """
-        return self.gap_model.ttf
-    @property
-    def deltaW(self):
-        """ delegate to gap-model """
-        return self.gap_model.deltaW
-    @property
-    def particlef(self):
-        """ delegate to gap-model """
-        return self.gap_model.particlef
 class _T3D_G(Node):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
-    def __init__(self, parent=None):
+    def __init__(self, host=None):
         super().__init__()
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
             x = pi*gap/(beta*lamb)
             return NP.sinc(x/pi)   # sinc(x) = sin(pi*x)/(pi*x)
-        def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW):
+        def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
             """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-            m = NP.eye(MDIM,MDIM)
-            beta    = particlei.beta
-            gamma   = particlei.gamma
-            m0c2    = particlei.e0
-            kz      = 2.*pi*E0L*ttf*sin(phisoll)/(m0c2*beta*beta*lamb)
-            ky      = kx = -0.5*kz/(gamma*gamma)
+            Wav     = particlei.tkin+deltaW/2.   # average tkin
+            pav     = Proton(tkin=Wav)
+            bav     = pav.beta
+            gav     = pav.gamma
+            m0c2    = pav.e0
+            kz      = twopi*E0L*ttf*sin(phisoll)/(m0c2*bav*bav*lamb)
+            ky      = kx = -0.5*kz/(gav*gav)
             bgi     = particlei.gamma_beta
             bgf     = particlef.gamma_beta
             bgi2bgf = bgi/bgf
+            m       = NP.eye(MDIM,MDIM)
             m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
             m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
             m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
             # UPDATE NODE matrix with deltaW
             m[EKOO, DEKOO] = deltaW
+            m[SKOO,LKOO]   = length
             return m
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
-        # parameters from parent
-        self.label     = parent.label
-        self.particle  = parent.particle
-        self.EzAvg     = parent.EzAvg
-        self.phisoll   = parent.phisoll
-        self.gap       = parent.gap
-        self.lamb      = parent.lamb
-        self.position  = parent.position
-        self.length    = parent.length
-        self.viseo     = parent.viseo
-        beta           = self.particle.beta
-        self.ttf       = ttf(self.lamb,self.gap,beta)
-        E0L            = self.EzAvg*self.gap
-        self.deltaW    = E0L*self.ttf*cos(self.phisoll) # deltaW energy kick Trace3D
-        tkin           = self.particle.tkin
-        self.particlef = copy(self.particle)(tkin+self.deltaW) # !!!IMPORTANT!!! particle @ (f)
-        self.matrix    = mx(self.ttf,self.particle,self.particlef,E0L,self.phisoll,self.lamb,self.deltaW)
-
+        host.ttf       = ttf(host.lamb,host.gap,host.particle.beta)
+        E0L            = host.EzAvg*host.gap
+        host.deltaW    = E0L*host.ttf*cos(host.phisoll) # deltaW energy kick Trace3D
+        tkin           = host.particle.tkin
+        host.particlef = copy(host.particle)(tkin+host.deltaW) # !!!IMPORTANT!!! particle @ (f)
+        host.matrix    = mx(host.ttf,host.particle,host.particlef,E0L,host.phisoll,host.lamb,host.deltaW,host.length)
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
@@ -619,13 +593,12 @@ class _T3D_G(Node):
         f_track[SKOO] = sf
         DEBUG_OFF('t3d-soll {}'.format(f_track))
         return f_track
-
 class _PYO_G(object):
     """ 
     PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) 
     """
-    def __init__(self, parent, mapping):
-        def trtf(lamb, gap, beta):
+    def __init__(self, host=None):
+        def ttf(lamb, gap, beta):
             """ Transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65) """
             x = gap/(beta*lamb)
             ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
@@ -633,20 +606,20 @@ class _PYO_G(object):
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
-        self.particle   = parent.particle
-        self.phis       = parent.phis
-        self.lamb       = parent.lamb
-        self.freq       = parent.freq
-        self.mapping    = mapping
-        self.E0L        = parent.EzAvg*parent.gap
-        self.ttf        = trtf(parent.lamb, parent.gap, parent.particle.beta)
+        self.particle   = host.particle
+        self.phis       = host.phis
+        self.lamb       = host.lamb
+        self.freq       = host.freq
+        self.mapping    = host.mapping
+        self.E0L        = host.EzAvg*host.gap
+        self.ttf        = ttf(host.lamb, host.gap, host.particle.beta)
         self.qE0LT      = self.E0L*self.ttf
         # deltaW soll-energy increase Trace3D (same as Shishlo)
         self._deltaW    = self.qE0LT*cos(self.phis)
         self._particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
 
         # UPDATE linear NODE matrix with deltaW
-        parent.matrix[EKOO, DEKOO] = self.deltaW
+        host.matrix[EKOO, DEKOO] = self.deltaW
 
         if self.mapping == 'simple':
             self.which_map = self.simple_map
@@ -1546,7 +1519,7 @@ class TestElementMethods(unittest.TestCase):
         # print(gap.matrix)
         self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.023817,delta=1.e-4)
     def test_RFG_Node(self):
-        print("\b----------------------------------------test_RFG_Node:_T3D_G map")
+        print("\b----------------------------------------test_RFG_Node with _T3D_G map")
         EzAvg = 2.1; phisoll = radians(-30.); gap = 0.044; freq = 816.e6
         rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
         # print(rfg.__dict__)
@@ -1558,9 +1531,13 @@ class TestElementMethods(unittest.TestCase):
         self.assertEqual(rfg.gap_model.EzAvg,2.1)
         self.assertEqual(rfg.gap_model.phisoll,radians(-30.))
         self.assertAlmostEqual(rfg.gap_model.deltaW,0.062206,delta=1.e-4)
+        self.assertAlmostEqual(rfg.gap_model.matrix[EKOO,DEKOO],0.062206,delta=1.e-4)
+        self.assertEqual(rfg.gap_model.length,0.)
+        self.assertEqual(rfg.gap_model.matrix[SKOO,LKOO],0.)
         rfg = rfg.adjust_energy(250.)
         self.assertAlmostEqual(rfg.gap_model.deltaW,0.0751,delta=1.e-4)
-        
+        self.assertAlmostEqual(rfg.gap_model.matrix[EKOO,DEKOO],0.0751,delta=1.e-4)
+
 if __name__ == '__main__':
     FLAGS['verbose'] = 3
     unittest.main()

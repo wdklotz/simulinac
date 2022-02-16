@@ -28,6 +28,14 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "elements.py",
+        },
+        {
+            "name": "lattice",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "lattice.py",
         }
     ]
 }

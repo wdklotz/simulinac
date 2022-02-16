@@ -21,13 +21,14 @@ import sys
 import numpy as NP
 import warnings
 import pprint, inspect
+import unittest
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 from copy import copy
 
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import wille,PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
+from setutil import PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions
 from sigma import Sigma
 
@@ -42,9 +43,7 @@ DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 # Lattice
 class Lattice(object):
-    """
-    The Lattice object is a list of elements: ELM.<element> in self.seq  ??
-    """
+    """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
     class LRiterator(object):
         def __init__(self,lattice):
             self.lattice = lattice
@@ -608,6 +607,32 @@ class Lattice(object):
                 break
         return node
 ## utilities
+class TestLattice(unittest.TestCase):
+    def test_lattice_generator(self):
+        print('----------------------------------test lattice factory')
+        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        lattice = factory(input_file)
+        self.assertEqual(lattice.__class__.__name__,"Lattice")
+    def test_lattice_iterator(self):
+        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        print('---------------------------------test LR and RL iterator')
+        lattice = factory(input_file)
+        for cnt,node in enumerate(iter(lattice)): 
+            print(F"left-->right {cnt}\r",end="")
+            # print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
+            pass
+        print()
+        self.assertEqual(node,lattice.seq[-1],"last node")
+
+        lattice.toggle_iteration()
+        for cnt,node in enumerate(iter(lattice)):
+            print(F"right-->left {cnt}\r",end="")
+            # print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
+            pass
+        print()
+        self.assertEqual(node,lattice.seq[0],"first node")
+        self.assertNotEqual(lattice.seq[0],lattice.seq[-1],"first node .ne. last node")
+
 def make_wille():
     """
     Wille's test lattice
@@ -695,6 +720,8 @@ def test3():
     lattice = make_wille()
     lattice.show_linkage()
 if __name__ == '__main__':
+    from lattice_generator import factory
+    unittest.main()    
     test1()
     test2()
     test3()
