@@ -29,7 +29,7 @@ from copy import copy
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
-from setutil import Twiss, Functions
+from setutil import Twiss, Functions, Particle, Proton
 from sigma import Sigma
 
 def PRINT_PRETTY(obj=None):
@@ -87,25 +87,25 @@ class Lattice(object):
             iterator = self.LRiterator(self)
         return iterator
     def add_element(self,element):
-        """ add element to lattice """
-        if len(self.seq) == 0:
-            s0 = 0.
-            element.prev = None
-        else:
-            previous = self.seq[-1]  
-            previous.next = element   # forward link
-            element.prev  = previous  # back link
-            s0 = element.prev.position[2]  # end of previous
-        self.seq.append(element)
+        """ add element to right end of lattice """
         l = element.length
-        si = s0
-        sf = si+l
-        sm = (sf+si)/2.
-        position = (si,sm,sf)
-        element.position = position 
-        self.length = sf
+        if len(self.seq) == 0:
+            element.prev     = None
+            element.position = (0.,l/2.,l)
+            self.length = l
+        else:     # linkage
+            previous      = self.seq[-1]  
+            previous.next = element  
+            element.prev  = previous
+            si = element.prev.position[2]
+            sf = si+l
+            sm = (sf+si)/2.
+            position = (si,sm,sf)
+            element.position = position 
+            self.length = sf
+        self.seq.append(element)
     def toString(self):
-        # TODO needs improvement
+       # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
         mcell = ELM.I(label='')   #  chain matrices
         # for element in self.seq:
@@ -280,7 +280,6 @@ class Lattice(object):
             bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
         printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
-        return(self)
     def report(self):
         # TODO needs more work
         """ report lattice layout (may not work!) """
@@ -311,9 +310,7 @@ class Lattice(object):
             self.iteration = "LR"
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
-        # TODO check correctness again
         for element in iter(lattice):
-            element = copy(element)
             self.add_element(element)
     def twiss_envelopes(self,steps=1):
         """ Calulate envelopes from initial twiss-vector with beta-matrices """
@@ -518,7 +515,6 @@ class Lattice(object):
         for element in iter(self):
             particle = element.particle
             gamma = particle.gamma
-            # objprnt(particle,text='cs_traj: '+element.label)   # DEBUG
             slices = element.make_slices(anz=steps)
             try:
                 for i_element in slices:
@@ -606,17 +602,20 @@ class Lattice(object):
                 node = elm
                 break
         return node
-## utilities
+## unittests
 class TestLattice(unittest.TestCase):
     def test_lattice_generator(self):
-        print('----------------------------------test lattice factory')
+        print('----------------------------------test_lattice_generator')
         input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
         lattice = factory(input_file)
+        print(lattice.__class__.__name__,F"{len(lattice.seq)} elements")
+        print(lattice.__class__.__name__,F"length {len(lattice.seq)} [m]")
         self.assertEqual(lattice.__class__.__name__,"Lattice")
     def test_lattice_iterator(self):
         input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
-        print('---------------------------------test LR and RL iterator')
+        print('---------------------------------test_lattice_iterator')
         lattice = factory(input_file)
+        # node = None
         for cnt,node in enumerate(iter(lattice)): 
             print(F"left-->right {cnt}\r",end="")
             # print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
@@ -632,46 +631,110 @@ class TestLattice(unittest.TestCase):
         print()
         self.assertEqual(node,lattice.seq[0],"first node")
         self.assertNotEqual(lattice.seq[0],lattice.seq[-1],"first node .ne. last node")
+    def test_lattice_add_element(self):
+        print('---------------------------------test_lattice_add_element')
+        l = 1.
+        p = Particle(50.)
+        lattice1 = Lattice()
+        for i in range(5):
+            lattice1.add_element(ELM.D(F"Drift{i}",length=l,aperture=5.))
+        for i in range(5):
+            print(lattice1.seq[i].label,lattice1.seq[i].position)
+        print()
+        lattice2 = Lattice()
+        for i in range(5):
+            lattice2.add_element(ELM.D(F"Drift{6+i}",length=l,aperture=5.))
+        for i in range(5):
+            print(lattice2.seq[i].label,lattice1.seq[i].position)
+        print()
+        lattice1.concat(lattice2)
+        for i in range(4,len(lattice1.seq)):
+            print(lattice1.seq[i].label,lattice1.seq[i].position)
+    def test_first_last_gap(self):
+        print('----------------------------------test_first_last_gap')
+        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        lattice = factory(input_file)
+        print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
+        lattice.toggle_iteration()
+        print(F"last  gap {lattice.first_gap.label} {lattice.first_gap.position}")
+    def test_wille(self):
+        from matplotlib.pyplot import plot,show,legend
+        print('----------------------------------test_wille')
+        lattice = make_wille()
+        # cell boundaries
+        full_cell   = lattice.cell(closed=True)
+        betax,a,g,e = PARAMS['twiss_x_i']()
+        betay,a,g,e = PARAMS['twiss_y_i']()
+        PARAMS['twiss_z_i'] = Twiss(1.,0.,1.)
+        lattice.symplecticity()
+        # twiss functions
+        beta_fun = lattice.twiss_envelopes(steps=5)
+        # cl,sl = lattice.cs_traj(steps=100)sK
+        disp = lattice.dispersion(steps=100,closed=True)
+        # plots
+        s  = [beta_fun(i,'s')  for i in range(beta_fun.nbpoints)]
+        xs = [beta_fun(i,'bx') for i in range(beta_fun.nbpoints)]
+        ys = [beta_fun(i,'by') for i in range(beta_fun.nbpoints)]
+        sd = [x[0] for x in disp]             # abszisse s
+        ds = [x[1] for x in disp]             # dispersion(s)
+        #-------------------- lattice viseo
+        lat_plot, ape_plot = lattice.lattice_plot_functions()
+        vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
+        vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
+        vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
 
+        plot(s,xs,label='betax')
+        plot(s,ys,label='betay')
+        plot(sd,ds,label='disp')
+        plot(vis_abszisse,vis_ordinate,label='',color='black')
+        plot(vis_abszisse,vzero,color='black')
+        legend(loc='upper left')
+        show()
+ 
 def make_wille():
-    """
-    Wille's test lattice
-    """
+    """ Wille's test lattice """
     print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
-    kqf = wille()['k_quad_f']
-    lqf = wille()['length_quad_f']
-    kqd = wille()['k_quad_d']
-    lqd = wille()['length_quad_d']
-    rhob = wille()['bending_radius']
-    lb = wille()['dipole_length']
-    ld = wille()['drift_length']
-    # elements
-    mqf1 = ELM.QF(k0=kqf,length=lqf,label='QF1')
-    mqf2 = ELM.QF(k0=kqf,length=lqf,label='QF2')
-    mqd1 = ELM.QD(k0=kqd,length=lqd,label='QD1')
-    md1  = ELM.D(length=ld)
-    md2  = ELM.D(length=ld)
-    md3  = ELM.D(length=ld)
-    md4  = ELM.D(length=ld)
-    mbr1  = ELM.RD(radius=rhob,length=lb)
-    mbr2  = ELM.RD(radius=rhob,length=lb)
+    kqf   = -1.2
+    kqd   = -kqf
+    lqf   = 0.20
+    lqd   = 0.40
+    rhob  = 3.8197
+    lb    = 1.50
+    phib  = 11.25
+    ld    = 0.55
+    p = Proton(tkin=50.)
+    gradf = kqf*p.brho
+    gradd = kqd*p.brho
+    wedge = ELM.Wedge(phib,rhob,t3d_wedge=False)
+
+    """ nodes """
+    qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
+    qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
+    qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
+    d1   = ELM.D('D1',particle=p,length=ld)
+    d2   = ELM.D('D2',particle=p,length=ld)
+    d3   = ELM.D('D3',particle=p,length=ld)
+    d4   = ELM.D('D4',particle=p,length=ld)
+    br1  = ELM.RD('RD1',phib,rhob,wedge,particle=p)
+    br2  = ELM.RD('RD2',2*phib,rhob,wedge,particle=p)
+    sd1  = ELM.SD('SD1',2*phib,rhob,particle=p)
     # lattice
     lattice = Lattice()
-    lattice.add_element(mqf1)
-    lattice.add_element(md1)
-    lattice.add_element(mbr1)
-    lattice.add_element(md2)
-    lattice.add_element(mqd1)
-    lattice.add_element(md3)
-    lattice.add_element(mbr2)
-    lattice.add_element(md4)
-    lattice.add_element(mqf2)
-    DEB.get('OFF')('lattice: {}'.format(lattice.toString()))
-    top = Lattice()
-    top.concat(lattice)
-    top.concat(lattice)
-    top.concat(lattice)
-    return top
+    lattice.add_element(qf1) 
+    lattice.add_element(d1)
+    lattice.add_element(br1)
+    lattice.add_element(d2)
+    lattice.add_element(qd1)
+    lattice.add_element(d3)
+    lattice.add_element(br2)
+    lattice.add_element(d4)
+    lattice.add_element(qf2)
+    DEB.get('ON')('lattice: {}'.format(lattice.toString()))
+    # top = Lattice()
+    # top.concat(lattice)
+    # top.concat(lattice)
+    # top.concat(lattice)
+    return lattice
 def test1():
     from matplotlib.pyplot import plot,show,legend
     print('-------------------------------------Test1--')

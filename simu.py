@@ -299,7 +299,7 @@ def simulation(filepath):
     soll_track = track_soll(lattice)
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
-    print(F'FINAL kinetic energy {lattice.seq[-1].particle.T} [MeV]') # print(F'') formating
+    print(F'FINAL kinetic energy {lattice.seq[-1].particle.tkin} [MeV]')
     #----------------------------------------------
     # STEP 3: calculate longitudinal paramters at entrance
     #----------------------------------------------
@@ -331,8 +331,9 @@ def simulation(filepath):
         show_data_from_elements() #..................................show ELEMENT attributes
         dictprnt(SUMMARY,text='Summary') #...........................show summary
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
-        (c_like,s_like) = lattice.cs_traj(steps = 10) #..............track sin- and cos-like trajectories
-        sigma_fun = lattice.sigmas(steps = 10) #.,,,.................calculate envelope functions
+        steps = 1
+        (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
+        sigma_fun       = lattice.sigmas(steps=steps) #.,,,.................calculate envelope functions
         display(sigma_fun,c_like,s_like,lat_plot,ape_plot) #.........make plots of functionsa
         if FLAGS['marker']: #........................................any MARKER with actions?
             # TODO need a function to filter/print lattice elements

@@ -373,7 +373,7 @@ def waccept(node):
         DT2T      = PARAMS['DT2T']
         E0T       = node.EzAvg*node.ttf  # [MV/m]
         particle  = node.particle
-        phis      = node.phis            # [rad]
+        phis      = node.phisoll         # [rad]
         lamb      = node.lamb            # [m]
         freq      = node.freq            # [Hz]
         m0c2      = particle.e0          # [MeV]
