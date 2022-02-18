@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, ceil
+from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ceil
 from copy import copy, deepcopy
 import numpy as NP
 import pprint, inspect
@@ -344,7 +344,7 @@ class QD(QF):
         shortened = QD(self.label, self.grad, particle=self.particle, position=self.position, length=length,  aperture=self.aperture)
         return shortened
 class SD(Node):
-    """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg]."""
+    """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
     def __init__(self, label, alpha, rho, n=0, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=PARAMS['aperture']):
         super().__init__()
         self.label    = label
@@ -366,7 +366,7 @@ class SD(Node):
         h = alpha/(abs(rho*alpha))       # [1/m]
         kx = sqrt((1-self.n)*h**2)       # [1/m]
         ky = sqrt(self.n*h**2)
-        Ds = abs(self.rho)*self.alpha         # [m]
+        Ds = abs(self.rho*self.alpha)     # [m]
         self.length = Ds
         cx = cos(kx*Ds)
         sx = sin(kx*Ds)
@@ -384,9 +384,7 @@ class SD(Node):
         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
-
-        m[SKOO, 
-        LKOO]  = self.length  # length increase
+        m[SKOO, LKOO]  = self.length  # length increase
         return m
     def adjust_energy(self, tkin):
         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
@@ -395,37 +393,42 @@ class SD(Node):
         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
         return shortSD
     def make_slices(self, anz=PARAMS['nbslices']):
-        shortSD = self.shorten(self.alpha/anz)
-        slices = []          # wedge @ entrance
+        shortSD = self.shorten(degrees(self.alpha/anz))
+        slices = []
         for i in range(anz):
             slices.append(shortSD)
-        DEBUG_OFF('slices {}'.format(slices))
         return slices
 class RD(SD):
-    """ Trace3D rectangular dipole x-plane """
+    """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
     def __init__(self, label, alpha, rho, wedge, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=PARAMS['aperture']):
         super().__init__(label, alpha, rho, particle=particle, position=position, aperture=aperture)
-        self.wedge = wedge
+        self.wedge   = wedge
         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
     def make_slices(self, anz=PARAMS['nbslices']):
-        slices = [self.wedge]          # wedge @ entrance
-        shortSD = super().shorten(self.length/anz)
-        for i in range(anz):
-            slices.append(shortSD)
-        slices.append(self.wedge)
-        DEBUG_OFF('slices {}'.format(slices))
+        if anz < 2: anz = 2
+        slicewinkel   = degrees(self.alpha)/anz
+        sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+        sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
+        slices  = [sdi]          # wedge @ entrance
+        for i in range(1,anz-1):
+            shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+            slices.append(shortRD)
+        sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+        sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
+        slices.append(sdf)
         return slices
 class Wedge(Node):
-    """  Trace3d wedge Rxx and Ryy simplified """
+    """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
     def __init__(self, kwinkel, rho, t3d_wedge=True):
         super().__init__()
         beta = radians(kwinkel)    # kantenwinkel
+        self.t3d_wedge = t3d_wedge
         self.label = "W"
         self.length = 0.
         g = 0.050    # fixed gap of 50 mm assumed
         K1=0.45
         K2=2.8
-        psi  = K1*g/rho*((1+sin(beta)**2)/cos(beta))*(1-K1*K2*(g/rho)*tan(beta)) if t3d_wedge else 0.
+        psi  = K1*g/rho*((1+sin(beta)**2)/cos(beta))*(1-K1*K2*(g/rho)*tan(beta)) if self.t3d_wedge else 0.
         mxpx = tan(beta)/rho
         mypy = tan(beta-psi)/rho
         mx   = NP.eye(MDIM,MDIM)
@@ -1456,8 +1459,8 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(mz[i,j],MRDZ.matrix[i,j],msg="MRDZ == MZ?",delta=1e-4)
-    def test_SD_and_RD_Nodes(self):
-        print("\b----------------------------------------test_SD_and_RD_Nodes")
+    def test_SD_and_RD_Node_slicing(self):
+        print("\b----------------------------------------test_SD_and_RD_Node_slicing")
         rhob   = 3.8197   # [m]
         phib   = 11.25    # [deg]
         p      = Proton(tkin=100.)
@@ -1469,23 +1472,23 @@ class TestElementMethods(unittest.TestCase):
         sdx = slices[0]         # combine the slices again
         for i in range(1,len(slices)):
             sdx = sdx * slices[i]
-        print("\nsd"); print(sd.matrix); print("\nsdx"); print(sdx.matrix)
+        # print("\nsd"); print(sd.matrix); print("\nsdx"); print(sdx.matrix)
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(sd.matrix[i,j],sdx.matrix[i,j],msg='sd == sdx?',delta=1.e-4)
 
         """ slice and recombine RD """
-        wedge =  _wedge(phib,rhob,t3d_wedge=True)
+        wedge =  Wedge(phib,rhob,t3d_wedge=True)
         rd = RD("RD",2*phib,rhob,wedge,particle=p)
-        slices = rd.make_slices(anz=3)
+        slices = rd.make_slices(anz=5)
         # for item in slices: print(item.matrix); print()
         rdx = slices[0]
         for i in range(1,len(slices)):
             rdx = rdx * slices[i]
-        # print("\nrd"); print(sd.matrix); print("\nrdx"); print(sdx.matrix)
+        # print("\nrd"); print(rd.matrix); print("\nrdx"); print(rdx.matrix)
         for i in range(10):
             for j in range(10):
-                self.assertAlmostEqual(rd.matrix[i,j],rdx.matrix[i,j],delta=1.e-4)
+                self.assertAlmostEqual(rd.matrix[i,j],rdx.matrix[i,j],msg='rd == rdx?',delta=1.e-4)
     def test_MRK_Node(self):
         print("\b----------------------------------------test_MRK_Node")
         class Agent(object):
@@ -1516,8 +1519,8 @@ class TestElementMethods(unittest.TestCase):
         gap = gap.adjust_energy(6.) # tkin=6
         # print(gap.matrix)
         self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.023817,delta=1.e-4)
-    def test_RFG_Node(self):
-        print("\b----------------------------------------test_RFG_Node with _T3D_G map")
+    def test_RFG_Node_with_T3D_G_map(self):
+        print("\b----------------------------------------test_RFG_Node_with_T3D_G_map")
         EzAvg = 2.1; phisoll = radians(-30.); gap = 0.044; freq = 816.e6
         rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
         # print(rfg.__dict__)
