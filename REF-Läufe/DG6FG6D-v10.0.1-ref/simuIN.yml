@@ -109,8 +109,8 @@ ELEMENTS:
         sec:      HE           # section 
     RFGH:                      # ID: &alias
         type:     RFG          # RFG class
-        EzAvg:    1.00         # [MV/m] average E-field on axis
-        EzPeak:   2.20         # [MV/m] # corresponds to (EzAvg = 1.00[MV/m])
+        # EzAvg:    1.00         # [MV/m] average E-field on axis
+        EzPeak:   2.20         # [MV/m] 
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *p01         # [Hz] frequency
         gap:      *p15         # [m] length
@@ -182,7 +182,7 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    # LINE:   [10,[SCle]]
-    LINE:   [200,[SCle]]
+    LINE:   [1,[SCle]]
+    # LINE:   [200,[SCle]]
 
   

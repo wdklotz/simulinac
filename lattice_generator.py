@@ -53,10 +53,10 @@ def get_mandatory(attributes,key,item):
         sys.exit(1)
     return res
 def instanciate_element(item):
-    """ item: {ID:{attrinutes}} for each element """
-    def EzPeakToAverage(Ezpeak):
-        # return 0.40 * EzPeak    # Pi mal Daumen: about 0.4*EzPeak from Superfish
-        return EzPeak
+    """ item: {ID:{attrinutes}} for each node """
+    # def EzPeakToAverage(Ezpeak):
+    #     # return 0.40 * EzPeak    # Pi mal Daumen: about 0.4*EzPeak from Superfish
+    #     return EzPeak
 
     DEBUG_OFF(item)
     for ID,attributes in item.items():
@@ -100,21 +100,21 @@ def instanciate_element(item):
             dWf       = util.FLAGS['dWf']
             mapping   = get_mandatory(attributes,'mapping',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fname = get_mandatory(attributes,"SFdata",ID)
                 if fname not in util.PARAMS:
                     gap_cm = gap*100     # Watch out!
                     util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
-                EzAvg = util.PARAMS[fname].EzAvg
+                EzAvg    = util.PARAMS[fname].EzAvg
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
             else:
+                EzAvg    = EzPeak
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
-            element = util.ELEMENTS[ID]
-            element['EzAvg'] = EzAvg
-            instance.EzPeak  = EzPeak
-            instance.sec     = attributes.get('sec','?')
+            element           = util.ELEMENTS[ID]
+            element['SFdata'] = instance.SFdata
+            element['EzAvg']  = EzAvg
+            instance.sec      = attributes.get('sec','?')
 
         elif type == 'RFC':
             label     = attributes['ID']

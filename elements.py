@@ -50,14 +50,14 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 class OutOfRadialBoundEx(Exception):
     def __init__(self,max_r,ID=''):
         self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
-#------- The mother of all lattice elements (a.k.a. matrices)
-#------- The mother of all lattice elements (a.k.a. matrices)
-#------- The mother of all lattice elements (a.k.a. matrices)
+#------- The mother of all lattice element objects (a.k.a. nodes)
+#------- The mother of all lattice element objects (a.k.a. nodes)
 class Node(object):
     """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
+    # TODO do we need slice_min?????
     slice_min = 0.001                   # default - minimal slice length
     def __init__(self):
         self.type      = self.__class__.__name__      # self's node type
@@ -70,6 +70,7 @@ class Node(object):
         self.next      = None      # right link
         self.prev      = None      # left link
         self.viseo     = None      # default - invisible
+    # TODO do we need __getitem__ and __setitem__ ?????
     def __getitem__(self,k):
         return self.__dict__[k]
     def __setitem__(self,k,v):
@@ -80,8 +81,9 @@ class Node(object):
             ret+= '\n{}:{}'.format(k,v)
         return ret
     def adjust_energy(self, tkin):
-        """ nothing to adjust """
+        """ dummy adjust """
         return self
+    # TODO do we need this @property ?????
     @property
     def twiss(self):
         return self['twiss']
@@ -117,12 +119,12 @@ class Node(object):
                 s+='{:8.4g} '.format(self.matrix[i, j])
             s+='\n'
         return s
-    def reverse(self):
-        raise RuntimeError('Node:reverse not implemented!')
-        sys.exit()
-    def inverse(self):
-        raise RuntimeError('Node:inverse not implemented!')
-        sys.exit(1)
+    # def reverse(self):
+    #     raise RuntimeError('Node:reverse not implemented!')
+    #     sys.exit()
+    # def inverse(self):
+    #     raise RuntimeError('Node:inverse not implemented!')
+    #     sys.exit(1)
     def trace(self):
         return self.tracex()+self.tracey()
     def tracex(self):
@@ -212,12 +214,15 @@ class Node(object):
                 f[i]  = f[i]*1.e3
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
         return f_track
-    def soll_map(self, i_track):
-        f_track = copy(i_track)
-        f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
-        return f_track
+    # TODO can we get rid of soll_map ?????
+    # def soll_map(self, i_track):
+        f_track = self.map(i_track)
+        # f_track = copy(i_track)
+        # f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
+        # f_track = NP.dot(self.matrix,f_track)
+        # return f_track
     def shorten(self, length):
-        """ nothing to shorten """
+        """ dummy shorten """
         return self
 class I(Node):
     """  Unity matrix: the unity Node """
@@ -240,13 +245,12 @@ class MRK(I):
         """ invoke all actions bound to this marker """
         for agent in self.agents:
             agent.do_action()
-    def adjust_energy(self, tkin):
-        adjusted = MRK(self.label, agents=self.agents, particle=self.particle(tkin), position=self.position)
-        return adjusted
+    # TODO does marker nedd adjuste_energy ????
+    # def adjust_energy(self, tkin):
+    #     adjusted = MRK(self.label, agents=self.agents, particle=self.particle(tkin), position=self.position)
+    #     return adjusted
 class D(Node):
-    """ 
-    Trace3D drift space 
-    """
+    """  Trace3D drift space  """
     def __init__(self, label, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0.,aperture=PARAMS['aperture']):
         super().__init__()
         self.label    = label
@@ -339,7 +343,6 @@ class QD(QF):
     def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=PARAMS['aperture']):
         super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
         self['viseo'] = -0.5
-
     def shorten(self, length):
         shortened = QD(self.label, self.grad, particle=self.particle, position=self.position, length=length,  aperture=self.aperture)
         return shortened
@@ -466,7 +469,8 @@ class GAP(Node):
         cyp = cxp = -pi*E0L*ttf*sin(self.phisoll)/(m0c2*lamb*bg**3)
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
-        m[EKOO, DEKOO] = deltaW    # energy increase
+        m[EKOO, DEKOO] = deltaW      # energy increase
+        m[SKOO, LKOO]  = self.length # length increase
         return deltaW,m
     def ttf(self, beta, lamb, gap):
         """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
@@ -516,8 +520,8 @@ class RFG(Node):
     """ delegate mapping to gap-model """
     def map(self, i_track):
         return self.gap_model.map(i_track)
-    def soll_map(self, i_track):
-        return self.gap_model.soll_map(i_track)
+    # def soll_map(self, i_track):
+    #     return self.gap_model.soll_map(i_track)
 class _T3D_G(Node):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
     def __init__(self, host=None):
@@ -544,7 +548,7 @@ class _T3D_G(Node):
             m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
             # UPDATE NODE matrix with deltaW
             m[EKOO, DEKOO] = deltaW
-            m[SKOO,LKOO]   = length
+            m[SKOO, LKOO]  = length
             return m
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
@@ -559,16 +563,18 @@ class _T3D_G(Node):
     def map(self, i_track):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
-        f_track = NP.dot(self.matrix,f_track)
-        DEBUG_OFF('t3d-map {}'.format(f_track))
+        f_track = NP.dot(self.host.matrix,f_track)
+        DEBUG_ON('t3d-map {}'.format(f_track))
         return f_track
-    def soll_map(self, i_track):
-        si,sm,sf = self.host.position
-        f_track = copy(i_track)
-        f_track[EKOO] = self.host.particlef.tkin
-        f_track[SKOO] = sf
-        DEBUG_OFF('t3d-soll {}'.format(f_track))
-        return f_track
+    # def soll_map(self, i_track):
+        # si,sm,sf = self.host.position
+        # f_track = copy(i_track)
+        # f_track[EKOO] += self.host.particlef.tkin
+        # f_track[SKOO] = sf
+        # DEBUG_OFF('t3d-soll {}'.format(f_track))
+        # f_track = self.map(i_track)
+        # return f_track
+# TODO classes below need unittesting
 class _PYO_G(object):
     """ 
     PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) 
@@ -1204,8 +1210,8 @@ class TestElementMethods(unittest.TestCase):
         # print(CA.toString())
 
         self.assertFalse(NP.array_equal(AC.matrix,CA.matrix))
-    def test_Node_make_slices(self):
-        print("\b----------------------------------------test_Node_make_slices")
+    def test_QF_Node_make_slices(self):
+        print("\b----------------------------------------test_QF_Node_make_slices")
         gradient = 3.; length = 1.; p = Proton()
         QFnode = QF("QFoc", gradient, particle=p, length=length)
         # slices = QFnode.make_slices(anz=anz)
@@ -1459,8 +1465,8 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(mz[i,j],MRDZ.matrix[i,j],msg="MRDZ == MZ?",delta=1e-4)
-    def test_SD_and_RD_Node_slicing(self):
-        print("\b----------------------------------------test_SD_and_RD_Node_slicing")
+    def test_SD_and_RD_Node_make_slices(self):
+        print("\b----------------------------------------test_SD_and_RD_Node_make_slices")
         rhob   = 3.8197   # [m]
         phib   = 11.25    # [deg]
         p      = Proton(tkin=100.)

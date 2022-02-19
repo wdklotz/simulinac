@@ -74,11 +74,12 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
-    def __init__(self):
+    def __init__(self, descriptor=""):
         self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
-        self.iteration = "LR"  # default: iterating lattice left-right
-        self.length = 0.
-        self.accel  = 0.
+        self.iteration  = "LR"  # default: iterating lattice left-right
+        self.length     = 0.
+        self.acc_node   = None
+        self.descriptor = descriptor
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -149,7 +150,8 @@ class Lattice(object):
             check symplecticity
             twiss prameters beta, alpha, gamma for periodic lattices
         """
-        mcell = ELM.I(label=' <==')   #  chain matrices for full cell
+        # mcell = ELM.I(label=' <==')   #  chain matrices for full cell
+        mcell = None
         """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):
             if count == 0:
@@ -187,11 +189,11 @@ class Lattice(object):
             # if verbose:
             printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
         ## full accelerator
-        self.accel = mcell    # the full cell: isinstance(self.accel,Lattice)==True
+        self.acc_node = mcell    # the full cell: isinstance(self.acc_node,Lattice)==True
         # if verbose:
         printv(0,'Full Accelerator Matrix (f)<==(i)')
-        printv(0,self.accel.prmatrix())
-        det = LA.det(self.accel.matrix)
+        printv(0,self.acc_node.prmatrix())
+        det = LA.det(self.acc_node.matrix)
         # if verbose:
         printv(2,'det|full-cell|={:.5f}\n'.format(det))
         ## Determinate M-I == 0 ?
@@ -214,7 +216,7 @@ class Lattice(object):
         ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
         if closed:
             if not unstable:
-                cell_matrix = self.accel.matrix
+                cell_matrix = self.acc_node.matrix
                 m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
                 m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
                 n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
@@ -252,7 +254,7 @@ class Lattice(object):
                 print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
-                m_cell_beta = self.accel.beta_matrix()
+                m_cell_beta = self.acc_node.beta_matrix()
                 v_beta_e = NP.dot(m_cell_beta,v_beta_a)
                 # if verbose:
                 printv(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
@@ -418,7 +420,7 @@ class Lattice(object):
         # column vector with MDIM rows, 1 column
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         if closed == True:
-            m_cell = self.accel
+            m_cell = self.acc_node
             m11 = m_cell.matrix[0,0]
             m15 = m_cell.matrix[0,5]
             d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
@@ -429,8 +431,8 @@ class Lattice(object):
         for element in iter(self):
             slices = element.make_slices(anz = steps)
             for i_element in slices:
-                m_beta = i_element.matrix
-                v_0 = NP.dot(m_beta,v_0)
+                mx = i_element.matrix
+                v_0 = NP.dot(mx,v_0)
                 s += i_element.length
                 d  = v_0[0]
                 dp = v_0[1]
@@ -571,8 +573,8 @@ class Lattice(object):
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #S
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
                     ])
-        s = NP.dot(self.accel.matrix.T,s)
-        s = NP.dot(s,self.accel.matrix)
+        s = NP.dot(self.acc_node.matrix.T,s)
+        s = NP.dot(s,self.acc_node.matrix)
         # dets = LA.det(s)
         # if fabs(dets-1.) > 1.e-12:
             # for i in range(ELM.Matrix._dim):
@@ -657,9 +659,53 @@ class TestLattice(unittest.TestCase):
         print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
         lattice.toggle_iteration()
         print(F"last  gap {lattice.first_gap.label} {lattice.first_gap.position}")
-    def test_wille(self):
+    def test_wille_lattice(self):
         from matplotlib.pyplot import plot,show,legend
-        print('----------------------------------test_wille')
+        def make_wille():
+            def make_wille_lattice():
+                """ Wille's test lattice """
+                kqf   = -1.2
+                kqd   = -kqf
+                lqf   = 0.20
+                lqd   = 0.40
+                rhob  = 3.8197
+                lb    = 1.50
+                phib  = 11.25   #]deg]
+                ld    = 0.55
+                p     = Proton(tkin=50.)
+                gradf = kqf*p.brho
+                gradd = kqd*p.brho
+                wedge = ELM.Wedge(phib,rhob,t3d_wedge=False)
+
+                """ nodes """
+                qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
+                qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
+                qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
+                d1   = ELM.D('D1',particle=p,length=ld)
+                d2   = ELM.D('D2',particle=p,length=ld)
+                d3   = ELM.D('D3',particle=p,length=ld)
+                d4   = ELM.D('D4',particle=p,length=ld)
+                br1  = ELM.RD('RD1',2*phib,rhob,wedge,particle=p)
+                br2  = ELM.RD('RD2',2*phib,rhob,wedge,particle=p)
+                sd1  = ELM.SD('SD1',2*phib,rhob,particle=p)
+                # lattice
+                lattice = Lattice()
+                lattice.add_element(qf1) 
+                lattice.add_element(d1)
+                lattice.add_element(br1)
+                lattice.add_element(d2)
+                lattice.add_element(qd1)
+                lattice.add_element(d3)
+                lattice.add_element(br2)
+                lattice.add_element(d4)
+                lattice.add_element(qf2)
+                return lattice
+            lattice = make_wille_lattice()
+            latticeA = make_wille_lattice()
+            lattice.concat(latticeA)
+            return lattice
+        print('----------------------------------test_wille_lattice')
+        print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
         lattice = make_wille()
         # cell boundaries
         full_cell   = lattice.cell(closed=True)
@@ -670,13 +716,13 @@ class TestLattice(unittest.TestCase):
         # twiss functions
         beta_fun = lattice.twiss_envelopes(steps=5)
         # cl,sl = lattice.cs_traj(steps=100)sK
-        disp = lattice.dispersion(steps=100,closed=True)
+        disp = lattice.dispersion(steps=5,closed=True)
         # plots
         s  = [beta_fun(i,'s')  for i in range(beta_fun.nbpoints)]
         xs = [beta_fun(i,'bx') for i in range(beta_fun.nbpoints)]
         ys = [beta_fun(i,'by') for i in range(beta_fun.nbpoints)]
-        sd = [x[0] for x in disp]             # abszisse s
-        ds = [x[1] for x in disp]             # dispersion(s)
+        sdisp = [x[0] for x in disp]             # abszisse s
+        disp  = [x[1] for x in disp]             # dispersion(s)
         #-------------------- lattice viseo
         lat_plot, ape_plot = lattice.lattice_plot_functions()
         vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
@@ -685,106 +731,11 @@ class TestLattice(unittest.TestCase):
 
         plot(s,xs,label='betax')
         plot(s,ys,label='betay')
-        plot(sd,ds,label='disp')
+        plot(sdisp,disp,label='disp')
         plot(vis_abszisse,vis_ordinate,label='',color='black')
         plot(vis_abszisse,vzero,color='black')
         legend(loc='upper left')
         show()
- 
-def make_wille():
-    """ Wille's test lattice """
-    print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
-    kqf   = -1.2
-    kqd   = -kqf
-    lqf   = 0.20
-    lqd   = 0.40
-    rhob  = 3.8197
-    lb    = 1.50
-    phib  = 11.25
-    ld    = 0.55
-    p = Proton(tkin=50.)
-    gradf = kqf*p.brho
-    gradd = kqd*p.brho
-    wedge = ELM.Wedge(phib,rhob,t3d_wedge=False)
-
-    """ nodes """
-    qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
-    qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
-    qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
-    d1   = ELM.D('D1',particle=p,length=ld)
-    d2   = ELM.D('D2',particle=p,length=ld)
-    d3   = ELM.D('D3',particle=p,length=ld)
-    d4   = ELM.D('D4',particle=p,length=ld)
-    br1  = ELM.RD('RD1',phib,rhob,wedge,particle=p)
-    br2  = ELM.RD('RD2',2*phib,rhob,wedge,particle=p)
-    sd1  = ELM.SD('SD1',2*phib,rhob,particle=p)
-    # lattice
-    lattice = Lattice()
-    lattice.add_element(qf1) 
-    lattice.add_element(d1)
-    lattice.add_element(br1)
-    lattice.add_element(d2)
-    lattice.add_element(qd1)
-    lattice.add_element(d3)
-    lattice.add_element(br2)
-    lattice.add_element(d4)
-    lattice.add_element(qf2)
-    DEB.get('ON')('lattice: {}'.format(lattice.toString()))
-    # top = Lattice()
-    # top.concat(lattice)
-    # top.concat(lattice)
-    # top.concat(lattice)
-    return lattice
-def test1():
-    from matplotlib.pyplot import plot,show,legend
-    print('-------------------------------------Test1--')
-    lattice = make_wille()
-    # for element in lattice.seq: DEBUG('test1: ',' [si,sm,sf,] elm= [{1}] {0}'.format(repr(element),''.join('{:5.3f},'.format(el) for el in element.position)))
-    # cell boundaries
-    full_cell = lattice.cell(closed=True)
-    betax,a,g,e = PARAMS['twiss_x_i']()
-    betay,a,g,e = PARAMS['twiss_y_i']()
-    PARAMS['twiss_z_i'] = Twiss(1.,0.,1.)
-    lattice.symplecticity()
-    # twiss functions
-    beta_fun = lattice.twiss_envelopes(steps=5)
-    # cl,sl = lattice.cs_traj(steps=100)sK
-    disp = lattice.dispersion(steps=100,closed=True)
-    # plots
-    s  = [beta_fun(i,'s')  for i in range(beta_fun.nbpoints)]
-    xs = [beta_fun(i,'bx') for i in range(beta_fun.nbpoints)]
-    ys = [beta_fun(i,'by') for i in range(beta_fun.nbpoints)]
-    sd = [x[0] for x in disp]             # abszisse s
-    ds = [x[1] for x in disp]             # dispersion(s)
-    #-------------------- lattice viseo
-    lat_plot, ape_plot = lattice.lattice_plot_functions()
-    vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
-    vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
-    vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
-
-    plot(s,xs,label='betax')
-    plot(s,ys,label='betay')
-    plot(sd,ds,label='disp')
-    plot(vis_abszisse,vis_ordinate,label='',color='black')
-    plot(vis_abszisse,vzero,color='black')
-    legend(loc='upper left')
-    show()
-def test2():
-    print('-------------------------------------Test2--')
-    print('lattice tags test ...')
-    lattice = Lattice()
-    print(type(lattice))
-    lattice.name = 'NAME'
-    lattice.label = 'LABEL'
-    lattice.section = 'SECTION'
-    print(lattice.__dict__)
-def test3():
-    print('-------------------------------------Test3--')
-    lattice = make_wille()
-    lattice.show_linkage()
 if __name__ == '__main__':
     from lattice_generator import factory
-    unittest.main()    
-    test1()
-    test2()
-    test3()
+    unittest.main()

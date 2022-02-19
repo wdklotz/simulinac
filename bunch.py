@@ -43,7 +43,7 @@ DEBUG_ON  = DEB.get('ON')
 #todo: uniform bucket fill ?
 class Tpoint(object):
     """ 
-        A track point is an NP.array of 10 coordinates, 
+        A track-point is an NP.array of 10 coordinates, 
         i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
     """
     def __init__(self, point = NP.array([0,0,0,0,0,0,0,1,0,1])):
@@ -53,11 +53,8 @@ class Tpoint(object):
     def as_str(self):
         s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[Ktp.x],self.point[Ktp.xp],self.point[Ktp.y],self.point[Ktp.yp],self.point[Ktp.z],self.point[Ktp.zp],self.point[Ktp.T],self.point[Ktp.S])
         return s
-    
 class Track(object):
-    """
-        A Track is a list of Tpoint objects. 
-    """
+    """ A Track is a list of Tpoint objects.  """
     def __init__(self):
         self._points = []
     def __getitem__(self,n):        # evaluation of self[key] for Tpoints in Track
@@ -92,7 +89,6 @@ class Track(object):
         for p in iter(self):
             str += p.as_str()+'\n'
         return str
-
 class Bunch(object):
     """
         A Bunch is a list of Particle objects
@@ -110,7 +106,6 @@ class Bunch(object):
         self._particles.append(particle)
     def removeparticle(self,particle):
         self._particles.remove(particle)
-
 class BunchFactory(object):
     """
     BunchFactory creates a multiparticle bunch
@@ -140,7 +135,6 @@ class BunchFactory(object):
             bunch.addparticle(particle)
             particle.track = initialtracklist[i]
         return bunch
-
 def Gauss1D(twx,twy,twz,npart,mask,tk):
     """ 
     Generates a bunch with 1D gaussian distribution 
@@ -189,7 +183,6 @@ def Gauss1D(twx,twy,twz,npart,mask,tk):
         track.addpoint(tpoint)
         tracklist.append(track)
     return tracklist
-        
 def EmitContour(nTracks,random=False):
     """
         Generates a bunch with particles of same emittance
@@ -278,7 +271,6 @@ def test0():
     print("last.track.__dict__; ",last.track.__dict__)
     
     print(last.track.as_table())
-
 def test1():
     # example data
     mu    = 0     # mean of distribution
@@ -289,7 +281,6 @@ def test1():
     fig = plt.figure('test1: figure')
     histPlot(x,mu,sigma)
     figures.append(fig)
-
 def test2():
     print('-----------------------------------------Test2---')
     N = 20000
@@ -313,7 +304,6 @@ def test2():
     good = (x, xp)
     poincarePlot(good, (0,0), 'x-x\'', (0.1,0.1), projections=(1,1))
     figures.append(fig2)
-
 def test3(filepath):
     print('-----------------------------------------Test3---')
     from lattice_generator import factory
@@ -328,7 +318,6 @@ def test3(filepath):
     plt.scatter(X,XP,s=0.1)
     plt.scatter(Y,YP,color='red',s=0.1)
     figures.append(fig)
-
 def test4():
     print('-----------------------------------------Test4---')
     twx = Twiss(3.,0.,1.e-6)
@@ -357,7 +346,6 @@ def test4():
     fig = plt.figure("test4:figure")
     plt.scatter(xaxis,yaxis,s=0.1)
     figures.append(fig)
-            
 if __name__ == '__main__':
     figures = []
     test0()
