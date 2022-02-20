@@ -33,18 +33,17 @@ FLAGS:
     # sigma:        False           # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
-    express:      True            # {False} use express version of thin quads
     # useaper:      True            # {False} use aperture check for lattice elements
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
     # marker:       True            # {False} activate Markers in the lattice
-    verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      0               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 50.             # [MeV] energy @ injection
+    Tkin:                 39.9            # [MeV] energy @ injection
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
@@ -84,15 +83,15 @@ ELEMENTS:
     D3:                       # ID
         type:     D            # D class
         length:   0.03         # [m]
-        sec:      HE           # section 
+        # sec:      HE           # section 
     D5:                       # ID: &alias
         type:     D            # D class
         length:   0.023        # [m] half cavity
-        sec:      HE           # is part of section
+        # sec:      HE           # is part of section
     D10:                       # ID
         type:     D            # D class
         length:   0.100        # [m]
-        sec:      HE           # section 
+        # sec:      HE           # section 
     QFH:                       # ID
         type:     QF           # QF class
         length:   *p03         # [m]
@@ -182,7 +181,7 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    LINE:   [1,[SCle]]
+    LINE:   [20,[SCle]]
     # LINE:   [200,[SCle]]
 
   

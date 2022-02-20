@@ -35,7 +35,7 @@ from OXAL    import _OXAL
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    print(F'DEBUG_ON[{file}] ==> ',end="")
     if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj=None):
     pass
@@ -251,13 +251,14 @@ class MRK(I):
     #     return adjusted
 class D(Node):
     """  Trace3D drift space  """
-    def __init__(self, label, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0.,aperture=PARAMS['aperture']):
+    def __init__(self, label, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0.,aperture=None):
         super().__init__()
         self.label    = label
         self.particle = copy(particle)
         self.position = position
         self.length   = length
         self.aperture = aperture
+        self.viseo    = 0.
         self.matrix   = NP.eye(MDIM,MDIM)
         m = self.matrix 
         g = self.particle.gamma
@@ -275,7 +276,7 @@ class QF(Node):
     """ 
     Trace3D focussing quad  !!! NEUES API !!!!
     """
-    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=PARAMS['aperture']):
+    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
         super().__init__()
         self.label    = label
         self.grad     = abs(grad)                        # [T/m]
@@ -340,7 +341,7 @@ class QD(QF):
     """ 
     Trace3D defocussing quad  !!! NEUES API !!!! 
     """
-    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=PARAMS['aperture']):
+    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
         self['viseo'] = -0.5
     def shorten(self, length):
@@ -348,7 +349,7 @@ class QD(QF):
         return shortened
 class SD(Node):
     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, n=0, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=PARAMS['aperture']):
+    def __init__(self, label, alpha, rho, n=0, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
         super().__init__()
         self.label    = label
         self.alpha    = radians(alpha)   # [deg]--->[rad]
@@ -395,7 +396,7 @@ class SD(Node):
     def shorten(self, alpha):
         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
         return shortSD
-    def make_slices(self, anz=PARAMS['nbslices']):
+    def make_slices(self, anz=2):
         shortSD = self.shorten(degrees(self.alpha/anz))
         slices = []
         for i in range(anz):
@@ -403,11 +404,11 @@ class SD(Node):
         return slices
 class RD(SD):
     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, wedge, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=PARAMS['aperture']):
+    def __init__(self, label, alpha, rho, wedge, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
         super().__init__(label, alpha, rho, particle=particle, position=position, aperture=aperture)
         self.wedge   = wedge
         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
-    def make_slices(self, anz=PARAMS['nbslices']):
+    def make_slices(self, anz=2):
         if anz < 2: anz = 2
         slicewinkel   = degrees(self.alpha)/anz
         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
@@ -564,7 +565,7 @@ class _T3D_G(Node):
         """ Mapping from (i) to (f) with linear Trace3D matrix """
         f_track = copy(i_track)
         f_track = NP.dot(self.host.matrix,f_track)
-        DEBUG_ON('t3d-map {}'.format(f_track))
+        DEBUG_OFF('t3d-map {}'.format(f_track))
         return f_track
     # def soll_map(self, i_track):
         # si,sm,sf = self.host.position
@@ -870,7 +871,7 @@ class RFC(I):
                 PhiSoll  = radians(-30.),
                 fRF      = 800.e6,
                 gap      = 0.024,
-                aperture = PARAMS['aperture'],
+                aperture = None,
                 dWf      = FLAGS['dWf'],
                 length   = 0.,
                 mapping  = 't3d',
@@ -934,9 +935,7 @@ class RFC(I):
             kick  = _T3D_G(self)
             self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
             # correct energy increase in Node.matrix
-            self.matrix[Ktp.T,Ktp.dT] = self._deltaW
-
-            
+            self.matrix[Ktp.T,Ktp.dT] = self._deltaW            
     def adjust_energy(self, tkin):
         _params = self._params
         self.__init__(
@@ -956,7 +955,6 @@ class RFC(I):
                     prev          = self.prev)
         self._params = _params
         return self
-
     def map(self,i_track):
         track = copy(i_track)
         for node in iter(self.triplet):
@@ -964,7 +962,6 @@ class RFC(I):
             track = f_track
         DEBUG_OFF('rfc-map {}'.format(f_track))
         return f_track
-
     def soll_map(self,i_track):
         si,sm,sf = self.position
         track = copy(i_track)
@@ -974,8 +971,7 @@ class RFC(I):
         f_track[SKOO] += sm
         DEBUG_OFF('rfc-soll {}'.format(f_track))
         return f_track
-
-    def make_slices(self, anz = PARAMS['nbslices']):
+    def make_slices(self, anz=0):
         slices = []
         if len(self.triplet) == 3:
             dri,kick,drf = self.triplet
@@ -1014,7 +1010,7 @@ class SIXD(D):
     """ 
     Drift with Sixtrack mapping (experimental!) 
     """
-    def __init__(self, label="Dsix", particle=PARAMS['sollteilchen'], position=(0., 0., 0.), length=0., aperture=PARAMS['aperture'], next=None, prev=None):
+    def __init__(self, label="Dsix", particle=PARAMS['sollteilchen'], position=(0., 0., 0.), length=0., aperture=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self['viseo'] = 0.
         self.off_soll = copy(self.particle) # !!!IMPORTANT!!!

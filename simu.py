@@ -58,7 +58,7 @@ from lattice_parser2 import parse as getParseResult
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    print(F'DEBUG_ON[{file}] ==> ',end="")
     if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
     return True
 def PASS(obj=None):
@@ -296,7 +296,7 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
-    soll_track = track_soll(lattice)
+    soll_track = track_soll(lattice, PARAMS['injection_energy'])
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
     print(F'FINAL kinetic energy {lattice.seq[-1].particle.tkin} [MeV]')

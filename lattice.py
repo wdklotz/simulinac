@@ -28,7 +28,7 @@ from copy import copy
 
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY,printv,sigmas, objprnt, Ktw, Ktp
+from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions, Particle, Proton
 from sigma import Sigma
 
@@ -41,6 +41,7 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+
 # Lattice
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
@@ -165,10 +166,10 @@ class Lattice(object):
         stab = fabs(mcell.tracex())
         PARAMS['traceX'] = stab
         # if verbose:
-        printv(1,'stability X? ',stab)
+        print_verbose(1,'stability X? ',stab)
         if stab >= 2.0:
             # if verbose:
-            printv(1,'unstable Lattice in x-plane\n')
+            print_verbose(1,'unstable Lattice in x-plane\n')
             unstable = True
         else:
             cos_mux = 0.5 * stab
@@ -177,37 +178,37 @@ class Lattice(object):
         stab = fabs(mcell.tracey())
         PARAMS['traceY'] = stab
         # if verbose:
-        printv(1,'stability Y? ',stab)
+        print_verbose(1,'stability Y? ',stab)
         if stab >= 2.0:
             # if verbose:
-            printv(1,'unstable Lattice in y-plane\n')
+            print_verbose(1,'unstable Lattice in y-plane\n')
             unstable = True
         else:
             cos_muy = 0.5 * stab
             muy = degrees(acos(cos_muy))
         if not unstable:
             # if verbose:
-            printv(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+            print_verbose(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
         ## full accelerator
         self.acc_node = mcell    # the full cell: isinstance(self.acc_node,Lattice)==True
         # if verbose:
-        printv(0,'Full Accelerator Matrix (f)<==(i)')
-        printv(0,self.acc_node.prmatrix())
+        print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
+        print_verbose(0,self.acc_node.prmatrix())
         det = LA.det(self.acc_node.matrix)
         # if verbose:
-        printv(2,'det|full-cell|={:.5f}\n'.format(det))
+        print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
         ## Determinate M-I == 0 ?
         beta_matrix = mcell.beta_matrix()
         for i in range(5):
             beta_matrix[i,i] = beta_matrix[i,i]-1.0
         det = LA.det(beta_matrix)
         # if verbose:
-        printv(2,'det|Mbeta - I|={:.5f}\n'.format(det))
+        print_verbose(2,'det|Mbeta - I|={:.5f}\n'.format(det))
         ## symplectic?
         s = self.symplecticity()
         # if verbose:
-        printv(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
-        printv(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
+        print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
+        print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
             format(s[0],s[1],s[2],s[3],s[4],s[5]))
         ## Vorgabe emittance @ entrance
         emitx = PARAMS['emitx_i']
@@ -257,11 +258,11 @@ class Lattice(object):
                 m_cell_beta = self.acc_node.beta_matrix()
                 v_beta_e = NP.dot(m_cell_beta,v_beta_a)
                 # if verbose:
-                printv(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
+                print_verbose(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
                 diffa_e = v_beta_a - v_beta_e
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
-                printv(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
+                print_verbose(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
                 ## transversale twiss parameter fuer periodisches lattice
                 twx = Twiss(bax,alx,emitx)
                 twy = Twiss(bay,aly,emity)
@@ -280,8 +281,8 @@ class Lattice(object):
             # NOTE: transfer lattices need not to be stable!
             bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
             bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
-        printv(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
-        printv(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
+        print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
+        print_verbose(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
     def report(self):
         # TODO needs more work
         """ report lattice layout (may not work!) """
@@ -604,7 +605,6 @@ class Lattice(object):
                 node = elm
                 break
         return node
-## unittests
 class TestLattice(unittest.TestCase):
     def test_lattice_generator(self):
         print('----------------------------------test_lattice_generator')

@@ -196,7 +196,6 @@ def test0(input_file):
     DEBUG_OFF(results.LATTICE)
     DEBUG_OFF(results.LAT_ELMIDs)
     DEBUG_OFF(results.ELMIDs)
-
 if __name__ == '__main__':
     args = sys.argv
     input_file = args[1]

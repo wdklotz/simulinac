@@ -22,10 +22,11 @@ from math import radians
 import yaml
 import warnings
 import pprint, inspect
+import unittest
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    print(F'DEBUG_ON[{file}] ==> ',end="")
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
@@ -53,44 +54,44 @@ def get_mandatory(attributes,key,item):
         sys.exit(1)
     return res
 def instanciate_element(item):
-    """ item: {ID:{attrinutes}} for each node """
-    # def EzPeakToAverage(Ezpeak):
-    #     # return 0.40 * EzPeak    # Pi mal Daumen: about 0.4*EzPeak from Superfish
-    #     return EzPeak
-
-    DEBUG_OFF(item)
+    """ item: {ID:{attributes}} for each node """
     for ID,attributes in item.items():
-        DEBUG_OFF(ID)
-        DEBUG_OFF(attributes)
-        # aperture   = PARAMS['aperture']    # default aperture
+        DEBUG_OFF(F"ID={ID} attributes={attributes}")
+        ELEMENT = util.ELEMENTS[ID]          # the item in the ELEMENT list
         type = attributes.get('type')
         if type == 'D':
             length       = get_mandatory(attributes,'length',ID)
             aperture     = attributes.get('aperture')
             instance     =  ELM.D(ID,length=length,aperture=aperture)
-            instance.sec = attributes.get('sec','?')
+            instance.sec   = attributes.get('sec','?')
+            ELEMENT['sec'] = instance.sec
 
         elif type == 'SIXD':
             length       = get_mandatory(attributes,'length',ID)
             aperture     = attributes.get('aperture')
             instance     = ELM.SIXD(ID,length=length,aperture=aperture)
-            instance.sec = attributes.get('sec','?')
+            instance.sec   = attributes.get('sec','?')
+            ELEMENT['sec'] = instance.sec
 
         elif type == 'QF':
-            length        = get_mandatory(attributes,'length',ID)
-            dBdz          = get_mandatory(attributes,"B'",ID)
-            aperture      = get_mandatory(attributes,'aperture',ID)
-            instance      = ELM.QF(ID,dBdz,length=length,aperture=aperture)
-            instance.Bpole = dBdz*aperture      # Bpole
-            instance.sec   = attributes.get('sec','?')
+            length         = get_mandatory(attributes,'length',ID)
+            dBdz           = get_mandatory(attributes,"B'",ID)
+            aperture       = get_mandatory(attributes,'aperture',ID)
+            instance       = ELM.QF(ID,dBdz,length=length,aperture=aperture)
+            instance.Bpole   = dBdz*aperture      # Bpole
+            instance.sec     = attributes.get('sec','?')
+            ELEMENT['Bpole'] = instance.Bpole
+            ELEMENT['sec']   = instance.sec
 
         elif type == 'QD':
             length         = get_mandatory(attributes,'length',ID)
             dBdz           = get_mandatory(attributes,"B'",ID)
             aperture       = get_mandatory(attributes,'aperture',ID)
             instance       = ELM.QD(ID,dBdz,length=length,aperture=aperture)
-            instance.Bpole = dBdz*aperture      # Bpole
-            instance.sec   = attributes.get('sec','?')
+            instance.Bpole   = dBdz*aperture      # Bpole
+            instance.sec     = attributes.get('sec','?')
+            ELEMENT['Bpole'] = instance.Bpole
+            ELEMENT['sec']   = instance.sec
 
         elif type == 'RFG':
             phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
@@ -111,10 +112,10 @@ def instanciate_element(item):
             else:
                 EzAvg    = EzPeak
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
-            element           = util.ELEMENTS[ID]
-            element['SFdata'] = instance.SFdata
-            element['EzAvg']  = EzAvg
             instance.sec      = attributes.get('sec','?')
+            ELEMENT['sec']    = instance.sec
+            ELEMENT['SFdata'] = instance.SFdata
+            ELEMENT['EzAvg']  = EzAvg
 
         elif type == 'RFC':
             label     = attributes['ID']
@@ -141,7 +142,6 @@ def instanciate_element(item):
             else:
                 # EzAvg = EzPeakToAverage(EzPeak)  TODO ??
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
-            element = util.ELEMENTS[label]
             element['EzAvg']     = EzAvg
             instance.sec = attributes.get('sec','?')
             instance['EzAvg']    = EzAvg
@@ -157,16 +157,17 @@ def instanciate_element(item):
 
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
-            EzAvg     = get_mandatory(attributes,"EzAvg",ID)
+            EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             dWf       = util.FLAGS['dWf']
             aperture  = get_mandatory(attributes,'aperture',ID)
+            EzAvg     = EzPeak
             instance  =  ELM.GAP(ID,EzAvg,phiSoll,gap,freq,aperture=aperture,dWf=dWf)
-            element = util.ELEMENTS[ID]
-            element['EzPeak'] = EzAvg
             instance.EzPeak   = EzPeak
             instance.sec      = attributes.get('sec','?')
+            ELEMENT['sec']    = instance.sec
+            ELEMENT['EzAvg']  = EzAvg
 
         elif type == 'MRK':
             action = get_mandatory(attributes,'action',ID)
@@ -188,7 +189,6 @@ def instanciate_element(item):
             #     instance['prefix']     = prefix
             #     instance['abszisse']   = abszisse
             #     instance['ordinate']   = ordinate
-
             else:
                 warnings.showwarning(
                         'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
@@ -210,47 +210,44 @@ def factory(input_file,stop=None):
     """ factory creates a lattice from input-file """
 
     def proces_flags(flags):
-        """fills global FLAGS"""
-        if 'accON' in flags:
-            if flags['accON']:
-                util.FLAGS['dWf'] = 1.
-                util.SUMMARY['accON'] = True
-            else:
-                util.FLAGS['dWf'] = 0.
-                util.SUMMARY['accON'] = False
+        """fills global FLAGS"""        
+        if 'acccON'      in flags: util.FLAGS['accON']    = flags['accON']
         if 'periodic'    in flags: util.FLAGS['periodic'] = flags['periodic']
         if 'egf'         in flags: util.FLAGS['egf']      = flags['egf']
         if 'sigma'       in flags: util.FLAGS['sigma']    = flags['sigma']
         if 'KVout'       in flags: util.FLAGS['KVout']    = flags['KVout']
         if 'verbose'     in flags: util.FLAGS['verbose']  = flags['verbose']
-        if 'express'     in flags: util.FLAGS['express']  = flags['express']
         if 'useaper'     in flags: util.FLAGS['useaper']  = flags['useaper']
         if 'bucket'      in flags: util.FLAGS['bucket']   = flags['bucket']
         if 'csTrak'      in flags: util.FLAGS['csTrak']   = flags['csTrak']
         if 'marker'      in flags: util.FLAGS['marker']   = flags['marker']
         if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
+        util.SUMMARY['accON'] = util.FLAGS.get('accON')
+        if not util.FLAGS.get('accON'): util.FLAGS['dWf'] = 0.
         return flags
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
         if 'Tkin'             in parameters: util.PARAMS['injection_energy'] = parameters['Tkin']
-        if 'phi_sync'         in parameters: util.PARAMS['phisoll']          = parameters['phi_sync']
-        if 'gap'              in parameters: util.PARAMS['gap']              = parameters['gap']
-        if 'cav_len'          in parameters: util.PARAMS['cavity_laenge']    = parameters['cav_len']
-        if 'frequency'        in parameters: util.PARAMS['frequency']        = parameters['frequency']
-        if 'ql'               in parameters: util.PARAMS['ql']               = parameters['ql']
-        if 'windings'         in parameters: util.PARAMS['nbwindgs']         = parameters['windings']
-        if 'nbsigma'          in parameters: util.PARAMS['nbsigma']          = parameters['nbsigma']
-        if 'aperture'         in parameters: util.PARAMS['aperture']         = parameters['aperture'] 
+        if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
         if 'emitx_i'          in parameters: util.PARAMS['emitx_i']          = parameters['emitx_i']
         if 'emity_i'          in parameters: util.PARAMS['emity_i']          = parameters['emity_i']
         if 'betax_i'          in parameters: util.PARAMS['betax_i']          = parameters['betax_i']
         if 'betay_i'          in parameters: util.PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: util.PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: util.PARAMS['alfay_i']          = parameters['alfay_i']
-        if 'mapping'          in parameters: util.PARAMS['mapping']          = parameters['mapping']
-        if 'thins'            in parameters: util.PARAMS['thins']            = parameters['thins']
-        if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
+        if 'nbsigma'          in parameters: util.PARAMS['nbsigma']          = parameters['nbsigma']
         if 'lattvers'         in parameters: util.PARAMS['lattice_version']  = parameters['lattvers']
+        if 'mapping'          in parameters: util.PARAMS['mapping']          = parameters['mapping']
+        """
+        if 'frequency'        in parameters: util.PARAMS['frequency']        = parameters['frequency']
+        if 'phi_sync'         in parameters: util.PARAMS['phisoll']          = parameters['phi_sync']
+        if 'gap'              in parameters: util.PARAMS['gap']              = parameters['gap']
+        if 'cav_len'          in parameters: util.PARAMS['cavity_laenge']    = parameters['cav_len']
+        if 'ql'               in parameters: util.PARAMS['ql']               = parameters['ql']
+        if 'windings'         in parameters: util.PARAMS['nbwindgs']         = parameters['windings']
+        if 'aperture'         in parameters: util.PARAMS['aperture']         = parameters['aperture'] 
+        if 'thins'            in parameters: util.PARAMS['thins']            = parameters['thins']
+        """
         return parameters
     def proces_elements(elements):
         """fills global ELEMENTS"""
@@ -261,19 +258,16 @@ def factory(input_file,stop=None):
         lattice = Lattice()
         instances = []
         for elementID in elementIDs:
-            # print("A")
-            # DEBUG_ON(elementID)
-            element = util.ELEMENTS.get(elementID)
-            # print("B")
-            # DEBUG_ON(element)
+            # print("A"); DEBUG_ON(elementID)
+            ELEMENT = util.ELEMENTS.get(elementID)
+            # print("B"); DEBUG_ON(element)
             """add sectionID and elementID"""
-            element['ID']  = elementID 
+            ELEMENT['ID']  = elementID 
             # repack {ID:{attributes}} for instanciate_element(...)
-            item = {elementID:element}
+            item = {elementID:ELEMENT}
             """INSTANCIATE ELM._Node objects"""
             instance = instanciate_element(item)
-            # print("C")
-            # DEBUG_ON(instance)
+            # print("C"); DEBUG_ON(instance)
             if isinstance(instance, ELM.Node):
                 # lattice.add_element(instance)
                 instances.append(instance)
@@ -281,11 +275,8 @@ def factory(input_file,stop=None):
             elif isinstance(instance,list):
                 # [lattice.add_element(x) for x in instance]
                 instances += instance
-        # print("D")
-        # DEBUG_ON(instances)
+        # print("D"); DEBUG_ON(instances)
         for instance in instances:
-            # print('E')
-            # DEBUG_ON(instance.__dict__)
             lattice.add_element(instance)
         return lattice   # the complete lattice
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
@@ -306,7 +297,8 @@ def factory(input_file,stop=None):
     fileobject.close()
     DEBUG_OFF(in_data)
 
-    results = doInputParser(in_data)  # call lattice parser, get results
+    # call lattice parser, get results
+    results = doInputParser(in_data)
 
     flags = proces_flags(results.FLAGS)
     DEBUG_OFF('global FLAGS after proces_flags():')
@@ -328,41 +320,28 @@ def factory(input_file,stop=None):
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)
     return lattice
-def test0(input_file):
-    print('---------------------------------TEST0')
-    wfl= []
-    fileobject = open(input_file,'r')
-    wfl = yaml.load(fileobject)
-    print('======================= yaml.dump(wfl,default_flow_style=True)')
-    print(yaml.dump(wfl,default_flow_style=True))
-    print('\n======================= wfl.items()')
-    for i,v in iter(wfl.items()):
-        print(i,' ==> ',v)
-    seg = wfl['SEGMENTS']
-    print("\n======================= seg = wfl['SEGMENTS']")
-    print(seg)
-    print('\n======================= segment')
-    for i in seg:
-        print(i)
-    lattice = wfl['LATTICE']
-    print('\n======================= lattice')
-    for l in lattice:
-        print(l)
-# def test1(input_file):
-#     print('---------------------------------TEST1')
-#     lattice = factory(input_file)
-#     print('%%%%%%%%%%%%%%%%%%% Left------->Right')
-#     for cnt,node in enumerate(iter(lattice)):
-#         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.next)))
-#     print('\n%%%%%%%%%%%%%%%%%%% Right------->Left')
-#     lattice.toggle_iteration()
-#     for cnt,node in enumerate(iter(lattice)):
-#         print(cnt,'{:38s} {:38s}'.format(repr(node),repr(node.prev)))
+class TestLatticeGeneratorMethods(unittest.TestCase):
+    def test_Lattice_Parser(self):
+        print("\b----------------------------------------test_Lattice_Parser")
+        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        fileobject = open(input_file,'r')
+        wfl = yaml.load(fileobject, Loader=yaml.FullLoader)
+        fileobject.close()
+        print('======================= yaml.dump(wfl,default_flow_style=True)')
+        print(yaml.dump(wfl,default_flow_style=True))
+        print('\n======================= wfl.items()')
+        for i,v in iter(wfl.items()):
+            print(i,' ==> ',v)
+        seg = wfl['SEGMENTS']
+        print("\n======================= seg = wfl['SEGMENTS']")
+        print(seg)
+        print('\n======================= segment')
+        for i in seg:
+            print(i)
+        lattice = wfl['LATTICE']
+        print('\n======================= lattice')
+        for l in lattice:
+            print(l)
 
 if __name__ == '__main__':
-    input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
-    # input_file = 'yml/v10.0.0_compat_IN.yml'
-    # input_file = 'yml/simuIN.yml'
-    # input_file = 'nwlat/nwlatIN.yml'
-    test0(input_file)
-    # test1(input_file)
+    unittest.main()

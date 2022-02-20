@@ -326,14 +326,13 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
-def track_soll(lattice, injektion_energy=PARAMS['sollteilchen'].tkin, start_position=0.):
+def track_soll(lattice, injection_energy, start_position=0.):
     """
     Track the reference particle through the lattice and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
     soll_track = Track()
-    # TODO this must be wrong ???????
-    tp0 = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., injektion_energy, 1., start_position, 1.]))
+    tp0 = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., injection_energy, 1., start_position, 1.]))
     soll_track.addpoint(tp0)   # 1st track point
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # track point at entrance

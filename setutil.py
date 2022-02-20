@@ -29,9 +29,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import warnings
 import time
-# import pprint
 import inspect
 import lattice_parser2 as parser
+import unittest
 
 def LOGGER():
     console_handler = logging.StreamHandler() # console handler
@@ -42,7 +42,7 @@ def LOGGER():
     return logger
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
-    print('==============>  '+file)
+    print(F'DEBUG_ON[{file}] ==> ',end="")
     if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj=None):
     pass
@@ -77,15 +77,18 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
+
+# for compatability with elder code TODO: replace by namedtupel
+XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 #------  DEFAULT "FLAGS" & "PARAMS" and global dicts
 FLAGS  = dict(
+        accON                = True,
         periodic             = False,            # periodic lattice? default
         egf                  = False,            # emittance grow flag default
         sigma                = True,             # beam sizes by sigma-tracking
         KVout                = False,            # print a dictionary of Key-Value pairs, no display
         dWf                  = 1,                # acceleration on/off flag 1=on,0=off
         verbose              = 0,                # print flag default = 0
-        express              = False,            # use express version of thin quads
         useaper              = False,            # use aperture check for quads and rf-gaps
         bucket               = False,            # plot bucket
         csTrak               = True,             # plot CS trajectories
@@ -97,28 +100,22 @@ PARAMS = dict(
         elementarladung      = C.e,              # [coulomb] const
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
         electron_mass        = C.value('electron mass energy equivalent in MeV'),
+        map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
+        warn_max             = 5,    # limit nbof warnings
+        DT2T                 = None,            # default kinetic energy spread  (T a.k.a W)
+        injection_energy     = None,
+        emitx_i              = None,           # [m*rad] Vorgabe emittance entrance
+        emity_i              = None,           # [m*rad] Vorgabe emittance entrance
+        betax_i              = None,            # [m] Vorgabe twiss beta entrance
+        betay_i              = None,            # [m] Vorgabe twiss beta entrance
+        alfax_i              = None,              # Vorgabe twiss alpha entrance
+        alfay_i              = None,              # Vorgabe twiss alpha entrance
+        alfaw_i              = None,              # Vorgabe twiss alpha entrance
         aperture             = None,             # default aperture = no aperture
-        nbwindgs             = 30,               # nboff coil windings
-        nbsigma              = 3,                # nboff beam sigmas to stay clear of aperture
-        emitx_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
-        emity_i              = 2.0e-6,           # [m*rad] Vorgabe emittance entrance
-        betax_i              = 2.800,            # [m] Vorgabe twiss beta entrance
-        betay_i              = 0.200,            # [m] Vorgabe twiss beta entrance
-        alfax_i              = 0.0,              # Vorgabe twiss alpha entrance
-        alfay_i              = 0.0,              # Vorgabe twiss alpha entrance
-        alfaw_i              = 0.0,              # Vorgabe twiss alpha entrance
-        nbslices             = 2,                # default number of slices
-        mapset               = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
-        mapping              = 'base',           # default rf gap-model      
-        DT2T                 = 1.e-3,            # default kinetic energy spread  (T a.k.a W)
-        warnmx               = 5                 # limit nbof warnings
-        )
+        mapping              = None        # default rf gap-model      
+        )              
 ELEMENTS = {}
 SUMMARY  = {}
-
-# for compatability with elder code TODO: replace by namedtupel
-XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-
 class Twiss(object):
     def __init__(self, beta, alfa, epsi):
         self.epsi  = epsi
@@ -202,10 +199,7 @@ class Proton(Particle):
 class Electron(Particle):    #TODO is it used?
     def __init__(self,tkin= 50.):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
-
-# Sollteichen
-PARAMS['sollteilchen'] = Proton()
-
+PARAMS['sollteilchen'] = Proton()   # Sollteichen
 class WConverter(object):
     """
     Converter to switch between different longitudinal phase space coordinates
@@ -524,7 +518,7 @@ def collect_data_for_summary(lattice):
         SUMMARY['use sigma tracking']              =  FLAGS['sigma']
         SUMMARY['use emittance growth']            =  FLAGS['egf']
         SUMMARY['use ring lattice']                =  FLAGS['periodic']
-        SUMMARY['use express']                     =  FLAGS['express']
+        # SUMMARY['use express']                     =  FLAGS['express']
         SUMMARY['use aperture']                    =  FLAGS['useaper']
         SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
         SUMMARY['lattice version']                 =  PARAMS['lattice_version']
@@ -621,28 +615,6 @@ def I1(x):
             print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
             sys.exit(1)
     return res
-#TODO: more marker-actions
-# def sigma_x_action(*args):
-#     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
-#     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
-#     PARAMS['sigma-x({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
-# def sigma_y_action(*args):
-#     # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_y']*1.e3))
-#     SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
-#     PARAMS['sigma-y({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
-# def tkin_action(*args):
-#     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
-#     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
-# 
-# """
-#  (global) MRKR_ACTIONS: dictionary of possible actions attached to a marker
-# """
-# MRKR_ACTIONS = dict(
-#             sigma_x     = sigma_x_action,
-#             sigma_y     = sigma_y_action,
-#             Tkin        = tkin_action,
-#             show_elli   = elli_sxy_action,
-#             )
 def k0prot(gradient=0.,tkin=0.):
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
@@ -743,7 +715,7 @@ def dictstring(what,text='',filter=[],njust=35):
     return res
 def dictprnt(what,text='',filter=[],njust=35,end='\n'):
     print(dictstring(what,text,filter,njust),end=end)
-def printv(level,*args):
+def print_verbose(level,*args):
     """Multilevel printing with verbose flag"""
     verbose = FLAGS['verbose']
     if verbose >= level and not FLAGS['KVout']:
@@ -779,79 +751,91 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     for val in array:
         print(fmt.format(val),end='')
     print('')
-def test0():
-    print('--------------------------Test0---')
-    dictprnt( PARAMS,text=' PARAMS')
+class Test_set_utilities(unittest.TestCase):
+    def test_particle(self):
+        print('----------------------------------test_particle')
+        print('Sollteilchen\n'+ PARAMS['sollteilchen'].toString())
+        print('Proton(tkin=5.)\n'+Proton(tkin=5.).toString())
+        print('Electron(tkin=5.)\n'+Electron(tkin=5.).toString())
+    def test_params(self):
+        print('----------------------------------test_params')
+        dictprnt( PARAMS,text=' PARAMS')
+    def test_particle_energy_adjustment(self):
+        print('----------------------------------test_particle_energy_adjustment')
+        p = PARAMS['sollteilchen']
+        print(repr(p)+':')
+        print(p.toString())
+        p1 = p(100.)
+        print(repr(p1)+':')
+        print(p1.toString())
+        try:
+            p2 = p(-10.)
+        except ValueError:
+            print("This was a test: Particle energy deliberately set negative!")
+    def test_ellipse(self):
+        print('----------------------------------test_ellipse')
+        def ellicp(xy,alfa,beta,emit):
+            """ convert twiss parameters to plot parameters """
+            gamma = (1.+alfa**2)/beta
+            H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
+            a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+            b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+            tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
+            # return plot prameters as  (origin,width,height,tilt)
+            return (xy,a,b,tilt)
+        args = ellicp((0,0),0.5,100.,1.e-6)
+        ells = [Ellipse(*args,fill=False,color='red')]
 
-    print('Sollteilchen\n'+ PARAMS['sollteilchen'].toString())
-    print('Proton(tkin=5.)\n'+Proton(tkin=5.).toString())
-    print('Electron(tkin=5.)\n'+Electron(tkin=5.).toString())
+        # fig, ax = plt.subplots(subplot_kw={'aspect': 'equal'})
+        fig, ax = plt.subplots()
+        for e in ells:
+            ax.add_artist(e)
+            e.set_clip_box(ax.bbox)
 
-    dictprnt(wille(),text='wille')
-    kqf = wille()['k_quad_f']
-    tk  = 5.
-    headr = ['kq[1/m^2]','tk[Mev]','dBdxprot(kqf,tk)[T/m]']
-    records = [['{:4.4f}'.format(kqf),'{:4.4f}'.format(tk),'{:4.4f}'.format(dBdxprot(k0=kqf,tkin=tk))]]
-    print('\n'+tblprnt(headr,records))
-def test1():
-    print('--------------------------Test1---')
-    def ellicp(xy,alfa,beta,emit):
-        """ convert twiss parameters to plot parameters """
-        gamma = (1.+alfa**2)/beta
-        H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
-        a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
-        b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
-        tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
-        # return plot prameters as  (origin,width,height,tilt)
-        return (xy,a,b,tilt)
-    args = ellicp((0,0),0.5,100.,1.e-6)
-    ells = [Ellipse(*args,fill=False,color='red')]
-
-    # fig, ax = plt.subplots(subplot_kw={'aspect': 'equal'})
-    fig, ax = plt.subplots()
-    for e in ells:
-        ax.add_artist(e)
-        e.set_clip_box(ax.bbox)
-
-    width  = args[1]
-    height = args[2]
-    scale = 0.7
-    ax.set_xlim(-width*scale, width*scale)
-    ax.set_ylim(-height*scale, height*scale)
-    plt.show()
-def test2():
-    print('--------------------------Test2---')
-    print('test particle energy adjustment...')
-    p = PARAMS['sollteilchen']
-    print(repr(p)+':')
-    print(p.toString())
-    p1 = p(100.)
-    print(repr(p1)+':')
-    print(p1.toString())
-    try:
-        p2 = p(-10.)
-    except ValueError:
-        print("This was a test: Particle energy deliberately set negative!")
-def test3():
-    print('--------------------------Test3---')
-    names = ('t','SIN','COS')
-    fn = Functions(names)
-    for ph in range(0,361):
-        phr = radians(ph)
-        fn.append(ph,(sin(phr),cos(3*phr)))
-    
-    t= [fn(i,'t')   for i in range(fn.nbpoints)]
-    S= [fn(i,'SIN') for i in range(fn.nbpoints)]
-    C= [fn(i,'COS') for i in range(fn.nbpoints)]
-    
-    for i in range(fn.nbpoints):
-        print(t[i],S[i],C[i])
-    
-    plt.plot(S,C)
-    plt.show()
+        width  = args[1]
+        height = args[2]
+        scale = 0.7
+        ax.set_xlim(-width*scale, width*scale)
+        ax.set_ylim(-height*scale, height*scale)
+        plt.show()
+    def test_lissajous_plot(self):
+        print('----------------------------------test_lissajous_plot')
+        names = ('t','SIN','COS')
+        fn = Functions(names)
+        for ph in range(0,361):
+            phr = radians(ph)
+            fn.append(ph,(sin(phr),cos(3*phr)))
+        
+        t= [fn(i,'t')   for i in range(fn.nbpoints)]
+        S= [fn(i,'SIN') for i in range(fn.nbpoints)]
+        C= [fn(i,'COS') for i in range(fn.nbpoints)]
+        
+        for i in range(fn.nbpoints): 
+            if 0: print(t[i],S[i],C[i])
+        plt.plot(S,C)
+        plt.show()
 if __name__ == '__main__':
-    test0()
-    test1()
-    test2()
-    test3()
+    unittest.main()
 
+#TODO: more marker-actions
+# def sigma_x_action(*args):
+#     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
+#     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
+#     PARAMS['sigma-x({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
+# def sigma_y_action(*args):
+#     # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_y']*1.e3))
+#     SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
+#     PARAMS['sigma-y({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
+# def tkin_action(*args):
+#     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
+#     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
+# 
+# """
+#  (global) MRKR_ACTIONS: dictionary of possible actions attached to a marker
+# """
+# MRKR_ACTIONS = dict(
+#             sigma_x     = sigma_x_action,
+#             sigma_y     = sigma_y_action,
+#             Tkin        = tkin_action,
+#             show_elli   = elli_sxy_action,
+#             )
