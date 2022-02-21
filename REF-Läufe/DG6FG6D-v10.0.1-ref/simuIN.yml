@@ -30,7 +30,7 @@ DESCRIPTOR:  'v10.0.1 compatible, pure FODO starter, DG6FG6D, base, 50 MeV'
 FLAGS:
     # accON:        False           # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
-    # sigma:        False           # {True} beam sizes by sigma-matrix
+    sigma:        False           # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
     # useaper:      True            # {False} use aperture check for lattice elements
@@ -52,6 +52,7 @@ PARAMETERS:
     phi_sync:     &phs    -25.            # [deg] synchronous phase
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
+    alfaw_i:              0.000           # [] twiss alpha y @ entrance
     frequency:    &p01   816.e+6          # [Hz] frequency
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length

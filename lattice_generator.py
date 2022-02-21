@@ -235,6 +235,7 @@ def factory(input_file,stop=None):
         if 'betay_i'          in parameters: util.PARAMS['betay_i']          = parameters['betay_i']
         if 'alfax_i'          in parameters: util.PARAMS['alfax_i']          = parameters['alfax_i']
         if 'alfay_i'          in parameters: util.PARAMS['alfay_i']          = parameters['alfay_i']
+        if 'alfaw_i'          in parameters: util.PARAMS['alfaw_i']          = parameters['alfaw_i']
         if 'nbsigma'          in parameters: util.PARAMS['nbsigma']          = parameters['nbsigma']
         if 'lattvers'         in parameters: util.PARAMS['lattice_version']  = parameters['lattvers']
         if 'mapping'          in parameters: util.PARAMS['mapping']          = parameters['mapping']

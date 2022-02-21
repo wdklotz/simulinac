@@ -58,7 +58,7 @@ class Node(object):
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
     # TODO do we need slice_min?????
-    slice_min = 0.001                   # default - minimal slice length
+    # slice_min = 0.001                   # default - minimal slice length
     def __init__(self):
         self.type      = self.__class__.__name__      # self's node type
         self.particle  = None      # !!!IMPORTANT!!! local copy of the particle object
@@ -70,11 +70,9 @@ class Node(object):
         self.next      = None      # right link
         self.prev      = None      # left link
         self.viseo     = None      # default - invisible
-    # TODO do we need __getitem__ and __setitem__ ?????
-    def __getitem__(self,k):
-        return self.__dict__[k]
-    def __setitem__(self,k,v):
-        self.__dict__[k] = v
+        self.twiss     = None
+        self.sigxy     = None
+        self.ref_track = None      # rerence track @ out of Node
     def toString(self):
         ret = repr(self)
         for k,v in self.__dict__.items():
@@ -83,10 +81,6 @@ class Node(object):
     def adjust_energy(self, tkin):
         """ dummy adjust """
         return self
-    # TODO do we need this @property ?????
-    @property
-    def twiss(self):
-        return self['twiss']
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
         return self.matrix[:n, :m]
@@ -119,12 +113,6 @@ class Node(object):
                 s+='{:8.4g} '.format(self.matrix[i, j])
             s+='\n'
         return s
-    # def reverse(self):
-    #     raise RuntimeError('Node:reverse not implemented!')
-    #     sys.exit()
-    # def inverse(self):
-    #     raise RuntimeError('Node:inverse not implemented!')
-    #     sys.exit(1)
     def trace(self):
         return self.tracex()+self.tracey()
     def tracex(self):
@@ -145,6 +133,9 @@ class Node(object):
         for i in range(anz):
             slices.append(mx)
         return slices
+    def shorten(self, length):
+        """ dummy shorten """
+        return self
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
         # Aliases
@@ -201,7 +192,7 @@ class Node(object):
         sgym  = avm[2]; sgypm = avm[3]
         sigxy = (sgxm,sgxpm,sgym,sgypm)
         # each node has its tuple of average sigmas     
-        self['sigxy'] = sigxy
+        self.sigxy = sigxy
         return sigmas
     def map(self, i_track):
         """ Linear mapping of trajectory from (i) to (f) """
@@ -215,15 +206,12 @@ class Node(object):
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
         return f_track
     # TODO can we get rid of soll_map ?????
-    # def soll_map(self, i_track):
+    def soll_map(self, i_track):
         f_track = self.map(i_track)
         # f_track = copy(i_track)
         # f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
         # f_track = NP.dot(self.matrix,f_track)
         # return f_track
-    def shorten(self, length):
-        """ dummy shorten """
-        return self
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label):
@@ -343,7 +331,7 @@ class QD(QF):
     """
     def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
-        self['viseo'] = -0.5
+        self.viseo = -0.5
     def shorten(self, length):
         shortened = QD(self.label, self.grad, particle=self.particle, position=self.position, length=length,  aperture=self.aperture)
         return shortened
@@ -521,8 +509,6 @@ class RFG(Node):
     """ delegate mapping to gap-model """
     def map(self, i_track):
         return self.gap_model.map(i_track)
-    # def soll_map(self, i_track):
-    #     return self.gap_model.soll_map(i_track)
 class _T3D_G(Node):   
     """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
     def __init__(self, host=None):
@@ -567,14 +553,6 @@ class _T3D_G(Node):
         f_track = NP.dot(self.host.matrix,f_track)
         DEBUG_OFF('t3d-map {}'.format(f_track))
         return f_track
-    # def soll_map(self, i_track):
-        # si,sm,sf = self.host.position
-        # f_track = copy(i_track)
-        # f_track[EKOO] += self.host.particlef.tkin
-        # f_track[SKOO] = sf
-        # DEBUG_OFF('t3d-soll {}'.format(f_track))
-        # f_track = self.map(i_track)
-        # return f_track
 # TODO classes below need unittesting
 class _PYO_G(object):
     """ 

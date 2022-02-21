@@ -96,22 +96,22 @@ FLAGS  = dict(
         pspace               = False             # plot CS twiss ellipses at entrance
         )
 PARAMS = dict(
-        clight               = C.c,              # [m/s] const
-        elementarladung      = C.e,              # [coulomb] const
+        clight               = C.c,              # [m/s]
+        elementarladung      = C.e,              # [coulomb]
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
         electron_mass        = C.value('electron mass energy equivalent in MeV'),
-        map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']), #gap-models
-        warn_max             = 5,    # limit nbof warnings
-        DT2T                 = None,            # default kinetic energy spread  (T a.k.a W)
+        map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
+        warn_max             = 5,          # limit nbof warnings
+        DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
         injection_energy     = None,
-        emitx_i              = None,           # [m*rad] Vorgabe emittance entrance
-        emity_i              = None,           # [m*rad] Vorgabe emittance entrance
-        betax_i              = None,            # [m] Vorgabe twiss beta entrance
-        betay_i              = None,            # [m] Vorgabe twiss beta entrance
-        alfax_i              = None,              # Vorgabe twiss alpha entrance
-        alfay_i              = None,              # Vorgabe twiss alpha entrance
-        alfaw_i              = None,              # Vorgabe twiss alpha entrance
-        aperture             = None,             # default aperture = no aperture
+        emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
+        emity_i              = None,       # [m*rad] Vorgabe emittance entrance
+        betax_i              = None,       # [m] Vorgabe twiss beta entrance
+        betay_i              = None,       # [m] Vorgabe twiss beta entrance
+        alfax_i              = None,       # Vorgabe twiss alpha entrance
+        alfay_i              = None,       # Vorgabe twiss alpha entrance
+        alfaw_i              = None,       # Vorgabe twiss alpha entrance
+        aperture             = None,       # default aperture = no aperture
         mapping              = None        # default rf gap-model      
         )              
 ELEMENTS = {}
@@ -155,7 +155,7 @@ class Particle(object):
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
         self.lost       = False
-        self.track      = None
+        # self.track      = None
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:

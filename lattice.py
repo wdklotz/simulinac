@@ -75,6 +75,7 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
+    
     def __init__(self, descriptor=""):
         self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         self.iteration  = "LR"  # default: iterating lattice left-right
@@ -88,24 +89,41 @@ class Lattice(object):
         elif self.iteration == "LR":
             iterator = self.LRiterator(self)
         return iterator
-    def add_element(self,element):
-        """ add element to right end of lattice """
-        l = element.length
+    def add_element(self,node):
+        self.add_node(node)
+    def add_node(self,node):
+        """ add node to right end of lattice """
+        """ the 1st node """
         if len(self.seq) == 0:
-            element.prev     = None
-            element.position = (0.,l/2.,l)
-            self.length = l
-        else:     # linkage
-            previous      = self.seq[-1]  
-            previous.next = element  
-            element.prev  = previous
-            si = element.prev.position[2]
-            sf = si+l
-            sm = (sf+si)/2.
-            position = (si,sm,sf)
-            element.position = position 
+            """ the initial node """
+            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,PARAMS.get('injection_energy'),1.,0.,1.])
+            node         = node.adjust_energy(PARAMS.get('injection_energy'))
+            ref_track    = NP.dot(node.matrix,ref_track)   # track @ out of 1st node
+            ref_particle = Proton(tkin=ref_track[EKOO]) # ref_particle @ out of 1st node
+            node.prev = node.next = None
+            sf = node.length
+            sf = ref_track[SKOO]
+            node.position = (0.,sf/2.,sf)
+            node.ref_track = ref_track
+            self.length = sf    # lattice length
+        else:
+            """ all other nodes """
+            prev = self.seq[-1]
+            ref_track = prev.ref_track
+            si = ref_track[SKOO]
+            tkin = ref_track[EKOO]
+            node = node.adjust_energy(tkin)
+            ref_track = NP.dot(node.matrix,ref_track)   # track @ out of 1st node
+            prev.next = node
+            node.prev = prev
+            sf = ref_track[SKOO]
+            node.position = (si,(si+sf)/2,sf)
+            node.ref_track = ref_track
             self.length = sf
-        self.seq.append(element)
+ 
+            # double_link_list(self,node)
+            # calc_position_and_lattice_length(self,node)
+        self.seq.append(node)
     def toString(self):
        # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
@@ -334,7 +352,7 @@ class Lattice(object):
                 twiss_vector= NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
                 s += slice.length
                 twfun.append(s,tuple(twiss_vector))
-                node['twiss'] = tuple(twiss_vector)
+                node.twiss = tuple(twiss_vector)
                 bx    = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                 by    = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
                 sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
@@ -343,7 +361,7 @@ class Lattice(object):
             # means = NP.array(means)
             means = NP.mean(means,axis=0)
             # each node has its tuple of average sigmas
-            node['sigxy'] = tuple(means)
+            node.sigxy = tuple(means)
             # aperture check
             self.aperture_check(node,twiss=True)
         return twfun
@@ -452,7 +470,7 @@ class Lattice(object):
             # DEBUG((element.__class__,element['viseo'],element.position))
             pos   = element.position
             # element plot
-            viseo = element['viseo']
+            viseo = element.viseo
             si, sm, sf = pos
             fun.append(si,(0,))
             fun.append(si,(viseo,))
@@ -606,6 +624,21 @@ class Lattice(object):
                 break
         return node
 class TestLattice(unittest.TestCase):
+    def test_lattice_add_first_6_nodes(self):
+        print('----------------------------------test_lattice_add_first_6_nodes')
+        PARAMS['injection_energy']=33.
+        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(tkin=66.))
+        drift = ELM.D("DR",length=1.)
+        quadf = ELM.QF("QUADF",3.,particle=Proton(tkin=66.),length=0.5)
+        lattice = Lattice()
+        lattice.add_node(rfgap)
+        lattice.add_node(drift)
+        lattice.add_node(quadf)
+        lattice.add_node(rfgap)
+        lattice.add_node(drift)
+        lattice.add_node(quadf)
+        for i in range(len(lattice.seq)):
+            print(lattice.seq[i].ref_track, lattice.seq[i].particle.tkin,lattice.seq[i].label)
     def test_lattice_generator(self):
         print('----------------------------------test_lattice_generator')
         input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
@@ -672,7 +705,7 @@ class TestLattice(unittest.TestCase):
                 lb    = 1.50
                 phib  = 11.25   #]deg]
                 ld    = 0.55
-                p     = Proton(tkin=50.)
+                p     = Proton(tkin=PARAMS['injection_energy'])
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
                 wedge = ELM.Wedge(phib,rhob,t3d_wedge=False)
@@ -701,11 +734,12 @@ class TestLattice(unittest.TestCase):
                 lattice.add_element(qf2)
                 return lattice
             lattice = make_wille_lattice()
-            latticeA = make_wille_lattice()
-            lattice.concat(latticeA)
+            # latticeA = make_wille_lattice()
+            # lattice.concat(latticeA)
             return lattice
         print('----------------------------------test_wille_lattice')
         print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
+
         lattice = make_wille()
         # cell boundaries
         full_cell   = lattice.cell(closed=True)
