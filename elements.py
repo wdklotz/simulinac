@@ -226,7 +226,7 @@ class MRK(I):
         self.agents = agents   # the agent-list
         self.particle = copy(particle)
         self.position = position
-        self['viseo'] = 4.
+        self.viseo = 4.
     def add(self,agent):
         self.agents.append(agent)
     def do_actions(self):
@@ -288,6 +288,7 @@ class QF(Node):
         if f/l > 50.: self.thin = True
         DEBUG_OFF(F"{self.type}: k02={k02:.2f} \tf={f:.2f} >> l={l:.2f}? {self.thin}")
         if self.thin != True:
+        # if True:
             """ thick quad """
             # focusing
             cf   = cos(phi)
@@ -332,6 +333,9 @@ class QD(QF):
     def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
         self.viseo = -0.5
+    def adjust_energy(self, tkin):
+        adjusted = QD(self.label, self.grad, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        return adjusted
     def shorten(self, length):
         shortened = QD(self.label, self.grad, particle=self.particle, position=self.position, length=length,  aperture=self.aperture)
         return shortened
@@ -340,7 +344,7 @@ class SD(Node):
     def __init__(self, label, alpha, rho, n=0, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
         super().__init__()
         self.label    = label
-        self.alpha    = radians(alpha)   # [deg]--->[rad]
+        self.alpha    = alpha   # [deg]
         self.rho      = rho     # [m]
         self.n        = n
         self.particle = copy(particle)
@@ -353,12 +357,12 @@ class SD(Node):
         m = NP.eye(MDIM,MDIM)
         beta  = self.particle.beta
         gamma = self.particle.gamma
-        alpha = self.alpha               # [rad]
+        alpha = radians(self.alpha)              # [rad]
         rho   = self.rho                 # [m]
-        h = alpha/(abs(rho*alpha))       # [1/m]
+        Ds     = abs(rho*alpha)     # [m]
+        h = alpha/Ds      # [1/m]
         kx = sqrt((1-self.n)*h**2)       # [1/m]
         ky = sqrt(self.n*h**2)
-        Ds = abs(self.rho*self.alpha)     # [m]
         self.length = Ds
         cx = cos(kx*Ds)
         sx = sin(kx*Ds)
@@ -385,7 +389,7 @@ class SD(Node):
         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
         return shortSD
     def make_slices(self, anz=2):
-        shortSD = self.shorten(degrees(self.alpha/anz))
+        shortSD = self.shorten(self.alpha/anz)
         slices = []
         for i in range(anz):
             slices.append(shortSD)
@@ -394,8 +398,14 @@ class RD(SD):
     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
     def __init__(self, label, alpha, rho, wedge, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
         super().__init__(label, alpha, rho, particle=particle, position=position, aperture=aperture)
-        self.wedge   = wedge
+        self.wedge  = wedge
         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
+    def adjust_energy(self, tkin):
+        adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+        return adjusted
+    def shorten(self, alpha):
+        shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
+        return shortSD
     def make_slices(self, anz=2):
         if anz < 2: anz = 2
         slicewinkel   = degrees(self.alpha)/anz
@@ -413,10 +423,12 @@ class Wedge(Node):
     """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
     def __init__(self, kwinkel, rho, t3d_wedge=True):
         super().__init__()
-        beta = radians(kwinkel)    # kantenwinkel
+        self.kwinkel = kwinkel     # [deg ] kantenwinkel
+        self.rho = rho
         self.t3d_wedge = t3d_wedge
         self.label = "W"
         self.length = 0.
+        beta = radians(self.kwinkel)    
         g = 0.050    # fixed gap of 50 mm assumed
         K1=0.45
         K2=2.8
@@ -1327,12 +1339,11 @@ class TestElementMethods(unittest.TestCase):
         mx = matrix(gradient,length,p,QDnode.isThin())
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"QD.shorten")
 
-        self.assertEqual(QDnode['label'],'QDfoc',"__getitem__")
-        self.assertEqual(QDnode['type'],'QD',"__getitem__")
+        self.assertEqual(QDnode.label,'QDfoc',"__getitem__")
+        self.assertEqual(QDnode.type,'QD',"__getitem__")
         self.assertEqual(QDnode.viseo,-0.5,"viseo")
-        self.assertEqual(QDnode['viseo'],-0.5,"__getitem__")
-        QDnode['viseo'] = 0.75
-        self.assertEqual(QDnode['viseo'],0.75,"__setitem__")
+        QDnode.viseo = 0.75
+        self.assertEqual(QDnode.viseo,0.75,"__setitem__")
 
         gradient = 1.0; length = 0.15; p = Proton(100.)
         QDnode = QD("QDfoc",gradient,particle=p,length=length)
@@ -1456,6 +1467,11 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(sd.matrix[i,j],sdx.matrix[i,j],msg='sd == sdx?',delta=1.e-4)
+
+        sd_adjusted = sd.adjust_energy(tkin=p.tkin)
+        for i in range(10):
+            for j in range(10):
+                self.assertEqual(sd.matrix[i,j],sd_adjusted.matrix[i,j],'sd == sd_adjusted?')
 
         """ slice and recombine RD """
         wedge =  Wedge(phib,rhob,t3d_wedge=True)

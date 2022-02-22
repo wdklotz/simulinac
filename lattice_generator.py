@@ -270,15 +270,15 @@ def factory(input_file,stop=None):
             instance = instanciate_element(item)
             # print("C"); DEBUG_ON(instance)
             if isinstance(instance, ELM.Node):
-                # lattice.add_element(instance)
+                # lattice.add_node(instance)
                 instances.append(instance)
             # list of thin quad instances
             elif isinstance(instance,list):
-                # [lattice.add_element(x) for x in instance]
+                # [lattice.add_node(x) for x in instance]
                 instances += instance
         # print("D"); DEBUG_ON(instances)
         for instance in instances:
-            lattice.add_element(instance)
+            lattice.add_node(instance)
         return lattice   # the complete lattice
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------

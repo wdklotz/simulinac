@@ -43,7 +43,7 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 39.9            # [MeV] energy @ injection
+    Tkin:                 50.0            # [MeV] energy @ injection
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
@@ -53,7 +53,7 @@ PARAMETERS:
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
     alfaw_i:              0.000           # [] twiss alpha y @ entrance
-    frequency:    &p01   816.e+6          # [Hz] frequency
+    frequency:    &p01    816.e+6         # [Hz] frequency
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius

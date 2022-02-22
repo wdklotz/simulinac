@@ -52,7 +52,7 @@ from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory
 from PsMarkerAgent import ellipse_plot
-from tracker import track_soll
+# from tracker import track_soll
 from pargs import pargs
 from lattice_parser2 import parse as getParseResult
 
@@ -287,6 +287,7 @@ def simulation(filepath):
             [plot(*functions) for plot in plots]
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
+    #         with linked and energy adjusted nodes.
     #----------------------------------------------
     lattice = factory(filepath)
     if 0: lattice_check(lattice)
@@ -296,10 +297,10 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: configure elements for energy increase
     #----------------------------------------------
-    soll_track = track_soll(lattice, PARAMS['injection_energy'])
+    # soll_track = track_soll(lattice, PARAMS['injection_energy'])
     if 0: lattice_check(lattice)
     if 0: link_check(lattice)
-    print(F'FINAL kinetic energy {lattice.seq[-1].particle.tkin} [MeV]')
+    print(F'FINAL kinetic energy {lattice.seq[-1].particle.tkin} [MeV]')   #TODO make property og latttice
     #----------------------------------------------
     # STEP 3: calculate longitudinal paramters at entrance
     #----------------------------------------------

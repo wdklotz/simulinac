@@ -89,25 +89,27 @@ class Lattice(object):
         elif self.iteration == "LR":
             iterator = self.LRiterator(self)
         return iterator
-    def add_element(self,node):
-        self.add_node(node)
     def add_node(self,node):
-        """ add node to right end of lattice """
+        """ 
+        Add node to end of lattice. lattice orientation from left to right.
+        Track the reference particle to get the energy kicks and length advances using t3d matrices,.
+        Link the lattice nodes in a doubly linked list.
+        Calculate the node positions.
+         """
         """ the 1st node """
         if len(self.seq) == 0:
             """ the initial node """
-            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,PARAMS.get('injection_energy'),1.,0.,1.])
+            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,PARAMS.get('injection_energy'),1.,0.,1.])  #TODO get rid of PARAMS['injrction_energy']
             node         = node.adjust_energy(PARAMS.get('injection_energy'))
             ref_track    = NP.dot(node.matrix,ref_track)   # track @ out of 1st node
-            ref_particle = Proton(tkin=ref_track[EKOO]) # ref_particle @ out of 1st node
+            ref_particle = Proton(tkin=ref_track[EKOO])    # ref_particle @ out of 1st node
             node.prev = node.next = None
             sf = node.length
             sf = ref_track[SKOO]
             node.position = (0.,sf/2.,sf)
             node.ref_track = ref_track
-            self.length = sf    # lattice length
         else:
-            """ all other nodes """
+            """ all later nodes """
             prev = self.seq[-1]
             ref_track = prev.ref_track
             si = ref_track[SKOO]
@@ -119,10 +121,7 @@ class Lattice(object):
             sf = ref_track[SKOO]
             node.position = (si,(si+sf)/2,sf)
             node.ref_track = ref_track
-            self.length = sf
- 
-            # double_link_list(self,node)
-            # calc_position_and_lattice_length(self,node)
+        self.length = sf    # lattice length
         self.seq.append(node)
     def toString(self):
        # TODO needs improvement
@@ -177,7 +176,8 @@ class Lattice(object):
                 mcell = element
             else:
                 # Achtung: Reihenfolge !
-                mcell = element * mcell
+                mcell = element * mcell    
+                # mcell = mcell *element   #???????
 
         ## Stabilität ?
         unstable = False
@@ -332,7 +332,7 @@ class Lattice(object):
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
-            self.add_element(element)
+            self.add_node(element)
     def twiss_envelopes(self,steps=1):
         """ Calulate envelopes from initial twiss-vector with beta-matrices """
         twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
@@ -672,13 +672,13 @@ class TestLattice(unittest.TestCase):
         p = Particle(50.)
         lattice1 = Lattice()
         for i in range(5):
-            lattice1.add_element(ELM.D(F"Drift{i}",length=l,aperture=5.))
+            lattice1.add_node(ELM.D(F"Drift{i}",length=l,aperture=5.))
         for i in range(5):
             print(lattice1.seq[i].label,lattice1.seq[i].position)
         print()
         lattice2 = Lattice()
         for i in range(5):
-            lattice2.add_element(ELM.D(F"Drift{6+i}",length=l,aperture=5.))
+            lattice2.add_node(ELM.D(F"Drift{6+i}",length=l,aperture=5.))
         for i in range(5):
             print(lattice2.seq[i].label,lattice1.seq[i].position)
         print()
@@ -692,11 +692,12 @@ class TestLattice(unittest.TestCase):
         print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
         lattice.toggle_iteration()
         print(F"last  gap {lattice.first_gap.label} {lattice.first_gap.position}")
-    def test_wille_lattice(self):
+    def test_wille_lattice_with_concat(self):
         from matplotlib.pyplot import plot,show,legend
         def make_wille():
             def make_wille_lattice():
                 """ Wille's test lattice """
+                PARAMS['injection_energy'] = 50.
                 kqf   = -1.2
                 kqd   = -kqf
                 lqf   = 0.20
@@ -708,9 +709,13 @@ class TestLattice(unittest.TestCase):
                 p     = Proton(tkin=PARAMS['injection_energy'])
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
-                wedge = ELM.Wedge(phib,rhob,t3d_wedge=False)
 
                 """ nodes """
+                # wedge= ELM.Wedge(phib,rhob,t3d_wedge=False)
+                w1   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                w2   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                w3   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                w4   = ELM.Wedge(phib,rhob,t3d_wedge=False)
                 qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
                 qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
                 qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
@@ -718,28 +723,38 @@ class TestLattice(unittest.TestCase):
                 d2   = ELM.D('D2',particle=p,length=ld)
                 d3   = ELM.D('D3',particle=p,length=ld)
                 d4   = ELM.D('D4',particle=p,length=ld)
-                br1  = ELM.RD('RD1',2*phib,rhob,wedge,particle=p)
-                br2  = ELM.RD('RD2',2*phib,rhob,wedge,particle=p)
-                sd1  = ELM.SD('SD1',2*phib,rhob,particle=p)
+                # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)   #TODO test rectangular dipoles not done yet
+                # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
+                sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
+                sd2  = ELM.SD('SD2',2.*phib,rhob,particle=p)
+
+                Mz = qf1*d1*w1*sd1*w2*d2*qd1*d3*w3*sd2*w4*d4*qf2      # complete lattice as single Node
+
                 # lattice
                 lattice = Lattice()
-                lattice.add_element(qf1) 
-                lattice.add_element(d1)
-                lattice.add_element(br1)
-                lattice.add_element(d2)
-                lattice.add_element(qd1)
-                lattice.add_element(d3)
-                lattice.add_element(br2)
-                lattice.add_element(d4)
-                lattice.add_element(qf2)
+                lattice.add_node(qf1) 
+                lattice.add_node(d1)
+                # lattice.add_node(br1)
+                lattice.add_node(w1)
+                lattice.add_node(sd1)
+                lattice.add_node(w2)
+                lattice.add_node(d2)
+                lattice.add_node(qd1)
+                lattice.add_node(d3)
+                # lattice.add_node(br2)
+                lattice.add_node(w3)
+                lattice.add_node(sd2)
+                lattice.add_node(w4)
+                lattice.add_node(d4)
+                lattice.add_node(qf2)
                 return lattice
             lattice = make_wille_lattice()
-            # latticeA = make_wille_lattice()
-            # lattice.concat(latticeA)
+            latticeA = make_wille_lattice()
+            lattice.concat(latticeA)
             return lattice
-        print('----------------------------------test_wille_lattice')
+        print('----------------------------------test_wille_lattice_with_concat()')
         print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
-
+        PARAMS['emitx_i'] = PARAMS['emity_i'] = 1.e-6
         lattice = make_wille()
         # cell boundaries
         full_cell   = lattice.cell(closed=True)
