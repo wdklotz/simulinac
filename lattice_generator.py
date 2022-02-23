@@ -140,7 +140,6 @@ def instanciate_element(item):
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
                 pass
             else:
-                # EzAvg = EzPeakToAverage(EzPeak)  TODO ??
                 instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
             element['EzAvg']     = EzAvg
             instance.sec = attributes.get('sec','?')
@@ -254,9 +253,9 @@ def factory(input_file,stop=None):
         """fills global ELEMENTS"""
         util.ELEMENTS = elements
         return elements
-    def make_lattice(elementIDs):
+    def make_lattice(elementIDs,injection_energy):
         # DEBUG_ON(elementIDs)
-        lattice = Lattice()
+        lattice = Lattice(injection_energy)
         instances = []
         for elementID in elementIDs:
             # print("A"); DEBUG_ON(elementID)
@@ -315,9 +314,8 @@ def factory(input_file,stop=None):
     DEBUG_OFF(util.ELEMENTS)
 
     lat_elementIDs = results.LAT_ELMIDs
-    lattice = make_lattice(lat_elementIDs)
+    lattice = make_lattice(lat_elementIDs,util.PARAMS['injection_energy'])
     DEBUG_OFF('lattice_generator >>{}'.format(lattice.toString()))
-    util.SUMMARY['lattice length [m]'] = util.PARAMS['lattice_length']  = lattice.length
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)
     return lattice

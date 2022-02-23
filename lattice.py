@@ -42,7 +42,6 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-# Lattice
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
     class LRiterator(object):
@@ -76,12 +75,14 @@ class Lattice(object):
             else:
                 raise StopIteration    
     
-    def __init__(self, descriptor=""):
-        self.seq    = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
-        self.iteration  = "LR"  # default: iterating lattice left-right
-        self.length     = 0.
-        self.acc_node   = None
-        self.descriptor = descriptor
+    def __init__(self, injection_energy=50.,descriptor=""):
+        self.seq              = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
+        self.iteration        = "LR"  # default: iterating lattice left-right
+        self.length           = 0.
+        self.acc_node         = None
+        self.injection_energy = injection_energy
+        self.descriptor       = descriptor
+    
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -99,30 +100,38 @@ class Lattice(object):
         """ the 1st node """
         if len(self.seq) == 0:
             """ the initial node """
-            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,PARAMS.get('injection_energy'),1.,0.,1.])  #TODO get rid of PARAMS['injrction_energy']
-            node         = node.adjust_energy(PARAMS.get('injection_energy'))
-            ref_track    = NP.dot(node.matrix,ref_track)   # track @ out of 1st node
-            ref_particle = Proton(tkin=ref_track[EKOO])    # ref_particle @ out of 1st node
+            tk_injection = self.injection_energy
+            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
+            node         = node.adjust_energy(tk_injection)  # energy adjustment
+            ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
+            ref_particle = Proton(ref_track[EKOO])           # ref_particle @ out of 1st node
             node.prev = node.next = None
             sf = node.length
             sf = ref_track[SKOO]
-            node.position = (0.,sf/2.,sf)
-            node.ref_track = ref_track
+            node.position     = (0.,sf/2.,sf)
+            node.ref_track    = ref_track
+            node.ref_particle = ref_particle
         else:
-            """ all later nodes """
-            prev = self.seq[-1]
+            """ all nodes after 1st """
+            prev      = self.seq[-1]
             ref_track = prev.ref_track
-            si = ref_track[SKOO]
-            tkin = ref_track[EKOO]
-            node = node.adjust_energy(tkin)
-            ref_track = NP.dot(node.matrix,ref_track)   # track @ out of 1st node
+            si        = ref_track[SKOO]
+            tkin      = ref_track[EKOO]
+            node      = node.adjust_energy(tkin)
+            ref_track = NP.dot(node.matrix,ref_track)
+            ref_particle = Proton(ref_track[EKOO])
             prev.next = node
             node.prev = prev
-            sf = ref_track[SKOO]
-            node.position = (si,(si+sf)/2,sf)
-            node.ref_track = ref_track
+            sf        = ref_track[SKOO]
+            node.position     = (si,(si+sf)/2,sf)
+            node.ref_track    = ref_track
+            node.ref_particle = ref_particle
         self.length = sf    # lattice length
         self.seq.append(node)
+    def concat(self,lattice):
+        """Concatenate two Lattice pieces (self+lattice)"""
+        for element in iter(lattice):
+            self.add_node(element)
     def toString(self):
        # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
@@ -135,29 +144,32 @@ class Lattice(object):
             mcell = element * mcell   
         mcell.section = '<= full lattice map'
         return mcell.prmatrix()
-    def stats(self,soll_track):
+    def stats(self):
         """ gather lattice statistics """
-        cav_counter = 0
-        q_counter   = 0
-        ttfm = +1.e+50
-        ttfx = +1.e-50
-        tk_i = soll_track.getpoints()[0]()[6]
-        tk_f = soll_track.getpoints()[-1]()[6]
+        cavity_counter = 0
+        quad_counter   = 0
+        ttfmin = +1.e+50
+        ttfmax = +1.e-50
+        # tk_i = soll_track.getpoints()[0]()[6]
+        # tk_f = soll_track.getpoints()[-1]()[6]
+        tk_inject  = self.injection_energy
+        tk_final   = self.seq[-1].ref_track[EKOO]
         """ loop over all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
-                q_counter += 1
+                quad_counter += 1
             if isinstance(element,(ELM.RFG,ELM.RFC)):
-                cav_counter += 1
-                ttfm = min(element.ttf,ttfm)
-                ttfx = max(element.ttf,ttfx)
-        if q_counter == 0:
-            SUMMARY['nbof quadrupoles*'] = '0 (no thick quads?)'
+                cavity_counter += 1
+                ttfmin = min(element.ttf,ttfmin)
+                ttfmax = max(element.ttf,ttfmax)
+        if quad_counter == 0:
+            SUMMARY['nbof quadrupoles*'] = '0 (no quads?)'
         else:
-            SUMMARY['nbof quadrupoles*'] = q_counter
-        SUMMARY['nbof cavities*']        = cav_counter
-        SUMMARY['(ttf)min,(ttf)max*']    = (ttfm,ttfx)
-        SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_i,tk_f)
+            SUMMARY['nbof quadrupoles*']      = quad_counter
+        SUMMARY['nbof cavities*']             = cavity_counter
+        SUMMARY['(ttf)min,(ttf)max*']         = (ttfmin,ttfmax)
+        SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_inject,tk_final)
+        SUMMARY['lattice length [m]']         = self.length
     def cell(self,closed=True):
         """
         Construct the full accelerator lattice-cell matrix and extract standard quantities:
@@ -329,10 +341,6 @@ class Lattice(object):
             self.iteration = "RL"
         elif self.iteration == "RL":
             self.iteration = "LR"
-    def concat(self,lattice):
-        """Concatenate two Lattice pieces (self+lattice)"""
-        for element in iter(lattice):
-            self.add_node(element)
     def twiss_envelopes(self,steps=1):
         """ Calulate envelopes from initial twiss-vector with beta-matrices """
         twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
@@ -601,18 +609,7 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    def show_linkage(self):
-        """ Show left-right links of doubly linked element list of the lattice. Iterate in both directions """
-        print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
-        for next in iter(self):
-            print('{:38s}\t{:38s}'.format(repr(next),repr(next.next)))
-            next = next.next
-        self.toggle_iteration()
-        print("@@@@@@@@@@ iteration {:s} @@@@@@@@@@".format(self.iteration))
-        for next in iter(self):
-            print('{:38s}\t{:38s}'.format(repr(next),repr(next.prev)))
-            next = next.next
-        self.toggle_iteration()
+    # def show_linkae_iteration()
     @property
     def first_gap(self):
         """ return the 1st RF gap"""
@@ -626,11 +623,10 @@ class Lattice(object):
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
         print('----------------------------------test_lattice_add_first_6_nodes')
-        PARAMS['injection_energy']=33.
-        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(tkin=66.))
+        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(66.))
         drift = ELM.D("DR",length=1.)
-        quadf = ELM.QF("QUADF",3.,particle=Proton(tkin=66.),length=0.5)
-        lattice = Lattice()
+        quadf = ELM.QF("QUADF",3.,particle=Proton(66.),length=0.5)
+        lattice = Lattice(injection_energy=33.)
         lattice.add_node(rfgap)
         lattice.add_node(drift)
         lattice.add_node(quadf)
@@ -666,8 +662,8 @@ class TestLattice(unittest.TestCase):
         print()
         self.assertEqual(node,lattice.seq[0],"first node")
         self.assertNotEqual(lattice.seq[0],lattice.seq[-1],"first node .ne. last node")
-    def test_lattice_add_element(self):
-        print('---------------------------------test_lattice_add_element')
+    def test_lattice_concat(self):
+        print('---------------------------------test_lattice_concat')
         l = 1.
         p = Particle(50.)
         lattice1 = Lattice()
@@ -706,7 +702,7 @@ class TestLattice(unittest.TestCase):
                 lb    = 1.50
                 phib  = 11.25   #]deg]
                 ld    = 0.55
-                p     = Proton(tkin=PARAMS['injection_energy'])
+                p     = Proton(PARAMS['injection_energy'])
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
 

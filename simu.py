@@ -48,6 +48,7 @@ import matplotlib.pyplot as plt
 import pprint, inspect
 
 import bucket_size
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory
@@ -287,38 +288,32 @@ def simulation(filepath):
             [plot(*functions) for plot in plots]
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
-    #         with linked and energy adjusted nodes.
+    #         with links and adjusted energy
+    #         using ref_track in lattice.add_node.
     #----------------------------------------------
     lattice = factory(filepath)
-    if 0: lattice_check(lattice)
-    if 0: link_check(lattice)
     descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
     if descriptor != None: print(descriptor)
+    print("---------------------------------------------------------------------------")
+    print(F'FINAL kinetic energy ==> {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] <==')
     #----------------------------------------------
-    # STEP 2: configure elements for energy increase
-    #----------------------------------------------
-    # soll_track = track_soll(lattice, PARAMS['injection_energy'])
-    if 0: lattice_check(lattice)
-    if 0: link_check(lattice)
-    print(F'FINAL kinetic energy {lattice.seq[-1].particle.tkin} [MeV]')   #TODO make property og latttice
-    #----------------------------------------------
-    # STEP 3: calculate longitudinal paramters at entrance
+    # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
     waccept(lattice.first_gap)
     #----------------------------------------------
-    # STEP 4: count elements and make other statistics
+    # STEP 3: count elements and make other statistics
     #----------------------------------------------
-    lattice.stats(soll_track)
+    lattice.stats()
     #----------------------------------------------
-    # STEP 5: beam dynamics full accelerator: initial values, etc...
+    # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
     lattice.cell(closed = FLAGS['periodic'])
     #----------------------------------------------
-    # STEP 6:collect results
+    # STEP 5:collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
     #----------------------------------------------
-    # STEP 7:display results and display them
+    # STEP 6:display results and display them
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:

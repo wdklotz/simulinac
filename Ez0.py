@@ -23,6 +23,7 @@ import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
 import pprint, inspect
+import unittest
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -33,22 +34,19 @@ def PASS(obj):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+DEBUG_MODULE = DEBUG_OFF
+DEBUG_TEST2  = DEBUG_OFF
+DEBUG_TEST3  = DEBUG_OFF
 
 from setutil import PARAMS,Proton
-
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  _Ez0_tab is list(Dpoint)
 Dpoint  = namedtuple('Dpoint',['z','R','Ez'])
 
-DEBUG_MODULE = DEBUG_OFF
-DEBUG_TEST2  = DEBUG_OFF
-DEBUG_TEST3  = DEBUG_OFF
-
 def NGauss(x,sig,mu):    # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
-
 def Kpoly(z,sigma,mu,E):
     """Calculate polynom coefficients from NG formula"""
     poly = []
@@ -82,7 +80,6 @@ def Kpoly(z,sigma,mu,E):
         # print('E0,a,b ',E0,a,b,'\n')
             # END-USING NP.polyfit()
     return poly
-
 def Ipoly(z,poly):
     """Interpolation using the polynomial fit"""
     ix = -1
@@ -110,7 +107,6 @@ def Ipoly(z,poly):
     b  = ival.b
     res = E0*(1.+a*dz+b*dz**2)
     return res
-
 def V0n(poly,n):
     """ Formel (4.4.3) A.Shishlo/J.Holmes """
     E0 = poly[n].E0                       # [MV/m]
@@ -118,7 +114,6 @@ def V0n(poly,n):
     dz = poly[n].dz                       # [cm]
     v0  = E0*(2*dz+2./3.*b*dz**3)*1.e-2   # [MV]
     return v0
-
 def V0(poly,zintval):
     v0 = []
     zl,zr = zintval
@@ -128,7 +123,6 @@ def V0(poly,zintval):
         if zil < zl or zir > zr: continue
         v0.append(V0n(poly,i))
     return v0
-
 def Tn(poly,k,n):
     """ Formel (4.4.6) A.Shishlo/J.Holmes """
     a  = poly[n].a
@@ -139,7 +133,6 @@ def Tn(poly,k,n):
     DEBUG_MODULE('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
     t = f1*f2
     return t
-
 def T(poly,k,zintval):
     t = []
     zl,zr = zintval
@@ -151,7 +144,6 @@ def T(poly,k,zintval):
         DEBUG_MODULE('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
-
 def Sn(poly,k,n):
     """ Formel (4.4.7) A.Shihlo """
     a  = poly[n].a
@@ -160,7 +152,6 @@ def Sn(poly,k,n):
     s = 2*a*sin(k*dz)/k**2/(2*dz+2./3.*b*dz**3)
     s = s * (1.-k*dz/tan(k*dz))
     return s
-
 def S(poly,k,zintval):
     s = []
     zl,zr = zintval
@@ -170,7 +161,6 @@ def S(poly,k,zintval):
         if zil < zl or zir > zr: continue
         s.append(Sn(poly,k,i))
     return s
-
 def Tpn(poly,k,n):
     """ Formel (4.4.8) A.Shishlo/J.Holmes """
     b   = poly[n].b
@@ -178,7 +168,6 @@ def Tpn(poly,k,n):
     tp = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
     tp = tp * ((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
     return tp
-
 def Tp(poly,k,zintval):
     tp = []
     zl,zr = zintval
@@ -188,7 +177,6 @@ def Tp(poly,k,zintval):
         if zil < zl or zir > zr: continue
         tp.append(Tpn(poly,k,i))
     return tp
-
 def Spn(poly,k,n):
     """ Formel (4.4.9) A.Shishlo/J.Holmes """
     a   = poly[n].a
@@ -197,7 +185,6 @@ def Spn(poly,k,n):
     sp = 2*a*sin(k*dz)/k/(2*dz+2./3.*b*dz**2)
     sp = sp * (dz**2-2./k**2+2*dz/k/tan(k*dz))
     return sp
-
 def Sp(poly,k,zintval):
     sp = []
     zl,zr = zintval
@@ -207,7 +194,6 @@ def Sp(poly,k,zintval):
         if zil < zl or zir > zr: continue
         sp.append(Spn(poly,k,i))
     return sp
-
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (can be normiert auf EzPeak & gap)
     IN: EzPeak peak field [MV/m]
@@ -339,162 +325,132 @@ class SFdata(object):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
         res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
         return res
-        
-def displayLR(table,legend):
-    # display left (L) and right (R) table data
-    zp   = [+float(x[0]) for x in table]
-    Ezp  = [+float(x[2]) for x in table]
-    zn   = [-float(x[0]) for x in reversed(table)]
-    Ezn  = [+float(x[2]) for x in reversed(table)]
-    plt.plot(zn+zp,Ezn+Ezp,label=legend)
-def display(table,legend):
-    z   = [+float(x[0]) for x in table]
-    Ez  = [+float(x[2]) for x in table]
-    plt.plot(z,Ez,label=legend)
-def test0(input_file):
-    # SuperFish (SF) data: read, instanciate SFdata, scale data
-    print('----------------------------TEST0---')
-    sfdata  = SFdata(input_file,EzPeak=1.5,gap=5.)   #NOTE: full gap
-    # sfdata  = SFdata(input_file)
-    Ez0_tab = sfdata._Ez0_tab_raw
-    Ez1_tab = sfdata._Ez0_tab_scaled
-    Ez2_tab, dummy = sfdata.scale_Ez_table(sfdata._EzAvg,EzPeak=0.8,gap=6.)
+class TestEz0Methods(unittest.TestCase):
+    @classmethod
+    def displayLR(cls,table,legend):
+        # display left (L) and right (R) table data
+        zp   = [+float(x[0]) for x in table]
+        Ezp  = [+float(x[2]) for x in table]
+        zn   = [-float(x[0]) for x in reversed(table)]
+        Ezn  = [+float(x[2]) for x in reversed(table)]
+        plt.plot(zn+zp,Ezn+Ezp,label=legend)
+    @classmethod
+    def display(cls,table,legend):
+        z   = [+float(x[0]) for x in table]
+        Ez  = [+float(x[2]) for x in table]
+        plt.plot(z,Ez,label=legend)
+    def test_0(self):
+        print("\b----------------------------------------test_0")
+        input_file='SF/PILL-2CM.TBL'
+        input_file='SF/SF_WDK2g44.TBL'
+        sfdata  = SFdata(input_file,EzPeak=1.5,gap=5.)   #NOTE: full gap
+        # sfdata  = SFdata(input_file)
+        Ez0_tab        = sfdata._Ez0_tab_raw
+        Ez1_tab        = sfdata._Ez0_tab_scaled
+        Ez2_tab, dummy = sfdata.scale_Ez_table(sfdata._EzAvg,EzPeak=0.8,gap=6.)
 
-    display(Ez0_tab,'SF-raw')
-    display(Ez1_tab,'SF-scaled.1')
-    display(Ez2_tab,'SF-scaled.2')
-def test1():
-    # Gauss'che Normalverteilung (NG)
-    print('----------------------------TEST1---')
-    gap = 4.4
-    z = NP.arange(0.,gap,gap/500.)
-    sigma = 1.14
-    Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
-    displayLR(Ez0_tab,'NG')
+        ax  = plt.subplot(111)
+        self.display(Ez0_tab,'SF-raw')
+        self.display(Ez1_tab,'SF-scaled.1')
+        self.display(Ez2_tab,'SF-scaled.2')
+        ax.set_ylabel('Ez0 [MV/m]')
+        ax.set_xlabel('z [cm]')
+        ax.set_title(input_file)
+        plt.legend(loc='upper right',fontsize='x-small')
+        plt.show()
+    def test_1(self):
+        print("\b----------------------------------------test_1")
+        gap = 4.4
+        z = NP.arange(0.,gap,gap/500.)
+        sigma = 1.14
+        Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
 
-            # EXPERIMENTAL
-    # EzZ_tab = [(x,0.,Z(x,sigma,0.01 )) for x in z]
-    # display(EzZ_tab,'Z')
-            # END-EXPERIMENTAL
+        ax  = plt.subplot(111)
+        self.displayLR(Ez0_tab,'NG')    
+        ax.set_ylabel('Ez0 [MV/m]')
+        ax.set_xlabel('z [cm]')
+        plt.legend(loc='upper right',fontsize='x-small')
+        plt.show()
+    def test_2(self):
+        print("\b----------------------------------------test_2")
+        particle = Proton(100.)
+        beta     = particle.beta
+        c        = PARAMS['clight']
+        freq     = 800.e6
+        k        = 2*pi*freq/(c*beta)*1.e-2     # [1/cm]
 
-            # Overlap?
-    # Ez1_tab = [(x,0.,NGauss(x,sigm,gap)) for x in z]
-    # Ez2_tab = []
-    # for i in range(len(z)):
-    #     x = z[i]
-    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
-    #     Ez2_tab.append((x,0.,Ez2))
-    # cavlen = 2.5
-    # print('sigma {}[cm], half-cavity length = {}[cm] = {}sigma'.
-    #     format(sigm,cavlen,cavlen/sigm))
-    # for x in Ez0_tab:
-    #     print('z {}[cm]\tR {}[cm]\tEz(z,R) {}[MV/m]'.format(x[0],x[1],x[2]))
-            # END-Overlap?
-def test2():
-    # Second order polynomial fit with 3 point formula to NG formula
-    print('----------------------------TEST2---')
-    particle = Proton(tkin=100.)
-    beta     = particle.beta
-    c        = PARAMS['clight']
-    freq     = 800.e6
-    k        = 2*pi*freq/(c*beta)*1.e-2     # [1/cm]
+        anz   = 6            # nboff slices
+        gap   = 4.8          # [cm] full gap length
+        zl    = -gap/2.      #left  interval boundary
+        zr    = gap/2.       #right interval boundary
+        sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
+        # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
+        E0    = 1.           # top of NGauss   (best fit with SF)
 
-    anz   = 6            # nboff slices
-    gap   = 4.8          # [cm] full gap length
-    zl    = -gap/2.      #left  interval boundary
-    zr    = gap/2.       #right interval boundary
-    sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
-    # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
-    E0    = 1.           # top of NGauss   (best fit with SF)
+        z = NP.linspace(zl,zr,2*anz+1)
+        Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
+        # display(Ez0_tab,'slice')
+        poly  = Kpoly(z,sigma,0.,E0*1.)
 
-    z = NP.linspace(zl,zr,2*anz+1)
-    Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
-    # display(Ez0_tab,'slice')
-    poly  = Kpoly(z,sigma,0.,E0*1.)
+        zstep = (zr-zl)/500.
+        z = NP.arange(zl,zr,zstep)
+        Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
 
-    zstep = (zr-zl)/500.
-    z = NP.arange(zl,zr,zstep)
-    Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
-    display(Ez0_tab,'NG-poly')
+        ax  = plt.subplot(111)
+        self.display(Ez0_tab,'NG-poly')
+        ax.set_ylabel('Ez0 [MV/m]')
+        ax.set_xlabel('z [cm]')
+        plt.legend(loc='upper right',fontsize='x-small')
+        plt.show()
+    def test_3(self):
+        print("\b----------------------------------------test_3")
+        input_file='SF/PILL-2CM.TBL'
+        input_file='SF/SF_WDK2g44.TBL'
+        EzPeak = 1.2
+        gap    = 0.
+        sf_data   = SFdata(input_file,EzPeak=EzPeak,gap=gap)
+        poly_data = sf_data._poly
+        particle  = Proton(tkin=100.)
+        beta      = particle.beta
+        c         = PARAMS['clight']
+        freq      = 800.e6
+        k         = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
+        zl        = -sf_data.gap/2.
+        zr        = -zl
+        zintval   = (zl,zr)
+        zstep     = (zr-zl)/500.
 
-            # Overlap?
-    # poly1 = Kpoly(z,sigma,gap,E0*1.)  # next cavity
-    # Ez1_tab = [(x,0.,Ipoly(x,poly1)) for x in z]
-    # display(Ez1_tab,'poly1')
-    # Ez2_tab = []
-    # for i in range(len(z)):
-    #     x = z[i]
-    #     Ez2 = Ez0_tab[i][2]+Ez1_tab[i][2]
-    #     Ez2_tab.append((x,0.,Ez2))
-    # display(Ez2_tab,'poly2')
-            # END-Overlap?
+        z = NP.arange(zl,zr,zstep)
+        ipoly_werte = [(x,0.,Ipoly(x, poly_data)) for x in z]
 
-    # TTF calculations
-    zintval = (zl,zr)
-    v0  = V0(poly,zintval)
-    t   = T(poly,k,zintval)
-    s   = S(poly,k,zintval)
-    tp  = Tp(poly,k,zintval)
-    sp  = Sp(poly,k,zintval)
-    DEBUG_TEST2('V0',v0)
-    DEBUG_TEST2('T(k)',t)
-    DEBUG_TEST2("T'(k)",tp)
-    DEBUG_TEST2('S(k)',s)
-    DEBUG_TEST2("S'(k)",sp)
-def test3(input_file,EzPeak,gap):
-    # Second order polynomial fit with 3 point formula to scaled SF data
-    print('----------------------------TEST3---')
-    sf_data   = SFdata(input_file,EzPeak=EzPeak,gap=gap)
-    poly_data = sf_data._poly
-    particle  = Proton(tkin=100.)
-    beta      = particle.beta
-    c         = PARAMS['clight']
-    freq      = 800.e6
-    k         = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
-    zl        = -sf_data.gap/2.
-    zr        = -zl
-    zintval   = (zl,zr)
-    zstep     = (zr-zl)/500.
-
-    z = NP.arange(zl,zr,zstep)
-    ipoly_werte = [(x,0.,Ipoly(x, poly_data)) for x in z]
-
-    display(sf_data._Ez0_tab_scaled,'SFdata')
-    display(ipoly_werte,'Polydata')
-
-    # TTF calculations
-    v0  = V0(poly_data,zintval)
-    t   = T(poly_data,k,zintval)
-    s   = S(poly_data,k,zintval)
-    tp  = Tp(poly_data,k,zintval)
-    sp  = Sp(poly_data,k,zintval)
-    DEBUG_TEST3('V0 {}'.format(v0))
-    DEBUG_TEST3('T(k) {}'.format(t))
-    DEBUG_TEST3("T'(k) {}".format(tp))
-    DEBUG_TEST3('S(k) {}'.format(s))
-    DEBUG_TEST3("S'(k) {}".format(sp))
-def test4(input_file,EzPeak,gap):
-    # Avergae/Peak ratio
-    print('----------------------------TEST4---')
-    sfdata = SFdata(input_file, EzPeak=EzPeak,gap=gap)
-    print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
+        ax  = plt.subplot(111)
+        self.display(sf_data._Ez0_tab_scaled,'SFdata')
+        self.display(ipoly_werte,'Polydata')
+        ax.set_ylabel('Ez0 [MV/m]')
+        ax.set_xlabel('z [cm]')
+        ax.set_title(input_file)
+        plt.legend(loc='upper right',fontsize='x-small')
+        plt.show()
+        # TTF calculations
+        v0  = V0(poly_data,zintval)
+        t   = T(poly_data,k,zintval)
+        s   = S(poly_data,k,zintval)
+        tp  = Tp(poly_data,k,zintval)
+        sp  = Sp(poly_data,k,zintval)
+        DEBUG_TEST3('V0 {}'.format(v0))
+        DEBUG_TEST3('T(k) {}'.format(t))
+        DEBUG_TEST3("T'(k) {}".format(tp))
+        DEBUG_TEST3('S(k) {}'.format(s))
+        DEBUG_TEST3("S'(k) {}".format(sp))
+    def test_4(self):
+        print("\b----------------------------------------test_4")
+        input_file='SF/PILL-2CM.TBL'
+        input_file='SF/SF_WDK2g44.TBL'
+        input_file='SF/SF_WDK2g44.TBL'
+        EzPeak = 1.2
+        gap    = 0.
+        sfdata = SFdata(input_file, EzPeak=EzPeak,gap=gap)
+        print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
 
 if __name__ == '__main__':
-    ax  = plt.subplot(111)
-    ax.set_ylabel('Ez0 [MV/m]')
-    ax.set_xlabel('z [cm]')
-
-    input_file='SF/PILL-2CM.TBL'
-    input_file='SF/SF_WDK2g44.TBL'
-    ax.set_title(input_file)
-
-    test0(input_file)               # get raw data and do scaling
-    # test1()                         # NG 
-    # test2()                         # poly-fit to NG
-    test3(input_file,1.2,0.)          # poly-fit to scaled SF
-    test4(input_file,1.2,0.)          # Average/Peak ratio
-   
-    # finish plot
-    plt.legend(loc='upper right',fontsize='x-small')
-    plt.show()
-
+     unittest.main()   

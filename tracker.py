@@ -22,6 +22,7 @@ This file is part of the SIMULINAC code
 #TODO: how to get the hokey stick?
 #TODO: check w-acceptance at each node entrance
 #TODO: no phase damping - why?
+#TODO is this still working after Umbau?
 import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt

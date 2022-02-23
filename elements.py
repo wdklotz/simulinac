@@ -17,6 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+# TODO adjust_energy() and shorten() return new objects. make sure object properties like links are correctly passed.
 import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ceil
 from copy import copy, deepcopy
@@ -50,37 +51,29 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 class OutOfRadialBoundEx(Exception):
     def __init__(self,max_r,ID=''):
         self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
-#------- The mother of all lattice element objects (a.k.a. nodes)
+# ------- The mother of all lattice element objects (a.k.a. nodes)
 #------- The mother of all lattice element objects (a.k.a. nodes)
 class Node(object):
     """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
-    # TODO do we need slice_min?????
-    # slice_min = 0.001                   # default - minimal slice length
     def __init__(self):
-        self.type      = self.__class__.__name__      # self's node type
-        self.particle  = None      # !!!IMPORTANT!!! local copy of the particle object
-        self.matrix    = None      # MDIMxMDIM zero matrix used here
-        self.position  = None      # [entrance, middle, exit]
-        self.length    = None      # default - thin
-        self.label     = None      # default - unlabeled
-        self.aperture  = None      # default - infinite aperture
-        self.next      = None      # right link
-        self.prev      = None      # left link
-        self.viseo     = None      # default - invisible
-        self.twiss     = None
-        self.sigxy     = None
-        self.ref_track = None      # rerence track @ out of Node
-    def toString(self):
-        ret = repr(self)
-        for k,v in self.__dict__.items():
-            ret+= '\n{}:{}'.format(k,v)
-        return ret
-    def adjust_energy(self, tkin):
-        """ dummy adjust """
-        return self
+        self.type         = self.__class__.__name__      # self's node type
+        self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
+        self.matrix       = None      # MDIMxMDIM zero matrix used here
+        self.position     = None      # [entrance, middle, exit]
+        self.length       = None
+        self.label        = None
+        self.aperture     = None
+        self.next         = None      # link to right Node
+        self.prev         = None      # link to jeft Node
+        self.viseo        = None      # default - invisible
+        self.twiss        = None      # twiss functions @ middle of Node
+        self.sigxy        = None      # envelope function @ middle of Node
+        self.ref_particle = None      # ref particle @ exit of Node
+        self.ref_track    = None      # rerence track @ exit of Node
+
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
         return self.matrix[:n, :m]
@@ -95,6 +88,17 @@ class Node(object):
         """ matrix product """
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
+    def toString(self):
+        ret = repr(self)
+        for k,v in self.__dict__.items():
+            ret+= '\n{}:{}'.format(k,v)
+        return ret
+    def adjust_energy(self, tkin):
+        """ dummy adjust """
+        return self
+    def shorten(self, length):
+        """ dummy shorten """
+        return self
     def prmatrix(self):
         n  = 1000
         nx = 1000
@@ -133,9 +137,6 @@ class Node(object):
         for i in range(anz):
             slices.append(mx)
         return slices
-    def shorten(self, length):
-        """ dummy shorten """
-        return self
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
         # Aliases
@@ -205,13 +206,6 @@ class Node(object):
                 f[i]  = f[i]*1.e3
             arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
         return f_track
-    # TODO can we get rid of soll_map ?????
-    def soll_map(self, i_track):
-        f_track = self.map(i_track)
-        # f_track = copy(i_track)
-        # f_track[EKOO] += i_track[DEKOO]*self.matrix[EKOO,DEKOO]
-        # f_track = NP.dot(self.matrix,f_track)
-        # return f_track
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label):
@@ -233,10 +227,6 @@ class MRK(I):
         """ invoke all actions bound to this marker """
         for agent in self.agents:
             agent.do_action()
-    # TODO does marker nedd adjuste_energy ????
-    # def adjust_energy(self, tkin):
-    #     adjusted = MRK(self.label, agents=self.agents, particle=self.particle(tkin), position=self.position)
-    #     return adjusted
 class D(Node):
     """  Trace3D drift space  """
     def __init__(self, label, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0.,aperture=None):
@@ -408,7 +398,7 @@ class RD(SD):
         return shortSD
     def make_slices(self, anz=2):
         if anz < 2: anz = 2
-        slicewinkel   = degrees(self.alpha)/anz
+        slicewinkel   = self.alpha/anz
         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
         sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
         slices  = [sdi]          # wedge @ entrance
@@ -502,6 +492,7 @@ class RFG(Node):
         self.viseo     = 0.25
         self.matrix    = None
         self.ttf       = None
+
         """ RFG 'hosts' gap_model - which is a ref. to the 'client' class, i.e. _T3D_G as default """
         self.gap_model = _T3D_G(host=self) 
         """ set dispatching to gap models """
@@ -532,7 +523,7 @@ class _T3D_G(Node):
         def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
             """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
             Wav     = particlei.tkin+deltaW/2.   # average tkin
-            pav     = Proton(tkin=Wav)
+            pav     = Proton(Wav)
             bav     = pav.beta
             gav     = pav.gamma
             m0c2    = pav.e0
@@ -607,10 +598,10 @@ class _PYO_G(object):
         return self._particlef
     def map(self, i_track):
         return self.which_map(i_track)
-    def soll_map(self, i_track):
-        f_track       = copy(i_track)
-        f_track[EKOO] = f_track[EKOO] + self.deltaW
-        return f_track
+    # def soll_map(self, i_track):
+    #     f_track       = copy(i_track)
+    #     f_track[EKOO] = f_track[EKOO] + self.deltaW
+    #     return f_track
     def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
         xi        = i_track[XKOO]       # [0]
@@ -952,15 +943,15 @@ class RFC(I):
             track = f_track
         DEBUG_OFF('rfc-map {}'.format(f_track))
         return f_track
-    def soll_map(self,i_track):
-        si,sm,sf = self.position
-        track = copy(i_track)
-        for node in iter(self.triplet):
-            f_track = node.soll_map(track)
-            track = f_track
-        f_track[SKOO] += sm
-        DEBUG_OFF('rfc-soll {}'.format(f_track))
-        return f_track
+    # def soll_map(self,i_track):
+    #     si,sm,sf = self.position
+    #     track = copy(i_track)
+    #     for node in iter(self.triplet):
+    #         f_track = node.soll_map(track)
+    #         track = f_track
+    #     f_track[SKOO] += sm
+    #     DEBUG_OFF('rfc-soll {}'.format(f_track))
+    #     return f_track
     def make_slices(self, anz=0):
         slices = []
         if len(self.triplet) == 3:
@@ -1198,7 +1189,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertFalse(NP.array_equal(AC.matrix,CA.matrix))
     def test_QF_Node_make_slices(self):
         print("\b----------------------------------------test_QF_Node_make_slices")
-        gradient = 3.; length = 1.; p = Proton()
+        gradient = 3.; length = 1.; p = Proton(80.)
         QFnode = QF("QFoc", gradient, particle=p, length=length)
         # slices = QFnode.make_slices(anz=anz)
         anz=5
@@ -1283,7 +1274,7 @@ class TestElementMethods(unittest.TestCase):
             mx[z,zp] = length/particle.gamma**2
             mx[S,dS] = length
             return mx
-        gradient = 3.; length = 1.; p = Proton()
+        gradient = 3.; length = 1.; p = Proton(80.)
         QFnode = QF("QFoc", gradient, particle=p, length=length)
         mx = matrix(gradient,length,p,QFnode.isThin())
         self.assertTrue(NP.array_equal(QFnode.matrix,mx),"matrix")
@@ -1327,7 +1318,7 @@ class TestElementMethods(unittest.TestCase):
             mx[z,zp] = length/particle.gamma**2
             mx[S,dS] = length
             return mx
-        gradient = 3.; length = 1.; p = Proton()
+        gradient = 3.; length = 1.; p = Proton(80.)
         QDnode = QD("QDfoc", gradient, particle=p, length=length)
         mx = matrix(gradient,length,p,QDnode.isThin())
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"matrix")
@@ -1359,7 +1350,7 @@ class TestElementMethods(unittest.TestCase):
         lb   = 1.50       #[m]
         phib = 11.25      # [deg]
         ld   = 0.55       # [m]
-        p    = Proton(tkin=100.)
+        p    = Proton(100.)
         gradf = kqf*p.brho
         gradd = kqd*p.brho
 
@@ -1454,10 +1445,10 @@ class TestElementMethods(unittest.TestCase):
         print("\b----------------------------------------test_SD_and_RD_Node_make_slices")
         rhob   = 3.8197   # [m]
         phib   = 11.25    # [deg]
-        p      = Proton(tkin=100.)
+        p      = Proton(100.)
 
-        """ slice and recombine SD """
-        sd     = SD("SB",2*phib,rhob,particle=p)
+        """ slice,recombine and adjust SD """
+        sd     = SD("SD",2*phib,rhob,particle=p)
         slices = sd.make_slices(anz=3)
         # for item in slices: print(item.matrix); print()
         sdx = slices[0]         # combine the slices again
@@ -1473,7 +1464,7 @@ class TestElementMethods(unittest.TestCase):
             for j in range(10):
                 self.assertEqual(sd.matrix[i,j],sd_adjusted.matrix[i,j],'sd == sd_adjusted?')
 
-        """ slice and recombine RD """
+        """ slice,recombine and agjust RD """
         wedge =  Wedge(phib,rhob,t3d_wedge=True)
         rd = RD("RD",2*phib,rhob,wedge,particle=p)
         slices = rd.make_slices(anz=5)
@@ -1485,6 +1476,34 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(rd.matrix[i,j],rdx.matrix[i,j],msg='rd == rdx?',delta=1.e-4)
+
+        rd_adjusted = rd.adjust_energy(tkin=p.tkin)
+        for i in range(10):
+            for j in range(10):
+                self.assertEqual(rd.matrix[i,j],rd_adjusted.matrix[i,j],'rd == rd_adjusted?')
+    def test_SD_and_RD_Node_adjust_energy(self):
+        print("\b----------------------------------------test_SD_and_RD_Node_adjust_energy")
+        rhob   = 3.8197   # [m]
+        phib   = 11.25    # [deg]
+        p100      = Proton(100.)
+        p50       = Proton(50.)
+
+        """ adjust SD  100->50->100 """
+        sd = SD("SD",2*phib,rhob,particle=p100)
+        sd_adjusted = sd.adjust_energy(tkin=p50.tkin)
+        sd_100 = sd_adjusted.adjust_energy(tkin=p100.tkin)
+        for i in range(10):
+            for j in range(10):
+                self.assertEqual(sd.matrix[i,j],sd_100.matrix[i,j],'sd == sd_100?')
+
+        """  adjust RD 100->50->100 """
+        wedge =  Wedge(phib,rhob,t3d_wedge=True)
+        rd = RD("RD",2*phib,rhob,wedge,particle=p100)
+        rd_adjusted = rd.adjust_energy(tkin=p50.tkin)
+        rd_100 = rd_adjusted.adjust_energy(tkin=p100.tkin)
+        for i in range(10):
+            for j in range(10):
+                self.assertEqual(rd.matrix[i,j],rd_100.matrix[i,j],'rd == rd_100?')
     def test_MRK_Node(self):
         print("\b----------------------------------------test_MRK_Node")
         class Agent(object):
@@ -1519,9 +1538,6 @@ class TestElementMethods(unittest.TestCase):
         print("\b----------------------------------------test_RFG_Node_with_T3D_G_map")
         EzAvg = 2.1; phisoll = radians(-30.); gap = 0.044; freq = 816.e6
         rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
-        # print(rfg.__dict__)
-        # print(rfg.gap_model.__dict__)
-        # print(rfg.gap_model.matrix)
         self.assertEqual(rfg.mapping,"t3d")
         self.assertEqual(rfg.label,"RFG")
         self.assertEqual(rfg.gap_model.type,"_T3D_G")

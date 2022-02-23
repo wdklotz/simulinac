@@ -77,7 +77,6 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
-
 # for compatability with elder code TODO: replace by namedtupel
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 #------  DEFAULT "FLAGS" & "PARAMS" and global dicts
@@ -194,12 +193,12 @@ class Particle(object):
         self._set_self(tkin=tkin,mass=self.e0,name=self.name)
         return self
 class Proton(Particle):
-    def __init__(self,tkin=50.):
+    def __init__(self,tkin):
         super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
-class Electron(Particle):    #TODO is it used?
-    def __init__(self,tkin= 50.):
+class Electron(Particle):
+    def __init__(self,tkin):
         super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
-PARAMS['sollteilchen'] = Proton()   # Sollteichen
+PARAMS['sollteilchen'] = Proton(50.)   # Sollteichen
 class WConverter(object):
     """
     Converter to switch between different longitudinal phase space coordinates
@@ -615,7 +614,7 @@ def I1(x):
             print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
             sys.exit(1)
     return res
-def k0prot(gradient=0.,tkin=0.):
+def k0prot(gradient=0.,tkin=0.):    # TODO still used?
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
     IN:
@@ -631,13 +630,13 @@ def k0prot(gradient=0.,tkin=0.):
     else:
         print('k0prot() called with negative kinetic energy? - STOP')
         sys.exit(1)
-def scalek0prot(k0=0.,tki=0.,tkf=0.):
+def scalek0prot(k0=0.,tki=0.,tkf=0.):    # still used?
     """Scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)"""
     bgi  = Proton(tki).gamma_beta
     bgf  = Proton(tkf).gamma_beta
     k= k0 * bgi/bgf
     return k
-def dBdxprot(k0=0.,tkin=0.):
+def dBdxprot(k0=0.,tkin=0.):   #TODO still used?
     """
     B-field gradient from quadrupole gradient for given quadrupole strength k0 and kin. energy tkin (only for protons!)
     IN:
@@ -755,7 +754,7 @@ class Test_set_utilities(unittest.TestCase):
     def test_particle(self):
         print('----------------------------------test_particle')
         print('Sollteilchen\n'+ PARAMS['sollteilchen'].toString())
-        print('Proton(tkin=5.)\n'+Proton(tkin=5.).toString())
+        print('Proton(5.)\n'+Proton(5.).toString())
         print('Electron(tkin=5.)\n'+Electron(tkin=5.).toString())
     def test_params(self):
         print('----------------------------------test_params')
@@ -817,7 +816,7 @@ class Test_set_utilities(unittest.TestCase):
 if __name__ == '__main__':
     unittest.main()
 
-#TODO: more marker-actions
+# TODO: more marker-actions
 # def sigma_x_action(*args):
 #     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
 #     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
