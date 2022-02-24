@@ -38,7 +38,6 @@ import os
 # import PyQt5             # works on native W10 but not on WSL2 as docker container
 # import matplotlib
 # matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
-
 # for Tk
 import tkinter             # works on native W10
 import matplotlib
@@ -295,7 +294,7 @@ def simulation(filepath):
     descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
     if descriptor != None: print(descriptor)
     print("---------------------------------------------------------------------------")
-    print(F'FINAL kinetic energy ==> {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] <==')
+    print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
     #----------------------------------------------
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------

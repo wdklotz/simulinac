@@ -74,7 +74,6 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
-    
     def __init__(self, injection_energy=50.,descriptor=""):
         self.seq              = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         self.iteration        = "LR"  # default: iterating lattice left-right
@@ -103,28 +102,30 @@ class Lattice(object):
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
             node         = node.adjust_energy(tk_injection)  # energy adjustment
-            ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
-            ref_particle = Proton(ref_track[EKOO])           # ref_particle @ out of 1st node
+            # ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
+            ref_track_m  = node.map(ref_track)
+            ref_particle = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
             node.prev = node.next = None
             sf = node.length
-            sf = ref_track[SKOO]
+            sf = ref_track_m[SKOO]
             node.position     = (0.,sf/2.,sf)
-            node.ref_track    = ref_track
+            node.ref_track    = ref_track_m
             node.ref_particle = ref_particle
         else:
             """ all nodes after 1st """
-            prev      = self.seq[-1]
-            ref_track = prev.ref_track
-            si        = ref_track[SKOO]
-            tkin      = ref_track[EKOO]
-            node      = node.adjust_energy(tkin)
-            ref_track = NP.dot(node.matrix,ref_track)
-            ref_particle = Proton(ref_track[EKOO])
+            prev         = self.seq[-1]
+            ref_track    = prev.ref_track
+            si           = ref_track[SKOO]
+            tkin         = ref_track[EKOO]
+            node         = node.adjust_energy(tkin)
+            # ref_track = NP.dot(node.matrix,ref_track)
+            ref_track_m  = node.map(ref_track)
+            ref_particle = Proton(ref_track_m[EKOO])
             prev.next = node
             node.prev = prev
-            sf        = ref_track[SKOO]
+            sf        = ref_track_m[SKOO]
             node.position     = (si,(si+sf)/2,sf)
-            node.ref_track    = ref_track
+            node.ref_track    = ref_track_m
             node.ref_particle = ref_particle
         self.length = sf    # lattice length
         self.seq.append(node)
@@ -494,7 +495,7 @@ class Lattice(object):
             ape.append(sm,(aperture,))
         return fun,ape
     def cs_traj(self,steps=1):
-        """ track cos- & sin-trajectories """
+        """ track cosine- & sine-like trajectories """
         def SollTest_ON(arg):  # set all 0. to simulate Sollteilchen
             return 0.
         def SollTest_OFF(arg):
@@ -509,9 +510,9 @@ class Lattice(object):
         # function body --------------- function body --------------- function body --------------- 
         # function body --------------- function body --------------- function body --------------- 
         print('CALCULATE C+S TRAJECTORIES')
-        tkin = PARAMS['sollteilchen'].tkin
         
         """ injektion parameters """
+        tkin = self.injection_energy
         if True:
             # 2 point on the ellipse y1 & y4: intersections
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
@@ -541,10 +542,12 @@ class Lattice(object):
         s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
 
         """ loop through lattice """
+        # TODO this function needs serious brain checking again. energy over distance? not carrried correctly! needed?
         for element in iter(self):
             particle = element.particle
-            gamma = particle.gamma
-            slices = element.make_slices(anz=steps)
+            gamma    = particle.gamma
+            tkin     = particle.tkin
+            slices   = element.make_slices(anz=steps)
             try:
                 for i_element in slices:
                     # if i_element.type == 'QFth' : print(i_element.type,i_element.matrix)
@@ -609,7 +612,6 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    # def show_linkae_iteration()
     @property
     def first_gap(self):
         """ return the 1st RF gap"""

@@ -60,6 +60,7 @@ class Node(object):
     """
     def __init__(self):
         self.type         = self.__class__.__name__      # self's node type
+        self.map          = self.__map# function ptr to mapping method
         self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
         self.matrix       = None      # MDIMxMDIM zero matrix used here
         self.position     = None      # [entrance, middle, exit]
@@ -88,6 +89,11 @@ class Node(object):
         """ matrix product """
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
+    def __map(self,itrack):
+        """ standard mapping with T3D matrix """
+        # ftrack = copy(itrack)    #TODO needed? think NO!
+        ftrack = NP.dot(self.matrix,itrack)
+        return ftrack
     def toString(self):
         ret = repr(self)
         for k,v in self.__dict__.items():
@@ -494,9 +500,9 @@ class RFG(Node):
         self.ttf       = None
 
         """ RFG 'hosts' gap_model - which is a ref. to the 'client' class, i.e. _T3D_G as default """
-        self.gap_model = _T3D_G(host=self) 
         """ set dispatching to gap models """
-        if self.mapping   == 't3d': pass
+        if self.mapping   == 't3d' :
+            self.gap_model = _T3D_G(host=self) 
         elif self.mapping == 'simple' or self.mapping == 'base':
             self.gap_model = _PYO_G(host=self) # PyOrbit gap-models w/o SF-data
         elif self.mapping == 'ttf':
@@ -518,8 +524,8 @@ class _T3D_G(Node):
         super().__init__()
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
-            x = pi*gap/(beta*lamb)
-            return NP.sinc(x/pi)   # sinc(x) = sin(pi*x)/(pi*x)
+            x = gap/(beta*lamb)
+            return NP.sinc(x)
         def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
             """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
             Wav     = particlei.tkin+deltaW/2.   # average tkin
@@ -550,58 +556,44 @@ class _T3D_G(Node):
         tkin           = host.particle.tkin
         host.particlef = copy(host.particle)(tkin+host.deltaW) # !!!IMPORTANT!!! particle @ (f)
         host.matrix    = mx(host.ttf,host.particle,host.particlef,E0L,host.phisoll,host.lamb,host.deltaW,host.length)
-    def map(self, i_track):
-        """ Mapping from (i) to (f) with linear Trace3D matrix """
-        f_track = copy(i_track)
-        f_track = NP.dot(self.host.matrix,f_track)
-        DEBUG_OFF('t3d-map {}'.format(f_track))
-        return f_track
 # TODO classes below need unittesting
 class _PYO_G(object):
-    """ 
-    PyOrbit zero length RF gap-model (A.Shishlo,Jeff Holmes) 
-    """
+    """  PyOrbit RF gap-models (A.Shishlo,Jeff Holmes). These are 'clients' of 'host' RFG """
     def __init__(self, host=None):
         def ttf(lamb, gap, beta):
             """ Transit-time-factor nach Panofsky (see Lapostolle CERN-97-09 pp.65) """
             x = gap/(beta*lamb)
-            ttf = NP.sinc(x)   # sinc(x) = sin(pi*x)/(pi*x)
-            return ttf
+            return NP.sinc(x)
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
         # function body starts here -------------function body starts here -------------function body starts here -------------
+        self.host       = host
+        host.ttf        = ttf(host.lamb,host.gap,host.particle.beta)
         self.particle   = host.particle
-        self.phis       = host.phis
+        self.phisoll    = host.phisoll
         self.lamb       = host.lamb
-        self.freq       = host.freq
-        self.mapping    = host.mapping
-        self.E0L        = host.EzAvg*host.gap
-        self.ttf        = ttf(host.lamb, host.gap, host.particle.beta)
-        self.qE0LT      = self.E0L*self.ttf
-        # deltaW soll-energy increase Trace3D (same as Shishlo)
-        self._deltaW    = self.qE0LT*cos(self.phis)
-        self._particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
-
-        # UPDATE linear NODE matrix with deltaW
+        E0L             = host.EzAvg*host.gap
+        self.qE0LT      = E0L*host.ttf
+        self.deltaW     = self.qE0LT*cos(self.phisoll) # deltaW ref-energy increase Trace3D (same as Shishlo)
+        host.matrix     = NP.eye(MDIM,MDIM)   #TODO do we need more than a unit matrix here?
+        # self.particlef = copy(self.particle)(self.particle.tkin+self._deltaW)
+        # self.freq       = host.freq
+        # self.mapping    = host.mapping
+        if host.mapping == 'simple':
+            self.map = self.simple_map
+        elif host.mapping == 'base':
+            self.map = self.base_map_1
+        # UPDATE  NODE matrix with deltaW
         host.matrix[EKOO, DEKOO] = self.deltaW
-
-        if self.mapping == 'simple':
-            self.which_map = self.simple_map
-        elif self.mapping == 'base':
-            self.which_map = self.base_map_1
-            
-    @property
-    def deltaW(self):
-        return self._deltaW
-    @property
-    def particlef(self):
-        return self._particlef
+    # TODO are these properties still needed?        
+    # # @property
+    # # def deltaW(self):
+    # #     return self._deltaW
+    # @property
+    # def particlef(self):
+        # return self._particlef
     def map(self, i_track):
-        return self.which_map(i_track)
-    # def soll_map(self, i_track):
-    #     f_track       = copy(i_track)
-    #     f_track[EKOO] = f_track[EKOO] + self.deltaW
-    #     return f_track
+        return self.map(i_track)
     def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
         xi        = i_track[XKOO]       # [0]
@@ -610,8 +602,8 @@ class _PYO_G(object):
         ypi       = i_track[YPKOO]      # [3]
         zi        = i_track[ZKOO]       # [4] z
         zpi       = i_track[ZPKOO]      # [5] Dp/p
-        T         = i_track[EKOO]       # [6] kinetic energy SOLL
-        S         = i_track[SKOO]       # [8] position SOLL
+        T         = i_track[EKOO]       # [6] kinetic energy REF
+        S         = i_track[SKOO]       # [8] position REF
 
         particle  = self.particle
         m0c2      = particle.e0
@@ -622,7 +614,7 @@ class _PYO_G(object):
         deltaW    = self.deltaW
         lamb      = self.lamb
         qE0LT     = self.qE0LT
-        phis      = self.phis
+        phisoll   = self.phisoll
         
 
         DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
@@ -656,7 +648,8 @@ class _PYO_G(object):
         xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
         ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis)
 
-        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T, 1., S, 1.])
+        # track @ out of node
+        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T+deltaW, 1., S, 1.])
 
         # for DEBUGGING
         if 0:
@@ -667,9 +660,9 @@ class _PYO_G(object):
                 ftr[i]  = ftr[i]*1.e3
             arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
             arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
-
+        # TODO 2 lines below still needed?
         # the parent delegates reading these properties from here
-        self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
+        # self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
         return f_track
     def base_map_0(self, i_track):
         """alte map version bis 02.02.2022"""
