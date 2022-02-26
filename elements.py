@@ -60,7 +60,7 @@ class Node(object):
     """
     def __init__(self):
         self.type         = self.__class__.__name__      # self's node type
-        self.map          = self.__map# function ptr to mapping method
+        # self.map          = self._map_# function ptr to mapping method
         self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
         self.matrix       = None      # MDIMxMDIM zero matrix used here
         self.position     = None      # [entrance, middle, exit]
@@ -74,7 +74,6 @@ class Node(object):
         self.sigxy        = None      # envelope function @ middle of Node
         self.ref_particle = None      # ref particle @ exit of Node
         self.ref_track    = None      # rerence track @ exit of Node
-
     def __call__(self, n = MDIM, m = MDIM):
         # return upper left n, m submatrix
         return self.matrix[:n, :m]
@@ -89,11 +88,11 @@ class Node(object):
         """ matrix product """
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
-    def __map(self,itrack):
+    def map(self,i_track):
         """ standard mapping with T3D matrix """
         # ftrack = copy(itrack)    #TODO needed? think NO!
-        ftrack = NP.dot(self.matrix,itrack)
-        return ftrack
+        f_track = NP.dot(self.matrix,i_track)
+        return f_track
     def toString(self):
         ret = repr(self)
         for k,v in self.__dict__.items():
@@ -201,17 +200,6 @@ class Node(object):
         # each node has its tuple of average sigmas     
         self.sigxy = sigxy
         return sigmas
-    def map(self, i_track):
-        """ Linear mapping of trajectory from (i) to (f) """
-        f_track = copy(i_track)
-        f_track = NP.dot(self.matrix,f_track)
-        # for DEBUGGING
-        if 0:
-            f = f_track.copy() # !!!IMPORTANT!!!
-            for i in range(len(f_track)-4):
-                f[i]  = f[i]*1.e3
-            arrprnt(f, fmt = '{:6.3g},', txt = 'matrix_map: ')
-        return f_track
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label):
@@ -481,8 +469,18 @@ class RFG(Node):
     """  Wrapper to zero length RF kick gap-models """
     def __init__(self, label, EzAvg, phisoll, gap, freq, mapping='t3d', SFdata = None, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
         super().__init__()
+        def ttf(lamb, gap, beta):
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
+            x = gap/(beta*lamb)
+            return NP.sinc(x)
+        self.particle  = copy(particle)
+        self.position  = position
+        self.length    = 0.
         self.label     = label
-        self.EzAvg     = EzAvg*dWf          # [MV/m] average gap field
+        self.aperture  = aperture
+        self.viseo     = 0.25
+        self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
+        self.EzAvg     = EzAvg*self.dWf          # [MV/m] average gap field
         self.phisoll   = phisoll            # [radians] soll phase
         self.freq      = freq               # [Hz]  RF frequenz
         self.omega     = twopi*self.freq
@@ -490,72 +488,306 @@ class RFG(Node):
         self.gap       = gap                # [m] rf-gap
         self.mapping   = mapping            # map model
         self.SFdata    = SFdata             # SuperFish data
-        self.particle  = copy(particle)
-        self.position  = position
-        self.aperture  = aperture
-        self.length    = 0.
-        self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
-        self.viseo     = 0.25
-        self.matrix    = None
-        self.ttf       = None
-
-        """ RFG 'hosts' gap_model - which is a ref. to the 'client' class, i.e. _T3D_G as default """
-        """ set dispatching to gap models """
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.E0L       = self.EzAvg*self.gap
+        self.qE0LT     = self.E0L*self.ttf
+        self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
+        self.particlef = Proton(self.particle.tkin+self.deltaW)
+        self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+        self.map       = None
+        """ dispatching to different gap models """
         if self.mapping   == 't3d' :
-            self.gap_model = _T3D_G(host=self) 
-        elif self.mapping == 'simple' or self.mapping == 'base':
-            self.gap_model = _PYO_G(host=self) # PyOrbit gap-models w/o SF-data
+            """ delegate mapping to standard matrix multiplication """
+            self.map = super().map
+        elif self.mapping == 'simple':
+            self.map = self.simple_map
+        elif self.mapping == 'base':
+            self.particlef = None
+            self.map = self.base_map_1
+
+# TODO mappings below not tested
         elif self.mapping == 'ttf':
             self.gap_model = _TTF_G(host=self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
         elif self.mapping == 'oxal':
             self.gap_model = _OXAL(host=self) # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
+
+    def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
+        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
+        m        = NP.eye(MDIM,MDIM)
+        Wav     = particlei.tkin+deltaW/2.   # average tkin
+        pav     = Proton(Wav)
+        bav     = pav.beta
+        gav     = pav.gamma
+        m0c2    = pav.e0
+        kz      = twopi*E0L*ttf*sin(phisoll)/(m0c2*bav*bav*lamb)
+        ky      = kx = -0.5*kz/(gav*gav)
+        bgi     = particlei.gamma_beta
+        bgf     = particlef.gamma_beta
+        bgi2bgf = bgi/bgf
+        m       = NP.eye(MDIM,MDIM)
+        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
+        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
+        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
+        # UPDATE NODE matrix with deltaW
+        m[EKOO, DEKOO] = deltaW
+        m[SKOO, LKOO]  = length
+        return m
+    def simple_map(self, i_track):
+        """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
+        xi        = i_track[XKOO]       # [0]
+        xpi       = i_track[XPKOO]      # [1]
+        yi        = i_track[YKOO]       # [2]
+        ypi       = i_track[YPKOO]      # [3]
+        zi        = i_track[ZKOO]       # [4] z
+        zpi       = i_track[ZPKOO]      # [5] Dp/p
+        T         = i_track[EKOO]       # [6] kinetic energy REF
+        S         = i_track[SKOO]       # [8] position REF
+
+        particle  = self.particle
+        m0c2      = particle.e0
+        WIN       = particle.tkin
+        betai     = particle.beta
+        gammai    = particle.gamma
+        gbi       = particle.gamma_beta
+        deltaW    = self.deltaW
+        lamb      = self.lamb
+        qE0LT     = self.qE0LT
+        phisoll   = self.phisoll
+        
+
+        DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phisoll) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phisoll))
+
+        DW         = deltaW
+        WOUT       = WIN + DW
+        particlef  = copy(particle)(tkin = WOUT) # !!!IMPORTANT!!!
+        betaf      = particlef.beta
+        gammaf     = particlef.gamma
+        gbf        = particlef.gamma_beta
+
+        # the longitudinal 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
+        m11 = gbf/gbi
+        m12 = 0.
+        m21 = qE0LT*twopi/(lamb*betai)*sin(phisoll)
+        m22 = 1.
+ 
+        # Dp/p --> DW
+        condPdT = m0c2*betai**2*gammai
+        dwi     = condPdT*zpi  
+
+        # long. (z,DW)
+        zf  = m11*zi + m12*dwi
+        dwf = m21*zi + m22*dwi
+
+        # DW --> Dp/p
+        condTdP = 1./(m0c2*betaf**2*gammaf)
+        zfp     = dwf*condTdP
+
+        # transverse (x',y')
+        xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phisoll) # A.Shishlo/J.Holmes 4.1.11)
+        ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phisoll)
+
+        # track @ out of node
+        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T+deltaW, 1., S, 1.])
+
+        # for DEBUGGING
+        if 0:
+            itr = i_track.copy()
+            ftr = f_track.copy()
+            for i in range(len(f_track)-4):
+                itr[i]  = itr[i]*1.e3
+                ftr[i]  = ftr[i]*1.e3
+            arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
+            arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
+        # TODO 2 lines below still needed?
+        # the parent delegates reading these properties from here
+        # self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
+        return f_track
+
+    def base_map_0(self, i_track):
+        """alte map version bis 02.02.2022"""
+        # def DEBUG_TRACK(inout,track):
+        #     print('{} {} {}'.format('base_map',inout,track))
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        # function body ================= function body ================= function body ================= 
+        """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
+        x        = i_track[XKOO]       # [0]
+        xp       = i_track[XPKOO]      # [1]
+        y        = i_track[YKOO]       # [2]
+        yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4] z
+        zp       = i_track[ZPKOO]      # [5] dp/p
+        T        = i_track[EKOO]       # [6] kinetic energy SOLL
+        S        = i_track[SKOO]       # [8] position SOLL
+
+        particle = self.particle
+        m0c2     = particle.e0
+        betai    = particle.beta
+        gammai   = particle.gamma
+        gbi      = particle.gamma_beta
+        tki      = particle.tkin
+        freq     = self.freq
+        lamb     = self.lamb
+        phisoll  = self.phisoll
+        qE0LT    = self.qE0LT
+        deltaW   = self.deltaW
+        
+        # if 0: 
+        #     DEBUG_ON()
+        #     DEBUG_TRACK('tr_i',i_track)
+        max_r  = 0.05              # max radial excursion [m]
+        r      = sqrt(x**2+y**2)  # radial coordinate
+        if r > max_r:
+            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
+        Kr     = (twopi*r)/(lamb*gbi)
+        i0     = I0(Kr)                               # bessel function I0
+        i1     = I1(Kr)                               # bessel function I1
+        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
+        # SOLL
+        WIN       = tki                               # energy (i)
+        DELTAW    = self.deltaW                       # energy kick
+        WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
+        # PARTICLE
+        converter = WConverter(WIN,freq)
+        # phin      = -z * twopi/(betai*lamb) + phis     # phase (i)  alte methode
+        phin      = converter.zToDphi(z) + phisoll          # phase (i)
+        deltaW    = qE0LT*i0*cos(phin)                   # energy kick
+        # win     = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
+        win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
+        wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
+        dw        = wout - WOUT                          # d(deltaW)
+
+        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+
+        particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
+        betaf     = particlef.beta
+        gammaf    = particlef.gamma
+        gbf       = particlef.gamma_beta
+
+        # converter = WConverter(WOUT,frq)
+        z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
+        # zpf     = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
+        zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
+        # if 0: print('z ',z,'zpf ',zpf)
+
+        commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
+        if r > 0.:
+            xp  = gbi/gbf*xp - x/r*commonf*sin(phin)  # Formel 4.2.6 A.Shishlo/J.Holmes
+            yp  = gbi/gbf*yp - y/r*commonf*sin(phin)
+        elif r == 0.:
+            xp  = gbi/gbf*xp
+            yp  = gbi/gbf*yp
+
+        f_track = NP.array([x, xp, y, yp, z, zpf, T+deltaW, 1., S, 1.])
+
+        # for DEBUGGING
+        # if 0: DEBUG_TRACK('tr_f',f_track)
+        if 0:
+            arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+            arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+        # the parent reads these attributes below
+        self.particlef = particlef
+        return f_track
+    def base_map_1(self, i_track):
+        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen."""
+        # def DEBUG_TRACK(inout,track):
+        #     print('{} {} {}'.format('base_map',inout,track))
+        # function body ================= function body ================= function body ================= 
+        """ Mapping (i) to (O) in Base RF-Gap Model. (A.Shislo 4.2) """
+        x        = i_track[XKOO]       # [0]
+        xp       = i_track[XPKOO]      # [1]
+        y        = i_track[YKOO]       # [2]
+        yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4] z
+        zp       = i_track[ZPKOO]      # [5] dp/p
+        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
+        S        = i_track[SKOO]       # [8] position gap
+
+        particleRi = self.particle   # ref Teilchen (I)
+        m0c2       = particleRi.e0
+        betai      = particleRi.beta
+        gammai     = particleRi.gamma
+        gbi        = particleRi.gamma_beta
+        wRi        = particleRi.tkin
+        freq       = self.freq
+        lamb       = self.lamb
+        phisoll    = self.phisoll
+        deg_phisoll= degrees(phisoll)
+        qE0LT      = self.qE0LT
+        deltaW     = self.deltaW
+        
+        # if 0: 
+        #     DEBUG_ON()
+        #     DEBUG_TRACK('tr_i',i_track)
+
+        max_r  = 0.05              # max radial excursion [m]
+        r      = sqrt(x**2+y**2)   # radial coordinate
+        if r > max_r:
+            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
+        Kr     = (twopi*r)/(lamb*gbi)
+        i0     = I0(Kr)            # bessel function I0
+        i1     = I1(Kr)            # bessel function I1
+
+        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
+
+        # ref Teilchen
+        wRo = wRi + deltaW                           # ref Teilchen energy (O)
+ 
+        # Teilchen
+        converter   = WConverter(wRi,freq)
+        deg_converter = degrees(converter.zToDphi(z)) 
+        phiin       = converter.zToDphi(z) + phisoll 
+        deg_phiin = degrees(phiin)        # Teilchen phase (I)
+        wo_wi       = qE0LT*i0*cos(phiin)                 # energy kick (Shislo 4.2.3)
+        wi          =  converter.Dp2pToW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
+        wo          = wi + wo_wi                          # Teilchen energy (O)   
+        dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
+
+        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+
+        particleRo = Proton(wRo)
+        betao      = particleRo.beta
+        gammao     = particleRo.gamma
+        gbo        = particleRo.gamma_beta
+
+        zo         = betao/betai*z                     # z (O) (4.2.5) A.Shishlo/J.Holmes
+        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
+
+        # if 0: print('z ',z,'zpf ',zpf)
+
+        factor = qE0LT/(m0c2*gbi*gbo)*i1               # common factor
+        if r > 0.:
+            xp  = gbi/gbo*xp - x/r*factor*sin(phiin)   # Formel 4.2.6 A.Shishlo/J.Holmes
+            yp  = gbi/gbo*yp - y/r*factor*sin(phiin)
+        elif r == 0.:
+            xp  = gbi/gbo*xp
+            yp  = gbi/gbo*yp
+
+        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
+
+        # for DEBUGGING
+        # if 0: DEBUG_TRACK('tr_f',f_track)
+        # if 0:
+        #     arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+        #     arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
+
+        # """ the parent reads these attributes below """
+        self.particlef = particleRo
+        return f_track
+
     def adjust_energy(self, tkin):
-        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 
-    """ delegate mapping to gap-model """
-    def map(self, i_track):
-        return self.gap_model.map(i_track)
-class _T3D_G(Node):   
-    """ Mapping (i) to (f) in Trace3D zero length RF-Gap Model """
-    def __init__(self, host=None):
-        super().__init__()
-        def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
-            x = gap/(beta*lamb)
-            return NP.sinc(x)
-        def mx(ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
-            """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-            Wav     = particlei.tkin+deltaW/2.   # average tkin
-            pav     = Proton(Wav)
-            bav     = pav.beta
-            gav     = pav.gamma
-            m0c2    = pav.e0
-            kz      = twopi*E0L*ttf*sin(phisoll)/(m0c2*bav*bav*lamb)
-            ky      = kx = -0.5*kz/(gav*gav)
-            bgi     = particlei.gamma_beta
-            bgf     = particlef.gamma_beta
-            bgi2bgf = bgi/bgf
-            m       = NP.eye(MDIM,MDIM)
-            m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
-            m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-            m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-            # UPDATE NODE matrix with deltaW
-            m[EKOO, DEKOO] = deltaW
-            m[SKOO, LKOO]  = length
-            return m
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        # function body starts here -------------function body starts here -------------function body starts here -------------
-        self.host      = host
-        host.ttf       = ttf(host.lamb,host.gap,host.particle.beta)
-        E0L            = host.EzAvg*host.gap
-        host.deltaW    = E0L*host.ttf*cos(host.phisoll) # deltaW energy kick Trace3D
-        tkin           = host.particle.tkin
-        host.particlef = copy(host.particle)(tkin+host.deltaW) # !!!IMPORTANT!!! particle @ (f)
-        host.matrix    = mx(host.ttf,host.particle,host.particlef,E0L,host.phisoll,host.lamb,host.deltaW,host.length)
+
+
+
+
+
+
+
 # TODO classes below need unittesting
 class _PYO_G(object):
     """  PyOrbit RF gap-models (A.Shishlo,Jeff Holmes). These are 'clients' of 'host' RFG """
@@ -593,77 +825,78 @@ class _PYO_G(object):
     # def particlef(self):
         # return self._particlef
     def map(self, i_track):
-        return self.map(i_track)
-    def simple_map(self, i_track):
-        """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
-        xi        = i_track[XKOO]       # [0]
-        xpi       = i_track[XPKOO]      # [1]
-        yi        = i_track[YKOO]       # [2]
-        ypi       = i_track[YPKOO]      # [3]
-        zi        = i_track[ZKOO]       # [4] z
-        zpi       = i_track[ZPKOO]      # [5] Dp/p
-        T         = i_track[EKOO]       # [6] kinetic energy REF
-        S         = i_track[SKOO]       # [8] position REF
+        f_track = self.map(i_track)
+        return f_track
+    # def simple_map(self, i_track):
+    #     """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
+    #     xi        = i_track[XKOO]       # [0]
+    #     xpi       = i_track[XPKOO]      # [1]
+    #     yi        = i_track[YKOO]       # [2]
+    #     ypi       = i_track[YPKOO]      # [3]
+    #     zi        = i_track[ZKOO]       # [4] z
+    #     zpi       = i_track[ZPKOO]      # [5] Dp/p
+    #     T         = i_track[EKOO]       # [6] kinetic energy REF
+    #     S         = i_track[SKOO]       # [8] position REF
 
-        particle  = self.particle
-        m0c2      = particle.e0
-        WIN       = particle.tkin
-        betai     = particle.beta
-        gammai    = particle.gamma
-        gbi       = particle.gamma_beta
-        deltaW    = self.deltaW
-        lamb      = self.lamb
-        qE0LT     = self.qE0LT
-        phisoll   = self.phisoll
+    #     particle  = self.particle
+    #     m0c2      = particle.e0
+    #     WIN       = particle.tkin
+    #     betai     = particle.beta
+    #     gammai    = particle.gamma
+    #     gbi       = particle.gamma_beta
+    #     deltaW    = self.deltaW
+    #     lamb      = self.lamb
+    #     qE0LT     = self.qE0LT
+    #     phisoll   = self.phisoll
         
 
-        DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
+    #     DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phis))
 
-        DW         = deltaW
-        WOUT       = WIN + DW
-        particlef  = copy(particle)(tkin = WOUT) # !!!IMPORTANT!!!
-        betaf      = particlef.beta
-        gammaf     = particlef.gamma
-        gbf        = particlef.gamma_beta
+    #     DW         = deltaW
+    #     WOUT       = WIN + DW
+    #     particlef  = copy(particle)(tkin = WOUT) # !!!IMPORTANT!!!
+    #     betaf      = particlef.beta
+    #     gammaf     = particlef.gamma
+    #     gbf        = particlef.gamma_beta
 
-        # the longitudinal 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
-        m11 = gbf/gbi
-        m12 = 0.
-        m21 = qE0LT*twopi/(lamb*betai)*sin(phis)
-        m22 = 1.
+    #     # the longitudinal 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
+    #     m11 = gbf/gbi
+    #     m12 = 0.
+    #     m21 = qE0LT*twopi/(lamb*betai)*sin(phis)
+    #     m22 = 1.
  
-        # Dp/p --> DW
-        condPdT = m0c2*betai**2*gammai
-        dwi     = condPdT*zpi  
+    #     # Dp/p --> DW
+    #     condPdT = m0c2*betai**2*gammai
+    #     dwi     = condPdT*zpi  
 
-        # long. (z,DW)
-        zf  = m11*zi + m12*dwi
-        dwf = m21*zi + m22*dwi
+    #     # long. (z,DW)
+    #     zf  = m11*zi + m12*dwi
+    #     dwf = m21*zi + m22*dwi
 
-        # DW --> Dp/p
-        condTdP = 1./(m0c2*betaf**2*gammaf)
-        zfp     = dwf*condTdP
+    #     # DW --> Dp/p
+    #     condTdP = 1./(m0c2*betaf**2*gammaf)
+    #     zfp     = dwf*condTdP
 
-        # transverse (x',y')
-        xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
-        ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis)
+    #     # transverse (x',y')
+    #     xpf  = gbi/gbf*xpi - xi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis) # A.Shishlo/J.Holmes 4.1.11)
+    #     ypf  = gbi/gbf*ypi - yi * (pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * sin(phis)
 
-        # track @ out of node
-        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T+deltaW, 1., S, 1.])
+    #     # track @ out of node
+    #     f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T+deltaW, 1., S, 1.])
 
-        # for DEBUGGING
-        if 0:
-            itr = i_track.copy()
-            ftr = f_track.copy()
-            for i in range(len(f_track)-4):
-                itr[i]  = itr[i]*1.e3
-                ftr[i]  = ftr[i]*1.e3
-            arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
-            arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
-        # TODO 2 lines below still needed?
-        # the parent delegates reading these properties from here
-        # self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
-        return f_track
+    #     # for DEBUGGING
+    #     if 0:
+    #         itr = i_track.copy()
+    #         ftr = f_track.copy()
+    #         for i in range(len(f_track)-4):
+    #             itr[i]  = itr[i]*1.e3
+    #             ftr[i]  = ftr[i]*1.e3
+    #         arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
+    #         arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
+    #     # TODO 2 lines below still needed?
+    #     # the parent delegates reading these properties from here
+    #     # self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
+    #     return f_track
     def base_map_0(self, i_track):
         """alte map version bis 02.02.2022"""
         def DEBUG_TRACK(inout,track):
@@ -750,10 +983,8 @@ class _PYO_G(object):
         return f_track
     def base_map_1(self, i_track):
         """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen."""
-        def DEBUG_TRACK(inout,track):
-            print('{} {} {}'.format('base_map',inout,track))
-        # function body ================= function body ================= function body ================= 
-        # function body ================= function body ================= function body ================= 
+        # def DEBUG_TRACK(inout,track):
+        #     print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
         """ Mapping (i) to (O) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
@@ -771,10 +1002,11 @@ class _PYO_G(object):
         gammai     = particleRi.gamma
         gbi        = particleRi.gamma_beta
         wRi        = particleRi.tkin
-        frq        = self.freq
+        freq       = self.freq
         lamb       = self.lamb
-        phis       = self.phis
+        phisoll    = self.phisoll
         qE0LT      = self.qE0LT
+        deltaW     = self.deltaW
         
         # if 0: 
         #     DEBUG_ON()
@@ -791,11 +1023,13 @@ class _PYO_G(object):
         # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
 
         # ref Teilchen
-        wRo = wRi + self.deltaW                           # ref Teilchen energy (O)
+        wRo = wRi + deltaW                           # ref Teilchen energy (O)
  
         # Teilchen
         converter   = WConverter(wRi,frq)
-        phiin       = converter.zToDphi(z) + phis         # Teilchen phase (I)
+        deg_phisoll = degrees(phisoll)
+        phiin       = converter.zToDphi(z) + phisoll         # Teilchen phase (I)
+        deg_phiin    = degrees(converter.zToDphi(z) + phisoll)         # Teilchen phase (I)
         wo_wi       = qE0LT*i0*cos(phiin)                 # energy kick (Shislo 4.2.3)
         wi          =  converter.Dp2pToW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
         wo          = wi + wo_wi                          # Teilchen energy (O)   
@@ -804,7 +1038,7 @@ class _PYO_G(object):
         # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
         """ !!!IMPORTANT!!! SOLL particle (O) """        
-        particleRo = copy(particleRi)(tkin = wRo)
+        particleRo = Proton(wRo)
         betao      = particleRo.beta
         gammao     = particleRo.gamma
         gbo        = particleRo.gamma_beta
@@ -822,8 +1056,7 @@ class _PYO_G(object):
             xp  = gbi/gbo*xp
             yp  = gbi/gbo*yp
 
-        T = wRo
-        f_track = NP.array([x, xp, y, yp, zo, zpo, T, 1., S, 1.])
+        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
 
         # for DEBUGGING
         # if 0: DEBUG_TRACK('tr_f',f_track)
@@ -832,7 +1065,7 @@ class _PYO_G(object):
         #     arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
 
         """ the parent reads these attributes below """
-        self._particlef = particleRo
+        self.particlef = particleRo
 
         return f_track
 class RFC(I):

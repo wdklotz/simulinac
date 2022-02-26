@@ -17,11 +17,12 @@ This file is part of the SIMULINAC code
 
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
-"""
+
 #TODO: Calulate cell phase advance sigma by integration
 #TODO: handle exceptions speziel ValueError   - more or less done
 #TODO: use normalized emittances ?
 #TODO: waccept results are global - each node should carry its own
+#TODO: waccept work and check again - logitudinal acceptance !!!!!
 #TODO: make new simu_manual.tex, README.md, check conversions.tex
 #TODO: rework the KVout - done in parts
 #TODO: rework verbose printing levels
@@ -29,6 +30,7 @@ This file is part of the SIMULINAC code
 #TODO: slices as sub-lattice attribute to thick element
 #TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 #TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
+"""
 import sys
 import os
 # import subprocess

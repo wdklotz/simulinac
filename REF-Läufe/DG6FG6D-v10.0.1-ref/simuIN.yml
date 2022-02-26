@@ -44,7 +44,7 @@ FLAGS:
 #...........................................................................................
 PARAMETERS:
     Tkin:                 8.5            # [MeV] energy @ injection
-    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
+    DT2T:                 6.0e-4          # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    3.3             # [m] twiss beta @ entrance x
@@ -64,9 +64,9 @@ PARAMETERS:
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'V8.0.0.a1 Vergleich'  # lattice version
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions

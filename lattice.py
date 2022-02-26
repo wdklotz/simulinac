@@ -101,34 +101,34 @@ class Lattice(object):
             """ the initial node """
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
-            node         = node.adjust_energy(tk_injection)  # energy adjustment
+            node_adj     = node.adjust_energy(tk_injection)  # energy adjustment
             # ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
-            ref_track_m  = node.map(ref_track)
+            ref_track_m  = node_adj.map(ref_track)
             ref_particle = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
-            node.prev = node.next = None
-            sf = node.length
+            node_adj.prev = node.next = None
+            sf = node_adj.length
             sf = ref_track_m[SKOO]
-            node.position     = (0.,sf/2.,sf)
-            node.ref_track    = ref_track_m
-            node.ref_particle = ref_particle
+            node_adj.position     = (0.,sf/2.,sf)
+            node_adj.ref_track    = ref_track_m
+            node_adj.ref_particle = ref_particle
         else:
             """ all nodes after 1st """
             prev         = self.seq[-1]
             ref_track    = prev.ref_track
             si           = ref_track[SKOO]
             tkin         = ref_track[EKOO]
-            node         = node.adjust_energy(tkin)
+            node_adj     = node.adjust_energy(tkin)
             # ref_track = NP.dot(node.matrix,ref_track)
-            ref_track_m  = node.map(ref_track)
+            ref_track_m  = node_adj.map(ref_track)
             ref_particle = Proton(ref_track_m[EKOO])
-            prev.next = node
-            node.prev = prev
+            prev.next = node_adj
+            node_adj.prev = prev
             sf        = ref_track_m[SKOO]
-            node.position     = (si,(si+sf)/2,sf)
-            node.ref_track    = ref_track_m
-            node.ref_particle = ref_particle
+            node_adj.position     = (si,(si+sf)/2,sf)
+            node_adj.ref_track    = ref_track_m
+            node_adj.ref_particle = ref_particle
         self.length = sf    # lattice length
-        self.seq.append(node)
+        self.seq.append(node_adj)
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
@@ -721,7 +721,8 @@ class TestLattice(unittest.TestCase):
                 d2   = ELM.D('D2',particle=p,length=ld)
                 d3   = ELM.D('D3',particle=p,length=ld)
                 d4   = ELM.D('D4',particle=p,length=ld)
-                # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)   #TODO test rectangular dipoles not done yet
+                #TODO test rectangular dipoles (ELM>RD) not done yet
+                # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)  
                 # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
                 sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
                 sd2  = ELM.SD('SD2',2.*phib,rhob,particle=p)
