@@ -360,13 +360,14 @@ def waccept(node):
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
     IN
-        node: the 1st rf-gap at the linac entrance
+        node: the 1st rf-gap at the linac entrance (to get gap-specific parameters)
     """
+    # TODO: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
     if node is not None and FLAGS['dWf'] == 1:
         DT2T      = PARAMS['DT2T']
         E0T       = node.EzAvg*node.ttf  # [MV/m]
         particle  = node.particle
-        phis      = node.phisoll         # [rad]
+        phisoll   = node.phisoll         # [rad]
         lamb      = node.lamb            # [m]
         freq      = node.freq            # [Hz]
         m0c2      = particle.e0          # [MeV]
@@ -376,42 +377,22 @@ def waccept(node):
         tkin      = particle.tkin
         conv      = WConverter(tkin,freq)
 
-        # LARGE amplitude oscillations (T.Wangler pp. 175)
-        # w = Dgamma = DW/m0c2 is normalized energy deviation
-        factor_phis = phis*cos(phis)-sin(phis)
-        wmx  = 2.*E0T*gb**3*lamb/(pi*m0c2)*factor_phis
-        try:
-            wmx  = sqrt(wmx) # T.Wangler (6.28) wmx on sepratrix
-        except ValueError as ex:
-            print('No energy acceptance at 1st gap! Maybe wrong frequency?')
-            raise ex
-        # [MeV] DW on separatrix (DE = DT a.k.a. DW)
-        DWmx = wmx*m0c2       
-        # Dp/p on separatrix, Dp2pmx = gamma/(gamma*gamma-1)*Dwmx
-        Dp2pmx = conv.wToDp2p(wmx) # Dp/p on separatrix
-        phi_1 = -phis              # [rad]
-        phi_2 = 2.*phis            # [rad] Naehrung T.Wangler pp.178
-        psi   = 3.*fabs(phis)      # [rad]
+        """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread
+        w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)) """  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+        """ SMALL amplitude oscillations (T.Wangler pp.185) """
+        w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
 
-        # SMALL amplitude oscillations (T.Wangler pp.184)
-        omgl0zuomg = sqrt(E0T*lamb*sin(-phis)/(2*pi*m0c2*gamma**3*beta))
-        omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
-        # Calulation of longitudinal parameters:
-        #     *) Vorgabe ist delta-T/T (DT2T) kinetic energy spread
-        #     *) daraus w0 als energy spread normiert auf m0c2.
-        #     *) w0root ist der Wurzelaudruck in Wangler's Formel
-        #     *) Dphi0 folgt aus DT2T und w0root
-        #     *) emittanz folgt als Produkt von Dphi0*w0
-        #     *) {Dphi,w}-space: emitw = Dphi0*w0 [rad]
         w0       = (gamma-1.)*DT2T
-        w0root   = sqrt(E0T*gb**3*lamb*sin(-phis)/(2.*pi*m0c2))
-        Dphi0    = (gamma-1.)/w0root*DT2T # delta-phase-intersect
-        emitw    = Dphi0*w0
-        betaw    = emitw/w0**2            # beta twiss
+        emitw    = PARAMS.get('emitw',2.*abs(phisoll)*w0/pi)   # injected beam emottance
+        Dphi0    = pi*emitw/w0
+        betaw    = emitw/w0**2            # w0 = w-int = sqrt(emitw/betaw) 
         gammaw   = 1./betaw               # gamma twiss
+        
+        omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
+        omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
 
         # longitudinal acceptance check (always done)
-        if wmx <= w0:
+        if w0small <= w0:
             si,sm,sf = node.position
             warnings.showwarning(
                 'out of energy acceptance @ s={:.1f} [m]'.format(si),
@@ -421,51 +402,30 @@ def waccept(node):
         # {z-dp/p}-space
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-    # TODO: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
-        Dp2pAcceptance = Dp2pmx
-        zAcceptance    = abs(conv.DphiToz(psi))
+        Dp2pmax = conv.wToDp2p(w0small) # Dp/p on separatrix
         res =  dict(
                 # {Dphi,w}
                 emitw    = emitw,       # emittance{Dphi,w} [rad]
                 betaw    = betaw,       # beta twiss [rad]
                 gammaw   = gammaw,      # gamma twiss [1/rad]
-                wmx      = wmx,         # separatrix: max w
-                w0       = w0,          # w-Axenabschnitt
+                wmax     = w0small,     # separatrix: large amp. oscillations
+                w0       = w0,          # separatrix small amp. osscillations
                 Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
-                phi_1    = phi_1,       # separatrix: max pos. phase
-                phi_2    = phi_2,       # separatrix: max neg. phase
-                psi      = psi,         # separatrix: bunch length [rad]
                 omgl0    = omgl0,       # synchrotron oscillation [Hz]
                 # {z,Dp2p}
+                emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
                 betaz    = betaz,       # twiss beta [m/rad]
                 gammaz   = gammaz,      # twiss gamma [1/m]
-                emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
-                Dp2pmx   = Dp2pmx,      # max D/p on separatrix
+                Dp2pmax  = Dp2pmax,     # max D/p on separatrix
                 Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
                 z0       = z0,          # ellipse z-int    (1/2 axis) [m]
-                Dp2pAcceptance = Dp2pAcceptance,
-                zAcceptance    = zAcceptance,
+                Dp2p_Acceptance = Dp2pmax,
+                z_Acceptance    = conv.DphiToz(2.*phisoll),
                 # {Dphi,DW}
-                DWmx      = DWmx)       # separatrix: max W in [MeV]
-
-        PARAMS['emitw']   = emitw
-        PARAMS['emitz']   = emitz
-        PARAMS['betaw']   = betaw
-        PARAMS['betaz']   = betaz
-        PARAMS['alfaz']   = 0.0
-        PARAMS['DWmx']    = DWmx
-        PARAMS['wmx']     = wmx
-        PARAMS['psi']     = psi
-        PARAMS['phi_2']   = phi_2
-        PARAMS['phi_1']   = phi_1
-        PARAMS['Dp2p0']   = Dp2p0
-        PARAMS['Dphi0']   = Dphi0
-        PARAMS['z0']      = z0
-        PARAMS['omgl0']   = omgl0
-        PARAMS['Dp2pmx']  = Dp2pmx
-        PARAMS['w0']      = w0
-        PARAMS['Dp2pAcceptance'] = Dp2pAcceptance
-        PARAMS['zAcceptance']    = zAcceptance
+                DWmax      = w0small*m0c2)       # separatrix: max W in [MeV]
+        
+        for k,v in res.items():
+            PARAMS[k] = v
         
         # now we can calculate the Twiss objects at injection
         alfaw = 0. # always for longitudinal
@@ -496,8 +456,8 @@ def waccept(node):
     PARAMS['twiss_xyi()'] = twy()
     PARAMS['twiss_w_i()'] = tww()
     PARAMS['twiss_z_i()'] = twz()
+    return
 
-    return res
 #TODO: integrate sigmas into Twiss
 def sigmas(alfa,beta,epsi):
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
@@ -532,10 +492,10 @@ def collect_data_for_summary(lattice):
         SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
-        SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmx'])
-        SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmx']*1.e2)
-        SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-        SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmx']*100.)
+        SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmax'])
+        SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmax']*1.e2)
+        # SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
+        SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmax']*100.)
         SUMMARY['emit{z-Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
         SUMMARY['emit{phi-w}*  [rad]']             =  '{:8.2e}'.format(PARAMS['emitw'])
         SUMMARY['(Dp/p)i spread*']                 =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])

@@ -493,15 +493,18 @@ class RFG(Node):
         self.qE0LT     = self.E0L*self.ttf
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
-        self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+        self.matrix    = None
         self.map       = None
         """ dispatching to different gap models """
         if self.mapping   == 't3d' :
             """ delegate mapping to standard matrix multiplication """
+            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.map = super().map
         elif self.mapping == 'simple':
+            self.matrix = NP.eye(MDIM,MDIM)
             self.map = self.simple_map
         elif self.mapping == 'base':
+            self.matrix = NP.eye(MDIM,MDIM)
             self.particlef = None
             self.map = self.base_map_1
 
@@ -610,8 +613,6 @@ class RFG(Node):
         # def DEBUG_TRACK(inout,track):
         #     print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
-        # function body ================= function body ================= function body ================= 
-        # function body ================= function body ================= function body ================= 
         """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -647,7 +648,7 @@ class RFG(Node):
         # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
         # SOLL
         WIN       = tki                               # energy (i)
-        DELTAW    = self.deltaW                       # energy kick
+        DELTAW    = deltaW                       # energy kick
         WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
         # PARTICLE
         converter = WConverter(WIN,freq)
@@ -661,7 +662,7 @@ class RFG(Node):
 
         # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
-        particlef = copy(particle)(tkin = WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
+        particlef = Proton(WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
         betaf     = particlef.beta
         gammaf    = particlef.gamma
         gbf       = particlef.gamma_beta
@@ -675,7 +676,7 @@ class RFG(Node):
         commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
         if r > 0.:
             xp  = gbi/gbf*xp - x/r*commonf*sin(phin)  # Formel 4.2.6 A.Shishlo/J.Holmes
-            yp  = gbi/gbf*yp - y/r*commonf*sin(phin)
+            yp  = gbi/gbf*yp - y/r*commonf*sin(phin)  # should be phi-middle
         elif r == 0.:
             xp  = gbi/gbf*xp
             yp  = gbi/gbf*yp
@@ -691,7 +692,8 @@ class RFG(Node):
         self.particlef = particlef
         return f_track
     def base_map_1(self, i_track):
-        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen."""
+        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen. 
+           Produziert dasselbe Verhalten wie base_map_0 """
         # def DEBUG_TRACK(inout,track):
         #     print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
