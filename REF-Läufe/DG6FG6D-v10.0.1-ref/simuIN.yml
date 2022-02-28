@@ -43,9 +43,11 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    # Tkin:                 8.5            # [MeV] energy @ injection
-    Tkin:                 50.            # [MeV] energy @ injection
+    Tkin:                 8.5            # [MeV] energy @ injection
+    # Tkin:                 50.            # [MeV] energy @ injection
     DT2T:                 6.0e-4          # delta-T/T kinetic energy spread @ injection
+    # emitw:                3.e-6           # [m*rad] {x,x'} emittance @ entrance
+    emitw:                3.e-7           # [m*rad] {x,x'} emittance @ entrance
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    3.3             # [m] twiss beta @ entrance x

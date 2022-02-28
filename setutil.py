@@ -377,14 +377,15 @@ def waccept(node):
         tkin      = particle.tkin
         conv      = WConverter(tkin,freq)
 
-        """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread
-        w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)) """  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+        """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
+        w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
         """ SMALL amplitude oscillations (T.Wangler pp.185) """
         w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
+        wmax    = w0large
 
         w0       = (gamma-1.)*DT2T
-        emitw    = PARAMS.get('emitw',2.*abs(phisoll)*w0/pi)   # injected beam emottance
-        Dphi0    = pi*emitw/w0
+        emitw    = PARAMS.get('emitw',2.*abs(phisoll)*w0/pi*0.33)   # injected beam emottance
+        Dphi0    = PARAMS.get('Dphi0',pi*emitw/w0)
         betaw    = emitw/w0**2            # w0 = w-int = sqrt(emitw/betaw) 
         gammaw   = 1./betaw               # gamma twiss
         
@@ -392,25 +393,25 @@ def waccept(node):
         omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
 
         # longitudinal acceptance check (always done)
-        if w0small <= w0:
+        if wmax <= w0:
             si,sm,sf = node.position
             warnings.showwarning(
                 'out of energy acceptance @ s={:.1f} [m]'.format(si),
                 UserWarning,'setutil.py',
                 'waccept()')
 
-        # {z-dp/p}-space
+        # {z-dp/p}-space  TODO test wToz again!!!!
         z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
         gammaz = 1./betaz
-        Dp2pmax = conv.wToDp2p(w0small) # Dp/p on separatrix
+        Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
         res =  dict(
                 # {Dphi,w}
                 emitw    = emitw,       # emittance{Dphi,w} [rad]
+                Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 betaw    = betaw,       # beta twiss [rad]
                 gammaw   = gammaw,      # gamma twiss [1/rad]
-                wmax     = w0small,     # separatrix: large amp. oscillations
+                wmax     = wmax,        # separatrix: large amp. oscillations
                 w0       = w0,          # separatrix small amp. osscillations
-                Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
                 omgl0    = omgl0,       # synchrotron oscillation [Hz]
                 # {z,Dp2p}
                 emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
@@ -422,7 +423,7 @@ def waccept(node):
                 Dp2p_Acceptance = Dp2pmax,
                 z_Acceptance    = conv.DphiToz(2.*phisoll),
                 # {Dphi,DW}
-                DWmax      = w0small*m0c2)       # separatrix: max W in [MeV]
+                DWmax      = wmax*m0c2)       # separatrix: max W in [MeV]
         
         for k,v in res.items():
             PARAMS[k] = v

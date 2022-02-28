@@ -783,13 +783,6 @@ class RFG(Node):
         adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 
-
-
-
-
-
-
-
 # TODO classes below need unittesting
 class _PYO_G(object):
     """  PyOrbit RF gap-models (A.Shishlo,Jeff Holmes). These are 'clients' of 'host' RFG """
