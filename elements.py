@@ -496,15 +496,15 @@ class RFG(Node):
         self.matrix    = None
         self.map       = None
         """ dispatching to different gap models """
+        self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
         if self.mapping   == 't3d' :
             """ delegate mapping to standard matrix multiplication """
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.map = super().map
         elif self.mapping == 'simple':
-            self.matrix = NP.eye(MDIM,MDIM)
+            # self.matrix = NP.eye(MDIM,MDIM)
             self.map = self.simple_map
         elif self.mapping == 'base':
-            self.matrix = NP.eye(MDIM,MDIM)
+            # self.matrix = NP.eye(MDIM,MDIM)
             self.particlef = None
             self.map = self.base_map_1
 

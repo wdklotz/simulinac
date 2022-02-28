@@ -5,6 +5,7 @@
 *.xml
 *.log
 __pycache__
+h
 .DS_Store
 .project
 .pydevproject
