@@ -223,6 +223,8 @@ def factory(input_file,stop=None):
         if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
         util.SUMMARY['accON'] = util.FLAGS.get('accON')
         if not util.FLAGS.get('accON'): util.FLAGS['dWf'] = 0.
+        util.FLAGS['non_linear_mapping'] = False
+
         return flags
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
@@ -262,6 +264,8 @@ def factory(input_file,stop=None):
         for elementID in elementIDs:
             # print("A"); DEBUG_ON(elementID)
             ELEMENT = util.ELEMENTS.get(elementID)
+            if ELEMENT.get('mapping',"") in ['base','ttf','dyn']:
+                util.FLAGS['non_linear_mapping'] = True
             # print("B"); DEBUG_ON(element)
             """add sectionID and elementID"""
             ELEMENT['ID']  = elementID 

@@ -25,11 +25,13 @@ import unittest
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
 from copy import copy
+# from termcolor import colored
+# from sty import fg,bg,ef,rs
 
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
-from setutil import Twiss, Functions, Particle, Proton
+from setutil import Twiss, Functions, Particle, Proton, colors
 from sigma import Sigma
 
 def PRINT_PRETTY(obj=None):
@@ -405,14 +407,14 @@ class Lattice(object):
                 sigma_fun.append(s,val)
             return sigma_fun
 
-        if PARAMS['mapping'] == 'dyn':
-            mess = 'CALCULATE TWISS ENVELOPES WITH T3D CAVITIES ("dyn")'
+        if FLAGS['non_linear_mapping']:
+            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping. CALCULATE ENVELOPES from Twiss-Parameters with T3D\'s RF-gaps (NT=10).'+colors.ENDC
             function = self.twiss_envelopes # use beta-matrix            
         elif FLAGS['sigma']:
-            mess = 'CALCULATE SIGMA ENVELOPES'
+            mess = 'CALCULATE ENVELOPES with sigma-Matrix'
             function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:
-            mess = 'CALCULATE TWISS ENVELOPES'
+            mess = 'CALCULATE ENVELOPES from Twiss-Parameters'
             function = self.twiss_envelopes # use beta-matrix
 
         if not FLAGS['KVout']: 

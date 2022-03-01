@@ -354,6 +354,12 @@ class TmStamp(object):
                 str= '{}  {}'.format(str,entry)
             cntr+=1
         return str
+class colors: # You may need to change color settings
+    RED = '\033[31m'
+    ENDC = '\033[m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
 def waccept(node):
     """
     Central to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
@@ -458,9 +464,7 @@ def waccept(node):
     PARAMS['twiss_w_i()'] = tww()
     PARAMS['twiss_z_i()'] = twz()
     return
-
-#TODO: integrate sigmas into Twiss
-def sigmas(alfa,beta,epsi):
+def sigmas(alfa,beta,epsi):    #TODO: integrate sigmas into Twiss
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
     sigma  = sqrt(epsi*beta)
