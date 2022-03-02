@@ -264,7 +264,7 @@ def factory(input_file,stop=None):
         for elementID in elementIDs:
             # print("A"); DEBUG_ON(elementID)
             ELEMENT = util.ELEMENTS.get(elementID)
-            if ELEMENT.get('mapping',"") in ['base','ttf','dyn']:
+            if ELEMENT.get('mapping',"") in ['base','ttf','dyn']:   # non_linear_mapping in lattice?
                 util.FLAGS['non_linear_mapping'] = True
             # print("B"); DEBUG_ON(element)
             """add sectionID and elementID"""

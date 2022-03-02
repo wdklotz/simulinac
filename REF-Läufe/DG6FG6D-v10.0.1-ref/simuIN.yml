@@ -67,8 +67,8 @@ PARAMETERS:
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'V8.0.0.a1 Vergleich'  # lattice version
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
@@ -187,5 +187,7 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [20,[SCle]]
     LINE:   [125,[SCle]]
+    # LINE:   [250,[SCle]]
+    # LINE:   [375,[SCle]]
 
   
