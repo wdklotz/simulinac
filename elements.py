@@ -1483,7 +1483,6 @@ class TestElementMethods(unittest.TestCase):
         rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
         self.assertEqual(rfg.mapping,"t3d")
         self.assertEqual(rfg.label,"RFG")
-        self.assertEqual(rfg.gap_model.type,"_T3D_G")
         self.assertEqual(rfg.EzAvg,2.1)
         self.assertEqual(rfg.phisoll,radians(-30.))
         self.assertAlmostEqual(rfg.deltaW,0.062206,delta=1.e-4)
