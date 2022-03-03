@@ -24,7 +24,7 @@ import numpy as NP
 # import time
 import pprint, inspect
 
-from setutil import PARAMS,Ktp,MDIM
+from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton
 from Ez0 import SFdata
 import elements as ELM
 
@@ -43,17 +43,17 @@ twopi = 2*pi
 class OXAL(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(50.), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata, particle, position, aperture, dWf, mapping='oxal')
+        super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='oxal')
         # TmStamp.stamp('OXAL init')
-        if self.SFdata == None:
+        if SFdata == None:
             raise RuntimeError('OXAL: missing E(z) table - STOP')
             sys.exit(1)
         else:
-            self.matrix = NP.eye(MDIM,MDIM)
+            self.SFdata = SFdata
             polies      = self.poly_slices(self.gap,self.SFdata)
-            self.make_mx(polies,self.phisoll,self.particle)
+            self.matrix = self.make_matrix(polies,self.phisoll,self.particle)
             self.deltaW = self.matrix[Ktp.T,Ktp.dT]
-            self.particlef = Proton(particle.tkin + self._deltaW)
+            self.particlef = Proton(particle.tkin + self.deltaW)
 
     def V0(self, poly):
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
@@ -71,7 +71,7 @@ class OXAL(ELM.RFG):
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
         t  = f1*f2
-        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
+        DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
         return t
     def S(self, poly, k):
         """ S(k) A.Shishlo/J.Holmes (4.4.7) """
@@ -82,7 +82,7 @@ class OXAL(ELM.RFG):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz/tan(k*dz)
         s  = f1*f2
-        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
+        DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
         return s
     def Tp(self, poly, k):
         """ 1st derivative T'(k) A.Shishlo/J.Holmes (4.4.8) """
@@ -140,11 +140,12 @@ class OXAL(ELM.RFG):
             # slice = OXAL_slice(parent, poly, particle)
             slices.append(poly)
         return slices
-    def make_mx(self, polies, phisoll, particle):
+    def make_matrix(self, polies, phisoll, particle):
         c        = PARAMS['clight']
-        m0c2     = Proton.m0c2
+        m0c2     = particle.m0c2
         m0c3     = m0c2*c
         omega    = self.omega
+        matrix   = NP.eye(MDIM,MDIM)
 
         # initialise loop variables
         p        = particle
@@ -157,10 +158,10 @@ class OXAL(ELM.RFG):
             ks     = omega/(c*betas)
             
             qV0    = self.V0(poly)
-            Tks    = self.T(self.poly,ks)
-            Sks    = self.S(self.poly,ks)
-            Tpks   = self.Tp(self.poly,ks)
-            Spks   = self.Sp(self.poly,ks)
+            Tks    = self.T(poly,ks)
+            Sks    = self.S(poly,ks)
+            Tpks   = self.Tp(poly,ks)
+            Spks   = self.Sp(poly,ks)
             # Tppks  = self.parent._Tpp(self.poly,ks)   # not needed for linear model
             # Sppks  = self.parent._Spp(self.poly,ks)   # not needed for linear model
 
@@ -238,11 +239,12 @@ class OXAL(ELM.RFG):
             mx[Ktp.S,Ktp.dS] = 0     # oxal-gap is kick of DKD - no length increase
 
             # add slice-matrix to oxal-matrix
-            self.matrix = NP.dot(mx,self.matrix)
+            matrix = NP.dot(mx,matrix)
 
             # refresh loop variables
             p = Proton(Wouts)
             phis = phiouts
+        return matrix
     def adjust_energy(self, tkin):
         adjusted = OXAL(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted

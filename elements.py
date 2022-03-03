@@ -30,9 +30,9 @@ from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
 from Ez0     import SFdata
-from TTFG    import _TTF_G
-from DynacG  import _DYN_G
-from OXAL    import _OXAL
+# from TTFG    import _TTF_G
+# from DynacG  import _DYN_G
+# from OXAL    import _OXAL
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
@@ -467,7 +467,7 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  Wrapper to zero length RF kick gap-models """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata = None, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
         super().__init__()
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
@@ -487,19 +487,18 @@ class RFG(Node):
         self.lamb      = PARAMS['clight']/self.freq
         self.gap       = gap                # [m] rf-gap
         self.mapping   = mapping            # map model
-        self.SFdata    = SFdata             # SuperFish data
         self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
         self.E0L       = self.EzAvg*self.gap
         self.qE0LT     = self.E0L*self.ttf
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
+        self.SFdata    = None               # SuperFish data
         self.matrix    = None
         self.map       = None
         """ dispatching to different gap models """
         if self.mapping   == 't3d' :
-            """ delegate mapping to standard matrix multiplication """
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
-            self.map = super().map
+            self.map = super().map   # delegate mapping to standard matrix multiplication
         elif self.mapping == 'simple':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.map = self.simple_map
@@ -509,7 +508,7 @@ class RFG(Node):
             self.map = self.base_map_1
         elif self.mapping == 'oxal':
             self.particlef = None
-            self.map = super().map
+            self.map = super().map   # delegate mapping to standard matrix multiplication
 
         # TODO mappings below not tested
         elif self.mapping == 'ttf':
@@ -781,7 +780,7 @@ class RFG(Node):
         self.particlef = particleRo
         return f_track
     def adjust_energy(self, tkin):
-        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 
 # TODO classes below need unittesting

@@ -36,6 +36,7 @@ DEBUG_OFF = DEB.get('OFF')
 
 import setutil as util
 import elements as ELM
+import OXAL
 from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
@@ -107,15 +108,16 @@ def instanciate_element(item):
                 if fname not in util.PARAMS:
                     gap_cm = gap*100     # Watch out!
                     util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
-                EzAvg    = util.PARAMS[fname].EzAvg
-                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
             else:
-                EzAvg    = EzPeak
+                ELEMENT['EzAvg']  = EzAvg = EzPeak
+                ELEMENT['SFdata'] = None
+            if mapping == 'oxal':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = OXAL.OXAL(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            else:
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
-            instance.sec      = attributes.get('sec','?')
-            ELEMENT['sec']    = instance.sec
-            ELEMENT['SFdata'] = instance.SFdata
-            ELEMENT['EzAvg']  = EzAvg
+                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
 
         elif type == 'RFC':
             label     = attributes['ID']
@@ -127,12 +129,11 @@ def instanciate_element(item):
             length    = get_mandatory(attributes,'length',label)
             mapping   = get_mandatory(attributes,'mapping',label)
             EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            # EzAvg     = attributes['EzAvg'] if 'EzAvg' in attributes else EzPeakToAverage(EzPeak)
             EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
             if mapping == None:
                 mapping = 't3d'
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fname     = get_mandatory(attributes,"SFdata",label)
+                fname = get_mandatory(attributes,"SFdata",label)
                 if fname not in util.PARAMS:
                     gap_cm = gap*100     # Watch out!
                     util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
