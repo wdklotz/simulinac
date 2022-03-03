@@ -103,7 +103,7 @@ class Lattice(object):
             """ the initial node """
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
-            node_adj     = node.adjust_energy(tk_injection)  # energy adjustment
+            node_adj     = node.adjust_energy(tk_injection)    # energy ADJUST
             # ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
             ref_track_m  = node_adj.map(ref_track)
             ref_particle = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
@@ -131,6 +131,12 @@ class Lattice(object):
             node_adj.ref_particle = ref_particle
         self.length = sf    # lattice length
         self.seq.append(node_adj)
+        # mx_full = NP.eye(10,10)
+        # for node in self.seq:
+        #     node_mx = node.matrix
+        #     mx_full = NP.dot(node_mx,mx_full)
+        # dumyy = 0
+
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):

@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sin,cos,tan,sqrt,pi
+from math import sin,cos,tan,sqrt,pi,degrees
 from copy import copy
 import numpy as NP
 # import time
@@ -156,6 +156,9 @@ class OXAL(ELM.RFG):
             betas  = p.beta
             gammas = p.gamma
             ks     = omega/(c*betas)
+
+            # ptkin = p.tkin
+            # psdeg = degrees(phis)
             
             qV0    = self.V0(poly)
             Tks    = self.T(poly,ks)
@@ -173,14 +176,16 @@ class OXAL(ELM.RFG):
             Wouts     = Wins + dws
             # phase increase SOLL
             phiouts   = phis + omega*polydz/(c*betas)
+            # phioutsdeg = degrees(phiouts)
 
             # oxal-matrix from SOLL aliases and variables
+            gbs_in      = gammas*betas
             gbs3_in     = 1./(gammas*betas)**3       # (gamma*beta)**3 in
             betas_in    = betas                      # beta in
             gammas_in   = gammas                     # gamma  in
             g3b2s_in    = gammas_in**3*betas_in**2   # gamma**3*beta**2 in
             gammas_out  = 1. + Wouts/m0c2            # gamma  out
-            gbs_out     = sqrt(gammas_out**2-1)      # (gamma*beta) out
+            gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta) out
             betas_out   = gbs_out/gammas_out         # beta out
             g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
 
@@ -226,9 +231,7 @@ class OXAL(ELM.RFG):
             mx[Ktp.zp,Ktp.zp]= (g3b2s_in/g3b2s_out - qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis))
 
             # {x,x',y,y'}: linear sub-matrix
-            gbs_in     = gammas*betas
-            gbs_out    = sqrt(gammas_out**2-1.)
-            facxy      = -qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
+            facxy = -qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
             mx[Ktp.xp,Ktp.x]  = facxy * (Tks*sphis + Sks*cphis) # mx(x',x) * xin
             mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out                  # mx(x',x')* xin'
             mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp,Ktp.x]                # mx(y',y) * yin
