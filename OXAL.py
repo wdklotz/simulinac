@@ -55,76 +55,99 @@ class OXAL(ELM.RFG):
             self.deltaW = self.matrix[Ktp.T,Ktp.dT]
             self.particlef = Proton(particle.tkin + self.deltaW)
 
+    def I0(self,k,d,cd,sd):
+        return 2.*sd/k   # [cm]
+    def I2(self,k,d,cd,sd):
+        return 2.*(2.*d*cd/k**2+(d**2/k-2./k**3)*sd)   # [cm**3]
+    def H1(self,k,d,cd,sd):
+        return 2.*(sd/k**2-d*cd/k)     # [cm**2]
+    def H3(self,k,d,cd,sd):
+        return 2.*((3.*d**2/k**2-6./k**4)*sd-(d**3/k-6.*d/k**3)*cd) # [cm**4]
+    def I4(self,k,d,cd,sd):
+        return 2.*(d**4*sd/k-4./k*self.H3(k, d, cd, sd))   # [cm**5]
     def V0(self, poly):
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
-        E0 = poly.E0                          # [MV/m]
+        # E0 = poly.E0                         # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
-        v0 = (2*dz+2./3.*b*dz**3)*1.e-2       # [cm] --> [m]
-        v0 = v0*E0*self.dWf
-        return v0
+        v0 = (2*dz+2./3.*b*dz**3)             # [cm]
+        # v0 = v0*E0*self.dWf
+        return v0    # [cm]
     def T(self, poly, k):
+        """
+        # poly = 1+a[1/cm]*z+b[1/cm**2]*z**2   
+        # k = omega/(c*beta) [1/m]
+        """
         """ T(k) A.Shishlo/J.Holmes (4.4.6) """
-        b  = poly.b
-        dz = poly.dz
+        b  = poly.b        # [1/cm**2]
+        dz = poly.dz       # [cm]
         k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-        t  = f1*f2
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        tk = (self.I0(k,dz,cd,sd) +b*self.I2(k,dz,cd,sd))  # [cm]
+        tk = tk/v0         # []
         DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
-        return t
+        return tk   # []
     def S(self, poly, k):
         """ S(k) A.Shishlo/J.Holmes (4.4.7) """
         a  = poly.a
-        b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.-k*dz/tan(k*dz)
-        s  = f1*f2
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        s = a*self.H1(k,dz,cd,sd)    # [cm]
+        s = s/v0                     # []
         DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
-        return s
+        return s    # []
     def Tp(self, poly, k):
         """ 1st derivative T'(k) A.Shishlo/J.Holmes (4.4.8) """
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        tp  = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
-        tp  = tp*1.e-2     # [cm] --> [m]
-        return tp
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2      # [1/m] --> [1/cm]
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        tp = -(self.H1(k,dz,cd,sd) +b*self.H3(k,dz,cd,sd))  # [cm**2]
+        tp = tp/v0   # [cm]
+        return tp   #[cm]
     def Sp(self, poly, k):
         """ 1st derivative S'(k) A.Shishlo/J.Holmes (4.4.9) """
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        sp  = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        sp  = sp*(dz**2-2./k**2+dz/tan(k*dz)*2/k)
-        sp  = sp*1.e-2     # [cm] --> [m]
-        return sp
+        a  = poly.a
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2      # [1/m] --> [1/cm]
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        sp = a* self.I2(k,dz,cd,sd)    #[cm**2]
+        sp = sp/v0      # [cm]
+        return sp       # [cm]
     def Tpp(self, poly, k):
         """ 2nd derivative T''(k) """
         a   = poly.a
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        tpp = \
-            2*(dz*k*(dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*cos(dz*k) 
-            - (dz*k*(-6*b + k**2*(dz**2*b + 1))/tan(dz*k) + 6*b - k**2*(3*dz**2*b + 1))*sin(dz*k) 
-            - (dz**2*k**2*(-6*b + k**2*(dz**2*b + 1))/sin(dz*k)**2 - 12*dz*b*k/tan(dz*k) + 18*b 
-            - k**2*(3*dz**2*b + 1))*sin(dz*k))/(dz*k**5*(2./3.*dz**2*b + 2))
-        return tpp
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        tpp = -(self.I2(k,dz,cd,sd) + b*self.I4(k,dz,cd,sd) +a*self.H1(k,dz,cd,sd))  # [cm**3]
+        tpp = tpp/v0    # [cm**2]
+        return tpp      # [cm**2]
     def Spp(self, poly, k):
         """ 2nd derivative S''(k) """
         a   = poly.a
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        spp = \
-            2*a*(dz**3*k**3*cos(dz*k) - 3*dz**2*k**2*sin(dz*k)
-            - 6*dz*k*cos(dz*k) + 6*sin(dz*k))/(dz*k**4*(2./3.*dz*b + 2))
-        return spp    
+        v0 = self.V0(poly) # [cm]
+        cd = cos(k*dz)
+        sd = sin(k*dz)
+        spp = -a*self.H1(k,dz,cd,sd) - self.I2(k,dz,cd,sd) - b*self.I4(k,dz,cd,sd)   #[cm]
+        spp = spp/v0   # []   TODO TODO falsche dimension ??????
+        return spp    # []
     def poly_slices(self, gap, SFdata):
         """Slice the RF gap"""
         slices = []
