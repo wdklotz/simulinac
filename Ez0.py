@@ -222,7 +222,6 @@ class SFdata(object):
     @property
     def EzPoly(self):
         return self._poly
-
     def make_Ez_table(self):
         """ read raw data and scale to self.EzPeak and self.gap """
         zp = []; rp = []; ep = []
@@ -260,7 +259,6 @@ class SFdata(object):
             EzAvg += ep[i]
         EzAvg = EzAvg/N
         return raw_tab,EzAvg
-
     def scale_Ez_table(self,EzAvg,EzPeak=0.,gap=0.):   # NOTE: full gap!
         # scales Ez-axis and z-axis of raw SF-data-table
         EzMax = max([x.Ez for x in self._Ez0_tab_raw])
@@ -278,7 +276,6 @@ class SFdata(object):
 
         EzAvg = EzAvg*(self._EzPeak/EzMax)
         return tab,EzAvg
-
     def make_polyfit(self,Ez_table): 
         # Polynomial fits to raw data according to Shislo&Holmes
         # In here M adjacent raw intervals are taken as one single interval and fitted with a polynomial
@@ -315,12 +312,10 @@ class SFdata(object):
         print('Ez0_poly::SFdata::make_polyfit: {} poly intervals'.format(len(polies)))
         # self._poly = polies
         return polies
-
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
         res = Ipoly(z,self.EzPoly) * cos(omega*t+phis)
         return res
-
     def dEz0tdt(self, z, t, omega, phis):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
         res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)

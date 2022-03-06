@@ -43,8 +43,8 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 8.5           # [MeV] energy @ injection
-    # Tkin:                 50.           # [MeV] energy @ injection
+    # Tkin:                 8.5           # [MeV] energy @ injection
+    Tkin:                 50.           # [MeV] energy @ injection
     # Tkin:                  100.           # [MeV] energy @ injection
     DT2T:                 6.0e-4          # delta-T/T kinetic energy spread @ injection
     # emitw:                3.e-6           # [m*rad] {x,x'} emittance @ entrance
@@ -186,8 +186,9 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    LINE:   [20,[SCle]]
-    # LINE:   [125,[SCle]]
+    # LINE:   [1,[SCle]]
+    # LINE:   [20,[SCle]]
+    LINE:   [125,[SCle]]
     # LINE:   [230,[SCle]]
     # LINE:   [375,[SCle]]
 

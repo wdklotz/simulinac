@@ -30,7 +30,7 @@ import elements as ELM
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    print(F'DEBUG_ON ==============>{file}: ', end="")
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
@@ -39,6 +39,8 @@ DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 twopi = 2*pi
+# counter_of_polies = 0
+# trigger_poly_number = 12
 
 class OXAL(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
@@ -50,8 +52,8 @@ class OXAL(ELM.RFG):
             sys.exit(1)
         else:
             self.SFdata = SFdata
-            polies      = self.poly_slices(self.gap,self.SFdata)
-            self.matrix = self.make_matrix(polies,self.phisoll,self.particle)
+            self.polies = self.poly_slices(self.gap,self.SFdata)
+            self.matrix = self.make_matrix(self.polies,self.phisoll,self.particle)
             self.deltaW = self.matrix[Ktp.T,Ktp.dT]
             self.particlef = Proton(particle.tkin + self.deltaW)
 
@@ -72,7 +74,7 @@ class OXAL(ELM.RFG):
         dz = poly.dz                          # [cm]
         v0 = (2*dz+2./3.*b*dz**3)             # [cm]
         # v0 = v0*E0*self.dWf
-        return v0    # [cm]
+        return v0   #NOTE V0 in [cm]
     def T(self, poly, k):
         """
         # poly = 1+a[1/cm]*z+b[1/cm**2]*z**2   
@@ -87,7 +89,7 @@ class OXAL(ELM.RFG):
         sd = sin(k*dz)
         tk = (self.I0(k,dz,cd,sd) +b*self.I2(k,dz,cd,sd))  # [cm]
         tk = tk/v0         # []
-        DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON('OXAL_slice:(T,k) {} [_]'.format((tk,k)))
         return tk   # []
     def S(self, poly, k):
         """ S(k) A.Shishlo/J.Holmes (4.4.7) """
@@ -97,10 +99,10 @@ class OXAL(ELM.RFG):
         v0 = self.V0(poly) # [cm]
         cd = cos(k*dz)
         sd = sin(k*dz)
-        s = a*self.H1(k,dz,cd,sd)    # [cm]
-        s = s/v0                     # []
-        DEBUG_OFF('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
-        return s    # []
+        sk = a*self.H1(k,dz,cd,sd)    # [cm]
+        sk = sk/v0                     # []
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON('OXAL_slice:(S,k) {} [_]'.format((sk,k)))
+        return sk    # []
     def Tp(self, poly, k):
         """ 1st derivative T'(k) A.Shishlo/J.Holmes (4.4.8) """
         b  = poly.b
@@ -111,7 +113,8 @@ class OXAL(ELM.RFG):
         sd = sin(k*dz)
         tp = -(self.H1(k,dz,cd,sd) +b*self.H3(k,dz,cd,sd))  # [cm**2]
         tp = tp/v0   # [cm]
-        return tp   #[cm]
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(T',k) {} [cm]".format((tp,k)))
+        return tp*1.e-2   #[m]
     def Sp(self, poly, k):
         """ 1st derivative S'(k) A.Shishlo/J.Holmes (4.4.9) """
         a  = poly.a
@@ -123,7 +126,8 @@ class OXAL(ELM.RFG):
         sd = sin(k*dz)
         sp = a* self.I2(k,dz,cd,sd)    #[cm**2]
         sp = sp/v0      # [cm]
-        return sp       # [cm]
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(S',k) {} [cm]".format((sp,k)))
+        return sp*1.e-2      # [m]
     def Tpp(self, poly, k):
         """ 2nd derivative T''(k) """
         a   = poly.a
@@ -135,7 +139,8 @@ class OXAL(ELM.RFG):
         sd = sin(k*dz)
         tpp = -(self.I2(k,dz,cd,sd) + b*self.I4(k,dz,cd,sd) +a*self.H1(k,dz,cd,sd))  # [cm**3]
         tpp = tpp/v0    # [cm**2]
-        return tpp      # [cm**2]
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(T'',k) {} [cm**2]".format((tpp,k)))
+        return tpp*1.e-4      # [m**2]
     def Spp(self, poly, k):
         """ 2nd derivative S''(k) """
         a   = poly.a
@@ -145,9 +150,10 @@ class OXAL(ELM.RFG):
         v0 = self.V0(poly) # [cm]
         cd = cos(k*dz)
         sd = sin(k*dz)
-        spp = -a*self.H1(k,dz,cd,sd) - self.I2(k,dz,cd,sd) - b*self.I4(k,dz,cd,sd)   #[cm]
-        spp = spp/v0   # []   TODO TODO falsche dimension ??????
-        return spp    # []
+        spp = -a*self.H3(k,dz,cd,sd)   #[cm**3]
+        spp = spp/v0   # [cm**2] 
+        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(S'',k) {} [cm**2]".format((spp,k)))
+        return spp*1.e-4     # [m**2]
     def poly_slices(self, gap, SFdata):
         """Slice the RF gap"""
         slices = []
@@ -173,44 +179,45 @@ class OXAL(ELM.RFG):
         # initialise loop variables
         p        = particle
         phis     = phisoll
-        for poly in polies:   # each poly is a slice of the full matrix
-            polydz = poly.dz*1.e-2     # [cm] ==> [m]
-            Wins   = p.tkin
-            betas  = p.beta
-            gammas = p.gamma
-            ks     = omega/(c*betas)
+        for poly in polies:   # each poly is a slice of the full mat
+            # global counter_of_polies   # debugging
+            # counter_of_polies += 1   # debugging
+            polydz    = poly.dz*1.e-2     # [cm] ==> [m]
+            Ws_in     = p.tkin
+            betas_in  = p.beta
+            gammas_in = p.gamma
+            gbs_in    = p.gamma_beta
+            gbs3_in   = gbs_in**3
+            phis_in   = phis
+            ks        = omega/(c*betas_in)
 
-            # ptkin = p.tkin
-            # psdeg = degrees(phis)
+            # ptkin = p.tkin   # debugging
+            # psdeg = degrees(phis)   # debugging
             
-            qV0    = self.V0(poly)
+            qV0    = self.V0(poly)*1.e-2*poly.E0     #NOTE units V0 [cm]->[m]
             Tks    = self.T(poly,ks)
             Sks    = self.S(poly,ks)
             Tpks   = self.Tp(poly,ks)
             Spks   = self.Sp(poly,ks)
-            # Tppks  = self.parent._Tpp(self.poly,ks)   # not needed for linear model
-            # Sppks  = self.parent._Spp(self.poly,ks)   # not needed for linear model
+            Tppks  = self.Tpp(poly,ks)  
+            Sppks  = self.Spp(poly,ks) 
 
             sphis  = sin(phis)
             cphis  = cos(phis)
 
-            # energy increase ref-particle
-            dws       = qV0*(Tks*cphis - Sks*sphis)
-            Wouts     = Wins + dws
-            # phase increase SOLL
-            phiouts   = phis + omega*polydz/(c*betas)
-            # phioutsdeg = degrees(phiouts)
+            # kin. energy increase ref-particle
+            DWs       = qV0*(Tks*cphis - Sks*sphis)     # Shishlo 4.6.1
+            Ws_out    = Ws_in + DWs
+            # phase increase ref-particle
+            Dphis = qV0*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
+            phis_out   = phis_in + Dphis
 
-            # oxal-matrix from SOLL aliases and variables
-            gbs_in      = gammas*betas
-            gbs3_in     = 1./(gammas*betas)**3       # (gamma*beta)**3 in
-            betas_in    = betas                      # beta in
-            gammas_in   = gammas                     # gamma  in
-            g3b2s_in    = gammas_in**3*betas_in**2   # gamma**3*beta**2 in
-            gammas_out  = 1. + Wouts/m0c2            # gamma  out
+            # oxal-matrix 
+            g3b2s_in    = gammas_in**3*betas_in**2    # gamma**3*beta**2 in
+            gammas_out  = 1. + Ws_out/m0c2            # gamma  out
             gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta) out
-            betas_out   = gbs_out/gammas_out         # beta out
-            g3b2s_out   = gammas_out**3*betas_out**2 # gamma-s**3*beta-s**2 out
+            betas_out   = gbs_out/gammas_out          # beta out
+            g3b2s_out   = gammas_out**3*betas_out**2  # gamma-s**3*beta-s**2 out
 
             #=======================================================================================
             # (4.6.10) in Shishlo's paper mit SYMPY berechnet: 
@@ -261,15 +268,15 @@ class OXAL(ELM.RFG):
             mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp,Ktp.xp]               # mx(y',y')* yin'
 
             # energy and length increase
-            mx[Ktp.T,Ktp.dT] = dws
-            mx[Ktp.S,Ktp.dS] = 0     # oxal-gap is kick of DKD - no length increase
+            mx[Ktp.T,Ktp.dT] = DWs
+            mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
 
             # add slice-matrix to oxal-matrix
             matrix = NP.dot(mx,matrix)
 
             # refresh loop variables
-            p = Proton(Wouts)
-            phis = phiouts
+            p = Proton(Ws_out)
+            phis = phis_out
         return matrix
     def adjust_energy(self, tkin):
         adjusted = OXAL(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
