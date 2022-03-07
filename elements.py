@@ -466,7 +466,7 @@ class GAP(Node):
         adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 class RFG(Node):
-    """  Wrapper to zero length RF kick gap-models """
+    """  RF-gap of zero length with different kick gap-models """
     def __init__(self, label, EzAvg, phisoll, gap, freq, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
         super().__init__()
         def ttf(lamb, gap, beta):
@@ -480,19 +480,19 @@ class RFG(Node):
         self.aperture  = aperture
         self.viseo     = 0.25
         self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
-        self.EzAvg     = EzAvg*self.dWf          # [MV/m] average gap field
-        self.phisoll   = phisoll            # [radians] soll phase
-        self.freq      = freq               # [Hz]  RF frequenz
+        self.EzAvg     = EzAvg*self.dWf      # [MV/m] average gap field
+        self.phisoll   = phisoll             # [radians] soll phase
+        self.freq      = freq                # [Hz]  RF frequenz
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
-        self.gap       = gap                # [m] rf-gap
-        self.mapping   = mapping            # map model
+        self.gap       = gap                 # [m] rf-gap
+        self.mapping   = mapping             # map model
         self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
         self.E0L       = self.EzAvg*self.gap
         self.qE0LT     = self.E0L*self.ttf
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
-        self.SFdata    = None               # SuperFish data
+        self.SFdata    = None                # SuperFish data
         self.matrix    = None
         self.map       = None
         """ dispatching to different gap models """
@@ -508,13 +508,11 @@ class RFG(Node):
             self.map = self.base_map_1
         elif self.mapping == 'oxal':
             self.particlef = None
-            # self.map = self.map   # OXAL has its own mapping method
+            # self.map  =>  # OXAL has its own mapping method
 
         # TODO mappings below not tested TODO
         elif self.mapping == 'ttf':
             self.gap_model = _TTF_G(host=self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
-        # elif self.mapping == 'oxal':
-            # self.gap_model = _OXAL(host=self) # openXAL gap-model with SF-data  (A.Shishlo/J.Holmes)
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
 

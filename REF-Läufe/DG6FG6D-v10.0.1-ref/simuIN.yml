@@ -38,7 +38,7 @@ FLAGS:
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
     # marker:       True            # {False} activate Markers in the lattice
-    verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      0               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -113,8 +113,8 @@ ELEMENTS:
         sec:      HE           # section 
     RFGH:                      # ID: &alias
         type:     RFG          # RFG class
-        # EzAvg:    1.00        # [MV/m] average E-field on axis
         EzPeak:   2.20         # [MV/m] 
+        # EzPeak:   0.7864         # [MV/m] 
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *p01         # [Hz] frequency
         gap:      *p15         # [m] length

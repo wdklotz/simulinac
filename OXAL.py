@@ -51,7 +51,7 @@ class OXAL(ELM.RFG):
             raise RuntimeError('OXAL: missing E(z) table - STOP')
             sys.exit(1)
         else:
-            self.map       = self.oxal_map
+            self.map       = self.oxal_map   # OXAL's specific mapping method
             self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
             self.matrix    = self.make_matrix(self.polies,self.phisoll,self.particle)
@@ -70,12 +70,12 @@ class OXAL(ELM.RFG):
         return 2.*(d**4*sd/k-4./k*self.H3(k, d, cd, sd))   # [cm**5]
     def V0(self, poly):
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
-        # E0 = poly.E0                         # [MV/m]
+        # E0 = poly.E0                        # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
         v0 = (2*dz+2./3.*b*dz**3)             # [cm]
         # v0 = v0*E0*self.dWf
-        return v0   #NOTE V0 in [cm]
+        return v0                    # NOTE V0 is in [cm]
     def T(self, poly, k):
         """
         # poly = 1+a[1/cm]*z+b[1/cm**2]*z**2   
@@ -195,7 +195,7 @@ class OXAL(ELM.RFG):
             # ptkin = p.tkin          # debugging
             # psdeg = degrees(phis)   # debugging
             
-            qV0m   = self.V0(poly)*1.e-2*poly.E0     #NOTE units V0 [cm]->[m]
+            qV0m   = self.V0(poly)*1.e-2*poly.E0     # NOTE change units V0 is in [cm]->[m]
             Tks    = self.T(poly,ks)
             Sks    = self.S(poly,ks)
             Tpks   = self.Tp(poly,ks)
@@ -219,6 +219,7 @@ class OXAL(ELM.RFG):
             gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta) out
             betas_out   = gbs_out/gammas_out          # beta out
             g3b2s_out   = gammas_out**3*betas_out**2  # gamma-s**3*beta-s**2 out
+            #======================================================================================="""        
             # (4.6.11) in Shishlo's paper:
             factor = qV0m*betas_out/m0c2/gbs3_in
             r44 = betas_out/betas_in + factor*omega/c/betas_in*(Tpks*cphis - Spks*sphis)
