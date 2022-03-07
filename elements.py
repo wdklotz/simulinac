@@ -508,9 +508,9 @@ class RFG(Node):
             self.map = self.base_map_1
         elif self.mapping == 'oxal':
             self.particlef = None
-            self.map = super().map   # delegate mapping to standard matrix multiplication
+            # self.map = self.map   # OXAL has its own mapping method
 
-        # TODO mappings below not tested
+        # TODO mappings below not tested TODO
         elif self.mapping == 'ttf':
             self.gap_model = _TTF_G(host=self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
         # elif self.mapping == 'oxal':

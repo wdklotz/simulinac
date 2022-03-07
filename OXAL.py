@@ -51,10 +51,11 @@ class OXAL(ELM.RFG):
             raise RuntimeError('OXAL: missing E(z) table - STOP')
             sys.exit(1)
         else:
-            self.SFdata = SFdata
-            self.polies = self.poly_slices(self.gap,self.SFdata)
-            self.matrix = self.make_matrix(self.polies,self.phisoll,self.particle)
-            self.deltaW = self.matrix[Ktp.T,Ktp.dT]
+            self.map       = self.oxal_map
+            self.SFdata    = SFdata
+            self.polies    = self.poly_slices(self.gap,self.SFdata)
+            self.matrix    = self.make_matrix(self.polies,self.phisoll,self.particle)
+            self.deltaW    = self.matrix[Ktp.T,Ktp.dT]
             self.particlef = Proton(particle.tkin + self.deltaW)
 
     def I0(self,k,d,cd,sd):
@@ -177,12 +178,12 @@ class OXAL(ELM.RFG):
         matrix   = NP.eye(MDIM,MDIM)
 
         # initialise loop variables
-        p        = particle
+        p        = Proton(particle.tkin)
         phis     = phisoll
         for poly in polies:   # each poly is a slice of the full mat
             # global counter_of_polies   # debugging
-            # counter_of_polies += 1   # debugging
-            polydz    = poly.dz*1.e-2     # [cm] ==> [m]
+            # counter_of_polies += 1     # debugging
+            z         = poly.dz*1.e-2     # [cm] ==> [m]
             Ws_in     = p.tkin
             betas_in  = p.beta
             gammas_in = p.gamma
@@ -191,10 +192,10 @@ class OXAL(ELM.RFG):
             phis_in   = phis
             ks        = omega/(c*betas_in)
 
-            # ptkin = p.tkin   # debugging
+            # ptkin = p.tkin          # debugging
             # psdeg = degrees(phis)   # debugging
             
-            qV0    = self.V0(poly)*1.e-2*poly.E0     #NOTE units V0 [cm]->[m]
+            qV0m   = self.V0(poly)*1.e-2*poly.E0     #NOTE units V0 [cm]->[m]
             Tks    = self.T(poly,ks)
             Sks    = self.S(poly,ks)
             Tpks   = self.Tp(poly,ks)
@@ -205,79 +206,58 @@ class OXAL(ELM.RFG):
             sphis  = sin(phis)
             cphis  = cos(phis)
 
-            # kin. energy increase ref-particle
-            DWs       = qV0*(Tks*cphis - Sks*sphis)     # Shishlo 4.6.1
+            # kin.energy increase ref-particle
+            DWs       = qV0m*(Tks*cphis - Sks*sphis)     # Shishlo 4.6.1
             Ws_out    = Ws_in + DWs
             # phase increase ref-particle
-            Dphis = qV0*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
+            Dphis = qV0m*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
             phis_out   = phis_in + Dphis
 
-            # oxal-matrix 
+            # OXAL-matrix 
             g3b2s_in    = gammas_in**3*betas_in**2    # gamma**3*beta**2 in
             gammas_out  = 1. + Ws_out/m0c2            # gamma  out
             gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta) out
             betas_out   = gbs_out/gammas_out          # beta out
             g3b2s_out   = gammas_out**3*betas_out**2  # gamma-s**3*beta-s**2 out
-
-            #=======================================================================================
-            # (4.6.10) in Shishlo's paper mit SYMPY berechnet: 
-            # ACHTUNG! ist nicht dasselbe wie Shishlo's formel. Keine Tpp- & Spp-terme hier! 
-                    # DDPHI= # DDPHI= phi_out - phi_in 
-                    # -(Spks*sphis - Tpks*cphis)*dphi*gsbs3*omega*qV0/m0c3 
-                    # -(Spks*cphis + Tpks*sphis)*3*db2bs*omega*qV0/(betas**3*gammas*m0c3) 
-                    
-                    # - Sppks*cphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2) (a) term mit gleichem factor in (4.6.10)
-                    # - Tppks*sphis*db2bs**2*gsbs3*omega**2*qV0/(betas*c*m0c3)            O(2) (b) term mit gleichem factor in (4.6.10)
-
-                    # - 3*Tpks*cphis*db2bs*dphi*omega*qV0/(betas**3*gammas*m0c3)          O(2)
-                    # + 3*Spks*db2bs*dphi*omega*qV0*sphis/(betas**3*gammas*m0c3)          O(2)
-                    # - Tppks*cphis*db2bs**2*dphi*gsbs3*omega**2*qV0/(betas*c*m0c3)       O(3)
-                    # + Sppks*db2bs**2*dphi*gsbs3*omega**2*qV0*sphis/(betas*c*m0c3)       O(3)
-                    # + 3*Sppks*cphis*db2bs**3*omega**2*qV0/(betas**4*c*gammas*m0c3)      O(3)
-                    # + 3*Tppks*db2bs**3*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3)      O(3)
-                    # - 3*Sppks*db2bs**3*dphi*omega**2*qV0*sphis/(betas**4*c*gammas*m0c3) O(4)
-                    # + 3*Tppks*cphis*db2bs**3*dphi*omega**2*qV0/(betas**4*c*gammas*m0c3) O(4)
-            # Facit: Formeln (4.6.10) und (4.6.11) im paper sind nicht korreckt. Terme (a) & (b) sind O(2) und nicht O(1) !
-            # Facit: die sympy-Rechnung ist genauer als die Formeln im paper !!
-            #=======================================================================================        
-            # (4.6.9) in Shishlo's paper:
-                    # dbeta2beta_out = db2bs*(g3b2s_in/g3b2s_out-qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis)) 
-                    # + z*qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
             # (4.6.11) in Shishlo's paper:
-                    # z_out = betas_out/betas_in*z 
-                    # + qV0*betas_out/(m0c2*gbs3_in)*((3*gammas_in**2*(Tpks*sphis+Spks*cphis)
-                    # + omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))*db2bs 
-                    # + omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)*z)
-            #=======================================================================================        
-
-            # {z, delta-beta/betas}: linear sub matrix
+            factor = qV0m*betas_out/m0c2/gbs3_in
+            r44 = betas_out/betas_in + factor*omega/c/betas_in*(Tpks*cphis - Spks*sphis)
+            r45 = factor*(3*gammas_in**2*(Tpks*sphis + Spks*cphis) + omega/c/betas_in*(Tppks*sphis+Sppks*cphis))
+            # (4.6.9) in Shishlo's paper:
+            r54 = qV0m*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis + Sks*cphis)
+            r55 = (g3b2s_in/g3b2s_out - qV0m*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis - Spks*sphis))
+            #======================================================================================="""        
+            # {z, Dbeta/betas}: linear sub matrix
+            # NOTE: Shislo's Formeln sind fuer (z,Dbeta/betas) longitudinal
             mx = NP.eye(MDIM,MDIM)
-            # implementation (4.6.9) und (4.6.11) from Shishlo's paper
-            mx[Ktp.z,Ktp.z ] = betas_out/betas_in + qV0*betas_out/(m0c2*gbs3_in)*omega/(c*betas_in)*(Tpks*cphis-Spks*sphis)
-            # mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis)+omega/(c*betas_in)*(Tppks*sphis+Sppks*cphis))
-            # (4.6.11) mit meiner sympy Korrektur: keine Tpp- und Spp-terme in (4.6.11)
-            mx[Ktp.z,Ktp.zp] = qV0*betas_out/(m0c2*gbs3_in)*(3*gammas_in**2*(Tpks*sphis+Spks*cphis))
-            mx[Ktp.zp,Ktp.z] = qV0*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis+Sks*cphis)
-            mx[Ktp.zp,Ktp.zp]= (g3b2s_in/g3b2s_out - qV0*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis-Spks*sphis))
-
-            # {x,x',y,y'}: linear sub-matrix
-            facxy = -qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
-            mx[Ktp.xp,Ktp.x]  = facxy * (Tks*sphis + Sks*cphis) # mx(x',x) * xin
-            mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out                  # mx(x',x')* xin'
-            mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp,Ktp.x]                # mx(y',y) * yin
-            mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp,Ktp.xp]               # mx(y',y')* yin'
-
+            mx[Ktp.z, Ktp.z] = r44; mx[Ktp.z, Ktp.zp ] = r45
+            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55
+            # {x,x'}: linear sub-matrix
+            factor = qV0m*omega/(2.*m0c3*gbs_out*gbs_in**2)
+            mx[Ktp.xp,Ktp.x ] = -factor * (Tks*sphis + Sks*cphis)
+            mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out
+            # {y,y'}: linear sub-matrix
+            mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp, Ktp.x]
+            mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp, Ktp.xp]
             # energy and length increase
             mx[Ktp.T,Ktp.dT] = DWs
             mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
-
             # add slice-matrix to oxal-matrix
             matrix = NP.dot(mx,matrix)
 
             # refresh loop variables
-            p = Proton(Ws_out)
+            # p = Proton(Ws_out)
+            p = p(Ws_out)   # NOTE using the call method for Particle
             phis = phis_out
         return matrix
     def adjust_energy(self, tkin):
         adjusted = OXAL(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
+    def oxal_map(self,i_track):
+        gs2 = (self.particle.gamma)**2
+        i_track = copy(i_track)
+        i_track[Ktp.zp] = 1./gs2 * i_track[Ktp.zp]      # Dp/p -> Dbeta/beta
+        f_track = NP.dot(self.matrix,i_track)
+        gs2 = (self.particlef.gamma)**2
+        f_track[Ktp.zp] = gs2 * f_track[Ktp.zp]         # Dbeta/beta -> Dp/p
+        return f_track
