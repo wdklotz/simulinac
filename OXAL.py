@@ -160,14 +160,10 @@ class OXAL(ELM.RFG):
         slices = []
         zl = -gap/2.*100.   # [m] --> [cm]
         zr = -zl
-        #    E0z = 0.
-        #    z = 0.
         for poly in SFdata.EzPoly:
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
-            # instantiate _TTF_Gslices
-            # slice = OXAL_slice(parent, poly, particle)
             slices.append(poly)
         return slices
     def make_matrix(self, polies, phisoll, particle):
@@ -183,7 +179,7 @@ class OXAL(ELM.RFG):
         for poly in polies:   # each poly is a slice of the full mat
             # global counter_of_polies   # debugging
             # counter_of_polies += 1     # debugging
-            z         = poly.dz*1.e-2     # [cm] ==> [m]
+            # z         = poly.dz*1.e-2     # [cm] ==> [m]
             Ws_in     = p.tkin
             betas_in  = p.beta
             gammas_in = p.gamma
