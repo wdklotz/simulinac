@@ -136,7 +136,6 @@ class Lattice(object):
         #     node_mx = node.matrix
         #     mx_full = NP.dot(node_mx,mx_full)
         # dumyy = 0
-
     def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):

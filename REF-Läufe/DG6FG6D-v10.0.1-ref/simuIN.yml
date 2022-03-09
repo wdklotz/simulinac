@@ -70,8 +70,8 @@ PARAMETERS:
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    oxal            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    oxal            # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................

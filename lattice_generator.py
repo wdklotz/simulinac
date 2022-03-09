@@ -36,7 +36,8 @@ DEBUG_OFF = DEB.get('OFF')
 
 import setutil as util
 import elements as ELM
-import OXAL
+import OXAL as OXA
+import TTFG as TTF
 from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
@@ -66,14 +67,12 @@ def instanciate_element(item):
             instance     =  ELM.D(ID,length=length,aperture=aperture)
             instance.sec   = attributes.get('sec','?')
             ELEMENT['sec'] = instance.sec
-
         elif type == 'SIXD':
             length       = get_mandatory(attributes,'length',ID)
             aperture     = attributes.get('aperture')
             instance     = ELM.SIXD(ID,length=length,aperture=aperture)
             instance.sec   = attributes.get('sec','?')
             ELEMENT['sec'] = instance.sec
-
         elif type == 'QF':
             length         = get_mandatory(attributes,'length',ID)
             dBdz           = get_mandatory(attributes,"B'",ID)
@@ -83,7 +82,6 @@ def instanciate_element(item):
             instance.sec     = attributes.get('sec','?')
             ELEMENT['Bpole'] = instance.Bpole
             ELEMENT['sec']   = instance.sec
-
         elif type == 'QD':
             length         = get_mandatory(attributes,'length',ID)
             dBdz           = get_mandatory(attributes,"B'",ID)
@@ -93,14 +91,13 @@ def instanciate_element(item):
             instance.sec     = attributes.get('sec','?')
             ELEMENT['Bpole'] = instance.Bpole
             ELEMENT['sec']   = instance.sec
-
         elif type == 'RFG':
             phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             gap       = get_mandatory(attributes,'gap',ID)
             aperture  = get_mandatory(attributes,'aperture',ID)
             dWf       = util.FLAGS['dWf']
-            mapping   = get_mandatory(attributes,'mapping',ID)
+            # mapping   = get_mandatory(attributes,'mapping',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
@@ -113,12 +110,15 @@ def instanciate_element(item):
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
-                instance = OXAL.OXAL(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance = OXA.OXAL(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            elif mapping == 'ttf':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
                 instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
             else:
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
                 instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-
         elif type == 'RFC':
             label     = attributes['ID']
             PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
@@ -154,7 +154,6 @@ def instanciate_element(item):
             instance['dWf']      = dWf
             instance['length']   = length
             instance['mapping']  = mapping
-
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
@@ -168,7 +167,6 @@ def instanciate_element(item):
             instance.sec      = attributes.get('sec','?')
             ELEMENT['sec']    = instance.sec
             ELEMENT['EzAvg']  = EzAvg
-
         elif type == 'MRK':
             action = get_mandatory(attributes,'action',ID)
             if 'pspace' == action:
@@ -225,7 +223,6 @@ def factory(input_file,stop=None):
         util.SUMMARY['accON'] = util.FLAGS.get('accON')
         if not util.FLAGS.get('accON'): util.FLAGS['dWf'] = 0.
         util.FLAGS['non_linear_mapping'] = False
-
         return flags
     def proces_parameters(parameters):
         """ fills global PARAMETERS"""
@@ -286,8 +283,6 @@ def factory(input_file,stop=None):
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
-    ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
-    ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     util.SUMMARY['input file'] = util.PARAMS['input_file'] = input_file
     with open(input_file,'r') as fileobject:

@@ -507,12 +507,15 @@ class RFG(Node):
             self.particlef = None
             self.map = self.base_map_1
         elif self.mapping == 'oxal':
+            # self.matrix ->  #OXAL has its own matrix
             self.particlef = None
             # self.map  =>  # OXAL has its own mapping method
-
-        # TODO mappings below not tested TODO
         elif self.mapping == 'ttf':
-            self.gap_model = _TTF_G(host=self) # 3 point TTF-RF gap-model with SF-data  (A.Shishlo/J.Holmes)
+            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+            self.particlef = None
+            # self.map  =>  # TTF_G has its own mapping method
+
+        # TODO other mappings not tested TODO
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
 

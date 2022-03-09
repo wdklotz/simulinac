@@ -24,14 +24,14 @@ from copy import copy
 import numpy as NP
 import pprint, inspect
 
-from setutil import PARAMS,I0,I1,tblprnt,arrprnt
+from setutil import PARAMS,I0,I1,tblprnt,arrprnt,Proton,FLAGS
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
 from Ez0 import SFdata
 import elements as ELM
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
+    print(F'DEBUG_ON ==============>{file}: ', end="")
     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
 def PASS(obj):
     pass
@@ -64,7 +64,7 @@ class TTF_G(ELM.RFG):
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
         t  = f1*f2
-        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((t,k)))
+        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
     def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
         a  = poly.a
@@ -74,7 +74,7 @@ class TTF_G(ELM.RFG):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz/tan(k*dz)
         s  = f1*f2
-        DEBUG_SLICE('_TTF_Gslice:_T: (T,k) {}'.format((s,k)))
+        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
     def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b
@@ -100,7 +100,6 @@ class TTF_G(ELM.RFG):
         v0 = (2*dz+2./3.*b*dz**3)             # [cm]
         # v0 = v0*E0*self.dWf
         return v0                             # NOTE [cm]
-
     def poly_slices(self, gap, SFdata):
         """Slice the RF gap"""
         slices = []
@@ -112,7 +111,6 @@ class TTF_G(ELM.RFG):
             if zil < zl or zir > zr: continue
             slices.append(poly)
         return slices
-
     def ttf_g_map(self, i_track):
         c          = PARAMS['clight']
         m0c2       = self.particle.m0c2
@@ -152,14 +150,14 @@ class TTF_G(ELM.RFG):
             """ Formel 4.3.1 A.Shishlo/J.Holmes """
             Ws_out_minus_Ws_in = V0m*E0*(Tk*cphis_in - Sk*sphis_in)
             Ws_out  = Ws_in + Ws_out_minus_Ws_in
-            ps_out = Proton(Ws_out)
+            ps_out  = Proton(Ws_out)
             gammas_out = ps_out.gamma
             # tracked particle
-            W_in          = zp*(gammas_in+1.)/gammas_in + Ws_in      # energy (i)  ~ (z')
+            W_in          = zp*(gammas_in+1.)/gammas_in*Ws_in+Ws_in      # energy (i)  ~ (z')
             p_in          = Proton(W_in)
             gb_in         = p_in.gamma_beta
             r             = sqrt(x**2+y**2)            # radial coordinate
-            K             = omega/(c*gb_in)*r
+            K             = omega/(c*gbs_in)*r
             i0            = I0(K)                      # bessel function I0
             i1            = I1(K)                      # bessel function I1
             phi_in        = -z*omega/(c*betas_in)+phis_in # phase  (i)  ~ (-z)
@@ -167,13 +165,13 @@ class TTF_G(ELM.RFG):
             sphi_in       = sin(phi_in)
             """ Formel 4.3.1 A.Shishlo/J.Holmes """
             W_out_minus_W_in = V0m*E0*i0*(Tk*cphi_in - Sk*sphi_in)
-            W_out  = W_in + W_out_minus_W_in
+            W_out = Ws_in + W_out_minus_W_in
             p_out = Proton(W_out)
             gamma_out = p_out.gamma
             gb_out    = p.gamma_beta
 
             DW = W_out - Ws_out
-            zp_out = gamma_out/(gamma_out+1.)*DW
+            zp_out = gamma_out/(gamma_out+1.)*DW/Ws_out
 
             """ Formel 4.3.2 A.Shishlo/J.Holmes """
             faktor = V0m*E0*omega/m0c3/gb3s_in
@@ -182,28 +180,31 @@ class TTF_G(ELM.RFG):
 
             """ Formel 4.3.2 A.Shishlo/J.Holmes """
             gamma_m = (gammas_out+gammas_in)/2.
-            phi_out_minus_phi_in = faktor*(i0*(Tkp*cphi_in + Skp*sphi_in)+gamma_m*r*i1*(Tk*phi_in+Sk*sphi_in))
+            phi_out_minus_phi_in = faktor*(i0*(Tkp*cphi_in + Skp*sphi_in)+gamma_m*r*i1*(Tk*cphi_in+Sk*sphi_in))
             phi_out = phi_in + phi_out_minus_phi_in
                         
-            z_out = gamma_m/(gamma_m+1)*DW/W_out
+            z_out = gammas_out/(gammas_out+1)*DW/Ws_out       #TODO check w or DW/W
             """ Formel 4.3.3 A.Shishlo/J.Holmes """
-            factor = V0m*E0/(m0c2*gb_in*gb_out)*i1
+            faktor = V0m*E0/(m0c2*gb_in*gb_out)*i1
             if r > 0.:
-                xp = gb_in/gb_out*xp-x/r*factor*(Tk*sphis_in + Sk*cphis_in)
-                yp = gb_in/gb_out*yp-y/r*factor*(Tk*sphis_in + Sk*cphis_in)
+                xp = gb_in/gb_out*xp-x/r*faktor*(Tk*sphis_in + Sk*cphis_in)
+                yp = gb_in/gb_out*yp-y/r*faktor*(Tk*sphis_in + Sk*cphis_in)
             elif r == 0.:
                 xp = gb_in/gb_out*xp
                 yp = gb_in/gb_out*yp
 
             # reset loop variables
-            T = T + DW
+            T = T + Ws_out_minus_Ws_in
             p    = ps_out
             phis = phis_out
-            i_track = NP.array([x,xp,y,yp,z_out,zp_out,T,1.,S,1.])
+            f_track = NP.array([x,xp,y,yp,z_out,zp_out,T,1.,S,1.])
 
         self.deltaW = Ws_out_minus_Ws_in
         self.particlef = ps_out
         return f_track
-
+    def adjust_energy(self, tkin):
+        adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        return adjusted
 
 if __name__ == '__main__':
+    pass
