@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 import sys
 from math import sin,cos,tan,radians,degrees,sqrt
-from math import pi as PI
+# from math import pi as PI
 from copy import copy
 import numpy as NP
 import pprint, inspect
@@ -39,8 +39,6 @@ def PASS(obj):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-
-twopi = 2*PI
 
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
@@ -115,7 +113,6 @@ class TTF_G(ELM.RFG):
         m0c2       = self.particle.m0c2
         m0c3       = m0c2*c
         omega      = self.omega
-
         """ initialise loop variables """
         p       = copy(self.particle)
         phis    = self.phisoll
@@ -167,6 +164,7 @@ class TTF_G(ELM.RFG):
             phi_in    = Dphi_in + phis_in 
             cphi_in   = cos(phi_in)
             sphi_in   = sin(phi_in)
+
             """ Offteilchen Energiedifferenz """
             W_out_minus_W_in = V0m*E0*i0*(Tk*cphi_in - Sk*sphi_in)    # 4.3.1
             W_out     = Ws_in + W_out_minus_W_in
@@ -175,11 +173,12 @@ class TTF_G(ELM.RFG):
             gammas_out = ps_out.gamma
             gamma_m    = (gammas_out+gammas_in)/2.
             i1         = I1(K)                      # bessel function I1
+
             """ Offteilchen Phasendifferenz """
             phi_out_minus_phi_in = faktor*(i0*(Tkp*cphi_in + Skp*sphi_in)+gamma_m*r*i1*(Tk*cphi_in+Sk*sphi_in))   # 4.3.2
             phi_out    = phi_in + phi_out_minus_phi_in
 
-            """ Die transversalen Koordinaten an Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
+            """ Die transversalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
             gbs_out = ps_out.gamma_beta
             faktor  = V0m*E0/(m0c2*gbs_in*gbs_out)*i1
             if r > 0.:
@@ -189,12 +188,13 @@ class TTF_G(ELM.RFG):
                 xp = gbs_in/gbs_out*xp
                 yp = gbs_in/gbs_out*yp
 
+            """ Die longitudinalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
             Dphi_out  = Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in
             betas_out = ps_out.beta
             z_out     = - betas_out*c/omega * Dphi_out
             zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)
    
-            """ Offteilchen at out (f_track) and reset of loop variables """
+            """ Koordinaten des Offteilchens am Ausgang (f_track) and Reset der loop Variablen """
             T = f_track[EKOO]       # [6] kinetic energy ref
             S = f_track[SKOO]       # [8] position
             T = Ws_out
@@ -206,7 +206,6 @@ class TTF_G(ELM.RFG):
     def adjust_energy(self, tkin):
         adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
-
 class TestTransitTimeFactorsGapModel(unittest.TestCase):
     def test_TTFG_mapping(self):
         print('----------------------------------test_TTFG_mapping')
@@ -233,6 +232,5 @@ class TestTransitTimeFactorsGapModel(unittest.TestCase):
         # print(i_track); print(f_track)
         for i in range(len(f_track)):
             self.assertAlmostEqual(f_track[i],NP.array([0.001,0.0010136,0.001,998.6669,0.0010011,-0.00067355,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
-
 if __name__ == '__main__':
     unittest.main()
