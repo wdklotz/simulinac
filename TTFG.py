@@ -189,9 +189,8 @@ class TTF_G(ELM.RFG):
                 yp = gbs_in/gbs_out*yp
 
             """ Die longitudinalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
-            Dphi_out  = Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in
             betas_out = ps_out.beta
-            z_out     = - betas_out*c/omega * Dphi_out
+            z_out     = - betas_out*c/omega * (Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in)
             zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)
    
             """ Koordinaten des Offteilchens am Ausgang (f_track) and Reset der loop Variablen """
