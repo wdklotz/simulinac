@@ -19,7 +19,6 @@ This file is part of the SIMULINAC code
 """
 import sys
 from math import sin,cos,tan,radians,degrees,sqrt
-# from math import pi as PI
 from copy import copy
 import numpy as NP
 import pprint, inspect
@@ -159,7 +158,9 @@ class TTF_G(ELM.RFG):
             K         = omega/(c*gbs_in)*r
             i0        = I0(K) 
             gammas_in = p.gamma
+            """ Umrechnung: Delta-W = (gamma+1)/gamma * Delta-p/p * W """
             DW_in     = (gammas_in+1)/gammas_in * zp  * Ws_in 
+            """ Umrechnung: Delta-phi = -360/(beta*lambda) * z """
             Dphi_in   = -z * omega/(betas_in*c) # die z-Koordinate des Offteilchens als Dphi [rad]  
             phi_in    = Dphi_in + phis_in 
             cphi_in   = cos(phi_in)
@@ -190,7 +191,9 @@ class TTF_G(ELM.RFG):
 
             """ Die longitudinalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
             betas_out = ps_out.beta
+            """ Rueckrechnung nach z: Delta-phi = -360/(beta*lambda) * z """
             z_out     = - betas_out*c/omega * (Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in)
+            """ Rueckrechnung nach Delta-p/p: Delta-W = (gamma+1)/gamma * Delta-p/p * W """
             zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)/Ws_out
    
             """ Koordinaten des Offteilchens am Ausgang (f_track) and Reset der loop Variablen """
@@ -226,10 +229,10 @@ class TestTransitTimeFactorsGapModel(unittest.TestCase):
         for i in range(len(f_track)):
             self.assertAlmostEqual(f_track[i],NP.array([0,0,0,0,0,0,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
 
-        i_track  = NP.array([1e-3,1e-3,1e-3,1e3,1e-3,1e-3,50,1,0,1])
+        i_track  = NP.array([1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 50, 1, 0, 1])
         f_track  = ttfg.map(i_track)
         # print(i_track); print(f_track)
         for i in range(len(f_track)):
-            self.assertAlmostEqual(f_track[i],NP.array([0.001,0.0010136,0.001,998.6669,0.0010011,-0.00067355,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
+            self.assertAlmostEqual(f_track[i],NP.array([1e-3, 1.0136e-3, 1e-3, 1.0136e-3, 1.0011e-3, 0.96408e-3, 50.13019, 1, 0, 1])[i],msg="f_track",delta=1e-4)
 if __name__ == '__main__':
     unittest.main()

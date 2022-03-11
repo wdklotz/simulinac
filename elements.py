@@ -30,9 +30,7 @@ from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
 from Ez0     import SFdata
-# from TTFG    import _TTF_G
 # from DynacG  import _DYN_G
-# from OXAL    import _OXAL
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
@@ -43,16 +41,15 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-
-twopi = 2.*pi     # used about everywhere
+    # used about everywhere
+twopi = 2.*pi
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
 class OutOfRadialBoundEx(Exception):
     def __init__(self,max_r,ID=''):
         self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
-# ------- The mother of all lattice element objects (a.k.a. nodes)
-#------- The mother of all lattice element objects (a.k.a. nodes)
+""" ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
     """ Base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
