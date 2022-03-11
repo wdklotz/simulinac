@@ -159,7 +159,7 @@ class TTF_G(ELM.RFG):
             K         = omega/(c*gbs_in)*r
             i0        = I0(K) 
             gammas_in = p.gamma
-            DW_in     = (gammas_in+1)/gammas_in * zp    
+            DW_in     = (gammas_in+1)/gammas_in * zp  * Ws_in 
             Dphi_in   = -z * omega/(betas_in*c) # die z-Koordinate des Offteilchens als Dphi [rad]  
             phi_in    = Dphi_in + phis_in 
             cphi_in   = cos(phi_in)
@@ -191,7 +191,7 @@ class TTF_G(ELM.RFG):
             """ Die longitudinalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
             betas_out = ps_out.beta
             z_out     = - betas_out*c/omega * (Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in)
-            zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)
+            zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)/Ws_out
    
             """ Koordinaten des Offteilchens am Ausgang (f_track) and Reset der loop Variablen """
             T = f_track[EKOO]       # [6] kinetic energy ref
