@@ -23,6 +23,7 @@ from math import pi as PI
 from copy import copy
 import numpy as NP
 import pprint, inspect
+import unittest
 
 from setutil import PARAMS,I0,I1,tblprnt,arrprnt,Proton,FLAGS
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
@@ -39,7 +40,7 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-twopi          = 2*PI
+twopi = 2*PI
 
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
@@ -53,9 +54,7 @@ class TTF_G(ELM.RFG):
             self.map       = self.ttf_g_map   # OXAL's specific mapping method
             self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
-            # self.matrix    = self.make_matrix(self.polies,self.phisoll,self.particle)
-            # self.deltaW    = self.matrix[Ktp.T,Ktp.dT]
-            # self.particlef = Proton(particle.tkin + self.deltaW)
+            self.deltaW    = 0.
 
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
@@ -117,94 +116,123 @@ class TTF_G(ELM.RFG):
         m0c3       = m0c2*c
         omega      = self.omega
 
-        # initialise loop variables
+        """ initialise loop variables """
         p       = copy(self.particle)
         phis    = self.phisoll
         f_track = copy(i_track)
         for poly in self.polies:
-            """ Map through this poly interval """
-            x        = f_track[XKOO]       # [0]
-            xp       = f_track[XPKOO]      # [1]
-            y        = f_track[YKOO]       # [2]
-            yp       = f_track[YPKOO]      # [3]
-            z        = f_track[ZKOO]       # [4] z
-            zp       = f_track[ZPKOO]      # [5] dp/p
-            T        = f_track[EKOO]       # [6] kinetic energy ref
-            S        = f_track[SKOO]       # [8] position
-            # ref
-            betas_in      = p.beta
+            """ Map through this poly interval
+            Das Referenzteilchen hat nur verschiedene Werte fuer Energie (Ws_in->Ws_out) u. (phis_in->phis_out) 
+            am Eingang und Ausgagang des Polyintervalls. Formel 4.3.1 und 4.3.2 von A.Shishlo/J.Holmes """
             gammas_in     = p.gamma
-            gbs_in        = p.gamma_beta
-            gb3s_in       = gbs_in**3
+            betas_in      = p.beta
+            Ws_in         = p.tkin          # bessel function I0
             ks            = omega/(c*betas_in)
             Tk            = self.T(poly,ks)
-            Tkp           = self.Tp(poly,ks)
             Sk            = self.S(poly,ks)
-            Skp           = self.Sp(poly,ks)
             V0m           = self.V0(poly)*1.e-2        # NOTE V0 in [m]
             E0            = poly.E0
             phis_in       = phis                     
-            Ws_in         = p.tkin
             cphis_in      = cos(phis_in)
             sphis_in      = sin(phis_in)
-            """ Formel 4.3.1 A.Shishlo/J.Holmes """
-            Ws_out_minus_Ws_in = V0m*E0*(Tk*cphis_in - Sk*sphis_in)
-            Ws_out  = Ws_in + Ws_out_minus_Ws_in
-            ps_out  = Proton(Ws_out)
+            Ws_out_minus_Ws_in = V0m*E0*(Tk*cphis_in - Sk*sphis_in)    # 4.3.1
+            """ Referenzenergie Out """
+            self.deltaW   = self.deltaW + Ws_out_minus_Ws_in   # Summe aller DW's aller Polyintervalle
+            Ws_out        = Ws_in + Ws_out_minus_Ws_in
+            ps_out        = Proton(Ws_out)
+
+            gbs_in        = p.gamma_beta
+            gb3s_in       = gbs_in**3
+            Tkp           = self.Tp(poly,ks)
+            Skp           = self.Sp(poly,ks)
+            faktor        = V0m*E0*omega/m0c3/gb3s_in
+            phis_out_minus_phis_in = faktor*(Tkp*cphis_in + Skp*sphis_in)   # 4.3.2
+            """ Referenzphase Out """
+            phis_out      = phis_in + phis_out_minus_phis_in
+
+            """ Das Offteilchen hat hat von 0 untersschiedliche Werte am Eingang und Ausgang des Polyinyervalls,
+            i.e. (x,xp,y,yp,z,zp)in -> (x,xp,y,yp,z,zp)out."""
+            x         = f_track[XKOO]       # [0]
+            xp        = f_track[XPKOO]      # [1] Dx/Ds
+            y         = f_track[YKOO]       # [2]
+            yp        = f_track[YPKOO]      # [3] Dy/Ds
+            z         = f_track[ZKOO]       # [4] z
+            zp        = f_track[ZPKOO]      # [5] dp/p
+            r         = sqrt(x**2+y**2)     # radial coordinate
+            K         = omega/(c*gbs_in)*r
+            i0        = I0(K) 
+            gammas_in = p.gamma
+            DW_in     = (gammas_in+1)/gammas_in * zp    
+            Dphi_in   = -z * omega/(betas_in*c) # die z-Koordinate des Offteilchens als Dphi [rad]  
+            phi_in    = Dphi_in + phis_in 
+            cphi_in   = cos(phi_in)
+            sphi_in   = sin(phi_in)
+            """ Offteilchen Energiedifferenz """
+            W_out_minus_W_in = V0m*E0*i0*(Tk*cphi_in - Sk*sphi_in)    # 4.3.1
+            W_out     = Ws_in + W_out_minus_W_in
+            p_out     = Proton(W_out)
+
             gammas_out = ps_out.gamma
-            # tracked particle
-            W_in          = zp*(gammas_in+1.)/gammas_in*Ws_in+Ws_in      # energy (i)  ~ (z')
-            p_in          = Proton(W_in)
-            gb_in         = p_in.gamma_beta
-            r             = sqrt(x**2+y**2)            # radial coordinate
-            K             = omega/(c*gbs_in)*r
-            i0            = I0(K)                      # bessel function I0
-            i1            = I1(K)                      # bessel function I1
-            phi_in        = -z*omega/(c*betas_in)+phis_in # phase  (i)  ~ (-z)
-            cphi_in       = cos(phi_in)
-            sphi_in       = sin(phi_in)
-            """ Formel 4.3.1 A.Shishlo/J.Holmes """
-            W_out_minus_W_in = V0m*E0*i0*(Tk*cphi_in - Sk*sphi_in)
-            W_out = Ws_in + W_out_minus_W_in
-            p_out = Proton(W_out)
-            gamma_out = p_out.gamma
-            gb_out    = p.gamma_beta
+            gamma_m    = (gammas_out+gammas_in)/2.
+            i1         = I1(K)                      # bessel function I1
+            """ Offteilchen Phasendifferenz """
+            phi_out_minus_phi_in = faktor*(i0*(Tkp*cphi_in + Skp*sphi_in)+gamma_m*r*i1*(Tk*cphi_in+Sk*sphi_in))   # 4.3.2
+            phi_out    = phi_in + phi_out_minus_phi_in
 
-            DW = W_out - Ws_out
-            zp_out = gamma_out/(gamma_out+1.)*DW/Ws_out
-
-            """ Formel 4.3.2 A.Shishlo/J.Holmes """
-            faktor = V0m*E0*omega/m0c3/gb3s_in
-            phis_out_minus_phis_in = faktor*(Tkp*cphis_in + Skp*sphis_in)
-            phis_out = phis_in + phis_out_minus_phis_in
-
-            """ Formel 4.3.2 A.Shishlo/J.Holmes """
-            gamma_m = (gammas_out+gammas_in)/2.
-            phi_out_minus_phi_in = faktor*(i0*(Tkp*cphi_in + Skp*sphi_in)+gamma_m*r*i1*(Tk*cphi_in+Sk*sphi_in))
-            phi_out = phi_in + phi_out_minus_phi_in
-                        
-            z_out = gammas_out/(gammas_out+1)*DW/Ws_out       #TODO check w or DW/W
-            """ Formel 4.3.3 A.Shishlo/J.Holmes """
-            faktor = V0m*E0/(m0c2*gb_in*gb_out)*i1
+            """ Die transversalen Koordinaten an Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
+            gbs_out = ps_out.gamma_beta
+            faktor  = V0m*E0/(m0c2*gbs_in*gbs_out)*i1
             if r > 0.:
-                xp = gb_in/gb_out*xp-x/r*faktor*(Tk*sphis_in + Sk*cphis_in)
-                yp = gb_in/gb_out*yp-y/r*faktor*(Tk*sphis_in + Sk*cphis_in)
+                xp = gbs_in/gbs_out*xp-x/r*faktor*(Tk*sphis_in + Sk*cphis_in)
+                yp = gbs_in/gbs_out*yp-y/r*faktor*(Tk*sphis_in + Sk*cphis_in)
             elif r == 0.:
-                xp = gb_in/gb_out*xp
-                yp = gb_in/gb_out*yp
+                xp = gbs_in/gbs_out*xp
+                yp = gbs_in/gbs_out*yp
 
-            # reset loop variables
-            T = T + Ws_out_minus_Ws_in
+            Dphi_out  = Dphi_in + phi_out_minus_phi_in - phis_out_minus_phis_in
+            betas_out = ps_out.beta
+            z_out     = - betas_out*c/omega * Dphi_out
+            zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)
+   
+            """ Offteilchen at out (f_track) and reset of loop variables """
+            T = f_track[EKOO]       # [6] kinetic energy ref
+            S = f_track[SKOO]       # [8] position
+            T = Ws_out
+            f_track = NP.array([x,xp,y,yp,z_out,zp_out,T,1.,S,1.])
             p    = ps_out
             phis = phis_out
-            f_track = NP.array([x,xp,y,yp,z_out,zp_out,T,1.,S,1.])
-
-        self.deltaW = Ws_out_minus_Ws_in
         self.particlef = ps_out
         return f_track
     def adjust_energy(self, tkin):
         adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 
+class TestTransitTimeFactorsGapModel(unittest.TestCase):
+    def test_TTFG_mapping(self):
+        print('----------------------------------test_TTFG_mapping')
+        phisoll  = radians(-25.)
+        gap      = 0.040
+        freq     = 800e6
+        particle = Proton(50.)
+        dWf      = 1
+        fname    = 'Superfish/SF_WDK2g44.TBL'
+        gap_cm   = gap*100     # Watch out!
+        EzPeak   = 10.0
+        Ezdata   = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
+        EzAvg    = Ezdata.EzAvg
+        ttfg     = TTF_G("rfg-test",EzAvg,phisoll,gap,freq,SFdata=Ezdata,particle=particle,dWf=dWf)
+
+        i_track  = NP.array([0,0,0,0,0,0,50,1,0,1])
+        f_track  = ttfg.map(i_track)
+        # print(i_track); print(f_track)
+        for i in range(len(f_track)):
+            self.assertAlmostEqual(f_track[i],NP.array([0,0,0,0,0,0,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
+
+        i_track  = NP.array([1e-3,1e-3,1e-3,1e3,1e-3,1e-3,50,1,0,1])
+        f_track  = ttfg.map(i_track)
+        # print(i_track); print(f_track)
+        for i in range(len(f_track)):
+            self.assertAlmostEqual(f_track[i],NP.array([0.001,0.0010136,0.001,998.6669,0.0010011,-0.00067355,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
+
 if __name__ == '__main__':
-    pass
+    unittest.main()

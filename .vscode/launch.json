@@ -36,6 +36,14 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "lattice.py",
+        },
+        {
+            "name": "TTFG",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "TTFG.py",
         }
     ]
 }

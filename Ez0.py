@@ -199,7 +199,6 @@ class SFdata(object):
     IN: EzPeak peak field [MV/m]
     gap: full gap [m]
     '''
-            
     def __init__(self,input_file,EzPeak=0.,gap=0.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
@@ -246,6 +245,7 @@ class SFdata(object):
                 zp.append(z)
                 rp.append(R)
                 ep.append(Ez)
+        f.close()
         zprev = [-x for x in reversed(zp[1:])]
         zp = zprev+zp
         rprev = [x for x in reversed(rp[1:])]
