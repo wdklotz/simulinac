@@ -73,8 +73,8 @@ PARAMETERS:
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    simple         # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    base           # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    oxal           # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    oxal           # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -192,8 +192,8 @@ LATTICE:
     # LINE:   [10,[SCle]]
     # LINE:   [20,[SCle]]
     # LINE:   [40,[SCle]]
-    LINE:   [80,[SCle]]
-    # LINE:   [160,[SCle]]
+    # LINE:   [80,[SCle]]
+    LINE:   [160,[SCle]]
     # LINE:   [320,[SCle]]
 
   

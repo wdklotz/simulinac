@@ -1,5 +1,5 @@
 import sys
-sys.path.append('.')
+sys.path.append('..')
 print(sys.path)
 
 from math import sqrt
@@ -15,7 +15,7 @@ def BetaGamma(particle):
     brho       = gamma_beta*3.1297
     return (vclassic, beta, gamma,gamma_beta,pc,brho)
 
-print ('Proton Ruhemasse {:.3f} [Mev/c**2]'.format(Proton().e0))
+print ('Proton Ruhemasse {:.3f} [Mev/c**2]'.format(Proton(50.).e0))
 header = [
     'T[MeV]',
     'v(class)[m/s]',
