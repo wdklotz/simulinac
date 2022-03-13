@@ -44,7 +44,7 @@ twopi = 2*pi
 
 class OXAL(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(50.), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
         super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='oxal')
         # TmStamp.stamp('OXAL init')
         if SFdata == None:

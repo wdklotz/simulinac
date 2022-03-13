@@ -220,6 +220,7 @@ def factory(input_file,stop=None):
         if 'csTrak'      in flags: util.FLAGS['csTrak']   = flags['csTrak']
         if 'marker'      in flags: util.FLAGS['marker']   = flags['marker']
         if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
+        if 'envelope'    in flags: util.FLAGS['envelope'] = flags['envelope']
         util.SUMMARY['accON'] = util.FLAGS.get('accON')
         if not util.FLAGS.get('accON'): util.FLAGS['dWf'] = 0.
         util.FLAGS['non_linear_mapping'] = False
@@ -309,7 +310,6 @@ def factory(input_file,stop=None):
     parameters = proces_parameters(results.PARAMETERS)
     DEBUG_OFF('global PARAMS after proces_parameters():')
     DEBUG_OFF(util.PARAMS)
-    util.PARAMS['sollteilchen'](tkin=util.PARAMS['injection_energy'])
     
     elements = proces_elements(results.ELEMENTS)
     DEBUG_OFF('ELEMENTS after proces_elements():')

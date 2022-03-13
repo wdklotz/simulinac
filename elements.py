@@ -206,7 +206,7 @@ class I(Node):
         self.length   = 0.
 class MRK(I):
     """ Marker node (a.k.a element): owns a list of agents that do the actions """
-    def __init__(self, label, agents=[], particle=PARAMS['sollteilchen'], position=(0.,0.,0.)):
+    def __init__(self, label, agents=[], particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
         super().__init__(label)
         self.agents = agents   # the agent-list
         self.particle = copy(particle)
@@ -220,7 +220,7 @@ class MRK(I):
             agent.do_action()
 class D(Node):
     """  Trace3D drift space  """
-    def __init__(self, label, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0.,aperture=None):
+    def __init__(self, label, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):
         super().__init__()
         self.label    = label
         self.particle = copy(particle)
@@ -245,7 +245,7 @@ class QF(Node):
     """ 
     Trace3D focussing quad  !!! NEUES API !!!!
     """
-    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
+    def __init__(self, label, grad, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
         super().__init__()
         self.label    = label
         self.grad     = abs(grad)                        # [T/m]
@@ -311,7 +311,7 @@ class QD(QF):
     """ 
     Trace3D defocussing quad  !!! NEUES API !!!! 
     """
-    def __init__(self, label, grad, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), length=0., aperture=None):
+    def __init__(self, label, grad, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
         self.viseo = -0.5
     def adjust_energy(self, tkin):
@@ -322,7 +322,7 @@ class QD(QF):
         return shortened
 class SD(Node):
     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, n=0, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
+    def __init__(self, label, alpha, rho, n=0, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
         super().__init__()
         self.label    = label
         self.alpha    = alpha   # [deg]
@@ -377,7 +377,7 @@ class SD(Node):
         return slices
 class RD(SD):
     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, wedge, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None):
+    def __init__(self, label, alpha, rho, wedge, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
         super().__init__(label, alpha, rho, particle=particle, position=position, aperture=aperture)
         self.wedge  = wedge
         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
@@ -423,7 +423,7 @@ class Wedge(Node):
 class GAP(Node):
     """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
     ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
         """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
         super().__init__()
         self.label    = label
@@ -464,7 +464,7 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  RF-gap of zero length with different kick gap-models """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=PARAMS['sollteilchen'], position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
         super().__init__()
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
@@ -516,7 +516,7 @@ class RFG(Node):
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
 
-    def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW,length):
+    def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW, length):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m        = NP.eye(MDIM,MDIM)
         Wav     = particlei.tkin+deltaW/2.   # average tkin
@@ -797,7 +797,7 @@ class RFC(I):
                 length   = 0.,
                 mapping  = 't3d',
                 SFdata   = None,
-                particle = PARAMS['sollteilchen'],
+                particle = Proton(PARAMS['injection_energy']),
                 position = (0.,0.,0.),
                 next     = None,
                 prev     = None):
@@ -931,7 +931,7 @@ class SIXD(D):
     """ 
     Drift with Sixtrack mapping (experimental!) 
     """
-    def __init__(self, label="Dsix", particle=PARAMS['sollteilchen'], position=(0., 0., 0.), length=0., aperture=None):
+    def __init__(self, label="Dsix", particle=Proton(PARAMS['injection_energy']), position=(0., 0., 0.), length=0., aperture=None):
         super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
         self['viseo'] = 0.
         self.off_soll = copy(self.particle) # !!!IMPORTANT!!!

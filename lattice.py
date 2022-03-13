@@ -356,7 +356,7 @@ class Lattice(object):
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
-        B_matrix = NP.eye(9)                            # cumulated beta-matrix
+        B_matrix = NP.eye(9,9)                            # cumulated beta-matrix
         """ loop over all nodes in the lattice """
         for node in iter(self):
             slices = node.make_slices(anz = steps)
@@ -412,14 +412,15 @@ class Lattice(object):
                 sigma_fun.append(s,val)
             return sigma_fun
 
+        mess = ""
         if FLAGS['non_linear_mapping']:
-            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping.\nENVELOPES are calulated from SIGMA-matrix formalism using T3D\'s RF-gaps (NT=10) instead.'+colors.ENDC
-            function = self.sigma_envelopes # use beta-matrix            
-        elif FLAGS['sigma']:
-            mess = 'CALCULATE ENVELOPES with SIGMA-matrix formalism'
+            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping.\nENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.'+colors.ENDC
+            # function = self.sigma_envelopes # use beta-matrix            
+        if FLAGS['sigma']:
+            mess += '\nCALCULATE ENVELOPES with SIGMA-matrix formalism'
             function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:
-            mess = 'CALCULATE ENVELOPES from TWISS-parameters'
+            mess += '\nCALCULATE ENVELOPES from TWISS-parameters'
             function = self.twiss_envelopes # use beta-matrix
 
         if not FLAGS['KVout']: 
@@ -432,8 +433,8 @@ class Lattice(object):
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twiss_vector0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
-        sg0      = Sigma(twiss_vector0,epsx,epsy,epsz)              # sigma object IN lattice
+        twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
+        sg0           = Sigma(twiss_vector0,epsx,epsy,epsz)              # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
         for node in iter(self): # loop nodes
@@ -445,7 +446,6 @@ class Lattice(object):
                 flist = v.tolist()
                 sigma_fun.append(s,tuple(flist))
             sg0 = sg          # loop back nodes
-
             # aperture check
             self.aperture_check(node,twiss=False)
         return sigma_fun

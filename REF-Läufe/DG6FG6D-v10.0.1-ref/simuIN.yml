@@ -30,7 +30,8 @@ DESCRIPTOR:  'v10.0.1 compatible, pure FODO starter, DG6FG6D, base, 50 MeV'
 FLAGS:
     # accON:        False           # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
-    # sigma:        False           # {True} beam sizes by sigma-matrix
+    sigma:        False           # (True) envelope by twiss parameters
+    # envelope:     False           # (True) plot tranverse envelopes
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
     # useaper:      True            # {False} use aperture check for lattice elements
@@ -43,9 +44,9 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 8.5           # [MeV] energy @ injection
-    # Tkin:                 50.           # [MeV] energy @ injection
-    # Tkin:                  100.           # [MeV] energy @ injection
+    # Tkin:                 8.5           # [MeV] energy @ injection
+    Tkin:                 50.           # [MeV] energy @ injection
+    # Tkin:                100.           # [MeV] energy @ injection
     DT2T:                 6.0e-4          # delta-T/T kinetic energy spread @ injection
     # emitw:                3.e-6           # [m*rad] {x,x'} emittance @ entrance
     emitw:                3.e-7           # [m*rad] {x,x'} emittance @ entrance
@@ -57,21 +58,23 @@ PARAMETERS:
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
     alfaw_i:              0.000           # [] twiss alpha y @ entrance
-    frequency:    &p01    816.e+6         # [Hz] frequency
+    # frequency:    &p01    816.e+6         # [Hz] frequency
+    frequency:    &p01    800.e+6         # [Hz] frequency
     ql0:          &p02    0.04            # [m] quad-length
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius
     windings:             30              # [] quad-coil windings
-    gap:          &p15    0.046           # [m] RF gap
+    # gap:          &p15    0.046           # [m] RF gap
+    gap:          &p15    0.042           # [m] RF gap
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     nbsigma:              10              # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'V8.0.0.a1 Vergleich'  # lattice version
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    oxal            # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    simple         # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    base           # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal           # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -188,8 +191,9 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [10,[SCle]]
     # LINE:   [20,[SCle]]
-    # LINE:   [125,[SCle]]
-    LINE:   [250,[SCle]]
-    # LINE:   [375,[SCle]]
+    # LINE:   [40,[SCle]]
+    LINE:   [80,[SCle]]
+    # LINE:   [160,[SCle]]
+    # LINE:   [320,[SCle]]
 
   

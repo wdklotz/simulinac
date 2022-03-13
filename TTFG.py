@@ -41,7 +41,7 @@ DEBUG_OFF = DEB.get('OFF')
 
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(50.), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
         super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='ttf')
         # TmStamp.stamp('OXAL init')
         if SFdata == None:
@@ -51,7 +51,7 @@ class TTF_G(ELM.RFG):
             self.map       = self.ttf_g_map   # OXAL's specific mapping method
             self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
-            self.deltaW    = 0.
+            self.ttf       = 0.
 
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
@@ -115,6 +115,7 @@ class TTF_G(ELM.RFG):
         """ initialise loop variables """
         p       = copy(self.particle)
         phis    = self.phisoll
+        self.deltaW = -p.tkin
         f_track = copy(i_track)
         for poly in self.polies:
             """ Map through this poly interval
@@ -125,28 +126,29 @@ class TTF_G(ELM.RFG):
             Ws_in         = p.tkin          # bessel function I0
             ks            = omega/(c*betas_in)
             Tk            = self.T(poly,ks)
+            self.ttf     += Tk
             Sk            = self.S(poly,ks)
-            V0m           = self.V0(poly)*1.e-2        # NOTE V0 in [m]
-            E0            = poly.E0
+            L0m           = self.V0(poly)*1.e-2        # NOTE V0 in [m]
+            qE0L          = poly.E0*L0m
             phis_in       = phis                     
             cphis_in      = cos(phis_in)
             sphis_in      = sin(phis_in)
-            Ws_out_minus_Ws_in = V0m*E0*(Tk*cphis_in - Sk*sphis_in)    # 4.3.1
+            Ws_out_minus_Ws_in = qE0L*(Tk*cphis_in - Sk*sphis_in)    # 4.3.1
             """ Referenzenergie Out """
-            self.deltaW   = self.deltaW + Ws_out_minus_Ws_in   # Summe aller DW's aller Polyintervalle
             Ws_out        = Ws_in + Ws_out_minus_Ws_in
             ps_out        = Proton(Ws_out)
-
+            # deb = Ws_out_minus_Ws_in/qE0L
+            # self.ttf      += Ws_out_minus_Ws_in/qE0L   # sum of poly interval ttfs
             gbs_in        = p.gamma_beta
             gb3s_in       = gbs_in**3
             Tkp           = self.Tp(poly,ks)
             Skp           = self.Sp(poly,ks)
-            faktor        = V0m*E0*omega/m0c3/gb3s_in
+            faktor        = qE0L*omega/m0c3/gb3s_in
             phis_out_minus_phis_in = faktor*(Tkp*cphis_in + Skp*sphis_in)   # 4.3.2
             """ Referenzphase Out """
             phis_out      = phis_in + phis_out_minus_phis_in
 
-            """ Das Offteilchen hat hat von 0 untersschiedliche Werte am Eingang und Ausgang des Polyinyervalls,
+            """ Das Offteilchen hat von 0 untersschiedliche Werte am Eingang und Ausgang des Polyinyervalls,
             i.e. (x,xp,y,yp,z,zp)in -> (x,xp,y,yp,z,zp)out."""
             x         = f_track[XKOO]       # [0]
             xp        = f_track[XPKOO]      # [1] Dx/Ds
@@ -156,7 +158,7 @@ class TTF_G(ELM.RFG):
             zp        = f_track[ZPKOO]      # [5] dp/p
             r         = sqrt(x**2+y**2)     # radial coordinate
             K         = omega/(c*gbs_in)*r
-            i0        = I0(K) 
+            i0        = I0(K)                      # bessel function I0 
             gammas_in = p.gamma
             """ Umrechnung: Delta-W = (gamma+1)/gamma * Delta-p/p * W """
             DW_in     = (gammas_in+1)/gammas_in * zp  * Ws_in 
@@ -167,7 +169,7 @@ class TTF_G(ELM.RFG):
             sphi_in   = sin(phi_in)
 
             """ Offteilchen Energiedifferenz """
-            W_out_minus_W_in = V0m*E0*i0*(Tk*cphi_in - Sk*sphi_in)    # 4.3.1
+            W_out_minus_W_in = qE0L*i0*(Tk*cphi_in - Sk*sphi_in)    # 4.3.1
             W_out     = Ws_in + W_out_minus_W_in
             p_out     = Proton(W_out)
 
@@ -181,7 +183,7 @@ class TTF_G(ELM.RFG):
 
             """ Die transversalen Koordinaten am Ausgang des Polyintervalls Formel 4.3.3 Shishlo/Holmes """
             gbs_out = ps_out.gamma_beta
-            faktor  = V0m*E0/(m0c2*gbs_in*gbs_out)*i1
+            faktor  = qE0L/(m0c2*gbs_in*gbs_out)*i1
             if r > 0.:
                 xp = gbs_in/gbs_out*xp-x/r*faktor*(Tk*sphis_in + Sk*cphis_in)
                 yp = gbs_in/gbs_out*yp-y/r*faktor*(Tk*sphis_in + Sk*cphis_in)
@@ -204,6 +206,8 @@ class TTF_G(ELM.RFG):
             p    = ps_out
             phis = phis_out
         self.particlef = ps_out
+        self.deltaW += ps_out.tkin
+        self.ttf       = self.ttf/len(self.polies)       # gap's ttf  (better as Panofski?)
         return f_track
     def adjust_energy(self, tkin):
         adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)

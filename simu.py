@@ -191,7 +191,8 @@ def display1(*args):
     splot311.set_title('transverse x')
     # mapping box
     splot311.text(0.01, 1.1, PARAMS['mapping'],transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
-    plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
+    if FLAGS['envelope']:
+        plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sx, label="S  [mm]",color='red' ,linestyle='-')
@@ -216,7 +217,8 @@ def display1(*args):
     splot312=plt.subplot(312)
     # splot312=plt.subplot(10,1,(4,6))
     splot312.set_title('transverse y')
-    plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
+    if FLAGS['envelope']:
+        plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
     plt.plot(z2,sy, label="S  [mm]",color='red' ,linestyle='-')

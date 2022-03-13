@@ -92,7 +92,8 @@ FLAGS  = dict(
         bucket               = False,            # plot bucket
         csTrak               = True,             # plot CS trajectories
         marker               = False,            # activate marker in lattice
-        pspace               = False             # plot CS twiss ellipses at entrance
+        pspace               = False,            # plot CS twiss ellipses at entrance
+        envelope             = True              # plot transverse envelopes
         )
 PARAMS = dict(
         clight               = C.c,              # [m/s]
@@ -102,7 +103,7 @@ PARAMS = dict(
         map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
         warn_max             = 5,          # limit nbof warnings
         DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
-        injection_energy     = None,
+        injection_energy     = 50.,        # default injection energy
         emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
         emity_i              = None,       # [m*rad] Vorgabe emittance entrance
         betax_i              = None,       # [m] Vorgabe twiss beta entrance
@@ -146,7 +147,7 @@ class Twiss(object):
         return y
 class Particle(object):
     """ A particle class """
-    def __init__(self,tkin=0.,mass= PARAMS['proton_mass'],name='proton'):
+    def __init__(self,tkin,mass,name):
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
@@ -194,11 +195,10 @@ class Particle(object):
         return self
 class Proton(Particle):
     def __init__(self,tkin):
-        super(Proton,self).__init__(tkin=tkin,mass= PARAMS['proton_mass'],name='proton')
+        super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')
 class Electron(Particle):
     def __init__(self,tkin):
-        super(Electron,self).__init__(tkin=tkin,mass= PARAMS['electron_mass'],name='electron')
-PARAMS['sollteilchen'] = Proton(50.)   # Sollteichen
+        super(Electron,self).__init__(tkin,PARAMS['electron_mass'],'electron')
 class WConverter(object):
     """
     Converter to switch between different longitudinal phase space coordinates
@@ -384,6 +384,7 @@ def waccept(node):
         conv      = WConverter(tkin,freq)
 
         """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
+        # deb = 2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)
         w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
         """ SMALL amplitude oscillations (T.Wangler pp.185) """
         w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
