@@ -51,7 +51,7 @@ class TTF_G(ELM.RFG):
             self.map       = self.ttf_g_map   # OXAL's specific mapping method
             self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
-            self.ttf       = 0.
+            self.ttf       = 0.                # calculate my own ttf
 
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
@@ -126,7 +126,7 @@ class TTF_G(ELM.RFG):
             Ws_in         = p.tkin          # bessel function I0
             ks            = omega/(c*betas_in)
             Tk            = self.T(poly,ks)
-            self.ttf     += Tk
+            self.ttf     += Tk              # Shishlo's ttf of each poly  (4.4.4)
             Sk            = self.S(poly,ks)
             L0m           = self.V0(poly)*1.e-2        # NOTE V0 in [m]
             qE0L          = poly.E0*L0m
@@ -137,8 +137,7 @@ class TTF_G(ELM.RFG):
             """ Referenzenergie Out """
             Ws_out        = Ws_in + Ws_out_minus_Ws_in
             ps_out        = Proton(Ws_out)
-            # deb = Ws_out_minus_Ws_in/qE0L
-            # self.ttf      += Ws_out_minus_Ws_in/qE0L   # sum of poly interval ttfs
+
             gbs_in        = p.gamma_beta
             gb3s_in       = gbs_in**3
             Tkp           = self.Tp(poly,ks)
@@ -198,17 +197,20 @@ class TTF_G(ELM.RFG):
             """ Rueckrechnung nach Delta-p/p: Delta-W = (gamma+1)/gamma * Delta-p/p * W """
             zp_out    = gammas_out/(gammas_out+1) * (DW_in + W_out_minus_W_in - Ws_out_minus_Ws_in)/Ws_out
    
-            """ Koordinaten des Offteilchens am Ausgang (f_track) and Reset der loop Variablen """
+            """ Koordinaten des Offteilchens am Ausgang (f_track) """
             T = f_track[EKOO]       # [6] kinetic energy ref
             S = f_track[SKOO]       # [8] position
             T = Ws_out
             f_track = NP.array([x,xp,y,yp,z_out,zp_out,T,1.,S,1.])
+            """ Reset der loop Variablen """
             p    = ps_out
             phis = phis_out
+
         self.particlef = ps_out
-        self.deltaW += ps_out.tkin
+        self.deltaW   += ps_out.tkin
         self.ttf       = self.ttf/len(self.polies)       # gap's ttf  (better as Panofski?)
         return f_track
+
     def adjust_energy(self, tkin):
         adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
