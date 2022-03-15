@@ -22,48 +22,22 @@ from copy import copy
 import math as MATH
 from functools import partial
 import warnings
+from collections import namedtuple
 
+import elements as ELM
 from setutil import DEB, arrprnt, PARAMS, tblprnt, Ktp, WConverter
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from Ez0 import SFdata, Ipoly
+from Ez0 import SFdata, Ipoly, Polyval
 
 DEBUG_OFF = DEB.get('OFF')
 DEBUG_ON  = DEB.get('ON')
 
 twopi = 2.*MATH.pi
 
-""" Numerical computations in an accelerating gap or in a cavity;
-    E.TANKE and S.VALERO
-    3-Oct-2016 
-"""
-
-def Picht(gamma,r,rp,DgDz,back=False):
-    """ A Picht transformation from cartesian to reduced variables """
-    g2m1 = gamma**2-1.
-    gqroot = MATH.pow(g2m1,0.25)
-    if not back:
-        # r=(x,y) rp=(xp,yp)
-        X=gqroot*r[0]
-        Y=gqroot*r[1]
-        Xp=(gqroot*rp[0]+0.5*X*gamma/g2m1*DgDz)
-        Yp=(gqroot*rp[1]+0.5*Y*gamma/g2m1*DgDz)
-        R=[X,Y]
-        Rp=[Xp,Yp]
-        return R,Rp
-    else:
-        # r=(X,Y) rp=(Xp,Yp)
-        x=r[0]/gqroot
-        y=r[1]/gqroot
-        xp=((rp[0]-0.5*gamma*r[0]/g2m1*DgDz)/gqroot)
-        yp=((rp[1]-0.5*gamma*r[1]/g2m1*DgDz)/gqroot)
-        R=[x,y]
-        Rp=[xp,yp]
-        return R,Rp
+""" Numerical computations in an accelerating gap or in a cavity; E.TANKE and S.VALERO 3-Oct-2016 """
 
 class StepFactory(object):
-    """ 
-    StepFactory
-    """
+    """ StepFactory """
     def __init__(self,gap,SFdata):
         self.zl = -gap*100./2. # [cm]
         self.zr = -self.zl
@@ -87,317 +61,162 @@ class StepFactory(object):
             z_parts.append((z0,z1,z2,z3,z4))
         self.z_steps = NP.array(z_parts)
         return
-    
     def zArray(self,n):
         return self.z_steps[n]
-
     def tArray(self,t0,betac):
         t1 = t0 + self.h/(4*betac)
         t2 = t0 + self.h/(2*betac)
         t3 = t0 +(3*self.h)/(4*betac)
         t4 = t0 + self.h/betac
         return NP.array([t0,t1,t2,t3,t4])
-
     def nsteps(self):
         return len(self.z_steps)
-
     def nparts(self):
         return 5
-    
     def steplen(self):
         return self.h
-
-class _DYN_G(object):
+class DYNG(ELM.RFG):
     """ DYNAC's RF-gap model """
-    def __init__(self, parent):
-        # _DYN_G attributes
-        self.c        = PARAMS['clight']
-        self.phis     = parent.phis
-        self.freq     = parent.freq
-        self.gap      = parent.gap
-        self.length   = parent.length
-        self.dWf      = parent.dWf
-        self.EzAvg    = parent.EzAvg
-        self.SFdata   = parent.SFdata
-        self.position = parent.position
-        self.particle = parent.particle
-        self.stpfac   = StepFactory(self.gap,self.SFdata)
-        self._deltaW, self._ttf, self._particlef = self.do_Dgamma()
-        if self.SFdata == None:
-            raise RuntimeError('_DYN_G: missing E(z) table - STOP!')
+    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+        super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='dyn')
+        if SFdata == None:
+            raise RuntimeError('DYNG: missing E(z) table - STOP')
             sys.exit(1)
-        pass # end __init__()
-    
-    def do_Dgamma(self):
-        """
-        Delta-gamma SOLL
-        """
-        if self.dWf == 1:
-            c        = self.c
-            tkin     = self.particle.tkin
-            m0c2     = PARAMS['proton_mass']
-            phiS     = self.phis
-            gap      = self.gap
-            EzAvg    = self.EzAvg
-            omega    = self.omega
-            stpfac   = self.stpfac
-            h        = stpfac.steplen()  
-            nsteps   = stpfac.nsteps() # nb-steps
-            for nstep in range(nsteps): # loop steps
-                gamma  = 1.+ tkin/m0c2
-                bg     = MATH.sqrt(gamma**2-1)
-                beta   = bg/gamma
-                betac  = beta*c
-                zarr   = stpfac.zArray(nstep)
-                t0     = zarr[0]/betac
-                tarr   = stpfac.tArray(t0,betac)
-                Dgamma = self.Integral1(zarr,tarr,h,omega,phiS)/m0c2
-                tkin  += Dgamma*m0c2
-            deltaW    = tkin - self.particle.tkin
-            particlef = copy(self.particle)(tkin)
-            ttf       = deltaW/(EzAvg*gap*MATH.cos(phiS))
         else:
-            deltaW    = 0.
-            particlef = copy(self.particle)
-            ttf       = 1.
-        return deltaW, ttf, particlef
-
-    def soll_map(self, i_track):
-        """ Soll mapping form (i) to (f) """
-        si,sm,sf = self.position
-        f_track = copy(i_track)
-        f_track[Ktp.T] += self._deltaW
-        f_track[Ktp.S]  = si
-        DEBUG_OFF('dyn-soll {}'.format(f_track))
-        return f_track
-
-    @property
-    def ttf(self):
-        return self._ttf
-    @property
-    def omega(self):
-        return twopi*self.freq
-    @property
-    def deltaW(self):
-        return self._deltaW
-    @property
-    def particlef(self):
-        return self._particlef
-        
-#todo: use non_const beta, i.e. gamma[i], i=1,4,1 in inegrals
-#todo: find better position for multiplication with dWf-flag
-    def Integral1(self, z, t, h, omega, phis):
-        # !!!ACHTUNG!!! must be called before all other I integrals
-        # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        def E(z, t, omega=omega, phis=phis):
-            z = 1.e2*z     # [cm]
-            return self.SFdata.Ez0t(z,t,omega,phis)
-        self.Ezt = (self.dWf*E(z[0],t[0]), self.dWf*E(z[1],t[1]), self.dWf*E(z[2],t[2]), self.dWf*E(z[3],t[3]), self.dWf*E(z[4],t[4]))
-        res = 7.*self.Ezt[0] + 32.*self.Ezt[1] +12.*self.Ezt[2] +32.*self.Ezt[3] +7.*self.Ezt[4]
-        res = res * h / 90.
-        return res
-
-    def Integral2(self, z, t, h, omega, phis):
-        # !!!ACHTUNG!!! must be called immefiately after Integral1
-        # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        # def E(z, t, omega=omega, phis=phis):
-        #     return self.SFdata.Ez0t(z,t,omega,phis)
-        # z = 1.e2*z     # [cm]
-        res = 8.*self.Ezt[1] + 6.*self.Ezt[2] +24.*self.Ezt[3] + 7.*self.Ezt[4]
-        res = res * h**2 / 90.
-        return res
-
-    def Integral3(self, z, t, h, bg, omega, phis):
-        # !!!ACHTUNG!!! must be called immefiately after Integral1
-        # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        # def E(z, t, omega=omega, phis=phis):
-        #     return self.SFdata.Ez0t(z,t,omega,phis)
-        # z = 1.e2*z     # [cm]
-        bg3 = bg**3
-        res = (8.*self.Ezt[1] + 6.*self.Ezt[2] + 24.*self.Ezt[3] + 7.*self.Ezt[4])/bg3
-        res = res * h**2 / 90.
-        return res
-
-    def Integral4(self, z, t, h, bg, omega, phis):
-        # !!!ACHTUNG!!! must be called immefiately after Integral1
-        # E = partial(self.SFdata.Ez0t, omega = omega, phi = phis)
-        # def E(z, t, omega=omega, phis=phis):
-        #     return self.SFdata.Ez0t(z,t,omega,phis)
-        # z = 1.e2*z     # [cm]
-        bg3 = bg**3
-        res = (2.*self.Ezt[1] + 3.*self.Ezt[2] + 18.*self.Ezt[3] + 7.*self.Ezt[4])/bg3
-        res = res * h**3 / 90.
-        return res
-
-    def Jntegral1(self, z, t, h, omega, phis, gamma):
-        # !!!ACHTUNG!!! must be called before all other J integrals
-        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
-        def Ep(z, t, omega=omega, phis=phis):
-            return self.SFdata.dEz0tdt(z,t,omega,phis)
-        def G1(gamma):
-            return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        self.Epzt = (self.dWf*Ep(z[0],t[0]), self.dWf*Ep(z[1],t[1]), self.dWf*Ep(z[2],t[2]), self.dWf*Ep(z[3],t[3]), self.dWf*Ep(z[4],t[4]))
-        self.g1 = G1(gamma)
-        res = (7.*self.Epzt[0] + 32.*self.Epzt[1] + 12.*self.Epzt[2] + 32.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
-        res = res * h / 90.
-        return res
-
-    def Jntegral2(self, z, t, h, omega, phis, gamma):
-        # !!!ACHTUNG!!! must be called immefiately after Jntegral1
-        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
-        # def Ep(z, t, omega=omega, phis=phis):
-        #     return self.SFdata.dEz0tdt(z,t,omega,phis)
-        # def G1(gamma):
-        #     return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        # g1 = G1(gamma)
-        res = (8.*self.Epzt[1] + 6.*self.Epzt[2] + 24.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
-        res = res * h**2 / 90.
-        return res
-
-    def Jntegral3(self, z, t, h, omega, phis, gamma):
-        # !!!ACHTUNG!!! must be called immefiately after Jntegral1
-        # E = partial(self.SFdata.dEz0tdt, omega = omega, phis = phis)
-        # def Ep(z, t, omega=omega, phis=phis):
-        #     return self.SFdata.dEz0tdt(z,t,omega,phis)
-        # def G1(gamma):
-        #     return MATH.pow((gamma**2-1.),(-1.5))/(2.*self.particle.m0c3)
-        # g1 = G1(gamma)
-        res = (2.*self.Epzt[1] + 3.*self.Epzt[2] + 18.*self.Epzt[3] + 7.*self.Epzt[4])*self.g1
-        res = res * h**3 / 90.
-        return res
-#todo: use equivalent E-field instead of SFdata
-    def do_step(self,nstep,z,gamma,R,Rp,omega,phiS):
-        """
-        Full step through the DYNAC intervall with its 4 parts
-        """
-        c = PARAMS['clight']
-        h = self.stpfac.steplen()  
-        m0c2 = PARAMS['proton_mass']
-        m0c3 = m0c2*c     
-        bg = MATH.sqrt(gamma**2-1)
-        beta = bg/gamma
-        betac = beta*c
-        if self.dWf == 1:    
-            zarr = self.stpfac.zArray(nstep)
-            t0   = (zarr[0]-z)/betac
-            tarr = self.stpfac.tArray(t0,betac)
-            I1   = self.Integral1(zarr,tarr,h,omega,phiS)
-            I2   = self.Integral2(zarr,tarr,h,omega,phiS)
-            I3   = self.Integral3(zarr,tarr,h,bg,omega,phiS)
-            I4   = self.Integral4(zarr,tarr,h,bg,omega,phiS)
-            J1   = self.Jntegral1(zarr,tarr,h,omega,phiS,gamma)
-            J2   = self.Jntegral2(zarr,tarr,h,omega,phiS,gamma)
-            J3   = self.Jntegral3(zarr,tarr,h,omega,phiS,gamma)
-            K1   = omega**2/(4.*c**2*bg**3)
-            Dgamma  = ((1.+ NP.dot(R,R)*K1)*I1 + NP.dot(R,Rp)*K1*I2)/m0c2     # (12)
-            Dtime   = ((1.+ NP.dot(R,R)*K1)*I3 + NP.dot(R,Rp)*K1*I4)/m0c3     # (26)
-            DRp     = R*J1 + Rp*J2                                            # (33)
-            DR      = R*J2 + Rp*J3                                            # (38)
-        else:
-            DR = DRp = NP.array([0.,0.])
-            DR,DRp,Dgamma,Dtime = (DR,DRp,0.,h/betac)  #todo Dtime?
-        return DR,DRp,Dgamma,Dtime
-
-    def map(self,i_track):
-        """ Mapping from (i) to (f) """                    
-        x        = i_track[XKOO]       # [0]
-        xp       = i_track[XPKOO]      # [1]
-        y        = i_track[YKOO]       # [2]
-        yp       = i_track[YPKOO]      # [3]
-        z        = i_track[ZKOO]       # [4]
-        zp       = i_track[ZPKOO]      # [5]
-        T        = i_track[EKOO]       # kinetic energy SOLL
-        S        = i_track[SKOO]       # position SOLL
-
-        # aliases
-        stpfac = self.stpfac
+            self.SFdata    = SFdata
+            self.map       = self.dynac_map   # OXAL's specific mapping method
+            self.polies    = self.poly_slices(self.gap,self.SFdata)
+            self.particlef = Proton(particle.tkin + self.deltaW)
+            # TODO self.deltaW    = self.matrix[ Ktp.T,Ktp.dT]
+    def poly_slices(self, gap, SFdata):
+        """ Slice the RF gap """
+        slices = []
+        zl = -gap/2.*100.   # [m] --> [cm]
+        zr = -zl
+        for poly in SFdata.EzPoly:
+            zil = poly.zl
+            zir = poly.zr
+            if zil < zl or zir > zr: continue
+            slices.append(poly)
+        return slices
+    def Picht(self,gamma,x,xp,y,yp,back=False):
+            """ A Picht transformation from cartesian to reduced variables """
+            g2m1           = gamma**2-1.
+            sqrt_g2m1      = sqrt(g2msqrt)
+            sqrt_sqrt_g2m1 = sqrt(sqrt_g2m1)
+            if not back:
+                # r=(x,y) rp=(xp,yp)
+                X = sqrt_sqrt_g2m1*x
+                Y = sqrt_sqrt_g2m1*y
+                Xp = (sqrt_sqrt_g2m1*xp+0.5*X*gamma/g2m1)
+                Yp = (sqrt_sqrt_g2m1*yp+0.5*y*gamma/g2m1)
+                return (X,XP,Y,YP)
+            else:
+                # r=(X,Y) rp=(Xp,Yp)
+                X = x; XP=xp; Y=y; YP=yp
+                x = X/sqrt_sqrt_g2m1
+                y = Y/sqrt_sqrt_g2m1
+                xp = (XP-0.5*gamma*X/g2m1)/sqrt_sqrt_g2m1)
+                yp = (YP-0.5*gamma*Y/g2m1)/sqrt_sqrt_g2m1)
+                return (x,xp,y,yp)
+    #TODO: use non_const beta, i.e. gamma[i], i=1,4,1 in inegrals
+    #TODO: find position for multiplication with dWf-flag
+    #TODO: use equivalent E-field instead of SFdata
+    def dynac_map(self,i_track):
+        """ Mapping from (i) to (f) """  
+        # stpfac = self.stpfac
         c      = PARAMS['clight']
         h      = stpfac.steplen()  
         m0c2   = PARAMS['proton_mass']
-        phiS   = self.phis
+        m0c3   = m0c2*c
         freq   = self.freq
         omega  = self.omega
-        nsteps = stpfac.nsteps() # nb-steps
+        # initial values for loop over polies
+        p           = copy(self.particle)
+        Ws_in       = p.tkin
+        phis_in     = self.phisoll
+        f_track     = copy(i_track)
+        self.deltaW = -Ws_in
+        for poly in self.polies:    
+            """ Map through a single poly interval 
+            For each poly interval a numerical step-by-step method based on the 5 point Boole's will be applied. The step size in the azimuthally direction z is divided in 4 parts equivalent 
+            lengths."""     
+            # Azimutally positions z0,z1,z2,z3,z4; step size h
+            h  = poly.dz*1.e-2     # stepsize [m]
+            z0 = poly.zl*1.e-2     # [m]
+            z1 = z0 + h/4.
+            z2 = z0 + h/2.
+            z3 = z0 = 3.*h/4.
+            z4 = z0 + h
+            
+            gbs_in = p.gamma_beta
+            gbs03 = gbs_in**3
+            K1 = omega**2/4/c**2/gbs03
+            x         = f_track[XKOO]       # [0]
+            xp        = f_track[XPKOO]      # [1]
+            y         = f_track[YKOO]       # [2]
+            yp        = f_track[YPKOO]      # [3]
+            gamma_in   = p.gamma`
+            Rx_in,Rxp_in,Ry_in,Ryp_in = self.Picht(gamma0,x,xp,y,yp,back=False)
+            betas_in = p.beta
+            bc       = betas_in*c
+            t0 = z0/bc
+            t1 = t0 + h/(4*bc)
+            t2 = t0 + h/(2*bc)
+            t3 = t0 + 3.*h/(4*bc)
+            t4 = t0 + h/bc
 
-        # SOLL
-        tkinS     = self.particle.tkin # SOLL energy IN
-        gammaS    = 1.+ tkinS/m0c2
-       
-        # PARTICLE
-        converter = WConverter(tkinS,freq)
-        DW        = converter.Dp2pToW(zp)
-        tkin      = tkinS+DW
-        gamma     = 1.+ tkin/m0c2
-        
-        # PARTICLE
-        # Picht transformation
-        #todo: DYNAC uses predictor-corrector for gamma1,...,gamma4. Details in subroutines BOUCLE and BCNUM in FORTRAN sources.
-        # DgDz stands for the z-derivative of gamma. When I introduced it 
-        # in the Picht-transformation, the model suddenly worked. (1 week of desperate work!)
-        # REMARK: when enetring the cavity gamma is constant and it's derivative zero!
-        DgDz = 0.
-        r    = [x,y]
-        rp   = [xp,yp]
-        R,Rp = Picht(gamma,r,rp,DgDz)
-        # change reduced variables from lists to NP.arrays to make do_step easier
-        R    = NP.array(R)
-        Rp   = NP.array(Rp)
+            Ez0 = self.SFdata.Ez0t(z0*100.,t0,omega,phis_in)
+            Ez1 = self.SFdata.Ez0t(z1*100.,t1,omega,phis_in)
+            Ez2 = self.SFdata.Ez0t(z2*100.,t2,omega,phis_in)
+            Ez3 = self.SFdata.Ez0t(z3*100.,t3,omega,phis_in)
+            Ez4 = self.SFdata.Ez0t(z4*100.,t4,omega,phis_in)
+            I1  = h/90.*(7.*Ez0 + 32.*Ez1 + 12.*Ez2 + 32.*Ez3 + 7.*Ez4)
+            I2  = h**2/90.*(8.*Ez1 + 6.*Ez2 + 24.* Ez3 + 7.*Ez4)
+            R02   = Rx_in**2 + Ry_in**2
+            R0R0p = Rx_in*Rxp_in + Ry_in*Ryp_in
+            """ Energy """
+            Dgamma = 1/m0c2*((1+R02*K1)*I1 + R0R0p*K1*I2)
+            gamma_out = gamma0 + Dgamma
 
-        for nstep in range(nsteps): # steps loop
-            zarr    = stpfac.zArray(nstep)
-            # SOLL step
-            bgS     = MATH.sqrt(gammaS**2-1)
-            betaS   = bgS/gammaS
-            betaSc  = betaS*c
-            t0      = zarr[0]/betaSc
-            tarr    = stpfac.tArray(t0,betaSc)
-            DgammaS = self.Integral1(zarr,tarr,h,omega,phiS)/m0c2
-            timeS   = tarr[4]     # SOLL time at z4
-            gammaS += DgammaS     # SOLL gamma at z4
+            I3 = h**2/90./gbs03*(8.*Ez1 + 6.*Ez2 + 24.*Ez3 + 7.*Ez4)
+            I4 = h**3/90./gbs03*(2.*Ez1 + 3.*Ez2 + 18.*Ez3 + 7.*Ez4)
+            """ Phase """
+            Dt = 1/m0c3*((1+R02*K1)*I3 + R0R0p*K1*I4)
+            t4_out = t4 + Dt
+            """ transverse x,xp,y,yp """
+            g2m1 = gamma_in-1
+            G1 = 1./2/m0c3*sqrt(1./g2m1**3)
+            Ez0p = self.SFdata.dEz0tdt(z0*100,t0,omega,phis_in)
+            Ez1p = self.SFdata.dEz0tdt(z1*100,t1,omega,phis_in)
+            Ez2p = self.SFdata.dEz0tdt(z2*100,t2,omega,phis_in)
+            Ez3p = self.SFdata.dEz0tdt(z3*100,t3,omega,phis_in)
+            Ez4p = self.SFdata.dEz0tdt(z4*100,t4,omega,phis_in)
+            J1 = h/90.*G1*(7.*Ez0p + 32.*Ez1p + 12.*Ez2p + 32.*Ez3p + 7.*Ez4p)
+            J2 = h**2/90.*G1*(8.*Ez1p + 6.*Ez2p + 24.*Ez3p + 7.*Ez4p)
 
-            # PARTICLE step
-            bg = MATH.sqrt(gamma**2-1)
-            beta    = bg/gamma
-            betac   = beta*c
-            t0      = (zarr[0]-z)/betac
-            tarr    = stpfac.tArray(t0,betac)
-            DR,DRp,Dgamma,Dtime = self.do_step(nstep,z,gamma,R,Rp,omega,phiS)
-            time    = tarr[4] + Dtime # PARTICLE time at z4
-            gamma  += Dgamma          # PARTICLE gamma at z4
-            # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
-            DEBUG_OFF('time-timeS {}'.format(time-timeS))
-            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: nach 1 Woche Arbeit!)
+            DRxp_out = Rx_in*J1 + Rxp_in*J2
+            Rxp_out  = Rxp_in + DRxp_out
+            DRyp_out = Ry_in*J1 + Ryp_in*J2
+            Ryp_out  = Ryp_in + DRyp_out
 
-            # transverse
-            R    = R  + DR + h*Rp           # (39)
-            Rp   = Rp + DRp                 # (34)
-            pass # end steps loop
-        
-        # Picht-back transformation
-        #todo: how to get better DgDz extimates?
-        DgDz    = Dgamma/h # Dgamma/Dz estimate at exit of interval 
-        R    = R.tolist()
-        Rp   = Rp.tolist()
-        r,rp = Picht(gamma,R,Rp,DgDz,back=True)
-        
-        x  = r[0]
-        xp = rp[0]
-        y  = r[1]
-        yp = rp[1]
+            J3 = H**3/90./G1*((2.*Ez1p + 3.*Ezp2 + 18.*Ezp3 + 7.*Ezp4))
 
-        tkinS = (gammaS-1.)*m0c2
-        tkin  = (gamma -1.)*m0c2
-        converter = WConverter(tkinS,freq)
-        zp = converter.DWToDp2p(tkin-tkinS)
+            DRx_out = Rx_in*J2 + Rxp_in*J3
+            Rx_out = Rx_in + DRx_out + h*Rxp_in
+            DRy_out = Ry_in*J2 + Ryp_in*J3
+            Ry_out = Ry_in + DRy_out + h*Ryp_in
 
-        T += self.deltaW
-        S += self.length
+            x,xp,y,yp = self.Picht(gamma_out,Rx_out,Rxp_out,Ry_out,Ryp_out,back=True)
 
+            """ Reset der loop Variablen  ??????????????????????? """
+
+
+            # TODO ------------------------------------------------------
         f_track = NP.array([ x, xp, y, yp, z, zp, T, 1., S, 1.])
         DEBUG_OFF('dyn-map {}'.format(i_track))
         DEBUG_OFF('dyn-map {}'.format(f_track))
         return f_track
-            
 def test0():
     DEBUG_TEST0 = DEBUG_ON
     import elements as ELM
@@ -430,6 +249,5 @@ def test0():
     DEBUG_TEST0('dyn-map:f_track:')
     for track in tracks:
         DEBUG_TEST0('{:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} {:+10.5f} '.format(track[0],track[1],track[2],track[3],track[4],track[5],track[6],track[7],track[8],track[9]))
-
 if __name__ == '__main__':
     test0()

@@ -97,7 +97,7 @@ class TTF_G(ELM.RFG):
         # v0 = v0*E0*self.dWf
         return v0                             # NOTE [cm]
     def poly_slices(self, gap, SFdata):
-        """Slice the RF gap"""
+        """ Slice the RF gap """
         slices = []
         zl = -gap/2.*100.   # [m] --> [cm]
         zr = -zl
