@@ -5,13 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Untitled-1",
+            "name": "DynacG",
             "type": "python",
             "request": "launch",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "program": "Untitled-1.py",
-            "args": ["REF-Läufe/DG6FG6D-v10.0.1-ref/simuIN.yml"]
+            "program": "DynacG.py",
         },
         {
             "name": "simu",

@@ -51,6 +51,7 @@ class TTF_G(ELM.RFG):
             self.map       = self.ttf_g_map   # OXAL's specific mapping method
             self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
+            self.particlef = None
             self.ttf       = 0.                # calculate my own ttf
 
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
