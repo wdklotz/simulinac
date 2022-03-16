@@ -38,6 +38,7 @@ import setutil as util
 import elements as ELM
 import OXAL as OXA
 import TTFG as TTF
+import DYNG as DYN
 from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
@@ -115,6 +116,10 @@ def instanciate_element(item):
             elif mapping == 'ttf':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
                 instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            elif mapping == 'dyn':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
                 instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
             else:
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)

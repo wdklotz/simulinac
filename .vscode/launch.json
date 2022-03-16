@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "DynacG",
+            "name": "DYNG",
             "type": "python",
             "request": "launch",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "program": "DynacG.py",
+            "program": "DYNG.py",
         },
         {
             "name": "simu",

@@ -511,6 +511,10 @@ class RFG(Node):
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
             # self.map  =>  # TTF_G has its own mapping method
+        elif self.mapping == 'dyn':
+            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+            self.particlef = None
+            # self.map  =>  # DYN_G has its own mapping method
 
         # TODO other mappings not tested TODO
         else:

@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 import numpy as NP
 from copy import copy
-import math as MATH
+from math import degrees,radians,sqrt
 # from functools import partial
 # import warnings
 from collections import namedtuple
@@ -34,7 +34,7 @@ from Ez0 import SFdata, Polyval
 DEBUG_OFF = DEB.get('OFF')
 DEBUG_ON  = DEB.get('ON')
 
-class DYNG(ELM.RFG):
+class DYN_G(ELM.RFG):
     """ DYNAC's RF-gap model. Numerical computations in an accelerating gap or in a cavity; E.TANKE and S.VALERO 3-Oct-2016 """
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
         super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='dyn')
@@ -62,8 +62,8 @@ class DYNG(ELM.RFG):
     def Picht(self,gamma,x,xp,y,yp,back=False):
             """ A Picht transformation from cartesian to reduced variables """
             g2m1           = gamma**2-1.
-            sqrt_g2m1      = MATH.sqrt(g2m1)
-            sqrt_sqrt_g2m1 = MATH.sqrt(sqrt_g2m1)
+            sqrt_g2m1      = sqrt(g2m1)
+            sqrt_sqrt_g2m1 = sqrt(sqrt_g2m1)
             if not back:
                 # r=(x,y) rp=(xp,yp)
                 X = sqrt_sqrt_g2m1*x
@@ -118,11 +118,12 @@ class DYNG(ELM.RFG):
             Rx_in,Rxp_in,Ry_in,Ryp_in = self.Picht(gammas_in,x,xp,y,yp,back=False)
             betas_in  = p.beta
             bc        = betas_in*c
+            h4bc      = h/(4*bc)
             t0        = z0/bc
-            t1        = t0 + h/(4*bc)
-            t2        = t0 + h/(2*bc)
-            t3        = t0 + 3.*h/(4*bc)
-            t4        = t0 + h/bc
+            t1        = t0 + h4bc
+            t2        = t1 + h4bc
+            t3        = t2 + h4bc
+            t4        = t3 + h4bc
 
             Ez0   = self.SFdata.Ez0t(z0*100.,t0,omega,phis_in)
             Ez1   = self.SFdata.Ez0t(z1*100.,t1,omega,phis_in)
@@ -137,6 +138,7 @@ class DYNG(ELM.RFG):
             """ Energy """
             Dgammas_out = I1/m0c2
             gammas_out  = gammas_in + Dgammas_out        # ref @ out
+            Ws_out      = (gammas_out-1)*m0c2
             zp          = f_track[ZPKOO]                 # dp/p
             gamma_in    = (gammas_in+1)/gammas_in * zp   # dp/p -> DW/W
             Dgamma      = 1./m0c2*((1+R02*K1)*I1 + R0R0p*K1*I2)
@@ -146,25 +148,26 @@ class DYNG(ELM.RFG):
             I4 = h**3/90./gbs3_in*(2.*Ez1 + 3.*Ez2 + 18.*Ez3 + 7.*Ez4)
 
             """ Phase """
-            Dts         = I3/m0c2
+            Dts         = I3/m0c3
             t4s_out     = t0 + Dts + h/bc           # time ref out
             Dphis_out   = omega * t4s_out
             phis_out    = phis_in + Dphis_out       # ref @ out    
             Dt          = 1/m0c3*((1+R02*K1)*I3 + R0R0p*K1*I4)
             t4_out      = t0 + Dt + h/bc
             Dphi_out    = omega * t4_out           
-            z           = f_track[ZKOO]             # z
+            print(F'Dphi_out: {degrees(Dphi_out)}')
+            z           = f_track[ZKOO]   
             phi_in      = -z * omega/bc             # z -> Dphi/phi
             phi_out     = phi_in + Dphi_out         # phase @ out
 
             """ transverse x,xp,y,yp """
-            g2m1 = gammas_in-1
-            G1 = 1./2/m0c3*MATH.sqrt(1./g2m1**3)
-            Ez0p = self.SFdata.dEz0tdt(z0*100,t0,omega,phis_in)
-            Ez1p = self.SFdata.dEz0tdt(z1*100,t1,omega,phis_in)
-            Ez2p = self.SFdata.dEz0tdt(z2*100,t2,omega,phis_in)
-            Ez3p = self.SFdata.dEz0tdt(z3*100,t3,omega,phis_in)
-            Ez4p = self.SFdata.dEz0tdt(z4*100,t4,omega,phis_in)
+            g2m1 = gammas_in**2-1
+            G1 = 1./2/m0c3*sqrt(1./g2m1**3)
+            Ez0p = self.SFdata.dEz0tdt(z0*100,t0,omega)
+            Ez1p = self.SFdata.dEz0tdt(z1*100,t1,omega)
+            Ez2p = self.SFdata.dEz0tdt(z2*100,t2,omega)
+            Ez3p = self.SFdata.dEz0tdt(z3*100,t3,omega)
+            Ez4p = self.SFdata.dEz0tdt(z4*100,t4,omega)
             J1 = h/90.*G1*(7.*Ez0p + 32.*Ez1p + 12.*Ez2p + 32.*Ez3p + 7.*Ez4p)
             J2 = h**2/90.*G1*(8.*Ez1p + 6.*Ez2p + 24.*Ez3p + 7.*Ez4p)
 
@@ -173,7 +176,7 @@ class DYNG(ELM.RFG):
             DRyp_out = Ry_in*J1 + Ryp_in*J2
             Ryp_out  = Ryp_in + DRyp_out
 
-            J3 = h**3/90./G1*((2.*Ez1p + 3.*Ez2p + 18.*Ez3p + 7.*Ez4p))
+            J3 = h**3/90.*G1*((2.*Ez1p + 3.*Ez2p + 18.*Ez3p + 7.*Ez4p))
 
             DRx_out = Rx_in*J2 + Rxp_in*J3
             Rx_out = Rx_in + DRx_out + h*Rxp_in
@@ -181,31 +184,33 @@ class DYNG(ELM.RFG):
             Ry_out = Ry_in + DRy_out + h*Ryp_in
 
             x,xp,y,yp = self.Picht(gammas_out,Rx_out,Rxp_out,Ry_out,Ryp_out,back=True)
+            z  = - bc/omega * phi_out
+            zp = gammas_out/(gammas_out+1) * gamma_out
 
             """ Reset der loop Variablen """
-            p       = Proton(gammas_out*m0c2)
-            phis_in = phis_out
-            T       = f_track[EKOO]
-            S       = f_track[SKOO]
-            f_track     = NP.array([x,xp,y,yp,z,zp,T,1,S,1])
+            p        = Proton(Ws_out)
+            phis_in  = phis_out
+            T        = f_track[EKOO]
+            S        = f_track[SKOO]
+            f_track  = NP.array([x,xp,y,yp,z,zp,T,1,S,1])
 
         # leaving loop poly intervals
         self.particlef = p
-        self.deltaW    = self.deltaW + p.tkin
+        self.deltaW    = Ws_out - Ws_in
         self.ttf       = self.ttf/len(self.polies)
-        f_track[EKOO]  = Ws_in + self.deltaW
+        f_track[EKOO]  = Ws_out
         DEBUG_OFF('dyn-map {}'.format(i_track))
         DEBUG_OFF('dyn-map {}'.format(f_track))
         return f_track
 
     def adjust_energy(self, tkin):
-        adjusted = DYNG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = DYN_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 class TestDynacGapMapping(unittest.TestCase):
     def test_DYNG_REF_mapping(self):
         print('----------------------------------test_DYNG_REF_mapping')
         label    = 'dyn_gap_test'
-        phisoll  = MATH.radians(-25.)
+        phisoll  = radians(-25.)
         gap      = 0.044
         freq     = 800e6
         tkin     = 50.
@@ -216,8 +221,12 @@ class TestDynacGapMapping(unittest.TestCase):
         EzPeak   = 10.0
         Ezdata   = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
         EzAvg    = Ezdata.EzAvg
-        dyngap   = DYNG(label,EzAvg,phisoll,gap,freq,SFdata=Ezdata,particle=particle,dWf=dWf)
+        dyngap   = DYN_G(label,EzAvg,phisoll,gap,freq,SFdata=Ezdata,particle=particle,dWf=dWf)
+
         i_track  = NP.array([0.,0.,0.,0.,0.,0.,tkin,1,0,1])
-        f_track  = dyngap.dynac_map(i_track)
+        # f_track  = dyngap.map(i_track)
+
+        i_track  = NP.array([1e-3, 0., 1e-3, 0.,1e-3,0.,tkin,1,0,1])
+        f_track  = dyngap.map(i_track)
 if __name__ == '__main__':
     unittest.main()
