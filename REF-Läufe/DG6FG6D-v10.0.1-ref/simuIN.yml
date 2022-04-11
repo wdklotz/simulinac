@@ -190,11 +190,12 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
+    LINE:   [5,[SCle]]
     # LINE:   [10,[SCle]]
     # LINE:   [20,[SCle]]
     # LINE:   [40,[SCle]]
     # LINE:   [80,[SCle]]
-    LINE:   [160,[SCle]]
+    # LINE:   [160,[SCle]]
     # LINE:   [320,[SCle]]
 
   

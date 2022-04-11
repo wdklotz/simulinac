@@ -316,9 +316,9 @@ class SFdata(object):
         """E(z,0,t): time dependent field value at location z"""
         res = Ipoly(z,self.EzPoly) * cos(omega*t+phis)
         return res
-    def dEz0tdt(self, z, t, omega):
+    def dEz0tdt(self, z, t, omega, phis):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
-        res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t)
+        res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
         return res
 class TestEz0Methods(unittest.TestCase):
     @classmethod
