@@ -1,0 +1,4 @@
+1) Open the CYGWIN terminal:  C:\cygwin64\bin\mintty.exe
+2) cd /cygdrive/c/Users/wdklotz/SIMULINAC/dynac/dynacv6_0_modified
+3) compile the FORTRAN code which generates the executable a.exe: gfortran dynacv6_0.f*
+4) run DYNAC: a.exe ../dynacIN

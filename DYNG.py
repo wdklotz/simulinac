@@ -197,7 +197,7 @@ class DYN_G(ELM.RFG):
             # I3p = I3_/gbp3
             # I4p = I4_/gbp3
 
-            # Dts  = 1/m0c3*I3s
+            # Dts  = 1/m0c3*I3s 
             # Dts_  = h/b0c
             # Dtp  = 1/m0c3*((1+R02*K1)*I3p + R0R0p*K1*I4p)
             # t4s  = t0 + Dts + h/b0c

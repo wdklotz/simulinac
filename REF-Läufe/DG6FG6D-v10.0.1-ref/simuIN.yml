@@ -72,10 +72,10 @@ PARAMETERS:
     lattvers:             'V8.0.0.a1 Vergleich'  # lattice version
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    simple         # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    base           # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base           # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal           # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf            # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    dyn            # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    dyn            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -190,12 +190,12 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    LINE:   [5,[SCle]]
+    # LINE:   [5,[SCle]]
     # LINE:   [10,[SCle]]
     # LINE:   [20,[SCle]]
     # LINE:   [40,[SCle]]
     # LINE:   [80,[SCle]]
-    # LINE:   [160,[SCle]]
+    LINE:   [160,[SCle]]
     # LINE:   [320,[SCle]]
 
   

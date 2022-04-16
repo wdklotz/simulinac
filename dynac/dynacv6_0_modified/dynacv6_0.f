@@ -9630,7 +9630,7 @@
              eyp4=(ey37-ey26)*delwz+ey26
 ! $$$$plane6+plane4
              eyp46=(eyp4-eyp6)*delux+eyp6
-!  £££ (plane2+plane5)+(plane4+plane6)--> field Ez(u,v,w)
+!  ï¿½ï¿½ï¿½ (plane2+plane5)+(plane4+plane6)--> field Ez(u,v,w)
              eyt=(eyp25+eyp46)/2.
 ! *******interpollation of the field component Ez
 ! %%%%%%     in plane 1:
@@ -9671,7 +9671,7 @@
              ezp4=(ez67-ez23)*delvy+ez23
 ! $$$$$$ plane6+plane4
              ezp64=(ezp4-ezp6)*delux+ezp6
-! £££££££ (P1+P3)+(P6+P4)----> Ez(u,v,w)
+! ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (P1+P3)+(P6+P4)----> Ez(u,v,w)
              ezt=(ezp13+ezp64)/2.
              insd=insd+1
 ! calculate kicks in x',y' and z' (energy)
@@ -28310,30 +28310,30 @@
 !   ylg(cm) length of cavity, xpas(cm): step length
 !   8 steps over a cell (a voir!! !)
        PRTLAB='CAVNUM'
-       BEREF=VREF/VL
-       GAMREF=1./SQRT(1.-(BEREF*BEREF))
-       ENREF=XMAT*GAMREF
-       e0=xmat
-       npas=ncell*istep
-       xpas=ylg/float(npas)
-       npas1=npas+1
+       BEREF=VREF/VL                      !wdk relativistic beta of ref particle
+       GAMREF=1./SQRT(1.-(BEREF*BEREF))   !wdk relativistic gamma of ref particle
+       ENREF=XMAT*GAMREF                  !wdk total energy of ref particle E=m*c**2
+       e0=xmat                            !wdk rest mass of particle
+       npas=ncell*istep                   !wdk nbof steps per cell   [cm?]
+       xpas=ylg/float(npas)               !wdk step length
+       npas1=npas+1                       !wdk Zaunlatte
        xnh=0.
 !   flgsc = true ---> s.c. computation
 !   eglsc = 2*xpas : acting length of s.c. computation
        eglsc=2.*xpas
        flgsc=.false.
-       aqst=abs(qst)
+       aqst=abs(qst)  !wdk qst : charge (unit of charge) of the reference
        do i=2,npas1
          i1=i-1
 ! --- seek the field E(z) values in the 6 positions in the step length xh
-         call fposb
+         call fposb   !wdk SUBR: electric field at the 6 Bode's positions in the step
          tmoy=0.
          do j=1,ngood
            tmoy=tmoy+f(6,j)
          enddo
          tmoy=tmoy/float(ngood)         
 ! --- systematic or random defaults on the phase amplitude (not for the reference)
-         if(ierpf.ne.0) then
+         if(ierpf.ne.0) then             !wdk apply sys or rndm errors
 ! --- systematic default on the amplitude
            if(ierpf.eq.1) then
              tspl0=tspl0*(1.+vfield)
@@ -28358,14 +28358,14 @@
          endif
          do j=1,ngood
 !           qc=f(9,j)
-           qc=abs(f(9,j))
-           gam0=f(7,j)/e0
+           qc=abs(f(9,j))        !wdk charge state
+           gam0=f(7,j)/e0        !wdk f(7) total energy , e0 rest mass
            gam(i1)=gam0
            if(i1.eq.1) then
-             tcour(j)=0.
-             tof=f(6,j)
+             tcour(j)=0.         !wdk current time part j
+             tof=f(6,j)          !wdk t-offset part j
 ! --- rphas: phase delay between the actual particle  and the reference (entrance of the cavity)
-             rphas=fh*(tof-tref)
+             rphas=fh*(tof-tref) !wdk phase delay
 ! --- systematic or random defaults on the phase RF (not for the reference)
              if(ierpf.ne.0) then
                vphasi=vphase*pi/180.
