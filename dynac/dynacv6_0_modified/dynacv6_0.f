@@ -28323,7 +28323,7 @@
        eglsc=2.*xpas
        flgsc=.false.
        aqst=abs(qst)  !wdk qst : charge (unit of charge) of the reference
-       do i=2,npas1
+       do i=2,npas1                       !wdk loop over steps
          i1=i-1
 ! --- seek the field E(z) values in the 6 positions in the step length xh
          call fposb   !wdk SUBR: electric field at the 6 Bode's positions in the step
@@ -28333,10 +28333,10 @@
          enddo
          tmoy=tmoy/float(ngood)         
 ! --- systematic or random defaults on the phase amplitude (not for the reference)
-         if(ierpf.ne.0) then             !wdk apply sys or rndm errors
+         if(ierpf.ne.0) then             !wdk apply systematic or random errors
 ! --- systematic default on the amplitude
            if(ierpf.eq.1) then
-             tspl0=tspl0*(1.+vfield)
+             tspl0=tspl0*(1.+vfield)       !wdk tspl0 ... tspl5  Ez Amplitude
              tspl1=tspl1*(1.+vfield)
              tspl2=tspl2*(1.+vfield)
              tspl3=tspl3*(1.+vfield)
@@ -28361,11 +28361,11 @@
            qc=abs(f(9,j))        !wdk charge state
            gam0=f(7,j)/e0        !wdk f(7) total energy , e0 rest mass
            gam(i1)=gam0
-           if(i1.eq.1) then
+           if(i1.eq.1) then      !wdk particle j step 1
              tcour(j)=0.         !wdk current time part j
              tof=f(6,j)          !wdk t-offset part j
 ! --- rphas: phase delay between the actual particle  and the reference (entrance of the cavity)
-             rphas=fh*(tof-tref) !wdk phase delay
+             rphas=fh*(tof-tref) !wdk phase delay (fh = omega)
 ! --- systematic or random defaults on the phase RF (not for the reference)
              if(ierpf.ne.0) then
                vphasi=vphase*pi/180.
@@ -28383,19 +28383,19 @@
            endif
            t0=tcour(j)
            ddt=t0
-!  predictor (energy gain)
+!  predictor (energy gain)            !wdk predictor delta-gamm gain
            if(gam0.le.1.) then
-             f(8,j)=0.
+             f(8,j)=0.                !wdk skip particle with gamma < 1
              cycle
            endif
-           b0=sqrt(gam0*gam0-1.)/gam0
+           b0=sqrt(gam0*gam0-1.)/gam0  !wdk beta**2 = (gamma**2-1)/gamma**2
            b1=b0
            b2=b0
            b3=b0
            b4=b0
            b5=b0
            dgam=xi1(phi(j),t0,t5)*qc/e0
-           gam5=gam(i1)+dgam
+           gam5=gam(i1)+dgam                        !wdk i1 ist step number!
 !   corrector (energy gain)
 !   tspl0 = dE/dz  (MV/(cm*cm)
            xpas2=xpas*xpas
@@ -28420,7 +28420,7 @@
            xt0=f(3,j)*1.e-03
            yp0=f(5,j)*1.e-03
 !        Picht transformation: xe0 and ye0 (cm) xpe0 and ype0 (rad)
-           gamm0=(gam0*gam0-1.)**0.25
+           gamm0=(gam0*gam0-1.)**0.25      !wdk Picht forward 
            xe0=x0*gamm0
            xpe0=xt0*gamm0
            ye0=y0*gamm0
@@ -28528,7 +28528,7 @@
            f(4,j)=yi
            f(3,j)=xpi*1.e03
            f(5,j)=ypi*1.e03
-         enddo
+         enddo                   !wdk end loop over steps
 !  space charge computation (only odd step numbers)
          if(.not.flgsc) then
            flgsc=.true.
