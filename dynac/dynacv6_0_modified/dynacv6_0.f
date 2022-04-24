@@ -28074,13 +28074,13 @@
        common/consta/vl,pi,xmat,rpel,qst
        common/ttfc/tk,t1k,t2k,sk,s1k,s2k,fh
        xi1=0.
-       b01=(b0+b1)/2.
+       b01=(b0+b1)/2.    !wdk average of beto and beta1
        b12=(b1+b2)/2.
        b23=(b2+b3)/2.
        b34=(b3+b4)/2.
        b45=(b4+b5)/2.
-       t1=t0+xpas/(5.*b01*vl)
-       t2=t1+xpas/(5.*b12*vl)
+       t1=t0+xpas/(5.*b01*vl)   
+       t2=t1+xpas/(5.*b12*vl)   !wdk: Formel (20) t1 = t0 + h/(4*b0*c)
        t3=t2+xpas/(5.*b23*vl)
        t4=t3+xpas/(5.*b34*vl)
        t5=t4+xpas/(5.*b45*vl)
@@ -28090,7 +28090,7 @@
        xspl3=cos(fh*t3+phi0)*tspl3
        xspl4=cos(fh*t4+phi0)*tspl4
        xspl5=cos(fh*t5+phi0)*tspl5
-       tspl=19.*xspl0+75.*xspl1+50.*xspl2+50.*xspl3+75.*xspl4
+       tspl=19.*xspl0+75.*xspl1+50.*xspl2+50.*xspl3+75.*xspl4    !wdk: Bodes's rule 25.4.15 pp 886 Abramowitz
      *     +19.*xspl5
        xi1=xpas/288. * tspl
        return
