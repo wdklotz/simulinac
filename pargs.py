@@ -20,12 +20,14 @@ This file is part of the SIMULINAC code
 import sys
 
 def input_error():
-    print("Input Error!")
-    print("Usage: python (simu.py | tracker.py) [(file | --tmpl number --run number)]")
+    print("Usage: python simu.py | tracker.py [file | --tmpl str [--run str]]")
     sys.exit(1)
 
 def pargs(args):
     proc    = args[0]
+    help    = args[1]
+    if help == "--help":
+        input_error()
     # either simu.py or tracker.py
     if "simu.py" not in proc and "tracker.py" not in proc:
         input_error()
