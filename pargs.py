@@ -25,9 +25,6 @@ def input_error():
 
 def pargs(args):
     proc    = args[0]
-    help    = args[1]
-    if help == "--help":
-        input_error()
     # either simu.py or tracker.py
     if "simu.py" not in proc and "tracker.py" not in proc:
         input_error()
@@ -44,9 +41,13 @@ def pargs(args):
         # python simu.py
        pass
     elif len(args) == 2:
+        help    = args[1]
+        if help == "--help":
+           input_error()
         # python simu.py file
-        file = args[1]
-        Args['file'] = file
+        else:
+           file = args[1]
+           Args['file'] = file
     elif len(args) == 3:
         # python simu.py --tmpl Number
         opt  = args[1]

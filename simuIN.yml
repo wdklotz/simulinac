@@ -74,7 +74,7 @@ PARAMETERS:
     EzAvg:        &p16    1.0        # [MV/m]
     # EzPeak:       &p17    2.2             # [MV/m] peak gap field Strengy
     EzPeak:       &p17    1.40             # [MV/m] peak gap field Strengy
-    # nbsigma:              2               # [m] sigma aperture
+    nbsigma:              2               # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'FODO-starter'  # lattice version
     mapping:      &map    base            # [t3d, simple, oxal, base, ttf, dyn]
