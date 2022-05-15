@@ -44,7 +44,8 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 6.              # [MeV] energy @ injection
+#   Tkin:                 6.              # [MeV] energy @ injection
+    Tkin:                 30.             # [MeV] energy @ injection
     DT2T:                 1.0e-3          # delta-T/T kinetic energy spread @ injection
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
@@ -54,11 +55,11 @@ PARAMETERS:
     frequency:    &freq   816.e6          # [Hz] frequency
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
-    ql0:          &p02    0.04            # [m] quad-length
-    ql:           &p03    0.02            # [m] 1/2 quad-length
+    ql0:          &p00    0.04            # [m] quad-length
+    ql1:          &p01    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    0.011           # [m] quad bore radius
     Bgrad:        &bgrad  _BGRAD          # [T/m]
-    windings:             30              # [] quad-coil windings
+    #windings:             30              # [] quad-coil windings
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     gap:          &p15    0.036           # [m] RF gap
     EzAvg:        &p16    0.786409        # [MV/m]
@@ -75,11 +76,10 @@ ELEMENTS:
         type:     D            # replacement
         length:   0.024        # replacement
         sec:      HE           # section 
-    DXX:          #12xRFX      # replacement of RF by D
-        type:     D            # replacement
-        length:   0.288        # replacement
-        sec:      HE           # section 
-# Nodes in low energy section
+#   DXX:          #12xRFX      # replacement of RF by D
+#       type:     D            # replacement
+#       length:   0.288        # replacement
+#       sec:      HE           # section 
     D3L:                       # ID
         type:     D            # D class
         length:   0.03         # [m]
@@ -104,12 +104,12 @@ ELEMENTS:
         sec:      LE           # section 
     DgapL:
         type:     D
-        length:   0.012
+        length:   0.011
         sec:      LE
     RFCL:                      # ID
         type:     RFC          # RFC class
         # EzAvg:    *p16         # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
+        EzPeak:   *p17         # [MV/m]
         PhiSync:  -30.         # [deg] synchronous phase
         freq:      *freq       # [Hz] frequency
         gap:      0.020        # [m] gap length
@@ -120,10 +120,10 @@ ELEMENTS:
         length:   0.024        # [m] cavity length
         sec:      LE           # section 
 # Nodes in high energy section
-    # D3H:                       # ID
-    #     type:     D            # D class
-    #     length:   0.03         # [m]
-    #     sec:      HE           # section 
+    #D3H:                       # ID
+        #type:     D            # D class
+        #length:   0.011        # [m]
+        #sec:      HE           # section
     # D10H:                      # ID
     #     type:     D            # D class
     #     length:   0.100        # [m]
@@ -146,31 +146,18 @@ ELEMENTS:
     #     type:     D            # type
     #     length:   0.020        # [m]
     #     sec:      HE           # section
-    # RFGH:                      # ID
-    #     type:     RFG          # RFG class
-    #     EzAvg:    *p16         # [MV/m] average E-field on axis
-    #     EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-    #     PhiSync:  *phs         # [deg] synchronous phase
-    #     freq:     *freq        # [Hz] frequency
-    #     gap:      0.036        # [m] length
-    #     aperture: 10.e-3       # [m] quad bore
-    #     # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
-    #     SFdata:   SF/SF_WDK2g44.TBL
-    #     mapping:  *map         # mapping in cavities
-    #     sec:      HE           # section 
-    # RFCH:                      # ID
-    #     type:     RFC          # RFC class
-    #     EzAvg:    *p16         # [MV/m] average E-field on axis
-    #     EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
-    #     PhiSync:  *phs         # [deg] synchronous phase
-    #     freq:     *freq        # [Hz] frequency
-    #     gap:      0.036        # [m] gap length
-    #     aperture: 10.e-3       # [m] quad bore
-    #     # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
-    #     SFdata:   SF/SF_WDK2g44.TBL
-    #     mapping:  *map         # mapping in cavities
-    #     length:   0.040        # [m] cavity length
-    #     sec:      HE           # section 
+    RFGH:                      # ID
+        type:     RFG          # RFG class
+#       EzAvg:    *p16         # [MV/m] average E-field on axis
+        EzPeak:   *p17         # [MV/m] # corresdponds to (EzAvg = 1.05[MV/m])
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        gap:      0.022        # [m] length
+        aperture: 10.e-3       # [m] quad bore
+        # SFdata:   SF/PILL-3_6CM.TBL # superfish tbl-data file
+        SFdata:   SF/SF_WDK2g44.TBL
+        mapping:  *map         # mapping in cavities
+        sec:      HE           # section 
     PsMkr:                     # ID
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
@@ -201,55 +188,31 @@ SEGMENTS:
     SGm:                [1,[D3L, QFL, QFL, D3L]]     # D+QD+D
     SGf:                [1,[D3L, QDL]]               # D+QF
     # pillbox cavities
-    CAVs:               [1,[RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ]] # 0xRFCL
-    # CAVs:               [1,[ 1 ,  2 ,  3 ,  4 ,  5  , 6 ,  7 ,  8 ,  9 , 10,  11,  12]]
-    # CAVs:               [1,[RFX ,RFX ,RFX ,RFX ,RFX ,RFCL,RFCL,RFX ,RFX ,RFX ,RFX ,RFX ]] # 2xRFCL
-    # CAVs:               [1,[RFX ,RFX ,RFX ,RFX ,RFCL,RFCL,RFCL,RFCL,RFX ,RFX ,RFX ,RFX ]] # 4xRFCL
-    # CAVs:               [1,[RFX ,RFX ,RFX ,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFX ,RFX ,RFX ]] # 6xRFCL
-    # CAVs:               [1,[RFX ,RFX ,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFX ,RFX ]] # 8xRFCL
-    # CAVs:               [1,[RFX ,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFX ]] # 10xRFCL
-    CAVs:               [1,[RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL]] # 12xRFCL
+    #CAVs:               [1,[ 1 ,  2 ,  3 ,  4 ,  5  , 6 ,  7 ,  8 ,  9 , 10,  11,  12]]
+    #CAVs:               [1,[RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ,RFX ]] # 0xRFCL
+    #CAVs:               [1,[RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL]] # 12xRFCL
+    # pillbox gaps
+    GAP:                [1,[DgapL,RFGH,DgapL]]
+    GAPs:               [1,[GAP , GAP, GAP, GAP, GAP, GAP, GAP, GAP, GAP, GAP, GAP, GAP ]] # 12xRFGH
 #
-    # CAVsarr:            [1,[CAVs, D10L, CAVs]] # CAVs+D+CAVs
-    CAVsarr:            [1,[CAVs]] # CAVs+D+CAVs
-# HE section segments
-    # QF+D-H:                 [1,[QFH, D3H]]
-    # D+QD+D-H:               [1,[D3H, QDH, D3H]]
-    # D+QF-H:                 [1,[D3H, QFH]]
-    # # pillbox cavities
-    # CavitiesH:              [12,[RFCH]]
-    # RF_Cavity_ArrayH:       [1,[CavitiesH, D10H, CavitiesH]]
-    # GapsH:                  [12,[DgapH,RFGH,DgapH]]
-    # RF_Cavity_ArrayH:       [1,[GapsH, D10H, GapsH]]
+#   CAVsarr:            [1,[CAVs, D10L, CAVs]] # CAVs+D+CAVs
+#   CAVsarr:            [1,[CAVs]] # CAVs+D+CAVs
+    CAVsarr:            [1,[GAPs]] # CAVs+D+CAVs
 # ===========================================================================================
 CELLS:    
     NIL_CELL:    [1,[NIL_SEG]]
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     CELL:   [1,[SGi, CAVsarr, SGm, CAVsarr, SGf]] 
-    # CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 # ===========================================================================================
 SECTIONS:
     NIL_SEC:    [1,[NIL_CELL]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    # SCle:      [30,[CELL]]
     SCle:      [1,[CELL]]
-#   S_HE:      [148,[CELL_H]]
-#   S_END:     [3,[CELL_H]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-# LE+HE 6-200
-#   LINE:   [1,[S_LE,PsMkr,CELL_L,PsMkr,CELL_H,PsMkr,S_HE,S_END,PsMkr]]
-
-# LE 6 IN
 #   LINE:   [1,[PsMkr,S_LE,CELL_L,PsMkr]]
-    LINE:   [1,[PsMkr,SCle,PsMkr]]
-
-#  HE 16.5 IN
-#   LINE:   [1,[PsMkr,CELL_H,S_HE,S_END,PsMkr]]
-#   LINE:  [30,[QFL,DXX,QDL,QDL,DXX,QFL]]
-
-  
+    LINE:   [50,[PsMkr,SCle,PsMkr]]

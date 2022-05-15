@@ -20,8 +20,7 @@ This file is part of the SIMULINAC code
 import sys
 
 def input_error():
-    print("Input Error!")
-    print("Usage: python (simu.py | tracker.py) [(file | --tmpl number --run number)]")
+    print("Usage: python simu.py | tracker.py [file | --tmpl str [--run str]]")
     sys.exit(1)
 
 def pargs(args):
@@ -42,9 +41,13 @@ def pargs(args):
         # python simu.py
        pass
     elif len(args) == 2:
+        help    = args[1]
+        if help == "--help":
+           input_error()
         # python simu.py file
-        file = args[1]
-        Args['file'] = file
+        else:
+           file = args[1]
+           Args['file'] = file
     elif len(args) == 3:
         # python simu.py --tmpl Number
         opt  = args[1]

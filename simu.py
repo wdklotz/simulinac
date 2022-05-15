@@ -40,6 +40,7 @@ import os
 # import PyQt5             # works on native W10 but not on WSL2 as docker container
 # import matplotlib
 # matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
+
 # for Tk
 import tkinter             # works on native W10
 import matplotlib
@@ -358,9 +359,7 @@ if __name__ == '__main__':
             command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
             stat = os.system(command)
             if stat != 0:
-                print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
+                print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
         else:
             print('Internal error!')
             sys.exit(1)
@@ -373,6 +372,10 @@ if __name__ == '__main__':
             # launch macros script with bash
             command = 'chmod +x {}'.format(macros_file)
             command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+            print(command)
+            stat = os.system(command)
+            if stat != 0:
+                print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
         else:
             print('Internal error!')
             sys.exit(1)
