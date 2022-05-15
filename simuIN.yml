@@ -67,15 +67,7 @@ PARAMETERS:
     # gap:          &p15    0.046           # [m] RF gap
     gap:          &p15    0.042           # [m] RF gap
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
-<<<<<<< HEAD
     nbsigma:              10              # [m] sigma aperture
-=======
-    # EzAvg:        &p16    0.786409        # [MV/m]
-    EzAvg:        &p16    1.0        # [MV/m]
-    # EzPeak:       &p17    2.2             # [MV/m] peak gap field Strengy
-    EzPeak:       &p17    1.40             # [MV/m] peak gap field Strengy
-    nbsigma:              2               # [m] sigma aperture
->>>>>>> ef9c969850a5ce6f78a08f4ca60be414216b69a1
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'V8.0.0.a1 Vergleich'  # lattice version
     # mapping:      &map    t3d            # [t3d, simple, oxal, base, ttf, dyn]
