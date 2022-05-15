@@ -20,13 +20,13 @@ This file is part of the SIMULINAC code
 import matplotlib.pyplot as plt
 
 import elements as ELM
-from setutil import PARAMS,Ktp
+from setutil import PARAMS,Ktp,Proton
 
 class PoincareAction(ELM.MRK):
     """
     This marker-action will be used by the 'scatter' action
     """
-    def __init__(self, label='PSC', prefix='', particle=PARAMS['sollteilchen'], position=[0, 0, 0], aperture=None, next=None, prev=None, abszisse='z', ordinate='zp'):
+    def __init__(self, label='PSC', prefix='', particle=Proton(PARAMS['injection_energy']), position=[0, 0, 0], aperture=None, next=None, prev=None, abszisse='z', ordinate='zp'):
         super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev, action='scatter')
         # all points for this scatter-marker
         self.tpoints  = []

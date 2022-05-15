@@ -22,7 +22,7 @@ This file is part of the SIMULINAC code
 #TODO: how to get the hokey stick?
 #TODO: check w-acceptance at each node entrance
 #TODO: no phase damping - why?
-#TODO is this still working after Umbau?
+#TODO is this still working after Umbau? seems but more checks needed
 import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt
@@ -31,7 +31,6 @@ from string import Template
 from math import sqrt, degrees, radians
 import pprint, inspect
 
-# from lattice_generator import factory
 from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
@@ -222,7 +221,7 @@ def progress(tx):
     # print('\r{}\r'.format(res),end="")
     sys.stdout.write('{}\r'.format(res))
 
-# max track amplitudes set here!
+# max track amplitudes are set here!
 xlim_max  = ylim_max  =  10.e-3
 xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
@@ -242,6 +241,7 @@ def track_node(node,particle,options):
     last_tp = track.getpoints()[-1]
     lost    = False
     try:
+        """ map is here! """
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
@@ -263,12 +263,12 @@ def track_node(node,particle,options):
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
-        if abs(new_point[Ktp.zp]) < PARAMS['Dp2pAcceptance']:
+        if abs(new_point[Ktp.zp]) < PARAMS['Dp2p_Acceptance']:
             lost = False
         else:
             lost = True
         # check z-acceptance
-        if abs(new_point[Ktp.z]) < PARAMS['zAcceptance']:
+        if abs(new_point[Ktp.z]) < PARAMS['z_Acceptance']:
             lost = False
         else:
             lost = True
@@ -293,7 +293,7 @@ def track_node(node,particle,options):
 def track(lattice,bunch,options):
     """
     Tracks a bunch of particles through the lattice using maps
-    - lattice is a list of elements (class _Node)
+    - lattice is a list of elements (class Node)
     - bunch (class Bunch) is a list of particles (class Particle)
     - each particle in a bunch has a track=particle['track']
     - track (class Track) is a list of points (class Tpoint)
@@ -327,9 +327,12 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
+#TODO kann inder neuen Version wegfallen?
 def track_soll(lattice, injection_energy, start_position=0.):
     """
-    Track the reference particle through the lattice and redefines the lattice 
+    Track the reference particle through the lattice.
+    NEW: Energy adjustemenr is already done when the node is added to the lattice.
+    OLD: and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
     soll_track = Track()
@@ -337,8 +340,8 @@ def track_soll(lattice, injection_energy, start_position=0.):
     soll_track.addpoint(tp0)   # 1st track point
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # track point at entrance
-        """ energy adjustment """
-        node.adjust_energy(pi()[Ktp.T])
+        """ OLD: energy adjustment """
+        # node.adjust_energy(pi()[Ktp.T])
         """ mapping with soll map """
         # pf = node.soll_map(pi())
         pf = node.map(pi())
@@ -364,7 +367,7 @@ def tracker(input_file,options):
 
     # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
-    tkin     = PARAMS['sollteilchen'].tkin
+    tkin     = PARAMS['injection_energy']
     conv     = WConverter(tkin,lattice.first_gap.freq)
     t1       = time.process_time()
 
@@ -400,14 +403,14 @@ def tracker(input_file,options):
     betaz,alfaz,gammaz,emitz = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
-    Dp2pmx     = PARAMS['Dp2pmx']
+    # Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw,alfaw,gammaw,emitw = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
-    wmx         = PARAMS['wmx']
+    wmax         = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
@@ -422,12 +425,12 @@ def tracker(input_file,options):
     tracker_log['betaz_i..........[m/rad]'] = betaz
     tracker_log['emitx_i..............[m]'] = emitx_i
     tracker_log['emity_i..............[m]'] = emity_i
-    tracker_log['emitw_i,wmx........[rad]'] = (emitw, wmx)
+    tracker_log['emitw_i,wmax.......[rad]'] = (emitw, wmax)
     tracker_log['emitz_i..............[m]'] = emitz
     # tracker_log['Dp2p,Dp2pmx..........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
     tracker_log['Dp2p.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p......[%]'] = PARAMS['Dp2pAcceptance']*1.e2
-    tracker_log['accpetance z........[mm]'] = PARAMS['zAcceptance']*1.e3
+    tracker_log['acceptance Dp2p......[%]'] = PARAMS['Dp2p_Acceptance']*1.e2
+    tracker_log['accpetance z........[mm]'] = PARAMS['z_Acceptance']*1.e3
     tracker_log['lattice version.........'] = PARAMS['lattice_version']
     tracker_log['mapping.................'] = PARAMS['mapping']
     tracker_log['DT/T-kin................'] = PARAMS['DT2T']
@@ -445,7 +448,7 @@ def tracker(input_file,options):
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
     t2 = time.process_time()
-    track_soll(lattice)  # <----- track soll
+    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
     t3 = time.process_time()
     # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
@@ -479,7 +482,7 @@ def tracker(input_file,options):
 def test0(filepath):
     print('-----------------------------------------Test0---')
     lattice = factory(filepath)
-    sollTrack = track_soll(lattice)
+    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
     table = sollTrack.as_table()
     DEBUG_TEST0('sollTrack:\n'+table)
     first = sollTrack[0]
@@ -496,6 +499,7 @@ if __name__ == '__main__':
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # parse argv and normalize
+    print("sys.argv: {}".format(sys.argv))
     Args = pargs(sys.argv)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
@@ -505,7 +509,11 @@ if __name__ == '__main__':
             pass
         elif Args['mode'] == 'm4':
             command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
-            os.system(command)
+            stat = os.system(command)
+            if stat != 0:
+                print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
         else:
             print('Internal error!')
             sys.exit(1)
