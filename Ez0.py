@@ -59,7 +59,7 @@ def Kpoly(z,sigma,mu,E):
         El  = E*NGauss(zl,sigma,mu)
         E0  = E*NGauss(z0,sigma,mu)
         Er  = E*NGauss(zr,sigma,mu)
-        b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+        b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation
         a = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
@@ -254,7 +254,7 @@ class SFdata(object):
         ep = eprev+ep
         N = len(zp)
         EzAvg = 0
-        for i in range(N):  
+        for i in range(N):
             raw_tab.append(Dpoint(zp[i],rp[i],ep[i]))
             EzAvg += ep[i]
         EzAvg = EzAvg/N
@@ -268,7 +268,7 @@ class SFdata(object):
 
         tab = []
         half_gap = self._gap*0.5
-        for i in range(len(self._Ez0_tab_raw)):  
+        for i in range(len(self._Ez0_tab_raw)):
             z = self._Ez0_tab_raw[i].z*(half_gap/zmax)       # scale z-axis
             e = self._Ez0_tab_raw[i].Ez*(self._EzPeak/EzMax)  # sclae Ez-axis
             r = self._Ez0_tab_raw[i].R*(half_gap/zmax)       # scale R same as Z
@@ -276,7 +276,7 @@ class SFdata(object):
 
         EzAvg = EzAvg*(self._EzPeak/EzMax)
         return tab,EzAvg
-    def make_polyfit(self,Ez_table): 
+    def make_polyfit(self,Ez_table):
         # Polynomial fits to raw data according to Shislo&Holmes
         # In here M adjacent raw intervals are taken as one single interval and fitted with a polynomial
         sf_tab = Ez_table        # SF-table scales applied
@@ -304,7 +304,7 @@ class SFdata(object):
             Er = sf_tab[ir].Ez
             i = ir   # next interval
             dz = z0-zl
-            b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation 
+            b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             polies.append(pval)
@@ -361,7 +361,7 @@ class TestEz0Methods(unittest.TestCase):
         Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
 
         ax  = plt.subplot(111)
-        self.displayLR(Ez0_tab,'NG')    
+        self.displayLR(Ez0_tab,'NG')
         ax.set_ylabel('Ez0 [MV/m]')
         ax.set_xlabel('z [cm]')
         plt.legend(loc='upper right',fontsize='x-small')
@@ -448,4 +448,4 @@ class TestEz0Methods(unittest.TestCase):
         print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
 
 if __name__ == '__main__':
-     unittest.main()   
+     unittest.main()
