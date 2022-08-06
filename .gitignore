@@ -14,11 +14,8 @@ h
 untitled*
 figures/
 frames/
-yml/simuIN.yml
-yml/trackIN.yml
 dist/
 KW.py
-SF/TplotPRF.TXT
 dynac/dynacv6_0_modified/dynac.long
 dynac/dynacv6_0_modified/a.exe
 dynac/dynacv6_0_modified/beam_core_H.dst

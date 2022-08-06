@@ -1,0 +1,47 @@
+; This file contains start-up settings for Tablplot
+MainWindowXPosition=   12
+MainWindowYPosition=   76
+MainWindowWidth= 1536
+MainWindowHeight=  864
+EditWindowXPosition=   -1
+EditWindowYPosition=   -1
+EditWindowWidth=   -1
+EditWindowHeight=   -1
+IntegrateWindowXPosition=   -1
+IntegrateWindowYPosition=   -1
+YvsXWindowXPosition=   -1
+YvsXWindowYPosition=   -1
+ZoomWindowXPosition=   -1
+ZoomWindowYPosition=   -1
+WidthWindowXPosition=   -1
+WidthWindowYPosition=   -1
+SelectDataWindowXPosition=   -1
+SelectDataWindowYPosition=   -1
+SortDataWindowXPosition=   -1
+SortDataWindowYPosition=   -1
+PointLabelWindowXPosition=   -1
+PointLabelWindowYPosition=   -1
+EditDataWindowXPosition=   -1
+EditDataWindowYPosition=   -1
+SelectFitXPosition=   -1
+SelectFitYPosition=   -1
+BuildColumnXPosition=   -1
+BuildColumnYPosition=   -1
+YLabelXPosition=   -1
+YLabelYPosition=   -1
+MarkerSizeXPosition=   -1
+MarkerSizeYPosition=   -1
+HardcopyFileExtension=    
+CurveLineWidth=1
+AxisLineWidth=1
+TitleStatus=1
+LabelStatus=1
+ConnectStatus=1
+MarkersStatus=1
+XlinLogStatus=LIN
+YLinLogStatus=LIN
+LastPlotFile=C:\Users\wdklotz\SIMULINAC\SF\SF_WDK2g44.TBL
+ZoomLimits  1     0.0000000       4.0000000       0.0000000       4.1752000    
+ZoomLimits  2    0.24447250      0.37142646       2.2754261       2.3778360    
+ZoomLevel=1
+MaxZoomLevel=2
