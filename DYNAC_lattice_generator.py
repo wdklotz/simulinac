@@ -1,5 +1,7 @@
+___version___='v10.1.0'
 """ 
-Dynac_conversion v0.18 converts YAML input file (simuIN.yml) into dynacIN for Dynac v6r19.   //TODO version numbers
+DYNAC_lattice-generator
+converts YAML input file (simuIN.yml) into dynacIN for dynacv7r1.
 
 Works with simulinac v7.1.3a3.
 
