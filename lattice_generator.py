@@ -68,10 +68,10 @@ def instanciate_element(item):
             instance     =  ELM.D(ID,length=length,aperture=aperture)
             # instance.sec   = attributes.get('sec','?')
             instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-        elif type == 'SIXD':
+        elif type   == 'DKD':
             length       = get_mandatory(attributes,'length',ID)
             aperture     = attributes.get('aperture')
-            instance     = ELM.SIXD(ID,length=length,aperture=aperture)
+            instance     =  ELM.DKD(ID,length=length,aperture=aperture)
             # instance.sec   = attributes.get('sec','?')
             instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
         elif type == 'QF':

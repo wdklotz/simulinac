@@ -88,8 +88,12 @@ ELEMENTS:
         length:   0.012        # [m]
         # sec:      LE         # section 
     DGAP:                      # ID
-        type:     DKD          # DKD class
+        type:     D            # D class
         length:   0.023        # [m]
+        # sec:      LE         # section 
+    DGAPi:                      # ID
+        type:     D            # D class
+        length:   0.046        # [m]  2*DGAP
         # sec:      LE         # section 
     PsMkr:                     # ID
         type:     MRK          # MRK class
@@ -216,6 +220,7 @@ SEGMENTS:
 # LE gaps
     GAPL:                  [1,[DGAP,RFG1,DGAP]]   # gaps
     GAPLarr:               [6,[GAPL]]    # GAP+D+GAP
+    # GAPLarr:               [1,[DGAP,RFG1,DGAPi,RFG1,DGAPi,RFG1,DGAPi,RFG1,DGAPi,RFG1,DGAPi,RFG1,DGAP]]    # 6 gaps
 # HE gaps
     GAPH:                  [1,[DGAP,RFG2,DGAP]]   # gaps
     GAPHarr:               [10,[GAPH]]    # GAP+D+GAP
@@ -232,12 +237,12 @@ SECTIONS:
 # group CELLs into SECTIONS
 #...........................................................................................
     SECL:      [20,[LE-CELL]]
-    # SECL:      [2,[LE-CELL]]
+    # SECL:      [65,[LE-CELL]]
     SECH:      [45,[HE-CELL]]
-    # SECH:      [4,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     LINE:   [1,[PsMkr,SECL,PsMkr,SECH,PsMkr]]
+    # LINE:   [1,[PsMkr,SECL,PsMkr]]
   

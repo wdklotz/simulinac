@@ -241,6 +241,17 @@ class D(Node):
     def shorten(self, length):
         shortend =  D(self.label, particle=self.particle, position=(0.,0.,0.), length=length, aperture=self.aperture)
         return shortend
+class DKD(D):
+    """  Trace3D drift spacer for Drift_Kick-Drift gaps"""
+    def __init__(self, label, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):
+        super().__init__(label,particle=particle,position=position,length=length,aperture=aperture)
+
+    def adjust_energy(self, tkin):
+        adjusted = DKD(self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        return adjusted
+    def shorten(self, length):
+        shortend =  DKD(self.label, particle=self.particle, position=(0.,0.,0.), length=length, aperture=self.aperture)
+        return shortend
 class QF(Node):
     """ 
     Trace3D focussing quad  !!! NEUES API !!!!
@@ -931,33 +942,6 @@ class RFC(I):
     @property
     def particlef(self):
         return self._particlef
-class SIXD(D):
-    """ 
-    Drift with Sixtrack mapping (experimental!) 
-    """
-    def __init__(self, label="Dsix", particle=Proton(PARAMS['injection_energy']), position=(0., 0., 0.), length=0., aperture=None):
-        super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self['viseo'] = 0.
-        self.off_soll = copy(self.particle) # !!!IMPORTANT!!!
-
-    def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-            label      = self.label, 
-            particle   = self.particle(tkin), 
-            position   = self.position, 
-            length     = self.length,
-            aperture   = self.aperture,
-            next       = self.next,
-            prev       = self.prev)
-        self._params   = _params
-        return self
-
-    def shorten(self, length):
-        shortSIXD = SIXD(label=self.label, particle=self.particle, position=self.position, length=length, aperture=self.aperture)
-        shortSIXD._params = self._params
-        return shortSIXD
-
     def map(self, i_track):
         def fpsigma(psigma, soll):
             beta0    = soll.beta

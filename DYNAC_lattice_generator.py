@@ -1,5 +1,5 @@
 """ 
-Dynac_conversion v0.18 converts YAML input file (simuIN.yml) into dynacIN for Dynac v6r19.
+Dynac_conversion v0.18 converts YAML input file (simuIN.yml) into dynacIN for Dynac v6r19.   //TODO version numbers
 
 Works with simulinac v7.1.3a3.
 
@@ -55,8 +55,7 @@ ENVEL - Envelope plots for X, Y, PHASE and ENERGY.
 PROFGR - Particles plots in X-Z and Y-Z; bunch profiles in X, Y, Z, X', Y' and Z'.
 STOP - End simulation; this card is mandatory.
 
-To DO:
-
+TODO:
 - TTF optimization
 
 """
@@ -87,7 +86,7 @@ output_base_dir = 'dynac/generated/'
 def call_INTRO(arg):
     file = arg['file']
     file.write("ALCELI\n")
-def call_FIELD_T(arg):
+def call_FIELD_T(arg):     #TODO
     """
     E.Tanke's Vorschlag:
         ...das SF-Feld mehrfach zu wiederholen funktioniert fuer ALCELI nicht wegen unabhaengiger pillboxes.
@@ -360,13 +359,13 @@ def call_ALCELI(arg):
             EzPeak        = element['EzPeak']      # (MV/m)
             dphase        = node.phisoll           #(radians) RF phase in gap center
             dphase        = math.degrees(+dphase)  #(deg) change phase sign
-            accumulated_length = cavlen + 0.4      # (cm) dummy DYNAC variable
+            accumu_length = cavlen + 0.4           # (cm) dummy DYNAC variable   #TODO what needed for?
             gap_frequency = node.freq*1E-06        # (MHz)
 
             sfdata = node.SFdata
             DEBUG_OFF(sfdata)
             if sfdata == None:
-                pass                        #TODO simulate a constant field
+                pass                        #TODO simulate a constant field!
             elif sfdata == active_field_map:
                 pass
             else:
@@ -396,18 +395,19 @@ def call_ALCELI(arg):
             # call_EMITGR('{}'.format(node_cnt),arg,limits)
             continue
 
-        elif isinstance(node, (ELM.D, ELM.SIXD)):
-            node_cnt += 1
+        elif isinstance(node, ELM.D):
             element = util.ELEMENTS[node.label]
             DEBUG_OFF(element)
 
             drift_length = (node.length) * 100  # (cm)
-            call_DRIFT(dict(file=file, length=drift_length))
+            if element['type'] == "D": 
+                node_cnt += 1
+                call_DRIFT(dict(file=file, length=drift_length))
             # call_EMITGR('{}'.format(node_cnt),arg,limits)
             continue
 
         elif isinstance(node, ELM.MRK):
-            node_cnt += 1
+            # node_cnt += 1
             element = util.ELEMENTS[node.label]
             DEBUG_OFF(element)
 
@@ -416,10 +416,12 @@ def call_ALCELI(arg):
             print("Nothig implemented fot RFC or GAP. Use RFG for DYNAC!")
             print("Nothig implemented fot RFC or GAP. Use RFG for DYNAC!")
             sys.exit(1)
+
         else:
             pass
 
     file.write(";ALCELI end\n")
+    print(f"nodes {node_cnt}, quadrupoles {quad_cnt}, cavities {cav_cnt}")
 def call_FINISH(arg):
     file = arg['file']
     file.write("STOP\n")
