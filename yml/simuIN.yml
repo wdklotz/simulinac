@@ -214,11 +214,11 @@ SEGMENTS:
     # CAVs:               [1,[RFX ,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFX ]] # 10xRFCL
     # CAVs:               [1,[RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL,RFCL]] # 12xRFCL
 # LE gaps
-    GAPL:                  [1,[DGAP,RFG1,DGAP]]   # gaps
-    GAPLarr:               [6,[GAPL]]    # GAP+D+GAP
+    GAPL:                  [1,[DGAP,RFG1,DGAP]]   # D+G+D sandwich
+    GAPLarr:               [6,[GAPL]]
 # HE gaps
-    GAPH:                  [1,[DGAP,RFG2,DGAP]]   # gaps
-    GAPHarr:               [10,[GAPH]]    # GAP+D+GAP
+    GAPH:                  [1,[DGAP,RFG2,DGAP]]   # D+G+D sandwich
+    GAPHarr:               [10,[GAPH]]
 # ===========================================================================================
 CELLS:    
     NIL_CELL:    [1,[NIL_SEG]]

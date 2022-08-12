@@ -797,7 +797,7 @@ class RFG(Node):
         return adjusted
 
 # TODO classes below need unittesting
-class RFC(I):
+class RFC(I):    #TODO
     """ 
     Rf cavity as product D*Kick*D (DKD-model)
     """
