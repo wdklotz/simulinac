@@ -464,7 +464,7 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  RF-gap of zero length with different kick gap-models """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
         super().__init__()
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
@@ -489,7 +489,7 @@ class RFG(Node):
         self.qE0LT     = self.E0L*self.ttf
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
-        self.SFdata    = None                # SuperFish data
+        self.SFdata    = SFdata               # SuperFish data
         self.matrix    = None
         self.map       = None
         """ dispatching to different gap models """

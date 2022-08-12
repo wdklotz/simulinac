@@ -205,7 +205,7 @@ class SFdata(object):
         self._EzPeak    = EzPeak
         self._gap       = gap           # full gap !!
         self._EzAvg     = None          # for later
-        self._Ez0_tab_raw,EzAvg = self.make_Ez_table()  # rtaw data from SF will never be scaled!
+        self._Ez0_tab_raw,EzAvg = self.make_Ez_table()  # raw data from SF will never be scaled!
         self._Ez0_tab_scaled,self._EzAvg = self.scale_Ez_table(EzAvg,EzPeak=self._EzPeak,gap=self._gap) # scale EzAvg and profile
         self._poly = self.make_polyfit(self._Ez0_tab_scaled)
 

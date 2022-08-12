@@ -42,14 +42,14 @@ DEBUG_OFF = DEB.get('OFF')
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='ttf')
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata, particle, position, aperture, dWf, mapping='ttf')
         # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('TTF_G: missing E(z) table - STOP')
             sys.exit(1)
         else:
-            self.map       = self.ttf_g_map   # OXAL's specific mapping method
-            self.SFdata    = SFdata
+            self.map       = self.ttf_g_map   # TTF_G's specific mapping method
+            # self.SFdata    = SFdata
             self.polies    = self.poly_slices(self.gap,self.SFdata)
             self.particlef = None
             self.ttf       = 0.                # calculate my own ttf
