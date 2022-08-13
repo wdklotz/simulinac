@@ -1,4 +1,4 @@
-##!/Users/klotz/anaconda3/bin/python3.6
+#!python
 # -*- coding: utf-8 -*-
 ___version___='v10.1.0'
 """

@@ -63,33 +63,29 @@ def instanciate_element(item):
         ELEMENT = util.ELEMENTS[ID]          # the item in the ELEMENT list
         type = attributes.get('type')
         if type   == 'D':
-            length       = get_mandatory(attributes,'length',ID)
-            aperture     = attributes.get('aperture')
-            instance     =  ELM.D(ID,length=length,aperture=aperture)
-            # instance.sec   = attributes.get('sec','?')
-            instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            length         = get_mandatory(attributes,'length',ID)
+            aperture       = attributes.get('aperture')
+            instance       =  ELM.D(ID,length=length,aperture=aperture)
+            ELEMENT['sec'] = attributes.get('sec','?')
         elif type   == 'DKD':
-            length       = get_mandatory(attributes,'length',ID)
-            aperture     = attributes.get('aperture')
-            instance     =  ELM.DKD(ID,length=length,aperture=aperture)
-            # instance.sec   = attributes.get('sec','?')
-            instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            length         = get_mandatory(attributes,'length',ID)
+            aperture       = attributes.get('aperture')
+            instance       =  ELM.DKD(ID,length=length,aperture=aperture)
+            ELEMENT['sec'] = attributes.get('sec','?')
         elif type == 'QF':
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
             instance         = ELM.QF(ID,dBdz,length=length,aperture=aperture)
-            # instance.Bpole   = dBdz*aperture      # Bpole
-            # instance.sec     = attributes.get('sec','?')
-            instance.Bpole = ELEMENT['Bpole'] = dBdz*aperture      # Bpole
-            instance.sec   = ELEMENT['sec']   = attributes.get('sec','?')
+            ELEMENT['Bpole'] = dBdz*aperture      # Bpole
+            ELEMENT['sec']   = attributes.get('sec','?')
         elif type == 'QD':
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
             instance         = ELM.QD(ID,dBdz,length=length,aperture=aperture)
-            instance.Bpole = ELEMENT['Bpole'] = dBdz*aperture      # Bpole
-            instance.sec   =  ELEMENT['sec']   = attributes.get('sec','?')
+            ELEMENT['Bpole'] = dBdz*aperture      # Bpole
+            ELEMENT['sec']   = attributes.get('sec','?')
         elif type == 'RFG':
             phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
@@ -109,22 +105,22 @@ def instanciate_element(item):
             if mapping == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
                 instance = OXA.OXAL(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
-                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-                instance.EzPeak = ELEMENT['EzPeak'] = EzPeak
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
                 instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
-                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-                instance.EzPeak = ELEMENT['EzPeak'] = EzPeak
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
                 instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
-                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-                instance.EzPeak = ELEMENT['EzPeak'] = EzPeak
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
             else:
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
-                instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
-                instance.EzPeak = ELEMENT['EzPeak'] = EzPeak
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
         elif type == 'RFC':
             label     = attributes['ID']
             PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
@@ -159,7 +155,7 @@ def instanciate_element(item):
             ELEMENT['dWf']      = dWf
             ELEMENT['length']   = length
             ELEMENT['mapping']  = mapping
-            instance.sec = ELEMENT['sec'] = attributes.get('sec','?')
+            ELEMENT['sec']      = attributes.get('sec','?')
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
@@ -169,9 +165,9 @@ def instanciate_element(item):
             aperture  = get_mandatory(attributes,'aperture',ID)
             EzAvg     = EzPeak
             instance  =  ELM.GAP(ID,EzAvg,phiSoll,gap,freq,aperture=aperture,dWf=dWf)
-            instance.EzPeak = ELEMENT['EzPeak'] = EzPeak
-            instance.sec    = ELEMENT['sec']    = attributes.get('sec','?')
-            instance.EzAvg  = ELEMENT['EzAvg']  = EzAvg
+            ELEMENT['EzPeak'] = EzPeak
+            ELEMENT['sec']    = attributes.get('sec','?')
+            ELEMENT['EzAvg']  = EzAvg
         elif type == 'MRK':
             action = get_mandatory(attributes,'action',ID)
             if 'pspace' == action:
