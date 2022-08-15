@@ -94,9 +94,9 @@ ELEMENTS:
 #...........................................................................................
 # LOW energy section nodes
 #...........................................................................................
-    DGAP1:                      # ID
+    DGAP1:                     # ID
         type:     DKD          # DKD class
-        length:   0.012        # [m]
+        length:   0.012        # [m] must be gap/2
         sec:      LE         # section 
     QF1:                       # ID
         type:     QF           # QF class
@@ -127,9 +127,9 @@ ELEMENTS:
 #...........................................................................................
 # HIGH energy section nodes
 #...........................................................................................
-    DGAP2:                      # ID
+    DGAP2:                     # ID
         type:     DKD          # DKD class
-        length:   0.023        # [m]
+        length:   0.023        # [m] must be gap/2
         sec:      LE         # section 
     QF2:                       # ID
         type:     QF           # QF class
