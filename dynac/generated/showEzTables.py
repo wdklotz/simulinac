@@ -9,14 +9,13 @@ for f in files:
         tables.append(f)
 # print(tables)
 
-plot_command = 'gnuplot -e \"'
+plot_command = 'gnuplot -persist -e \"'
 plot_command +=   "set xlabel '[m]'"
 plot_command += "; set ylabel '[V/m]'"
 plot_command += "; plot "
 for f in tables:
-    plot_command += f" '{f}' skip 1 with lines,"
-plot_command +='; pause mouse keypress"'
+    plot_command += f" '{f}' skip 1 title '{f}' noenhanced with points,"
+    # plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
+plot_command +=';"'
 # process gnuploy
 os.system(plot_command)
-
-
