@@ -67,7 +67,7 @@ def instanciate_element(item):
             aperture       = attributes.get('aperture')
             instance       =  ELM.D(ID,length=length,aperture=aperture)
             ELEMENT['sec'] = attributes.get('sec','?')
-        elif type   == 'DKD':
+        elif type == 'DKD':
             length         = get_mandatory(attributes,'length',ID)
             aperture       = attributes.get('aperture')
             instance       =  ELM.DKD(ID,length=length,aperture=aperture)
@@ -104,7 +104,7 @@ def instanciate_element(item):
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
-                instance = OXA.OXAL(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
@@ -122,40 +122,41 @@ def instanciate_element(item):
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
         elif type == 'RFC':
-            label     = attributes['ID']
-            PhiSoll   = radians(get_mandatory(attributes,"PhiSync",label))
-            freq      = float(get_mandatory(attributes,"freq",label))
-            gap       = get_mandatory(attributes,'gap',label)
-            aperture  = get_mandatory(attributes,'aperture',label)
+            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            freq      = float(get_mandatory(attributes,"freq",ID))
+            gap       = get_mandatory(attributes,'gap',ID)
+            length    = get_mandatory(attributes,'length',ID)
+            aperture  = get_mandatory(attributes,'aperture',ID)
             dWf       = util.FLAGS['dWf']
-            length    = get_mandatory(attributes,'length',label)
-            mapping   = get_mandatory(attributes,'mapping',label)
-            EzPeak    = get_mandatory(attributes,"EzPeak",label)
-            # EzAvg     = attributes.get('EzAvg',EzPeakToAverage(EzPeak))
-            if mapping == None:
-                mapping = 't3d'
+            EzPeak    = get_mandatory(attributes,"EzPeak",ID)
+            mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fname = get_mandatory(attributes,"SFdata",label)
+                fname = get_mandatory(attributes,"SFdata",ID)
                 if fname not in util.PARAMS:
                     gap_cm = gap*100     # Watch out!
                     util.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
-                EzAvg = util.PARAMS[fname].EzAvg
-                instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping,SFdata=util.PARAMS[fname])
-                pass
             else:
-                EzAvg = EzPeak
-                instance  =  ELM.RFC(EzAvg=EzAvg,label=label,PhiSoll=PhiSoll,fRF=freq,gap=gap,aperture=aperture,dWf=dWf,length=length,mapping=mapping)
-            ELEMENT['EzAvg']    = EzAvg
-            ELEMENT['EzPeak']   = EzPeak
-            ELEMENT['label']    = label
-            ELEMENT['PhiSoll']  = PhiSoll
-            ELEMENT['freq']     = freq
-            ELEMENT['gap']      = gap
-            ELEMENT['aperture'] = aperture
-            ELEMENT['dWf']      = dWf
-            ELEMENT['length']   = length
-            ELEMENT['mapping']  = mapping
-            ELEMENT['sec']      = attributes.get('sec','?')
+                ELEMENT['EzAvg']  = EzAvg = EzPeak
+                ELEMENT['SFdata'] = None
+            if mapping == 'oxal':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
+            elif mapping == 'ttf':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
+            elif mapping == 'dyn':
+                EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
+                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
+            else:
+                instance = ELM.RFC(ID,EzAvg,phiSoll,gap,freq,length,mapping=mapping,aperture=aperture,dWf=dWf)
+                ELEMENT['sec']    = attributes.get('sec','?')
+                ELEMENT['EzPeak'] = EzPeak
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)

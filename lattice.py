@@ -414,13 +414,13 @@ class Lattice(object):
 
         mess = ""
         if FLAGS['non_linear_mapping']:
-            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping.\nENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.'+colors.ENDC
+            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping.\nENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
             # function = self.sigma_envelopes # use beta-matrix            
         if FLAGS['sigma']:
-            mess += '\nCALCULATE ENVELOPES with SIGMA-matrix formalism'
+            mess += 'CALCULATE ENVELOPES with SIGMA-matrix formalism'
             function = self.sigma_envelopes # use sigma-matrix
         elif not FLAGS['sigma']:
-            mess += '\nCALCULATE ENVELOPES from TWISS-parameters'
+            mess += 'CALCULATE ENVELOPES from TWISS-parameters'
             function = self.twiss_envelopes # use beta-matrix
 
         if not FLAGS['KVout']: 

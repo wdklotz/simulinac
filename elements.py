@@ -77,7 +77,7 @@ class Node(object):
     def __mul__(self, other):
         """ define the (*) operator for Node objects """
         res = Node()
-        if (self.label == ''):
+        if (self.label == '' or isinstance(self,DKD)):
             res.label = other.label
         else:
             res.label = self.label+'*'+other.label
@@ -526,7 +526,6 @@ class RFG(Node):
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
             # self.map  =>  # DYN_G has its own mapping method
-
         # TODO other mappings not tested TODO
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
@@ -793,104 +792,26 @@ class RFG(Node):
         self.particlef = particleRo
         return f_track
     def adjust_energy(self, tkin):
-        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,mapping=self.mapping,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
 
 # TODO classes below need unittesting
-class RFC(I):    #TODO
-    """ 
-    Rf cavity as product D*Kick*D (DKD-model)
-    """
-    def __init__(self,
-                EzAvg    = 1.,
-                label    = 'RFC',
-                PhiSoll  = radians(-30.),
-                fRF      = 800.e6,
-                gap      = 0.024,
-                aperture = None,
-                dWf      = FLAGS['dWf'],
-                length   = 0.,
-                mapping  = 't3d',
-                SFdata   = None,
-                particle = Proton(PARAMS['injection_energy']),
-                position = (0.,0.,0.),
-                next     = None,
-                prev     = None):
-        if length > 0:
-            self.length = length
-        else:
-            self.length = gap   # die ideale pillbox
-        super().__init__(label=label, particle=particle, position=position, length=length, aperture=aperture, next=next, prev=prev)
-        self._EzAvg   = EzAvg*dWf
-        self.phis     = PhiSoll
-        self.freq     = fRF
-        self.gap      = gap
-        self.E0L      = self._EzAvg*self.gap
-        self.dWf      = dWf
-        self.mapping  = mapping
-        self.SFdata   = SFdata 
-        self._ttf     = None
-        self._deltaW  = None
-        
-        self['viseo']   = 0.25
-        
-        if self.mapping != 'dyn':
-            # ---> DKD models <--- uses RFG for t3d, simple, base, ttf mappings
-            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            kick  = RFG(EzAvg     = self._EzAvg,
-                        PhiSoll   = self.phis,
-                        fRF       = self.freq,
-                        gap       = self.gap,
-                        aperture  = self.aperture,
-                        dWf       = self.dWf,
-                        mapping   = self.mapping,
-                        SFdata    = self.SFdata,
-                        particle  = self.particle)
-            self.triplet = (dri, kick, drf)
-            self._deltaW = kick.deltaW
-            tkin_f       = self.particle.tkin + self._deltaW   # tkin after acc. gap
-            # UPDATE energy for downstream drift after gap
-            drf.adjust_energy(tkin_f)
-            self._ttf = self._deltaW/(self.E0L*cos(self.phis)) if self.dWf == 1 else 1.
-            # in case off ... (really needed ?)
-            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
-            self._particlef = kick.particlef
-            DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
-        elif self.mapping == 'dyn':
-            # DYNAC gap model with SF-data (E.Tanke, S.Valero)
-            # This is no DKD-model. 
-            cav             = _DYN_G(self)
-            self.triplet    = (cav,)
-            self._deltaW    = cav.deltaW
-            self._particlef = cav.particlef
-            self._ttf       = cav.ttf
-            # ACHTUNG! _DYN_G has no matrix, so use DKD with _T3D_G-matrix instead
-            dri   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            drf   = D(length=0.5*self.length, particle=self.particle, aperture=self.aperture)
-            kick  = _T3D_G(self)
-            self.matrix = NP.dot(drf.matrix,NP.dot(kick.matrix,dri.matrix))
-            # correct energy increase in Node.matrix
-            self.matrix[Ktp.T,Ktp.dT] = self._deltaW            
+class RFC(RFG):    #TODO
+    """ Rf cavity as product D*Kick*D (DKD-model) """
+    def __init__(self, label, EzAvg, phisoll, gap, length, freq, SFdata=None, particle = Proton(PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=None, particle = Proton(PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d')
+        self.length  = length if length >= gap else gap
+        self.dri     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
+        self.drf     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
+        self.triplet = (dri,self,drf)
+        # UPDATE energy for downstream drift after gap
+        tkin_f = self.particle.tkin + self._deltaW   # tkin after acc. gap
+        drf.adjust_energy(tkin_f)
+        self.matrix = NP.dot(drf.matrix,NP.dot(self.matrix,dri.matrix))
+        # DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
     def adjust_energy(self, tkin):
-        _params = self._params
-        self.__init__(
-                    EzAvg         = self.EzAvg,
-                    label         = self.label,
-                    PhiSoll       = self.phis,
-                    fRF           = self.freq,
-                    gap           = self.gap,
-                    aperture      = self.aperture,
-                    dWf           = self.dWf,
-                    length        = self.length,
-                    mapping       = self.mapping,
-                    SFdata        = self.SFdata,
-                    particle      = self.particle(tkin),
-                    position      = self.position,
-                    next          = self.next,
-                    prev          = self.prev)
-        self._params = _params
-        return self
+        adjusted = RFC(self.label,self.EzAvg,self.phisoll,self.gap,self.length,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
+        return adjusted
     def map(self,i_track):
         track = copy(i_track)
         for node in iter(self.triplet):
@@ -898,15 +819,6 @@ class RFC(I):    #TODO
             track = f_track
         DEBUG_OFF('rfc-map {}'.format(f_track))
         return f_track
-    # def soll_map(self,i_track):
-    #     si,sm,sf = self.position
-    #     track = copy(i_track)
-    #     for node in iter(self.triplet):
-    #         f_track = node.soll_map(track)
-    #         track = f_track
-    #     f_track[SKOO] += sm
-    #     DEBUG_OFF('rfc-soll {}'.format(f_track))
-    #     return f_track
     def make_slices(self, anz=0):
         slices = []
         if len(self.triplet) == 3:
@@ -920,144 +832,6 @@ class RFC(I):    #TODO
         else:
             slices.append(self)
         return slices
-
-    @property
-    def ttf(self):
-        return self._ttf
-    @property
-    def lamb(self):
-        return PARAMS['clight']/self.freq
-    @property
-    def deltaW(self):
-        return self._deltaW
-    @property
-    def EzPeak(self):
-        return self['EzPeak']
-    @property
-    def EzAvg(self):
-        return self._EzAvg
-    @EzAvg.setter
-    def EzAvg(self,value):
-        self._EzAvg = self['EzAvg'] = value
-    @property
-    def particlef(self):
-        return self._particlef
-    def map(self, i_track):
-        def fpsigma(psigma, soll):
-            beta0    = soll.beta
-            E0       = soll.e
-            m0c2     = soll.e0
-            res      = (1+beta0**2*psigma)**2-(m0c2/E0)**2
-            res      = sqrt(res)/beta0-1.
-            return res
-
-        def einsplusfpsigma(psigma, soll):
-            return 1.+fpsigma(psigma, soll)
-
-        def t3d2six(i_track):
-            """ Conversion Trace3D ==> Ripken-Schmidt (sixtrack) """
-            soll     = self.particle
-            x        = i_track[XKOO]       # [0]
-            xp       = i_track[XPKOO]      # [1]
-            y        = i_track[YKOO]       # [2]
-            yp       = i_track[YPKOO]      # [3]
-            z        = i_track[ZKOO]       # [4] z
-            dp2p     = i_track[ZPKOO]      # [5] dp/p
-            T        = i_track[EKOO]       # [6] kinetic energy SOLL
-            s        = i_track[SKOO]       # [8] position SOLL
-
-            E0       = soll.e
-            beta0    = soll.beta
-            p0       = soll.p             # cp SOLL [MeV]
-            m0c2     = soll.e0
-            p        = p0/(1.-dp2p)
-            E        = sqrt(p**2+m0c2**2) # E aus dp2p und p0
-            tkin     = E-m0c2
-            particle = self.off_soll(tkin = tkin)
-            gb       = particle.gamma_beta
-            beta     = particle.beta
-
-            px       = gb*m0c2/E0*xp
-            py       = gb*m0c2/E0*yp
-            sigma    = z
-            try:
-                psigma = ((beta0/beta/(1.-dp2p))-1.)/beta0**2
-            except Exception as ex:
-                print('(dp2p, beta, beta0)', (dp2p, beta, beta0))
-                print('in t3d2six(): bad psigma')
-                sys.exit(1)
-            f_track  = NP.array([x, px, y, py, sigma, psigma, T, 1., s, 1.])
-            return f_track
-
-        def six2t3d(i_track):
-            """ Conversion Ripken-Schmidt (sixtrack) ==> Trace3D """
-            soll     = self.particle
-            x        = i_track[XKOO]
-            px       = i_track[XPKOO]
-            y        = i_track[YKOO]
-            py       = i_track[YPKOO]
-            sigma    = i_track[ZKOO]
-            psigma   = i_track[ZPKOO]
-            T        = i_track[EKOO]
-            s        = i_track[SKOO]
-
-            E0       = soll.e
-            beta0    = soll.beta
-            m0c2     = soll.e0
-            eta      = beta0**2*psigma
-            E        = (1.+eta)*E0
-            tkin     = E-m0c2
-            particle = self.off_soll(tkin = tkin)
-            beta     = particle.beta
-            gb       = particle.gamma_beta
-
-            xp       = px/(gb*m0c2/E0)
-            yp       = py/(gb*m0c2/E0)
-            z        = sigma
-            dp2p     = 1.-beta0/beta/(1.+beta0**2*psigma)
-            f_track  = NP.array([x, xp, y, yp, z, dp2p, T, 1., s, 1.])
-            return f_track
-
-        def rps_map(i_track, l):
-            """ Ripken-Schmidt sixtrack map """
-            soll     = self.particle
-            xi       = i_track[XKOO]
-            pxi      = i_track[XPKOO]
-            yi       = i_track[YKOO]
-            pyi      = i_track[YPKOO]
-            sigmai   = i_track[ZKOO]
-            psigmai  = i_track[ZPKOO]
-            T        = i_track[EKOO]
-            s        = i_track[SKOO]
-
-            E0       = soll.e
-            beta0    = soll.beta
-            m0c2     = soll.e0
-            eta      = beta0**2*psigmai
-            E        = (1.+eta)*E0
-            tkin     = E-m0c2
-            particle = self.off_soll(tkin = tkin)
-            beta     = particle.beta
-
-            xf       = xi + pxi/einsplusfpsigma(psigmai, soll)*l
-            pxf      = pxi
-            yf       = yi + pyi/einsplusfpsigma(psigmai, soll)*l
-            pyf      = pyi
-            sigmaf   = sigmai + (1.-(beta0/beta)*(1.+0.5*(pxi**2+pyi**2)/einsplusfpsigma(psigmai, soll)**2))*l
-            psigmaf  = psigmai
-            f_track  = NP.array([xf, pxf, yf, pyf, sigmaf, psigmaf, T, 1., s, 1.])
-            return f_track
-
-        # body map
-        f_track     = t3d2six(i_track)
-        DEBUG_OFF('t3d-->six\n{}'.format(f_track))
-        f_track     = rps_map(f_track, self.length)
-        DEBUG_OFF('SIXD.map\n{}'.format(f_track))
-        f_track     = six2t3d(f_track)
-        DEBUG_OFF('six-->t3d\n{}'.format(f_track))
-        # nicht vergessen! adjust total lattice length
-        f_track[SKOO] += self.length
-        return f_track
 
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
