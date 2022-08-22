@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "DYNAC_multigap_generator",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "DYNAC_multigap_generator.py",
+        },
+        {
+            "name": "DYNAC_pillbox_generator",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "DYNAC_pillbox_generator.py",
+        },
+        {
             "name": "DYNG",
             "type": "python",
             "request": "launch",
