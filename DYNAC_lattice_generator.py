@@ -424,14 +424,21 @@ def call_ALCELI(arg):
 
     file.write(";ALCELI end\n")
     print(f"nodes {node_cnt}, quadrupoles {quad_cnt}, cavities {cav_cnt}")
+def call_WRBEAM(dst_file, arg):
+    file = arg['file']
+    file.write("WRBEAM\n")
+    file.write("{}\n".format(dst_file))
+    file.write("{}  {}   ;IREC IFLAG\n".format(0,100))
 def call_FINISH(arg):
     file = arg['file']
     file.write("STOP\n")
     file.close()
 
 if __name__ == '__main__':
+    args = sys.argv
     # lattice
-    lattice = factory('yml/simuIN.yml')
+    IN_file = args[1] if len(args) >1 else 'simuWork.yml'
+    lattice = factory(IN_file)
     util.waccept(lattice.first_gap)
 
     # Parameters: these are hardcoded to a specific value.
@@ -529,6 +536,7 @@ if __name__ == '__main__':
     call_ALCELI(dyn_params)
     call_EMITGR('OUT', dyn_params, limits_f)
     call_PROFGR('OUT', dyn_params)
+    call_WRBEAM("dynacIN_out.dst",dyn_params) 
     call_FINISH(dyn_params)
 
     print('Reminder: '+Fore.RED+"You need a valid input-file for simu.py. Did you run simu.py first?")

@@ -50,7 +50,7 @@ def generate_space_part(delta=0.0):
         xstart = xstop
     return x,y
 
-phi = lambda u: twopi*u+p0+pi/2.0
+phi = lambda u: twopi*u+p0
 
 fig = PLT.figure(figsize=(14.,6.))      # prep plotting
 
@@ -63,13 +63,13 @@ for p in phisoll:
     p0 = M.radians(p)
     Eup = NP.array([])
     for i,u in enumerate(x):
-        v = M.sin(phi(u))*y[i]
+        v = M.cos(phi(u))*y[i]
         Eup = NP.append(Eup,[v])
     fmt = 'ok' if p == phisoll[0] else '-'
     PLT.plot(x,Eup,fmt,label=f'{p:+3.1f} deg',markersize=3)
 PLT.legend()
 
-x,y = generate_space_part(delta=+10.0)    # gap positions
+x,y = generate_space_part(delta=+10.0)    # gap positions +10%
 splt = PLT.subplot(212)
 PLT.title(r'5 gaps with spacing = $\beta\lambda$ + 10%')
 PLT.plot(x,y,':')
@@ -77,11 +77,11 @@ for p in phisoll:
     p0 = M.radians(p)
     Eup = NP.array([])
     for i,u in enumerate(x):
-        v = M.sin(phi(u))*y[i]
+        v = M.cos(phi(u))*y[i]
         Eup = NP.append(Eup,[v])
     fmt = 'ok' if p == phisoll[0] else '-'
     PLT.plot(x,Eup,fmt,label=f'{p:+3.1f} deg',markersize=3)
 PLT.legend()
-splt.set_xlabel(r'$\beta\lambda$')
+splt.set_xlabel(r'u=s/$\beta\lambda$')
 
 PLT.show()

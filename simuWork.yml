@@ -63,7 +63,7 @@ PARAMETERS:
     BgradH:       &bgrad2  35.            # [T/m]
     thins:        &ths     1              # if thins == 0|1: one thick element else: many thin elements
     EzAvg:        &p16     1.0            # [MV/m]
-    EzPeak:       &p17     6.4            # [MV/m] peak gap field Strengy
+    # EzPeak:       &p17     6.4            # [MV/m] peak gap field Strengy
     nbsigma:               2              # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'v10.0.1m-6822' # lattice version
@@ -115,7 +115,8 @@ ELEMENTS:
     RFG1:                      # ID
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
+        # EzPeak:   *p17         # [MV/m] 
+        EzPeak:   2.0          # [MV/m] 
         PhiSync:  -25.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.024        # [m] gap length
@@ -148,7 +149,8 @@ ELEMENTS:
     RFG2:                      # ID
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
+        # EzPeak:   *p17         # [MV/m] 
+        EzPeak:   1.0          # [MV/m] 
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.046        # [m] gap length
@@ -236,9 +238,8 @@ SECTIONS:
     NIL_SEC:    [1,[]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    # SECL:      [20,[LE-CELL]]
-    SECL:      [2,[LE-CELL]]
-    # SECH:      [47,[HE-CELL]]
+    SECL:      [20,[LE-CELL]]
+    SECH:      [66,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
