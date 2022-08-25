@@ -16,7 +16,6 @@ plot_command += "; plot "
 for cnt,f in enumerate(tables):
     plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
     # if cnt == 0: plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
->>>>>>> Stashed changes
 plot_command +=';"'
 # process gnuploy
 os.system(plot_command)
