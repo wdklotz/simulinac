@@ -13,11 +13,6 @@ plot_command = 'gnuplot -persist -e \"'
 plot_command +=   "set xlabel '[m]'"
 plot_command += "; set ylabel '[V/m]'"
 plot_command += "; plot "
-<<<<<<< Updated upstream
-for f in tables:
-    plot_command += f" '{f}' skip 1 title '{f}' noenhanced with points,"
-    # plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
-=======
 for cnt,f in enumerate(tables):
     plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
     # if cnt == 0: plot_command += f" '{f}' skip 1 title '{f}' noenhanced with lines,"
