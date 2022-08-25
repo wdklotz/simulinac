@@ -102,7 +102,7 @@ class Node(object):
         """ dummy shorten """
         return self
     def prmatrix(self):
-        n  = 1000
+        n  = 500
         nx = 1000
         if len(self.label) > nx:
             # make short when too long
@@ -796,6 +796,7 @@ class RFG(Node):
         return adjusted
 
 # TODO classes below need unittesting
+# TODO D+K+D models not finished for OXAL_C and TTF_C
 class RFC(RFG):    #TODO
     """ Rf cavity as product D*Kick*D (DKD-model) """
     def __init__(self, label, EzAvg, phisoll, gap, length, freq, SFdata=None, particle = Proton(PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
