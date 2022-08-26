@@ -28,7 +28,7 @@ import numpy as NP
 import matplotlib.pyplot as plt
 import time
 from string import Template
-from math import sqrt, degrees, radians
+from math import sqrt, degrees, radians, ceil
 import pprint, inspect
 
 from lattice_generator import factory
@@ -39,6 +39,13 @@ from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs
 # from trackPlot import poincarePlot
+
+# max track amplitudes are set here!
+xlim_max  = ylim_max  =  10.e-3
+xplim_max = yplim_max =  10.e-3
+zlim_max  = zplim_max = 100.e-3
+limit     = \
+    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -173,6 +180,26 @@ def frames(lattice, skip):
     # invoke the marker's action
     for nscnt,node in iter(scatter_mrkr):
         node.do_action(nscnt,xmax,ymax)
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total: 
+        print()
 def loss_plot(lattice,live_lost):
     """
     Plot losses along the lattice
@@ -213,21 +240,11 @@ def loss_plot(lattice,live_lost):
     plt.show()
     return
 def progress(tx):
-    """
-    Show progress
-    """
+    """ Show progress """
     template = Template('$tx1 $tx2 $tx3 $tx4')
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     # print('\r{}\r'.format(res),end="")
     sys.stdout.write('{}\r'.format(res))
-
-# max track amplitudes are set here!
-xlim_max  = ylim_max  =  10.e-3
-xplim_max = yplim_max =  10.e-3
-zlim_max  = zplim_max = 100.e-3
-limit     = \
-    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
-
 def track_node(node,particle,options):
     """
     Tracks a particle through a node
@@ -300,15 +317,13 @@ def track(lattice,bunch,options):
     
     Input: lattice , bunch
     """
-    zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
-    tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbparticles())
-
     ndcnt  = 0
     lnode  = len(lattice.seq)
-    lmod   = int(lnode*0.05)
+    pgceil =  ceil(lnode/100)   
     nlost  = 0
     nbpart = bunch.nbparticles()
     lbunch = Bunch()    # lost particles go into this bunch
+    printProgressBar(0,lnode,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
         ndcnt +=1
         for particle in iter(bunch):        # particles
@@ -317,18 +332,14 @@ def track(lattice,bunch,options):
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
                 nlost += 1
-            # showing track-loop progress
-            if (ndcnt+1)%lmod == 0:
-                tx4 = ' {}% done {}% lost'.format(int((ndcnt/lnode*100.)+1.), int(nlost/nbpart*100.))
-                # tx = ('(track design)', '(track bunch)', zeuge[ndcnt%4], tx4)
-                tx = ('(track design)', '(track bunch)', '', tx4)
-                progress(tx)
-                
+        # showing track-loop progress
+        if ndcnt%pgceil == 0 or ndcnt == lnode: 
+            printProgressBar(ndcnt,lnode,prefix="Progress:",suffix="Complete",length=50)
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
-#TODO kann inder neuen Version wegfallen?
 def track_soll(lattice, injection_energy, start_position=0.):
+    # TODO kann in der neuen Version wegfallen?
     """
     Track the reference particle through the lattice.
     NEW: Energy adjustemenr is already done when the node is added to the lattice.
@@ -342,7 +353,7 @@ def track_soll(lattice, injection_energy, start_position=0.):
         pi = soll_track.getpoints()[-1]   # track point at entrance
         """ OLD: energy adjustment """
         # node.adjust_energy(pi()[Ktp.T])
-        """ mapping with soll map """
+        # apply soll map 
         # pf = node.soll_map(pi())
         pf = node.map(pi())
         tpoint = Tpoint(pf)               # Tpoint at exit
@@ -479,6 +490,7 @@ def tracker(input_file,options):
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
+
 def test0(filepath):
     print('-----------------------------------------Test0---')
     lattice = factory(filepath)
@@ -512,8 +524,8 @@ if __name__ == '__main__':
             stat = os.system(command)
             if stat != 0:
                 print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print('WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
+                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
         else:
             print('Internal error!')
             sys.exit(1)

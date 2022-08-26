@@ -5,7 +5,7 @@ files = os.listdir()
 # print(files)
 tables = []
 for f in files:
-    if 'dynacEzTab' in f: 
+    if '_field' in f: 
         tables.append(f)
 # print(tables)
 

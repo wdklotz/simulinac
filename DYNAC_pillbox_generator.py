@@ -105,7 +105,7 @@ def call_FIELD_T(arg):     #TODO
     EzPeak        = 1.  # Mv/m
     sfdata        = SFdata(arg['sfdata_file'])
     sfdtable      = sfdata._Ez0_tab
-    table_file_name = 'dynacEzTab'
+    table_file_name = 'dynacEz_field.txt'
 
     tmp = []
     for p in sfdtable:
@@ -146,7 +146,7 @@ def call_FIELD(arg):
     cav_cnt       = arg['cav_cnt']
     sfdata        = arg['sfdata'] 
     sfdtable      = sfdata._Ez0_tab_scaled   # normed to EzPeak
-    table_file_name = f'dynacEzTab_{cav_cnt}' 
+    table_file_name = f'dynacEz_field_{cav_cnt}.txt' 
 
     tmp = []
     for p in sfdtable:

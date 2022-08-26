@@ -67,7 +67,7 @@ PARAMETERS:
     nbsigma:               2              # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'v10.0.1m-6822' # lattice version
-    mapping:      &map    ttf             # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
