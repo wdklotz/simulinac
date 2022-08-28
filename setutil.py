@@ -81,21 +81,7 @@ class Ktw(IntEnum):
 # for compatability with elder code TODO: replace by namedtupel
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 #------  DEFAULT "FLAGS" & "PARAMS" and global dicts
-FLAGS  = dict(
-        accON                = True,
-        periodic             = False,            # periodic lattice? default
-        egf                  = False,            # emittance grow flag default
-        sigma                = True,             # beam sizes by sigma-tracking
-        KVout                = False,            # print a dictionary of Key-Value pairs, no display
-        dWf                  = 1,                # acceleration on/off flag 1=on,0=off
-        verbose              = 0,                # print flag default = 0
-        useaper              = False,            # use aperture check for quads and rf-gaps
-        bucket               = False,            # plot bucket
-        csTrak               = True,             # plot CS trajectories
-        marker               = False,            # activate marker in lattice
-        pspace               = False,            # plot CS twiss ellipses at entrance
-        envelope             = True              # plot transverse envelopes
-        )
+FLAGS  = dict(dWf=1)
 PARAMS = dict(
         clight               = C.c,              # [m/s]
         elementarladung      = C.e,              # [coulomb]

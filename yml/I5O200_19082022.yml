@@ -38,7 +38,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
-    # marker:       True            # {False} activate Markers in the lattice
+    # marker:       True            # {False} include Markers in the lattice
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -79,9 +79,17 @@ ELEMENTS:
     D10:                       # ID
         type:     D            # D class
         length:   0.050        # [m]
-    PsMkr:                     # ID
+    Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
+        active:   True         # {False} action activated
+    Pcc:                       # ID   (tracker.py marker)
+        type:     MRK          # MRK class
+        action:   pcrcut       # Pointcare cut
+        active:   True         # action activated
+        # prefix:   frames     # base dir of frames
+        abscissa: z            # x axis
+        ordinate: zp           # y axis
 #...........................................................................................
 # LOW energy section nodes
 #...........................................................................................
@@ -192,7 +200,7 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    # LINE:   [1,[PsMkr,SECL,PsMkr]]
-    LINE:   [1,[PsMkr,SECL,PsMkr,SECH,PsMkr]]
+    # LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
 
   

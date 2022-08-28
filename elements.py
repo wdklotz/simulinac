@@ -41,7 +41,8 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
-    # used about everywhere
+
+# used about everywhere
 twopi = 2.*pi
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
@@ -199,25 +200,29 @@ class Node(object):
         return sigmas
 class I(Node):
     """  Unity matrix: the unity Node """
-    def __init__(self, label):
+    def __init__(self, label='I'):
         super().__init__()
         self.label    = label
         self.matrix   = NP.eye(MDIM,MDIM) # set the NODE's member variable
         self.length   = 0.
 class MRK(I):
-    """ Marker node (a.k.a element): owns a list of agents that do the actions """
-    def __init__(self, label, agents=[], particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
+    """ 
+    MaRKer node (a.k.a element): Each marker owns an agent that does the specific action.
+    The action can be bypassed if the 'maction'-FLAG is False.
+    """
+    def __init__(self, label, agent, active, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
         super().__init__(label)
-        self.agents = agents   # the agent-list
-        self.particle = copy(particle)
-        self.position = position
-        self.viseo = 4.
-    def add(self,agent):
-        self.agents.append(agent)
-    def do_actions(self):
-        """ invoke all actions bound to this marker """
-        for agent in self.agents:
-            agent.do_action()
+        self.agent      = agent   # the agent is one of: PsMakerAgent, PoincareMarkerAgent, .....
+        self.active     = active
+        self.particle   = copy(particle)
+        self.position   = position
+        self.viseo      = 4.
+        self.do_actions = self.actions if FLAGS['maction'] else self.no_actions  # toggle actions
+    def actions(self,*args):
+        """ invoke the action on the agent bound to this marker """
+        self.agent.do_action(*args)
+    def no_actions(self,*args):
+        pass
 class D(Node):
     """  Trace3D drift space  """
     def __init__(self, label, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):

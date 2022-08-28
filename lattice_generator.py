@@ -24,6 +24,17 @@ import warnings
 import pprint, inspect
 import unittest
 
+import setutil as util
+import elements as ELM
+import OXAL as OXA
+import TTFG as TTF
+import DYNG as DYN
+from lattice import Lattice
+from Ez0 import SFdata
+from lattice_parser2 import parse as doInputParser
+import PsMarkerAgent as psmkr
+import PoincareMarkerAgent as pcmkr
+
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
     print(F'DEBUG_ON[{file}] ==> ',end="")
@@ -34,16 +45,13 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-import setutil as util
-import elements as ELM
-import OXAL as OXA
-import TTFG as TTF
-import DYNG as DYN
-from lattice import Lattice
-from Ez0 import SFdata
-from lattice_parser2 import parse as doInputParser
-import PsMarkerAgent as psmkr
-
+def check_marker_incompatible_with(prog,ID):
+    ret = False
+    this_prog = sys.argv[0]
+    if prog != this_prog:
+        print(util.colors.RED+f'Marker {ID} incompatible with {this_prog}. Will be skipped'+util.colors.ENDC)
+        ret = True
+        return ret
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -58,6 +66,7 @@ def get_mandatory(attributes,key,item):
     return res
 def instanciate_element(item):
     """ item: {ID:{attributes}} for each node """
+    instance = None     # will be defined below and returned
     for ID,attributes in item.items():
         DEBUG_OFF(F"ID={ID} attributes={attributes}")
         ELEMENT = util.ELEMENTS[ID]          # the item in the ELEMENT list
@@ -170,25 +179,39 @@ def instanciate_element(item):
             ELEMENT['sec']    = attributes.get('sec','?')
             ELEMENT['EzAvg']  = EzAvg
         elif type == 'MRK':
-            action = get_mandatory(attributes,'action',ID)
-            if 'pspace' == action:
-                which        = attributes.get('which','transvers')
-                agent        = psmkr.PsMarkerAgent(which_action=which)
-                instance     = ELM.MRK(ID,agents=[agent])
-                instance.sec = attributes.get('sec','?')
+            active  = attributes.get('active',False)
+            if not active: continue       # exclude this marker from lattice
+            ELEMENT = util.ELEMENTS[ID]
+            action  = get_mandatory(attributes,'action',ID)
+            if action == 'pspace':
+                # A marker for simu.py ?
+                if check_marker_incompatible_with('simu.py',ID): continue    # exclude this marker from lattice
+                agent    = psmkr.PsMarkerAgent()
+                instance = ELM.MRK(ID,agent,active)
                 agent.set_parent(instance)
-                DEBUG_OFF(instance.__dict__)
+                sec = attributes.get('sec','?') 
+                ELEMENT['sec']   = sec
+                DEBUG_OFF(ELEMENT)
+                DEBUG_OFF(instance.toString())
                 DEBUG_OFF(agent.__dict__)
 
-            # TODO !!
-            # elif 'poincare' == action:
-            #     prefix    = attributes['prefix']   if 'prefix'   in attributes else ''
-            #     abszisse  = attributes['abscissa'] if 'abscissa' in attributes else 'z'
-            #     ordinate  = attributes['ordinate'] if 'ordinate' in attributes else 'zp'
-            #     instance = MRK.PoincareAction(label=label, prefix=prefix, abszisse=abszisse, ordinate=ordinate)
-            #     instance['prefix']     = prefix
-            #     instance['abszisse']   = abszisse
-            #     instance['ordinate']   = ordinate
+            elif action == 'pcrcut':
+                # A marker for tracker.py ?
+                if check_marker_incompatible_with('tracker.py',ID): continue    # exclude this marker from lattice
+                sec        = attributes.get('sec','?') 
+                prefix     = attributes.get('prefix','frames')
+                abscissa   = attributes.get('abscissa','z')
+                ordinate   = attributes.get('ordinate','zp')
+                agent      = pcmkr.PoincareMarkerAgent(sec,prefix,abscissa,ordinate)
+                instance   = ELM.MRK(ID,agent,active)
+                agent.set_parent(instance)
+                ELEMENT['sec']      = sec
+                ELEMENT['prefix']   = prefix
+                ELEMENT['abscissa'] = abscissa
+                ELEMENT['ordinate'] = ordinate
+                DEBUG_OFF(ELEMENT)
+                DEBUG_OFF(instance.__dict__)
+                DEBUG_OFF(agent.__dict__)
             else:
                 warnings.showwarning(
                         'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
@@ -199,11 +222,11 @@ def instanciate_element(item):
                 sys.exit(1)
         else:
             warnings.showwarning(
-                    'InputError: Unknown element TYPE encountered: "{}" - STOP'.format(type),
-                    UserWarning,
-                    'lattice_generator.py',
-                    'instanciate_element()',
-                    )
+                'InputError: Unknown element TYPE encountered: "{}" - STOP'.format(type),
+                UserWarning,
+                'lattice_generator.py',
+                'instanciate_element()',
+                )
             sys.exit(1)
     return instance
 def factory(input_file,stop=None):
@@ -211,20 +234,20 @@ def factory(input_file,stop=None):
 
     def proces_flags(flags):
         """fills global FLAGS"""        
-        if 'acccON'      in flags: util.FLAGS['accON']    = flags['accON']
-        if 'periodic'    in flags: util.FLAGS['periodic'] = flags['periodic']
-        if 'egf'         in flags: util.FLAGS['egf']      = flags['egf']
-        if 'sigma'       in flags: util.FLAGS['sigma']    = flags['sigma']
-        if 'KVout'       in flags: util.FLAGS['KVout']    = flags['KVout']
-        if 'verbose'     in flags: util.FLAGS['verbose']  = flags['verbose']
-        if 'useaper'     in flags: util.FLAGS['useaper']  = flags['useaper']
-        if 'bucket'      in flags: util.FLAGS['bucket']   = flags['bucket']
-        if 'csTrak'      in flags: util.FLAGS['csTrak']   = flags['csTrak']
-        if 'marker'      in flags: util.FLAGS['marker']   = flags['marker']
-        if 'pspace'      in flags: util.FLAGS['pspace']   = flags['pspace']
-        if 'envelope'    in flags: util.FLAGS['envelope'] = flags['envelope']
-        util.SUMMARY['accON'] = util.FLAGS.get('accON')
-        if not util.FLAGS.get('accON'): util.FLAGS['dWf'] = 0.
+        util.FLAGS['accON']    = flags.get('accON',True)               # acceleration ON
+        util.FLAGS['periodic'] = flags.get('periodic',False)           # periodic lattice? default
+        util.FLAGS['egf']      = flags.get('egf',False)                # emittance grow flag default
+        util.FLAGS['sigma']    = flags.get('sigma',True)               # beam sizes by sigma-tracking
+        util.FLAGS['KVout']    = flags.get('KVout',False)              # print a dictionary of Key-Value pairs, no display
+        util.FLAGS['verbose']  = flags.get('verbose',0)                # print flag default = 0
+        util.FLAGS['useaper']  = flags.get('useaper',False)            # use aperture check for quads and rf-gaps
+        util.FLAGS['bucket']   = flags.get('bucket',False)             # plot bucket
+        util.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
+        util.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
+        util.FLAGS['pspace']   = flags.get('pspace',False)             # plot CS twiss ellipses at entrance
+        util.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
+        util.FLAGS['dWf']      = 1 if util.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
+        util.SUMMARY['accON']  = util.FLAGS.get('accON')
         util.FLAGS['non_linear_mapping'] = False
         return flags
     def proces_parameters(parameters):
@@ -273,7 +296,8 @@ def factory(input_file,stop=None):
             # repack {ID:{attributes}} for instanciate_element(...)
             item = {elementID:ELEMENT}
             """INSTANCIATE ELM._Node objects"""
-            instance = instanciate_element(item)
+            instance = instanciate_element(item) 
+            if instance == None: continue
             # print("C"); DEBUG_ON(instance)
             if isinstance(instance, ELM.Node):
                 # lattice.add_node(instance)

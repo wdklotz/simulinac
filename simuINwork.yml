@@ -38,7 +38,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
-    # marker:       True            # {False} activate Markers in the lattice
+    maction:      True            # {False} call marker actions
     verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -63,11 +63,11 @@ PARAMETERS:
     BgradH:       &bgrad2  35.            # [T/m]
     thins:        &ths     1              # if thins == 0|1: one thick element else: many thin elements
     EzAvg:        &p16     1.0            # [MV/m]
-    EzPeak:       &p17     6.4            # [MV/m] peak gap field Strengy
+    # EzPeak:       &p17     6.4            # [MV/m] peak gap field Strengy
     nbsigma:               2              # [m] sigma aperture
     aperture:             15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'v10.0.1m-6822' # lattice version
-    mapping:      &map    ttf             # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -88,9 +88,17 @@ ELEMENTS:
         # length:   0.012        # [m]
         length:   0.100        # [m]
         # sec:      LE         # section 
-    PsMkr:                     # ID
+    Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
+        active:   True         # {False} action activated
+    Pcc:                       # ID   (tracker.py marker)
+        type:     MRK          # MRK class
+        action:   pcrcut       # Pointcare cut
+        active:   True         # action activated
+        # prefix:   frames     # base dir of frames
+        abscissa: z            # x axis
+        ordinate: zp           # y axis
 #...........................................................................................
 # LOW energy section nodes
 #...........................................................................................
@@ -115,7 +123,8 @@ ELEMENTS:
     RFG1:                      # ID
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
+        # EzPeak:   *p17         # [MV/m] 
+        EzPeak:   2.0          # [MV/m] 
         PhiSync:  -25.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.024        # [m] gap length
@@ -148,7 +157,8 @@ ELEMENTS:
     RFG2:                      # ID
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
-        EzPeak:   *p17         # [MV/m] 
+        # EzPeak:   *p17         # [MV/m] 
+        EzPeak:   1.0          # [MV/m] 
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.046        # [m] gap length
@@ -200,7 +210,7 @@ SEGMENTS:
 # the list [node,...,node] is repeated number times
 #...........................................................................................
 # Marker segment
-    # Psmarker:              [1,[PsMkr]]
+    # Psmarker:              [1,[Psp]]
 # LE section segment
     SGLi:                [1,[QD1, D3]]               # QD+D
     SGLm:                [1,[D3, QF1, QF1, D3]]      # D+QF+QF+D
@@ -236,13 +246,12 @@ SECTIONS:
     NIL_SEC:    [1,[]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    # SECL:      [20,[LE-CELL]]
-    SECL:      [2,[LE-CELL]]
-    # SECH:      [47,[HE-CELL]]
+    SECL:      [20,[LE-CELL]]
+    SECH:      [66,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    # LINE:   [1,[PsMkr,SECL,PsMkr,SECH,PsMkr]]
-    LINE:   [1,[PsMkr,SECL,PsMkr]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
   

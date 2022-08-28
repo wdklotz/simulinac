@@ -22,7 +22,6 @@ This file is part of the SIMULINAC code
 #TODO: how to get the hokey stick?
 #TODO: check w-acceptance at each node entrance
 #TODO: no phase damping - why?
-#TODO is this still working after Umbau? seems but more checks needed
 import sys,os
 import numpy as NP
 import matplotlib.pyplot as plt
@@ -30,15 +29,15 @@ import time
 from string import Template
 from math import sqrt, degrees, radians, ceil
 import pprint, inspect
+import argparse
 
 from lattice_generator import factory
 import elements as ELM
-import marker_actions as MRK
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 from pargs import pargs
-# from trackPlot import poincarePlot
+import PoincareMarkerAgent as pcmkr
 
 # max track amplitudes are set here!
 xlim_max  = ylim_max  =  10.e-3
@@ -159,27 +158,29 @@ def projections(live_lost):
     scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
     plt.show()
 def frames(lattice, skip):
-    """
-    2D phase space projection at marker position
-    """
+    """ 2D phase space projection at marker position """
     plt.figure()    # new figure instance
-    nscnt = 0
-    scatter_mrkr = []
+    agent_cnt = 0
+    frames = []
     # gather and count markers
     for node in iter(lattice):
-        if isinstance(node,MRK.PoincareAction):
-            nscnt += 1
-            if nscnt%skip == 0:
-                scatter_mrkr.append((nscnt,node))
+        if isinstance(node,ELM.MRK) and isinstance(node.agent,pcmkr.PoincareMarkerAgent):
+            marker_position = node.position
+            marker_agent    = node.agent
+            agent_cnt += 1
+            if agent_cnt%skip == 0:
+                frames.append((agent_cnt,marker_agent))
     # make an estimate for x- and y-axis
-    d,first_mrkr = scatter_mrkr[0]
-    x = [abs(tp()[first_mrkr.xaxis]) for tp in first_mrkr.tpoints]
-    y = [abs(tp()[first_mrkr.yaxis]) for tp in first_mrkr.tpoints]
+    dummy,first_frame = frames[0]
+    x = [abs(tp()[first_frame.xaxis]) for tp in first_frame.tpoints]
+    y = [abs(tp()[first_frame.yaxis]) for tp in first_frame.tpoints]
     xmax = max(x)*1.5
     ymax = max(y)*1.5
-    # invoke the marker's action
-    for nscnt,node in iter(scatter_mrkr):
-        node.do_action(nscnt,xmax,ymax)
+    # invoke actions on Marker
+    for agent_cnt,agent in iter(frames):
+        marker = agent.parent     # agent's parent is MRK object
+        marker_position = marker.position
+        marker.do_actions(agent_cnt,xmax,ymax,marker_position)
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
@@ -246,9 +247,7 @@ def progress(tx):
     # print('\r{}\r'.format(res),end="")
     sys.stdout.write('{}\r'.format(res))
 def track_node(node,particle,options):
-    """
-    Tracks a particle through a node
-    """
+    """ Tracks a particle through a node """
     def norm(track):
         track_norm = \
         sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
@@ -258,7 +257,7 @@ def track_node(node,particle,options):
     last_tp = track.getpoints()[-1]
     lost    = False
     try:
-        """ map is here! """
+        """ maping happens here! """
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
@@ -303,8 +302,8 @@ def track_node(node,particle,options):
             # !!DISCARD!! last point
             track.removepoint(last_tp)
         track.addpoint(new_tp)
-        if isinstance(node,MRK.PoincareAction) and node.has_action('scatter'):
-            node.add_track_point(new_tp)
+        if isinstance(node,ELM.MRK) and isinstance(node.agent,pcmkr.PoincareMarkerAgent):
+            node.agent.add_track_point(new_tp)
     particle.lost = lost
     return lost
 def track(lattice,bunch,options):
@@ -315,11 +314,11 @@ def track(lattice,bunch,options):
     - each particle in a bunch has a track=particle['track']
     - track (class Track) is a list of points (class Tpoint)
     
-    Input: lattice , bunch
+    Input: lattice , bunch, options
     """
     ndcnt  = 0
     lnode  = len(lattice.seq)
-    pgceil =  ceil(lnode/100)   
+    pgceil =  ceil(lnode/100)    # every 1% progress update
     nlost  = 0
     nbpart = bunch.nbparticles()
     lbunch = Bunch()    # lost particles go into this bunch
@@ -360,9 +359,7 @@ def track_soll(lattice, injection_energy, start_position=0.):
         soll_track.addpoint(tpoint)
     return soll_track
 def tracker(input_file,options):
-    """ 
-    Prepare and launch tracking 
-    """
+    """  Prepare and launch tracking  """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
 
@@ -502,11 +499,20 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TRACK       = DEBUG_OFF
-    DEBUG_SOLL_TRACK  = DEBUG_OFF
-    DEBUG_TEST0       = DEBUG_ON
-
-    # test0('yml/trackIN.yml')
+    DEBUG_TEST0 = DEBUG_ON
+    parser = argparse.ArgumentParser(prog='python tracker.py')
+    group  = parser.add_mutually_exclusive_group()
+    group1 = parser.add_mutually_exclusive_group()
+    parser.add_argument("--p", metavar="N", default=1750,      help="N particles per bunch")
+    parser.add_argument("--hide", action="store_false",        help="hide scatter plots IN/OUT")
+    group.add_argument ("--file", default="trackerINwork.yml", help="lattice input-file")
+    group.add_argument ("--tmpl",                              help="lattice template-file")
+    parser.add_argument("--run",                               help="run number")
+    group1.add_argument("--pcuts", action="store_true",        help="save poincare cuts")
+    group1.add_argument("--losses", action="store_true",       help="show losses")
+    parser.add_argument("--skip", metavar="N", default="1",    help="skip every N poincare cuts")
+    args = parser.parse_args()
+    print(vars(args))
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
@@ -515,7 +521,8 @@ if __name__ == '__main__':
     Args = pargs(sys.argv)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
-    input_file = Args['file']
+    # input_file = Args['file']
+    input_file = vars(args)["file"]
     if sys.platform == 'win32':
         if Args['mode']   == 'no_m4':
             pass
@@ -550,7 +557,7 @@ if __name__ == '__main__':
     options['particles_per_bunch'] = 1750
     options['show']                = True
     options['save']                = False
-    options['skip']                = 1
+    options['skip']                = 3
     options['losses']              = False
 
     # start the tracking

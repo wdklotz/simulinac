@@ -22,37 +22,21 @@ class PsMarkerAgent(object):
     Action is selectable by the which_action argument. 
     Default action is 'transvers'. 
     """
-    def __init__(self, label="ps", position=[1,1,1], values=(0.5,0.5), which_action="transvers"):
-        self.label = label
-        self.position = position
+    def __init__(self, position=[1,1,1], values=(0.5,0.5)):
+        self.label        = "ps-mkr-agent"
+        self.position     = position
         self.twiss_values = values
-        self.which_action = which_action
-        self.parent = None
-        self.my_actions=dict(transvers=self.action_transvers, no_plot=self.action_no_plot)  # dispatcher
+        self.parent       = None
 
-
-    # def __setitem__(self,k,v):  TODO for _Nodes?
-    #     self.__dict__[k]=v
-    # def __getitem__(self,k):
-    #     return self.__dict__[k]
-    
     def set_parent(self,obj):
         self.parent = obj
-
-    def do_action(self):
-        self.my_actions.get(self.which_action)()   # dispatch which_action
-
-    def action_transvers(self):
+    def do_action(self,*args):
         """ the default action: plot transvers ellipses """
         node = self.parent
         if node == None: 
             ellipse_plot(node,on_injection=True,scale=0.5)
         else:
             ellipse_plot(node,on_injection=False,scale=0.5)
-
-    def action_no_plot(self):
-        """ action without plotting """
-
 def ellipse_plot(node,on_injection=False,scale=1.):   
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """
@@ -62,9 +46,8 @@ def ellipse_plot(node,on_injection=False,scale=1.):
         b = sqrt(emit/beta)
         # return matplot.patches.Ellipse(origin=xy,width=a,height=b,angle=tilt) arguments
         return (xy,a,b,tilt)
-#------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
-#------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
-#------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
+    #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
+    #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
     """ display x- and y-phase-space ellipses """
     # TODO for tracker.py:  Plot a confidence ellipse of a two-dimensional dataset ==> https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
     if on_injection:
@@ -75,7 +58,7 @@ def ellipse_plot(node,on_injection=False,scale=1.):
         by = PARAMS['betay_i']
 
     else:
-        twiss = node['twiss']   # alpha, beta, gamma
+        twiss = node.twiss      # alpha, beta, gamma
         s = node.position[1]    # position
 
         ax = twiss[Ktw.ax]

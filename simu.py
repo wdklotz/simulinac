@@ -58,6 +58,7 @@ from PsMarkerAgent import ellipse_plot
 # from tracker import track_soll
 from pargs import pargs
 from lattice_parser2 import parse as getParseResult
+import elements as ELM
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
@@ -312,7 +313,7 @@ def simulation(filepath):
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
     lattice.cell(closed = FLAGS['periodic'])
-    #----------------------------------------------
+    #---------------------------------------------- 
     # STEP 5:collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
@@ -333,14 +334,13 @@ def simulation(filepath):
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
         steps = 1
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        sigma_fun       = lattice.sigmas(steps=steps) #.,,,.................calculate envelope functions
-        display(sigma_fun,c_like,s_like,lat_plot,ape_plot) #.........make plots of functionsa
-        if FLAGS['marker']: #........................................any MARKER with actions?
-            # TODO need a function to filter/print lattice elements
-            for node in lattice.seq:
-                if node.type != "MRK": continue
-                DEBUG_OFF(node.toString())
-                node.do_actions()
+        sigma_fun       = lattice.sigmas(steps=steps) #.,,,...........calculate envelope functions
+        display(sigma_fun,c_like,s_like,lat_plot,ape_plot) #..........make plots of functions
+        for node in lattice.seq: #....................................filter on Markers and invoke actions
+            if not isinstance(node,ELM.MRK): continue
+            # DEBUG_ON(node.toString())
+            # DEBUG_ON(node.__dict__)
+            node.do_actions()
         """ show all figures - (must be the only one!) """
         plt.show()
 if __name__ == '__main__':

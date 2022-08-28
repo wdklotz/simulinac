@@ -35,7 +35,16 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["REF-Läufe/DG6FG6D-v10.0.1-ref/simuIN.yml"]
+            "args": ["simuINwork.yml"]
+        },
+        {
+            "name": "tracker",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "tracker.py",
+            "args": ["trackerINwork.yml"]
         },
         {
             "name": "setutil",
