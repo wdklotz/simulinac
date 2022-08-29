@@ -36,7 +36,7 @@ import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
-from pargs import pargs
+# from pargs import pargs
 import PoincareMarkerAgent as pcmkr
 
 # max track amplitudes are set here!
@@ -499,30 +499,46 @@ def test0(filepath):
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TEST0 = DEBUG_ON
+    DEBUG_TEST0 = DEBUG_OFF
+    # use first ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser(prog='python tracker.py')
     group  = parser.add_mutually_exclusive_group()
     group1 = parser.add_mutually_exclusive_group()
-    parser.add_argument("--p", metavar="N", default=1750,      help="N particles per bunch")
-    parser.add_argument("--hide", action="store_false",        help="hide scatter plots IN/OUT")
-    group.add_argument ("--file", default="trackerINwork.yml", help="lattice input-file")
-    group.add_argument ("--tmpl",                              help="lattice template-file")
-    parser.add_argument("--run",                               help="run number")
-    group1.add_argument("--pcuts", action="store_true",        help="save poincare cuts")
-    group1.add_argument("--losses", action="store_true",       help="show losses")
-    parser.add_argument("--skip", metavar="N", default="1",    help="skip every N poincare cuts")
-    args = parser.parse_args()
-    print(vars(args))
+    parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
+    parser.add_argument("--hide", action="store_false",               help="hide IN/OUT scatter plots")
+    group.add_argument ("--file", default="trackerINwork.yml",        help="lattice input-file")
+    group.add_argument ("--tmpl",                                     help="lattice template-file")
+    parser.add_argument("--run",                                      help="run number")
+    group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")
+    group1.add_argument("--losses", action="store_true",              help="run losses mode")
+    parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
+    args = vars(parser.parse_args())
+    # DEBUG_ON(args)
+    options = {}
+    options['particles_per_bunch'] = args['p']
+    options['show']                = args['hide']
+    options['save']                = args['pcuts']
+    options['skip']                = args['skip']
+    options['losses']              = args['losses']
+
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
-    # parse argv and normalize
-    print("sys.argv: {}".format(sys.argv))
-    Args = pargs(sys.argv)
+    # adapt to legacy code which uses 'Args'
+    Args  = {}
+    tmpl  = args['tmpl']
+    run   = args['run'] 
+    Args['mode']  = 'no_m4' if tmpl == None else 'm4'
+    Args['file']  = args['file']
+    Args['tmpl']  = ''
+    Args['macro'] = ''
+    if Args['mode'] == 'm4':
+        Args['tmpl']   = 'yml/tmpl_{}.yml'.format(tmpl)
+        Args['macro']  = 'yml/macros_{}.{}.sh'.format(tmpl,run) if run != None else 'yml/macros_{}.sh'.format(tmpl)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
-    # input_file = Args['file']
-    input_file = vars(args)["file"]
+    # let's go input is parsed...
+    input_file = Args['file']
     if sys.platform == 'win32':
         if Args['mode']   == 'no_m4':
             pass
@@ -552,13 +568,6 @@ if __name__ == '__main__':
     else:
         print('wrong platform')
         sys.exit(1)
-
-    options = {}
-    options['particles_per_bunch'] = 1750
-    options['show']                = True
-    options['save']                = False
-    options['skip']                = 3
-    options['losses']              = False
 
     # start the tracking
     tracker(input_file,options)
