@@ -36,7 +36,6 @@ import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
-# from pargs import pargs
 import PoincareMarkerAgent as pcmkr
 
 # max track amplitudes are set here!
@@ -518,9 +517,8 @@ if __name__ == '__main__':
     options['particles_per_bunch'] = args['p']
     options['show']                = args['hide']
     options['save']                = args['pcuts']
-    options['skip']                = args['skip']
+    options['skip']                = args['skip']+1
     options['losses']              = args['losses']
-
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
@@ -537,7 +535,7 @@ if __name__ == '__main__':
         Args['macro']  = 'yml/macros_{}.{}.sh'.format(tmpl,run) if run != None else 'yml/macros_{}.sh'.format(tmpl)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
-    # let's go input is parsed...
+    # let's go. All  input is parsed...
     input_file = Args['file']
     if sys.platform == 'win32':
         if Args['mode']   == 'no_m4':
