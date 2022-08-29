@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v10.1.0'
+___version___='v10.2.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -499,7 +499,7 @@ def test0(filepath):
 #----------------main------------
 if __name__ == '__main__':
     DEBUG_TEST0 = DEBUG_OFF
-    # use first ArgumentParser to put result in 'args'
+    # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser(prog='python tracker.py')
     group  = parser.add_mutually_exclusive_group()
     group1 = parser.add_mutually_exclusive_group()

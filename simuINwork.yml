@@ -23,7 +23,7 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  'v10.1.0 compatible, modified: 12.8.2022'
+DESCRIPTOR:  'v10.2.0 compatible, work version'
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
@@ -252,6 +252,6 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp]]
   

@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-___version___='v10.1.0'
+___version___='v10.2.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -56,7 +56,7 @@ from setutil import collect_data_for_summary, show_data_from_elements
 from lattice_generator import factory
 from PsMarkerAgent import ellipse_plot
 # from tracker import track_soll
-from pargs import pargs
+import argparse
 from lattice_parser2 import parse as getParseResult
 import elements as ELM
 
@@ -344,13 +344,31 @@ def simulation(filepath):
         """ show all figures - (must be the only one!) """
         plt.show()
 if __name__ == '__main__':
+    # use ArgumentParser to put result in 'args'
+    parser = argparse.ArgumentParser(prog='python simu.py')
+    group  = parser.add_mutually_exclusive_group()
+    group.add_argument ("--file", default="simuINwork.yml",   help="lattice input-file")
+    group.add_argument ("--tmpl",                             help="template number")
+    parser.add_argument("--run",                              help="run number")
+    args = vars(parser.parse_args())
+    # DEBUG_ON(args)
+
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    # parse argv and normalize
-    print("sys.argv: {}".format(sys.argv))
-    Args = pargs(sys.argv)
+    # adapt to legacy code which uses 'Args'
+    Args = {}
+    tmpl  = args['tmpl']
+    run   = args['run'] 
+    Args['mode']  = 'no_m4' if tmpl == None else 'm4'
+    Args['file']  = args['file']
+    Args['tmpl']  = ''
+    Args['macro'] = ''
+    if Args['mode'] == 'm4':
+        Args['tmpl']   = 'yml/tmpl_{}.yml'.format(tmpl)
+        Args['macro']  = 'yml/macros_{}.{}.sh'.format(tmpl,run) if run != None else 'yml/macros_{}.sh'.format(tmpl)
     print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
 
+    # let's go. All  input is parsed...
     input_file = Args['file']
     if sys.platform == 'win32':
         if Args['mode']   == 'no_m4':
