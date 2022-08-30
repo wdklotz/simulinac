@@ -37,7 +37,7 @@ from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
-import trackPlot as TPLT
+from trackPlot import scatter11
 
 # max track amplitudes are set here!
 xlim_max  = ylim_max  =  10.e-3
@@ -56,86 +56,6 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-def scatter1(live,lost,abscisse,ordinate,txt):
-    """
-    live, lost are instances of Bunch
-    abscisse, ordinate are integer coordinate indexes
-    text is string
-    """
-    title = dict(initial=f'IN {txt}',final=f'OUT {txt}')
-    loc   = dict(initial=0,final=-1)
-    golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
-    fig   = plt.figure(num=f'scatter plot {txt}',constrained_layout=False, figsize=(width, height))
-
-    def plotit(*args):
-        nblive   = args[0]
-        nblost   = args[1]
-        loc      = args[2]
-        live     = args[3]
-        lost     = args[4]
-        abscisse = args[5]
-        ordinate = args[6]
-        title    = args[7]
-        subplot  = args[8]
-
-        x=np.array([]); y=np.array([])
-        nbtotal = nblive + nblost
-        for particle in iter(live): # live particles
-            track  = particle.track
-            tpoint = track.getpoints()[loc]
-            point  = tpoint()
-            x = np.append(x,point[abscisse]*1.e3)    # [mm]
-            y = np.append(y,point[ordinate]*1.e3)
-        xymax=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
-        xlost=np.array([]); ylost=np.array([])
-        if nblost != 0:     # lost particles
-            for particle in iter(lost): # lost particles
-                track  = particle.track
-                tpoint = track.getpoints()[loc]
-                point  = tpoint()
-                xlost = np.append(xlost,point[abscisse]*1.e3)    # [mm]
-                ylost = np.append(ylost,point[ordinate]*1.e3)
-            xymax1=np.array([np.amax(np.abs(xlost)), np.amax(np.abs(ylost))])
-            xymax=np.fmax(xymax,xymax1)
-        DEBUG_OFF(xymax)
-        xymax = 1.03 * xymax   # add 3% margin
-
-        box_text = f"{title} {nbtotal} particles"
-        ax = plt.subplot(subplot)
-        ax.set_title(box_text)
-        plt.xlim(-xymax[0],xymax[0])
-        plt.ylim(-xymax[1],xymax[1])
-        ax.scatter(x,y,s=1)
-        ax.scatter(xlost,ylost,s=1,color='red')
-        return
-
-    # IN
-    plotit(
-        live.nbparticles(),
-        lost.nbparticles(),
-        loc['initial'],
-        live,
-        lost,
-        abscisse,
-        ordinate,
-        title['initial'],
-        121
-        )
-    # OUT
-    plotit(
-        live.nbparticles(),
-        0,
-        loc['final'],
-        live,
-        None,
-        abscisse,
-        ordinate,
-        title['final'],
-        122
-        )
-    # adjust: left, bottom, right, top, wspace, hspace
-    plt.subplots_adjust(wspace=0.15) 
-    return
 def projections(live_lost):
     """  2D phase space projections IN and OUT """
     symbols = ("x","x'","y","y'","z","\u0394p/p")
@@ -144,22 +64,22 @@ def projections(live_lost):
     ordinate = Ktp.xp
     text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
     live,lost = live_lost
-    scatter1(live,lost,abscisse,ordinate,text)
+    scatter11(live,lost,abscisse,ordinate,text)
     # (y,yp) 
     abscisse = Ktp.y
     ordinate = Ktp.yp
     text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter1(live,lost,abscisse,ordinate,text)
+    scatter11(live,lost,abscisse,ordinate,text)
     # (x,y)
     abscisse = Ktp.x
     ordinate = Ktp.y
     text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter1(live,lost,abscisse,ordinate,text)
+    scatter11(live,lost,abscisse,ordinate,text)
     # (z,zp)
     abscisse = Ktp.z
     ordinate = Ktp.zp
     text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter1(live,lost,abscisse,ordinate,text)
+    scatter11(live,lost,abscisse,ordinate,text)
     plt.show()
     return
 def frames(lattice, skip):
@@ -445,7 +365,7 @@ def tracker(input_file,options):
     tracker_log['lattice version.........'] = PARAMS['lattice_version']
     tracker_log['mapping.................'] = PARAMS['mapping']
     tracker_log['DT/T-kin................'] = PARAMS['DT2T']
-    dictprnt(tracker_log,'Tracker Log'); print()
+    dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
     bunchfactory = BunchFactory()

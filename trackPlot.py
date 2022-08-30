@@ -20,8 +20,11 @@ This file is part of the SIMULINAC code
 #TODO full with old unused or unfinished code
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+from matplotlib.patches import Ellipse
 from scipy.stats import norm
 import pprint, inspect
+from math import sqrt
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -33,6 +36,7 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
+#TODO below still used by bunch: from trackPlot import histPlot, poincarePlot 
 def histPlot(x,mu,sigma):
     """ a historgram plot """
     import matplotlib.mlab as mlab
@@ -48,54 +52,6 @@ def histPlot(x,mu,sigma):
     plt.title(r'$\mu$= {:.5e}, $\sigma$= {:.5e}'.format(mu,sigma))
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
-
-def scatter_hist(x,y, ax, ax_histx,ax_histy):
-   # no labels
-    ax_histx.tick_params(axis="x", labelbottom=False)
-    ax_histy.tick_params(axis="y", labelleft=False)
-
-    # the scatter plot:
-    ax.scatter(x, y)
-
-    # now determine nice limits by hand:
-    binwidth = 0.25
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal')
-
-def poincare_hist(fig,ax,x,y):
-    # definitions for the axes
-    left, width    = 0.1, 0.65
-    bottom, height = 0.1, 0.65
-    spacing        = 0.005
-
-
-    rect_scatter = [left, bottom, width, height]
-    rect_histx   = [left, bottom + height + spacing, width, 0.2]
-    rect_histy   = [left + width + spacing, bottom, 0.2, height]
-
-    # start with a square Figure
-    # fig = plt.figure(figsize=(8, 8))
-
-    # Add a gridspec with two rows and two columns and a ratio of 2 to 7 between
-    # the size of the marginal axes and the main axes in both directions.
-    # Also adjust the subplot parameters for a square plot.
-    gs = fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7), left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05)
-
-    ax1       = ax.add_subplot(gs[1, 0])
-    ax_histx = ax.add_subplot(gs[0, 0], sharex=ax)
-    ax_histy = ax.add_subplot(gs[1, 1], sharey=ax)
-    # ax = fig.add_axes(rect_scatter)
-    # ax_histx = fig.add_axes(rect_histx, sharex=ax)
-    # ax_histy = fig.add_axes(rect_histy, sharey=ax)
-
-    # use the previously defined function
-    scatter_hist(x, y, ax1, ax_histx, ax_histy)
-
-#TODO: generalize for many xyvalues
 def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
     """ 
     Scatter plot with projection histograms 
@@ -186,6 +142,189 @@ def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
             # axHisty.set_ylim(axScatter.get_ylim())
 
     return
+# below used in release
+def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
+    """
+    Create a plot of the covariance confidence ellipse of *x* and *y*.
+
+    Parameters
+    ----------
+    x, y : array-like, shape (n, )
+        Input data.
+
+    ax : matplotlib.axes.Axes
+        The axes object to draw the ellipse into.
+
+    n_std : float
+        The number of standard deviations to determine the ellipse's radiuses.
+
+    **kwargs
+        Forwarded to `~matplotlib.patches.Ellipse` 
+
+    Returns
+    -------
+    matplotlib.patches.Ellipse
+    """
+    if x.size != y.size:
+        raise ValueError("x and y must be the same size")
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    # Using a special case to obtain the eigenvalues of this
+    # two-dimensionl dataset.
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
+                      facecolor=facecolor, **kwargs)
+
+    # Calculating the stdandard deviation of x from
+    # the squareroot of the variance and multiplying
+    # with the given number of standard deviations.
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    mean_x = np.mean(x)
+
+    # calculating the stdandard deviation of y ...
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(mean_x, mean_y)
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
+def scatter11(live,lost,abscisse,ordinate,txt):
+    """
+    2 scatter plots in a 11 grid
+    live, lost are instances of Bunch
+    abscisse, ordinate are integer coordinate indexesck
+    text is string
+    """
+    title = dict(initial=f'IN {txt}',final=f'OUT {txt}')
+    loc   = dict(initial=0,final=-1)
+    golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
+    fig   = plt.figure(num=f'scatter plot {txt}',constrained_layout=False, figsize=(width, height))
+
+    def plotit(*args):
+        nblive   = args[0]
+        nblost   = args[1]
+        loc      = args[2]
+        live     = args[3]
+        lost     = args[4]
+        abscisse = args[5]
+        ordinate = args[6]
+        title    = args[7]
+        subplot  = args[8]
+
+        x=np.array([]); y=np.array([])
+        nbtotal = nblive + nblost
+        for particle in iter(live): # live particles
+            track  = particle.track
+            tpoint = track.getpoints()[loc]
+            point  = tpoint()
+            x = np.append(x,point[abscisse]*1.e3)    # [mm]
+            y = np.append(y,point[ordinate]*1.e3)
+        xymax=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
+        xlost=np.array([]); ylost=np.array([])
+        if nblost != 0:     # lost particles
+            for particle in iter(lost): # lost particles
+                track  = particle.track
+                tpoint = track.getpoints()[loc]
+                point  = tpoint()
+                xlost = np.append(xlost,point[abscisse]*1.e3)    # [mm]
+                ylost = np.append(ylost,point[ordinate]*1.e3)
+            xymax1=np.array([np.amax(np.abs(xlost)), np.amax(np.abs(ylost))])
+            xymax=np.fmax(xymax,xymax1)
+        DEBUG_OFF(xymax)
+        xymax = 1.03 * xymax   # add 3% margin
+
+        box_text = f"{title} {nbtotal} particles"
+        ax = plt.subplot(subplot)
+        ax.set_title(box_text)
+        plt.xlim(-xymax[0],xymax[0])
+        plt.ylim(-xymax[1],xymax[1])
+        ax.axvline(c='grey', lw=1)
+        ax.axhline(c='grey', lw=1)
+
+        # https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
+        confidence_ellipse(x,y,ax,n_std=2.0,edgecolor='green')
+
+        ax.scatter(x,y,s=1)
+        if nblost !=0: ax.scatter(xlost,ylost,s=1,color='red')
+        return
+    # IN
+    plotit(
+        live.nbparticles(),
+        lost.nbparticles(),
+        loc['initial'],
+        live,
+        lost,
+        abscisse,
+        ordinate,
+        title['initial'],
+        121
+        )
+    # OUT
+    plotit(
+        live.nbparticles(),
+        0,
+        loc['final'],
+        live,
+        None,
+        abscisse,
+        ordinate,
+        title['final'],
+        122
+        )
+    # adjust: left, bottom, right, top, wspace, hspace
+    plt.subplots_adjust(wspace=0.15) 
+    return
+# TODO below is experimental, maybe unfinished
+def scatter_hist(x,y, ax, ax_histx,ax_histy):
+   # no labels
+    ax_histx.tick_params(axis="x", labelbottom=False)
+    ax_histy.tick_params(axis="y", labelleft=False)
+
+    # the scatter plot:
+    ax.scatter(x, y)
+
+    # now determine nice limits by hand:
+    binwidth = 0.25
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx.hist(x, bins=bins)
+    ax_histy.hist(y, bins=bins, orientation='horizontal')
+def poincare_hist(fig,ax,x,y):
+    # definitions for the axes
+    left, width    = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    spacing        = 0.005
+
+
+    rect_scatter = [left, bottom, width, height]
+    rect_histx   = [left, bottom + height + spacing, width, 0.2]
+    rect_histy   = [left + width + spacing, bottom, 0.2, height]
+
+    # start with a square Figure
+    # fig = plt.figure(figsize=(8, 8))
+
+    # Add a gridspec with two rows and two columns and a ratio of 2 to 7 between
+    # the size of the marginal axes and the main axes in both directions.
+    # Also adjust the subplot parameters for a square plot.
+    gs = fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7), left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05)
+
+    ax1       = ax.add_subplot(gs[1, 0])
+    ax_histx = ax.add_subplot(gs[0, 0], sharex=ax)
+    ax_histy = ax.add_subplot(gs[1, 1], sharey=ax)
+    # ax = fig.add_axes(rect_scatter)
+    # ax_histx = fig.add_axes(rect_histx, sharex=ax)
+    # ax_histy = fig.add_axes(rect_histy, sharey=ax)
+
+    # use the previously defined function
+    scatter_hist(x, y, ax1, ax_histx, ax_histy)
 
 if __name__ == '__main__':
     print("baaaaaaa - nothing todo")
