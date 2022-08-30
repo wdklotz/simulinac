@@ -17,7 +17,8 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import numpy as NP
+#TODO full with old unused or unfinished code
+import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 import pprint, inspect
@@ -48,8 +49,54 @@ def histPlot(x,mu,sigma):
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15)
 
-#todo: generalize for many xyvalues
-def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
+def scatter_hist(x,y, ax, ax_histx,ax_histy):
+   # no labels
+    ax_histx.tick_params(axis="x", labelbottom=False)
+    ax_histy.tick_params(axis="y", labelleft=False)
+
+    # the scatter plot:
+    ax.scatter(x, y)
+
+    # now determine nice limits by hand:
+    binwidth = 0.25
+    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+    lim = (int(xymax/binwidth) + 1) * binwidth
+
+    bins = np.arange(-lim, lim + binwidth, binwidth)
+    ax_histx.hist(x, bins=bins)
+    ax_histy.hist(y, bins=bins, orientation='horizontal')
+
+def poincare_hist(fig,ax,x,y):
+    # definitions for the axes
+    left, width    = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    spacing        = 0.005
+
+
+    rect_scatter = [left, bottom, width, height]
+    rect_histx   = [left, bottom + height + spacing, width, 0.2]
+    rect_histy   = [left + width + spacing, bottom, 0.2, height]
+
+    # start with a square Figure
+    # fig = plt.figure(figsize=(8, 8))
+
+    # Add a gridspec with two rows and two columns and a ratio of 2 to 7 between
+    # the size of the marginal axes and the main axes in both directions.
+    # Also adjust the subplot parameters for a square plot.
+    gs = fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7), left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05)
+
+    ax1       = ax.add_subplot(gs[1, 0])
+    ax_histx = ax.add_subplot(gs[0, 0], sharex=ax)
+    ax_histy = ax.add_subplot(gs[1, 1], sharey=ax)
+    # ax = fig.add_axes(rect_scatter)
+    # ax_histx = fig.add_axes(rect_histx, sharex=ax)
+    # ax_histy = fig.add_axes(rect_histy, sharey=ax)
+
+    # use the previously defined function
+    scatter_hist(x, y, ax1, ax_histx, ax_histy)
+
+#TODO: generalize for many xyvalues
+def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
     """ 
     Scatter plot with projection histograms 
     IN:
@@ -62,7 +109,7 @@ def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
 
     x1, y1 = xyvalues1  # sample 1
     x2, y2 = xyvalues2  # sample2
-    ax = plt.subplot()
+    # ax = plt.subplot(121)
     if projections == (0,0):
         # the scatter plot
         ax.scatter(x1,y1,s=1)
@@ -84,7 +131,7 @@ def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
     
     elif projections != (0,0):
         nullfmt = NullFormatter()         # no labels
-        plt.delaxes(ax)
+        # plt.delaxes(ax)
         # definitions for the axes
         left, width    = 0.1, 0.65
         bottom, height = 0.1, 0.65
@@ -120,7 +167,7 @@ def poincarePlot(xyvalues1, xyvalues2, box, max, projections=(0,0)):
             binwidthx = xmax/100.
             limx = (int(xmax/binwidthx) + 1) * binwidthx
             axScatter.set_xlim((-limx, limx))
-            binsx = NP.arange(-limx, limx + binwidthx, binwidthx)
+            binsx = np.arange(-limx, limx + binwidthx, binwidthx)
             axHistx.hist(x1, bins=binsx, color='black')
             # axHistx.set_xlim(axScatter.get_xlim())
 

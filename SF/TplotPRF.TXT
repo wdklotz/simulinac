@@ -40,8 +40,7 @@ ConnectStatus=1
 MarkersStatus=1
 XlinLogStatus=LIN
 YLinLogStatus=LIN
-LastPlotFile=C:\Users\wdklotz\SIMULINAC\SF\SF_WDK2g44.TBL
-ZoomLimits  1     0.0000000       4.0000000       0.0000000       4.1752000    
-ZoomLimits  2    0.24447250      0.37142646       2.2754261       2.3778360    
+LastPlotFile=C:\Users\wdklotz\SIMULINAC\SF\PILL-3CM.TBL
+ZoomLimits  1     0.0000000       1.7000000       0.0000000       2.1258841    
 ZoomLevel=1
-MaxZoomLevel=2
+MaxZoomLevel=1

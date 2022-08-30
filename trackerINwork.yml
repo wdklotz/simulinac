@@ -34,11 +34,11 @@ FLAGS:
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
     # express:      True            # {False} use express version of thin quads
-    # useaper:      True            # {False} use aperture check for lattice elements
+    useaper:      True            # {False} use aperture check for lattice elements
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
     # pspace:       True            # {False} plot the twiss ellipses at entrance
-    maction:      True            # {False} call marker actions
+    # maction:      True            # {False} call marker actions
     verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -65,7 +65,7 @@ PARAMETERS:
     EzAvg:        &p16     1.0            # [MV/m]
     # EzPeak:       &p17     6.4            # [MV/m] peak gap field Strengy
     nbsigma:               2              # [m] sigma aperture
-    aperture:             15.e-3          # [m] global aperture setting (default = None)
+    aperture:      &aper  15.e-3          # [m] global aperture setting (default = None)
     lattvers:             'v10.0.1m-6822' # lattice version
     mapping:      &map    t3d             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
@@ -128,7 +128,7 @@ ELEMENTS:
         PhiSync:  -25.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.024        # [m] gap length
-        aperture: 10.e-3       # [m]
+        aperture: *p04         # [m]
         SFdata:   SF/SF_WDK2g22.TBL # superfish tbl-data file
         # SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
         mapping:  *map         # mapping in cavities
@@ -162,7 +162,7 @@ ELEMENTS:
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.046        # [m] gap length
-        aperture: 10.e-3       # [m]
+        aperture: *p04         # [m]
         # SFdata:   SF/SF_WDK2g22.TBL # superfish tbl-data file
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
         mapping:  *map          # mapping in cavities

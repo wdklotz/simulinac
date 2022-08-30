@@ -345,7 +345,7 @@ def simulation(filepath):
         plt.show()
 if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
-    parser = argparse.ArgumentParser(prog='python simu.py')
+    parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
     group.add_argument ("--file", default="simuINwork.yml",   help="lattice input-file")
     group.add_argument ("--tmpl",                             help="template number")

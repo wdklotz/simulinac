@@ -23,7 +23,7 @@ This file is part of the SIMULINAC code
 #TODO: check w-acceptance at each node entrance
 #TODO: no phase damping - why?
 import sys,os
-import numpy as NP
+import numpy as np
 import matplotlib.pyplot as plt
 import time
 from string import Template
@@ -37,6 +37,7 @@ from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
 from setutil import WConverter, Functions
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
+import trackPlot as TPLT
 
 # max track amplitudes are set here!
 xlim_max  = ylim_max  =  10.e-3
@@ -55,107 +56,112 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
-    """ 
-    The scatter plots 
+def scatter1(live,lost,abscisse,ordinate,txt):
     """
-    live_bunch, lost_bunch = live_lost
-    txt = ('IN {}'.format(text),'OUT {}'.format(text))
-    initial = 0; final = -1
+    live, lost are instances of Bunch
+    abscisse, ordinate are integer coordinate indexes
+    text is string
+    """
+    title = dict(initial=f'IN {txt}',final=f'OUT {txt}')
+    loc   = dict(initial=0,final=-1)
+    golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
+    fig   = plt.figure(num=f'scatter plot {txt}',constrained_layout=False, figsize=(width, height))
 
-    # ENTRANCE-DATA
-    loc = initial
-    x=[]; y=[]; xlost=[]; ylost=[]
-    nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
-    for particle in iter(live_bunch): # particles
-        track  = particle.track
-        tpoint = track.getpoints()[loc]
-        point  = tpoint()
-        x.append(point[abszisse]*1e3)
-        y.append(point[ordinate]*1e3)
-    xmax0 = max([abs(i) for i in x])
-    ymax0 = max([abs(i) for i in y])
-    
-    if lost_bunch.nbparticles() != 0:     # lost particles
-        for particle in iter(lost_bunch):
+    def plotit(*args):
+        nblive   = args[0]
+        nblost   = args[1]
+        loc      = args[2]
+        live     = args[3]
+        lost     = args[4]
+        abscisse = args[5]
+        ordinate = args[6]
+        title    = args[7]
+        subplot  = args[8]
+
+        x=np.array([]); y=np.array([])
+        nbtotal = nblive + nblost
+        for particle in iter(live): # live particles
             track  = particle.track
             tpoint = track.getpoints()[loc]
             point  = tpoint()
-            xlost.append(point[abszisse]*1e3)
-            ylost.append(point[ordinate]*1e3)
-        xmax1 = max([abs(i) for i in xlost])
-        ymax1 = max([abs(i) for i in ylost])
-    else:
-        xmax1=xmax0
-        ymax1=ymax0
+            x = np.append(x,point[abscisse]*1.e3)    # [mm]
+            y = np.append(y,point[ordinate]*1.e3)
+        xymax=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
+        xlost=np.array([]); ylost=np.array([])
+        if nblost != 0:     # lost particles
+            for particle in iter(lost): # lost particles
+                track  = particle.track
+                tpoint = track.getpoints()[loc]
+                point  = tpoint()
+                xlost = np.append(xlost,point[abscisse]*1.e3)    # [mm]
+                ylost = np.append(ylost,point[ordinate]*1.e3)
+            xymax1=np.array([np.amax(np.abs(xlost)), np.amax(np.abs(ylost))])
+            xymax=np.fmax(xymax,xymax1)
+        DEBUG_OFF(xymax)
+        xymax = 1.03 * xymax   # add 3% margin
 
-    # Axis scales
-    xmax = max(xmax0,xmax1)*1.1
-    ymax = max(ymax0,ymax1)*1.1
-    
-    # figure with mapping box
-    width = 12; height = 6.
-    fig   = plt.figure(figsize=(width,height))
-    box   = '{} {} particles'.format(txt[loc],nbprt)
-    ax    = plt.subplot(121)
-    ax.set_title(box)
-    # mapping box
-    ax.text(0.01, 1.1, PARAMS['mapping'], transform= ax.transAxes, fontsize= 8, bbox= dict(boxstyle='round',facecolor='wheat',alpha=0.5), verticalalignment= 'top')
-    plt.xlabel("$10^{-3}$")
-    plt.ylabel("$10^{-3}$")
-    plt.xlim([-xmax,xmax])
-    plt.ylim([-ymax,ymax])
-    plt.scatter(x,y,s=1)
-    plt.scatter(xlost,ylost,s=1,color='red')
-    # poincarePlot((x,y),(xlost, ylost), box, max = minmax, projections = (1,1))
+        box_text = f"{title} {nbtotal} particles"
+        ax = plt.subplot(subplot)
+        ax.set_title(box_text)
+        plt.xlim(-xymax[0],xymax[0])
+        plt.ylim(-xymax[1],xymax[1])
+        ax.scatter(x,y,s=1)
+        ax.scatter(xlost,ylost,s=1,color='red')
+        return
 
-    # EXIT-DATA
-    loc = final
-    x=[]; y=[]
-    nbprt = live_bunch.nbparticles()
-    for particle in iter(live_bunch): # particles
-        track  = particle.track
-        tpoint = track.getpoints()[loc]
-        point  = tpoint()
-        x.append(point[abszisse]*1e3)
-        y.append(point[ordinate]*1e3)
-    # figure
-    box = '{} {} particles'.format(txt[loc],nbprt)
-    ax = plt.subplot(122)
-    ax.set_title(box)
-    plt.xlabel("$10^{-3}$")
-    plt.ylabel("$10^{-3}$")
-    plt.xlim([-xmax,xmax])
-    plt.ylim([-ymax,ymax])
-    plt.scatter(x,y,s=1)
-    # poincarePlot((x,y),(0,0), box, max = minmax, projections = (1,1))
+    # IN
+    plotit(
+        live.nbparticles(),
+        lost.nbparticles(),
+        loc['initial'],
+        live,
+        lost,
+        abscisse,
+        ordinate,
+        title['initial'],
+        121
+        )
+    # OUT
+    plotit(
+        live.nbparticles(),
+        0,
+        loc['final'],
+        live,
+        None,
+        abscisse,
+        ordinate,
+        title['final'],
+        122
+        )
+    # adjust: left, bottom, right, top, wspace, hspace
+    plt.subplots_adjust(wspace=0.15) 
     return
 def projections(live_lost):
-    """ 
-    2D phase space projections IN and OUT
-    """
-    symbols = ("x","x'","y","y'","z","$\Delta$p/p")
+    """  2D phase space projections IN and OUT """
+    symbols = ("x","x'","y","y'","z","\u0394p/p")
     # (x,xp)
-    abszisse = Ktp.x
+    abscisse = Ktp.x
     ordinate = Ktp.xp
-    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
-    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
+    live,lost = live_lost
+    scatter1(live,lost,abscisse,ordinate,text)
     # (y,yp) 
-    abszisse = Ktp.y
+    abscisse = Ktp.y
     ordinate = Ktp.yp
-    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
-    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
+    scatter1(live,lost,abscisse,ordinate,text)
     # (x,y)
-    abszisse = Ktp.x
+    abscisse = Ktp.x
     ordinate = Ktp.y
-    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
-    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
+    scatter1(live,lost,abscisse,ordinate,text)
     # (z,zp)
-    abszisse = Ktp.z
+    abscisse = Ktp.z
     ordinate = Ktp.zp
-    text    = '{}-{}'.format(symbols[abszisse],symbols[ordinate])
-    scatterPlot(live_lost, abszisse=abszisse, ordinate=ordinate, text=text)
+    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
+    scatter1(live,lost,abscisse,ordinate,text)
     plt.show()
+    return
 def frames(lattice, skip):
     """ 2D phase space projection at marker position """
     plt.figure()    # new figure instance
@@ -201,9 +207,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     if iteration == total: 
         print()
 def loss_plot(lattice,live_lost):
-    """
-    Plot losses along the lattice
-    """
+    """ Plot losses along the lattice """
     # figure
     width = 15
     fig,(ax1,ax2) = plt.subplots(2,1,sharex=True)
@@ -345,7 +349,7 @@ def track_soll(lattice, injection_energy, start_position=0.):
     element parameters according to the energy of the accelerated reference particle.
     """
     soll_track = Track()
-    tp0 = Tpoint(NP.array([ 0., 0., 0., 0., 0., 0., injection_energy, 1., start_position, 1.]))
+    tp0 = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., injection_energy, 1., start_position, 1.]))
     soll_track.addpoint(tp0)   # 1st track point
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # track point at entrance
@@ -385,7 +389,7 @@ def tracker(input_file,options):
     losses   = options['losses']
     
     # manipulate options
-    if losses :
+    if losses:
         show = False
         save = False
     if show or save:
@@ -447,7 +451,7 @@ def tracker(input_file,options):
     bunchfactory = BunchFactory()
     bunchfactory.setDistribution(Gauss1D)
     bunchfactory.setTwiss((twx,twy,twz))
-    bunchfactory.setMask(NP.array((1,1,1,1,1,1)))
+    bunchfactory.setMask(np.array((1,1,1,1,1,1)))
     bunchfactory.setNumberOfParticles(npart)
     bunchfactory.setReferenceEnergy(PARAMS['injection_energy'])
     bunch = bunchfactory()
@@ -499,8 +503,9 @@ def test0(filepath):
 #----------------main------------
 if __name__ == '__main__':
     DEBUG_TEST0 = DEBUG_OFF
+    DEBUG_OFF(sys.argv)
     # use ArgumentParser to put result in 'args'
-    parser = argparse.ArgumentParser(prog='python tracker.py')
+    parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
