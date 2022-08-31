@@ -146,6 +146,7 @@ def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
 def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     """
     Create a plot of the covariance confidence ellipse of *x* and *y*.
+    https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
 
     Parameters
     ----------
@@ -281,22 +282,6 @@ def scatter11(live,lost,abscisse,ordinate,txt):
     plt.subplots_adjust(wspace=0.15) 
     return
 # TODO below is experimental, maybe unfinished
-def scatter_hist(x,y, ax, ax_histx,ax_histy):
-   # no labels
-    ax_histx.tick_params(axis="x", labelbottom=False)
-    ax_histy.tick_params(axis="y", labelleft=False)
-
-    # the scatter plot:
-    ax.scatter(x, y)
-
-    # now determine nice limits by hand:
-    binwidth = 0.25
-    xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
-    lim = (int(xymax/binwidth) + 1) * binwidth
-
-    bins = np.arange(-lim, lim + binwidth, binwidth)
-    ax_histx.hist(x, bins=bins)
-    ax_histy.hist(y, bins=bins, orientation='horizontal')
 def poincare_hist(fig,ax,x,y):
     # definitions for the axes
     left, width    = 0.1, 0.65
