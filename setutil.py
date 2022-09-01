@@ -99,7 +99,8 @@ PARAMS = dict(
         alfay_i              = None,       # Vorgabe twiss alpha entrance
         alfaw_i              = None,       # Vorgabe twiss alpha entrance
         aperture             = None,       # default aperture = no aperture
-        mapping              = None        # default rf gap-model      
+        mapping              = None,       # default rf gap-model  
+        warnmx               = 1           # max warnings
         )              
 ELEMENTS = {}
 SUMMARY  = {}

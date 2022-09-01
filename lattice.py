@@ -389,7 +389,7 @@ class Lattice(object):
             nbsigma = PARAMS['nbsigma']
             if node.aperture != None:
                 aperture = node.aperture
-                sigx, sigxp, sigy, sigyp = node['sigxy']
+                sigx, sigxp, sigy, sigyp = node.sigxy
                 if PARAMS['warnmx']:
                     if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
                         # warnings.showwarning('{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
