@@ -56,7 +56,7 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-def projections(live_lost): 
+def projections(live_lost):
     """  2D phase space projections IN and OUT """
     symbols = ("x","x'","y","y'","z","\u0394p/p")
     # (x,xp)
@@ -126,6 +126,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     # Print New Line on Complete
     if iteration == total: 
         print()
+def loss_plot(lattice,live_lost):
     """ Plot losses along the lattice """
     # figure
     width = 15

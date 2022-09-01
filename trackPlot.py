@@ -22,6 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 from matplotlib.patches import Ellipse
+from matplotlib.widgets import Button
 from scipy.stats import norm
 import pprint, inspect
 from math import sqrt
@@ -217,6 +218,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         ordinate = args[6]
         title    = args[7]
         subplot  = args[8]
+        xymax    = args[9]
 
         x=np.array([]); y=np.array([])
         nbtotal = nblive + nblost
@@ -226,8 +228,9 @@ def scatter11(live,lost,abscisse,ordinate,txt):
             point  = tpoint()
             x = np.append(x,point[abscisse]*1.e3)    # [mm]
             y = np.append(y,point[ordinate]*1.e3)
-        xymax=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
+            xymax0=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
         xlost=np.array([]); ylost=np.array([])
+        xymax1=np.array([0.,0.])
         if nblost != 0:     # lost particles
             for particle in iter(lost): # lost particles
                 track  = particle.track
@@ -236,9 +239,11 @@ def scatter11(live,lost,abscisse,ordinate,txt):
                 xlost = np.append(xlost,point[abscisse]*1.e3)    # [mm]
                 ylost = np.append(ylost,point[ordinate]*1.e3)
             xymax1=np.array([np.amax(np.abs(xlost)), np.amax(np.abs(ylost))])
-            xymax=np.fmax(xymax,xymax1)
+        # axis scales
+        if np.array_equal(xymax,np.array([0.,0.])):
+            xymax=np.fmax(xymax0,xymax1)
+            xymax = 1.03 * xymax   # add 3% margin
         DEBUG_OFF(xymax)
-        xymax = 1.03 * xymax   # add 3% margin
 
         box_text = f"{title} {nbtotal} particles"
         ax = plt.subplot(subplot)
@@ -253,9 +258,9 @@ def scatter11(live,lost,abscisse,ordinate,txt):
 
         ax.scatter(x,y,s=1)
         if nblost !=0: ax.scatter(xlost,ylost,s=1,color='red')
-        return
+        return xymax
     # IN
-    plotit(
+    xymax = plotit(
         live.nbparticles(),
         lost.nbparticles(),
         loc['initial'],
@@ -264,7 +269,8 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         abscisse,
         ordinate,
         title['initial'],
-        121
+        121,
+        np.array([0.,0.])
         )
     # OUT
     plotit(
@@ -276,7 +282,8 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         abscisse,
         ordinate,
         title['final'],
-        122
+        122,
+        xymax     # take xymax from plot before for equal axis scales
         )
     # adjust: left, bottom, right, top, wspace, hspace
     plt.subplots_adjust(wspace=0.15) 
