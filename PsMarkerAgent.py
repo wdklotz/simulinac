@@ -56,6 +56,7 @@ class PsMarkerAgent(object):
             ellipse_plot(node,on_injection=True,scale=0.5)
         else:
             ellipse_plot(node,on_injection=False,scale=0.5)
+
 def ellipse_plot(node,on_injection=False,scale=1.):   
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """

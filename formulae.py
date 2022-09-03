@@ -42,7 +42,7 @@ gamma = W/m0c2
 beta  = math.sqrt(1.-1./gamma**2)
 lamb  = cl/frq    # [m]
 
-def I0(x):
+def I0(x):      #TODO   kw
     """
     Modified Bessel function I of integer order 0
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
@@ -76,7 +76,6 @@ def I0(x):
             print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))
             sys.exit(1)
     return res
-
 def J1(x):
     """ -3 <= x <= +3 """
     xov3 = x/3.
@@ -89,17 +88,14 @@ def J1(x):
     j1 += 0.00001109*xov3**12
     j1  = x*j1
     return j1
-    
 def TWpp28():   # TW pp. 28
     Rc =     2.405*cl/omega
     print('TW-pp.28 : frequency(frq)[Mhz]= {:5.3f}, pillbox radius(Rc)[cm]= {:5.3f}'.format(frq*1.e-6,Rc*1.e2))
     return Rc
-
 def TW2_24():   # TW 2.24
     K2    = (twopi/lamb)**2*(1.-1./beta**2)
     K     = math.sqrt(abs(K2))
     print('TW-2.24  : K2= {}, K= {}'.format(K2,K))
-
 def TW2_43():   # TW 2.43
     K2    = (twopi/lamb)**2*(1.-1./beta**2)
     K     = math.sqrt(abs(K2))
@@ -107,11 +103,9 @@ def TW2_43():   # TW 2.43
     Ttfk  = 1./I0(K*rbore)*math.sin(x)/x
     print('TW-2.43  : T(k)~= {} - time transition factor'.format(Ttfk))
     return Ttfk
-
 def HWII6_61(): # HW vol II 6.61
     rs = 1.28 * math.sqrt(frq)
     print('HWII-6.61: rs[MOhm/m]~= {} - specific shunt impedance (pillbox)'.format(rs))
-
 def EJ_26():   # EJ 26
     eta   = 376.73    # Ohms
     chi01 = 2.40483

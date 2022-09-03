@@ -40,7 +40,7 @@ from trackPlot import histPlot, poincarePlot
 DEBUG_OFF = DEB.get('OFF')
 DEBUG_ON  = DEB.get('ON')
 
-#todo: uniform bucket fill ?
+#TODO: uniform bucket fill ?
 class Tpoint(object):
     """ 
         A track-point is an NP.array of 10 coordinates, 

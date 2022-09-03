@@ -211,10 +211,10 @@ class TTF_G(ELM.RFG):
         self.deltaW   += ps_out.tkin
         self.ttf       = self.ttf/len(self.polies)       # gap's ttf  (better as Panofski?)
         return f_track
-
     def adjust_energy(self, tkin):
         adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
+
 class TestTransitTimeFactorsGapModel(unittest.TestCase):
     def test_TTFG_mapping(self):
         print('----------------------------------test_TTFG_mapping')

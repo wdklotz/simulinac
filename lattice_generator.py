@@ -250,7 +250,7 @@ def factory(input_file,stop=None):
         util.SUMMARY['accON']  = util.FLAGS.get('accON')
         util.FLAGS['non_linear_mapping'] = False
         return flags
-    def proces_parameters(parameters):
+    def proces_parameters(parameters):   #TODO use dict.get()
         """ fills global PARAMETERS"""
         if 'Tkin'             in parameters: util.PARAMS['injection_energy'] = parameters['Tkin']
         if 'DT2T'             in parameters: util.PARAMS['DT2T']             = parameters['DT2T']
@@ -310,6 +310,8 @@ def factory(input_file,stop=None):
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
+
+
     ## factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body --------
     util.SUMMARY['input file'] = util.PARAMS['input_file'] = input_file
     with open(input_file,'r') as fileobject:
@@ -347,6 +349,7 @@ def factory(input_file,stop=None):
     DEBUG_OFF('SUMMARY in factory() {}'.format(util.SUMMARY))
     # end of factory(...)
     return lattice
+    
 class TestLatticeGeneratorMethods(unittest.TestCase):
     def test_Lattice_Parser(self):
         print("\b----------------------------------------test_Lattice_Parser")

@@ -18,7 +18,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Python 2 and 3 print compatability
-from __future__ import print_function
+from __future__ import print_function   #TODO still used?
 
 import sys
 import scipy.constants as C
@@ -34,13 +34,16 @@ import inspect
 import lattice_parser2 as parser
 import unittest
 
-def LOGGER():
-    console_handler = logging.StreamHandler() # console handler
-    logger = logging.getLogger("logger")
-    console_handler.setLevel(logging.DEBUG)  # set handler level
-    console_handler.setFormatter(logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s"))              # set handler's format
-    logger.addHandler(console_handler) # add handler to logger
-    return logger
+# def LOGGER():                                    #TODO still used?
+#     console_handler = logging.StreamHandler() # console handler
+#     logger = logging.getLogger("logger")
+#     console_handler.setLevel(logging.DEBUG)  # set handler level
+#     console_handler.setFormatter(logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s"))              # set handler's format
+#     logger.addHandler(console_handler) # add handler to logger
+#     return logger
+# Logger
+# logger = LOGGER()
+
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
     print(F'DEBUG_ON[{file}] ==> ',end="")
@@ -50,10 +53,9 @@ def PASS(obj=None):
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
+
 # MDIM: dimension of matrices
 MDIM = 10
-# Logger
-logger = LOGGER()
 class Ktp(IntEnum):
     """ Koordinaten fuer track points (1x10)"""
     x  = 0     # x
@@ -78,29 +80,29 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
-# for compatability with elder code TODO: replace by namedtupel
+# for compatability with elder code TODO: replace!
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 #------  DEFAULT "FLAGS" & "PARAMS" and global dicts
 FLAGS  = dict(dWf=1)
-PARAMS = dict(
+PARAMS = dict(             #TODO better use dict.get()
         clight               = C.c,              # [m/s]
         elementarladung      = C.e,              # [coulomb]
         proton_mass          = C.value('proton mass energy equivalent in MeV'),
         electron_mass        = C.value('electron mass energy equivalent in MeV'),
         map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
-        warn_max             = 5,          # limit nbof warnings
-        DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
-        injection_energy     = 50.,        # default injection energy
-        emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
-        emity_i              = None,       # [m*rad] Vorgabe emittance entrance
-        betax_i              = None,       # [m] Vorgabe twiss beta entrance
-        betay_i              = None,       # [m] Vorgabe twiss beta entrance
-        alfax_i              = None,       # Vorgabe twiss alpha entrance
-        alfay_i              = None,       # Vorgabe twiss alpha entrance
-        alfaw_i              = None,       # Vorgabe twiss alpha entrance
-        aperture             = None,       # default aperture = no aperture
-        mapping              = None,       # default rf gap-model  
-        warnmx               = 1           # max warnings
+        warnmx               = 1,          # max warnings
+        injection_energy     = 50.         # default injection energy
+        # warn_max             = 5,          # max warnings
+        # DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
+        # emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
+        # emity_i              = None,       # [m*rad] Vorgabe emittance entrance
+        # betax_i              = None,       # [m] Vorgabe twiss beta entrance
+        # betay_i              = None,       # [m] Vorgabe twiss beta entrance
+        # alfax_i              = None,       # Vorgabe twiss alpha entrance
+        # alfay_i              = None,       # Vorgabe twiss alpha entrance
+        # alfaw_i              = None,       # Vorgabe twiss alpha entrance
+        # aperture             = None,       # default aperture = no aperture
+        # mapping              = None,       # default rf gap-model  
         )              
 ELEMENTS = {}
 SUMMARY  = {}
@@ -263,7 +265,7 @@ class WConverter(object):
         emitz = self.emitwToemitz(emitw)
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
-class Functions(object):
+class Functions(object):         #TODO better use pandas
     """ A class to gather function-values (Ordinaten) over a common independent variable (Abszisse) """
     def __init__(self,names):
         self._values  = [] # [(abzisse, ordinate-1, ordinate-2, ordinate-3,...)]
@@ -453,7 +455,7 @@ def waccept(node):
     PARAMS['twiss_w_i()'] = tww()
     PARAMS['twiss_z_i()'] = twz()
     return
-def sigmas(alfa,beta,epsi):    #TODO: integrate sigmas into Twiss
+def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
     sigma  = sqrt(epsi*beta)
@@ -570,7 +572,7 @@ def I1(x):
     #         print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
     #         sys.exit(1)
     # return res
-def k0prot(gradient=0.,tkin=0.):    # TODO still used?
+def k0prot(gradient=0.,tkin=0.):         #TODO still used?
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)
     IN:
@@ -586,13 +588,13 @@ def k0prot(gradient=0.,tkin=0.):    # TODO still used?
     else:
         print('k0prot() called with negative kinetic energy? - STOP')
         sys.exit(1)
-def scalek0prot(k0=0.,tki=0.,tkf=0.):    # still used?
+def scalek0prot(k0=0.,tki=0.,tkf=0.):    #TODO still used?
     """Scale Quadrupole strength k0 for increase of kin. energy from tki to tkf  (only for protons!)"""
     bgi  = Proton(tki).gamma_beta
     bgf  = Proton(tkf).gamma_beta
     k= k0 * bgi/bgf
     return k
-def dBdxprot(k0=0.,tkin=0.):   #TODO still used?
+def dBdxprot(k0=0.,tkin=0.):             #TODO still used?
     """
     B-field gradient from quadrupole gradient for given quadrupole strength k0 and kin. energy tkin (only for protons!)
     IN:
@@ -771,26 +773,3 @@ class Test_set_utilities(unittest.TestCase):
         plt.show()
 if __name__ == '__main__':
     unittest.main()
-
-# TODO: more marker-actions
-# def sigma_x_action(*args):
-#     # DEBUG_MODULE('(sigma)x @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_x']*1.e3))
-#     SUMMARY['z {:8.4f}[m] sigma-x [mm]'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
-#     PARAMS['sigma-x({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_x']*1.e3
-# def sigma_y_action(*args):
-#     # DEBUG_MODULE('(sigma)y @ z {:8.4f}[m] = {:8.4f}[mm]'.format(KEEP['z'],KEEP['sigma_y']*1.e3))
-#     SUMMARY['z {:8.4f}[m] sigma-y [mm]'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
-#     PARAMS['sigma-y({:0=6.2f})'.format(KEEP['z'])] = KEEP['sigma_y']*1.e3
-# def tkin_action(*args):
-#     SUMMARY['z {:8.4f}[m]   Tkin [MeV]'.format(KEEP['z'])] = KEEP['Tkin']
-#     PARAMS['Tkin({:0=6.2f})'.format(KEEP['z'])] = KEEP['Tkin']
-# 
-# """
-#  (global) MRKR_ACTIONS: dictionary of possible actions attached to a marker
-# """
-# MRKR_ACTIONS = dict(
-#             sigma_x     = sigma_x_action,
-#             sigma_y     = sigma_y_action,
-#             Tkin        = tkin_action,
-#             show_elli   = elli_sxy_action,
-#             )
