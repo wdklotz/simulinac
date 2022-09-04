@@ -29,11 +29,11 @@ import elements as ELM
 import OXAL as OXA
 import TTFG as TTF
 import DYNG as DYN
+import PsMarkerAgent as psmkr
+import PoincareMarkerAgent as pcmkr
 from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
-import PsMarkerAgent as psmkr
-import PoincareMarkerAgent as pcmkr
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -45,11 +45,21 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
+def make_counter():
+    count = 0
+    def inner():
+        nonlocal count
+        count += 1
+        return count
+    return inner
+counter1 = make_counter()
+counter2 = make_counter()
+
 def check_marker_incompatible_with(prog,ID):
     ret = False
     this_prog = sys.argv[0]
     if prog != this_prog:
-        print(util.colors.RED+f'Marker {ID} incompatible with {this_prog}. Will be skipped'+util.colors.ENDC)
+        print(util.colors.RED+f'WARN: Marker {ID} incompatible with {this_prog}. Will be skipped'+util.colors.ENDC)
         ret = True
         return ret
 def get_mandatory(attributes,key,item):
@@ -113,24 +123,32 @@ def instanciate_element(item):
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
-                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],particle=util.Proton(util.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
-                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],particle=util.Proton(util.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
+                if counter1() < 5:
+                    print(util.colors.RED+"WARN: dyn mapping is broken"+util.colors.ENDC)
+                else:
+                    pass
                 EzAvg = ELEMENT['EzAvg'] = util.PARAMS[fname].EzAvg
-                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],aperture=aperture,dWf=dWf)
+                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=util.PARAMS[fname],particle=util.Proton(util.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             else:
-                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,mapping=mapping,aperture=aperture,dWf=dWf)
+                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,SFdata=None,particle=util.Proton(util.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
         elif type == 'RFC':
+            if counter2() < 5:
+                print(util.colors.RED+"WARN: RFC node is broken"+util.colors.ENDC)
+            else:
+                sys.exit(1)
             phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             gap       = get_mandatory(attributes,'gap',ID)

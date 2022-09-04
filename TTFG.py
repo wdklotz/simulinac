@@ -42,7 +42,7 @@ DEBUG_OFF = DEB.get('OFF')
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata, particle, position, aperture, dWf, mapping='ttf')
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='ttf')
         # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('TTF_G: missing E(z) table - STOP')

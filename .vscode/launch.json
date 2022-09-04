@@ -35,7 +35,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["simuINwork.yml"]
+            "args": ["--file","simuINwork.yml"]
         },
         {
             "name": "tracker",

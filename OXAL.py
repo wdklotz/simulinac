@@ -45,7 +45,7 @@ twopi = 2*pi
 class OXAL_G(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='oxal')
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='oxal')
         # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('OXAL: missing E(z) table - STOP')
@@ -248,7 +248,7 @@ class OXAL_G(ELM.RFG):
             phis = phis_out
         return matrix
     def adjust_energy(self, tkin):
-        adjusted = OXAL(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = OXAL_G(self.label, self.EzAvg, self.phisoll, self.gap, self.freq, SFdata=self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf)
         return adjusted
     def oxal_map(self,i_track):
         gs2 = (self.particle.gamma)**2

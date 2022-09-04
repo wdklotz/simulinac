@@ -393,7 +393,7 @@ class Lattice(object):
                 if PARAMS['warnmx']:
                     if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
                         # warnings.showwarning('{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
-                        print(warnings.formatwarning('{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm),UserWarning,'','')[3:-1])
+                        print(warnings.formatwarning(colors.RED+'{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)+colors.ENDC,UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
     def sigmas(self,steps = 10):
@@ -414,7 +414,7 @@ class Lattice(object):
 
         mess = ""
         if FLAGS['non_linear_mapping']:
-            mess = colors.RED+'Lattice has RF-gaps with non-linear mapping.\nENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
+            mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
             # function = self.sigma_envelopes # use beta-matrix            
         if FLAGS['sigma']:
             mess += 'CALCULATE ENVELOPES with SIGMA-matrix formalism'

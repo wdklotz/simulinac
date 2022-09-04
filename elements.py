@@ -486,7 +486,7 @@ class RFG(Node):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
             x = gap/(beta*lamb)
             return NP.sinc(x)
-        self.particle  = Proton(particle.tkin)
+        self.particle  = particle
         self.position  = position
         self.length    = 0.
         self.label     = label

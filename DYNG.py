@@ -39,7 +39,7 @@ EzAvg_test =1.    # 1 Mev constant gap field
 class DYN_G(ELM.RFG): 
     """ DYNAC's RF-gap model. Numerical computations in an accelerating gap or in a cavity; E.TANKE and S.VALERO 3-Oct-2016 """
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, particle, position, aperture, dWf, mapping='dyn')
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='dyn')
         if SFdata == None:
             raise RuntimeError('DYNG: missing E(z) table - STOP')
             sys.exit(1)
