@@ -394,7 +394,7 @@ class SD(Node):
 class RD(SD):
     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
     def __init__(self, label, alpha, rho, wedge, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-        super().__init__(label, alpha, rho, particle=particle, position=position, aperture=aperture)
+        super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
         self.wedge  = wedge
         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
     def adjust_energy(self, tkin):
