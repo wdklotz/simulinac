@@ -434,7 +434,7 @@ def call_FINISH(arg):
 
 if __name__ == '__main__':
     # lattice
-    lattice = factory('yml/simuIN.yml')
+    lattice = factory('unittests/simuIN.yml')
     util.waccept(lattice.first_gap)
 
     # Parameters: these are hardcoded to a specific value.

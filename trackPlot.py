@@ -6,7 +6,7 @@ This file is part of the SIMULINAC code
 
     SIMULINAC is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation,Buttonnp either version 3 of the License, or
     any later version.
 
     SIMULINAC is distributed in the hope that it will be useful,
@@ -18,13 +18,12 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #TODO full with old unused or unfinished code
-import numpy as np
+import numpy as NP
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 from matplotlib.patches import Ellipse
 from matplotlib.widgets import Button
 from scipy.stats import norm
-import pprint, inspect
 from math import sqrt
 
 def PRINT_PRETTY(obj):
@@ -124,7 +123,7 @@ def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
             binwidthx = xmax/100.
             limx = (int(xmax/binwidthx) + 1) * binwidthx
             axScatter.set_xlim((-limx, limx))
-            binsx = np.arange(-limx, limx + binwidthx, binwidthx)
+            binsx = NP.arange(-limx, limx + binwidthx, binwidthx)
             axHistx.hist(x1, bins=binsx, color='black')
             # axHistx.set_xlim(axScatter.get_xlim())
 
@@ -170,24 +169,24 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
 
-    cov = np.cov(x, y)
-    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    cov = NP.cov(x, y)
+    pearson = cov[0, 1]/NP.sqrt(cov[0, 0] * cov[1, 1])
     # Using a special case to obtain the eigenvalues of this
     # two-dimensionl dataset.
-    ell_radius_x = np.sqrt(1 + pearson)
-    ell_radius_y = np.sqrt(1 - pearson)
+    ell_radius_x = NP.sqrt(1 + pearson)
+    ell_radius_y = NP.sqrt(1 - pearson)
     ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
                       facecolor=facecolor, **kwargs)
 
     # Calculating the stdandard deviation of x from
     # the squareroot of the variance and multiplying
     # with the given number of standard deviations.
-    scale_x = np.sqrt(cov[0, 0]) * n_std
-    mean_x = np.mean(x)
+    scale_x = NP.sqrt(cov[0, 0]) * n_std
+    mean_x = NP.mean(x)
 
     # calculating the stdandard deviation of y ...
-    scale_y = np.sqrt(cov[1, 1]) * n_std
-    mean_y = np.mean(y)
+    scale_y = NP.sqrt(cov[1, 1]) * n_std
+    mean_y = NP.mean(y)
 
     transf = transforms.Affine2D() \
         .rotate_deg(45) \
@@ -220,28 +219,28 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         subplot  = args[8]
         xymax    = args[9]
 
-        x=np.array([]); y=np.array([])
+        x=NP.array([]); y=NP.array([])
         nbtotal = nblive + nblost
         for particle in iter(live): # live particles
             track  = particle.track
             tpoint = track.getpoints()[loc]
             point  = tpoint()
-            x = np.append(x,point[abscisse]*1.e3)    # [mm]
-            y = np.append(y,point[ordinate]*1.e3)
-            xymax0=np.array([np.amax(np.abs(x)), np.amax(np.abs(y))])
-        xlost=np.array([]); ylost=np.array([])
-        xymax1=np.array([0.,0.])
+            x = NP.append(x,point[abscisse]*1.e3)    # [mm]
+            y = NP.append(y,point[ordinate]*1.e3)
+            xymax0=NP.array([NP.amax(NP.abs(x)), NP.amax(NP.abs(y))])
+        xlost=NP.array([]); ylost=NP.array([])
+        xymax1=NP.array([0.,0.])
         if nblost != 0:     # lost particles
             for particle in iter(lost): # lost particles
                 track  = particle.track
                 tpoint = track.getpoints()[loc]
                 point  = tpoint()
-                xlost = np.append(xlost,point[abscisse]*1.e3)    # [mm]
-                ylost = np.append(ylost,point[ordinate]*1.e3)
-            xymax1=np.array([np.amax(np.abs(xlost)), np.amax(np.abs(ylost))])
+                xlost = NP.append(xlost,point[abscisse]*1.e3)    # [mm]
+                ylost = NP.append(ylost,point[ordinate]*1.e3)
+            xymax1=NP.array([NP.amax(NP.abs(xlost)), NP.amax(NP.abs(ylost))])
         # axis scales
-        if np.array_equal(xymax,np.array([0.,0.])):
-            xymax=np.fmax(xymax0,xymax1)
+        if NP.array_equal(xymax,NP.array([0.,0.])):
+            xymax=NP.fmax(xymax0,xymax1)
             xymax = 1.03 * xymax   # add 3% margin
         DEBUG_OFF(xymax)
 
@@ -270,7 +269,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         ordinate,
         title['initial'],
         121,
-        np.array([0.,0.])
+        NP.array([0.,0.])
         )
     # OUT
     plotit(
@@ -319,4 +318,4 @@ def poincare_hist(fig,ax,x,y):
     scatter_hist(x, y, ax1, ax_histx, ax_histy)
 
 if __name__ == '__main__':
-    print("baaaaaaa - nothing todo")
+    print("what?")

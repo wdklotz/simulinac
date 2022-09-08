@@ -220,7 +220,7 @@ class MRK(I):
         self.do_actions = self.actions if FLAGS['maction'] else self.no_actions  # toggle actions
     def actions(self,*args):
         """ invoke the action on the agent bound to this marker """
-        self.agent.do_action(*args)
+        return self.agent.do_action(*args)
     def no_actions(self,*args):
         pass
 class D(Node):
@@ -928,7 +928,7 @@ class TestElementMethods(unittest.TestCase):
     def test_D_Node(self):
         print("\b----------------------------------------test_D_Node")
         l = 10.
-        p = Particle(50.)
+        p = Proton(50.)
         Dnode = D("Drift",length=l,aperture=5.)
         self.assertEqual(Dnode.length,10.)
         g = p.gamma
@@ -952,7 +952,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertEqual(Dnode.particle.tkin,p.tkin,"tkin")
     def test_Particle_and_K(self):
         print("\b----------------------------------------test_Particle_and_K")
-        p = PARAMS['sollteilchen']
+        p = Proton(50.)
         gradient =3.
         K0 = K(gradient,p)
         self.assertAlmostEqual(p.tkin, 50., delta=1e-3)
@@ -1215,22 +1215,19 @@ class TestElementMethods(unittest.TestCase):
                 self.assertEqual(rd.matrix[i,j],rd_100.matrix[i,j],'rd == rd_100?')
     def test_MRK_Node(self):
         print("\b----------------------------------------test_MRK_Node")
+        FLAGS['maction'] = True          # call marker actions
         class Agent(object):
             counter = 1
             def __init__(self):
                 self.counter = Agent.counter
                 Agent.counter += 1
             def do_action(self):
-                print(F"Agent # {self.counter} here!")
-        a = Agent()
-        mrk = MRK("MRK",[a,a])
-        mrk.add(Agent())
-        mrk.add(Agent())
-        mrk.add(Agent())
-        # mrk.do_actions()
-        self.assertEqual(len(mrk.agents),5)
-        mrk.adjust_energy(75.)
-        self.assertEqual(len(mrk.agents),5)
+                return(F"Agent # {self.counter} here!")
+        mrks = [MRK(f'marker {i}',Agent(),True) for i in range(3)]
+        for cnt, mrk in enumerate(mrks):
+            res = f'{mrk.label} {mrk.actions()}'
+            # print(res)
+            self.assertEqual(res, f'marker {cnt} Agent # {cnt+1} here!')
     def test_GAP_Node(self):
         print("\b----------------------------------------test_GAP_Node")
         EzAvg   = 2.1             #[MV/m]

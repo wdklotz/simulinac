@@ -72,3 +72,6 @@ class PoincareMarkerAgent(object):
         y = [tp()[self.yaxis] for tp in self.tpoints]
         ax.scatter(x,y,s=1)
         plt.savefig('{}/poincare_cut_{:03d}.png'.format(self.prefix,number))
+
+if __name__ == '__main__':
+    print('what?')

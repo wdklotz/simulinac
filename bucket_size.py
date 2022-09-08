@@ -89,4 +89,4 @@ def bucket():
     return
 #-----------*-----------*-----------*-----------*-----------*-----------*-----------*
 if __name__ == '__main__':
-    print("bucket_size.py: sorry - nothing todo")
+    print("what?")

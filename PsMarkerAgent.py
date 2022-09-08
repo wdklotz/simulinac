@@ -22,6 +22,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import pprint, inspect
 
+from elements import MRK
+from setutil import Twiss, PARAMS, Ktw, FLAGS
+
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
@@ -32,19 +35,15 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-from elements import MRK
-from setutil import Twiss, PARAMS, Ktw
-
 class PsMarkerAgent(object):
     """ 
-    Is an agent for the Marker node which performs an action. 
-    Action is selectable by the which_action argument. 
-    Default action is 'transvers'. 
+    Is an agent for the Marker node which performs 
+    a phase-space ellipse plot at the marker's position.
     """
-    def __init__(self, position=[1,1,1], values=(0.5,0.5)):
+    def __init__(self, position=[0,0,0], twiss_values=(0.5,0.5)):
         self.label        = "ps-mkr-agent"
         self.position     = position
-        self.twiss_values = values
+        self.twiss_values = twiss_values
         self.parent       = None
 
     def set_parent(self,obj):
@@ -52,12 +51,9 @@ class PsMarkerAgent(object):
     def do_action(self,*args):
         """ the default action: plot transvers ellipses """
         node = self.parent
-        if node == None: 
-            ellipse_plot(node,on_injection=True,scale=0.5)
-        else:
-            ellipse_plot(node,on_injection=False,scale=0.5)
+        ellipse_plot(node,scale=0.5)
 
-def ellipse_plot(node,on_injection=False,scale=1.):   
+def ellipse_plot(node,scale=1.):   
     def convert(xy,alfa,beta,emit):
         """ convert twiss parameters to plot parameters """
         gamma = (1.+alfa**2)/beta
@@ -66,25 +62,16 @@ def ellipse_plot(node,on_injection=False,scale=1.):
         b = sqrt(emit/beta)
         # return matplot.patches.Ellipse(origin=xy,width=a,height=b,angle=tilt) arguments
         return (xy,a,b,tilt)
-    #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
+
     #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
     """ display x- and y-phase-space ellipses """
-    # TODO for tracker.py:  Plot a confidence ellipse of a two-dimensional dataset ==> https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-    if on_injection:
-        s = 0.0
-        ax = PARAMS['alfax_i']
-        bx = PARAMS['betax_i']
-        ay = PARAMS['alfay_i']
-        by = PARAMS['betay_i']
+    twiss = node.twiss      # alpha, beta, gamma
+    s = node.position[1]    # position
 
-    else:
-        twiss = node.twiss      # alpha, beta, gamma
-        s = node.position[1]    # position
-
-        ax = twiss[Ktw.ax]
-        bx = twiss[Ktw.bx]
-        ay = twiss[Ktw.ay]
-        by = twiss[Ktw.by]
+    ax = twiss[Ktw.ax]
+    bx = twiss[Ktw.bx]
+    ay = twiss[Ktw.ay]
+    by = twiss[Ktw.by]
 
     org = (0,0)
     ellix = convert(org,ax,bx,PARAMS['emitx_i'])  # emittance
@@ -116,19 +103,18 @@ def ellipse_plot(node,on_injection=False,scale=1.):
     # plt.show()    # do not show now! will be done by simu.py
     return
 
-def test0():
-    print('----------------------------------------- test0')
-    action0 = PsMarkerAgent(which_action='no_plot')
-    action1 = PsMarkerAgent(label='MyMarker', which_action='no_plot')
-    markr = MRK(agent=action0)    # new Marker with agent
-    markr.add(action1)            # ad a second agent
-    markr.do_actions()
-def test1():
-    print('----------------------------------------- test1')
-    action0 = PsMarkerAgent()
-    markr = MRK(agent=action0)
-    markr.do_actions()
-    plt.show()
+# def test0():
+#     print('----------------------------------------- test0')
+#     FLAGS['maction'] = True
+#     agent = PsMarkerAgent()
+#     markr = MRK('marker',agent, True)    # new Marker with agent
+#     agent.set_parent(markr)
+#     markr.actions()
+# def test1():
+#     print('----------------------------------------- test1')
+#     action0 = PsMarkerAgent()
+#     markr = MRK(agent=action0)
+#     markr.do_actions()
+#     plt.show()
 if __name__ == '__main__':
-    test0()
-    test1()
+    print('what?')

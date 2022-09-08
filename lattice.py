@@ -647,13 +647,13 @@ class TestLattice(unittest.TestCase):
             print(lattice.seq[i].ref_track, lattice.seq[i].particle.tkin,lattice.seq[i].label)
     def test_lattice_generator(self):
         print('----------------------------------test_lattice_generator')
-        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        input_file = "unittests/simuIN.yml"
         lattice = factory(input_file)
         print(lattice.__class__.__name__,F"{len(lattice.seq)} elements")
         print(lattice.__class__.__name__,F"length {len(lattice.seq)} [m]")
         self.assertEqual(lattice.__class__.__name__,"Lattice")
     def test_lattice_iterator(self):
-        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        input_file = "unittests/simuIN.yml"
         print('---------------------------------test_lattice_iterator')
         lattice = factory(input_file)
         # node = None
@@ -675,7 +675,7 @@ class TestLattice(unittest.TestCase):
     def test_lattice_concat(self):
         print('---------------------------------test_lattice_concat')
         l = 1.
-        p = Particle(50.)
+        p = Proton(50.)
         lattice1 = Lattice()
         for i in range(5):
             lattice1.add_node(ELM.D(F"Drift{i}",length=l,aperture=5.))
@@ -693,7 +693,7 @@ class TestLattice(unittest.TestCase):
             print(lattice1.seq[i].label,lattice1.seq[i].position)
     def test_first_last_gap(self):
         print('----------------------------------test_first_last_gap')
-        input_file = "REF-Läufe\DG6FG6D-v10.0.1-ref\simuIN.yml"
+        input_file = "unittests/simuIN.yml"
         lattice = factory(input_file)
         print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
         lattice.toggle_iteration()

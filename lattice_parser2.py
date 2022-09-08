@@ -209,13 +209,13 @@ def test0(input_file):
     results = parse(in_data)    # this parses the IN-file and returns the  results of parsing the IN-file
     results = parse()           # this only returns the results of parsing the IN-file
     DEBUG_ON(results.DESCRIPTOR)
-    DEBUG_OFF(results.FLAGS)
-    DEBUG_OFF(results.PARAMETERS)
-    DEBUG_OFF(results.ELEMENTS)
-    DEBUG_OFF(results.LATTICE)
-    DEBUG_OFF(results.LAT_ELMIDs)
-    DEBUG_OFF(results.ELMIDs)
+    DEBUG_ON(results.FLAGS)
+    DEBUG_ON(results.PARAMETERS)
+    DEBUG_ON(results.ELEMENTS)
+    DEBUG_ON(results.LATTICE)
+    DEBUG_ON(results.LAT_ELMIDs)
+    DEBUG_ON(results.ELMIDs)
 if __name__ == '__main__':
     args = sys.argv
-    input_file = args[1]
+    input_file = args[1] if len(args) >1 else 'unittests/simuIN.yml'
     test0(input_file)

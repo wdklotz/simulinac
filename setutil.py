@@ -33,6 +33,7 @@ import time
 import inspect
 import lattice_parser2 as parser
 import unittest
+import pprint, inspect
 
 # def LOGGER():                                    #TODO still used?
 #     console_handler = logging.StreamHandler() # console handler
@@ -711,15 +712,14 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
 class Test_set_utilities(unittest.TestCase):
     def test_particle(self):
         print('----------------------------------test_particle')
-        print('Sollteilchen\n'+ PARAMS['sollteilchen'].toString())
         print('Proton(5.)\n'+Proton(5.).toString())
-        print('Electron(tkin=5.)\n'+Electron(tkin=5.).toString())
+        print('Electron(5.)\n'+Electron(5.).toString())
     def test_params(self):
         print('----------------------------------test_params')
         dictprnt( PARAMS,text=' PARAMS')
     def test_particle_energy_adjustment(self):
         print('----------------------------------test_particle_energy_adjustment')
-        p = PARAMS['sollteilchen']
+        p = Proton(50.)
         print(repr(p)+':')
         print(p.toString())
         p1 = p(100.)

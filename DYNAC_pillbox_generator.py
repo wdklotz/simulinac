@@ -437,7 +437,7 @@ def call_FINISH(arg):
 if __name__ == '__main__':
     args = sys.argv
     # lattice
-    IN_file = args[1] if len(args) >1 else 'simuWork.yml'
+    IN_file = args[1] if len(args) >1 else 'unittests/simuIN.yml'
     lattice = factory(IN_file)
     util.waccept(lattice.first_gap)
 

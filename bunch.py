@@ -17,60 +17,72 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+from trackPlot import histPlot, poincarePlot
+from setutil import Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
 import sys
 import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
-import pprint, inspect
+import pprint
+import inspect
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
     print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+    pprint.PrettyPrinter(width=200, compact=True).pprint(obj)
 def PASS(obj):
     pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEB = dict(OFF=PASS, ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-from setutil import Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
-from trackPlot import histPlot, poincarePlot
-
 # DEBUG
 DEBUG_OFF = DEB.get('OFF')
-DEBUG_ON  = DEB.get('ON')
+DEBUG_ON = DEB.get('ON')
 
-#TODO: uniform bucket fill ?
+# TODO: uniform bucket fill ?
 class Tpoint(object):
     """ 
         A track-point is an NP.array of 10 coordinates, 
         i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
     """
-    def __init__(self, point = NP.array([0,0,0,0,0,0,0,1,0,1])):
+
+    def __init__(self, point=NP.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1])):
         self.point = point
+
     def __call__(self):
         return self.point
+
     def as_str(self):
-        s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(self.point[Ktp.x],self.point[Ktp.xp],self.point[Ktp.y],self.point[Ktp.yp],self.point[Ktp.z],self.point[Ktp.zp],self.point[Ktp.T],self.point[Ktp.S])
+        s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(
+            self.point[Ktp.x], self.point[Ktp.xp], self.point[Ktp.y], self.point[Ktp.yp], self.point[Ktp.z], self.point[Ktp.zp], self.point[Ktp.T], self.point[Ktp.S])
         return s
 class Track(object):
     """ A Track is a list of Tpoint objects.  """
+
     def __init__(self):
         self._points = []
-    def __getitem__(self,n):        # evaluation of self[key] for Tpoints in Track
+
+    # evaluation of self[key] for Tpoints in Track
+    def __getitem__(self, n):
         return self._points[n]
 
     def getpoints(self):            # points in Track
         return self._points
+
     def nbpoints(self):           # nbof points in Track
         return len(self._points)
-    def addpoint(self,point):       # add a point to Track
+
+    def addpoint(self, point):       # add a point to Track
         self._points.append(point)
-    def removepoint(self,point):
+
+    def removepoint(self, point):
         self._points.remove(point)
+
     def as_table(self):
-        tblheadr = ['    x',"    x'",'    y',"    y'",'    z',"    z'",'  tkin','    s']
-        tblrows =[]
+        tblheadr = ['    x', "    x'", '    y', "    y'",
+                    '    z', "    z'", '  tkin', '    s']
+        tblrows = []
         for point in iter(self):
             tblrow = [
                 '{:8.3f}'.format(point()[Ktp.x]),
@@ -81,9 +93,10 @@ class Track(object):
                 '{:8.3f}'.format(point()[Ktp.zp]),
                 '{:8.3f}'.format(point()[Ktp.T]),
                 '{:8.3f}'.format(point()[Ktp.S]),
-                ]
+            ]
             tblrows.append(tblrow)
-        return tblprnt(tblheadr,tblrows)
+        return tblprnt(tblheadr, tblrows)
+
     def as_str(self):
         str = ''
         for p in iter(self):
@@ -93,49 +106,63 @@ class Bunch(object):
     """
         A Bunch is a list of Particle objects
     """
+
     def __init__(self):
         self._particles = []
+
     def __iter__(self):
         for particle in self._particles:
             yield particle
+
     def getparticles(self):             # particles in bunch
         return self._particles
+
     def nbparticles(self):            # nbof particles in bunch
         return len(self._particles)
-    def addparticle(self,particle):     # add particle to bunch
+
+    def addparticle(self, particle):     # add particle to bunch
         self._particles.append(particle)
-    def removeparticle(self,particle):
+
+    def removeparticle(self, particle):
         self._particles.remove(particle)
 class BunchFactory(object):
     """
     BunchFactory creates a multiparticle bunch
     """
+
     def __init__(self):
         pass
-    def setDistribution(self,value):
+
+    def setDistribution(self, value):
         self.distribution = value
-    def setTwiss(self,value):
+
+    def setTwiss(self, value):
         self.twiss = value
-    def setNumberOfParticles(self,value):
+
+    def setNumberOfParticles(self, value):
         self.numberofparticles = value
+
     def setReferenceEnergy(self, value):
         self.tk = value
-    def setMask(self,value):
+
+    def setMask(self, value):
         self.mask = value
 
     def __call__(self):
         bunch = Bunch()
         if self.distribution.__name__ == 'Gauss1D':
-            initialtracklist = self.distribution(*self.twiss,self.numberofparticles,self.mask,self.tk)
+            initialtracklist = self.distribution(
+                *self.twiss, self.numberofparticles, self.mask, self.tk)
         else:
-            print('{} distributions implemented!'.format(self.distribution.__name__))
+            print('{} distributions implemented!'.format(
+                self.distribution.__name__))
             sys.exit(1)
         for i in range(self.numberofparticles):
-            particle = Proton(tkin= PARAMS['injection_energy'])
+            particle = Proton(50.)
             bunch.addparticle(particle)
             particle.track = initialtracklist[i]
         return bunch
-def Gauss1D(twx,twy,twz,npart,mask,tk):
+def Gauss1D(twx, twy, twz, npart, mask, tk):
     """ 
     Generates a bunch with 1D gaussian distribution 
     IN:
@@ -148,99 +175,104 @@ def Gauss1D(twx,twy,twz,npart,mask,tk):
     Out:
         list of Track objects with one initial Tpoint object each
     """
-    sigx  = twx.sigmaH()
+    sigx = twx.sigmaH()
     sigxp = twx.sigmaV()
-    sigy  = twy.sigmaH()
+    sigy = twy.sigmaH()
     sigyp = twy.sigmaV()
-    sigz  = twz.sigmaH()
+    sigz = twz.sigmaH()
     sigzp = twz.sigmaV()
 
-    X          = sigx  * NP.random.randn(npart)
-    XP         = sigxp * NP.random.randn(npart)
-    Y          = sigy  * NP.random.randn(npart)
-    YP         = sigyp * NP.random.randn(npart)
-    Z          = sigz  * NP.random.randn(npart)
-    ZP         = sigzp * NP.random.randn(npart)
+    X = sigx * NP.random.randn(npart)
+    XP = sigxp * NP.random.randn(npart)
+    Y = sigy * NP.random.randn(npart)
+    YP = sigyp * NP.random.randn(npart)
+    Z = sigz * NP.random.randn(npart)
+    ZP = sigzp * NP.random.randn(npart)
 
-    tracklist=[]        # all tracks in a bunch
+    tracklist = []        # all tracks in a bunch
     for i in range(npart):
-        start=NP.array([ 0., 0., 0., 0., 0., 0., tk, 1., 0., 1.])
+        start = NP.array([0., 0., 0., 0., 0., 0., tk, 1., 0., 1.])
         # initial setting for each coordinate
         if mask[Ktp.x]:
-            start[Ktp.x]  = X[i]
+            start[Ktp.x] = X[i]
         if mask[Ktp.xp]:
             start[Ktp.xp] = XP[i]
         if mask[Ktp.y]:
-            start[Ktp.y]  = Y[i]
+            start[Ktp.y] = Y[i]
         if mask[Ktp.yp]:
             start[Ktp.yp] = YP[i]
         if mask[Ktp.z]:
-            start[Ktp.z]  = Z[i]
+            start[Ktp.z] = Z[i]
         if mask[Ktp.zp]:
             start[Ktp.zp] = ZP[i]
         tpoint = Tpoint(point=start)
-        track  = Track()
+        track = Track()
         track.addpoint(tpoint)
         tracklist.append(track)
     return tracklist
-def EmitContour(nTracks,random=False):
+def EmitContour(nTracks, random=False):
     """
         Generates a bunch with particles of same emittance
     """
     def emittanceContourPoint(x, alfa, beta, emit):
-        gamma = (1.+ alfa**2)/beta
+        gamma = (1. + alfa**2)/beta
         a = beta
         b = 2.*alfa*x
         c = gamma*x**2-emit
         d = sqrt(b**2-4.*a*c)
-        y = (-b+d)/(2.*a)   
-        p1 = (x,y)     # upper half-plane
-        p2 = (-x,-y)   # upper half-plane 
-        return (p1,p2)
+        y = (-b+d)/(2.*a)
+        p1 = (x, y)     # upper half-plane
+        p2 = (-x, -y)   # upper half-plane
+        return (p1, p2)
 
-    sigx,sigxp = sigmas(PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
+    sigx, sigxp = sigmas(
+        PARAMS['alfax_i'], PARAMS['betax_i'], PARAMS['emitx_i'])
     if random:
         Xrand = sigx*(2.*NP.random.random_sample((nTracks,))-1.)
     else:
-        Xrand = NP.linspace(-sigx*(1.-1.e-3),sigx*(1.-1.e-3),nTracks)
-    X=[]; XP=[]
+        Xrand = NP.linspace(-sigx*(1.-1.e-3), sigx*(1.-1.e-3), nTracks)
+    X = []
+    XP = []
     for x in Xrand:
-        points = emittanceContourPoint(x,PARAMS['alfax_i'],PARAMS['betax_i'],PARAMS['emitx_i'])
-        X.append( points[0][0])
+        points = emittanceContourPoint(
+            x, PARAMS['alfax_i'], PARAMS['betax_i'], PARAMS['emitx_i'])
+        X.append(points[0][0])
         XP.append(points[0][1])
-        X.append( points[1][0])
+        X.append(points[1][0])
         XP.append(points[1][1])
-    sigy,sigyp = sigmas(PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
+    sigy, sigyp = sigmas(
+        PARAMS['alfay_i'], PARAMS['betay_i'], PARAMS['emity_i'])
     if random:
         Yrand = sigy*(2.*NP.random.random_sample((nTracks,))-1.)
     else:
-        Yrand = NP.linspace(-sigy+1.e-5,sigy-1.e-5,nTracks)
-    Y=[]; YP=[]
+        Yrand = NP.linspace(-sigy+1.e-5, sigy-1.e-5, nTracks)
+    Y = []
+    YP = []
     for y in Yrand:
-        points = emittanceContourPoint(y,PARAMS['alfay_i'],PARAMS['betay_i'],PARAMS['emity_i'])
-        Y.append( points[0][0])
+        points = emittanceContourPoint(
+            y, PARAMS['alfay_i'], PARAMS['betay_i'], PARAMS['emity_i'])
+        Y.append(points[0][0])
         YP.append(points[0][1])
-        Y.append( points[1][0])
+        Y.append(points[1][0])
         YP.append(points[1][1])
-    tkin = PARAMS['sollteilchen'].tkin  #energy at entrance
+    tkin = 50. # energy at entrance
     track = Track()
     for i in range(2*nTracks):
-        start       = NP.array([ 0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
-        start[Ktp.x]  = X[i]
+        start = NP.array([0., 0., 0., 0., 0., 0., tkin, 1., 0., 1.])
+        start[Ktp.x] = X[i]
         start[Ktp.xp] = XP[i]
-        start[Ktp.y]  = Y[i]
+        start[Ktp.y] = Y[i]
         start[Ktp.yp] = YP[i]
         point = Tpoint(start)
         track.addpoint(point)
     return track
-
 def test0():
     print('-----------------------------------------Test0---')
     bunch = Bunch()
     print('nbofparticles: ', bunch.nbparticles())
     # populate bunch
     for i in range(3):
-        p = Proton()
+        p = Proton(50.)
         bunch.addparticle(p)
     print('nbofparticles: ', bunch.nbparticles())
     allparticles = bunch.getparticles()
@@ -252,12 +284,12 @@ def test0():
     # populate track
     track = Track()
     for i in range(3):
-        point = Tpoint(NP.array([i,0,i,0,i,0,0,1,0,1]))
+        point = Tpoint(NP.array([i, 0, i, 0, i, 0, 50., 1, 10., 1]))
         track.addpoint(point)
-    print('nbofpoints: ',track.nbpoints())
+    print('nbofpoints: ', track.nbpoints())
     allpoints = track.getpoints()
-    print('points: ',allpoints)
-    print('track.__dict__: ',track.__dict__)
+    print('points: ', allpoints)
+    print('track.__dict__: ', track.__dict__)
     # loop points in track
     for point in iter(track):
         print(point())
@@ -268,18 +300,18 @@ def test0():
     particles = bunch.getparticles()
     last = particles[-1]
     print('last particle track: ', last.track)
-    print("last.track.__dict__; ",last.track.__dict__)
-    
+    print("last.track.__dict__; ", last.track.__dict__)
+
     print(last.track.as_table())
 def test1():
     # example data
-    mu    = 0     # mean of distribution
+    mu = 0     # mean of distribution
     sigma = 1     # standard deviation of distribution
     print('-----------------------------------------Test1---')
     # NP.random.randn returns a sample (or samples) from the “standard normal” distribution.
-    x   = mu + sigma * NP.random.randn(4000)
+    x = mu + sigma * NP.random.randn(4000)
     fig = plt.figure('test1: figure')
-    histPlot(x,mu,sigma)
+    histPlot(x, mu, sigma)
     figures.append(fig)
 def test2():
     print('-----------------------------------------Test2---')
@@ -288,21 +320,21 @@ def test2():
     betax = 1.
     emitx = 1.e-3
     sigma, sigmap = sigmas(alfax, betax, emitx)
-    x      = sigma  * NP.random.randn(N)
-    xp     = sigmap * NP.random.randn(N)
+    x = sigma * NP.random.randn(N)
+    xp = sigmap * NP.random.randn(N)
     DEBUG_OFF('x: {}'.format(x))
     DEBUG_OFF('x\': {}'.format(xp))
 
     fig1 = plt.figure('test2:figure 1')
-    h1   = plt.subplot2grid((2,1),(0,0))
-    histPlot(x,0.,sigma)
-    h2   = plt.subplot2grid((2,1),(1,0))
-    histPlot(xp,0.,sigmap)
+    h1 = plt.subplot2grid((2, 1), (0, 0))
+    histPlot(x, 0., sigma)
+    h2 = plt.subplot2grid((2, 1), (1, 0))
+    histPlot(xp, 0., sigmap)
     figures.append(fig1)
 
-    fig2 = plt.figure('test2:figure 2')
+    fig2 = ax = plt.figure('test2:figure 2')
     good = (x, xp)
-    poincarePlot(good, (0,0), 'x-x\'', (0.1,0.1), projections=(1,1))
+    poincarePlot(ax, good, (0, 0), 'x-x\'', (0.1, 0.1), projections=(1, 1))
     figures.append(fig2)
 def test3(filepath):
     print('-----------------------------------------Test3---')
@@ -310,47 +342,48 @@ def test3(filepath):
     N = 200
     lattice = factory(filepath)
     track = EmitContour(N, random=True)
-    X  = [x()[Ktp.x] for x in iter(track)]
+    X = [x()[Ktp.x] for x in iter(track)]
     XP = [x()[Ktp.xp] for x in iter(track)]
-    Y  = [x()[Ktp.y] for x in iter(track)]
+    Y = [x()[Ktp.y] for x in iter(track)]
     YP = [x()[Ktp.yp] for x in iter(track)]
     fig = plt.figure('test3:figure')
-    plt.scatter(X,XP,s=0.1)
-    plt.scatter(Y,YP,color='red',s=0.1)
+    plt.scatter(X, XP, s=0.1)
+    plt.scatter(Y, YP, color='red', s=0.1)
     figures.append(fig)
 def test4():
     print('-----------------------------------------Test4---')
-    twx = Twiss(3.,0.,1.e-6)
-    twy = Twiss(3.,0.,1.e-6)
-    twz = Twiss(3.,0.,1.e-6)
-    
-    sigx        = twx.sigmaH()
-    sigxp       = twx.sigmaV()
-    sigy        = twy.sigmaH()
-    sigyp       = twy.sigmaV()
-    sigz        = twz.sigmaH()
-    sigzp       = twz.sigmaV()
-    nbparticles = 30000
-    coord_mask  = NP.array([1,1,1,1,1,1,0,1,0,1])
-    tkin        = 70
+    twx = Twiss(3., 0., 1.e-6)
+    twy = Twiss(3., 0., 1.e-6)
+    twz = Twiss(3., 0., 1.e-6)
 
-    tracklist = Gauss1D(twx,twy,twz,nbparticles,coord_mask,tkin)
+    sigx = twx.sigmaH()
+    sigxp = twx.sigmaV()
+    sigy = twy.sigmaH()
+    sigyp = twy.sigmaV()
+    sigz = twz.sigmaH()
+    sigzp = twz.sigmaV()
+    nbparticles = 30000
+    coord_mask = NP.array([1, 1, 1, 1, 1, 1, 0, 1, 0, 1])
+    tkin = 70
+
+    tracklist = Gauss1D(twx, twy, twz, nbparticles, coord_mask, tkin)
     xaxis = []
     yaxis = []
     for track in tracklist:
         for point in iter(track):
-            X  = point()[Ktp.x]
+            X = point()[Ktp.x]
             XP = point()[Ktp.xp]
             xaxis.append(X)
             yaxis.append(XP)
     fig = plt.figure("test4:figure")
-    plt.scatter(xaxis,yaxis,s=0.1)
+    plt.scatter(xaxis, yaxis, s=0.1)
     figures.append(fig)
+
 if __name__ == '__main__':
     figures = []
     test0()
     test1()
     test2()
-    test3('yml/trackIN.yml')
+    test3('unittests/bunch_test.yml')
     test4()
     [plt.show(fig) for fig in figures]

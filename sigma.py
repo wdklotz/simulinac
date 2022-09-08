@@ -127,7 +127,7 @@ class Sigma(object):
             res = 0.5*(1.+(sin(phis)**2-cos(phis)**2)*f(2.*dphi))
             return res
         
-        Phis          = rf_gap.phis
+        Phis          = rf_gap.phisoll
         E0L           = rf_gap.EzAvg*rf_gap.gap
         Ttf           = rf_gap.ttf
         m0c2          = rf_gap.particle.e0
@@ -186,8 +186,8 @@ def test1():
     from elements import RFG
     print('-----------------------------Test1--')
 
-    particle = Proton(tkin=2.)
-    R = RFG(particle=particle)
+    particle = Proton(2.)
+    R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
 
     bx       = 1.
     ax       = 0.

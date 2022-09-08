@@ -122,7 +122,7 @@ class Order3Map(object):
         t = t0 + self.h
         return (p,x,t)
     
-#todo: besser loop particles in loop gaps
+#TODO: besser loop particles in loop gaps
 def test1(Ts,qE0T,phis,lamb):
     print("----------------------Test 1--------------")
     # prep plot

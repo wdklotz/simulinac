@@ -33,8 +33,6 @@ This file is part of the SIMULINAC code
 """
 import sys
 import os
-# import subprocess
-# from math import sqrt
 
 # for PyQt
 # import PyQt5             # works on native W10 but not on WSL2 as docker container
@@ -46,16 +44,14 @@ import tkinter             # works on native W10
 import matplotlib
 matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
-# from matplotlib.patches import Ellipse
 import pprint, inspect
 
 import bucket_size
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
+from setutil import DEB,DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
-from PsMarkerAgent import ellipse_plot
-# from tracker import track_soll
 import argparse
 from lattice_parser2 import parse as getParseResult
 import elements as ELM
@@ -263,8 +259,6 @@ def display1(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-def display2(*args):
-    ellipse_plot(None,on_injection=True)
 def lattice_check(lattice):
     for x in lattice.seq:
         DEBUG_ON(x.label)
@@ -273,8 +267,7 @@ def lattice_check(lattice):
 def link_check(lattice):
     DEBUG_ON()
     lattice.show_linkage()
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
@@ -285,8 +278,6 @@ def simulation(filepath):
             plots.append(display1) # C&S tracks {x,y,z}
             if FLAGS['bucket']:
                 plots.append(bucket) # separatrix
-        if FLAGS['pspace']:
-            plots.append(display2)   # pspace
         # standard plots
         if len(plots) != 0:
             print('PREPARE DISPLAY')
