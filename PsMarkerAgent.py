@@ -44,7 +44,6 @@ class PsMarkerAgent(MRK):
         super().__init__(label, active, particle, position,)
         self.twiss_values = twiss_values
         self.do_action    = self.action if FLAGS['maction'] else self.noaction # toggle
-
     def action(self,*args):
         """ the action: plot transvers ellipses """
         ellipse_plot(self,scale=0.5)

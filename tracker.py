@@ -95,9 +95,10 @@ def frames(lattice, skip):
             if agent_cnt%skip == 0:
                 frames.append((agent_cnt,agent))
     # make an estimate for x- and y-axis
-    dummy,first_frame = frames[0]
-    x = [abs(tp()[first_frame.xaxis]) for tp in first_frame.tpoints]
-    y = [abs(tp()[first_frame.yaxis]) for tp in first_frame.tpoints]
+    lrx = options['lrx']
+    dummy,lrx_frame = frames[lrx]
+    x = [abs(tp()[lrx_frame.xaxis]) for tp in lrx_frame.tpoints]
+    y = [abs(tp()[lrx_frame.yaxis]) for tp in lrx_frame.tpoints]
     xmax = max(x)*1.5
     ymax = max(y)*1.5
     # invoke actions on Marker
@@ -434,6 +435,7 @@ if __name__ == '__main__':
     group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")
     group1.add_argument("--losses", action="store_true",              help="run in losses mode")
     parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
+    parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
     args = vars(parser.parse_args())
     DEBUG_OFF(args)
     options = {}
@@ -442,6 +444,7 @@ if __name__ == '__main__':
     options['save']                = args['pcuts']
     options['skip']                = args['skip']
     options['losses']              = args['losses']
+    options['lrx']                 = args['lrx']
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
