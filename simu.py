@@ -331,7 +331,7 @@ def simulation(filepath):
             if not isinstance(node,ELM.MRK): continue
             # DEBUG_ON(node.toString())
             # DEBUG_ON(node.__dict__)
-            node.do_actions()
+            node.do_action()
         """ show all figures - (must be the only one!) """
         plt.show()
 if __name__ == '__main__':

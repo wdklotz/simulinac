@@ -207,21 +207,16 @@ class I(Node):
         self.length   = 0.
 class MRK(I):
     """ 
-    MaRKer node (a.k.a element): Each marker owns an agent that does the specific action.
+    MaRKer node (a.k.a element): Each marker is parent of an agent that does the specific action.
     The action can be bypassed if the 'maction'-FLAG is False.
     """
-    def __init__(self, label, agent, active, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
+    def __init__(self, label, active, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
         super().__init__(label)
-        self.agent      = agent   # the agent is one of: PsMakerAgent, PoincareMarkerAgent, .....
         self.active     = active
         self.particle   = copy(particle)
         self.position   = position
         self.viseo      = 4.
-        self.do_actions = self.actions if FLAGS['maction'] else self.no_actions  # toggle actions
-    def actions(self,*args):
-        """ invoke the action on the agent bound to this marker """
-        return self.agent.do_action(*args)
-    def no_actions(self,*args):
+    def noaction(self,*args):
         pass
 class D(Node):
     """  Trace3D drift space  """

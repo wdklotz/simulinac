@@ -23,7 +23,7 @@ from matplotlib.patches import Ellipse
 import pprint, inspect
 
 from elements import MRK
-from setutil import Twiss, PARAMS, Ktw, FLAGS
+from setutil import Twiss, PARAMS, Ktw, FLAGS, Proton
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -35,23 +35,19 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-class PsMarkerAgent(object):
+class PsMarkerAgent(MRK):
     """ 
     Is an agent for the Marker node which performs 
     a phase-space ellipse plot at the marker's position.
     """
-    def __init__(self, position=[0,0,0], twiss_values=(0.5,0.5)):
-        self.label        = "ps-mkr-agent"
-        self.position     = position
+    def __init__(self, label, active, particle=Proton(PARAMS['injection_energy']), position=[0,0,0], twiss_values=(0.5,0.5)):
+        super().__init__(label, active, particle, position,)
         self.twiss_values = twiss_values
-        self.parent       = None
+        self.do_action    = self.action if FLAGS['maction'] else self.noaction # toggle
 
-    def set_parent(self,obj):
-        self.parent = obj
-    def do_action(self,*args):
-        """ the default action: plot transvers ellipses """
-        node = self.parent
-        ellipse_plot(node,scale=0.5)
+    def action(self,*args):
+        """ the action: plot transvers ellipses """
+        ellipse_plot(self,scale=0.5)
 
 def ellipse_plot(node,scale=1.):   
     def convert(xy,alfa,beta,emit):

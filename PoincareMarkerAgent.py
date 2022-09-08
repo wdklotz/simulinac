@@ -20,8 +20,8 @@ This file is part of the SIMULINAC code
 import matplotlib.pyplot as plt
 import pprint, inspect
 
-import elements as ELM
-from setutil import PARAMS,Ktp,Proton
+from elements import MRK
+from setutil import PARAMS,Ktp,Proton,FLAGS
 
 def PRINT_PRETTY(obj):
     file = inspect.stack()[0].filename
@@ -33,24 +33,22 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-class PoincareMarkerAgent(object):
+class PoincareMarkerAgent(MRK):
     """ A Marker agent  """
-    def __init__(self,sec,prefix,abscissa,ordinate):
+    def __init__(self,label,active,prefix,abscissa,ordinate,particle=Proton(PARAMS['injection_energy']),position=(0.,0.,0.)):
+        super().__init__(label, active, particle, position,)
         krows = dict(x=Ktp.x.value, xp=Ktp.xp.value, y=Ktp.y.value, yp=Ktp.yp.value, z=Ktp.z.value, zp=Ktp.zp.value)
-        self.label    = "poincare"
         self.tpoints  = []
         self.prefix   = prefix
         self.abscissa = abscissa
         self.ordinate = ordinate
         self.xaxis    = krows[abscissa]
         self.yaxis    = krows[ordinate]
-        self.parent   = None
+        self.do_action = self.action if FLAGS['maction'] else self.noaction # toggle
 
-    def set_parent(self,obj):
-        self.parent = obj
     def add_track_point(self,track_point):
         self.tpoints.append(track_point)
-    def do_action(self,*args): 
+    def action(self,*args): 
         """ Generate scatter plot of the poincrecut at this marker and dump it to a file """
         number   = args[0]
         xmax     = args[1]

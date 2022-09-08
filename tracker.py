@@ -89,12 +89,11 @@ def frames(lattice, skip):
     frames = []
     # gather and count markers
     for node in iter(lattice):
-        if isinstance(node,ELM.MRK) and isinstance(node.agent,pcmkr.PoincareMarkerAgent):
-            marker_position = node.position
-            marker_agent    = node.agent
+        if isinstance(node,pcmkr.PoincareMarkerAgent):
+            agent = node
             agent_cnt += 1
             if agent_cnt%skip == 0:
-                frames.append((agent_cnt,marker_agent))
+                frames.append((agent_cnt,agent))
     # make an estimate for x- and y-axis
     dummy,first_frame = frames[0]
     x = [abs(tp()[first_frame.xaxis]) for tp in first_frame.tpoints]
@@ -103,9 +102,8 @@ def frames(lattice, skip):
     ymax = max(y)*1.5
     # invoke actions on Marker
     for agent_cnt,agent in iter(frames):
-        marker = agent.parent     # agent's parent is MRK object
-        marker_position = marker.position
-        marker.do_actions(agent_cnt,xmax,ymax,marker_position)
+        position = agent.position
+        agent.do_action(agent_cnt,xmax,ymax,position)
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
@@ -225,8 +223,8 @@ def track_node(node,particle,options):
             # !!DISCARD!! last point
             track.removepoint(last_tp)
         track.addpoint(new_tp)
-        if isinstance(node,ELM.MRK) and isinstance(node.agent,pcmkr.PoincareMarkerAgent):
-            node.agent.add_track_point(new_tp)
+        if isinstance(node,pcmkr.PoincareMarkerAgent):
+            node.add_track_point(new_tp)
     particle.lost = lost
     return lost
 def track(lattice,bunch,options):
@@ -437,12 +435,12 @@ if __name__ == '__main__':
     group1.add_argument("--losses", action="store_true",              help="run in losses mode")
     parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
     args = vars(parser.parse_args())
-    # DEBUG_ON(args)
+    DEBUG_OFF(args)
     options = {}
     options['particles_per_bunch'] = args['p']
     options['show']                = args['hide']
     options['save']                = args['pcuts']
-    options['skip']                = args['skip']+1
+    options['skip']                = args['skip']
     options['losses']              = args['losses']
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))

@@ -204,14 +204,11 @@ def instanciate_element(item):
             if action == 'pspace':
                 # A marker for simu.py ?
                 if check_marker_incompatible_with('simu.py',ID): continue    # exclude this marker from lattice
-                agent    = PSMKR.PsMarkerAgent()
-                instance = ELM.MRK(ID,agent,active)
-                agent.set_parent(instance)
+                instance  = PSMKR.PsMarkerAgent(ID,active)
                 sec = attributes.get('sec','?') 
                 ELEMENT['sec']   = sec
                 DEBUG_OFF(ELEMENT)
                 DEBUG_OFF(instance.toString())
-                DEBUG_OFF(agent.__dict__)
 
             elif action == 'pcrcut':
                 # A marker for tracker.py ?
@@ -220,16 +217,13 @@ def instanciate_element(item):
                 prefix     = attributes.get('prefix','frames')
                 abscissa   = attributes.get('abscissa','z')
                 ordinate   = attributes.get('ordinate','zp')
-                agent      = PCMKR.PoincareMarkerAgent(sec,prefix,abscissa,ordinate)
-                instance   = ELM.MRK(ID,agent,active)
-                agent.set_parent(instance)
+                instance   = PCMKR.PoincareMarkerAgent(ID,active,prefix,abscissa,ordinate)
                 ELEMENT['sec']      = sec
                 ELEMENT['prefix']   = prefix
                 ELEMENT['abscissa'] = abscissa
                 ELEMENT['ordinate'] = ordinate
                 DEBUG_OFF(ELEMENT)
                 DEBUG_OFF(instance.__dict__)
-                DEBUG_OFF(agent.__dict__)
             else:
                 warnings.showwarning(
                         'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),

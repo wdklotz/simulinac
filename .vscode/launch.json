@@ -44,7 +44,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "tracker.py",
-            "args": ["--p", "20"]
+            "args": ["--p", "200", "--pcuts"]
         },
         {
             "name": "setutil",
