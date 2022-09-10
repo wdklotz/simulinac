@@ -437,7 +437,7 @@ if __name__ == '__main__':
     parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
     parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
     args = vars(parser.parse_args())
-    DEBUG_OFF(args)
+    DEBUG_ON(f'arguments => {args}')
     options = {}
     options['particles_per_bunch'] = args['p']
     options['show']                = args['hide']
