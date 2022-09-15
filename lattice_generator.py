@@ -396,9 +396,11 @@ def factory(input_file):
     ## factory body --------
     SUMMARY['input file'] = PARAMS['input_file'] = input_file
 
+    print(input_file)
     with open(input_file,'r') as fileobject:
-        try:
-            in_data = yaml.load(fileobject)
+        print(fileobject)
+        try :
+            in_data = yaml.load(fileobject, Loader=yaml.CLoader)
         except Exception as ex:
             warnings.showwarning(
                     'InputError: {} - STOP'.format(str(ex)),

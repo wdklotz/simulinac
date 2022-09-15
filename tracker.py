@@ -86,8 +86,8 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
         track  = particle.track
         tpoint = track.getpoints()[loc]
         point  = tpoint()
-        x.append(point[abszisse]*1e3)
-        y.append(point[ordinate]*1e3)
+        x.append(point[abszisse]*-1e3)
+        y.append(point[ordinate]*-1e3)
     xmax = max([abs(i) for i in x])*1.5
     ymax = max([abs(i) for i in y])*1.5
     # figure
@@ -488,11 +488,12 @@ if __name__ == '__main__':
 
     options = {}
     options['input_file']          = input_file
-    options['particles_per_bunch'] = 1000*5
+    options['particles_per_bunch'] = 1000*10
     options['show']                = True
     options['save']                = False
     options['skip']                = 1
     options['losses']              = False
 
     # start the run
+    print(options)
     tracker(options)
