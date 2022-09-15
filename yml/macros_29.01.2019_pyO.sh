@@ -1,5 +1,5 @@
 T=50.                   # kinetic energy in [Mev]
-DT2T=6.0e-3             # delta-T/T kinetic%magic
+DT2T=6.0e-3             # delta-T/T kinetic
 
 EMITX=1.e-6             # x emittance in [m*rad]
 EMITY=1.e-6             # y emittance in [m*rad]
@@ -10,9 +10,14 @@ BETAY=0.55              # twiss beta x in [m]
 
 PHISY=-25.              # synchronous phase in [deg]
 
-NCELL=10
+NCELL=140
 
+MAP=t3d
+MAP=simple
+MAP=oxal
 MAP=base
+MAP=ttf
+# MAP=dyn
 
 ARGS="-D _TKIN=$T"
 ARGS="$ARGS -D _DT2T=$DT2T"

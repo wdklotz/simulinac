@@ -18,11 +18,12 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sin,cos,tan,radians,degrees,sqrt,pi
+from math import sin,cos,tan,sqrt,pi
 from copy import copy
 import numpy as NP
+import time
 
-from setutil import PARAMS,DEBUG,DEBUG_ON,DEBUG_OFF,I0,I1,tblprnt,arrprnt,objprnt,Ktp,MDIM
+from setutil import PARAMS,DEBUG_ON,DEBUG_OFF,Ktp,MDIM,TmStamp
 from Ez0 import SFdata
 
 DEBUG_SLICE = DEBUG_OFF
@@ -39,8 +40,8 @@ class _OXAL(object):
             slices = []
             zl = -gap/2.*100.   # [m] --> [cm]
             zr = -zl
-            E0z = 0.
-            z = 0.
+#            E0z = 0.
+#            z = 0.
             for poly in SFdata.Ez_poly:
                 zil = poly.zl
                 zir = poly.zr
@@ -53,6 +54,7 @@ class _OXAL(object):
         #todo: need adjustment of phis to middle of gap ??
         def configure_slices(slices, phis, tkin):
             """adjust SOLL-energy dependence of slices"""
+            # TmStamp.stamp('config...')
             matrix = NP.eye(MDIM,MDIM)
             tkinIN = tkin
             phIN = phis
@@ -65,6 +67,7 @@ class _OXAL(object):
             deltaPhi = phis-phIN    # total phase advance
             return deltaW, deltaPhi, matrix
 
+        # TmStamp.stamp('OXAL init')
         # _OXAL attributes
         self.EzAvg    = parent.EzAvg
         self.gap      = parent.gap
@@ -114,7 +117,8 @@ class _OXAL(object):
 
     def map(self, i_track):
         """ Mapping from position (i) to (f )"""
-        f_track = copy(i_track)
+#        f_track = copy(i_track)
+        f_track = i_track
         # full map through sliced openXAL gap-model
         f_track = self._full_gap_map(self.slices, f_track)
         # add SOLL-energy increase
@@ -123,8 +127,10 @@ class _OXAL(object):
         return f_track
 
     def soll_map(self, i_track):
+        # TmStamp.stamp('soll_map')
         si,sm,sf = self.position
-        f_track = copy(i_track)
+#        f_track = copy(i_track)
+        f_track = i_track
         f_track[Ktp.T] += self._deltaW
         f_track[Ktp.S]  = sm
         DEBUG_OFF('oxal-soll ',f_track)
@@ -132,7 +138,9 @@ class _OXAL(object):
         
     def _full_gap_map(self, slices, i_track):
         """ The wrapper to slice mappings """
-        f_track = copy(i_track)
+        # TmStamp.stamp('full_gap_map')
+#        f_track = copy(i_track)
+        f_track = i_track
         for slice in slices:
             # map each slice
             f_track = slice.slice_map(f_track)
@@ -216,8 +224,8 @@ class _OXAL(object):
         v0 = v0*E0*self.dWf
         return v0
 
-def DbetaToBetaFromDp2p(gamma,Dp2p):
-    return Dp2p/gamma**2
+#def DbetaToBetaFromDp2p(gamma,Dp2p):
+#    return Dp2p/(gamma**gamma)
 def DphiFromZ(omega,c,beta,z):
     return -omega/(c*beta)*z
 def ZFromDphi(omega,c,beta,dphi):
@@ -226,7 +234,6 @@ def Dw2wFromDp2p(gamma,Dp2p):
     return (gamma+1)/gamma*Dp2p
 def Dp2pFromDw2w(gamma,Dw2w):
     return gamma/(gamma+1)*Dw2w
-
 # def dbg_slice(slice):
 #     print('Win {:8.5} \t Phin {:8.3}'.format(slice.Wins,degrees(slice.phis)))
 
@@ -254,6 +261,7 @@ class _OXAL_slice(object):
     def adjust_slice_parameters(self, tkin, phin):
         """ Adjust SOLL-energy dpendent parameters for this slice """
         self.particle(tkin)    # UPDATE tkin
+        # TmStamp.stamp('adjust...')
         c      = PARAMS['lichtgeschwindigkeit']
         m0c2   = PARAMS['proton_mass']
         m0c3   = m0c2*c
@@ -277,7 +285,7 @@ class _OXAL_slice(object):
         # energy increase SOLL
         dws       = qV0*(Tks*cphis - Sks*sphis)
         Wouts     = Wins + dws
-        particlef = copy(self.particle)(tkin=Wouts)
+#        particlef = copy(self.particle)(tkin=Wouts)
         # phase increase SOLL
         phiouts   = phis + omega*self.polydz/(c*betas)
 
@@ -353,26 +361,20 @@ class _OXAL_slice(object):
 
     def slice_map(self, i_track):
         """Map through this slice from position (i) to (f)"""
-        # z      = i_track[Ktp.z]       # [4] z~(phi-phis)
-        zp       = i_track[Ktp.zp]      # [5] delta-p/p
-        track    = copy(i_track)
-        # local aliases
-        gammas     = self.gammas
-        gammas_out = self.gammas_out        
-
-        db2bs = DbetaToBetaFromDp2p(gammas,zp)      # delta-beta/betas in
-        track[Ktp.zp]   = db2bs                     # zp ==> db2bs
-        f_track = NP.dot(self.matrix,track)         # matrix
-        zp_out  = gammas_out**2*f_track[Ktp.zp]     # db2bs ==> zp
-        f_track[Ktp.zp] = zp_out
-        DEBUG_OFF(repr(self.__dict__))
-        DEBUG_OFF('oxal-slice ',f_track)
+        # TmStamp.stamp('slice_map')
+        # z  = i_track[Ktp.z]       # [4] z ~ delta-phi
+        # zp = i_track[Ktp.zp]      # [5] dp/p
+        i_track[Ktp.zp] = i_track[Ktp.zp]/(self.gammas*self.gammas)       # zp ==> dbeta/betas
+        f_track         = NP.dot(self.matrix,i_track)                     # matrix
+        f_track[Ktp.zp] = self.gammas_out*self.gammas_out*f_track[Ktp.zp] # dbeta/betas ==> zp
+        # DEBUG_OFF(repr(self.__dict__))
+        # DEBUG_OFF('oxal-slice ',f_track)
         # dbg_slice(self)
         return f_track
 
 def test0():
     from bunch import Tpoint, Track
-    from elements import RFC,RFG
+    from elements import RFG
     
     print('-----------------------------------TEST 0----------------')
     input_file='SF_WDK2g44.TBL'
@@ -410,7 +412,7 @@ def test0():
 
 def test1():
     from bunch import Tpoint, Track
-    from elements import RFC,RFG
+    from elements import RFG
     
     print('-----------------------------------TEST 1----------------')
     input_file='SF_WDK2g44.TBL'

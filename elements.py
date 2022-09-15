@@ -144,7 +144,7 @@ class _Node(DictObject, object):
             res += self.matrix[i, i]
         return res
 
-    def make_slices(self, anz = PARAMS['nbof_slices']):
+    def make_slices(self, anz = PARAMS['nbslices']):
         # ignore the very small rest
         mr = None
         slices = []
@@ -439,7 +439,7 @@ class RD(SD):
         rd = self.wd * (self * self.wd)
         self.matrix = rd.matrix
 
-    def make_slices(self, anz=PARAMS['nbof_slices']):
+    def make_slices(self, anz=PARAMS['nbslices']):
         # DEBUG_MODULE('RD.make_slices: {} {:8.4f}'.format(self.label, self.length))
         shortSD = self.shorten(self.length/anz)
         slices = [self.wd]          # wedge @ entrance
@@ -761,7 +761,7 @@ class RFC(I):
         DEBUG_OFF('rfc-soll ',f_track)
         return f_track
 
-    def make_slices(self, anz = PARAMS['nbof_slices']):
+    def make_slices(self, anz = PARAMS['nbslices']):
         slices = []
         if len(self.triplet) == 3:
             dri,kick,drf = self.triplet
@@ -1066,7 +1066,7 @@ class _thin(_Node):
         super().__init__(label=label, particle=particle, position=position, aperture=aperture, next=next, prev=prev)
         self.matrix    = NP.eye(MDIM)     # MDIMxMDIM unit matrix used here
 
-    def make_slices(self, anz = PARAMS['nbof_slices']):  
+    def make_slices(self, anz = PARAMS['nbslices']):  
         """ 
         Stepping routine through the triplet
         """
@@ -1161,7 +1161,7 @@ class QFthx(D):
         self._params = _params
         return self
 
-    def make_slices(self, anz=PARAMS['nbof_slices']):
+    def make_slices(self, anz=PARAMS['nbslices']):
         slices = [self]
         return slices
 

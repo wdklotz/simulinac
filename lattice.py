@@ -349,13 +349,13 @@ class Lattice(object):
             node['sigxy'] = tuple(means)
             # aperture check
             if FLAGS['useaper']:
-                n_sigma = PARAMS['n_sigma']
+                nbsigma = PARAMS['nbsigma']
                 if node.aperture != None:
                     aperture = node.aperture
                     sigx, sigxp, sigy, sigyp = node['sigxy']
-                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
+                    if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
                         warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),
                             UserWarning,'lattice.py',
                             'twiss_functions()')
         return twfun
@@ -415,14 +415,14 @@ class Lattice(object):
 
             # aperture check
             if FLAGS['useaper']:
-                n_sigma = PARAMS['n_sigma']
+                nbsigma = PARAMS['nbsigma']
                 if node.aperture != None:
                     aperture = node.aperture
                     sigx, sigxp, sigy, sigyp = node['sigxy']
                     si,sm,sf                 = node.position
-                    if(aperture < n_sigma*sigx or aperture < n_sigma*sigy):
+                    if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
                         warnings.showwarning(
-                            '{} sigma aperture hit @ s={:.1f} [m]'.format(n_sigma,sm),
+                            '{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),
                             UserWarning,'lattice.py',
                             'sigma_functions()')
         return sigma_fun

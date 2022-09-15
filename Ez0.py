@@ -17,6 +17,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+import sys
 import matplotlib.pyplot as plt
 import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
@@ -215,12 +216,44 @@ def EzAvg(poly):
     Eav = sum/N               # EzAvg [MV/m]
     return Eav
 
+def tabellenTeilung(N,nt):
+        """
+        IN: N Anzahl der SF-Tabellenintervalle
+        IN: nt Anzahl der SF-Tabellenintervalle pro gap-slice
+        
+        OUT: Anzahl der gap-slices
+        """
+        teilungen = { 88:[44,22,11,8,4,2],
+                      90:[45,30,18,15,10,9,6,5,3,2],
+                      92:[46,23,4,2],
+                      96:[48,24,12.6,3,32,16,8,4,2],
+                      98:[49,14,7,2],
+                     100:[50,25,20,10,5,4,2]}
+        try:
+            ntlist = teilungen[N]
+            nI     = ntlist[ntlist.index(nt)]
+        except (KeyError,ValueError):
+            WARNING = '\033[31m'
+            ENDC    = '\033[30m'
+            mess1 = "Incompatible parameters for table reduction!\n"
+            mess2 = "For SFdata the table should have at least N equidistant intervals with N>=88.\n"
+            mess3 = "The number of SFdata-intervals per gap-slice has to be a number\n"
+            mess4 = "that divides N without a remainder.\n"
+            mess5 = "Possible combinations are:\n\tN=88:[44,22,11,8,4,2],\n\tN=90:[45,30,18,15,10,9,6,5,3,2],\n\tN=92:[46,23,4,2],\n\tN=96:[48,24,12.6,3,32,16,8,4,2],\n\tN=98:[49,14,7,2],\n\tN=100:[50,25,20,10,5,4,2].\n"
+            print(WARNING+mess1+mess2+mess3+mess4+mess5+ENDC)
+            sys.exit(1)
+        return int(N/nI)
+
 class SFdata(object):
     ''' Cavity E(z,r=0) field profile: Superfish data  (normiert auf EzPeak)'''
+            
     def __init__(self,input_file,EzPeak=1.):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
         self.EzPeak     = EzPeak
+        self.N  = None
+        self.nt = None
+        self.nI = None
         self.make_Ez_table()
         self.make_Ez_poly()
         self.EzAvg = EzAvg(self._poly)
@@ -231,9 +264,22 @@ class SFdata(object):
         zp = []
         rp = []
         ep = []
+        offset = 41
+        adjust = 0       # adjustment for N=100:[50,25,20,10,5,4,2]
+        adjust = -2      # adjustment for N=98:[49,14,7,2]
+        adjust = 4       # adjustment for N=96:[48,24,12.6,3,32,16,8,4,2]
+        # nt nboff SFtable-intervals per gap-slice   !!VORGABE!!
+        self.nt = 16
         with open(self.input_file,'r') as f:
             lines = list(f)
-            for line in lines[41:-2]:
+            # remove trailing and leading lines
+            lines = lines[offset:-2-adjust]
+            # N nboff SFtable-intervals
+            self.N = len(lines)-1
+            # nI nboff integration-intervals
+            self.nI = tabellenTeilung(self.N,self.nt)
+
+            for line in lines:
                 # print(line,end='')
                 stripped    = line.strip()
                 (z,sep,aft) = stripped.partition(' ')
@@ -265,7 +311,7 @@ class SFdata(object):
         """ Calculate polynom coefficients from SF data """
         def indexer(nbslices,M):
             """
-                nbslices = nboff slices
+                nbslices = nboff gap-slices
                 N = nboff half-length-slices
                 M = nboff SF-points
                 n = nboff SF-points/half-length-slice
@@ -275,13 +321,13 @@ class SFdata(object):
                 raise RuntimeError('nboff slices must be <= {}'.format(int((M-1)/2)))
             M = int(M-fmod(M,N))
             n = int(M/N)
-            print('{} intervals, {} SF-points, {} SF-points/interval'.format(nbslices,M,2*n))
             for i in range(0,M,2*n):
                 DEBUG_MODULE('make_Ez_poly:indexer(): (i,i+n,i+2*n)={},{},{}'.format(i,i+n,i+2*n))
                 yield((i,i+n,i+2*n))
         
         self._poly = []
-        anz = 10        # interpolate SF-data with 'anz' polynomials od 2nd order
+        anz = self.nI     # interpolate SF-data with 'anz' polynomials and 2nd order
+        print('{} gap-slices, {} SF-intervals, {} SF-intervals/gap-slice'.format(anz,self.N,self.nt))
         for (il,i0,ir) in indexer(anz,len(self.Ez_table)):
             DEBUG_MODULE('make_Ez_poly(): (il,i0,ir) ',((il,i0,ir)))
             zl = self.Ez_table[il].z
@@ -314,7 +360,7 @@ class SFdata(object):
     def Ez_poly(self):
         """List(Polyval) of polygon approximations"""
         return self._poly
-        
+
 def pre_plt(input_file):
     """ prepare plot """
     ax  = plt.subplot(111)
@@ -468,4 +514,3 @@ if __name__ == '__main__':
     # test2()                         # poly-fit to NG
     test3(input_file)               # poly-fit to SF
     post_plt(ax)
-    # test4(input_file)

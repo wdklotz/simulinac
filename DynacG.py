@@ -370,7 +370,7 @@ class _DYN_G(object):
             gamma  += Dgamma          # PARTICLE gamma at z4
             # !!!ACHTUNG!!! Vorzeichen: z = - dtime/batac
             DEBUG_OFF('time-timeS ', time-timeS)
-            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: noch 1 Woche Arbeit!)
+            z = -(time - timeS)*betac # PARTICLE z at z4  (der Knackpunkt: nach 1 Woche Arbeit!)
 
             # transverse
             R    = R  + DR + h*Rp           # (39)

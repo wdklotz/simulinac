@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a4'
+___version___='v7.1.3a5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -31,6 +31,8 @@ import sys
 import os
 # import subprocess
 #from math import sqrt
+import matplotlib
+matplotlib.use("TKagg")
 import matplotlib.pyplot as plt
 #from matplotlib.patches import Ellipse
 
@@ -187,7 +189,7 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = PARAMS['n_sigma']
+        N = PARAMS['nbsigma']
         sgx = [i*N for i in sgx]
         #label = F'{N:1}$\sigma$ [mm]'
         label = '{:1}$\sigma$ [mm]'.format(N)
@@ -214,7 +216,7 @@ def display1(*args):
     # apertures
     if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = PARAMS['n_sigma']
+        N = PARAMS['nbsigma']
         sgy = [i*N for i in sgy]
         plt.plot(z,sgy ,label=label,color='green',linestyle=':')
     plt.legend(loc='lower right',fontsize='x-small')
@@ -328,8 +330,10 @@ if __name__ == '__main__':
     input_file    = 'yml/simuIN.yml'        # def.input file
 
     if sys.platform   == 'win32':
+        input_file = 'yml/simuINstat.yml'
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]
+        print('input="{}"'.format(input_file))
     elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]

@@ -1,5 +1,15 @@
 """
 Version v7.1.3a4
+*) input_files for Windows now static now
+*) Ez0.py refactored. Neue Intervalteilung
+*) improved speed of calculation in OXAL.py
+*) added TmStamp class in setutil.py to check program flow 
+*) removed depricated time.clock() in tracker.py
+*) removed emitw_i as initial parameter. Vorgabe is now relative kinetic energy spread DT/T @ entrance
+"""
+
+"""
+Version v7.1.3a4
 *) updated documents in doc-dir
 *) longitudinal phase space now initialized by DT/T kinetic energy spread
 *) new SUMMARY print-out
@@ -43,9 +53,9 @@ Version v7.0.5
 *) code cleaning
 *) Marker-actions reduced from list to single variable
 *) cleaned scatter plotting
-*) n_sigma PARAMETER activated
+*) nbsigma PARAMETER activated
 *) useaper FLAG activated
-*) aperture checks with n_sigma in simu and tracker
+*) aperture checks with nbsigma in simu and tracker
 *) input of aperture improved
 
 Version v7.0.4

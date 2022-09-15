@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v7.1.3a4'
+___version___='v7.1.3a5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -24,6 +24,8 @@ This file is part of the SIMULINAC code
 #todo: no phase damping - why?
 import sys,os
 import numpy as NP
+import matplotlib
+matplotlib.use("TKagg")
 import matplotlib.pyplot as plt
 import time
 from string import Template
@@ -33,7 +35,7 @@ from lattice_generator import factory
 import elements as ELM
 import marker_actions as MRK
 from setutil import DEBUG,DEBUG_ON,DEBUG_OFF, PARAMS, FLAGS, dictprnt, sigmas, Ktp, PARAMS, waccept
-from setutil import WConverter, Functions
+from setutil import WConverter, Functions, TmStamp
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 # from trackPlot import poincarePlot
 
@@ -47,7 +49,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # INITIAL DATA
     x=[]; y=[]; xlost=[]; ylost=[]
     loc = initial
-    nbprt = live_bunch.nbofparticles()+lost_bunch.nbofparticles()
+    nbprt = live_bunch.nbparticles()+lost_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
@@ -81,7 +83,7 @@ def scatterPlot(live_lost, abszisse, ordinate, text, minmax=(1.,1.)):
     # FINAL DATA
     x=[]; y=[]
     loc   = final
-    nbprt = live_bunch.nbofparticles()
+    nbprt = live_bunch.nbparticles()
     for particle in iter(live_bunch): # particles
         track  = particle.track
         tpoint = track.getpoints()[loc]
@@ -200,16 +202,19 @@ def progress(tx):
     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
     print('\r{}'.format(res),end="")
 
-xlim_max  = ylim_max   = zlim_max  = 100.e-3
-xplim_max = yplim_max  = zplim_max = 100.e-3
-limit = sqrt(xlim_max*xlim_max+xplim_max*xplim_max+ylim_max*ylim_max+yplim_max*yplim_max+zlim_max*zlim_max+zplim_max*zplim_max)
+xlim_max  = ylim_max  =  10.e-3
+xplim_max = yplim_max =  10.e-3
+zlim_max  = zplim_max = 100.e-3
+limit     = \
+    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
 def track_node(node,particle,options):
     """
     Tracks a particle through a node
     """
     def norm(track):
-        track_norm = sqrt(track[0]*track[0]+track[1]*track[1]+track[2]*track[2]+track[3]*track[3]+track[4]*track[4]+track[5]*track[5])
+        track_norm = \
+        sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
         return track_norm > limit
     
     track   = particle.track
@@ -253,7 +258,7 @@ def track_node(node,particle,options):
 
     # if we look for losses we keep all track points
     if not lost:
-        if track.nbofpoints() > 1 and not options['losses']:
+        if track.nbpoints() > 1 and not options['losses']:
             # !!DISCARD!! last point
             track.removepoint(last_tp)
         track.addpoint(new_tp)
@@ -273,13 +278,13 @@ def track(lattice,bunch,options):
     Input: lattice , bunch
     """
     zeuge          = ('*\u007C*','**\u007C','*\u007C*','\u007C**')  # *|*
-    tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbofparticles())
+    tx4            = ' {}% done {}/{} lost/initial'.format(0,0,bunch.nbparticles())
 
     ndcnt  = 0
     lnode  = len(lattice.seq)
     lmod   = int(lnode*0.05)
     nlost  = 0
-    nbpart = bunch.nbofparticles()
+    nbpart = bunch.nbparticles()
     lbunch = Bunch()    # lost particles go into this bunch
     for node in iter(lattice):              # nodes
         ndcnt +=1
@@ -296,7 +301,7 @@ def track(lattice,bunch,options):
                 tx = ('(track design)', '(track bunch)', '', tx4)
                 progress(tx)
                 
-    live = nbpart - lbunch.nbofparticles()
+    live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
 
@@ -384,25 +389,25 @@ def tracker(options):
 
     # gather for print
     tracker_log = {}
-    tracker_log['tkin.......[MeV]'] = tkin
+    tracker_log['T-kin.......[MeV]']          = tkin
     tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
     tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
     tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
     tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i......[m]'] = betax_i
-    tracker_log['betay_i......[m]'] = betay_i
-    tracker_log['betaw_i....[rad]'] = betaw
-    tracker_log['betaz_i..[m/rad]'] = betaz
-    tracker_log['emitx_i......[m]'] = emitx_i
-    tracker_log['emity_i......[m]'] = emity_i
-    tracker_log['emitw_i......[rad]'] = (emitw, wmx)
-    tracker_log['emitz_i......[m]'] = emitz
-    tracker_log['Dp2p.........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    tracker_log['Dp2p-accptance....[%]'] = PARAMS['Dp2pAcceptance']*1.e2
-    tracker_log['z-accpetance.....[mm]'] = PARAMS['zAcceptance']*1.e3
-    tracker_log['lattice version......'] = PARAMS['lattice_version']
-    tracker_log['mapping..............'] = PARAMS['mapping']
-    tracker_log['DT/T.................'] = PARAMS['DT2T']
+    tracker_log['betax_i......[m]']           = betax_i
+    tracker_log['betay_i......[m]']           = betay_i
+    tracker_log['betaw_i....[rad]']           = betaw
+    tracker_log['betaz_i..[m/rad]']           = betaz
+    tracker_log['emitx_i........[m]']         = emitx_i
+    tracker_log['emity_i........[m]']         = emity_i
+    tracker_log['emitw_i,wmx..[rad]']         = (emitw, wmx)
+    tracker_log['emitz_i........[m]']         = emitz
+    tracker_log['Dp2p,Dp2pmx..[%]']           = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    tracker_log['acceptance Dp2p...[%]']      = PARAMS['Dp2pAcceptance']*1.e2
+    tracker_log['accpetance z.....[mm]']      = PARAMS['zAcceptance']*1.e3
+    tracker_log['lattice version......']      = PARAMS['lattice_version']
+    tracker_log['mapping..............']      = PARAMS['mapping']
+    tracker_log['DT/T-kin.............']      = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log'); print()
 
     # bunch factory
@@ -419,9 +424,11 @@ def tracker(options):
     t2 = time.process_time()
     track_soll(lattice)  # <----- track soll
     t3 = time.process_time()
+    # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
     live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
     t4 = time.process_time()
+    # print(TmStamp.as_str())
 
     # make 2D projections
     if show:
@@ -456,6 +463,7 @@ def test0(filepath):
     last  = sollTrack[-1]
     DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 
+#----------------main------------
 if __name__ == '__main__':
     DEBUG_TRACK       = DEBUG_OFF
     DEBUG_SOLL_TRACK  = DEBUG_OFF
@@ -471,8 +479,10 @@ if __name__ == '__main__':
     input_file    = 'yml/trackIN.yml'       # def.input file
 
     if sys.platform   == 'win32':
+        input_file = 'yml/trackINstat.yml'
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]
+        print('input="{}"'.format(input_file))
     elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
         if len(sys.argv) == 2:
             input_file    = sys.argv[1]

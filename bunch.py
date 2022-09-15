@@ -57,7 +57,7 @@ class Track(object):
 
     def getpoints(self):            # points in Track
         return self._points
-    def nbofpoints(self):           # nbof points in Track
+    def nbpoints(self):           # nbof points in Track
         return len(self._points)
     def addpoint(self,point):       # add a point to Track
         self._points.append(point)
@@ -96,7 +96,7 @@ class Bunch(object):
             yield particle
     def getparticles(self):             # particles in bunch
         return self._particles
-    def nbofparticles(self):            # nbof particles in bunch
+    def nbparticles(self):            # nbof particles in bunch
         return len(self._particles)
     def addparticle(self,particle):     # add particle to bunch
         self._particles.append(particle)
@@ -236,12 +236,12 @@ def EmitContour(nTracks,random=False):
 def test0():
     print('-----------------------------------------Test0---')
     bunch = Bunch()
-    print('nbofparticles: ', bunch.nbofparticles())
+    print('nbofparticles: ', bunch.nbparticles())
     # populate bunch
     for i in range(3):
         p = Proton()
         bunch.addparticle(p)
-    print('nbofparticles: ', bunch.nbofparticles())
+    print('nbofparticles: ', bunch.nbparticles())
     allparticles = bunch.getparticles()
     print('particles: ', allparticles)
     print('bunch.__dict__: ', bunch.__dict__)
@@ -253,7 +253,7 @@ def test0():
     for i in range(3):
         point = Tpoint(NP.array([i,0,i,0,i,0,0,1,0,1]))
         track.addpoint(point)
-    print('nbofpoints: ',track.nbofpoints())
+    print('nbofpoints: ',track.nbpoints())
     allpoints = track.getpoints()
     print('points: ',allpoints)
     print('track.__dict__: ',track.__dict__)
