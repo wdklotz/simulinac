@@ -199,7 +199,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
     """
     2 scatter plots in a 11 grid
     live, lost are instances of Bunch
-    abscisse, ordinate are integer coordinate indexesck
+    abscisse, ordinate are integer coordinate indexes
     text is string
     """
     title = dict(initial=f'IN {txt}',final=f'OUT {txt}')
@@ -227,7 +227,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
             point  = tpoint()
             x = NP.append(x,point[abscisse]*1.e3)    # [mm]
             y = NP.append(y,point[ordinate]*1.e3)
-            xymax0=NP.array([NP.amax(NP.abs(x)), NP.amax(NP.abs(y))])
+        xymax0=NP.array([NP.amax(NP.abs(x)), NP.amax(NP.abs(y))])
         xlost=NP.array([]); ylost=NP.array([])
         xymax1=NP.array([0.,0.])
         if nblost != 0:     # lost particles
@@ -254,9 +254,9 @@ def scatter11(live,lost,abscisse,ordinate,txt):
 
         # https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
         confidence_ellipse(x,y,ax,n_std=2.0,edgecolor='green')
-
         ax.scatter(x,y,s=1)
-        if nblost !=0: ax.scatter(xlost,ylost,s=1,color='red')
+        if nblost !=0: 
+            ax.scatter(xlost,ylost,s=1,color='red')
         return xymax
     # IN
     xymax = plotit(
