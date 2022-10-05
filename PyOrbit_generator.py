@@ -22,6 +22,9 @@ import sys
 from math import degrees, sqrt
 import warnings
 import pprint, inspect
+# import pickle
+import argparse
+
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
 from setutil import FLAGS,PARAMS,waccept
@@ -29,26 +32,33 @@ from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
 
-def PRINT_PRETTY(obj=None):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PRINT_PRETTY(*args):
+    print('DEBUG ==> {}'.format(args))
     return True
-def PASS(obj=None):
+def PASS(*args):
     return False
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
-    input   = '{}/{}.{}'.format(dir,file,ext)
+def lineno():
+    return inspect.currentframe().f_back.f_lineno
+
+def generator(file=None):
+    input   = file
     output  = '{}/{}.{}'.format('PyOrbitLattice','generated','xml')
+    print("this run ==> input {}, output {}".format(input,output))
 
     # lattice and longitudinal paramters at entrance
     lattice = factory(input)
-    waccept(lattice.first_gap)
 
-    root_da   = XmlDataAdaptor(name='Alceli')
+    # pickle test for whole lattice
+    # pickled_lattice   = pickle.dumps(lattice)
+    # unpickled_lattice = pickle.loads(pickled_lattice)
+    # lattice           = unpickled_lattice
+    # DEBUG_ON(__file__,lineno(),'lattice length',lattice.length)
+
+    waccept(lattice.first_gap)
 
     # transfer a selection of parameters to <PARAMS/>-tag
     parameter = dict(
@@ -63,7 +73,7 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
             emitx_i          = PARAMS['emitx_i'],             # [m*rad]
             emity_i          = PARAMS['emity_i'],             # [m*rad]
             emitz_i          = PARAMS['emitz'],               # [m*rad]
-            emitw_i           = PARAMS['emitw'],              # [rad]
+            emitw_i          = PARAMS['emitw'],               # [rad]
             betax_i          = PARAMS['betax_i'],             # [m/rad]
             betay_i          = PARAMS['betay_i'],             # [m/rad]
             betaz_i          = PARAMS['betaz'],               # [m/rad]
@@ -73,21 +83,25 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
             lattice_version  = PARAMS['lattice_version'],
             z0               = PARAMS['z0'],                  # [m]
             )
+    root_da        = XmlDataAdaptor(name='Alceli')
     params_dict_da = root_da.createChild('PARAMS')
+    lattice_da     = root_da.createChild('Lattice')
+    cavs_da        = lattice_da.createChild('Cavities')
     for key in parameter:
         value = parameter[key]
         params_dict_da.setValue(key,value)
+    lattice_da.setParam('length',lattice.length)
 
-    print('-----XmlGenerator for pyOrbit -----\n{}'.format(root_da.makeXmlText()))
-    print('wait...')
-
-    lattice_da = root_da.createChild('Lattice')
-    cavs_da    = lattice_da.createChild('Cavities')
-    gap_cnt    = 0
-    quad_cnt   = 0
-
+    print('{}'.format(root_da.makeXmlText()))
+    # print('wait...')
 
     # iterate through the lattice
+    accElement_cnt = 0
+    gap_cnt        = 0
+    quadF_cnt      = 0
+    quadD_cnt      = 0
+    quad_cnt       = 0
+    drift_cnt      = 0
     nodes  = iter(lattice)
     for node in nodes:
         if isinstance(node,(ELM.GAP, ELM.RFC)):
@@ -100,17 +114,20 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
             sm = node.position[1]  #middle position
             s1 = node.position[2]  #to
             accelm_da = lattice_da.createChild('accElement')
+            accElement_cnt += 1
             accelm_da.setValue('length',node.length)
             accelm_da.setValue('pos',sm)
             par_da = accelm_da.createChild('parameters')
 
             if isinstance(node,(ELM.QF,ELM.QD)):
-                quad_cnt += 1
+                quad_cnt  += 1
+                quadF_cnt += 1
                 name = '{}:{}'.format(node.label,quad_cnt)
                 k0 = node.k02
                 Bgrad = sqrt(k0)*node.particle.brho
                 if isinstance(node,ELM.QD): 
-                    # k0 = -k0
+                    quadF_cnt -= 1
+                    quadD_cnt += 1
                     Bgrad = -Bgrad
                 aperture = node.aperture
 
@@ -118,9 +135,9 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
                 accelm_da.setValue('name',name)
 
                 par_da.setValue('field', Bgrad)
+                par_da.setValue("dBdr", Bgrad)
                 par_da.setValue('aperture', aperture)
                 par_da.setValue('aprt_type', 1)
-
             elif isinstance(node,ELM.RFG):
                 gap_cnt += 1
                 name = '{}:{}'.format(node.label,gap_cnt)
@@ -132,18 +149,19 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
                 E0TL = E0L*node.ttf                # use this when energy is adjusted
                 E0TL = E0L*0.8575                  # some reasonable(?) average
                 aperture = node.aperture
+                fieldtab = node.fieldtab           # file name of SF table
                 name = '{}:{}'.format('pillbox',gap_cnt)
                 accelm_da.setValue('type','RFGAP')
                 accelm_da.setValue('name',name)
 
                 par_da.setValue('E0L', E0L)
                 par_da.setValue('E0TL', E0TL)
-                par_da.setValue('EzFile', EzFile)
                 par_da.setValue('aperture', aperture)
                 par_da.setValue('aprt_type', 1)
                 par_da.setValue('cavity', name)
                 par_da.setValue('mode', 0)
                 par_da.setValue('phase', phiSoll)
+                par_da.setValue('fieldtab',fieldtab)
 
                 ttf_da.setValue('beta_max', 1.0)
                 ttf_da.setValue('beta_min', 0.0)
@@ -166,15 +184,34 @@ def generator(dir='.', file='simuINwork', ext='yml', EzFile=None):
                 cavity_da.setValue('frequency',node.freq)
                 cavity_da.setValue('name', name)
                 cavity_da.setValue('pos', sm)
-            else:
-                pass
+        if isinstance(node,(ELM.D,ELM.DKD)):
+            drift_cnt += 1
+        else:
+            pass
         DEBUG_OFF('accelm_da: {}'.format(accelm_da.makeXmlText()))
+    print("accElement_cnt {}".format(accElement_cnt))
+    print("gap_cnt        {}".format(gap_cnt))
+    print("quadF_cnt      {}".format(quadF_cnt))
+    print("quadD_cnt      {}".format(quadD_cnt))
+    print("quad_cnt       {}".format(quad_cnt))
+    print("drift_cnt      {}".format(drift_cnt))
 
     root_da.writeToFile(output)
-    print('Input from file ==> {}'.format(input))
-    print('Result in  file ==> {}'.format(output))
     return
 
 if __name__ == '__main__':
-    EzFile = './SF/SF_WDK2g44.TBL'
-    generator(dir='.', file='simuINxxx', ext='yml',EzFile = EzFile)
+    # r_limit = sys.getrecursionlimit()
+    # DEBUG_OFF(__file__,lineno(),f'recursionlimit {r_limit}')
+    # sys.setrecursionlimit(r_limit*60)
+    # r_limit = sys.getrecursionlimit()
+    # DEBUG_ON(__file__,lineno(),f'recursionlimit {r_limit}')
+
+    # use ArgumentParser to put result in 'args'
+    parser = argparse.ArgumentParser()
+    group  = parser.add_mutually_exclusive_group()
+    group.add_argument ("--file", default="simuINwork.yml",   help="lattice input-file:default simuINwork.yml")
+    args = vars(parser.parse_args())
+    # DEBUG_ON(args)
+
+    file_name = args['file']
+    generator(file = file_name)

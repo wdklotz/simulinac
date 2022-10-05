@@ -33,17 +33,16 @@ FLAGS:
     sigma:        False             # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
-    # express:      True            # {False} use express version of thin quads
-    # useaper:      True            # {False} use aperture check for lattice elements
+    useaper:      True            # {False} use aperture check for lattice elements
     # csTrak:       False           # {True} plot CS trajectories
     # bucket:       True            # {False} plot the bucket
-    maction:      True            # {False} call marker actions
+    # maction:      True            # {False} call marker actions
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 5.0             # [MeV] energy @ injection 
+    Tkin:                 20.0            # [MeV] energy @ injection 
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   816.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
@@ -196,14 +195,15 @@ SECTIONS:
 # group CELLs into SECTIONS
 #...........................................................................................
     SECL:      [25,[LE_CELL]]
-    SECH:      [137,[HE-CELL]]
+    SECH:      [127,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
-    # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
     # LINE:   [1,[Psp,SECL,Psp]]
+
 
   

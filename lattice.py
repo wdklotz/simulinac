@@ -34,11 +34,13 @@ from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions, Particle, Proton, colors
 from sigma import Sigma
 
-def PRINT_PRETTY(obj=None):
+def PRINT_PRETTY(*args):
     file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj=None):
+    line = inspect.currentframe().f_back.f_lineno
+    print(F'DEBUG {file}, {line} =======> ',end="")
+    for obj in args:
+        if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(*args):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
@@ -147,7 +149,7 @@ class Lattice(object):
         # for element in self.seq:
         for element in iter(self):
         # for element in iter(self):
-            DEBUG_OFF('{:10s}({:d})\tlength={:.3f}\tfrom-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
+            DEBUG_OFF('{:10s}({:d}) length={:.3f} from-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
             # ACHTUNG: Reihenfolge im Produkt ist wichtig!
             mcell = element * mcell   
         mcell.section = '<= full lattice map'
@@ -434,7 +436,7 @@ class Lattice(object):
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
-        sg0           = Sigma(twiss_vector0,epsx,epsy,epsz)              # sigma object IN lattice
+        sg0           = Sigma(twiss_vector0,epsx,epsy,epsz)     # sigma object IN lattice
         # sigma envelopes as function of distance s
         sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
         for node in iter(self): # loop nodes

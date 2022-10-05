@@ -114,21 +114,21 @@ def instanciate_element(item):
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fname = get_mandatory(attributes,"SFdata",ID)
-                if fname not in UTIL.PARAMS:
+                fieldtab = get_mandatory(attributes,"SFdata",ID)
+                if fieldtab not in UTIL.PARAMS:
                     gap_cm = gap*100     # Watch out!
-                    UTIL.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
+                    UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fname],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fname],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
@@ -136,8 +136,8 @@ def instanciate_element(item):
                     print(UTIL.colors.RED+"WARN: dyn mapping is broken"+UTIL.colors.ENDC)
                 else:
                     pass
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fname],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             else:
@@ -158,30 +158,30 @@ def instanciate_element(item):
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fname = get_mandatory(attributes,"SFdata",ID)
-                if fname not in UTIL.PARAMS:
+                fieldtab = get_mandatory(attributes,"SFdata",ID)
+                if fieldtab not in UTIL.PARAMS:
                     gap_cm = gap*100     # Watch out!
-                    UTIL.PARAMS[fname] = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
+                    UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fname],aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fname],aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fname].EzAvg
-                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fname],aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
+                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             else:
-                instance = ELM.RFC(ID,EzAvg,phiSoll,gap,freq,length,mapping=mapping,aperture=aperture,dWf=dWf)
+                instance = ELM.RFC(ID,EzAvg,phiSoll,gap,freq,length,mapping=mapping,aperture=aperture,dWf=dWf,fieldtab=None)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
         elif type == 'GAP':

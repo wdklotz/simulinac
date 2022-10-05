@@ -165,7 +165,7 @@ SEGMENTS:
     NIL_SEG:     [1,[]]
 # group ELEMENTs into SEGMENTs:
 # Syntax: [number[node,...,node]]
-# the list [node,...,node] is repeated number times
+# the nested list [node,...,node] is repeated number times
 #...........................................................................................
 # Markers
     Mkrs:                [1,[Psp,Pcc]]

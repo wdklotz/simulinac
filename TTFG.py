@@ -41,8 +41,8 @@ DEBUG_OFF = DEB.get('OFF')
 
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='ttf')
+    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'],fieldtab=None):
+        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='ttf', fieldtab=fieldtab)
         # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('TTF_G: missing E(z) table - STOP')
@@ -212,7 +212,7 @@ class TTF_G(ELM.RFG):
         self.ttf       = self.ttf/len(self.polies)       # gap's ttf  (better as Panofski?)
         return f_track
     def adjust_energy(self, tkin):
-        adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        adjusted = TTF_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,fieldtab=self.fieldtab)
         return adjusted
 
 class TestTransitTimeFactorsGapModel(unittest.TestCase):

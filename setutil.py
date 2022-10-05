@@ -22,34 +22,24 @@ from __future__ import print_function   #TODO still used?
 
 import sys
 import scipy.constants as C
-from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 import scipy.special as SP
-import logging, pprint
-from enum import IntEnum
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
 import warnings
 import time
-import inspect
 import lattice_parser2 as parser
 import unittest
 import pprint, inspect
+from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
+from enum import IntEnum
+from matplotlib.patches import Ellipse
 
-# def LOGGER():                                    #TODO still used?
-#     console_handler = logging.StreamHandler() # console handler
-#     logger = logging.getLogger("logger")
-#     console_handler.setLevel(logging.DEBUG)  # set handler level
-#     console_handler.setFormatter(logging.Formatter("%(levelname)s: %(filename)s[%(lineno)d] %(message)s"))              # set handler's format
-#     logger.addHandler(console_handler) # add handler to logger
-#     return logger
-# Logger
-# logger = LOGGER()
-
-def PRINT_PRETTY(obj=None):
+def PRINT_PRETTY(*args):
     file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj=None):
+    line = inspect.currentframe().f_back.f_lineno
+    print(F'DEBUG {file}, {line} =======> ',end="")
+    for obj in args:
+        if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+def PASS(*args):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
@@ -111,7 +101,7 @@ class Twiss(object):
     def __init__(self, beta, alfa, epsi):
         self.epsi  = epsi
         self.beta  = beta
-        self. alfa = alfa
+        self.alfa  = alfa
         if beta >= 0.:
             self.gamma = (1.+self.alfa**2)/self.beta
         else:
@@ -187,6 +177,7 @@ class Particle(object):
 class Proton(Particle):
     def __init__(self,tkin):
         super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')
+        self.brho = 3.1297*self.gamma_beta
 class Electron(Particle):
     def __init__(self,tkin):
         super(Electron,self).__init__(tkin,PARAMS['electron_mass'],'electron')
@@ -375,7 +366,6 @@ def waccept(node):
         conv      = WConverter(tkin,freq)
 
         """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
-        # deb = 2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)
         w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
         """ SMALL amplitude oscillations (T.Wangler pp.185) """
         w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
