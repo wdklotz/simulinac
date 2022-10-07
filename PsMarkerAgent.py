@@ -20,20 +20,9 @@ This file is part of the SIMULINAC code
 from math import degrees, sqrt, atan
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-import pprint, inspect
 
 from elements import MRK
-from setutil import Twiss, PARAMS, Ktw, FLAGS, Proton
-
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
+from setutil import Twiss, PARAMS, Ktw, FLAGS, Proton, DEBUG_ON, DEBUG_OFF
 
 class PsMarkerAgent(MRK):
     """ 

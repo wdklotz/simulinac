@@ -18,27 +18,27 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 from trackPlot import histPlot, poincarePlot
-from setutil import Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss
+from setutil import Proton, tblprnt, Ktp, sigmas, PARAMS, Twiss, DEBUG_ON, DEBUG_OFF
 import sys
 import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
-import pprint
-import inspect
+# import pprint
+# import inspect
 
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200, compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS, ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
+# def PRINT_PRETTY(obj):
+#     file = inspect.stack()[0].filename
+#     print('DEBUG_ON ==============>  '+file)
+#     pprint.PrettyPrinter(width=200, compact=True).pprint(obj)
+# def PASS(obj):
+#     pass
+# DEB = dict(OFF=PASS, ON=PRINT_PRETTY)
+# DEBUG_ON = DEB.get('ON')
+# DEBUG_OFF = DEB.get('OFF')
 
 # DEBUG
-DEBUG_OFF = DEB.get('OFF')
-DEBUG_ON = DEB.get('ON')
+# DEBUG_OFF = DEB.get('OFF')
+# DEBUG_ON = DEB.get('ON')
 
 # TODO: uniform bucket fill ?
 class Tpoint(object):
@@ -312,7 +312,6 @@ def test1():
     x = mu + sigma * NP.random.randn(4000)
     fig = plt.figure('test1: figure')
     histPlot(x, mu, sigma)
-    figures.append(fig)
 def test2():
     print('-----------------------------------------Test2---')
     N = 20000
@@ -330,12 +329,10 @@ def test2():
     histPlot(x, 0., sigma)
     h2 = plt.subplot2grid((2, 1), (1, 0))
     histPlot(xp, 0., sigmap)
-    figures.append(fig1)
 
     fig2 = ax = plt.figure('test2:figure 2')
     good = (x, xp)
     poincarePlot(ax, good, (0, 0), 'x-x\'', (0.1, 0.1), projections=(1, 1))
-    figures.append(fig2)
 def test3(filepath):
     print('-----------------------------------------Test3---')
     from lattice_generator import factory
@@ -349,7 +346,6 @@ def test3(filepath):
     fig = plt.figure('test3:figure')
     plt.scatter(X, XP, s=0.1)
     plt.scatter(Y, YP, color='red', s=0.1)
-    figures.append(fig)
 def test4():
     print('-----------------------------------------Test4---')
     twx = Twiss(3., 0., 1.e-6)
@@ -377,13 +373,11 @@ def test4():
             yaxis.append(XP)
     fig = plt.figure("test4:figure")
     plt.scatter(xaxis, yaxis, s=0.1)
-    figures.append(fig)
 
 if __name__ == '__main__':
-    figures = []
     test0()
     test1()
     test2()
     test3('unittests/bunch_test.yml')
     test4()
-    [plt.show(fig) for fig in figures]
+    plt.show()

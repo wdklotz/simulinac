@@ -28,13 +28,12 @@ import matplotlib.pyplot as plt
 import time
 from string import Template
 from math import sqrt, degrees, radians, ceil
-import pprint, inspect
 import argparse
 
 from lattice_generator import factory
 import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
-from setutil import WConverter, Functions
+from setutil import WConverter, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
 from trackPlot import scatter11
@@ -45,16 +44,6 @@ xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
 limit     = \
     sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
-
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 def projections(live_lost):
     """  2D phase space projections IN and OUT """
@@ -429,7 +418,7 @@ if __name__ == '__main__':
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
     parser.add_argument("--hide", action="store_false",               help="hide IN/OUT scatter plots")
-    group.add_argument ("--file", default="trackerINwork.yml",        help="lattice input-file")
+    group.add_argument ("--file", default="yml/trackerIN_REF.yml",    help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
     group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")

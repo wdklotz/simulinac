@@ -22,25 +22,14 @@ import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ceil
 from copy import copy, deepcopy
 import numpy as NP
-import pprint, inspect
 import unittest
 
-from setutil import PARAMS, FLAGS, Particle
+from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF
 from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
 from Ez0     import SFdata
 # from DynacG  import _DYN_G
-
-def PRINT_PRETTY(obj=None):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj=None):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON  = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 # used about everywhere
 twopi = 2.*pi

@@ -37,7 +37,7 @@
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
  //           "args": ["--file","FODO.yml"]
-            "args": ["--file","yml/I5O200_19082022.yml"]
+            "args": ["--file","yml/simuIN_REF.yml"]
 },
         {
             "name": "tracker",

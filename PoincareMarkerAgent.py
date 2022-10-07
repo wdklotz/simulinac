@@ -18,20 +18,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import matplotlib.pyplot as plt
-import pprint, inspect
 
 from elements import MRK
-from setutil import PARAMS,Ktp,Proton,FLAGS
-
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON  = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
+from setutil import PARAMS,Ktp,Proton,FLAGS,DEBUG_ON,DEBUG_OFF
 
 class PoincareMarkerAgent(MRK):
     """ A Marker agent  """
@@ -73,3 +62,4 @@ class PoincareMarkerAgent(MRK):
 
 if __name__ == '__main__':
     print('what?')
+    

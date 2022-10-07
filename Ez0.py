@@ -17,28 +17,13 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import sys
 import matplotlib.pyplot as plt
 import numpy as NP
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
-import pprint, inspect
 import unittest
 
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
-DEBUG_MODULE = DEBUG_OFF
-DEBUG_TEST2  = DEBUG_OFF
-DEBUG_TEST3  = DEBUG_OFF
-
-from setutil import PARAMS,Proton
+from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  _Ez0_tab is list(Dpoint)
@@ -64,7 +49,7 @@ def Kpoly(z,sigma,mu,E):
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
         poly.append(pval)
 
-            # USING NP.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
+        # USING NP.polyfit() liefert gleiches Resultat wie Langrange 3 Punkt
         # x   = NP.array((zl,z0,zr))
         # y   = NP.array((El,E0,Er))
         # coeff = NP.polyfit(x,y,2)
@@ -130,7 +115,7 @@ def Tn(poly,k,n):
     dz = poly[n].dz
     f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
     f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-    DEBUG_MODULE('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+    DEBUG_OFF('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
     t = f1*f2
     return t
 def T(poly,k,zintval):
@@ -141,7 +126,7 @@ def T(poly,k,zintval):
         zir = poly[i].zr
         dz = poly[i].dz
         if zil < zl or zir > zr: continue
-        DEBUG_MODULE('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
+        DEBUG_OFF('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
 def Sn(poly,k,n):
@@ -432,11 +417,11 @@ class TestEz0Methods(unittest.TestCase):
         s   = S(poly_data,k,zintval)
         tp  = Tp(poly_data,k,zintval)
         sp  = Sp(poly_data,k,zintval)
-        DEBUG_TEST3('V0 {}'.format(v0))
-        DEBUG_TEST3('T(k) {}'.format(t))
-        DEBUG_TEST3("T'(k) {}".format(tp))
-        DEBUG_TEST3('S(k) {}'.format(s))
-        DEBUG_TEST3("S'(k) {}".format(sp))
+        DEBUG_OFF('V0 {}'.format(v0))
+        DEBUG_OFF('T(k) {}'.format(t))
+        DEBUG_OFF("T'(k) {}".format(tp))
+        DEBUG_OFF('S(k) {}'.format(s))
+        DEBUG_OFF("S'(k) {}".format(sp))
     def test_4(self):
         print("\b----------------------------------------test_4")
         input_file='SF/PILL-2CM.TBL'
@@ -448,4 +433,4 @@ class TestEz0Methods(unittest.TestCase):
         print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
 
 if __name__ == '__main__':
-     unittest.main()
+    unittest.main()

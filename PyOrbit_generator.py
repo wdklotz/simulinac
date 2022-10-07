@@ -21,28 +21,14 @@ import os
 import sys
 from math import degrees, sqrt
 import warnings
-import pprint, inspect
 # import pickle
 import argparse
 
-
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
-from setutil import FLAGS,PARAMS,waccept
+from setutil import FLAGS,PARAMS,waccept,DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
-
-def PRINT_PRETTY(*args):
-    print('DEBUG ==> {}'.format(args))
-    return True
-def PASS(*args):
-    return False
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
-
-def lineno():
-    return inspect.currentframe().f_back.f_lineno
 
 def generator(file=None):
     input   = file
@@ -56,7 +42,7 @@ def generator(file=None):
     # pickled_lattice   = pickle.dumps(lattice)
     # unpickled_lattice = pickle.loads(pickled_lattice)
     # lattice           = unpickled_lattice
-    # DEBUG_ON(__file__,lineno(),'lattice length',lattice.length)
+    # DEBUG_ON('lattice length',lattice.length)
 
     waccept(lattice.first_gap)
 
@@ -201,17 +187,17 @@ def generator(file=None):
 
 if __name__ == '__main__':
     # r_limit = sys.getrecursionlimit()
-    # DEBUG_OFF(__file__,lineno(),f'recursionlimit {r_limit}')
+    # DEBUG_OFF(f'recursionlimit {r_limit}')
     # sys.setrecursionlimit(r_limit*60)
     # r_limit = sys.getrecursionlimit()
-    # DEBUG_ON(__file__,lineno(),f'recursionlimit {r_limit}')
+    # DEBUG_ON(f'recursionlimit {r_limit}')
 
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
-    group.add_argument ("--file", default="simuINwork.yml",   help="lattice input-file:default simuINwork.yml")
+    group.add_argument ("--file", default="yml/simuINwork.yml",   help="lattice input-file:default simuINwork.yml")
     args = vars(parser.parse_args())
-    # DEBUG_ON(args)
+    DEBUG_OFF(args)
 
     file_name = args['file']
     generator(file = file_name)

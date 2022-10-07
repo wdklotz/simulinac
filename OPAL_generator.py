@@ -88,7 +88,6 @@ import setutil as util
 from lattice_generator import factory
 from Ez0 import SFdata
 from copy import copy
-import pprint, inspect
 import yaml
 
 def PRINT_PRETTY(obj):
@@ -368,7 +367,7 @@ def call_RUN(arg):
 
 if __name__ == '__main__':
     # lattice
-    input_file="simuIN.fazel.yml"
+    input_file="yml/simuIN.fazel.yml"
     lattice = factory(input_file)
     util.waccept(lattice.first_gap)
     

@@ -17,11 +17,10 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-import sys
+import sys,os
 from math import radians
 import yaml
 import warnings
-import pprint, inspect
 import unittest
 
 import setutil             as UTIL
@@ -35,15 +34,15 @@ from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
 
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON  = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
+# def PRINT_PRETTY(obj):
+#     file = inspect.stack()[0].filename
+#     print(F'UTIL.DEBUG_ON[{file}] ==> ',end="")
+#     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+# def PASS(obj):
+#     pass
+# DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
+# UTIL.DEBUG_ON  = DEB.get('ON')
+# UTIL.DEBUG_OFF = DEB.get('OFF')
 
 def make_counter():
     count = 0
@@ -57,7 +56,9 @@ counter2 = make_counter()
 
 def check_marker_incompatible_with(prog,ID):
     ret = False
-    this_prog = sys.argv[0]
+    head, tail = os.path.split(sys.argv[0])
+    this_prog = tail
+    UTIL.DEBUG_OFF((prog,this_prog))
     if prog != this_prog:
         print(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with {this_prog}. Will be skipped'+UTIL.colors.ENDC)
         ret = True
@@ -78,7 +79,7 @@ def instanciate_element(item):
     """ item: {ID:{attributes}} for each node """
     instance = None     # will be defined below and returned
     for ID,attributes in item.items():
-        DEBUG_OFF(F"ID={ID} attributes={attributes}")
+        UTIL.DEBUG_OFF(F"ID={ID} attributes={attributes}")
         ELEMENT = UTIL.ELEMENTS[ID]          # the item in the ELEMENT list
         type = attributes.get('type')
         if type   == 'D':
@@ -207,8 +208,8 @@ def instanciate_element(item):
                 instance  = PSMKR.PsMarkerAgent(ID,active)
                 sec = attributes.get('sec','?') 
                 ELEMENT['sec']   = sec
-                DEBUG_OFF(ELEMENT)
-                DEBUG_OFF(instance.toString())
+                UTIL.DEBUG_OFF(ELEMENT)
+                UTIL.DEBUG_OFF(instance.toString())
 
             elif action == 'pcrcut':
                 # A marker for tracker.py ?
@@ -222,8 +223,8 @@ def instanciate_element(item):
                 ELEMENT['prefix']   = prefix
                 ELEMENT['abscissa'] = abscissa
                 ELEMENT['ordinate'] = ordinate
-                DEBUG_OFF(ELEMENT)
-                DEBUG_OFF(instance.__dict__)
+                UTIL.DEBUG_OFF(ELEMENT)
+                UTIL.DEBUG_OFF(instance.__dict__)
             else:
                 warnings.showwarning(
                         'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
@@ -245,7 +246,7 @@ def factory(input_file,stop=None):
     """ factory creates a lattice from input-file """
 
     def proces_flags(flags):
-        """fills global FLAGS"""        
+        """ external FLAGS """        
         UTIL.FLAGS['accON']    = flags.get('accON',True)               # acceleration ON
         UTIL.FLAGS['periodic'] = flags.get('periodic',False)           # periodic lattice? default
         UTIL.FLAGS['egf']      = flags.get('egf',False)                # emittance grow flag default
@@ -257,12 +258,12 @@ def factory(input_file,stop=None):
         UTIL.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
         UTIL.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
         UTIL.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
+        """ internal FLAGS """        
         UTIL.FLAGS['dWf']      = 1 if UTIL.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
-        UTIL.SUMMARY['accON']  = UTIL.FLAGS.get('accON')
         UTIL.FLAGS['non_linear_mapping'] = False
-        return flags
+        return
     def proces_parameters(parameters):   #TODO use dict.get()
-        """ fills global PARAMETERS"""
+        """ global PARAMETERS"""
         if 'Tkin'             in parameters: UTIL.PARAMS['injection_energy'] = parameters['Tkin']
         if 'DT2T'             in parameters: UTIL.PARAMS['DT2T']             = parameters['DT2T']
         if 'emitw'            in parameters: UTIL.PARAMS['emitw']            = parameters['emitw']
@@ -277,31 +278,21 @@ def factory(input_file,stop=None):
         if 'nbsigma'          in parameters: UTIL.PARAMS['nbsigma']          = parameters['nbsigma']
         if 'lattvers'         in parameters: UTIL.PARAMS['lattice_version']  = parameters['lattvers']
         if 'mapping'          in parameters: UTIL.PARAMS['mapping']          = parameters['mapping']
-        """
-        if 'frequency'        in parameters: UTIL.PARAMS['frequency']        = parameters['frequency']
-        if 'phi_sync'         in parameters: UTIL.PARAMS['phisoll']          = parameters['phi_sync']
-        if 'gap'              in parameters: UTIL.PARAMS['gap']              = parameters['gap']
-        if 'cav_len'          in parameters: UTIL.PARAMS['cavity_laenge']    = parameters['cav_len']
-        if 'ql'               in parameters: UTIL.PARAMS['ql']               = parameters['ql']
-        if 'windings'         in parameters: UTIL.PARAMS['nbwindgs']         = parameters['windings']
-        if 'aperture'         in parameters: UTIL.PARAMS['aperture']         = parameters['aperture'] 
-        if 'thins'            in parameters: UTIL.PARAMS['thins']            = parameters['thins']
-        """
-        return parameters
+        return
     def proces_elements(elements):
         """fills global ELEMENTS"""
         UTIL.ELEMENTS = elements
         return elements
     def make_lattice(elementIDs,injection_energy):
-        # DEBUG_ON(elementIDs)
+        # UTIL.DEBUG_ON(elementIDs)
         lattice = Lattice(injection_energy)
         instances = []
         for elementID in elementIDs:
-            # print("A"); DEBUG_ON(elementID)
+            # print("A"); UTIL.DEBUG_ON(elementID)
             ELEMENT = UTIL.ELEMENTS.get(elementID)
             if ELEMENT.get('mapping',"") in ['base','ttf','dyn']:   # non_linear_mapping in lattice?
                 UTIL.FLAGS['non_linear_mapping'] = True
-            # print("B"); DEBUG_ON(element)
+            # print("B"); UTIL.DEBUG_ON(element)
             """add sectionID and elementID"""
             ELEMENT['ID']  = elementID 
             # repack {ID:{attributes}} for instanciate_element(...)
@@ -309,7 +300,7 @@ def factory(input_file,stop=None):
             """INSTANCIATE ELM._Node objects"""
             instance = instanciate_element(item) 
             if instance == None: continue
-            # print("C"); DEBUG_ON(instance)
+            # print("C"); UTIL.DEBUG_ON(instance)
             if isinstance(instance, ELM.Node):
                 # lattice.add_node(instance)
                 instances.append(instance)
@@ -317,7 +308,7 @@ def factory(input_file,stop=None):
             elif isinstance(instance,list):
                 # [lattice.add_node(x) for x in instance]
                 instances += instance
-        # print("D"); DEBUG_ON(instances)
+        # print("D"); UTIL.DEBUG_ON(instances)
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
@@ -337,27 +328,27 @@ def factory(input_file,stop=None):
                     )
             sys.exit(1)
     fileobject.close()
-    DEBUG_OFF(in_data)
+    UTIL.DEBUG_OFF(in_data)
 
     # call lattice parser, get results
     results = doInputParser(in_data)
 
     flags = proces_flags(results.FLAGS)
-    DEBUG_OFF('global FLAGS after proces_flags():')
-    DEBUG_OFF(UTIL.FLAGS)
+    UTIL.DEBUG_OFF('global FLAGS after proces_flags():')
+    UTIL.DEBUG_OFF(UTIL.FLAGS)
 
     parameters = proces_parameters(results.PARAMETERS)
-    DEBUG_OFF('global PARAMS after proces_parameters():')
-    DEBUG_OFF(UTIL.PARAMS)
+    UTIL.DEBUG_OFF('global PARAMS after proces_parameters():')
+    UTIL.DEBUG_OFF(UTIL.PARAMS)
     
     elements = proces_elements(results.ELEMENTS)
-    DEBUG_OFF('ELEMENTS after proces_elements():')
-    DEBUG_OFF(UTIL.ELEMENTS)
+    UTIL.DEBUG_OFF('ELEMENTS after proces_elements():')
+    UTIL.DEBUG_OFF(UTIL.ELEMENTS)
 
     lat_elementIDs = results.LAT_ELMIDs
     lattice = make_lattice(lat_elementIDs,UTIL.PARAMS['injection_energy'])
-    DEBUG_OFF('lattice_generator >>{}'.format(lattice.toString()))
-    DEBUG_OFF('SUMMARY in factory() {}'.format(UTIL.SUMMARY))
+    UTIL.DEBUG_OFF('lattice_generator >>{}'.format(lattice.toString()))
+    UTIL.DEBUG_OFF('SUMMARY in factory() {}'.format(UTIL.SUMMARY))
     # end of factory(...)
     return lattice
     

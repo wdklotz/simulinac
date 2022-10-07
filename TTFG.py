@@ -21,23 +21,13 @@ import sys
 from math import sin,cos,tan,radians,degrees,sqrt
 from copy import copy
 import numpy as NP
-import pprint, inspect
 import unittest
 
 from setutil import PARAMS,I0,I1,tblprnt,arrprnt,Proton,FLAGS
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import DEBUG_ON,DEBUG_OFF
 from Ez0 import SFdata
 import elements as ELM
-
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON ==============>{file}: ', end="")
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
@@ -223,7 +213,7 @@ class TestTransitTimeFactorsGapModel(unittest.TestCase):
         freq     = 800e6
         particle = Proton(50.)
         dWf      = 1
-        fname    = 'Superfish/SF_WDK2g44.TBL'
+        fname    = 'SF/SF_WDK2g44.TBL'
         gap_cm   = gap*100     # Watch out!
         EzPeak   = 10.0
         Ezdata   = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)

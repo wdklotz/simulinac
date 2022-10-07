@@ -28,17 +28,20 @@ import warnings
 import time
 import lattice_parser2 as parser
 import unittest
-import pprint, inspect
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
 
+import pprint, inspect
 def PRINT_PRETTY(*args):
-    file = inspect.stack()[0].filename
-    line = inspect.currentframe().f_back.f_lineno
-    print(F'DEBUG {file}, {line} =======> ',end="")
-    for obj in args:
-        if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+    frameinfo = inspect.stack()[1]    # caller's stack frame
+    file=frameinfo[1]
+    line=frameinfo[2]
+    print('DEBUG {}, {} =======> '.format(file,line),end="")
+    if len(args) == 0: print()
+    else:
+        for obj in args:
+            pprint.PrettyPrinter(width=200,compact=True).pprint(obj)   
 def PASS(*args):
     pass
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
@@ -464,9 +467,8 @@ def collect_data_for_summary(lattice):
         SUMMARY['use sigma tracking']              =  FLAGS['sigma']
         SUMMARY['use emittance growth']            =  FLAGS['egf']
         SUMMARY['use ring lattice']                =  FLAGS['periodic']
-        # SUMMARY['use express']                     =  FLAGS['express']
         SUMMARY['use aperture']                    =  FLAGS['useaper']
-        SUMMARY['accON']                           =  False if  FLAGS['dWf'] == 0 else  True
+        SUMMARY['accON']                           =  FLAGS['accON']
         SUMMARY['lattice version']                 =  PARAMS['lattice_version']
         SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
         SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
@@ -662,6 +664,7 @@ def dictstring(what,text='',filter=[],njust=35):
         res+=fmt.format(k)+'{}\n'.format(vars)
     return res
 def dictprnt(what,text='',filter=[],njust=35,end='\n'):
+    # print dictionary sorted by key
     print(dictstring(what,text,filter,njust),end=end)
 def print_verbose(level,*args):
     """Multilevel printing with verbose flag"""

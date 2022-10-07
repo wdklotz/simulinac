@@ -372,7 +372,7 @@ if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
-    group.add_argument ("--file", default="simuINwork.yml",   help="lattice input-file")
+    group.add_argument ("--file", default="yml/simuIN_REF.yml",   help="lattice input-file")
     group.add_argument ("--tmpl",                             help="template number")
     parser.add_argument("--run",                              help="run number")
     args = vars(parser.parse_args())

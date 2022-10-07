@@ -20,7 +20,6 @@ This file is part of the SIMULINAC code
 import sys
 import numpy as NP
 import warnings
-import pprint, inspect
 import unittest
 from math import sqrt,fabs,acos,degrees
 from numpy import linalg as LA
@@ -31,20 +30,8 @@ from copy import copy
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
-from setutil import Twiss, Functions, Particle, Proton, colors
+from setutil import Twiss, Functions, Particle, Proton, colors, DEBUG_ON, DEBUG_OFF
 from sigma import Sigma
-
-def PRINT_PRETTY(*args):
-    file = inspect.stack()[0].filename
-    line = inspect.currentframe().f_back.f_lineno
-    print(F'DEBUG {file}, {line} =======> ',end="")
-    for obj in args:
-        if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(*args):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON  = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
