@@ -37,7 +37,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories
-    maction:      True            # {False} call marker actions
+    maction:      True              # {False} call marker actions
     envelope:     True              # {False} plot envelopes
 #...........................................................................................
 ## INPUT-PARAMETER definitions

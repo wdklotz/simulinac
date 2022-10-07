@@ -31,41 +31,27 @@ This file is part of the SIMULINAC code
 #TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 #TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
 """
-import sys
-import os
+import sys,os
 
 # for PyQt
 # import PyQt5             # works on native W10 but not on WSL2 as docker container
 # import matplotlib
 # matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
-
 # for Tk
 import tkinter             # works on native W10
 import matplotlib
 matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
-import pprint, inspect
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
-from setutil import DEB,DEBUG_ON,DEBUG_OFF
+from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 import argparse
 from lattice_parser2 import parse as getParseResult
 import elements as ELM
 import bucket_size as separatrix
-
-def PRINT_PRETTY(obj=None):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON[{file}] ==> ',end="")
-    if obj != None: pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-    return True
-def PASS(obj=None):
-    return False
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 def display0(*args):
     """
@@ -284,14 +270,6 @@ def display3(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-def lattice_check(lattice):
-    for x in lattice.seq:
-        DEBUG_ON(x.label)
-        if x.type == 'QFth' : print(x.type,x.matrix)
-        if x.type == 'QDth' : print(x.type,x.matrix)
-def link_check(lattice):
-    DEBUG_ON()
-    lattice.show_linkage()
 
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
@@ -363,8 +341,8 @@ def simulation(filepath):
         display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
-            # DEBUG_ON(node.toString())
-            # DEBUG_ON(node.__dict__)
+            DEBUG_OFF(node.toString())
+            DEBUG_OFF(node.__dict__)
             node.do_action()
         """ show all figures - (must be the only one!) """
         plt.show()
@@ -376,7 +354,7 @@ if __name__ == '__main__':
     group.add_argument ("--tmpl",                             help="template number")
     parser.add_argument("--run",                              help="run number")
     args = vars(parser.parse_args())
-    # DEBUG_ON(args)
+    DEBUG_OFF(args)
 
     print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
@@ -427,4 +405,3 @@ if __name__ == '__main__':
         sys.exit(1)
     # run the simulation
     simulation(input_file)
-    # simulation('yml/tmpl_25.10.2021_new.yml')

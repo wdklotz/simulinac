@@ -401,7 +401,7 @@ class Lattice(object):
             # sigma_fun = envelopes(function, steps=steps)
             twiss_fun = function(steps=steps)
         return twiss_fun
-    def sigma_envelopes(self, steps = 1):     # TODO replace by new method
+    def sigma_envelopes(self, steps = 1):     # TODO not in use anymore: replace by new method
         """ Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
