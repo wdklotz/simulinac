@@ -133,15 +133,6 @@ class Lattice(object):
             node_adj.ref_particle = ref_particle
         self.length = sf    # lattice length
         self.seq.append(node_adj)
-        # mx_full = NP.eye(10,10)
-        # for node in self.seq:
-        #     node_mx = node.matrix
-        #     mx_full = NP.dot(node_mx,mx_full)
-        # dumyy = 0
-    def concat(self,lattice):
-        """Concatenate two Lattice pieces (self+lattice)"""
-        for element in iter(lattice):
-            self.add_node(element)
     def toString(self):
        # TODO needs improvement
         """ log lattice layout to string (could be even better?) """
@@ -204,7 +195,6 @@ class Lattice(object):
         ## Stabilität ?
         unstable = False
         stab = fabs(mcell.tracex())
-        PARAMS['traceX'] = stab
         # if verbose:
         print_verbose(1,'stability X? ',stab)
         if stab >= 2.0:
@@ -216,7 +206,6 @@ class Lattice(object):
             mux = degrees(acos(cos_mux))
 
         stab = fabs(mcell.tracey())
-        PARAMS['traceY'] = stab
         # if verbose:
         print_verbose(1,'stability Y? ',stab)
         if stab >= 2.0:
@@ -230,7 +219,7 @@ class Lattice(object):
             # if verbose:
             print_verbose(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
         ## full accelerator
-        self.acc_node = mcell    # the full cell: isinstance(self.acc_node,Lattice)==True
+        self.acc_node = mcell    # the full acc: isinstance(self.acc_node,Lattice)==True
         # if verbose:
         print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
         print_verbose(0,self.acc_node.prmatrix())
@@ -248,8 +237,7 @@ class Lattice(object):
         s = self.symplecticity()
         # if verbose:
         print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
-        print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.
-            format(s[0],s[1],s[2],s[3],s[4],s[5]))
+        print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
         ## Vorgabe emittance @ entrance
         emitx = PARAMS['emitx_i']
         emity = PARAMS['emity_i']
@@ -262,36 +250,18 @@ class Lattice(object):
                 m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
                 n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
                 n21  = cell_matrix[YPKOO,YKOO];  n22  = cell_matrix[YPKOO,YPKOO]
-                ## betax,alphax,gammax from transfer matrix
-                #  [m11,m12] = [cos(mu) + alpha * sin(mu),       beta * sin(mu)     ]
-                #  [m21,m22] = [     -gamma * sin(mu)    , cos(mu) - alpha * sin(mu)]
-                #  und: beta * gamma - alpha^2 = 1
-                sin2mu = -(((m11-m22)**2)/4.+m12*m21)
-                if sin2mu < 0.: 
-                    print('STOP: unstable in X: sin(mux)^2={:4.4f}'.format(sin2mu))
-                    sys,exit(1)
-                sinmu = sqrt(sin2mu)
-                if m12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
-                    sinmu = -sinmu
-                bax = m12/sinmu
-                gmx = -m21/sinmu
-                alx2 = bax*gmx-1.
-                # print('alfax^2',alx2)
-                alx = 0. if fabs(alx2) < 1.e-9 else sqrt(alx2)
+                # Formeln von Wille pp 107
+                wurzx = 2.-m11**2-2.*m12*m21-m22**2
+                if wurzx > 0.:
+                    bax = fabs(2.*m12/sqrt(wurzx))     #  muss Absolutwert sein! (Fehler bei Wille)
+                    alx = (m11-m22)/(2.*m12)*bax
+                    gmx = (1.+alx**2)/bax
                 print('betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
-                ## betay,alphay,gammay from transfer matrix
-                sin2mu = -((n11-n22)**2/4.+n12*n21)
-                if sin2mu < 0.: 
-                    print('STOP: unstable in Y: sin(muy)^2={:4.4f}'.format(sin2mu))
-                    sys.exit(1)
-                sinmu = sqrt(sin2mu)
-                if n12 < 0:     # get rid of +- ambiguity from sqrt(sin(mu)^2)
-                    sinmu = -sinmu
-                bay = n12/sinmu
-                gmy = -n21/sinmu
-                aly2 = bay*gmy-1.
-                # print('alfay^2',aly2)
-                aly = 0. if fabs(aly2) < 1.e-9 else sqrt(aly2)
+                wurzy = 2.-n11**2-2.*n12*n21-n22**2
+                if wurzy > 0.:
+                    bay = fabs(2.*n12/sqrt(wurzy))    #  muss Absolutwert sein! (Fehler bei Wille)
+                    aly = (n11-n22)/(2.*n12)*bay
+                    gmy = (1.+aly**2)/bay
                 print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
@@ -302,7 +272,7 @@ class Lattice(object):
                 diffa_e = v_beta_a - v_beta_e
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
-                print_verbose(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e)
+                print_verbose(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
                 ## transversale twiss parameter fuer periodisches lattice
                 twx = Twiss(bax,alx,emitx)
                 twy = Twiss(bay,aly,emity)
@@ -351,38 +321,51 @@ class Lattice(object):
             self.iteration = "RL"
         elif self.iteration == "RL":
             self.iteration = "LR"
-    def twiss_envelopes(self,steps=1):
-        """ Calulate envelopes from initial twiss-vector with beta-matrices """
-        twfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
+    def twiss_funcs(self,steps=1):
+        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices """
+        function_tbl = []
+        # INITIAL twiss @ entrance
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])   # initial
+        node0 = self.seq[0]      # 1st node
+        si,sm,sf = node0.position
+        twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
+        node0.twiss = tuple(twiss_vector0)
+        node0.sigxy = (sigx,sigxp,sigy,sigyp)
+        function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
+        function_tbl.append(function_row)
+        
+        """ loop over all nodes in the lattice to get sliced function values"""
         B_matrix = NP.eye(9,9)                            # cumulated beta-matrix
-        """ loop over all nodes in the lattice """
         for node in iter(self):
-            slices = node.make_slices(anz = steps)
+            si,sm,sf = node.position
+            slices = node.make_slices(anz=steps)
+            s = si
             means = []
-            s,sm,sf = node.position
             for slice in slices:
-                beta_matrix = slice.beta_matrix()
-                B_matrix    = NP.dot(beta_matrix,B_matrix)
-                twiss_vector= NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                beta_matrix  = slice.beta_matrix()
+                B_matrix     = NP.dot(beta_matrix,B_matrix)
+                twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
+                by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
+                sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 s += slice.length
-                twfun.append(s,tuple(twiss_vector))
-                node.twiss = tuple(twiss_vector)
-                bx    = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
-                by    = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
-                sigxy = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
-                means.append(sigxy)
-                
-            # means = NP.array(means)
+                function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
+                function_tbl.append(function_row)
+                means.append((sigx,sigxp,sigy,sigyp))
             means = NP.mean(means,axis=0)
-            # each node has its tuple of average sigmas
-            node.sigxy = tuple(means)
+            node.twiss = tuple(twiss_vector)    # each noe has twiss
+            node.sigxy = tuple(means)           # each node has sigxy
             # aperture check
             self.aperture_check(node,twiss=True)
-        return twfun
+        twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
+        for row in function_tbl:
+            abscisse = row[0]
+            ordinaten = row[1:]
+            twissfun.append(abscisse,ordinaten)
+        return twissfun
     def aperture_check(self,node,twiss=True):
         """ check sigmas against apertures """
         fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
@@ -398,20 +381,20 @@ class Lattice(object):
                         print(warnings.formatwarning(colors.RED+'{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)+colors.ENDC,UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
-    def sigmas(self,steps = 10):
+    def twiss_n_sigmas(self,steps=1):
         """ dispatch to different envelope functions """
         #TODO: analytical sigmas for 'dyn' mapping as best estimates ?
-        def envelopes(function, steps = 10):
+        def envelopes(function, steps=10):
             """ calc. envelopes using function """
-            twfunc     = function(steps = steps)
-            b,a,g,epsx = PARAMS['twiss_x_i']()
-            b,a,g,epsy = PARAMS['twiss_y_i']()
+            twiss_func     = function(steps=steps)
+            # b,a,g,epsx = PARAMS['twiss_x_i']()
+            # b,a,g,epsy = PARAMS['twiss_y_i']()
             sigma_fun  = Functions(('s','sigmax','sigmay'))
             for i in range(twfunc.nbpoints):
                 val,dummy = twfunc[i]
-                (s,bx,ax,gx,by,ay,gy,bz,az,gz) = val
-                val=(sqrt(bx*epsx),sqrt(by*epsy))
-                sigma_fun.append(s,val)
+                (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp) = val
+                # val=(sqrt(bx*epsx),sqrt(by*epsy))
+                sigma_fun.append(s,(sigx,sigy))
             return sigma_fun
 
         mess = ""
@@ -419,17 +402,19 @@ class Lattice(object):
             mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
             # function = self.sigma_envelopes # use beta-matrix            
         if FLAGS['sigma']:
-            mess += 'CALCULATE ENVELOPES with SIGMA-matrix formalism'
-            function = self.sigma_envelopes # use sigma-matrix
+            mess += 'ENVELOPES from SIGMA-matrix formalism replaced by TWISS-parameter envelopes'
+            # function = self.sigma_envelopes # use sigma-matrix
+            function = self.twiss_funcs # use sigma-matrix
         elif not FLAGS['sigma']:
             mess += 'CALCULATE ENVELOPES from TWISS-parameters'
-            function = self.twiss_envelopes # use beta-matrix
+            function = self.twiss_funcs # use beta-matrix
 
         if not FLAGS['KVout']: 
             print(mess)
-            sigma_fun = envelopes(function, steps = steps)
-        return sigma_fun
-    def sigma_envelopes(self, steps = 1):
+            # sigma_fun = envelopes(function, steps=steps)
+            twiss_fun = function(steps=steps)
+        return twiss_fun
+    def sigma_envelopes(self, steps = 1):     # TODO replace by new method
         """ Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes """
         # initials
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
@@ -438,11 +423,10 @@ class Lattice(object):
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
         sg0           = Sigma(twiss_vector0,epsx,epsy,epsz)     # sigma object IN lattice
         # sigma envelopes as function of distance s
-        sigma_fun = Functions(('s','bx','ax','gax','by','ay','gy','bz','az','gz'))
+        sigma_fun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
         for node in iter(self): # loop nodes
             # sigma-matrices for a single node
-            sigmas = node.sigma_beam(steps = steps, sg = sg0)   # note: sets node['sigxy']
-            # prep plot list of ftn's
+            sigmas = node.sigma_beam(steps=steps, sg=sg0)   # note: sets node['sigxy']
             for sg,s in sigmas:
                 v = sg.twiss()      # twiss from Sigma object
                 flist = v.tolist()
@@ -542,6 +526,7 @@ class Lattice(object):
             Dp2p_i   = 0.
         z1,z1p = soll_test((sigmaz_i, 0.))    # S
         z4,z4p = soll_test((0., Dp2p_i))      # C
+        # INITIAL @ entrance
         # MDIMxMDIM tracking used here
         s   = 0.
         c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
@@ -549,6 +534,8 @@ class Lattice(object):
         # function names
         c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
         s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
+        c_fun.append(s,c_0)
+        s_fun.append(s,s_0)
 
         """ loop through lattice """
         # TODO this function needs serious brain checking again. energy over distance? not carrried correctly! needed?
@@ -622,6 +609,10 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
+    def concat(self,lattice):       # TODO   
+        """Concatenate two Lattice pieces (self+lattice)"""
+        for element in iter(lattice):
+            self.add_node(element)
     @property
     def first_gap(self):
         """ return the 1st RF gap"""
@@ -718,46 +709,48 @@ class TestLattice(unittest.TestCase):
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
 
-                """ nodes """
-                # wedge= ELM.Wedge(phib,rhob,t3d_wedge=False)
-                w1   = ELM.Wedge(phib,rhob,t3d_wedge=False)
-                w2   = ELM.Wedge(phib,rhob,t3d_wedge=False)
-                w3   = ELM.Wedge(phib,rhob,t3d_wedge=False)
-                w4   = ELM.Wedge(phib,rhob,t3d_wedge=False)
-                qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
-                qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
-                qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
-                d1   = ELM.D('D1',particle=p,length=ld)
-                d2   = ELM.D('D2',particle=p,length=ld)
-                d3   = ELM.D('D3',particle=p,length=ld)
-                d4   = ELM.D('D4',particle=p,length=ld)
-                #TODO test rectangular dipoles (ELM>RD) not done yet
-                # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)  
-                # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
-                sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
-                sd2  = ELM.SD('SD2',2.*phib,rhob,particle=p)
-
-                Mz = qf1*d1*w1*sd1*w2*d2*qd1*d3*w3*sd2*w4*d4*qf2      # complete lattice as single Node
-
-                # lattice
                 lattice = Lattice()
-                lattice.add_node(qf1) 
-                lattice.add_node(d1)
-                # lattice.add_node(br1)
-                lattice.add_node(w1)
-                lattice.add_node(sd1)
-                lattice.add_node(w2)
-                lattice.add_node(d2)
-                lattice.add_node(qd1)
-                lattice.add_node(d3)
-                # lattice.add_node(br2)
-                lattice.add_node(w3)
-                lattice.add_node(sd2)
-                lattice.add_node(w4)
-                lattice.add_node(d4)
-                lattice.add_node(qf2)
+                anz = 0
+                while anz < 1:
+                    anz += 1
+                    """ nodes """
+                    # wedge= ELM.Wedge(phib,rhob,t3d_wedge=False)
+                    w1   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                    w2   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                    w3   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                    w4   = ELM.Wedge(phib,rhob,t3d_wedge=False)
+                    qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
+                    qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
+                    qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
+                    d1   = ELM.D('D1',particle=p,length=ld)
+                    d2   = ELM.D('D2',particle=p,length=ld)
+                    d3   = ELM.D('D3',particle=p,length=ld)
+                    d4   = ELM.D('D4',particle=p,length=ld)
+                    #TODO test rectangular dipoles (ELM>RD) not done yet
+                    # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)  
+                    # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
+                    sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
+                    sd2  = ELM.SD('SD2',2.*phib,rhob,particle=p)
+
+                    # Mz = qf1*d1*w1*sd1*w2*d2*qd1*d3*w3*sd2*w4*d4*qf2      # complete lattice as single Node
+
+                    lattice.add_node(qf1) 
+                    lattice.add_node(d1)
+                    # lattice.add_node(br1)
+                    lattice.add_node(w1)
+                    lattice.add_node(sd1)
+                    lattice.add_node(w2)
+                    lattice.add_node(d2)
+                    lattice.add_node(qd1)
+                    lattice.add_node(d3)
+                    # lattice.add_node(br2)
+                    lattice.add_node(w3)
+                    lattice.add_node(sd2)
+                    lattice.add_node(w4)
+                    lattice.add_node(d4)
+                    lattice.add_node(qf2)
                 return lattice
-            lattice = make_wille_lattice()
+            lattice  = make_wille_lattice()
             latticeA = make_wille_lattice()
             lattice.concat(latticeA)
             return lattice
@@ -772,13 +765,13 @@ class TestLattice(unittest.TestCase):
         PARAMS['twiss_z_i'] = Twiss(1.,0.,1.)
         lattice.symplecticity()
         # twiss functions
-        beta_fun = lattice.twiss_envelopes(steps=5)
+        twiss_fun = lattice.twiss_funcs(steps=5)
         # cl,sl = lattice.cs_traj(steps=100)sK
         disp = lattice.dispersion(steps=5,closed=True)
         # plots
-        s  = [beta_fun(i,'s')  for i in range(beta_fun.nbpoints)]
-        xs = [beta_fun(i,'bx') for i in range(beta_fun.nbpoints)]
-        ys = [beta_fun(i,'by') for i in range(beta_fun.nbpoints)]
+        s  = [twiss_fun(i,'s')  for i in range(twiss_fun.nbpoints)]
+        xs = [twiss_fun(i,'bx') for i in range(twiss_fun.nbpoints)]
+        ys = [twiss_fun(i,'by') for i in range(twiss_fun.nbpoints)]
         sdisp = [x[0] for x in disp]             # abszisse s
         disp  = [x[1] for x in disp]             # dispersion(s)
         #-------------------- lattice viseo

@@ -168,7 +168,7 @@ class Node(object):
         """ 
         Track the Sigma object through a node
             twiss vector: twv  = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
-            *) input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
+            input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
         """
         si,sm,sf = self.position # entrance
         sigmas   = []
@@ -183,7 +183,6 @@ class Node(object):
             s += slice.length
             sigmas.append((sgf,s))
             sg = sgf
-
         # averages
         av = []
         for sig,s in sigmas:
@@ -799,17 +798,17 @@ class RFG(Node):
 # TODO classes below need unittesting
 # TODO D+K+D models not finished for OXAL_C and TTF_C
 class RFC(RFG):    #TODO
-    """ Rf cavity as product D*Kick*D (DKD-model) """
+    """ Rf cavity as product DKD*Kick*DKD (DKD-model) """
     def __init__(self, label, EzAvg, phisoll, gap, length, freq, SFdata=None, particle = Proton(PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d'):
         super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=None, particle = Proton(PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d')
         self.length  = length if length >= gap else gap
         self.dri     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
         self.drf     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
-        self.triplet = (dri,self,drf)
+        self.triplet = (self.dri,self,self.drf)
         # UPDATE energy for downstream drift after gap
         tkin_f = self.particle.tkin + self._deltaW   # tkin after acc. gap
-        drf.adjust_energy(tkin_f)
-        self.matrix = NP.dot(drf.matrix,NP.dot(self.matrix,dri.matrix))
+        self.drf.adjust_energy(tkin_f)
+        self.matrix = NP.dot(self.drf.matrix,NP.dot(self.matrix,self.dri.matrix))
         # DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
     def adjust_energy(self, tkin):
         adjusted = RFC(self.label,self.EzAvg,self.phisoll,self.gap,self.length,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
@@ -1209,21 +1208,6 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertEqual(rd.matrix[i,j],rd_100.matrix[i,j],'rd == rd_100?')
-    def test_MRK_Node(self):
-        print("\b----------------------------------------test_MRK_Node")
-        FLAGS['maction'] = True          # call marker actions
-        class Agent(object):
-            counter = 1
-            def __init__(self):
-                self.counter = Agent.counter
-                Agent.counter += 1
-            def do_action(self):
-                return(F"Agent # {self.counter} here!")
-        mrks = [MRK(f'marker {i}',Agent(),True) for i in range(3)]
-        for cnt, mrk in enumerate(mrks):
-            res = f'{mrk.label} {mrk.actions()}'
-            # print(res)
-            self.assertEqual(res, f'marker {cnt} Agent # {cnt+1} here!')
     def test_GAP_Node(self):
         print("\b----------------------------------------test_GAP_Node")
         EzAvg   = 2.1             #[MV/m]

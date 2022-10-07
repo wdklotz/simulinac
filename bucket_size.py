@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 from setutil import PARAMS,Proton
 from matplotlib import pyplot as plt
-from math import cos,pi,sqrt,sin,degrees,radians
+from math import cos,pi,sqrt,sin,degrees,radians,fabs
 from elements import RFG
 
 def display_bucket(functions,phis,tkin,gap,EzAvg,freq,name):
@@ -49,30 +49,30 @@ def display_bucket(functions,phis,tkin,gap,EzAvg,freq,name):
     plt.text(xy_nx[0]*0.75,xy_nx[3]*0.8,txt,bbox=dict(facecolor='bisque', alpha=0.8))
     # figure title
     plt.title('longitudinal bucket')
-def bucket():
+    plt.show()
+def bucket(gap_node):
     '''produce the longitudinal phase plots (Formeln T.Wangler pp.175)'''
-    phis = radians(PARAMS['phisoll'])           # KNOB: soll phase
-
-    # Wertebereiche
-    Dphi  = 1e-4                  # step size phase
-    phi_2 = PARAMS['phi_2']       # stable phase lower limit
-    psi   = PARAMS['psi']
-    anz   = int(psi/Dphi)
-    #TODO: get parameters from 1st cavity in lattice
-    tkin     = PARAMS['injection_energy']
-    particle = Proton(tkin=tkin)
-    gap      = PARAMS['gap']
-    EzAvg    = 1.     #PARAMS['EzAvg']
-    freq     = 800.e6 #PARAMS['frequenz']
-    lamb     = PARAMS['clight']/freq
+    # parameters from 1st cavity in lattice
+    phis     = gap_node.phisoll     # soll phase
+    particle = gap_node.particle
+    tkin     = particle.tkin
+    gap      = gap_node.gap
+    EzAvg    = gap_node.EzAvg
+    freq     = gap_node.freq
+    lamb     = gap_node.lamb
     gamma    = particle.gamma
     beta     = particle.beta
     m0c2     = particle.e0
     T        = particle.trtf(gap,freq)
     A        = 2.*pi/pow(gamma*beta,3)/lamb
     B        = EzAvg*T/m0c2
-    H0       = -B*(sin(phis)-phis*cos(phis))      # hamiltonian
+    H0       = -B*(sin(phis)-phis*cos(phis))      # Hamiltonian
     H        = [H0 - (i-1)*H0/5. for i in range(11)]
+    # Wertebereiche
+    Dphi  = 1e-4                  # step size phase
+    phi_2 = 2*phis                # using Wangler's approx
+    psi   = 3.*fabs(phis)         # using Wangler's approx
+    anz   = int(psi/Dphi) 
 
     functions = []           # list of functions
     for h in H:

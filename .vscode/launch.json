@@ -36,8 +36,9 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["--file","simuINwork.yml"]
-        },
+ //           "args": ["--file","FODO.yml"]
+            "args": ["--file","yml/I5O200_19082022.yml"]
+},
         {
             "name": "tracker",
             "type": "python",

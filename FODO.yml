@@ -30,13 +30,13 @@ DESCRIPTOR:  "FODO ohne Bend"
 FLAGS:
     accON:        False           # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
-    # sigma:        False             # {True} beam sizes by sigma-matrix
+    sigma:        False             # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    # periodic:     True            # {False} treat lattice as ring
+    periodic:     True            # {False} treat lattice as ring
     # useaper:      True            # {False} use aperture check for lattice elements
-    # csTrak:       False           # {True} plot CS trajectories
+    csTrak:       False           # {True} plot CS trajectories else beta functions
     # bucket:       True            # {False} plot the bucket
-    maction:      True            # {False} call marker actions
+    # maction:      True            # {False} call marker actions
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -44,26 +44,24 @@ FLAGS:
 PARAMETERS:
     Tkin:                 50.0            # [MeV] energy @ injection 
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
-    # frequency:    &freq   816.e6          # [Hz] frequency
+    frequency:    &freq   816.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    1.902           # [m] twiss beta @ entrance x
     betay_i:      &bty    0.351           # [m] twiss beta @ entrance y
     alfax_i:              0.000           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
-    ql:           &p03    0.05            # [m] 1/2 quad-length
+    ql:           &p03    0.1             # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
-    # phi_sync:     &phs    -20.            # [deg] synchronous phase
-    # windings:             30              # [] quad-coil windings
-    # gap:          &p15    0.044           # [m] RF gap
-    BgradL:       &bgrad1 25.0            # [T/m]
+    phi_sync:     &phs    -20.            # [deg] synchronous phase
+    gap:          &p15    0.044           # [m] RF gap
+    BgradL:       &bgrad1 15.0            # [T/m]
     BgradH:       &bgrad2 25.0            # [T/m]
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
-    # EzPeak:       &p17    2.5             # [MV/m] peak gap field Strengy
+    EzPeak:       &p17    2.5             # [MV/m] peak gap field Strengy
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
-    lattvers:     'FODO ohne Bend'     # lattice version: IN 5, out 200
-    # mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
+    lattvers:     'FODO ohne Bend'        # lattice version
     mapping:      &map    t3d             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
@@ -115,38 +113,21 @@ SEGMENTS:
 #...........................................................................................
 # Markers
     Mkrs:                [1,[Psp,Pcc]]
-# LE section segment
-    # SGLi:                [1,[QF1, D3]]               # QF+D
-    # SGLm:                [1,[D3, QD1, QD1, D3]]      # D+QD+QD+D
-    # SGLf:                [1,[D3, QF1]]               # D+QF
-# HE section segment
-    # SGHi:                [1,[QF2, D3]]               # Qf+D
-    # SGHm:                [1,[D3, QD2, QD2, D3]]      # D+QD+QD+D
-    # SGHf:                [1,[D3, QF2]]               # D+QF
-# LE gaps
-    # GAPL:                [1,[DGAP1,RFG1,DGAP1]]   # D+G+D sandwich
-    # GAPLarr:             [10,[GAPL]]
-# HE gaps
-    # GAPH:                [1,[DGAP2,RFG2,DGAP2]]   # D+G+D sandwich
-    # GAPHarr:             [10,[GAPH]]
 # ===========================================================================================
 CELLS:    
     NIL_CELL:    [1,[]]
-    CELL:        [1,[D,QF,Psp,D,QD,Psp]]     # D-QF-D-QD
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
-    # LE_CELL:   [1,[SGLi, GAPLarr, D10, GAPLarr, SGLm, GAPLarr, D10, GAPLarr, SGLf]] 
-    # HE-CELL:   [1,[SGHi, GAPHarr, D10, GAPHarr, SGHm, GAPHarr, D10, GAPHarr, SGHf]] 
+    # CELL:        [1,[QF,D,QD,QD,D,QF]]     # D-QF-D-QD
+    CELL:        [1,[D,QF,QF,D,QD,QD]]     # D-QF-D-QD
 # ===========================================================================================
 SECTIONS:
     NIL_SEC:    [1,[]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    # SECL:      [25,[LE_CELL]]
-    # SECH:      [127,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    LINE:   [1,[CELL]]
+    LINE:   [5,[CELL]]
  

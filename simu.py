@@ -46,7 +46,6 @@ matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
 import pprint, inspect
 
-import bucket_size
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
 from setutil import collect_data_for_summary, show_data_from_elements
@@ -55,6 +54,7 @@ from lattice_generator import factory
 import argparse
 from lattice_parser2 import parse as getParseResult
 import elements as ELM
+import bucket_size as separatrix
 
 def PRINT_PRETTY(obj=None):
     file = inspect.stack()[0].filename
@@ -67,21 +67,19 @@ DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-def bucket(*args):
-    bucket_size.bucket()
 def display0(*args):
     """
     C&S-Tracks w/o longitudinal motion
     """
     #----------*----------*   # unpack
-    sigma_fun = args[0]
-    cos_like  = args[1]
-    sin_like  = args[2]
-    lat_plot  = args[3]
+    twiss_func = args[0]
+    cos_like   = args[1]
+    sin_like   = args[2]
+    lat_plot   = args[3]
     #-------------------- Bahnkoordinate (z)
-    z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)]
-    sgx   = [sigma_fun(i,'sigmax') for i in range(sigma_fun.nbpoints)]
-    sgy   = [sigma_fun(i,'sigmay') for i in range(sigma_fun.nbpoints)]
+    z     = [twiss_func(i,'s')    for i in range(twiss_func.nbpoints)]
+    sgx   = [twiss_func(i,'sigx') for i in range(twiss_func.nbpoints)]
+    sgy   = [twiss_func(i,'sigy') for i in range(twiss_func.nbpoints)]
     #    zero  = [0.                    for i in range(sigma_fun.nbpoints)]
     #-------------------- trajectories (tz)
     tz=  [cos_like(i,'s')     for i in range(cos_like.nbpoints)]
@@ -143,19 +141,46 @@ def display0(*args):
     plt.legend(loc='lower right',fontsize='x-small')
 def display1(*args):
     """
+    beta functions w/o longitudinal motion
+    """
+    #----------*----------*   # unpack
+    twiss_func = args[0]
+    lat_plot   = args[3]
+    #-------------------- Bahnkoordinate (z)
+    s     = [twiss_func(i,'s')  for i in range(twiss_func.nbpoints)]
+    bx    = [twiss_func(i,'bx') for i in range(twiss_func.nbpoints)]
+    by    = [twiss_func(i,'by') for i in range(twiss_func.nbpoints)]
+    #-------------------- lattice viseo
+    vzero        = [0.                  for i in range(lat_plot.nbpoints)] # zero line
+    vis_abszisse = [lat_plot(i,'s')     for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo') for i in range(lat_plot.nbpoints)]
+    #-------------------- figure frame
+    width=14; height=7.6
+    plt.figure(num=0,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
+
+    #-------------------- transverse X
+    splot111=plt.subplot(111)
+    splot111.set_title('beta functions')
+    plt.plot(s,bx ,label=r'$\beta$x [m]',color='red', linestyle='-')
+    plt.plot(s,by ,label=r'$\beta$y [m]',color='blue',linestyle='-')
+    plt.plot(vis_abszisse,vis_ordinate,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='black')
+    plt.legend(loc='lower right',fontsize='x-small')
+def display3(*args):
+    """
     C&S-Tracks with longitudinal motion
     """
     #-------------------- unpack
-    sigma_fun = args[0]
+    twiss_fun = args[0]
     cos_like  = args[1]
     sin_like  = args[2]
     lat_plot  = args[3]
     ape_plot  = args[4]
     #-------------------- sigma functions
     #    zero  = [0.                    for i in range(sigma_fun.nbpoints)] # zero line
-    z     = [sigma_fun(i,'s')      for i in range(sigma_fun.nbpoints)] # Abszisse
-    sgx   = [sigma_fun(i,'sigmax')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-x)
-    sgy   = [sigma_fun(i,'sigmay')*1.e3 for i in range(sigma_fun.nbpoints)] # envelope (sigma-y)
+    z     = [twiss_fun(i,'s')         for i in range(twiss_fun.nbpoints)] # Abszisse
+    sgx   = [twiss_fun(i,'sigx')*1.e3 for i in range(twiss_fun.nbpoints)] # envelope (sigma-x)
+    sgy   = [twiss_fun(i,'sigy')*1.e3 for i in range(twiss_fun.nbpoints)] # envelope (sigma-y)
     #-------------------- trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cx=  [cos_like(i,'cx')*1.e3    for i in range(cos_like.nbpoints)]
@@ -272,13 +297,22 @@ def link_check(lattice):
 def simulation(filepath):
     def display(*functions):
         plots   = []
-        if FLAGS['csTrak'] and FLAGS['dWf'] == 0:
-            plots.append(display0) # C&S tracks {x,y}
-        elif FLAGS['csTrak'] and FLAGS['dWf'] == 1:
-            plots.append(display1) # C&S tracks {x,y,z}
+        if FLAGS['dWf'] == 0:
+            # accel OFF
+            if FLAGS['csTrak']:
+                plots.append(display0)      # C&S tracks and sigmas {x,y}
+            else:
+                plots.append(display1)      # beta functions {x,y}
+        else:
+            # accel ON
+            plots.append(display3)          # C&S tracks and sigmas {x,y,z}
             if FLAGS['bucket']:
-                plots.append(bucket) # separatrix
-        # standard plots
+                first_gap_node = lattice.first_gap
+                if first_gap_node != None: 
+                    separatrix.bucket(first_gap_node) # separatrix
+                else:
+                    print("No 1st rg-gap in lattice? Can't plot W-acceptance.")
+        # make all plots
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
@@ -323,10 +357,10 @@ def simulation(filepath):
         show_data_from_elements() #..................................show ELEMENT attributes
         dictprnt(SUMMARY,text='Summary') #...........................show summary
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
-        steps = 1
+        steps = 10
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        sigma_fun       = lattice.sigmas(steps=steps) #.,,,...........calculate envelope functions
-        display(sigma_fun,c_like,s_like,lat_plot,ape_plot) #..........make plots of functions
+        twiss_func      = lattice.twiss_n_sigmas(steps=steps) #.,,,...........calculate envelope functions
+        display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
             # DEBUG_ON(node.toString())
