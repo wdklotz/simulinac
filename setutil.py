@@ -41,9 +41,10 @@ def PRINT_PRETTY(*args):
     if len(args) == 0: print()
     else:
         for obj in args:
-            pprint.PrettyPrinter(width=200,compact=True).pprint(obj)   
+            pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+    return True
 def PASS(*args):
-    pass
+    return False
 DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
@@ -501,70 +502,12 @@ def I0(x):
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     return SP.iv(0,x)
-    # t = x/3.75
-    # if 0. <= x and x < 3.75:
-    #     t2 = t*t
-    #     res = 1.
-    #     res+= 3.5156229*t2
-    #     res+= 3.0899424*t2*t2
-    #     res+= 1.2067492*t2*t2*t2
-    #     res+= 0.2659732*t2*t2*t2*t2
-    #     res+= 0.0360768*t2*t2*t2*t2*t2
-    #     res+= 0.0045813*t2*t2*t2*t2*t2*t2
-    #     DEB.get('OFF')('(I0,x )=({},{})'.format(res,x))
-    # elif 3.75 <= x:
-    #     tm1 = 1./t
-    #     res = 0.39894228
-    #     res+= 0.01328529*tm1
-    #     res+= 0.00225319*tm1*tm1
-    #     res-= 0.00157565*tm1*tm1*tm1
-    #     res+= 0.00916281*tm1*tm1*tm1*tm1
-    #     res-= 0.02057706*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     try:
-    #         res = res*exp(x)/sqrt(x)
-    #     except OverflowError as ex:
-    #         print('STOP: Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
-    #         sys.exit(1)
-    # return res
 def I1(x):
     """
     Modified Bessel function I of integer order 1
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun pp.379
     """
     return SP.iv(1,x)
-    # t = x/3.75
-    # if 0. <= x and x < 3.75:
-    #     t2 = t*t
-    #     res = 0.5
-    #     res+= 0.87890059*t2
-    #     res+= 0.51498869*t2*t2
-    #     res+= 0.15084934*t2*t2*t2
-    #     res+= 0.02658733*t2*t2*t2*t2
-    #     res+= 0.00301532*t2*t2*t2*t2*t2
-    #     res+= 0.00032411*t2*t2*t2*t2*t2*t2
-    #     res = res*x
-    #     DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-    # elif 3.75 <= x:
-    #     tm1 = 1/t
-    #     res = 0.39894228
-    #     res-= 0.03988024*tm1
-    #     res-= 0.00362018*tm1*tm1
-    #     res+= 0.00163801*tm1*tm1*tm1
-    #     res-= 0.01031555*tm1*tm1*tm1*tm1
-    #     res+= 0.02282967*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.02895312*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.01787654*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     try:
-    #         res = res*exp(x)/sqrt(x)
-    #         DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-    #     except OverflowError as ex:
-    #         print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
-    #         sys.exit(1)
-    # return res
 def k0prot(gradient=0.,tkin=0.):         #TODO still used?
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)

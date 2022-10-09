@@ -349,7 +349,7 @@ class Lattice(object):
             self.aperture_check(node,twiss=True)
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
         for row in function_tbl:
-            abscisse = row[0]
+            abscisse  = row[0]
             ordinaten = row[1:]
             twissfun.append(abscisse,ordinaten)
         return twissfun
@@ -373,16 +373,17 @@ class Lattice(object):
         #TODO: analytical sigmas for 'dyn' mapping as best estimates ?
         def envelopes(function, steps=10):
             """ calc. envelopes using function """
-            twiss_func     = function(steps=steps)
+            # twiss_func     = function(steps=steps)
             # b,a,g,epsx = PARAMS['twiss_x_i']()
             # b,a,g,epsy = PARAMS['twiss_y_i']()
-            sigma_fun  = Functions(('s','sigmax','sigmay'))
-            for i in range(twfunc.nbpoints):
-                val,dummy = twfunc[i]
-                (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp) = val
+            # # sigma_fun  = Functions(('s','sigmax','sigmay'))
+            # for i in range(twiss_func.nbpoints):
+            #     val,dummy = twiss_func[i]
+            #     (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp) = val
                 # val=(sqrt(bx*epsx),sqrt(by*epsy))
-                sigma_fun.append(s,(sigx,sigy))
-            return sigma_fun
+                # sigma_fun.append(s,(sigx,sigy))
+            # return sigma_fun
+            pass
 
         mess = ""
         if FLAGS['non_linear_mapping']:

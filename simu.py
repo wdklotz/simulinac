@@ -270,6 +270,77 @@ def display3(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+def display4(*args):
+    """
+    beta functions and synchrotron oscillations
+    """
+    #-------------------- unpack
+    beta_fun  = args[0]
+    cos_like  = args[1]
+    sin_like  = args[2]
+    lat_plot  = args[3]
+    #-------------------- beta and sigma functions
+    s     = [beta_fun(i,'s')    for i in range(beta_fun.nbpoints)] # Abszisse
+    bx    = [beta_fun(i,'bx')   for i in range(beta_fun.nbpoints)] # envelope (sigma-x)
+    by    = [beta_fun(i,'by')   for i in range(beta_fun.nbpoints)] # envelope (sigma-y)
+    #-------------------- longitudinal trajectories
+    z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
+    cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
+    cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]
+
+    z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
+    sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
+    sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
+    #-------------------- lattice viseo
+    vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
+    vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
+    #-------------------- figure frame
+    width=14; height=7.6
+    # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
+    fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
+
+    #-------------------- beta functions
+    splot211=plt.subplot(211)
+    splot211.set_title('beta x,y')
+    # mapping box
+    splot211.text(0.01, 1.1, PARAMS['mapping'],transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    # function plots
+    plt.plot(s,bx,      label=r"$\beta$x  [m]",  color='black', linestyle='-')
+    plt.plot(s,by,      label=r"$\beta$y  [m]",  color='red',   linestyle='-')
+    vscale=splot211.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    plt.plot(vis_abszisse,viseoz,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    # zero line
+    splot211.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    plt.legend(loc='lower right',fontsize='x-small')
+
+    #-------------------- longitudinal tracks z, dP/P
+    # ax_l = left abszisse
+    ax_l=plt.subplot(212)
+    # ax_l=plt.subplot(10,1,(7,9))
+    ax_l.set_title('synchrotron oscillation')
+    ax_l.set_ylabel(r"z [mm]")
+    ax_l.tick_params(axis='y', colors='green')
+    ax_l.yaxis.label.set_color('green')
+    ax_l.plot(z1,cz,label='C',color='green')
+    ax_l.plot(z2,sz,label='S',color='green',linestyle=':')
+    plt.legend(loc='lower left',fontsize='x-small')
+    # ax_r = right abszisse
+    ax_r = ax_l.twinx()
+    ax_r.set_ylabel(r'$\Delta$p/p [%]')
+    ax_r.tick_params(axis='y', colors='red')
+    ax_r.yaxis.label.set_color('red')
+    ax_r.plot(z2,cdp,label='C',color='red')
+    ax_r.plot(z2,sdp,label='S',color='red',linestyle=':')
+    ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
+    plt.legend(loc='lower right',fontsize='x-small')
+    # lattice elements
+    vscale=ax_l.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    ax_l.plot(vis_abszisse,viseoz,label='',color='black')
+    ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
@@ -283,7 +354,11 @@ def simulation(filepath):
                 plots.append(display1)      # beta functions {x,y}
         else:
             # accel ON
-            plots.append(display3)          # C&S tracks and sigmas {x,y,z}
+            if FLAGS['csTrak']:
+                plots.append(display3)      # C&S tracks and sigmas {x,y}
+            else:
+                plots.append(display4)      # beta functions {x,y}
+
             if FLAGS['bucket']:
                 first_gap_node = lattice.first_gap
                 if first_gap_node != None: 
