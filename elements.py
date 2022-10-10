@@ -20,7 +20,7 @@ This file is part of the SIMULINAC code
 # TODO adjust_energy() and shorten() return new objects. make sure object properties like links are correctly passed.
 import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ceil
-from copy import copy, deepcopy
+from copy import copy
 import numpy as NP
 import unittest
 
@@ -153,39 +153,6 @@ class Node(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
-    def sigma_beam(self, steps=1, sg=None):
-        """ 
-        Track the Sigma object through a node
-            twiss vector: twv  = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
-            input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
-        """
-        si,sm,sf = self.position # entrance
-        sigmas   = []
-        s        = si
-        slices = self.make_slices(anz = steps)
-        for slice in slices:
-            # next_SIGMA = R * SIGMA * transpose(R)
-            sgf = sg.RSRT(slice)
-            # emmitance grow ?
-            if isinstance(slice,RFG) and FLAGS['egf']: # loop slices
-                sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg, delta_phi=PARAMS['Dphi0'])
-            s += slice.length
-            sigmas.append((sgf,s))
-            sg = sgf
-        # averages
-        av = []
-        for sig,s in sigmas:
-            v = sig.sigv().tolist()
-            av.append(v)
-        avarr = NP.array(av)
-        avm = NP.mean(avarr,axis=0)
-        # sgxm, sgym are mean values of sigmas over slices
-        sgxm  = avm[0]; sgxpm = avm[1]
-        sgym  = avm[2]; sgypm = avm[3]
-        sigxy = (sgxm,sgxpm,sgym,sgypm)
-        # each node has its tuple of average sigmas     
-        self.sigxy = sigxy
-        return sigmas
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label='I'):

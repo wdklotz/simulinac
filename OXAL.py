@@ -258,3 +258,5 @@ class OXAL_G(ELM.RFG):
         gs2 = (self.particlef.gamma)**2
         f_track[Ktp.zp] = gs2 * f_track[Ktp.zp]         # Dbeta/beta -> Dp/p
         return f_track
+if __name__ == '__main__':
+    print('what?')

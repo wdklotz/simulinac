@@ -32,7 +32,6 @@ This file is part of the SIMULINAC code
 #TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
 """
 import sys,os
-
 # for PyQt
 # import PyQt5             # works on native W10 but not on WSL2 as docker container
 # import matplotlib
@@ -341,7 +340,6 @@ def display4(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):

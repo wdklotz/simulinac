@@ -83,7 +83,7 @@ DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 active_field_map = "@#&%^*$"
-output_base_dir = 'dynac/generated/'
+output_base_dir = 'dynac/ALCELI/'
 
 def call_INTRO(arg):
     file = arg['file']

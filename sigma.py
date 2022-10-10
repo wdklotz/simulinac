@@ -19,7 +19,7 @@ This file is part of the SIMULINAC code
 """
 from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
-from copy import copy,deepcopy
+from copy import deepcopy
 import unittest
 
 from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
