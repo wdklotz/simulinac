@@ -345,6 +345,7 @@ def display4(*args):
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
+        # dispatch to different plots according to FLAG settings
         plots   = []
         if FLAGS['dWf'] == 0:
             # accel OFF
@@ -412,7 +413,7 @@ def simulation(filepath):
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
         steps = 10
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        twiss_func      = lattice.twiss_n_sigmas(steps=steps) #.,,,...........calculate envelope functions
+        twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,...........calculate envelope functions
         display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue

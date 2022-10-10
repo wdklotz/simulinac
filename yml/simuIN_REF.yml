@@ -36,8 +36,8 @@ FLAGS:
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
-    csTrak:       False           # {True} plot CS trajectories
-    maction:      True              # {False} call marker actions
+    csTrak:       False           # {True} plot CS trajectories else beta functions
+    # maction:      True              # {False} call marker actions
     envelope:     True              # {False} plot envelopes
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -64,7 +64,7 @@ PARAMETERS:
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
     lattvers:     'I5O200-19.08.2022'     # lattice version: IN 5, out 200
-    mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................

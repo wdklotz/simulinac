@@ -22,14 +22,12 @@ import numpy as NP
 from copy import copy,deepcopy
 import unittest
 
-from setutil import Proton, mxprnt, PARAMS, Ktw, DEBUG_ON, DEBUG_OFF
-
-DIM = 6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace-3D
+from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
 
 class Sigma(object):
     """ class for the sigma-matrix """
     def __init__(self, twiss_vec0, epsx, epsy, epsz):
-        self.matrix = NP.zeros((DIM,DIM))      ## sigma matrix (6x6)
+        self.matrix = NP.eye(MDIM,MDIM)      ## sigma matrix 
         self.emitx = epsx
         self.emity = epsy
         self.emitz = epsz
@@ -131,16 +129,15 @@ def sig_apply_eg_corr(rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
     DEBUG_OFF('delta_yp2_av {}'.format(delta_yp2_av))
     DEBUG_OFF('delta_dp2_av {}'.format(delta_dp2_av))
     return sigma
-def sig_map(sigma_i,R):
+def sig_map(sigma_i,node):
     """
     Map this sigma-matrix through element R
-    *) input R is ELM._matrix!
+    *) input R is ELM.Node!
     *) returns the transformed Sigma object
     """
-    # R(DIM,DIM) is same as R.__call__(DIM,DIM): upper (DIMxDIM) block matrix
-    r6             = R(DIM,DIM)
+    R              = node.matrix
     sigma_f        = deepcopy(sigma_i)          # the new sigma object
-    sigma_f.matrix = r6 @ sigma_i.matrix @ r6.T # NP matrix multiplication
+    sigma_f.matrix = R @ sigma_i.matrix @ R.T # NP matrix multiplication
     return sigma_f
     
 class TestElementMethods(unittest.TestCase):
