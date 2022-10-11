@@ -399,7 +399,7 @@ def tracker(input_file,options):
 
 class TestTracker(unittest.TestCase):
     def setUp(self):
-        self.lattice = factory('yml/trackerIN_REF.yml')
+        self.lattice = factory('unittests/trackerIN_REF.yml')
     def test_soll_tracking(self):
         print('---------------------test_soll_tracking---')
         sollTrack = track_soll(self.lattice)  # <----- track soll

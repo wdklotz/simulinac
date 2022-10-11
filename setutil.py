@@ -261,7 +261,7 @@ class WConverter(object):
         emitz = self.emitwToemitz(emitw)
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
-class Functions(object):         #TODO better use pandas
+class Functions(object):         #TODO better use pandas?
     """ A class to gather function-values (Ordinaten) over a common independent variable (Abszisse) """
     def __init__(self,names):
         self._values  = [] # [(abzisse, ordinate-1, ordinate-2, ordinate-3,...)]
