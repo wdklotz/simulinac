@@ -72,7 +72,6 @@ class Lattice(object):
         self.acc_node         = None
         self.injection_energy = injection_energy
         self.descriptor       = descriptor
-    
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -89,7 +88,7 @@ class Lattice(object):
          """
         """ the 1st node """
         if len(self.seq) == 0:
-            """ the initial node """
+            """ the 1st node """
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
             node_adj     = node.adjust_energy(tk_injection)    # energy ADJUST
@@ -274,8 +273,7 @@ class Lattice(object):
                 sys.exit(1)
         else:
             ## transversale twiss parameter fuer transfer lines
-            # alfa, beta und emittance definieren den beam @ entrance, 
-            # NOTE: transfer lattices need not to be stable!
+            # alfa, beta und emittance definieren den Beam @ entrance, 
             bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
             bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
         print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
@@ -387,7 +385,7 @@ class Lattice(object):
         return twissfun
     def aperture_check(self,node,twiss=True):
         """ check sigmas against apertures """
-        fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
+        fcnt = 'twiss envelopes' if twiss else 'sigma envelopes'
         s,sm,sf = node.position
         if FLAGS['useaper']:
             nbsigma = PARAMS['nbsigma']
@@ -574,7 +572,7 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    def concat(self,lattice):       # TODO   
+    def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
             self.add_node(element)
