@@ -63,7 +63,7 @@ PARAMETERS:
     EzPeak:       &p17    1.0             # [MV/m] peak gap field Strengy
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
-    lattvers:     'I5O200-19.08.2022'     # lattice version: IN 5, out 200
+    lattvers:     'trackerIN_REF'         # lattice version: IN 5, out 200
     mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
@@ -203,7 +203,7 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
 
   

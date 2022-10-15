@@ -29,6 +29,7 @@ import time
 from string import Template
 from math import sqrt, degrees, radians, ceil
 import argparse
+import unittest
 
 from lattice_generator import factory
 import elements as ELM
@@ -38,12 +39,11 @@ from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
 from trackPlot import scatter11
 
-# max track amplitudes are set here!
+# max limits for track amplitudes
 xlim_max  = ylim_max  =  10.e-3
 xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
-limit     = \
-    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
+limit     = sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
 def projections(live_lost):
     """  2D phase space projections IN and OUT """
@@ -248,23 +248,21 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
-def track_soll(lattice, injection_energy, start_position=0.):
-    # TODO kann in der neuen Version wegfallen?
+def track_soll(lattice):
     """
     Track the reference particle through the lattice.
     NEW: Energy adjustemenr is already done when the node is added to the lattice.
     OLD: and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
-    soll_track = Track()
-    tp0 = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., injection_energy, 1., start_position, 1.]))
-    soll_track.addpoint(tp0)   # 1st track point
+    
+    soll_track  = Track()
+    tkIN        = lattice.injection_energy
+    position    = 0.
+    tp0         = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., tkIN, 1., position, 1.]))
+    soll_track.addpoint(tp0)              # 1st track point
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # track point at entrance
-        """ OLD: energy adjustment """
-        # node.adjust_energy(pi()[Ktp.T])
-        # apply soll map 
-        # pf = node.soll_map(pi())
         pf = node.map(pi())
         tpoint = Tpoint(pf)               # Tpoint at exit
         soll_track.addpoint(tpoint)
@@ -286,8 +284,8 @@ def tracker(input_file,options):
 
     # calculate twiss paramters at entrance
     waccept(lattice.first_gap)
-    tkin     = PARAMS['injection_energy']
-    conv     = WConverter(tkin,lattice.first_gap.freq)
+    tkIN     = lattice.injection_energy
+    # conv     = WConverter(tkIN,lattice.first_gap.freq)
     t1       = time.process_time()
 
     # pull more options
@@ -333,7 +331,7 @@ def tracker(input_file,options):
 
     # gather for print
     tracker_log = {}
-    tracker_log['T-kin..............[MeV]'] = tkin
+    tracker_log['Tk_i...............[MeV]'] = tkIN
     tracker_log["sigma(x,x')i...([m,rad])"] = (sigma_x,sigma_xp)
     tracker_log["sigma(y,y')i...([m,rad])"] = (sigma_y,sigma_yp)
     tracker_log["sigma(Dphi,w)i..([rad,])"] = (sigma_Dphi,sigma_w)
@@ -347,12 +345,12 @@ def tracker(input_file,options):
     tracker_log['emitw_i,wmax.......[rad]'] = (emitw, wmax)
     tracker_log['emitz_i..............[m]'] = emitz
     # tracker_log['Dp2p,Dp2pmx..........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    tracker_log['Dp2p.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p......[%]'] = PARAMS['Dp2p_Acceptance']*1.e2
-    tracker_log['accpetance z........[mm]'] = PARAMS['z_Acceptance']*1.e3
-    tracker_log['lattice version.........'] = PARAMS['lattice_version']
-    tracker_log['mapping.................'] = PARAMS['mapping']
-    tracker_log['DT/T-kin................'] = PARAMS['DT2T']
+    tracker_log['Dp2p_i.................[%]'] = Dp2p0*1.e2
+    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2p_Acceptance']*1.e2
+    tracker_log['accpetance z_i........[mm]'] = PARAMS['z_Acceptance']*1.e3
+    tracker_log['lattice version...........'] = PARAMS['lattice_version']
+    tracker_log['mapping...................'] = PARAMS['mapping']
+    tracker_log['DT/T_i....................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
@@ -367,7 +365,7 @@ def tracker(input_file,options):
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
     t2 = time.process_time()
-    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
+    track_soll(lattice)  # <----- track soll
     t3 = time.process_time()
     # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
@@ -399,18 +397,19 @@ def tracker(input_file,options):
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
 
-def test0(filepath):
-    print('-----------------------------------------Test0---')
-    lattice = factory(filepath)
-    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
-    table = sollTrack.as_table()
-    DEBUG_TEST0('sollTrack:\n'+table)
-    first = sollTrack[0]
-    last  = sollTrack[-1]
-    DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
+class TestTracker(unittest.TestCase):
+    def setUp(self):
+        self.lattice = factory('unittests/trackerIN_REF.yml')
+    def test_soll_tracking(self):
+        print('---------------------test_soll_tracking---')
+        sollTrack = track_soll(self.lattice)  # <----- track soll
+        table = sollTrack.as_table()
+        DEBUG_OFF('sollTrack:\n'+table)
+        first = sollTrack[0]
+        last  = sollTrack[-1]
+        DEBUG_ON('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TEST0 = DEBUG_OFF
     DEBUG_OFF(sys.argv)
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
@@ -426,7 +425,7 @@ if __name__ == '__main__':
     parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
     parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
     args = vars(parser.parse_args())
-    DEBUG_ON(f'arguments => {args}')
+    DEBUG_OFF(f'arguments => {args}')
     options = {}
     options['particles_per_bunch'] = args['p']
     options['show']                = args['hide']
@@ -452,35 +451,36 @@ __version__='v10.22.2'
 
     # let's go. All  input is parsed...
     input_file = Args['file']
-    if sys.platform == 'win32':
-        if Args['mode']   == 'no_m4':
-            pass
-        elif Args['mode'] == 'm4':
-            command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
-            stat = os.system(command)
-            if stat != 0:
-                print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
-        else:
-            print('Internal error!')
-            sys.exit(1)
-    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        if Args['mode']   == 'no_m4':
-            pass
-        elif Args['mode'] == 'm4':
-            macros_file   = Args['macro']
-            template_file = Args['tmpl']
-            # launch macros script with bash
-            command = 'chmod +x {}'.format(macros_file)
-            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
-            os.system(command)
-        else:
-            print('Internal error!')
-            sys.exit(1)
+    if DEBUG_ON():
+        # unittest.main()
+        TestTracker(methodName='test_soll_tracking').run()
     else:
-        print('wrong platform')
-        sys.exit(1)
-
-    # start the tracking
-    tracker(input_file,options)
+        if sys.platform == 'win32':
+            if Args['mode']   == 'no_m4':
+                pass
+            elif Args['mode'] == 'm4':
+                command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
+                stat = os.system(command)
+                if stat != 0:
+                    print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+            else:
+                print('Internal error!')
+                sys.exit(1)
+        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            if Args['mode']   == 'no_m4':
+                pass
+            elif Args['mode'] == 'm4':
+                macros_file   = Args['macro']
+                template_file = Args['tmpl']
+                # launch macros script with bash
+                command = 'chmod +x {}'.format(macros_file)
+                command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+                os.system(command)
+            else:
+                print('Internal error!')
+                sys.exit(1)
+        else:
+            print('wrong platform')
+            sys.exit(1)
+        # start the tracking
+        tracker(input_file,options)

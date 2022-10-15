@@ -392,7 +392,7 @@ if __name__ == '__main__':
     
     emity     = util.PARAMS['emity_i']*1E06 # mm*mrad - DYNAC units
     emitw     = util.PARAMS['emitw']        # mm/mrad - DYNAC units
-    tkIN      = util.PARAMS['injection_energy'] # MeV
+    tkIN      = lattice.injection_energy    # MeV
     freq      = lattice.first_gap.freq
     conv      = util.WConverter(tkIN,freq)
     alphaz    = 0.

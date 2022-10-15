@@ -31,8 +31,8 @@ from copy import copy
 import elements as ELM
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
-from setutil import Twiss, Functions, Particle, Proton, colors, DEBUG_ON, DEBUG_OFF
-from sigma import Sigma
+from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
+from sigma import Sigma, sig_map
 
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
@@ -73,7 +73,6 @@ class Lattice(object):
         self.acc_node         = None
         self.injection_energy = injection_energy
         self.descriptor       = descriptor
-    
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -90,7 +89,7 @@ class Lattice(object):
          """
         """ the 1st node """
         if len(self.seq) == 0:
-            """ the initial node """
+            """ the 1st node """
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
             node_adj     = node.adjust_energy(tk_injection)    # energy ADJUST
@@ -275,8 +274,7 @@ class Lattice(object):
                 sys.exit(1)
         else:
             ## transversale twiss parameter fuer transfer lines
-            # alfa, beta und emittance definieren den beam @ entrance, 
-            # NOTE: transfer lattices need not to be stable!
+            # alfa, beta und emittance definieren den Beam @ entrance, 
             bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
             bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
         print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
@@ -310,35 +308,66 @@ class Lattice(object):
         elif self.iteration == "RL":
             self.iteration = "LR"
     def twiss_funcs(self,steps=1):
-        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices """
-        function_tbl = []
+        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices or sigma-matrix"""
+        sFLAG   = FLAGS['sigma']
+        nlFLAG  = FLAGS['non_linear_mapping']
+        t3dFLAG = True
+        
+        mess = ""
+        if nlFLAG:
+            mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
+            mess += 'sigma ENVELOPES from TWISS paramweters'
+        elif not nlFLAG:
+            if sFLAG:
+                mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
+                t3dFLAG = False
+            else:
+                mess += 'sigma ENVELOPES from TWISS paramweters'
+        if not FLAGS['KVout']: 
+            print(mess)
+        
         # INITIAL twiss @ entrance
+        function_tbl = []
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = PARAMS['twiss_z_i']()
         node0 = self.seq[0]      # 1st node
-        si,sm,sf = node0.position
+        si,sm,sf      = node0.position
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
         sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
-        node0.twiss = tuple(twiss_vector0)
-        node0.sigxy = (sigx,sigxp,sigy,sigyp)
+        node0.twiss  = tuple(twiss_vector0)
+        node0.sigxy  = (sigx,sigxp,sigy,sigyp)
         function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
         function_tbl.append(function_row)
-        
+                
         """ loop over all nodes in the lattice to get sliced function values"""
-        B_matrix = NP.eye(9,9)                            # cumulated beta-matrix
+        B_matrix = NP.eye(9,9)                           # cumulated beta-matrix
+        R_matrix = NP.eye(MDIM,MDIM)                     # cumulated R-matrix
+        Sig      = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
         for node in iter(self):
             si,sm,sf = node.position
             slices = node.make_slices(anz=steps)
             s = si
             means = []
             for slice in slices:
-                beta_matrix  = slice.beta_matrix()
-                B_matrix     = NP.dot(beta_matrix,B_matrix)
-                twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                slice_beta_mx = slice.beta_matrix()
+                slice_r_mx    = slice.matrix
+                B_matrix      = NP.dot(slice_beta_mx,B_matrix)
+                R_matrix      = NP.dot(slice_r_mx,R_matrix)
+                Sig           = sig_map(Sig,slice)
+                
+                if t3dFLAG:
+                    twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                    sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
+                elif not t3dFLAG:
+                    twiss_vector = Sig.sig_twiss_vec_get()
+                    sigma_vector = Sig.sig_sigma_vec_get()
+                    sigx  = sigma_vector[0]; sigxp = sigma_vector[1]              
+                    sigy  = sigma_vector[2]; sigyp = sigma_vector[3]              
+                    # sigz  = sigma_vector[4]; sigzp = sigma_vector[5]              
+                
                 bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                 by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
-                sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
                 s += slice.length
                 function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
                 function_tbl.append(function_row)
@@ -347,16 +376,17 @@ class Lattice(object):
             node.twiss = tuple(twiss_vector)    # each noe has twiss
             node.sigxy = tuple(means)           # each node has sigxy
             # aperture check
-            self.aperture_check(node,twiss=True)
+            self.aperture_check(node,twiss=t3dFLAG)
+            
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
         for row in function_tbl:
-            abscisse = row[0]
+            abscisse  = row[0]
             ordinaten = row[1:]
             twissfun.append(abscisse,ordinaten)
         return twissfun
     def aperture_check(self,node,twiss=True):
         """ check sigmas against apertures """
-        fcnt = 'twiss_envelopes()' if twiss else 'sigma_envelopes()'
+        fcnt = 'twiss envelopes' if twiss else 'sigma envelopes'
         s,sm,sf = node.position
         if FLAGS['useaper']:
             nbsigma = PARAMS['nbsigma']
@@ -369,60 +399,6 @@ class Lattice(object):
                         print(warnings.formatwarning(colors.RED+'{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)+colors.ENDC,UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
-    def twiss_n_sigmas(self,steps=1):
-        """ dispatch to different envelope functions """
-        #TODO: analytical sigmas for 'dyn' mapping as best estimates ?
-        def envelopes(function, steps=10):
-            """ calc. envelopes using function """
-            twiss_func     = function(steps=steps)
-            # b,a,g,epsx = PARAMS['twiss_x_i']()
-            # b,a,g,epsy = PARAMS['twiss_y_i']()
-            sigma_fun  = Functions(('s','sigmax','sigmay'))
-            for i in range(twfunc.nbpoints):
-                val,dummy = twfunc[i]
-                (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp) = val
-                # val=(sqrt(bx*epsx),sqrt(by*epsy))
-                sigma_fun.append(s,(sigx,sigy))
-            return sigma_fun
-
-        mess = ""
-        if FLAGS['non_linear_mapping']:
-            mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
-            # function = self.sigma_envelopes # use beta-matrix            
-        if FLAGS['sigma']:
-            mess += 'ENVELOPES from SIGMA-matrix formalism replaced by TWISS-parameter envelopes'
-            # function = self.sigma_envelopes # use sigma-matrix
-            function = self.twiss_funcs # use sigma-matrix
-        elif not FLAGS['sigma']:
-            mess += 'CALCULATE ENVELOPES from TWISS-parameters'
-            function = self.twiss_funcs # use beta-matrix
-
-        if not FLAGS['KVout']: 
-            print(mess)
-            # sigma_fun = envelopes(function, steps=steps)
-            twiss_fun = function(steps=steps)
-        return twiss_fun
-    def sigma_envelopes(self, steps = 1):     # TODO not in use anymore: replace by new method
-        """ Envelopes and twiss-functions from sigma-matrix method a.k.a rms-envelopes """
-        # initials
-        bx,ax,gx,epsx = PARAMS['twiss_x_i']()
-        by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        bz,az,gz,epsz = PARAMS['twiss_z_i']()
-        twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])  # twiss vector IN lattice
-        sg0           = Sigma(twiss_vector0,epsx,epsy,epsz)     # sigma object IN lattice
-        # sigma envelopes as function of distance s
-        sigma_fun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz'))
-        for node in iter(self): # loop nodes
-            # sigma-matrices for a single node
-            sigmas = node.sigma_beam(steps=steps, sg=sg0)   # note: sets node['sigxy']
-            for sg,s in sigmas:
-                v = sg.twiss()      # twiss from Sigma object
-                flist = v.tolist()
-                sigma_fun.append(s,tuple(flist))
-            sg0 = sg          # loop back nodes
-            # aperture check
-            self.aperture_check(node,twiss=False)
-        return sigma_fun
     def dispersion(self,steps=10,closed=True):
         """ track the dispersion function """
         traj = []
@@ -597,7 +573,7 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    def concat(self,lattice):       # TODO   
+    def concat(self,lattice):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
             self.add_node(element)

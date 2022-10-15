@@ -56,10 +56,6 @@ WRBEAM - Print particle coordinates to file.
 ENVEL - Envelope plots for X, Y, PHASE and ENERGY.
 PROFGR - Particles plots in X-Z and Y-Z; bunch profiles in X, Y, Z, X', Y' and Z'.
 STOP - End simulation; this card is mandatory.
-
-TODO:
-- TTF optimization
-
 """
 import sys
 from colorama import Fore, Style
@@ -83,7 +79,7 @@ DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 active_field_map = "@#&%^*$"
-output_base_dir = 'dynac/generated/'
+output_base_dir = 'dynac/ALCELI/'
 
 def call_INTRO(arg):
     file = arg['file']
