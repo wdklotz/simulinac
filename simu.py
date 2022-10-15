@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-___version___='v10.2.0'
+___version___='v10.22.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
