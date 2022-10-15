@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.22.2'
+__version__='v10.22.3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -434,7 +434,7 @@ if __name__ == '__main__':
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
 
-__version__='v10.22.2'
+    print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # adapt to legacy code which uses 'Args'
     Args  = {}
@@ -451,7 +451,7 @@ __version__='v10.22.2'
 
     # let's go. All  input is parsed...
     input_file = Args['file']
-    if DEBUG_ON():
+    if DEBUG_OFF():
         # unittest.main()
         TestTracker(methodName='test_soll_tracking').run()
     else:
