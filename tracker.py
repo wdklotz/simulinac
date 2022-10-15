@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v10.22.1'
+__version__='v10.22.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -435,7 +435,7 @@ if __name__ == '__main__':
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
 
-    print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+__version__='v10.22.2'
     
     # adapt to legacy code which uses 'Args'
     Args  = {}

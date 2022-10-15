@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-___version___='v10.22.1'
+__version__='v10.22.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -356,7 +356,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
     DEBUG_OFF(args)
 
-    print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+__version__='v10.22.2'
 
     # adapt to legacy code which uses 'Args'
     Args = {}
