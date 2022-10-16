@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.22.3'
+__version__='v10.22.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -34,16 +34,6 @@ import PoincareMarkerAgent as PCMKR
 from lattice import Lattice
 from Ez0 import SFdata
 from lattice_parser2 import parse as doInputParser
-
-# def PRINT_PRETTY(obj):
-#     file = inspect.stack()[0].filename
-#     print(F'UTIL.DEBUG_ON[{file}] ==> ',end="")
-#     pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-# def PASS(obj):
-#     pass
-# DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-# UTIL.DEBUG_ON  = DEB.get('ON')
-# UTIL.DEBUG_OFF = DEB.get('OFF')
 
 def make_counter():
     count = 0
@@ -247,7 +237,7 @@ def factory(input_file,stop=None):
     """ factory creates a lattice from input-file """
 
     def proces_flags(flags):
-        """ external FLAGS """        
+        """ external FLAGs """        
         UTIL.FLAGS['accON']    = flags.get('accON',True)               # acceleration ON
         UTIL.FLAGS['periodic'] = flags.get('periodic',False)           # periodic lattice? default
         UTIL.FLAGS['egf']      = flags.get('egf',False)                # emittance grow flag default
@@ -259,26 +249,32 @@ def factory(input_file,stop=None):
         UTIL.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
         UTIL.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
         UTIL.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
-        """ internal FLAGS """        
+        """ internal FLAGs """        
         UTIL.FLAGS['dWf']      = 1 if UTIL.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
         UTIL.FLAGS['non_linear_mapping'] = False
         return
-    def proces_parameters(parameters):   #TODO use dict.get()
-        """ global PARAMETERS"""
-        if 'Tkin'             in parameters: UTIL.PARAMS['injection_energy'] = parameters['Tkin']
-        if 'DT2T'             in parameters: UTIL.PARAMS['DT2T']             = parameters['DT2T']
-        if 'emitw'            in parameters: UTIL.PARAMS['emitw']            = parameters['emitw']
-        if 'Dphi0'            in parameters: UTIL.PARAMS['Dphi0']            = parameters['Dphi0']
-        if 'emitx_i'          in parameters: UTIL.PARAMS['emitx_i']          = parameters['emitx_i']
-        if 'emity_i'          in parameters: UTIL.PARAMS['emity_i']          = parameters['emity_i']
-        if 'betax_i'          in parameters: UTIL.PARAMS['betax_i']          = parameters['betax_i']
-        if 'betay_i'          in parameters: UTIL.PARAMS['betay_i']          = parameters['betay_i']
-        if 'alfax_i'          in parameters: UTIL.PARAMS['alfax_i']          = parameters['alfax_i']
-        if 'alfay_i'          in parameters: UTIL.PARAMS['alfay_i']          = parameters['alfay_i']
-        # if 'alfaw_i'          in parameters: UTIL.PARAMS['alfaw_i']          = parameters['alfaw_i']
-        if 'nbsigma'          in parameters: UTIL.PARAMS['nbsigma']          = parameters['nbsigma']
-        if 'lattvers'         in parameters: UTIL.PARAMS['lattice_version']  = parameters['lattvers']
-        if 'mapping'          in parameters: UTIL.PARAMS['mapping']          = parameters['mapping']
+    def proces_parameters(parameters):
+        """ PARAMETERS and their default values """
+        UTIL.PARAMS['DT2T']             = parameters.get('DT2T',6E-3)
+        # UTIL.PARAMS['emitw']            = parameters.get('emitw',1.)   calculated by UTIL.waccept() from 1s rf node
+        # UTIL.PARAMS['Dphi0']            = parameters.get('Dphi0',1.)   calculated by UTIL.waccept() from 1st rf node
+        UTIL.PARAMS['emitx_i']          = parameters.get('emitx_i',10E-6)
+        UTIL.PARAMS['emity_i']          = parameters.get('emity_i',10E-6)
+        UTIL.PARAMS['betax_i']          = parameters.get('betax_i',1.)
+        UTIL.PARAMS['betay_i']          = parameters.get('betay_i',1.)
+        UTIL.PARAMS['alfax_i']          = parameters.get('alfax_i',0.)
+        UTIL.PARAMS['alfay_i']          = parameters.get('alfay_i',0.)
+        UTIL.PARAMS['nbsigma']          = parameters.get('nbsigma',2)
+        UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
+        UTIL.PARAMS['mapping']          = parameters.get('mapping','base')
+        UTIL.PARAMS['thins']            = parameters.get('thins',1)
+        """ dummy PARAMETERS to satisfy some code elsewhere """   #TODO
+        UTIL.PARAMS['emitz']            = 1.
+        UTIL.PARAMS['betaz']            = 1.
+        UTIL.PARAMS['z0']               = 1.
+        UTIL.PARAMS['alfaw_i']          = 0.
+        """ PARAMETERS already defined that maybe overriden """
+        UTIL.PARAMS['injection_energy'] = parameters.get('Tkin',UTIL.PARAMS['injection_energy'])
         return
     def proces_elements(elements):
         """fills global ELEMENTS"""

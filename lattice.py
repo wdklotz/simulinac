@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.22.3'
+__version__='v10.22.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -155,8 +155,8 @@ class Lattice(object):
         else:
             SUMMARY['nbof quadrupoles*']      = quad_counter
         SUMMARY['nbof cavities*']             = cavity_counter
-        SUMMARY['(ttf)min,(ttf)max*']         = (ttfmin,ttfmax)
-        SUMMARY['(energy)i,(energy)f [MeV]']  = (tk_inject,tk_final)
+        SUMMARY['ttf_min,ttf_max*']           = (ttfmin,ttfmax)
+        SUMMARY['Tk_i,Tk_f [MeV]']            = (tk_inject,tk_final)
         SUMMARY['lattice length [m]']         = self.length
     def cell(self,closed=True):
         """
@@ -249,26 +249,22 @@ class Lattice(object):
                     bay = fabs(2.*n12/sqrt(wurzy))    #  muss Absolutwert sein! (Fehler bei Wille)
                     aly = (n11-n22)/(2.*n12)*bay
                     gmy = (1.+aly**2)/bay
-                print('betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
+                print_verbose(2,'betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
                 ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
                 v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
                 m_cell_beta = self.acc_node.beta_matrix()
                 v_beta_e = NP.dot(m_cell_beta,v_beta_a)
                 # if verbose:
-                print_verbose(1,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
+                print_verbose(2,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
                 diffa_e = v_beta_a - v_beta_e
                 for i in range(6):
                     if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
-                print_verbose(1,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
+                print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
                 ## transversale twiss parameter fuer periodisches lattice
                 twx = Twiss(bax,alx,emitx)
                 twy = Twiss(bay,aly,emity)
                 PARAMS['twiss_x_i'] = twx
                 PARAMS['twiss_y_i'] = twy
-                SUMMARY['(sigx )i*   [mm]'] =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-                SUMMARY["(sigx')i* [mrad]"] =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-                SUMMARY['(sigy )i*   [mm]'] =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-                SUMMARY["(sigy')i* [mrad]"] =  PARAMS['twiss_y_i'].sigmaV()*1.e3
             else:
                 print('STOP: unstable lattice!')
                 sys.exit(1)

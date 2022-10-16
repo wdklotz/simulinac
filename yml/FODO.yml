@@ -38,7 +38,7 @@ FLAGS:
     # bucket:       True            # {False} plot the bucket
     # maction:      True            # {False} call marker actions
     # envelope:     True              # {False} plot envelopes
-    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      1                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................

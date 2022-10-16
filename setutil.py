@@ -1,7 +1,7 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 from __future__ import print_function   #TODO still used?
-__version__='v10.22.3'
+__version__='v10.22.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -33,6 +33,7 @@ from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
 
+# DEBUG utility used by all modules
 import pprint, inspect
 def PRINT_PRETTY(*args):
     frameinfo = inspect.stack()[1]    # caller's stack frame
@@ -46,8 +47,8 @@ def PRINT_PRETTY(*args):
     return True
 def PASS(*args):
     return False
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
+DEB       = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 # MDIM: dimension of matrices
@@ -78,28 +79,21 @@ class Ktw(IntEnum):
     s  = 9      # abszisse for twiss functions
 # for compatability with elder code TODO: replace!
 XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-#------  DEFAULT "FLAGS" & "PARAMS" and global dicts
-FLAGS  = dict(dWf=1)
-PARAMS = dict(             #TODO better use dict.get()
-        clight               = C.c,              # [m/s]
-        elementarladung      = C.e,              # [coulomb]
-        proton_mass          = C.value('proton mass energy equivalent in MeV'),
-        electron_mass        = C.value('electron mass energy equivalent in MeV'),
-        map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
-        warnmx               = 10,         # max warnings
-        injection_energy     = 50.         # default injection energy
-        # warn_max             = 5,          # max warnings
-        # DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
-        # emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
-        # emity_i              = None,       # [m*rad] Vorgabe emittance entrance
-        # betax_i              = None,       # [m] Vorgabe twiss beta entrance
-        # betay_i              = None,       # [m] Vorgabe twiss beta entrance
-        # alfax_i              = None,       # Vorgabe twiss alpha entrance
-        # alfay_i              = None,       # Vorgabe twiss alpha entrance
-        # alfaw_i              = None,       # Vorgabe twiss alpha entrance
-        # aperture             = None,       # default aperture = no aperture
-        # mapping              = None,       # default rf gap-model  
-        )              
+FLAGS  = dict(
+    # lattice_generator may override these FLAGs
+    dWf = 1
+    )
+PARAMS = dict(
+    # global constants
+    clight               = C.c, # [m/s]
+    elementarladung      = C.e, # [coulomb]
+    proton_mass          = C.value('proton mass energy equivalent in MeV'),
+    electron_mass        = C.value('electron mass energy equivalent in MeV'),
+    map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
+    warnmx               = 10, # max warnings
+    # lattice_generator may override these PARAMETERs
+    injection_energy     = 50.
+    )              
 ELEMENTS = {}
 SUMMARY  = {}
 class Twiss(object):
@@ -369,6 +363,7 @@ def waccept(node):
         gamma     = particle.gamma
         tkin      = particle.tkin
         conv      = WConverter(tkin,freq)
+        DEBUG_OFF(dict(DT2T=DT2T,E0T=E0T,phisoll=phisoll,lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
         """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
         w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
@@ -377,13 +372,14 @@ def waccept(node):
         wmax    = w0large
 
         w0       = (gamma-1.)*DT2T
-        emitw    = PARAMS.get('emitw',2.*abs(phisoll)*w0/pi*0.33)   # injected beam emottance
-        Dphi0    = PARAMS.get('Dphi0',pi*emitw/w0)
-        betaw    = emitw/w0**2            # w0 = w-int = sqrt(emitw/betaw) 
-        gammaw   = 1./betaw               # gamma twiss
+        emitw    = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance
+        Dphi0    = pi*emitw/w0                # injected phase spread
+        betaw    = emitw/w0**2                # w0 = w-int = sqrt(emitw/betaw) 
+        gammaw   = 1./betaw                   # gamma twiss
         
         omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
         omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
+        DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w0=w0,emitw=emitw,Dphi0=Dphi0,betaw=betaw,gammaw=gammaw,omgl0=omgl0))
 
         # longitudinal acceptance check (always done)
         if wmax <= w0:
@@ -416,8 +412,8 @@ def waccept(node):
                 Dp2p_Acceptance = Dp2pmax,
                 z_Acceptance    = conv.DphiToz(2.*phisoll),
                 # {Dphi,DW}
-                DWmax      = wmax*m0c2)       # separatrix: max W in [MeV]
-        
+                DWmax      = wmax*m0c2  # separatrix: max W in [MeV]
+                )
         for k,v in res.items():
             PARAMS[k] = v
         
@@ -435,16 +431,24 @@ def waccept(node):
     else:
         # assume no acceleration
         FLAGS['dWf'] = 0
-        res = {}
         # we can calculate the Twiss objects at injection ...
         twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
         twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
         # ... and use dummies
         tww = twz = Twiss(1.,0.,1.)
-        PARAMS['twiss_x_i'] = twx
-        PARAMS['twiss_y_i'] = twy
-        PARAMS['twiss_w_i'] = tww
-        PARAMS['twiss_z_i'] = twz
+        res = dict(
+            EzAvg         = 0.,
+            gap           = 0.,
+            cavity_laenge = 0.,
+            phisoll       = 0.,
+            frequenz      = 0.,
+            twiss_x_i     = twx,
+            twiss_y_i     = twy,
+            twiss_w_i     = tww,
+            twiss_z_i     = twz
+        )
+        for k,v in res.items():
+            PARAMS[k] = v
         
     PARAMS['twiss_x_i()'] = twx()   # function pointers
     PARAMS['twiss_xyi()'] = twy()
@@ -472,28 +476,28 @@ def collect_data_for_summary(lattice):
         SUMMARY['use aperture']                    =  FLAGS['useaper']
         SUMMARY['accON']                           =  FLAGS['accON']
         SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-        SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
+        SUMMARY['N_sigma']                         =  PARAMS['nbsigma']
         SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-        SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-        SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-        SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-        SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-        SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
-        SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-        SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
+        SUMMARY['sigx_i*   [mm]']                  =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+        SUMMARY["sigx'_i* [mrad]"]                 =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+        SUMMARY['sigy_i*   [mm]']                  =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+        SUMMARY["sigy'_i* [mrad]"]                 =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+        SUMMARY["emitx_i[mrad*mm]"]                =  PARAMS['emitx_i']*1.e6
+        SUMMARY["emity_i[mrad*mm]"]                =  PARAMS['emity_i']*1.e6
+        SUMMARY['dT/T_i']                          =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
         SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmax'])
         SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmax']*1.e2)
         # SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-        SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmax']*100.)
-        SUMMARY['emit{z-Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-        SUMMARY['emit{phi-w}*  [rad]']             =  '{:8.2e}'.format(PARAMS['emitw'])
-        SUMMARY['(Dp/p)i spread*']                 =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
-        SUMMARY['(phi)i spread* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
-        SUMMARY['(z)i spread*    [m]']             =  '{:8.2e} bunch'.format(abs(PARAMS['z0']))
-        SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
-        SUMMARY['(w)i spread']                     =  '{:8.2e} delta-gamma, dE/E0'.format(PARAMS['w0'])
+        SUMMARY['separatrix: DP/P-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmax']*100.)
+        SUMMARY['emitz*  [mm]']                    =  '{:8.2e} {{z,DP/P}}'.format(PARAMS['emitz']*1.e3)
+        SUMMARY['emitw*  [rad]']                   =  '{:8.2e} {{Phi,w}}'.format(PARAMS['emitw'])
+        SUMMARY['dP/P_i*']                         =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
+        SUMMARY['dPhi_i* [rad]']                   =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
+        SUMMARY['z_i*    [m]']                     =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
+        SUMMARY['frequency* [MHz]']                =  '{:8.2e} synchotron'.format(PARAMS['omgl0']*1.e-6)
+        SUMMARY['dw_i']                            =  '{:8.2e} delta-gamma'.format(PARAMS['w0'])
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
