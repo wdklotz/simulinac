@@ -341,7 +341,7 @@ class colors: # You may need to change color settings
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     BLUE = '\033[34m'
-def waccept(node):
+def waccept(node):   # should be a method of RFG TODO
     """
     Central to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1

@@ -167,7 +167,7 @@ def call_Dist(arg):
 def call_FIELD(arg):
     """
     SF-field table on intervall -cavlen <= z <= +cavlen. 
-    Field maximum is at z=0 and normalized to EzPeak Mv/m.   #TODO  z=0?
+    Field maximum is at z=0 and normalized to EzPeak Mv/m.
     """
     
     FH               = arg['freq']

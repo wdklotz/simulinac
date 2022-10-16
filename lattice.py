@@ -498,7 +498,6 @@ class Lattice(object):
         s_fun.append(s,s_0)
 
         """ loop through lattice """
-        # TODO this function needs serious brain checking again. energy over distance? not carrried correctly! needed?
         for element in iter(self):
             if isinstance(element,ELM.MRK): continue     # TODO skip markers, not a permanent solution
             particle = element.particle

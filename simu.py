@@ -18,18 +18,17 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO: Calulate cell phase advance sigma by integration
-#TODO: handle exceptions speziel ValueError   - more or less done
+#TODO: Calulate cell phase advance sigma by integration - maybe
 #TODO: use normalized emittances ?
-#TODO: waccept results are global - each node should carry its own
-#TODO: waccept work and check again - logitudinal acceptance !!!!!
-#TODO: make new simu_manual.tex, README.md, check conversions.tex
+#TODO: make new simu_manual.tex, README.md, check conversions.tex - later
 #TODO: rework the KVout - done in parts
-#TODO: rework verbose printing levels
-#TODO: C.K.Allen's matrices which are XAL as well?
-#TODO: slices as sub-lattice attribute to thick element
-#TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
+#TODO: rework verbose printing levels - needed?
+#TODO: C.K.Allen's matrices which are XAL as well? - don't know if better
+#TODO: slices as sub-lattice attribute to thick element - too big a modification
+#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - what?
+#TODO: make waccept a method of RFG node - next planned improvement
+#done: handle exceptions speziel ValueError - more or less done
+#done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 """
 import sys,os
 # for PyQt
@@ -53,9 +52,7 @@ import elements as ELM
 import bucket_size as separatrix
 
 def display0(*args):
-    """
-    C&S-Tracks w/o longitudinal motion
-    """
+    """ C&S-Tracks w/o longitudinal motion """
     #----------*----------*   # unpack
     twiss_func = args[0]
     cos_like   = args[1]
@@ -152,9 +149,7 @@ def display1(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 def display3(*args):
-    """
-    C&S-Tracks with longitudinal motion
-    """
+    """ C&S-Tracks with longitudinal motion """
     #-------------------- unpack
     twiss_fun = args[0]
     cos_like  = args[1]
@@ -270,9 +265,7 @@ def display3(*args):
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
 def display4(*args):
-    """
-    beta functions and synchrotron oscillations
-    """
+    """ beta functions and synchrotron oscillations """
     #-------------------- unpack
     beta_fun  = args[0]
     cos_like  = args[1]
@@ -406,19 +399,19 @@ def simulation(filepath):
             kv[key] = SUMMARY[key]
         dictprnt(kv,text='KV',njust=1)
     else:
-        show_data_from_elements() #..................................show ELEMENT attributes
-        dictprnt(SUMMARY,text='Summary') #...........................show summary
-        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
+        show_data_from_elements() #...................................show ELEMENT attributes
+        dictprnt(SUMMARY,text='Summary') #............................show summary
+        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
         steps = 10
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,...........calculate envelope functions
+        twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,......calculate envelope functions
         display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
             DEBUG_OFF(node.toString())
             DEBUG_OFF(node.__dict__)
             node.do_action()
-        """ show all figures - (must be the only one!) """
+        """ show all figures - (must be the only call to show!) """
         plt.show()
 if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
