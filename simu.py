@@ -260,7 +260,7 @@ def display3(*args):
     ax_r.set_ylabel(r'$\Delta$p/p [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
-    ax_r.plot(z2,cdp,label='C',color='red')
+    ax_r.plot(z1,cdp,label='C',color='red')
     ax_r.plot(z2,sdp,label='S',color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
     plt.legend(loc='lower right',fontsize='x-small')

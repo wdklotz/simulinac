@@ -484,13 +484,13 @@ class Lattice(object):
         else:
             sigmaz_i = 0.
             Dp2p_i   = 0.
-        z1,z1p = soll_test((sigmaz_i, 0.))    # S
-        z4,z4p = soll_test((0., Dp2p_i))      # C
+        z1,z1p = soll_test((0., Dp2p_i))      # SIN like
+        z4,z4p = soll_test((sigmaz_i, 0.))    # cOS like
         # INITIAL @ entrance
         # MDIMxMDIM tracking used here
         s   = 0.
-        c_0 = NP.array([x1, x1p, y1, y1p, z1, z1p, tkin,1,0,1])  # C
-        s_0 = NP.array([x4, x4p, y4, y4p, z4, z4p, tkin,1,0,1])  # S
+        c_0 = NP.array([x1, x1p, y1, y1p, z4, z4p, tkin,1,0,1])  # C
+        s_0 = NP.array([x4, x4p, y4, y4p, z1, z1p, tkin,1,0,1])  # S
         # function names
         c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
         s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
