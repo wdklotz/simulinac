@@ -468,6 +468,7 @@ def show_data_from_elements():  #TODO better get data fron lattice objects
         print('{} '.format(elementID),end='')
         dictprnt(element,'(MKSA units)',end='')
 def collect_data_for_summary(lattice):
+    # Unicode characters in python :https://pythonforundergradengineers.com/unicode-characters-in-python.html
     if True:
         SUMMARY['use emittance growth']            =  FLAGS['egf']
         SUMMARY['use sigma tracking']              =  FLAGS['sigma']
@@ -478,26 +479,25 @@ def collect_data_for_summary(lattice):
         SUMMARY['lattice version']                 =  PARAMS['lattice_version']
         SUMMARY['N_sigma']                         =  PARAMS['nbsigma']
         SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-        SUMMARY['sigx_i*   [mm]']                  =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-        SUMMARY["sigx'_i* [mrad]"]                 =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-        SUMMARY['sigy_i*   [mm]']                  =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-        SUMMARY["sigy'_i* [mrad]"]                 =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-        SUMMARY["emitx_i[mrad*mm]"]                =  PARAMS['emitx_i']*1.e6
-        SUMMARY["emity_i[mrad*mm]"]                =  PARAMS['emity_i']*1.e6
-        SUMMARY['dT/T_i']                          =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
+        SUMMARY['\u03C3x_i*    [mm]']              =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+        SUMMARY["\u03C3x'_i* [mrad]"]              =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+        SUMMARY['\u03C3y_i*    [mm]']              =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+        SUMMARY["\u03C3y'_i* [mrad]"]              =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+        SUMMARY["\u03B5x_i [mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
+        SUMMARY["\u03B5y_i [mrad*mm]"]             =  PARAMS['emity_i']*1.e6
+        SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kinetic energy spread'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
-        SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmax'])
-        SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmax']*1.e2)
-        # SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-        SUMMARY['separatrix: DP/P-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmax']*100.)
-        SUMMARY['emitz*  [mm]']                    =  '{:8.2e} {{z,DP/P}}'.format(PARAMS['emitz']*1.e3)
-        SUMMARY['emitw*  [rad]']                   =  '{:8.2e} {{Phi,w}}'.format(PARAMS['emitw'])
-        SUMMARY['dP/P_i*']                         =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
-        SUMMARY['dPhi_i* [rad]']                   =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
-        SUMMARY['z_i*    [m]']                     =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
-        SUMMARY['frequency* [MHz]']                =  '{:8.2e} synchotron'.format(PARAMS['omgl0']*1.e-6)
-        SUMMARY['dw_i']                            =  '{:8.2e} delta-gamma'.format(PARAMS['w0'])
+        SUMMARY['\u0394W-max_i* [MeV]']            =  '{:8.2e} \u0394W on separatrix'.format(PARAMS['DWmax'])
+        SUMMARY['w-max_i*']                        =  '{:8.2e} \u0394\u03B3 on separatrix'.format(PARAMS['wmax'])
+        SUMMARY['\u0394P/P-max_i [%]']             =  '{:8.2e} \u0394P/P on separatrix'.format(PARAMS['Dp2pmax']*1.e2)
+        SUMMARY['\u03B5z_i* [mm]']                 =  '{:8.2e} {{z,\u0394P/P}}'.format(PARAMS['emitz']*1.e3)
+        SUMMARY['\u03B5w_i* [rad]']                =  '{:8.2e} {{Phi,w}}'.format(PARAMS['emitw'])
+        SUMMARY['\u0394P/P_i*']                    =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0'])
+        SUMMARY['\u0394\u03A6_i* [rad]']           =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
+        SUMMARY['z_i* [m]']                        =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
+        SUMMARY['sync-freq* [MHz]']                =  '{:8.2e} synchotron frquency'.format(PARAMS['omgl0']*1.e-6)
+        SUMMARY['w0_i*']                           =  '{:8.2e} \u0394\u03B3'.format(PARAMS['w0'])
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
