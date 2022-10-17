@@ -231,14 +231,14 @@ SEGMENTS:
     # RF_Cavity_ArrayH:       [1,[GapsH, D10H, GapsH]]
 # ===========================================================================================
 CELLS:    
-    NIL_CELL:    [1,[NIL_SEG]]
+    NIL_CELL:    [1,[]]
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     CELL:   [1,[SGi, CAVsarr, SGm, CAVsarr, SGf]] 
     # CELL_H:   [1,[QF+D-H, RF_Cavity_ArrayH, D+QD+D-H, RF_Cavity_ArrayH, D+QF-H]]  
 # ===========================================================================================
 SECTIONS:
-    NIL_SEC:    [1,[NIL_CELL]]
+    NIL_SEC:    [1,[]]
 # group CELLs into SECTIONS
 #...........................................................................................
     SCle:      [40,[CELL]]       

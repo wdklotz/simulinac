@@ -234,8 +234,7 @@ def instanciate_element(item):
             sys.exit(1)
     return instance
 def factory(input_file,stop=None):
-    """ factory creates a lattice from input-file """
-
+    """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
     def proces_flags(flags):
         """ external FLAGs """        
         UTIL.FLAGS['accON']    = flags.get('accON',True)               # acceleration ON
@@ -255,64 +254,77 @@ def factory(input_file,stop=None):
         return
     def proces_parameters(parameters):
         """ PARAMETERS and their default values """
-        UTIL.PARAMS['DT2T']             = parameters.get('DT2T',6E-3)
-        # UTIL.PARAMS['emitw']            = parameters.get('emitw',1.)   calculated by UTIL.waccept() from 1s rf node
-        # UTIL.PARAMS['Dphi0']            = parameters.get('Dphi0',1.)   calculated by UTIL.waccept() from 1st rf node
-        UTIL.PARAMS['emitx_i']          = parameters.get('emitx_i',10E-6)
-        UTIL.PARAMS['emity_i']          = parameters.get('emity_i',10E-6)
-        UTIL.PARAMS['betax_i']          = parameters.get('betax_i',1.)
-        UTIL.PARAMS['betay_i']          = parameters.get('betay_i',1.)
+        # kinetic injection energy
+        W_in  = parameters.get("Win",UTIL.PARAMS['injection_energy']) # default PARAMS['injection_energy']
+        tk_in = parameters.get('Tkin',W_in) # alias Tkin=Win
+        UTIL.PARAMS['injection_energy'] = tk_in 
+        # longitudinal in {Dphi,w}-space
+        DW2W_in = parameters.get('DW2W',0.01) # default 1%
+        DT2T_in = parameters.get('DT2T',DW2W_in) # alias DT2T=DW2W
+        UTIL.PARAMS['DT2T']             = DT2T_in
+        UTIL.PARAMS['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [deg]
+        # transverse beam parameters
+        UTIL.PARAMS['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
+        UTIL.PARAMS['betax_i']          = parameters.get('betax_i',1.) # [m]
         UTIL.PARAMS['alfax_i']          = parameters.get('alfax_i',0.)
+        UTIL.PARAMS['emity_i']          = parameters.get('emity_i',10E-6)
+        UTIL.PARAMS['betay_i']          = parameters.get('betay_i',1.)
         UTIL.PARAMS['alfay_i']          = parameters.get('alfay_i',0.)
+        # transverse Twiss @ entrance
+        UTIL.PARAMS['twiss_x_i'] = UTIL.Twiss(UTIL.PARAMS['betax_i'], UTIL.PARAMS['alfax_i'],UTIL.PARAMS['emitx_i'])
+        UTIL.PARAMS['twiss_y_i'] = UTIL.Twiss(UTIL.PARAMS['betay_i'], UTIL.PARAMS['alfay_i'],UTIL.PARAMS['emity_i'])
+        # supplemental global parameters
         UTIL.PARAMS['nbsigma']          = parameters.get('nbsigma',2)
         UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
-        UTIL.PARAMS['mapping']          = parameters.get('mapping','base')
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
-        """ dummy PARAMETERS to satisfy some code elsewhere """   #TODO
-        UTIL.PARAMS['emitz']            = 1.
-        UTIL.PARAMS['betaz']            = 1.
-        UTIL.PARAMS['z0']               = 1.
-        UTIL.PARAMS['alfaw_i']          = 0.
-        """ PARAMETERS already defined that maybe overriden """
-        UTIL.PARAMS['injection_energy'] = parameters.get('Tkin',UTIL.PARAMS['injection_energy'])
+        UTIL.PARAMS['input_file']       = None
+        # longitudinal emittance
+        Dphi_0  = UTIL.PARAMS['Dphi0']
+        DT2T    = UTIL.PARAMS['DT2T']
+        T       = UTIL.PARAMS['injection_energy']
+        E0      = UTIL.PARAMS['proton_mass']
+        w_0     = T/E0*DT2T # Wrangler's definition of w (pp.176)
+        emit_w  = Dphi_0 * w_0 # emittance in {Dphi,w}-space
+        UTIL.PARAMS['emitw_i']  = Dphi_0 * w_0
+        UTIL.PARAMS['alfaw_i']  = 0.   # always
+        UTIL.PARAMS['betaw_i']  = emit_w/w_0**2
+        # longitudinal TWiss @ entrance
+        UTIL.PARAMS['twiss_w_i'] = UTIL.Twiss(UTIL.PARAMS['betaw_i'], UTIL.PARAMS['alfaw_i'],UTIL.PARAMS['emitw_i'])
+        # maybe parameters    #TODO
+        UTIL.PARAMS['emitz_i']   = None
+        UTIL.PARAMS['alfaz_i']   = 0.   # always
+        UTIL.PARAMS['betaz_i']   = None
+        UTIL.PARAMS['z0']        = None
         return
     def proces_elements(elements):
         """fills global ELEMENTS"""
         UTIL.ELEMENTS = elements
         return elements
     def make_lattice(elementIDs,injection_energy):
-        # UTIL.DEBUG_ON(elementIDs)
+        UTIL.DEBUG_OFF(elementIDs)
         lattice = Lattice(injection_energy)
         instances = []
         for elementID in elementIDs:
-            # print("A"); UTIL.DEBUG_ON(elementID)
+            UTIL.DEBUG_OFF(elementID)
             ELEMENT = UTIL.ELEMENTS.get(elementID)
-            if ELEMENT.get('mapping',"") in ['base','ttf','dyn']:   # non_linear_mapping in lattice?
+            UTIL.DEBUG_OFF(ELEMENT)
+            if ELEMENT.get('mapping') in ['base','ttf','dyn']:   # non_linear_mapping in lattice?
                 UTIL.FLAGS['non_linear_mapping'] = True
-            # print("B"); UTIL.DEBUG_ON(element)
             """add sectionID and elementID"""
             ELEMENT['ID']  = elementID 
-            # repack {ID:{attributes}} for instanciate_element(...)
-            item = {elementID:ELEMENT}
             """INSTANCIATE ELM._Node objects"""
-            instance = instanciate_element(item) 
+            instance = instanciate_element({elementID:ELEMENT}) 
             if instance == None: continue
-            # print("C"); UTIL.DEBUG_ON(instance)
+            UTIL.DEBUG_OFF(instance)
             if isinstance(instance, ELM.Node):
-                # lattice.add_node(instance)
                 instances.append(instance)
-            # list of thin quad instances
-            elif isinstance(instance,list):
-                # [lattice.add_node(x) for x in instance]
-                instances += instance
-        # print("D"); UTIL.DEBUG_ON(instances)
+        UTIL.DEBUG_OFF(instances)
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
 
-
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
-    UTIL.SUMMARY['input file'] = UTIL.PARAMS['input_file'] = input_file
+    # UTIL.SUMMARY['input file'] = input_file
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)
@@ -335,24 +347,25 @@ def factory(input_file,stop=None):
     UTIL.DEBUG_OFF(UTIL.FLAGS)
 
     parameters = proces_parameters(results.PARAMETERS)
+    UTIL.PARAMS['input_file'] = input_file
     UTIL.DEBUG_OFF('global PARAMS after proces_parameters():')
     UTIL.DEBUG_OFF(UTIL.PARAMS)
-    
+
     elements = proces_elements(results.ELEMENTS)
     UTIL.DEBUG_OFF('ELEMENTS after proces_elements():')
     UTIL.DEBUG_OFF(UTIL.ELEMENTS)
 
     lat_elementIDs = results.LAT_ELMIDs
+    UTIL.DEBUG_OFF('LAT_ELMIDs after proces_elements():')
+    UTIL.DEBUG_OFF(lat_elementIDs)
     lattice = make_lattice(lat_elementIDs,UTIL.PARAMS['injection_energy'])
-    UTIL.DEBUG_OFF('lattice_generator >>{}'.format(lattice.toString()))
-    UTIL.DEBUG_OFF('SUMMARY in factory() {}'.format(UTIL.SUMMARY))
-    # end of factory(...)
+    # end of factory. return full Lattice object.
     return lattice
     
 class TestLatticeGeneratorMethods(unittest.TestCase):
     def test_Lattice_Parser(self):
         print("\b----------------------------------------test_Lattice_Parser")
-        input_file = "unittests\DG6FG6D\simuIN.yml"
+        input_file = "unittests/I5O200_19082022.yml"
         fileobject = open(input_file,'r')
         wfl = yaml.load(fileobject, Loader=yaml.FullLoader)
         fileobject.close()
@@ -361,16 +374,41 @@ class TestLatticeGeneratorMethods(unittest.TestCase):
         print('\n======================= wfl.items()')
         for i,v in iter(wfl.items()):
             print(i,' ==> ',v)
+        
         seg = wfl['SEGMENTS']
         print("\n======================= seg = wfl['SEGMENTS']")
         print(seg)
-        print('\n======================= segment')
+        print('======================= segments')
         for i in seg:
             print(i)
+        
+        cell = wfl['CELLS']
+        print("\n======================= seg = wfl['CELLS']")
+        print(cell)
+        print('======================= cells')
+        for i in cell:
+            print(i)
+        
+        sec = wfl['SECTIONS']
+        print("\n======================= seg = wfl['SECTIONS']")
+        print(sec)
+        print('======================= sections')
+        for i in sec:
+            print(i)
+        
         lattice = wfl['LATTICE']
         print('\n======================= lattice')
         for l in lattice:
             print(l)
+    def test_Lattice_factory(self):
+        print("\b----------------------------------------test_Lattice_factory")
+        input_file = "unittests/I5O200_19082022.yml"
+        lattice = factory(input_file)
+        print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[UTIL.EKOO]:.3f} [MeV] \u26dd')
+        UTIL.DEBUG_ON('lattice_generator'   ,lattice.toString())
+        UTIL.DEBUG_ON('SUMMARY in factory()',UTIL.SUMMARY)
+        UTIL.DEBUG_ON('FLAGS in factory()'  ,UTIL.FLAGS)
+        UTIL.DEBUG_ON('PARAMS in factory()' ,UTIL.PARAMS)
 
 if __name__ == '__main__':
     unittest.main()

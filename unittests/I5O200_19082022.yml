@@ -45,7 +45,7 @@ FLAGS:
 PARAMETERS:
     Tkin:                 5.0             # [MeV] energy @ injection 
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
-    Dphi0:                1.0             # [deg] delta-phi @ iinjection
+    DPHI0:                18.             # [deg] delta-phi @ iinjection
     frequency:    &freq   816.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance

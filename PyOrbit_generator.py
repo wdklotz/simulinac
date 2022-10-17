@@ -26,7 +26,7 @@ import warnings
 import argparse
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
-from setutil import FLAGS,PARAMS,waccept,DEBUG_ON,DEBUG_OFF
+from setutil import FLAGS,PARAMS,DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
@@ -44,19 +44,20 @@ def generator(file=None):
     # lattice           = unpickled_lattice
     # DEBUG_ON('lattice length',lattice.length)
 
-    waccept(lattice.first_gap)
+    # waccept(lattice.first_gap)
+    lattice.first_gap.waccept()
 
     # select parameters for <PARAMS/>-tag
     parameter = dict(
             clight           = PARAMS['clight'],              # [m/s]
             proton_mass      = PARAMS['proton_mass'],         # MeV
-            EzAvg            = PARAMS['EzAvg'],               # [MV/m]
-            gap              = PARAMS['gap'],                 # [m]
-            cavity_laenge    = PARAMS['cavity_laenge'],       # [m]
-            phisoll          = PARAMS['phisoll'],             # [deg]
-            frequenz         = PARAMS['frequenz'],            # [Hz]
             injection_energy = PARAMS['injection_energy'],    # [MeV]
             lattice_version  = PARAMS['lattice_version'],
+            # EzAvg            = PARAMS['EzAvg'],               # [MV/m]
+            # gap              = PARAMS['gap'],                 # [m]
+            # cavity_laenge    = PARAMS['cavity_laenge'],       # [m]
+            # phisoll          = PARAMS['phisoll'],             # [deg]
+            # frequenz         = PARAMS['frequenz'],            # [Hz]
             # emitx_i          = PARAMS['emitx_i'],             # [m*rad]
             # emity_i          = PARAMS['emity_i'],             # [m*rad]
             # emitz_i          = PARAMS['emitz'],               # [m*rad]

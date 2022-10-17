@@ -42,7 +42,7 @@ matplotlib.use("TkAgg")    # works on native W10
 import matplotlib.pyplot as plt
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,Twiss
 from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
@@ -374,7 +374,36 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
-    waccept(lattice.first_gap)
+    # waccept(lattice.first_gap)
+    """
+    if FLAGS['dWf'] == 1:
+        lattice.first_gap.waccept()
+    else:
+        # assume no acceleration
+        FLAGS['dWf'] = 0
+        # we can calculate the Twiss objects at injection ...
+        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
+        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
+        # ... and use dummies
+        tww = twz = Twiss(1.,0.,1.)
+        res = dict(
+            EzAvg         = 0.,
+            gap           = 0.,
+            cavity_laenge = 0.,
+            phisoll       = 0.,
+            frequenz      = 0.,
+            twiss_x_i     = twx,
+            twiss_y_i     = twy,
+            twiss_w_i     = tww,
+            twiss_z_i     = twz
+        )
+        for k,v in res.items():
+            PARAMS[k] = v
+        PARAMS['twiss_x_i()'] = twx()   # function pointers
+        PARAMS['twiss_xyi()'] = twy()
+        PARAMS['twiss_w_i()'] = tww()
+        PARAMS['twiss_z_i()'] = twz()
+    """
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------

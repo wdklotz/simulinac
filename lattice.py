@@ -35,7 +35,7 @@ from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, 
 from sigma import Sigma, sig_map
 
 class Lattice(object):
-    """ The Lattice object is a list of elements: ELM.<element> in self.seq  ?? """
+    """ The Lattice object is a list of elements: ELM.<element> in self.seq """
     class LRiterator(object):
         def __init__(self,lattice):
             self.lattice = lattice
@@ -66,13 +66,14 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
-    def __init__(self, injection_energy=50.,descriptor=""):
+    def __init__(self, injection_energy,descriptor=""):
         self.seq              = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         self.iteration        = "LR"  # default: iterating lattice left-right
         self.length           = 0.
         self.acc_node         = None
         self.injection_energy = injection_energy
         self.descriptor       = descriptor
+        PARAMS['injection_energy'] = injection_energy
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -138,10 +139,8 @@ class Lattice(object):
         quad_counter   = 0
         ttfmin = +1.e+50
         ttfmax = +1.e-50
-        # tk_i = soll_track.getpoints()[0]()[6]
-        # tk_f = soll_track.getpoints()[-1]()[6]
-        tk_inject  = self.injection_energy
-        tk_final   = self.seq[-1].ref_track[EKOO]
+        tki  = self.injection_energy
+        tkf   = self.seq[-1].ref_track[EKOO]
         """ loop over all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
@@ -150,25 +149,108 @@ class Lattice(object):
                 cavity_counter += 1
                 ttfmin = min(element.ttf,ttfmin)
                 ttfmax = max(element.ttf,ttfmax)
-        if quad_counter == 0:
-            SUMMARY['nbof quadrupoles*'] = '0 (no quads?)'
-        else:
-            SUMMARY['nbof quadrupoles*']      = quad_counter
-        SUMMARY['nbof cavities*']             = cavity_counter
-        SUMMARY['ttf_min,ttf_max*']           = (ttfmin,ttfmax)
-        SUMMARY['Tk_i,Tk_f [MeV]']            = (tk_inject,tk_final)
-        SUMMARY['lattice length [m]']         = self.length
+        SUMMARY['nbof quadrupoles*']  = quad_counter   if quad_counter   != 0 else '0 (no quadrupoles?)'
+        SUMMARY['nbof cavities*']     = cavity_counter if cavity_counter != 0 else '0 (no cavities?)'
+        SUMMARY['ttf_min,ttf_max*']   = (ttfmin,ttfmax)
+        SUMMARY['Tk_i,Tk_f [MeV]']    = (tki,tkf)
+        SUMMARY['lattice length [m]'] = self.length
     def cell(self,closed=True):
-        """
-        Construct the full accelerator lattice-cell matrix and extract standard quantities:
-            full cell: mcell
-            stability?
-            betatron tunes: mux, muy
+        """ Construct the full lattice cell-matrix and extract standard quantities:
+            full cell => mcell
+            stability
             det(M)
-            check symplecticity
-            twiss prameters beta, alpha, gamma for periodic lattices
+            symplecticity
+            transverse Twiss for open and closed lattices
+            betatron tunes: mux, muy
         """
-        # mcell = ELM.I(label=' <==')   #  chain matrices for full cell
+        def ring(mcell):
+            if not isStable(mcell): sys.exit(1)
+            # cell matrix (not beta_matrix!)
+            cell_matrix = self.acc_node.matrix
+            m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
+            m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
+            n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
+            n21  = cell_matrix[YPKOO,YKOO];  n22  = cell_matrix[YPKOO,YPKOO]
+            # formula from Wille (pp.107)
+            wurzx = 2.-m11**2-2.*m12*m21-m22**2
+            if wurzx > 0.:
+                bax = fabs(2.*m12/sqrt(wurzx))     #  muss Absolutwert sein! (Fehler bei Wille)
+                alx = (m11-m22)/(2.*m12)*bax
+                gmx = (1.+alx**2)/bax
+            print_verbose(2,'betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
+            PARAMS['betax_i'] = bax
+            PARAMS['alfax_i'] = alx
+            wurzy = 2.-n11**2-2.*n12*n21-n22**2
+            if wurzy > 0.:
+                bay = fabs(2.*n12/sqrt(wurzy))    #  muss Absolutwert sein! (Fehler bei Wille)
+                aly = (n11-n22)/(2.*n12)*bay
+                gmy = (1.+aly**2)/bay
+            print_verbose(2,'betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
+            PARAMS['betay_i'] = bay
+            PARAMS['alfay_i'] = aly
+            ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
+            v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
+            m_cell_beta = self.acc_node.beta_matrix()
+            v_beta_e = NP.dot(m_cell_beta,v_beta_a)
+            # if verbose:
+            print_verbose(2,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
+            diffa_e = v_beta_a - v_beta_e
+            for i in range(6):
+                if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
+            print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
+            ## transverse/longitudinal Twiss @ entrance for periodic lattice
+            PARAMS['twiss_x_i'] = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'],PARAMS['emitx_i'])
+            PARAMS['twiss_y_i'] = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'],PARAMS['emity_i'])
+            PARAMS['twiss_w_i'] = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
+            return
+        def transferline(mcell):
+            isStable(mcell)
+            # transverse/longitudinal Twiss @ entrance for transfer line from input
+            PARAMS['twiss_x_i'] = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'],PARAMS['emitx_i'])
+            PARAMS['twiss_y_i'] = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'],PARAMS['emity_i'])
+            PARAMS['twiss_w_i'] = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
+            return
+        def isStable(mcell):
+            stable = True
+
+            stabx = fabs(mcell.tracex())
+            print_verbose(1,'stability X? ',stabx)
+            if stabx >= 2.0:
+                print_verbose(1,'unstable Lattice in x-plane\n')
+                stable = False
+            else:
+                cos_mux = 0.5 * stabx
+                mux = degrees(acos(cos_mux))
+
+            staby = fabs(mcell.tracey())
+            print_verbose(1,'stability Y? ',staby)
+            if staby >= 2.0:
+                print_verbose(1,'unstable Lattice in y-plane\n')
+                stable = False
+            else:
+                cos_muy = 0.5 * staby
+                muy = degrees(acos(cos_muy))
+            
+            if stable: 
+                print_verbose(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+                print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
+                print_verbose(0,self.acc_node.prmatrix())
+                det = LA.det(self.acc_node.matrix)
+                print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
+                # Determinate M-I == 0 ?
+                beta_matrix = mcell.beta_matrix()
+                for i in range(5):
+                    beta_matrix[i,i] = beta_matrix[i,i]-1.0
+                det = LA.det(beta_matrix)
+                print_verbose(2,'det|Mbeta - I|={:.5f}\n'.format(det))
+                # symplectic?
+                s = self.symplecticity()
+                print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
+                print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
+            else:
+                print('STOP: unstable lattice!')
+            return stable
+    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
         mcell = None
         """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):
@@ -177,104 +259,17 @@ class Lattice(object):
             else:
                 # Achtung: Reihenfolge !
                 mcell = element * mcell    
-                # mcell = mcell *element   #???????
-
-        ## Stabilität ?
-        unstable = False
-        stab = fabs(mcell.tracex())
-        # if verbose:
-        print_verbose(1,'stability X? ',stab)
-        if stab >= 2.0:
-            # if verbose:
-            print_verbose(1,'unstable Lattice in x-plane\n')
-            unstable = True
-        else:
-            cos_mux = 0.5 * stab
-            mux = degrees(acos(cos_mux))
-
-        stab = fabs(mcell.tracey())
-        # if verbose:
-        print_verbose(1,'stability Y? ',stab)
-        if stab >= 2.0:
-            # if verbose:
-            print_verbose(1,'unstable Lattice in y-plane\n')
-            unstable = True
-        else:
-            cos_muy = 0.5 * stab
-            muy = degrees(acos(cos_muy))
-        if not unstable:
-            # if verbose:
-            print_verbose(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
-        ## full accelerator
-        self.acc_node = mcell    # the full acc: isinstance(self.acc_node,Lattice)==True
-        # if verbose:
-        print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
-        print_verbose(0,self.acc_node.prmatrix())
-        det = LA.det(self.acc_node.matrix)
-        # if verbose:
-        print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
-        ## Determinate M-I == 0 ?
-        beta_matrix = mcell.beta_matrix()
-        for i in range(5):
-            beta_matrix[i,i] = beta_matrix[i,i]-1.0
-        det = LA.det(beta_matrix)
-        # if verbose:
-        print_verbose(2,'det|Mbeta - I|={:.5f}\n'.format(det))
-        ## symplectic?
-        s = self.symplecticity()
-        # if verbose:
-        print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
-        print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
-        ## Vorgabe emittance @ entrance
-        emitx = PARAMS['emitx_i']
-        emity = PARAMS['emity_i']
-
-        ## Startwerte für twiss-functions aus cell matrix (not beta_matrix!)
+        # the full acc isinstance(self.acc_node,Lattice)==True
+        self.acc_node = mcell
         if closed:
-            if not unstable:
-                cell_matrix = self.acc_node.matrix
-                m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
-                m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
-                n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
-                n21  = cell_matrix[YPKOO,YKOO];  n22  = cell_matrix[YPKOO,YPKOO]
-                # Formeln von Wille pp 107
-                wurzx = 2.-m11**2-2.*m12*m21-m22**2
-                if wurzx > 0.:
-                    bax = fabs(2.*m12/sqrt(wurzx))     #  muss Absolutwert sein! (Fehler bei Wille)
-                    alx = (m11-m22)/(2.*m12)*bax
-                    gmx = (1.+alx**2)/bax
-                print('betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
-                wurzy = 2.-n11**2-2.*n12*n21-n22**2
-                if wurzy > 0.:
-                    bay = fabs(2.*n12/sqrt(wurzy))    #  muss Absolutwert sein! (Fehler bei Wille)
-                    aly = (n11-n22)/(2.*n12)*bay
-                    gmy = (1.+aly**2)/bay
-                print_verbose(2,'betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
-                ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
-                v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
-                m_cell_beta = self.acc_node.beta_matrix()
-                v_beta_e = NP.dot(m_cell_beta,v_beta_a)
-                # if verbose:
-                print_verbose(2,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
-                diffa_e = v_beta_a - v_beta_e
-                for i in range(6):
-                    if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
-                print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
-                ## transversale twiss parameter fuer periodisches lattice
-                twx = Twiss(bax,alx,emitx)
-                twy = Twiss(bay,aly,emity)
-                PARAMS['twiss_x_i'] = twx
-                PARAMS['twiss_y_i'] = twy
-            else:
-                print('STOP: unstable lattice!')
-                sys.exit(1)
+            ring(mcell)
         else:
-            ## transversale twiss parameter fuer transfer lines
-            # alfa, beta und emittance definieren den Beam @ entrance, 
-            bax,alx,gmx,epsx = PARAMS['twiss_x_i']()
-            bay,aly,gmy,epsy = PARAMS['twiss_y_i']()
+            transferline(mcell)
+        bax,alx,gmx,epsix = PARAMS['twiss_x_i']()
+        bay,aly,gmy,epsiy = PARAMS['twiss_y_i']()
         print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         print_verbose(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
+        return
     def report(self):
         # TODO needs more work
         """ report lattice layout (may not work!) """
@@ -304,7 +299,7 @@ class Lattice(object):
         elif self.iteration == "RL":
             self.iteration = "LR"
     def twiss_funcs(self,steps=1):
-        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices or sigma-matrix"""
+        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices or sigma-matrix """
         sFLAG   = FLAGS['sigma']
         nlFLAG  = FLAGS['non_linear_mapping']
         t3dFLAG = True
@@ -326,7 +321,8 @@ class Lattice(object):
         function_tbl = []
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        bz,az,gz,epsz = PARAMS['twiss_z_i']()
+        # bz,az,gz,epsz = PARAMS['twiss_w_i']()   
+        bz,az,gz,epsz = (0,0,0,0))   # not used for transverse sigmas
         node0 = self.seq[0]      # 1st node
         si,sm,sf      = node0.position
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
@@ -337,8 +333,11 @@ class Lattice(object):
         function_tbl.append(function_row)
                 
         """ loop over all nodes in the lattice to get sliced function values"""
-        B_matrix = NP.eye(9,9)                           # cumulated beta-matrix
-        R_matrix = NP.eye(MDIM,MDIM)                     # cumulated R-matrix
+        # B_matrix = NP.eye(9,9)                           # cumulated beta-matrix
+        # R_matrix = NP.eye(MDIM,MDIM)                     # cumulated R-matrix
+        # TODO (6,6) or (9,9) or (10,10)?
+        B_matrix = NP.eye(6,6)                           # cumulated beta-matrix
+        R_matrix = NP.eye(6,6)                           # cumulated R-matrix
         Sig      = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
         for node in iter(self):
             si,sm,sf = node.position

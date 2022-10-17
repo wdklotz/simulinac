@@ -33,7 +33,7 @@ import unittest
 
 from lattice_generator import factory
 import elements as ELM
-from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
+from setutil import PARAMS, FLAGS, dictprnt, Ktp
 from setutil import WConverter, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
@@ -283,7 +283,8 @@ def tracker(input_file,options):
         sys.exit()
 
     # calculate twiss paramters at entrance
-    waccept(lattice.first_gap)
+    # waccept(lattice.first_gap)
+    lattice.first_gap.waccept()
     tkIN     = lattice.injection_energy
     # conv     = WConverter(tkIN,lattice.first_gap.freq)
     t1       = time.process_time()

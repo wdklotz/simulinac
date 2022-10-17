@@ -22,11 +22,12 @@ from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ce
 from copy import copy
 import numpy as NP
 import unittest
+import warnings
 
 from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF
 from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
+from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp, Twiss
 from Ez0     import SFdata
 # from DynacG  import _DYN_G
 
@@ -749,7 +750,120 @@ class RFG(Node):
     def adjust_energy(self, tkin):
         adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
+    def waccept(self):
+        """ Calculate longitudinal acceptance, i.e. phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
+            (w/w0)**2 + (Dphi/Dphi0)**2 = 1
+            emitw = w0*Dphi0 = ellipse_area/pi
+        """
+        # acceleration
+        if FLAGS['dWf'] == 1:
+            DT2T      = PARAMS['DT2T']
+            E0T       = self.EzAvg*self.ttf  # [MV/m]
+            particle  = self.particle
+            phisoll   = self.phisoll         # [rad]
+            lamb      = self.lamb            # [m]
+            freq      = self.freq            # [Hz]
+            m0c2      = particle.e0          # [MeV]
+            gb        = particle.gamma_beta
+            beta      = particle.beta
+            gamma     = particle.gamma
+            tkin      = particle.tkin
+            conv      = WConverter(tkin,freq)
+            DEBUG_OFF(dict(DT2T=DT2T,E0T=E0T,phisoll=phisoll,lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
+            """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
+            w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+            """ SMALL amplitude oscillations (T.Wangler pp.185) """
+            w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
+            wmax    = w0large
+
+            w0       = (gamma-1.)*DT2T
+            emitw    = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance
+            Dphi0    = pi*emitw/w0                # injected phase spread
+            betaw    = emitw/w0**2                # w0 = w-int = sqrt(emitw/betaw) 
+            gammaw   = 1./betaw                   # gamma twiss
+            
+            omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
+            omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
+            DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w0=w0,emitw=emitw,Dphi0=Dphi0,betaw=betaw,gammaw=gammaw,omgl0=omgl0))
+
+            # longitudinal acceptance check (always done)
+            if wmax <= w0:
+                si,sm,sf = self.position
+                warnings.showwarning(
+                    'out of energy acceptance @ s={:.1f} [m]'.format(si),
+                    UserWarning,'setutil.py',
+                    'waccept()')
+
+            # {z-dp/p}-space  TODO test wToz again!!!!
+            z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
+            gammaz  = 1./betaz
+            Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
+            alfaw   = 0. # always for longitudinal
+
+            res =  dict (
+                    # {Dphi,w}
+                    emitw    = emitw,       # emittance{Dphi,w} [rad]
+                    Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
+                    betaw    = betaw,       # beta twiss [rad]
+                    gammaw   = gammaw,      # gamma twiss [1/rad]
+                    wmax     = wmax,        # separatrix: large amp. oscillations
+                    w0       = w0,          # separatrix small amp. osscillations
+                    omgl0    = omgl0,       # synchrotron oscillation [Hz]
+                    # {z,Dp2p}
+                    emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
+                    betaz    = betaz,       # twiss beta [m/rad]
+                    gammaz   = gammaz,      # twiss gamma [1/m]
+                    Dp2pmax  = Dp2pmax,     # max D/p on separatrix
+                    Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                    z0       = z0,          # ellipse z-int    (1/2 axis) [m]
+                    Dp2p_Acceptance = Dp2pmax,
+                    z_Acceptance    = conv.DphiToz(2.*phisoll),
+                    # {Dphi,DW}
+                    DWmax     = wmax*m0c2 # separatrix: max W in [MeV]
+                    )
+            # now we can calculate the longitudinal Twiss objects at injection
+            res['twiss_w_i'] = Twiss(res['betaw'], alfaw,emitw)
+            res['twiss_z_i'] = Twiss(res['betaz'], alfaw,emitz)
+        # no acceleration
+        else:
+            res = dict (
+                EzAvg         = 0.,
+                twiss_w_i     = Twiss(),
+                twiss_z_i     = Twiss()
+            )
+        return res
+            
+        # else:
+        """
+            # assume no acceleration
+            FLAGS['dWf'] = 0
+            # we can calculate the Twiss objects at injection ...
+            twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
+            twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
+            # ... and use dummies
+            tww = twz = Twiss(1.,0.,1.)
+            res = dict(
+                EzAvg         = 0.,
+                gap           = 0.,
+                cavity_laenge = 0.,
+                phisoll       = 0.,
+                frequenz      = 0.,
+                twiss_x_i     = twx,
+                twiss_y_i     = twy,
+                twiss_w_i     = tww,
+                twiss_z_i     = twz
+            )
+            for k,v in res.items():
+                PARAMS[k] = v
+            """
+            # pass
+            
+        # PARAMS['twiss_x_i()'] = twx()   # function pointers
+        # PARAMS['twiss_xyi()'] = twy()
+        # PARAMS['twiss_w_i()'] = tww()
+        # PARAMS['twiss_z_i()'] = twz()
+        # return
 # TODO classes below need unittesting
 # TODO D+K+D models not finished for OXAL_C and TTF_C
 class RFC(RFG):    #TODO
