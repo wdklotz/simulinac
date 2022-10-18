@@ -262,7 +262,7 @@ def factory(input_file,stop=None):
         DW2W_in = parameters.get('DW2W',0.01) # default 1%
         DT2T_in = parameters.get('DT2T',DW2W_in) # alias DT2T=DW2W
         UTIL.PARAMS['DT2T']             = DT2T_in
-        UTIL.PARAMS['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [deg]
+        UTIL.PARAMS['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
         # transverse beam parameters
         UTIL.PARAMS['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
         UTIL.PARAMS['betax_i']          = parameters.get('betax_i',1.) # [m]
@@ -285,6 +285,7 @@ def factory(input_file,stop=None):
         E0      = UTIL.PARAMS['proton_mass']
         w_0     = T/E0*DT2T # Wrangler's definition of w (pp.176)
         emit_w  = Dphi_0 * w_0 # emittance in {Dphi,w}-space
+        UTIL.PARAMS['w_i']      = w_0
         UTIL.PARAMS['emitw_i']  = Dphi_0 * w_0
         UTIL.PARAMS['alfaw_i']  = 0.   # always
         UTIL.PARAMS['betaw_i']  = emit_w/w_0**2
@@ -294,7 +295,7 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['emitz_i']   = None
         UTIL.PARAMS['alfaz_i']   = 0.   # always
         UTIL.PARAMS['betaz_i']   = None
-        UTIL.PARAMS['z0']        = None
+        # UTIL.PARAMS['z0']        = None
         return
     def proces_elements(elements):
         """fills global ELEMENTS"""

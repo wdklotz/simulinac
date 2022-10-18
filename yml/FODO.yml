@@ -28,16 +28,16 @@ DESCRIPTOR:  "FODO ohne Bend"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    accON:        False           # {True} accSeleration on/off flag
+    # accON:        False             # {True} accSeleration on/off flag
     # egf:          True            # {False} emittance growth flag
     # sigma:        False             # {True} beam sizes by sigma-matrix
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     periodic:     True            # {False} treat lattice as ring
     # useaper:      True            # {False} use aperture check for lattice elements
-    csTrak:       False           # {True} plot CS trajectories else beta functions
+    # csTrak:       False           # {True} plot CS trajectories else beta functions
     # bucket:       True            # {False} plot the bucket
     # maction:      True            # {False} call marker actions
-    # envelope:     True              # {False} plot envelopes
+    envelope:     True            # {False} plot envelopes
     verbose:      1                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
@@ -130,5 +130,5 @@ SECTIONS:
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
-    LINE:   [5,[CELL]]
+    LINE:   [15,[CELL]]
  

@@ -139,8 +139,6 @@ class Lattice(object):
         quad_counter   = 0
         ttfmin = +1.e+50
         ttfmax = +1.e-50
-        tki  = self.injection_energy
-        tkf   = self.seq[-1].ref_track[EKOO]
         """ loop over all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
@@ -151,9 +149,11 @@ class Lattice(object):
                 ttfmax = max(element.ttf,ttfmax)
         SUMMARY['nbof quadrupoles*']  = quad_counter   if quad_counter   != 0 else '0 (no quadrupoles?)'
         SUMMARY['nbof cavities*']     = cavity_counter if cavity_counter != 0 else '0 (no cavities?)'
-        SUMMARY['ttf_min,ttf_max*']   = (ttfmin,ttfmax)
-        SUMMARY['Tk_i,Tk_f [MeV]']    = (tki,tkf)
-        SUMMARY['lattice length [m]'] = self.length
+        if ttfmin != +1.e+50: SUMMARY['ttf_min,ttf_max*']   = (ttfmin,ttfmax)
+        tki   = self.injection_energy
+        tkf   = self.seq[-1].ref_track[EKOO]
+        SUMMARY['Tk_i,Tk_f* [MeV]']    = (tki,tkf)
+        SUMMARY['lattice length* [m]'] = self.length
     def cell(self,closed=True):
         """ Construct the full lattice cell-matrix and extract standard quantities:
             full cell => mcell
@@ -250,7 +250,9 @@ class Lattice(object):
             else:
                 print('STOP: unstable lattice!')
             return stable
-    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
         mcell = None
         """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):
@@ -300,9 +302,29 @@ class Lattice(object):
             self.iteration = "LR"
     def twiss_funcs(self,steps=1):
         """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices or sigma-matrix """
+        def beta_matrix(R):
+            """ beta-matrix from tranport matrix """
+            m11 = R[0,0]; m12=R[0,1]; m21=R[1,0]; m22=R[1,1]
+            n11 = R[2,2]; n12=R[2,3]; n21=R[3,2]; n22=R[3,3]
+            o11 = R[4,4]; o12=R[4,5]; o21=R[5,4]; o22=R[5,5]
+            m_beta  =  NP.array([
+            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
+            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
+            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
+            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
+            [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
+            [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
+            [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
+            ])
+            return m_beta
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
+        # function body --------------- function body --------------- function body --------------- 
         sFLAG   = FLAGS['sigma']
         nlFLAG  = FLAGS['non_linear_mapping']
-        t3dFLAG = True
+        sigFLAG = True
         
         mess = ""
         if nlFLAG:
@@ -311,7 +333,7 @@ class Lattice(object):
         elif not nlFLAG:
             if sFLAG:
                 mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
-                t3dFLAG = False
+                sigFLAG = False
             else:
                 mess += 'sigma ENVELOPES from TWISS paramweters'
         if not FLAGS['KVout']: 
@@ -321,8 +343,8 @@ class Lattice(object):
         function_tbl = []
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        # bz,az,gz,epsz = PARAMS['twiss_w_i']()   
-        bz,az,gz,epsz = (0,0,0,0))   # not used for transverse sigmas
+        # bz,az,gz,epsz = PARAMS['twiss_w_i']() #TODO convert emitw -> emitz before 
+        bz,az,gz,epsz = (1.,0.,1.,1.) #TODO  a dummy to ignore longitudinal
         node0 = self.seq[0]      # 1st node
         si,sm,sf      = node0.position
         twiss_vector0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
@@ -333,11 +355,8 @@ class Lattice(object):
         function_tbl.append(function_row)
                 
         """ loop over all nodes in the lattice to get sliced function values"""
-        # B_matrix = NP.eye(9,9)                           # cumulated beta-matrix
-        # R_matrix = NP.eye(MDIM,MDIM)                     # cumulated R-matrix
-        # TODO (6,6) or (9,9) or (10,10)?
-        B_matrix = NP.eye(6,6)                           # cumulated beta-matrix
-        R_matrix = NP.eye(6,6)                           # cumulated R-matrix
+        B_matrix = NP.eye(9,9)                           # 9x9 cumulated beta-matrix
+        R_matrix = NP.eye(6,6)                           # 6x6 cumulated R-matrix
         Sig      = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
         for node in iter(self):
             si,sm,sf = node.position
@@ -345,21 +364,22 @@ class Lattice(object):
             s = si
             means = []
             for slice in slices:
-                slice_beta_mx = slice.beta_matrix()
-                slice_r_mx    = slice.matrix
-                B_matrix      = NP.dot(slice_beta_mx,B_matrix)
-                R_matrix      = NP.dot(slice_r_mx,R_matrix)
-                Sig           = sig_map(Sig,slice)
+                slice_R_mx = slice.matrix[:6,:6]   # 6x6 transport submatrix
+                R_matrix   = NP.dot(slice_R_mx,R_matrix)
+                B_matrix   = beta_matrix(R_matrix)
+                Sig        = sig_map(Sig,slice)
                 
-                if t3dFLAG:
+                if sigFLAG:
                     twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                    bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
+                    by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
                     sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
-                elif not t3dFLAG:
+                elif not sigFLAG:
                     twiss_vector = Sig.sig_twiss_vec_get()
                     sigma_vector = Sig.sig_sigma_vec_get()
                     sigx  = sigma_vector[0]; sigxp = sigma_vector[1]              
                     sigy  = sigma_vector[2]; sigyp = sigma_vector[3]              
-                    # sigz  = sigma_vector[4]; sigzp = sigma_vector[5]              
+                    sigz  = sigma_vector[4]; sigzp = sigma_vector[5]              
                 
                 bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                 by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
@@ -371,7 +391,7 @@ class Lattice(object):
             node.twiss = tuple(twiss_vector)    # each noe has twiss
             node.sigxy = tuple(means)           # each node has sigxy
             # aperture check
-            self.aperture_check(node,twiss=t3dFLAG)
+            self.aperture_check(node,twiss=sigFLAG)
             
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
         for row in function_tbl:
@@ -453,7 +473,6 @@ class Lattice(object):
         def SollTest_OFF(arg):
             return arg
         soll_test = SollTest_OFF
-
         def DEBUG_TRACKs(elm,c,s):
             DEBUG_ON()
             print('{} cosine {} sine {}'.format(elm.type,c,s))
@@ -477,22 +496,18 @@ class Lattice(object):
             y1,y1p = soll_test(PARAMS['twiss_y_i'].y2())
             x4,x4p = soll_test(PARAMS['twiss_x_i'].y3())
             y4,y4p = soll_test(PARAMS['twiss_y_i'].y3())
-        if FLAGS['dWf']:
-            sigmaz_i    = soll_test(PARAMS['z0'])      # z0[m] from waccept
-            Dp2p_i      = soll_test(PARAMS['Dp2p0'])   # dp/p0 from waccept
-        else:
-            sigmaz_i = 0.
-            Dp2p_i   = 0.
-        z1,z1p = soll_test((0., Dp2p_i))      # SIN like
-        z4,z4p = soll_test((sigmaz_i, 0.))    # cOS like
+        z0     = soll_test(PARAMS.get('z0',0.))    # z0[m] from waccept
+        Dp2p0  = soll_test(PARAMS.get('Dp2p0',0.)) # dp/p0 from waccept
+        sz,szp = soll_test((0., Dp2p0)) # SIN like
+        cz,czp = soll_test((z0, 0.))    # cOS like
         # INITIAL @ entrance
-        # MDIMxMDIM tracking used here
+        # 10x10 tracking used here
         s   = 0.
-        c_0 = NP.array([x1, x1p, y1, y1p, z4, z4p, tkin,1,0,1])  # C
-        s_0 = NP.array([x4, x4p, y4, y4p, z1, z1p, tkin,1,0,1])  # S
+        c_0 = NP.array([x1, x1p, y1, y1p, cz, czp, tkin, 1., s, 1.])  # C
+        s_0 = NP.array([x4, x4p, y4, y4p, sz, szp, tkin, 1., s, 1.])  # S
         # function names
-        c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp'))
-        s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp'))
+        c_fun = Functions(('s','cx','cxp','cy','cyp','cz','cdp','T','1','S','1'))
+        s_fun = Functions(('s','sx','sxp','sy','syp','sz','sdp','T','1','S','1'))
         c_fun.append(s,c_0)
         s_fun.append(s,s_0)
 

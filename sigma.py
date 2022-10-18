@@ -28,7 +28,7 @@ from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
 class Sigma(object):
     """ class for the sigma-matrix """
     def __init__(self, twiss_vec0, epsx, epsy, epsz):
-        self.matrix = NP.eye(MDIM,MDIM)      ## sigma matrix 
+        self.matrix = NP.eye(6,6)      # 6x6 sigma matrix 
         self.emitx = epsx
         self.emity = epsy
         self.emitz = epsz
@@ -41,9 +41,9 @@ class Sigma(object):
         self.matrix[3,3] = self.emity*twiss_vec0[Ktw.gy]
         self.matrix[5,5] = self.emitz*twiss_vec0[Ktw.gz]
         
-        self.matrix[0,1] = self.matrix[1,0] =  -self.emitx*twiss_vec0[Ktw.ax]
-        self.matrix[2,3] = self.matrix[3,2] =  -self.emity*twiss_vec0[Ktw.ay]
-        self.matrix[4,5] = self.matrix[5,4] =  -self.emitz*twiss_vec0[Ktw.az]
+        self.matrix[0,1] = self.matrix[1,0] = -self.emitx*twiss_vec0[Ktw.ax]
+        self.matrix[2,3] = self.matrix[3,2] = -self.emity*twiss_vec0[Ktw.ay]
+        self.matrix[4,5] = self.matrix[5,4] = -self.emitz*twiss_vec0[Ktw.az]
     def sig_twiss_vec_get(self):
         """ return twiss-vector from sigma-matrix """
         bx  =  self.matrix[0,0]/self.emitx
@@ -133,12 +133,12 @@ def sig_apply_eg_corr(rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
 def sig_map(sigma_i,node):
     """
     Map this sigma-matrix through element R
-    *) input R is ELM.Node!
+    *) input R is ELM.Node.matrix!
     *) returns the transformed Sigma object
     """
-    R              = node.matrix
+    R              = node.matrix[:6,:6]         # 6x6 trajectory submatrix
     sigma_f        = deepcopy(sigma_i)          # the new sigma object
-    sigma_f.matrix = R @ sigma_i.matrix @ R.T # NP matrix multiplication
+    sigma_f.matrix = R @ sigma_i.matrix @ R.T   # numpy matrix multiplication
     return sigma_f
     
 class TestElementMethods(unittest.TestCase):

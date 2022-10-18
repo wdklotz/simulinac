@@ -193,7 +193,7 @@ def display3(*args):
     # splot311=plt.subplot(10,1,(1,3))
     splot311.set_title('transverse x')
     # mapping box
-    splot311.text(0.01, 1.1, PARAMS['mapping'],transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot311.text(0.01, 1.1,PARAMS.get('mapping','---'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     if FLAGS['envelope']:
         plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
@@ -296,7 +296,7 @@ def display4(*args):
     splot211=plt.subplot(211)
     splot211.set_title('beta x,y')
     # mapping box
-    splot211.text(0.01, 1.1, PARAMS['mapping'],transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot211.text(0.01, 1.1, PARAMS.get('mapping','---'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     # function plots
     plt.plot(s,bx,      label=r"$\beta$x  [m]",  color='black', linestyle='-')
     plt.plot(s,by,      label=r"$\beta$y  [m]",  color='red',   linestyle='-')
@@ -333,6 +333,8 @@ def display4(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
