@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.22.4'
+__version__='v10.22.5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -190,12 +190,12 @@ def track_node(node,particle,options):
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
-        if abs(new_point[Ktp.zp]) < PARAMS['Dp2p_Acceptance']:
+        if abs(new_point[Ktp.zp]) < PARAMS['Dp2p_max']:
             lost = False
         else:
             lost = True
         # check z-acceptance
-        if abs(new_point[Ktp.z]) < PARAMS['z_Acceptance']:
+        if abs(new_point[Ktp.z]) < PARAMS['z_max']:
             lost = False
         else:
             lost = True
@@ -283,8 +283,11 @@ def tracker(input_file,options):
         sys.exit()
 
     # calculate twiss paramters at entrance
-    # waccept(lattice.first_gap)
-    lattice.first_gap.waccept()
+    first_gap = lattice.first_gap
+    if first_gap != -1:
+        lattice.first_gap.waccept()
+    else:
+        pass
     tkIN     = lattice.injection_energy
     # conv     = WConverter(tkIN,lattice.first_gap.freq)
     t1       = time.process_time()
@@ -322,7 +325,7 @@ def tracker(input_file,options):
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     # Dp2pmx     = PARAMS['Dp2pmx']
-    Dp2p0      = PARAMS['Dp2p0']
+    Dp2p0      = PARAMS['Dp2p_0']
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw,alfaw,gammaw,emitw = tww()
@@ -332,25 +335,23 @@ def tracker(input_file,options):
 
     # gather for print
     tracker_log = {}
-    tracker_log['Tk_i...............[MeV]'] = tkIN
-    tracker_log["sigma(x,x')i...([m,rad])"] = (sigma_x,sigma_xp)
-    tracker_log["sigma(y,y')i...([m,rad])"] = (sigma_y,sigma_yp)
-    tracker_log["sigma(Dphi,w)i..([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log["sigma(z,Dp2p)i....([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i..............[m]'] = betax_i
-    tracker_log['betay_i..............[m]'] = betay_i
-    tracker_log['betaw_i............[rad]'] = betaw
-    tracker_log['betaz_i..........[m/rad]'] = betaz
-    tracker_log['emitx_i..............[m]'] = emitx_i
-    tracker_log['emity_i..............[m]'] = emity_i
-    tracker_log['emitw_i,wmax.......[rad]'] = (emitw, wmax)
-    tracker_log['emitz_i..............[m]'] = emitz
-    # tracker_log['Dp2p,Dp2pmx..........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
+    tracker_log['Tk_i.................[MeV]'] = tkIN
+    tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
+    tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
+    tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log['betax_i................[m]'] = betax_i
+    tracker_log['betay_i................[m]'] = betay_i
+    tracker_log['betaw_i..............[rad]'] = betaw
+    tracker_log['betaz_i............[m/rad]'] = betaz
+    tracker_log['emitx_i................[m]'] = emitx_i
+    tracker_log['emity_i................[m]'] = emity_i
+    tracker_log['emitw_i,wmax.........[rad]'] = (emitw, wmax)
+    tracker_log['emitz_i................[m]'] = emitz
     tracker_log['Dp2p_i.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2p_Acceptance']*1.e2
-    tracker_log['accpetance z_i........[mm]'] = PARAMS['z_Acceptance']*1.e3
+    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2p_max']*1.e2
+    tracker_log['accpetance z_i........[mm]'] = PARAMS['z_max']*1.e3
     tracker_log['lattice version...........'] = PARAMS['lattice_version']
-    tracker_log['mapping...................'] = PARAMS['mapping']
     tracker_log['DT/T_i....................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 

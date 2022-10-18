@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.22.4'
+__version__='v10.22.5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -88,18 +88,5 @@ def ellipse_plot(node,scale=1.):
     # plt.show()    # do not show now! will be done by simu.py
     return
 
-# def test0():
-#     print('----------------------------------------- test0')
-#     FLAGS['maction'] = True
-#     agent = PsMarkerAgent()
-#     markr = MRK('marker',agent, True)    # new Marker with agent
-#     agent.set_parent(markr)
-#     markr.actions()
-# def test1():
-#     print('----------------------------------------- test1')
-#     action0 = PsMarkerAgent()
-#     markr = MRK(agent=action0)
-#     markr.do_actions()
-#     plt.show()
 if __name__ == '__main__':
     print('what?')

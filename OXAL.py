@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.22.4'
+__version__='v10.22.5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -40,8 +40,8 @@ DEBUG_ON = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 twopi = 2*pi
-# counter_of_polies = 0
-# trigger_poly_number = 12
+counter_of_polies = 0
+trigger_poly_number = 12
 
 class OXAL_G(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """

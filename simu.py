@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-__version__='v10.22.4'
+__version__='v10.22.5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -26,7 +26,7 @@ This file is part of the SIMULINAC code
 #TODO: C.K.Allen's matrices which are XAL as well? - don't know if better
 #TODO: slices as sub-lattice attribute to thick element - too big a modification
 #TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - what?
-#TODO: make waccept a method of RFG node - next planned improvement
+#done: make waccept a method of RFG node - next planned improvement
 #done: handle exceptions speziel ValueError - more or less done
 #done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 """
@@ -333,9 +333,6 @@ def display4(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
         # dispatch to different plots according to FLAG settings
@@ -363,6 +360,9 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
+    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #         with links and adjusted energy
@@ -376,36 +376,11 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
-    # waccept(lattice.first_gap)
-    """
-    if FLAGS['dWf'] == 1:
+    first_gap = lattice.first_gap
+    if first_gap != -1:
         lattice.first_gap.waccept()
     else:
-        # assume no acceleration
-        FLAGS['dWf'] = 0
-        # we can calculate the Twiss objects at injection ...
-        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
-        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        # ... and use dummies
-        tww = twz = Twiss(1.,0.,1.)
-        res = dict(
-            EzAvg         = 0.,
-            gap           = 0.,
-            cavity_laenge = 0.,
-            phisoll       = 0.,
-            frequenz      = 0.,
-            twiss_x_i     = twx,
-            twiss_y_i     = twy,
-            twiss_w_i     = tww,
-            twiss_z_i     = twz
-        )
-        for k,v in res.items():
-            PARAMS[k] = v
-        PARAMS['twiss_x_i()'] = twx()   # function pointers
-        PARAMS['twiss_xyi()'] = twy()
-        PARAMS['twiss_w_i()'] = tww()
-        PARAMS['twiss_z_i()'] = twz()
-    """
+        pass
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------

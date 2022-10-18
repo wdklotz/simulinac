@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.22.4'
+__version__='v10.22.5'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -589,7 +589,7 @@ class Lattice(object):
     @property
     def first_gap(self):
         """ return the 1st RF gap"""
-        node = None
+        node = -1
         # for elm in self.seq:
         for elm in iter(self):
             if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
@@ -642,13 +642,13 @@ class TestLattice(unittest.TestCase):
         print('---------------------------------test_lattice_concat')
         l = 1.
         p = Proton(50.)
-        lattice1 = Lattice()
+        lattice1 = Lattice(PARAMS['injection_energy'])
         for i in range(5):
             lattice1.add_node(ELM.D(F"Drift{i}",length=l,aperture=5.))
         for i in range(5):
             print(lattice1.seq[i].label,lattice1.seq[i].position)
         print()
-        lattice2 = Lattice()
+        lattice2 = Lattice(PARAMS['injection_energy'])
         for i in range(5):
             lattice2.add_node(ELM.D(F"Drift{6+i}",length=l,aperture=5.))
         for i in range(5):
@@ -682,7 +682,7 @@ class TestLattice(unittest.TestCase):
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
 
-                lattice = Lattice()
+                lattice = Lattice(PARAMS['injection_energy'])
                 anz = 0
                 while anz < 1:
                     anz += 1
