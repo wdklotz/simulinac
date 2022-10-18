@@ -277,8 +277,8 @@ def tracker(input_file,options):
     filepath = input_file
     lattice  = factory(filepath)
 
-    # No tracking without acceleration
     if FLAGS['dWf'] == 0:
+        # no gap no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
 
@@ -287,7 +287,10 @@ def tracker(input_file,options):
     if first_gap != -1:
         lattice.first_gap.waccept()
     else:
-        pass
+        # no gap no acceleration
+        print('{}'.format('IMPOSSIBLE: zero gap -> no tracking without acceleration!'))
+        sys.exit()
+
     tkIN     = lattice.injection_energy
     # conv     = WConverter(tkIN,lattice.first_gap.freq)
     t1       = time.process_time()

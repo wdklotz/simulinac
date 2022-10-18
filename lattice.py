@@ -343,7 +343,7 @@ class Lattice(object):
         function_tbl = []
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
-        # bz,az,gz,epsz = PARAMS['twiss_w_i']() #TODO convert emitw -> emitz before 
+        # bz,az,gz,epsz = PARAMS['twiss_w_i']() #TODO must convert emitw -> emitz before TODO
         bz,az,gz,epsz = (1.,0.,1.,1.) #TODO  a dummy to ignore longitudinal
         node0 = self.seq[0]      # 1st node
         si,sm,sf      = node0.position

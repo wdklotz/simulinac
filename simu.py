@@ -380,7 +380,7 @@ def simulation(filepath):
     if first_gap != -1:
         lattice.first_gap.waccept()
     else:
-        pass
+        FLAGS['dWf'] = 0    # no gap no acceleration
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------

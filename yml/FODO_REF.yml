@@ -28,7 +28,7 @@ DESCRIPTOR:  "FODO ohne Bend"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    #accON:        False            # {True} accSeleration on/off flag
+    # accON:        False            # {True} accSeleration on/off flag
     periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
