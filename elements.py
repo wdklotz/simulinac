@@ -24,7 +24,7 @@ import numpy as NP
 import unittest
 import warnings
 
-from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF
+from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF,colors
 from setutil import WConverter, dictprnt, objprnt, Proton, Electron
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp, Twiss
@@ -789,8 +789,8 @@ class RFG(Node):
         if wmax <= w_0:
             si,sm,sf = self.position
             warnings.showwarning(
-                'out of energy acceptance @ s={:.1f} [m]'.format(si),
-                UserWarning,'setutil.py',
+                colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
+                UserWarning,'elements.py',
                 'waccept()')
 
         # {z-dp/p}-space  TODO test wToz again!!!!

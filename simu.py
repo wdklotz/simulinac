@@ -391,11 +391,11 @@ def simulation(filepath):
     #----------------------------------------------
     lattice.cell(closed = FLAGS['periodic'])
     #---------------------------------------------- 
-    # STEP 5:collect results
+    # STEP 5: collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
     #----------------------------------------------
-    # STEP 6:display results and display them
+    # STEP 6: display results and display them
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
