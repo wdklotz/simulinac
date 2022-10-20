@@ -29,7 +29,7 @@ DESCRIPTOR:  "FODO ohne Bend"
 #..........................................................................................
 FLAGS:
     # accON:        False            # {True} accSeleration on/off flag
-    periodic:     True            # {False} treat lattice as ring
+    # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
