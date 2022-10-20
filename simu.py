@@ -37,8 +37,10 @@ import sys,os
 # matplotlib.use("Qt5Agg") 
 # for Tk
 import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
-# import matplotlib
-# matplotlib.use("TkAgg")
+# NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
+# NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
+import matplotlib
+matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
 
