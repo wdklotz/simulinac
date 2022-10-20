@@ -35,7 +35,7 @@ FLAGS:
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
-    # bucket:       True            # {False} plot w acceptance
+    bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     # maction:      True            # {False} call marker actions
     envelope:     True            # {False} plot envelopes
@@ -65,7 +65,7 @@ PARAMETERS:
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
     lattvers:     'simuIN_REF'            # lattice version: IN 5, out 200
-    mapping:      &map    simple            # [t3d, simple, oxal, base, ttf, dyn]
+    mapplt:       &map    simple          # [t3d, simple, oxal, base, ttf, dyn] show in plots
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................

@@ -373,15 +373,15 @@ def collect_data_for_summary(lattice):
         SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kinetic energy spread'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
-        SUMMARY['\u0394W-max_i* [MeV]']            =  '{:8.2e} \u0394W on separatrix'.format(PARAMS.get('DW_max',0))
-        SUMMARY['w-max_i*']                        =  '{:8.2e} \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
-        SUMMARY['\u0394P/P-max_i [%]']             =  '{:8.2e} \u0394P/P on separatrix'.format(PARAMS.get('Dp2p_max',0)*1.e2)
+        SUMMARY['\u0394W_max_i* [MeV]']            =  '{:8.2e} \u0394W on separatrix'.format(PARAMS.get('DW_max',0))
+        SUMMARY['w_max_i*']                        =  '{:8.2e} \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
+        SUMMARY['\u0394P/P_max_i [%]']             =  '{:8.2e} \u0394P/P on separatrix'.format(PARAMS.get('Dp2p_max',0)*1.e2)
         SUMMARY['\u03B5z_i* [mm]']                 =  '{:8.2e} {{z,\u0394P/P}}'.format(PARAMS['emitz_i']*1.e3)
         SUMMARY['\u03B2z_i* [mm]']                 =  '{:8.2e} {{z,\u0394P/P}}'.format(PARAMS['betaz_i']*1.e3)
         SUMMARY['\u0394P/P_i*']                    =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p_0'])
         SUMMARY['\u0394\u03A6_i* [rad]']           =  '{:8.2e} phase'.format(PARAMS['Dphi_0'])
         SUMMARY['z0* [m]']                         =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
-        SUMMARY['z-max* [m]']                      =  '{:8.2e} z acceptance'.format(abs(PARAMS['z_max']))
+        SUMMARY['z_max* [m]']                      =  '{:8.2e} z acceptance'.format(abs(PARAMS['z_max']))
         SUMMARY['\u03C9* [MHz]']                   =  '{:8.2e} synchotron frquency'.format(PARAMS.get('omgl_0',0)*1.e-6)
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')

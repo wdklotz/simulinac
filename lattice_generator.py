@@ -254,7 +254,7 @@ def factory(input_file,stop=None):
         return
     def proces_parameters(parameters):
         """ PARAMETERS and their default values """
-        # kinetic injection energy
+        # kinetic energy @ injection
         W_in  = parameters.get("Win",UTIL.PARAMS['injection_energy']) # default PARAMS['injection_energy']
         tk_in = parameters.get('Tkin',W_in) # alias Tkin=Win
         UTIL.PARAMS['injection_energy'] = tk_in 
@@ -277,6 +277,7 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['nbsigma']          = parameters.get('nbsigma',2)
         UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
+        UTIL.PARAMS['mapping']          = parameters.get('mapplt','---')
         UTIL.PARAMS['input_file']       = None
         # longitudinal emittance
         Dphi_0  = UTIL.PARAMS['Dphi0']

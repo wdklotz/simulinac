@@ -36,7 +36,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # csTrak:       False           # {True} plot CS trajectories
     envelope:       True            # {False} plot envelopes
-    bucket:       True            # {False} plot the bucket
+    # bucket:       True            # {False} plot the bucket
     # maction:      True            # {False} call marker actions
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................

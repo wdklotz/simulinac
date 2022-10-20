@@ -32,13 +32,14 @@ This file is part of the SIMULINAC code
 """
 import sys,os
 # for PyQt
-# import PyQt5             # works on native W10 but not on WSL2 as docker container
+# import PyQt5            
 # import matplotlib
-# matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
+# matplotlib.use("Qt5Agg") 
 # for Tk
-import tkinter             # works on native W10
-import matplotlib
-matplotlib.use("TkAgg")    # works on native W10
+import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
+# import matplotlib
+# matplotlib.use("TkAgg")
+
 import matplotlib.pyplot as plt
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
