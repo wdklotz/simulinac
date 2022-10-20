@@ -403,9 +403,9 @@ def simulation(filepath):
     if kv_only:
         kv = {}
         for key in PARAMS:
-            kv[key] = PARAMS[key]
+            kv['P '+key] = PARAMS[key]
         for key in SUMMARY:
-            kv[key] = SUMMARY[key]
+            kv['S '+key] = SUMMARY[key]
         dictprnt(kv,text='KV',njust=1)
     else:
         show_data_from_elements() #...................................show ELEMENT attributes

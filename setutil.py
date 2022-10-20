@@ -369,7 +369,7 @@ def collect_data_for_summary(lattice):
         SUMMARY["\u03B5y_i [mrad*mm]"]             =  PARAMS['emity_i']*1.e6
         SUMMARY["\u03B5w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03A6,\u03B4\u03B3}}'.format(PARAMS['emitw_i'])
         SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03A6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
-        SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} kinetic energy spread (w_i)'.format(PARAMS['w_i'])
+        SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} kinetic energy spread (w_0)'.format(PARAMS['w_0'])
         SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kinetic energy spread'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
