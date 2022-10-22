@@ -1,5 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+# Python 2 and 3 print compatability
 from __future__ import print_function   #TODO still used?
 __version__='v10.22.5'
 """
@@ -19,13 +20,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-# Python 2 and 3 print compatability
 
 import sys
 import scipy.constants as C
 import scipy.special as SP
 import matplotlib.pyplot as plt
-import warnings
 import time
 import lattice_parser2 as parser
 import unittest
@@ -78,12 +77,14 @@ class Ktw(IntEnum):
     gz = 8
     s  = 9      # abszisse for twiss functions
 # for compatability with elder code TODO: replace!
-XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-FLAGS  = dict(
-    # lattice_generator may override these FLAGs
+XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
+ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
+RUN_MODE = ('ring with cavities','linac','ring w/o cavities','transfer line')
+FLAGS    = dict(
+    # lattice_generator may override some of these FLAGs
     dWf = 1
     )
-PARAMS = dict(
+PARAMS   = dict(
     # global constants
     clight               = C.c, # [m/s]
     elementarladung      = C.e, # [coulomb]

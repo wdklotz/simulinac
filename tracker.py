@@ -34,7 +34,7 @@ import unittest
 from lattice_generator import factory
 import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp
-from setutil import WConverter, Functions, DEBUG_ON, DEBUG_OFF
+from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
 from trackPlot import scatter11
@@ -271,6 +271,13 @@ def tracker(input_file,options):
     """  Prepare and launch tracking  """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
+    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
+    if twoflag == (True,True):   mode=0
+    if twoflag == (True,False):  mode=1
+    if twoflag == (False,True):  mode=2
+    if twoflag == (False,False): mode=3
+    FLAGS['mode'] = mode
+    print('running in "'+ RUN_MODE[mode] + '" mode')
 
     # !!FIRST!! make lattice
     t0       = time.process_time()
@@ -422,7 +429,7 @@ if __name__ == '__main__':
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
     parser.add_argument("--hide", action="store_false",               help="hide IN/OUT scatter plots")
-    group.add_argument ("--file", default="yml/trackerIN_REF.yml",    help="lattice input-file")
+    group.add_argument ("--file", default="RefRuns/trackerIN_REF.yml",    help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
     group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")

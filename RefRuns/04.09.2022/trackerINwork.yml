@@ -23,29 +23,28 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  "v10.2.0 compatible, modified: 07.10.2022, IN 20.MeV"
+DESCRIPTOR:  "v10.2.0 compatible, modified: 29.8.2022, IN 5MeV"
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
 FLAGS:
     # accON:        False           # {True} accSeleration on/off flag
+    # egf:          True            # {False} emittance growth flag
+    sigma:        False             # {True} beam sizes by sigma-matrix
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
-    # egf:          True            # {False} apply emittance growth flag
-    # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
-    KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
-    # useaper:      True            # {False} use aperture check for lattice elements
-    # bucket:       True            # {False} plot w acceptance
-    # csTrak:       False           # {True} plot CS trajectories else beta functions
+    # express:      True            # {False} use express version of thin quads
+    useaper:      True            # {False} use aperture check for lattice elements
+    # csTrak:       False           # {True} plot CS trajectories
+    # bucket:       True            # {False} plot the bucket
     # maction:      True            # {False} call marker actions
-    envelope:     True            # {False} plot envelopes
+    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Win:                  20.0            # [MeV] energy @ injection 
-    DW2W:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
-    DPHI0:                18.             # [deg] delta-phi @ iinjection
+    Tkin:                 5.0             # [MeV] energy @ injection 
+    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   816.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
@@ -64,8 +63,8 @@ PARAMETERS:
     EzPeak:       &p17    1.0             # [MV/m] peak gap field Strengy
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
-    lattvers:     'simuIN_REF'            # lattice version: IN 5, out 200
-    mapplt:       &map    simple          # [t3d, simple, oxal, base, ttf, dyn] show in plots
+    lattvers:     'I5O200-19.08.2022'     # lattice version: IN 5, out 200
+    mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -196,16 +195,15 @@ SECTIONS:
     NIL_SEC:    [1,[]]
 # group CELLs into SECTIONS
 #...........................................................................................
-    SECL:      [25,[LE_CELL,Psp]]
-    SECH:      [127,[HE-CELL]]
+    SECL:      [25,[LE_CELL]]
+    SECH:      [137,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
-    LINE:   [1,[Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECH,Psp]]
+    LINE:   [1,[Pcc,SECL,Pcc,SECH,Pcc]]
     # LINE:   [1,[Psp,SECL,Psp]]
-
 
   

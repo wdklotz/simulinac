@@ -104,7 +104,9 @@ def instanciate_element(item):
             aperture  = get_mandatory(attributes,'aperture',ID)
             dWf       = UTIL.FLAGS['dWf']
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            mapping   = attributes.get('mapping','t3d')
+            mapping   = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
+            if mapping == None:
+                mapping = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 if fieldtab not in UTIL.PARAMS:
@@ -113,7 +115,8 @@ def instanciate_element(item):
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
-            if mapping == 'oxal':
+                UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
+            if mapping   == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
                 instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
@@ -248,6 +251,7 @@ def factory(input_file,stop=None):
         UTIL.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
         UTIL.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
         UTIL.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
+        UTIL.FLAGS['mapping']  = flags.get('mapping')                  # global mapping overrides individula mapping
         """ internal FLAGs """        
         UTIL.FLAGS['dWf']      = 1 if UTIL.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
         UTIL.FLAGS['non_linear_mapping'] = False
@@ -277,7 +281,6 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['nbsigma']          = parameters.get('nbsigma',2)
         UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
-        UTIL.PARAMS['mapping']          = parameters.get('mapplt','---')
         UTIL.PARAMS['input_file']       = None
         # longitudinal emittance
         Dphi_0  = UTIL.PARAMS['Dphi0']

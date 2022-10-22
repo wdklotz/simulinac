@@ -28,12 +28,13 @@ DESCRIPTOR:  "FODO ohne Bend"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    # accON:        False            # {True} accSeleration on/off flag
-    # periodic:     True            # {False} treat lattice as ring
+    NIL_FLAG:      []               # placeholder
+    accON:        False           # {True} accSeleration on/off flag
+    periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    verbose:      1                 # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot the bucket
     # csTrak:       False           # {True} plot CS trajectories else beta functions
@@ -119,8 +120,8 @@ CELLS:
     NIL_CELL:    [1,[]]
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
-    # CELL:        [1,[QF,D,QD,QD,D,QF]]     # D-QF-D-QD
-    CELL:        [1,[D,QF,QF,D,QD,QD]]     # D-QF-D-QD
+    CELL:        [1,[QF,D,QD,QD,D,QF]]     # D-QF-D-QD
+    # CELL:        [1,[D,QF,QF,D,QD,QD]]     # D-QF-D-QD
 # ===========================================================================================
 SECTIONS:
     NIL_SEC:    [1,[]]

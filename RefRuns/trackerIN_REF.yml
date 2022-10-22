@@ -28,6 +28,7 @@ DESCRIPTOR:  "v10.2.0 compatible, modified: 29.8.2022, IN 5MeV"
 ## RUN switches
 #..........................................................................................
 FLAGS:
+    NIL_FLAG:      []               # placeholder
     # accON:        False           # {True} accSeleration on/off flag
     # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} emittance growth flag
@@ -39,6 +40,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories
     # maction:      True            # {False} call marker actions
     # envelope:     True            # {False} plot envelopes
+    mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -64,7 +66,6 @@ PARAMETERS:
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
     lattvers:     'trackerIN_REF'         # lattice version: IN 5, out 200
-    mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -162,7 +163,7 @@ ELEMENTS:
 # LATTICE is LINE
 # ===========================================================================================
 SEGMENTS:   
-    NIL_SEG:     [1,[]]
+    NIL_SEG:     [1,[]]  # placeholder
 # group ELEMENTs into SEGMENTs:
 # Syntax: [number[node,...,node]]
 # the nested list [node,...,node] is repeated number times
@@ -185,14 +186,14 @@ SEGMENTS:
     GAPHarr:             [10,[GAPH]]
 # ===========================================================================================
 CELLS:    
-    NIL_CELL:    [1,[]]
+    NIL_CELL:    [1,[]]  # placeholder
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     LE_CELL:   [1,[SGLi, GAPLarr, D10, GAPLarr, SGLm, GAPLarr, D10, GAPLarr, SGLf]] 
     HE-CELL:   [1,[SGHi, GAPHarr, D10, GAPHarr, SGHm, GAPHarr, D10, GAPHarr, SGHf]] 
 # ===========================================================================================
 SECTIONS:
-    NIL_SEC:    [1,[]]
+    NIL_SEC:    [1,[]]  # placeholder
 # group CELLs into SECTIONS
 #...........................................................................................
     SECL:      [25,[LE_CELL]]

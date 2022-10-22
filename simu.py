@@ -45,7 +45,7 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,Twiss
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,RUN_MODE
 from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
@@ -196,7 +196,7 @@ def display3(*args):
     # splot311=plt.subplot(10,1,(1,3))
     splot311.set_title('transverse x')
     # mapping box
-    splot311.text(0.01, 1.1,PARAMS.get('mapping','---'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot311.text(0.01, 1.1,FLAGS.get('mapping'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     if FLAGS['envelope']:
         plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
@@ -299,7 +299,7 @@ def display4(*args):
     splot211=plt.subplot(211)
     splot211.set_title('beta x,y')
     # mapping box
-    splot211.text(0.01, 1.1, PARAMS.get('mapping','---'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot211.text(0.01, 1.1, FLAGS.get('mapping'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     # function plots
     plt.plot(s,bx,      label=r"$\beta$x  [m]",  color='black', linestyle='-')
     plt.plot(s,by,      label=r"$\beta$y  [m]",  color='red',   linestyle='-')
@@ -370,8 +370,16 @@ def simulation(filepath):
     # STEP 1: parse input file and create a lattice
     #         with links and adjusted energy
     #         using ref_track in lattice.add_node.
+    #         Set run-mode from FLAGS.
     #----------------------------------------------
     lattice = factory(filepath)
+    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
+    if twoflag == (True,True):   mode=0
+    if twoflag == (True,False):  mode=1
+    if twoflag == (False,True):  mode=2
+    if twoflag == (False,False): mode=3
+    FLAGS['mode'] = mode
+    print('running in "'+ RUN_MODE[mode] + '" mode')
     descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
     if descriptor != None: print(descriptor)
     print("---------------------------------------------------------------------------")
@@ -379,11 +387,10 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
-    first_gap = lattice.first_gap
-    if first_gap != -1:
+    if FLAGS['mode'] == 0 or FLAGS['mode'] == 1:
         lattice.first_gap.waccept()
     else:
-        FLAGS['dWf'] = 0    # no gap no acceleration
+        pass   # no gap no acceleration
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------
@@ -402,6 +409,8 @@ def simulation(filepath):
     kv_only = FLAGS['KVout']
     if kv_only:
         kv = {}
+        for key in FLAGS:
+            kv['F '+key] = FLAGS[key]
         for key in PARAMS:
             kv['P '+key] = PARAMS[key]
         for key in SUMMARY:
@@ -426,7 +435,7 @@ if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
-    group.add_argument ("--file", default="yml/simuIN_REF.yml",   help="lattice input-file")
+    group.add_argument ("--file", default="RefRuns/simuIN_REF.yml",   help="lattice input-file")
     group.add_argument ("--tmpl",                             help="template number")
     parser.add_argument("--run",                              help="run number")
     args = vars(parser.parse_args())
