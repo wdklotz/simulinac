@@ -107,6 +107,7 @@ def instanciate_element(item):
             mapping   = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
+            UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
@@ -116,7 +117,6 @@ def instanciate_element(item):
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
-                UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
             if mapping   == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
                 instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
