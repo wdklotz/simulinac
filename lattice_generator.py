@@ -108,6 +108,7 @@ def instanciate_element(item):
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
+                UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 if fieldtab not in UTIL.PARAMS:
                     gap_cm = gap*100     # Watch out!
@@ -313,8 +314,6 @@ def factory(input_file,stop=None):
             UTIL.DEBUG_OFF(elementID)
             ELEMENT = UTIL.ELEMENTS.get(elementID)
             UTIL.DEBUG_OFF(ELEMENT)
-            if ELEMENT.get('mapping') in ['base','ttf','dyn']:   # non_linear_mapping in lattice?
-                UTIL.FLAGS['non_linear_mapping'] = True
             """add sectionID and elementID"""
             ELEMENT['ID']  = elementID 
             """INSTANCIATE ELM._Node objects"""
