@@ -28,19 +28,19 @@ DESCRIPTOR:  "v10.2.0 compatible, modified: 07.10.2022, IN 20.MeV"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    NIL_FLAG:      []               # placeholder
+    NIL_FLAG:       []              # placeholder
     # accON:        False           # {True} accSeleration on/off flag
     # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
-    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     # maction:      True            # {False} call marker actions
     # envelope:     True            # {False} plot envelopes
-    # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -121,7 +121,7 @@ ELEMENTS:
         gap:      0.020        # [m] gap length
         aperture: *aper        # [m] aperture radius
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
-        mapping:  base         # mapping in cavities
+        mapping:  *map         # mapping in cavities
         sec:      LE           # section 
 #...........................................................................................
 # HIGH energy section nodes
@@ -153,7 +153,7 @@ ELEMENTS:
         gap:      0.046        # [m] gap length
         aperture: *aper        # [m] aperture radius
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
-        mapping:  base         # mapping in cavities
+        mapping:  *map         # mapping in cavities
         sec:      HE           # section 
 
 # ...........................................................................................

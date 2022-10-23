@@ -284,16 +284,16 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
         UTIL.PARAMS['input_file']       = None
         # longitudinal emittance
-        Dphi_0  = UTIL.PARAMS['Dphi0']
+        Dphi0  = UTIL.PARAMS['Dphi0']
         DT2T    = UTIL.PARAMS['DT2T']
         T       = UTIL.PARAMS['injection_energy']
         E0      = UTIL.PARAMS['proton_mass']
-        w_0     = T/E0*DT2T # Wrangler's definition of w (pp.176)
-        emit_w  = Dphi_0 * w_0 # emittance in {Dphi,w}-space
-        UTIL.PARAMS['w_0']      = w_0
-        UTIL.PARAMS['emitw_i']  = Dphi_0 * w_0
+        w0      = T/E0*DT2T # Wrangler's definition of w (pp.176)
+        emit_w  = Dphi0 * w0 # emittance in {Dphi,w}-space
+        UTIL.PARAMS['w0']       = w0
+        UTIL.PARAMS['emitw_i']  = Dphi0 * w0
         UTIL.PARAMS['alfaw_i']  = 0.   # always
-        UTIL.PARAMS['betaw_i']  = emit_w/w_0**2
+        UTIL.PARAMS['betaw_i']  = emit_w/w0**2
         # longitudinal TWiss @ entrance
         UTIL.PARAMS['twiss_w_i'] = UTIL.Twiss(UTIL.PARAMS['betaw_i'], UTIL.PARAMS['alfaw_i'],UTIL.PARAMS['emitw_i'])
         # maybe parameters    #TODO

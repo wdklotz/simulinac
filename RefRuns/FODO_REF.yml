@@ -108,7 +108,7 @@ ELEMENTS:
 # LATTICE is LINE
 # ===========================================================================================
 SEGMENTS:   
-    NIL_SEG:     [1,[]]
+    NIL_SEG:     [1,[]] # placeholder
 # group ELEMENTs into SEGMENTs:
 # Syntax: [number[node,...,node]]
 # the nested list [node,...,node] is repeated number times
@@ -117,14 +117,14 @@ SEGMENTS:
     Mkrs:                [1,[Psp,Pcc]]
 # ===========================================================================================
 CELLS:    
-    NIL_CELL:    [1,[]]
+    NIL_CELL:    [1,[]] # placeholder
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     CELL:        [1,[QF,D,QD,QD,D,QF]]     # D-QF-D-QD
     # CELL:        [1,[D,QF,QF,D,QD,QD]]     # D-QF-D-QD
 # ===========================================================================================
 SECTIONS:
-    NIL_SEC:    [1,[]]
+    NIL_SEC:    [1,[]] # placeholder
 # group CELLs into SECTIONS
 #...........................................................................................
 # ===========================================================================================

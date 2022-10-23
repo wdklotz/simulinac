@@ -190,12 +190,12 @@ def track_node(node,particle,options):
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
-        if abs(new_point[Ktp.zp]) < PARAMS['Dp2p_max']:
+        if abs(new_point[Ktp.zp]) < PARAMS['Dp2pmax']:
             lost = False
         else:
             lost = True
         # check z-acceptance
-        if abs(new_point[Ktp.z]) < PARAMS['z_max']:
+        if abs(new_point[Ktp.z]) < PARAMS['zmax']:
             lost = False
         else:
             lost = True
@@ -335,7 +335,7 @@ def tracker(input_file,options):
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     # Dp2pmx     = PARAMS['Dp2pmx']
-    Dp2p0      = PARAMS['Dp2p_0']
+    Dp2p0      = PARAMS['Dp2p0']
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw,alfaw,gammaw,emitw = tww()
@@ -359,8 +359,8 @@ def tracker(input_file,options):
     tracker_log['emitw_i,wmax.........[rad]'] = (emitw, wmax)
     tracker_log['emitz_i................[m]'] = emitz
     tracker_log['Dp2p_i.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2p_max']*1.e2
-    tracker_log['accpetance z_i........[mm]'] = PARAMS['z_max']*1.e3
+    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2pmax']*1.e2
+    tracker_log['accpetance z_i........[mm]'] = PARAMS['zmax']*1.e3
     tracker_log['lattice version...........'] = PARAMS['lattice_version']
     tracker_log['DT/T_i....................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()

@@ -776,17 +776,17 @@ class RFG(Node):
         w0small   = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
         wmax      = w0large
 
-        w_0       = (gamma-1.)*DT2T
-        emitw_i    = 2.*abs(phisoll)*w_0/pi*0.33 # injected beam emittance
-        Dphi_0    = pi*emitw_i/w_0                # injected phase spread
-        betaw_i    = emitw_i/w_0**2                # w0 = w-int = sqrt(emitw/betaw) 
+        w0        = (gamma-1.)*DT2T
+        emitw_i   = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance
+        Dphi0     = pi*emitw_i/w0                # injected phase spread
+        betaw_i   = emitw_i/w0**2                # w0 = w-int = sqrt(emitw/betaw) 
         
         omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
-        omgl_0      = omgl0zuomg*2.*pi*freq   # [Hz]
-        DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w_0=w_0,emitw_i=emitw_i,Dphi_0=Dphi_0,betaw_i=betaw_i,omgl_0=omgl_0))
+        omgl_0     = omgl0zuomg*2.*pi*freq   # [Hz]
+        DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w0=w0,emitw_i=emitw_i,Dphi0=Dphi0,betaw_i=betaw_i,omgl_0=omgl_0))
 
         # longitudinal acceptance check (always done)
-        if wmax <= w_0:
+        if wmax <= w0:
             si,sm,sf = self.position
             warnings.showwarning(
                 colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
@@ -794,30 +794,30 @@ class RFG(Node):
                 'waccept()')
 
         # {z-dp/p}-space  TODO test wToz again!!!!
-        z0,Dp2p_0,emitz_i,betaz_i = conv.wtoz((Dphi_0,w_0,emitw_i,betaw_i))
-        Dp2p_max = conv.wToDp2p(wmax) # Dp/p on separatrix
+        z0,Dp2p0,emitz_i,betaz_i = conv.wtoz((Dphi0,w0,emitw_i,betaw_i))
+        Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
         alfaz_i = alfaw_i = 0. # always
 
         res =  dict (
                 # {Dphi,w}
                 emitw_i         = emitw_i,      # emittance{Dphi,w} [rad]
-                Dphi_0          = Dphi_0,       # ellipse dphi-int (1/2 axis)
+                Dphi0           = Dphi0,       # ellipse dphi-int (1/2 axis)
                 betaw_i         = betaw_i,      # beta twiss [rad]
                 alfaw_i         = alfaw_i,
                 wmax            = wmax,         # separatrix: large amp. oscillations
-                w_0             = w_0,          # separatrix small amp. osscillations
+                w0              = w0,          # separatrix small amp. osscillations
                 omgl_0          = omgl_0,       # synchrotron oscillation [Hz]
                 # {z,Dp2p}
                 emitz_i         = emitz_i,      # emittance {z,dp/p} space [m*rad]
                 betaz_i         = betaz_i,      # twiss beta [m/rad]
                 alphaz_i        = alfaz_i,
-                Dp2p_max        = Dp2p_max,     # max D/p on separatrix
+                Dp2pmax         = Dp2pmax,     # max D/p on separatrix
                 z0              = z0,           # ellipse z-int    (1/2 axis) [m]
-                Dp2p_0          = Dp2p_0,       # ellipse dp/p-int (1/2 axis)
-                # Dp2p_Acceptance = Dp2p_max,
-                z_max           = conv.DphiToz(2.*phisoll),  # Wrangler's approximation
+                Dp2p0           = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                # Dp2p_Acceptance = Dp2pmax,
+                zmax            = conv.DphiToz(2.*phisoll),  # Wrangler's approximation
                 # {Dphi,DW}
-                DW_max     = wmax*m0c2     # separatrix: max W in [MeV]
+                DWmax           = wmax*m0c2     # separatrix: max W in [MeV]
                 )
         # new longitudinal Twiss objects at injection from 1st cavity attributes
         res['twiss_w_i'] = Twiss(betaw_i, alfaw_i, emitw_i)
