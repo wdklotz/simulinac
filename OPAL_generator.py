@@ -1,4 +1,4 @@
-__version__='v10.22.5'
+__version__='v10.22.6'
 """ 
 DYNAC_lattice-generator
 converts YAML input file (simuIN.yml) into dynacIN for dynacv7r1.
