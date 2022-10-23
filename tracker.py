@@ -347,7 +347,7 @@ def tracker(input_file,options):
     tracker_log = {}
     tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(tkIN)
-    tracker_log['acceptance..\u0394P/P.....[%]']      = PARAMS['Dp2pmax']*1.e2
+    tracker_log['acceptance..\u0394p/p.....[%]']      = PARAMS['Dp2pmax']*1.e2
     tracker_log['acceptance..\u0394\u03B3..........'] = wmax
     tracker_log['accpetance..z.......[mm]']           = PARAMS['zmax']*1.e3
     tracker_log['\u03B2w_i...............[rad]']      = betaw_i
@@ -357,13 +357,13 @@ def tracker(input_file,options):
     tracker_log['\u03B5w_i..{\u0394\u03A6,\u0394\u03B3}......[rad]'] = emitw_i
     tracker_log['\u03B5x_i.................[m]']      = emitx_i
     tracker_log['\u03B5y_i.................[m]']      = emity_i
-    tracker_log['\u03B5z_i..{z,\u0394P/P}.......[m]'] = emitz_i
+    tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
     tracker_log['lattice version.........']           = PARAMS['lattice_version']
     tracker_log["\u03C3(x,x')i.......([m,rad])"]      = (sigma_x,sigma_xp)
     tracker_log["\u03C3(y,y')i.......([m,rad])"]      = (sigma_y,sigma_yp)
-    tracker_log["\u03C3(z,\u0394P/P)i........([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = (sigma_z,sigma_Dp2p)
     tracker_log["\u03C3(\u0394\u03A6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log['\u0394P/P0................[%]']      = Dp2p0*1.e2
+    tracker_log['\u0394p/p0................[%]']      = Dp2p0*1.e2
     tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
