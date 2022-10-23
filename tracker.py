@@ -345,6 +345,7 @@ def tracker(input_file,options):
 
     # gather for print
     tracker_log = {}
+    tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(tkIN)
     tracker_log['acceptance..\u0394P/P.....[%]']      = PARAMS['Dp2pmax']*1.e2
     tracker_log['acceptance..\u0394\u03B3..........'] = wmax
