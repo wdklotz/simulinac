@@ -354,7 +354,7 @@ def tracker(input_file,options):
     tracker_log['\u03B2x_i.................[m]']      = betax_i
     tracker_log['\u03B2y_i.................[m]']      = betay_i
     tracker_log['\u03B2z_i.............[m/rad]']      = betaz_i
-    tracker_log['\u03B5w_i..{\u0394\u03A6,\u0394\u03B3}......[rad]'] = emitw_i
+    tracker_log['\u03B5w_i..{\u0394\u03C6,\u0394\u03B3}......[rad]'] = emitw_i
     tracker_log['\u03B5x_i.................[m]']      = emitx_i
     tracker_log['\u03B5y_i.................[m]']      = emity_i
     tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
@@ -362,7 +362,7 @@ def tracker(input_file,options):
     tracker_log["\u03C3(x,x')i.......([m,rad])"]      = (sigma_x,sigma_xp)
     tracker_log["\u03C3(y,y')i.......([m,rad])"]      = (sigma_y,sigma_yp)
     tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log["\u03C3(\u0394\u03A6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
     tracker_log['\u0394p/p0................[%]']      = Dp2p0*1.e2
     tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()

@@ -368,8 +368,8 @@ def collect_data_for_summary(lattice):
         SUMMARY["\u03C3y'_i* [mrad]"]              =  PARAMS['twiss_y_i'].sigmaV()*1.e3
         SUMMARY["\u03B5x_i [mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
         SUMMARY["\u03B5y_i [mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-        SUMMARY["\u03B5w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03A6,\u03B4\u03B3}}'.format(PARAMS['emitw_i'])
-        SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03A6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
+        SUMMARY["\u03B5w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['emitw_i'])
+        SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
         SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} norm. energy spread @ injection (w0)'.format(PARAMS['w0'])
         SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kin. energy spread @ injection'.format(PARAMS['DT2T'])
     
@@ -381,7 +381,7 @@ def collect_data_for_summary(lattice):
         SUMMARY['\u03B5z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['emitz_i']*1.e3)
         SUMMARY['\u03B2z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['betaz_i']*1.e3)
         SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0'])
-        SUMMARY['\u0394\u03A60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
+        SUMMARY['\u0394\u03C60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
         SUMMARY['|z0|* [m]']                       =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
         SUMMARY['\u03C9* [MHz]']                   =  '{:8.2e} synchotron frquency'.format(PARAMS.get('omgl_0',0)*1.e-6)
     else:
