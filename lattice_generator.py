@@ -252,7 +252,7 @@ def factory(input_file,stop=None):
         UTIL.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
         UTIL.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
         UTIL.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
-        UTIL.FLAGS['mapping']  = flags.get('mapping')                  # global mapping overrides individula mapping
+        UTIL.FLAGS['mapping']  = flags.get('mapping')                  # global mapping overrides individula mapping (default to None)
         """ internal FLAGs """        
         UTIL.FLAGS['dWf']      = 1 if UTIL.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
         UTIL.FLAGS['non_linear_mapping'] = False
@@ -283,7 +283,7 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
         UTIL.PARAMS['input_file']       = None
-        # longitudinal emittance
+        # longitudinal emittance @ entrance
         Dphi0  = UTIL.PARAMS['Dphi0']
         DT2T    = UTIL.PARAMS['DT2T']
         T       = UTIL.PARAMS['injection_energy']
@@ -296,11 +296,11 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['betaw_i']  = emit_w/w0**2
         # longitudinal TWiss @ entrance
         UTIL.PARAMS['twiss_w_i'] = UTIL.Twiss(UTIL.PARAMS['betaw_i'], UTIL.PARAMS['alfaw_i'],UTIL.PARAMS['emitw_i'])
-        # maybe parameters    #TODO
+        # set parameters that will be caculated later (f.i. waccept) to None
         UTIL.PARAMS['emitz_i']   = None
-        UTIL.PARAMS['alfaz_i']   = 0.   # always
+        UTIL.PARAMS['alfaz_i']   = None
         UTIL.PARAMS['betaz_i']   = None
-        # UTIL.PARAMS['z0']        = None
+        UTIL.PARAMS['z0']        = None
         return
     def proces_elements(elements):
         """fills global ELEMENTS"""
@@ -328,7 +328,8 @@ def factory(input_file,stop=None):
         return lattice   # the complete lattice
 
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
-    # UTIL.SUMMARY['input file'] = input_file
+    """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
+    """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)

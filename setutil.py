@@ -77,8 +77,8 @@ class Ktw(IntEnum):
     gz = 8
     s  = 9      # abszisse for twiss functions
 # for compatability with elder code TODO: replace!
-XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
-ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
+XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
+ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 RUN_MODE = ('ring with cavities','linac','ring w/o cavities','transfer line')
 FLAGS    = dict(
     # lattice_generator may override some of these FLAGs

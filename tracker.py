@@ -331,38 +331,39 @@ def tracker(input_file,options):
     sigma_yp  = twy.sigmaV()
     # {z,Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
-    betaz,alfaz,gammaz,emitz = twz()
+    betaz_i,alfaz_i,gammaz_i,emitz_i = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     # Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
-    betaw,alfaw,gammaw,emitw = tww()
+    betaw_i,alfaw_i,gammaw,emitw_i = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
     wmax         = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
-    tracker_log['Tk_i.................[MeV]'] = tkIN
-    tracker_log["sigma(x,x')i.....([m,rad])"] = (sigma_x,sigma_xp)
-    tracker_log["sigma(y,y')i.....([m,rad])"] = (sigma_y,sigma_yp)
-    tracker_log["sigma(Dphi,w)i....([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log["sigma(z,Dp2p)i......([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i................[m]'] = betax_i
-    tracker_log['betay_i................[m]'] = betay_i
-    tracker_log['betaw_i..............[rad]'] = betaw
-    tracker_log['betaz_i............[m/rad]'] = betaz
-    tracker_log['emitx_i................[m]'] = emitx_i
-    tracker_log['emity_i................[m]'] = emity_i
-    tracker_log['emitw_i,wmax.........[rad]'] = (emitw, wmax)
-    tracker_log['emitz_i................[m]'] = emitz
-    tracker_log['Dp2p_i.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p_i......[%]'] = PARAMS['Dp2pmax']*1.e2
-    tracker_log['accpetance z_i........[mm]'] = PARAMS['zmax']*1.e3
-    tracker_log['lattice version...........'] = PARAMS['lattice_version']
-    tracker_log['DT/T_i....................'] = PARAMS['DT2T']
+    tracker_log['Tk_i...............[MeV]'] = tkIN
+    tracker_log['acceptance..\u0394P/P.....[%]'] = PARAMS['Dp2pmax']*1.e2
+    tracker_log['acceptance..\u0394\u03B3..........'] = wmax
+    tracker_log['accpetance..z.......[mm]'] = PARAMS['zmax']*1.e3
+    tracker_log['betaw_i............[rad]'] = betaw_i
+    tracker_log['betax_i..............[m]'] = betax_i
+    tracker_log['betay_i..............[m]'] = betay_i
+    tracker_log['betaz_i..........[m/rad]'] = betaz_i
+    tracker_log['emitw_i..{\u0394\u03A6,\u0394\u03B3}...[rad]'] = emitw_i
+    tracker_log['emitx_i..............[m]'] = emitx_i
+    tracker_log['emity_i..............[m]'] = emity_i
+    tracker_log['emitz_i..{z,\u0394P/P}....[m]'] = emitz_i
+    tracker_log['lattice version.........'] = PARAMS['lattice_version']
+    tracker_log["sigma(x,x')i...([m,rad])"] = (sigma_x,sigma_xp)
+    tracker_log["sigma(y,y')i...([m,rad])"] = (sigma_y,sigma_yp)
+    tracker_log["sigma(z,\u0394P/P)i....([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log["sigma(\u0394\u03A6,\u0394\u03B3)i...([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log['\u0394P/P0................[%]'] = Dp2p0*1.e2
+    tracker_log['\u0394T/T_i..................'] = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
