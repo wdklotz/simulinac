@@ -388,7 +388,10 @@ def simulation(filepath):
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
     if FLAGS['mode'] == 0 or FLAGS['mode'] == 1:
-        lattice.first_gap.waccept()
+        res = lattice.first_gap.waccept()
+        # Update PARAMS
+        for k,v in res.items():
+            PARAMS[k] = v
     else:
         pass   # no gap no acceleration
     #----------------------------------------------

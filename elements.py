@@ -822,10 +822,6 @@ class RFG(Node):
         # new longitudinal Twiss objects at injection from 1st cavity attributes
         res['twiss_w_i'] = Twiss(betaw_i, alfaw_i, emitw_i)
         res['twiss_z_i'] = Twiss(betaz_i, alfaz_i, emitz_i)
-        # Update PARAMS
-        for k,v in res.items():
-            PARAMS[k] = v
-
         return res
                         
 # TODO classes below need unittesting
