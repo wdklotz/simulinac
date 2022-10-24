@@ -271,6 +271,7 @@ def tracker(input_file,options):
     """  Prepare and launch tracking  """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
+    # run_mode
     twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
     if twoflag == (True,True):   mode=0
     if twoflag == (True,False):  mode=1
@@ -278,28 +279,20 @@ def tracker(input_file,options):
     if twoflag == (False,False): mode=3
     FLAGS['mode'] = mode
     print('running in "'+ RUN_MODE[mode] + '" mode')
-
-    # !!FIRST!! make lattice
+    # make lattice
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
-
-    if FLAGS['dWf'] == 0:
-        # no gap no acceleration
+    # w acceptance
+    if FLAGS['accON']:
+        res = lattice.first_gap.waccept()
+        # Update PARAMS
+        for k,v in res.items():
+            PARAMS[k] = v
+    else:
+        # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
-
-    # calculate twiss paramters at entrance
-    first_gap = lattice.first_gap
-    if first_gap != -1:
-        lattice.first_gap.waccept()
-    else:
-        # no gap no acceleration
-        print('{}'.format('IMPOSSIBLE: zero gap -> no tracking without acceleration!'))
-        sys.exit()
-
-    tkIN     = lattice.injection_energy
-    # conv     = WConverter(tkIN,lattice.first_gap.freq)
     t1       = time.process_time()
 
     # pull more options
@@ -307,7 +300,6 @@ def tracker(input_file,options):
     save     = options['save']
     skip     = options['skip']
     losses   = options['losses']
-    
     # manipulate options
     if losses:
         show = False
@@ -346,7 +338,7 @@ def tracker(input_file,options):
     # gather for print
     tracker_log = {}
     tracker_log['mapping.................']           = FLAGS['mapping']
-    tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(tkIN)
+    tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = PARAMS['Dp2pmax']*1.e2
     tracker_log['acceptance..\u0394\u03B3..........'] = wmax
     tracker_log['accpetance..z.......[mm]']           = PARAMS['zmax']*1.e3

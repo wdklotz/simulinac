@@ -373,6 +373,10 @@ def simulation(filepath):
     #         Set run-mode from FLAGS.
     #----------------------------------------------
     lattice = factory(filepath)
+    # descriptor
+    PARAMS['descriptor'] = descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
+    if descriptor != None:   print(descriptor)
+    # run-mode
     twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
     if twoflag == (True,True):   mode=0
     if twoflag == (True,False):  mode=1
@@ -380,8 +384,6 @@ def simulation(filepath):
     if twoflag == (False,False): mode=3
     FLAGS['mode'] = mode
     print('running in "'+ RUN_MODE[mode] + '" mode')
-    descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
-    if descriptor != None: print(descriptor)
     print("---------------------------------------------------------------------------")
     print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
     #----------------------------------------------
@@ -401,7 +403,10 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
-    lattice.cell(closed = FLAGS['periodic'])
+    res = lattice.cell(closed = FLAGS['periodic'])
+    # Update PARAMS
+    for k,v in res.items():
+        PARAMS[k] = v
     #---------------------------------------------- 
     # STEP 5: collect results
     #----------------------------------------------

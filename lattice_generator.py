@@ -284,7 +284,7 @@ def factory(input_file,stop=None):
         UTIL.PARAMS['thins']            = parameters.get('thins',1)
         UTIL.PARAMS['input_file']       = None
         # longitudinal emittance @ entrance
-        Dphi0  = UTIL.PARAMS['Dphi0']
+        Dphi0   = UTIL.PARAMS['Dphi0']
         DT2T    = UTIL.PARAMS['DT2T']
         T       = UTIL.PARAMS['injection_energy']
         E0      = UTIL.PARAMS['proton_mass']
@@ -306,9 +306,9 @@ def factory(input_file,stop=None):
         """fills global ELEMENTS"""
         UTIL.ELEMENTS = elements
         return elements
-    def make_lattice(elementIDs,injection_energy):
+    def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
-        lattice = Lattice(injection_energy)
+        lattice = Lattice(descriptor=UTIL.PARAMS.get('descriptor'))
         instances = []
         for elementID in elementIDs:
             UTIL.DEBUG_OFF(elementID)
@@ -363,7 +363,7 @@ def factory(input_file,stop=None):
     lat_elementIDs = results.LAT_ELMIDs
     UTIL.DEBUG_OFF('LAT_ELMIDs after proces_elements():')
     UTIL.DEBUG_OFF(lat_elementIDs)
-    lattice = make_lattice(lat_elementIDs,UTIL.PARAMS['injection_energy'])
+    lattice = make_lattice(lat_elementIDs)
     # end of factory. return full Lattice object.
     return lattice
     

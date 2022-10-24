@@ -66,14 +66,13 @@ class Lattice(object):
                 return this
             else:
                 raise StopIteration    
-    def __init__(self, injection_energy,descriptor=""):
+    def __init__(self,descriptor="lattice"):
         self.seq              = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
         self.iteration        = "LR"  # default: iterating lattice left-right
         self.length           = 0.
         self.acc_node         = None
-        self.injection_energy = injection_energy
+        self.injection_energy = PARAMS.get('injection_energy',50.)
         self.descriptor       = descriptor
-        PARAMS['injection_energy'] = injection_energy
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -178,16 +177,12 @@ class Lattice(object):
                 alx = (m11-m22)/(2.*m12)*bax
                 gmx = (1.+alx**2)/bax
             print_verbose(2,'betax {:4.4f} alfax {:4.4f} gammax {:4.4f}'.format(bax,alx,gmx))
-            PARAMS['betax_i'] = bax
-            PARAMS['alfax_i'] = alx
             wurzy = 2.-n11**2-2.*n12*n21-n22**2
             if wurzy > 0.:
                 bay = fabs(2.*n12/sqrt(wurzy))    #  muss Absolutwert sein! (Fehler bei Wille)
                 aly = (n11-n22)/(2.*n12)*bay
                 gmy = (1.+aly**2)/bay
             print_verbose(2,'betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
-            PARAMS['betay_i'] = bay
-            PARAMS['alfay_i'] = aly
             ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
             v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
             m_cell_beta = self.acc_node.beta_matrix()
@@ -199,17 +194,25 @@ class Lattice(object):
                 if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
             print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
             ## transverse/longitudinal Twiss @ entrance for periodic lattice
-            PARAMS['twiss_x_i'] = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'],PARAMS['emitx_i'])
-            PARAMS['twiss_y_i'] = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'],PARAMS['emity_i'])
-            PARAMS['twiss_w_i'] = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
-            return
+            res = dict(
+                betax_i         = bax,
+                alfax_i         = alx,
+                betay_i         = bay,
+                alfay_i         = aly,
+                twiss_x_i       = Twiss(bax, alx, PARAMS['emitx_i']),
+                twiss_y_i       = Twiss(bay, aly, PARAMS['emity_i']),
+                twiss_w_i       = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
+                )
+            return res
         def transferline(mcell):
             isStable(mcell)
             # transverse/longitudinal Twiss @ entrance for transfer line from input
-            PARAMS['twiss_x_i'] = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'],PARAMS['emitx_i'])
-            PARAMS['twiss_y_i'] = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'],PARAMS['emity_i'])
-            PARAMS['twiss_w_i'] = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
-            return
+            res = dict (
+                twiss_x_i = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'],PARAMS['emitx_i']),
+                twiss_y_i = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'],PARAMS['emity_i']),
+                twiss_w_i = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
+            )
+            return res
         def isStable(mcell):
             stable = True
 
@@ -264,14 +267,14 @@ class Lattice(object):
         # the full acc isinstance(self.acc_node,Lattice)==True
         self.acc_node = mcell
         if closed:
-            ring(mcell)
+            params = ring(mcell)
         else:
-            transferline(mcell)
-        bax,alx,gmx,epsix = PARAMS['twiss_x_i']()
-        bay,aly,gmy,epsiy = PARAMS['twiss_y_i']()
+            params = transferline(mcell)
+        bax,alx,gmx,epsix = params['twiss_x_i']()
+        bay,aly,gmy,epsiy = params['twiss_y_i']()
         print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         print_verbose(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
-        return
+        return params
     def report(self):
         # TODO needs more work
         """ report lattice layout (may not work!) """
@@ -599,10 +602,11 @@ class Lattice(object):
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
         print('----------------------------------test_lattice_add_first_6_nodes')
-        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(66.))
+        lattice = Lattice()
+        tkin = lattice.injection_energy
+        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(tkin))
         drift = ELM.D("DR",length=1.)
-        quadf = ELM.QF("QUADF",3.,particle=Proton(66.),length=0.5)
-        lattice = Lattice(injection_energy=33.)
+        quadf = ELM.QF("QUADF",3.,particle=Proton(tkin),length=0.5)
         lattice.add_node(rfgap)
         lattice.add_node(drift)
         lattice.add_node(quadf)
@@ -669,7 +673,6 @@ class TestLattice(unittest.TestCase):
         def make_wille():
             def make_wille_lattice():
                 """ Wille's test lattice """
-                PARAMS['injection_energy'] = 50.
                 kqf   = -1.2
                 kqd   = -kqf
                 lqf   = 0.20
@@ -682,7 +685,8 @@ class TestLattice(unittest.TestCase):
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
 
-                lattice = Lattice(PARAMS['injection_energy'])
+                # lattice = Lattice(PARAMS['injection_energy'])
+                lattice = Lattice(descriptor='Wille')
                 anz = 0
                 while anz < 1:
                     anz += 1
@@ -730,9 +734,15 @@ class TestLattice(unittest.TestCase):
         print('----------------------------------test_wille_lattice_with_concat()')
         print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
         PARAMS['emitx_i'] = PARAMS['emity_i'] = 1.e-6
+        PARAMS['injection_energy'] = 50.
+        FLAGS['periodic'] = True
         lattice = make_wille()
         # cell boundaries
-        full_cell   = lattice.cell(closed=True)
+        full_cell = lattice.cell(closed=FLAGS['periodic'])
+        # Update PARAMS
+        for k,v in full_cell.items():
+            PARAMS[k] = v
+
         betax,a,g,e = PARAMS['twiss_x_i']()
         betay,a,g,e = PARAMS['twiss_y_i']()
         PARAMS['twiss_z_i'] = Twiss(1.,0.,1.)
