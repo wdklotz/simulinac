@@ -18,6 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
+from sre_parse import FLAGS
 import sys,os
 from math import radians
 import yaml
@@ -241,70 +242,72 @@ def factory(input_file,stop=None):
     """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
     def proces_flags(flags):
         """ external FLAGs """        
-        UTIL.FLAGS['accON']    = flags.get('accON',True)               # acceleration ON
-        UTIL.FLAGS['periodic'] = flags.get('periodic',False)           # periodic lattice? default
-        UTIL.FLAGS['egf']      = flags.get('egf',False)                # emittance grow flag default
-        UTIL.FLAGS['sigma']    = flags.get('sigma',True)               # beam sizes by sigma-tracking
-        UTIL.FLAGS['KVout']    = flags.get('KVout',False)              # print a dictionary of Key-Value pairs, no display
-        UTIL.FLAGS['verbose']  = flags.get('verbose',0)                # print flag default = 0
-        UTIL.FLAGS['useaper']  = flags.get('useaper',False)            # use aperture check for quads and rf-gaps
-        UTIL.FLAGS['bucket']   = flags.get('bucket',False)             # plot bucket
-        UTIL.FLAGS['csTrak']   = flags.get('csTrak',True)              # plot CS trajectories
-        UTIL.FLAGS['maction']  = flags.get('maction',False)            # call marker actions
-        UTIL.FLAGS['envelope'] = flags.get('envelope',False)           # plot transverse envelopes
-        UTIL.FLAGS['mapping']  = flags.get('mapping')                  # global mapping overrides individula mapping (default to None)
+        res = dict(
+            accON    = flags.get('accON',True),               # acceleration ON
+            periodic = flags.get('periodic',False),           # periodic lattice? default
+            egf      = flags.get('egf',False),                # emittance grow flag default
+            sigma    = flags.get('sigma',True),               # beam sizes by sigma-tracking
+            KVout    = flags.get('KVout',False),              # print a dictionary of Key-Value pairs, no display
+            verbose  = flags.get('verbose',0),                # print flag default = 0
+            useaper  = flags.get('useaper',False),            # use aperture check for quads and rf-gaps
+            bucket   = flags.get('bucket',False),             # plot bucket
+            csTrak   = flags.get('csTrak',True),              # plot CS trajectories
+            maction  = flags.get('maction',False),            # call marker actions
+            envelope = flags.get('envelope',False),           # plot transverse envelopes
+            mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
+        )
         """ internal FLAGs """        
-        UTIL.FLAGS['dWf']      = 1 if UTIL.FLAGS.get('accON') else 0   # acceleration on/off flag 1=on,0=off
-        UTIL.FLAGS['non_linear_mapping'] = False
-        return
+        res['dWf'] = 1 if res['accON'] else 0    # acceleration on/off flag 1=on,0=off
+        res['non_linear_mapping'] = False
+        return res
     def proces_parameters(parameters):
-        """ PARAMETERS and their default values """
+        """ external parameters and their default values """
+        res = dict()
         # kinetic energy @ injection
         W_in  = parameters.get("Win",UTIL.PARAMS['injection_energy']) # default PARAMS['injection_energy']
         tk_in = parameters.get('Tkin',W_in) # alias Tkin=Win
-        UTIL.PARAMS['injection_energy'] = tk_in 
+        res['injection_energy'] = tk_in 
         # longitudinal in {Dphi,w}-space
         DW2W_in = parameters.get('DW2W',0.01) # default 1%
         DT2T_in = parameters.get('DT2T',DW2W_in) # alias DT2T=DW2W
-        UTIL.PARAMS['DT2T']             = DT2T_in
-        UTIL.PARAMS['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
+        res['DT2T']             = DT2T_in
+        res['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
         # transverse beam parameters
-        UTIL.PARAMS['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
-        UTIL.PARAMS['betax_i']          = parameters.get('betax_i',1.) # [m]
-        UTIL.PARAMS['alfax_i']          = parameters.get('alfax_i',0.)
-        UTIL.PARAMS['emity_i']          = parameters.get('emity_i',10E-6)
-        UTIL.PARAMS['betay_i']          = parameters.get('betay_i',1.)
-        UTIL.PARAMS['alfay_i']          = parameters.get('alfay_i',0.)
+        res['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
+        res['betax_i']          = parameters.get('betax_i',1.) # [m]
+        res['alfax_i']          = parameters.get('alfax_i',0.)
+        res['emity_i']          = parameters.get('emity_i',10E-6)
+        res['betay_i']          = parameters.get('betay_i',1.)
+        res['alfay_i']          = parameters.get('alfay_i',0.)
         # transverse Twiss @ entrance
-        UTIL.PARAMS['twiss_x_i'] = UTIL.Twiss(UTIL.PARAMS['betax_i'], UTIL.PARAMS['alfax_i'],UTIL.PARAMS['emitx_i'])
-        UTIL.PARAMS['twiss_y_i'] = UTIL.Twiss(UTIL.PARAMS['betay_i'], UTIL.PARAMS['alfay_i'],UTIL.PARAMS['emity_i'])
+        res['twiss_x_i'] = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
+        res['twiss_y_i'] = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
         # supplemental global parameters
-        UTIL.PARAMS['nbsigma']          = parameters.get('nbsigma',2)
-        UTIL.PARAMS['lattice_version']  = parameters.get('lattvers','not given')
-        UTIL.PARAMS['thins']            = parameters.get('thins',1)
-        UTIL.PARAMS['input_file']       = None
+        res['nbsigma']          = parameters.get('nbsigma',2)
+        res['lattice_version']  = parameters.get('lattvers','not given')
+        res['thins']            = parameters.get('thins',1)
+        res['input_file']       = None
         # longitudinal emittance @ entrance
-        Dphi0   = UTIL.PARAMS['Dphi0']
-        DT2T    = UTIL.PARAMS['DT2T']
+        Dphi0   = res['Dphi0']
+        DT2T    = res['DT2T']
         T       = UTIL.PARAMS['injection_energy']
         E0      = UTIL.PARAMS['proton_mass']
         w0      = T/E0*DT2T # Wrangler's definition of w (pp.176)
         emit_w  = Dphi0 * w0 # emittance in {Dphi,w}-space
-        UTIL.PARAMS['w0']       = w0
-        UTIL.PARAMS['emitw_i']  = Dphi0 * w0
-        UTIL.PARAMS['alfaw_i']  = 0.   # always
-        UTIL.PARAMS['betaw_i']  = emit_w/w0**2
+        res['w0']       = w0
+        res['emitw_i']  = Dphi0 * w0
+        res['alfaw_i']  = 0.   # always
+        res['betaw_i']  = emit_w/w0**2
         # longitudinal TWiss @ entrance
-        UTIL.PARAMS['twiss_w_i'] = UTIL.Twiss(UTIL.PARAMS['betaw_i'], UTIL.PARAMS['alfaw_i'],UTIL.PARAMS['emitw_i'])
+        res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
         # set parameters that will be caculated later (f.i. waccept) to None
-        UTIL.PARAMS['emitz_i']   = None
-        UTIL.PARAMS['alfaz_i']   = None
-        UTIL.PARAMS['betaz_i']   = None
-        UTIL.PARAMS['z0']        = None
-        return
+        res['emitz_i']   = None
+        res['alfaz_i']   = None
+        res['betaz_i']   = None
+        res['z0']        = None
+        return res
     def proces_elements(elements):
         """fills global ELEMENTS"""
-        UTIL.ELEMENTS = elements
         return elements
     def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
@@ -348,15 +351,18 @@ def factory(input_file,stop=None):
     results = doInputParser(in_data)
 
     flags = proces_flags(results.FLAGS)
+    for k,v in flags.items(): UTIL.FLAGS[k] = v
     UTIL.DEBUG_OFF('global FLAGS after proces_flags():')
     UTIL.DEBUG_OFF(UTIL.FLAGS)
 
     parameters = proces_parameters(results.PARAMETERS)
-    UTIL.PARAMS['input_file'] = input_file
+    parameters['input_file'] = input_file
+    for k,v in parameters.items(): UTIL.PARAMS[k] = v
     UTIL.DEBUG_OFF('global PARAMS after proces_parameters():')
     UTIL.DEBUG_OFF(UTIL.PARAMS)
 
     elements = proces_elements(results.ELEMENTS)
+    UTIL.ELEMENTS = elements
     UTIL.DEBUG_OFF('ELEMENTS after proces_elements():')
     UTIL.DEBUG_OFF(UTIL.ELEMENTS)
 

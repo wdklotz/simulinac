@@ -24,12 +24,9 @@ import numpy as NP
 import unittest
 import warnings
 
-from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF,colors
-from setutil import WConverter, dictprnt, objprnt, Proton, Electron
+from setutil import PARAMS, FLAGS, DEBUG_ON, DEBUG_OFF, colors
+from setutil import WConverter, Proton, I0, I1, arrprnt, Twiss
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp, Twiss
-from Ez0     import SFdata
-# from DynacG  import _DYN_G
 
 # used about everywhere
 twopi = 2.*pi

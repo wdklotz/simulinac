@@ -146,13 +146,17 @@ class Lattice(object):
                 cavity_counter += 1
                 ttfmin = min(element.ttf,ttfmin)
                 ttfmax = max(element.ttf,ttfmax)
-        SUMMARY['nbof quadrupoles*']  = quad_counter   if quad_counter   != 0 else '0 (no quadrupoles?)'
-        SUMMARY['nbof cavities*']     = cavity_counter if cavity_counter != 0 else '0 (no cavities?)'
         if ttfmin != +1.e+50: SUMMARY['ttf_min,ttf_max*']   = (ttfmin,ttfmax)
         tki   = self.injection_energy
         tkf   = self.seq[-1].ref_track[EKOO]
-        SUMMARY['Tk_i,Tk_f* [MeV]']    = (tki,tkf)
-        SUMMARY['lattice length* [m]'] = self.length
+        res = dict(
+            quad_cntr    = quad_counter,
+            cavity_cntr  = cavity_counter,
+            latt_length  = self.length,
+            tki          = tki,
+            tkf          = tkf,
+        )
+        return res
     def cell(self,closed=True):
         """ Construct the full lattice cell-matrix and extract standard quantities:
             full cell => mcell

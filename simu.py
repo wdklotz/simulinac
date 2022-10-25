@@ -399,7 +399,11 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------
-    lattice.stats()
+    res = lattice.stats()
+    SUMMARY['nbof quadrupoles*']   = res['quad_cntr']
+    SUMMARY['nbof cavities*']      = res['cavity_cntr']
+    SUMMARY['Tk_i,Tk_f* [MeV]']    = (res['tki'],res['tkf'])
+    SUMMARY['lattice length* [m]'] = res['latt_length']
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
