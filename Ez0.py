@@ -193,6 +193,7 @@ class SFdata(object):
     """
     def __init__(self,input_file):
         print('READING SF-DATA from "{}"'.format(input_file))
+        self.input_file = input_file
         self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  # raw data from SF will never be modified!
         self.EzPeak_raw = max([x.Ez for x in self.Ez0_tab_raw])
         self.gap_raw    = 2.*max([x.z  for x in self.Ez0_tab_raw])
@@ -351,39 +352,38 @@ class TestEz0Methods(unittest.TestCase):
         input_file='SF/SF_WDK2g44.TBL'
         (EzPeak,gap) = (4.0,4.0)
         sfdata1 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata1,end="")
+        print('   ',(EzPeak,gap),sfdata1.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         sfdata2 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata2,end="")
+        print('   ',(EzPeak,gap),sfdata2.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         (EzPeak,gap) = (5.0,2.0)
         sfdata3 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata3,end="")
+        print('   ',(EzPeak,gap),sfdata3.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         (EzPeak,gap) = (0.,0.)
         sfdata4 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata4,end="")
+        print('   ',(EzPeak,gap),sfdata4.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         input_file='SF/SF_WDK2g22.TBL'
         sfdata5 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata5,end="")
+        print('   ',(EzPeak,gap),sfdata5.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         (EzPeak,gap) = (5.0,2.0)
         sfdata6 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata6,end="")
+        print('   ',(EzPeak,gap),sfdata6.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         input_file='SF/SF_WDK2g44.TBL'
         (EzPeak,gap) = (0.,0.)
         sfdata7 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata7,end="")
+        print('   ',(EzPeak,gap),sfdata7.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
-
     def test1(self):
         print("\b----------------------------------------test1")
         input_file='SF/PILL-2CM.TBL'
