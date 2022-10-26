@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.22.6'
+__version__='vv10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -22,22 +22,10 @@ import sys
 from math import sin,cos,tan,sqrt,pi,degrees
 from copy import copy
 import numpy as NP
-# import time
-import pprint, inspect
 
-from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton
+from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
 from Ez0 import SFdata
 import elements as ELM
-
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print(F'DEBUG_ON ==============>{file}: ', end="")
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
 
 twopi = 2*pi
 counter_of_polies = 0
@@ -47,7 +35,6 @@ class OXAL_G(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], fieldtab=None):
         super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='oxal', fieldtab=fieldtab)
-        # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('OXAL: missing E(z) table - STOP')
             sys.exit(1)

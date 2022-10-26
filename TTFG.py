@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.22.6'
+__version__='vv10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -34,7 +34,6 @@ class TTF_G(ELM.RFG):
     """Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'],fieldtab=None):
         super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='ttf', fieldtab=fieldtab)
-        # TmStamp.stamp('OXAL init')
         if SFdata == None:
             raise RuntimeError('TTF_G: missing E(z) table - STOP')
             sys.exit(1)
@@ -217,7 +216,7 @@ class TestTransitTimeFactorsGapModel(unittest.TestCase):
         fname    = 'SF/SF_WDK2g44.TBL'
         gap_cm   = gap*100     # Watch out!
         EzPeak   = 10.0
-        Ezdata   = SFdata(fname,EzPeak=EzPeak,gap=gap_cm)
+        Ezdata   = SFdata.field_data(fname,EzPeak=EzPeak,gap=gap_cm)
         EzAvg    = Ezdata.EzAvg
         ttfg     = TTF_G("rfg-test",EzAvg,phisoll,gap,freq,SFdata=Ezdata,particle=particle,dWf=dWf)
 

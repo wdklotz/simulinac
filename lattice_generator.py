@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.22.6'
+__version__='vv10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -112,36 +112,33 @@ def instanciate_element(item):
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
-                if fieldtab not in UTIL.PARAMS:
-                    gap_cm = gap*100     # Watch out!
-                    UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                gap_cm = gap*100     # Watch out!
+                sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
             if mapping   == 'oxal':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
+                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
+                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
                 if counter1() < 5:
                     print(UTIL.colors.RED+"WARN: dyn mapping is broken"+UTIL.colors.ENDC)
-                else:
-                    pass
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=UTIL.PARAMS[fieldtab],particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
+                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
+                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             else:
                 instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,SFdata=None,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
-        elif type == 'RFC':
+            """         elif type == 'RFC':
             if counter2() < 5:
                 print(UTIL.colors.RED+"WARN: RFC node is broken"+UTIL.colors.ENDC)
             else:
@@ -155,32 +152,39 @@ def instanciate_element(item):
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
+                UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
-                if fieldtab not in UTIL.PARAMS:
-                    gap_cm = gap*100     # Watch out!
-                    UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                gap_cm = gap*100     # Watch out!
+                sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                # if fieldtab not in UTIL.PARAMS:
+                #     gap_cm = gap*100     # Watch out!
+                #     UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
             if mapping == 'oxal':
                 EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                # instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'ttf':
                 EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                # instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
                 EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                # instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
             else:
                 instance = ELM.RFC(ID,EzAvg,phiSoll,gap,freq,length,mapping=mapping,aperture=aperture,dWf=dWf,fieldtab=None)
                 ELEMENT['sec']    = attributes.get('sec','?')
                 ELEMENT['EzPeak'] = EzPeak
+            """        
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
@@ -329,7 +333,6 @@ def factory(input_file,stop=None):
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
-
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """

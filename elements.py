@@ -1,4 +1,4 @@
-__version__='v10.22.6'
+__version__='vv10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
