@@ -334,8 +334,6 @@ def factory(input_file,stop=None):
             lattice.add_node(instance)
         return lattice   # the complete lattice
     """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
-    """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
-    """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)

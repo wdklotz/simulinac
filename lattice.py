@@ -257,9 +257,7 @@ class Lattice(object):
             else:
                 print('STOP: unstable lattice!')
             return stable
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
+        """ function body --------------- function body --------------- function body --------------- """
         mcell = None
         """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):
@@ -326,9 +324,7 @@ class Lattice(object):
             [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
             ])
             return m_beta
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
+        """ function body --------------- function body --------------- function body --------------- """
         sFLAG   = FLAGS['sigma']
         nlFLAG  = FLAGS['non_linear_mapping']
         sigFLAG = True
@@ -484,9 +480,7 @@ class Lattice(object):
             DEBUG_ON()
             print('{} cosine {} sine {}'.format(elm.type,c,s))
             pass
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
-        # function body --------------- function body --------------- function body --------------- 
+        """ function body --------------- function body --------------- function body --------------- """
         print('CALCULATE C+S TRAJECTORIES')
         
         """ injektion parameters """

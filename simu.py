@@ -363,9 +363,7 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
-    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
-    # ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
+    """ ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here """
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #         with links and adjusted energy

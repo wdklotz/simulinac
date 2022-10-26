@@ -198,10 +198,12 @@ class SFdata(object):
         def scale(instance,EzPeak,gap):
             instance.EzPeak = EzPeak
             instance.gap    = gap
-            instance.Ez0_tab, instance.EzAvg = instance.scale_Ez_table(EzPeak,gap)    # scale EzAvg and profile
+            instance.Ez0_tab, instance.EzAvg = instance.scale_Ez_table(EzPeak,gap) # scale EzAvg and profile
+            # fit polynomials
             instance.poly = instance.make_polyfit(instance.Ez0_tab)
             DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(instance.poly)))
         instance = cls.instances.get(input_file)
+        """ field_data body -------- field_data body -------- field_data body -------- field_data body -------- field_data body """
         if instance == None:
             # new instance
             instance = SFdata(input_file)
@@ -232,14 +234,16 @@ class SFdata(object):
     def __init__(self,input_file):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
-        self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  # raw data from SF will never be modified!
+        # raw data from SF will never be modified!
+        self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  
         self.EzPeak_raw = max([x.Ez for x in self.Ez0_tab_raw])
         self.gap_raw    = 2.*max([x.z  for x in self.Ez0_tab_raw])
-
+        # actual [scaled] data will go here
         self.Ez0_tab    = self.Ez0_tab_raw
         self.EzAvg      = self.EzAvg_raw
         self.EzPeak     = self.EzPeak_raw
         self.gap        = self.gap_raw
+        # fit polynomials
         self.poly       = self.make_polyfit(self.Ez0_tab)
 
     def make_Ez_table(self,input_file):
