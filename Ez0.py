@@ -191,19 +191,6 @@ class SFdata(object):
     IN: EzPeak peak field [MV/m], gap: full gap [m]
     OUT: SFdata object
     """
-    def __init__(self,input_file):
-        print('READING SF-DATA from "{}"'.format(input_file))
-        self.input_file = input_file
-        self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  # raw data from SF will never be modified!
-        self.EzPeak_raw = max([x.Ez for x in self.Ez0_tab_raw])
-        self.gap_raw    = 2.*max([x.z  for x in self.Ez0_tab_raw])
-
-        self.Ez0_tab    = self.Ez0_tab_raw
-        self.EzAvg      = self.EzAvg_raw
-        self.EzPeak     = self.EzPeak_raw
-        self.gap        = self.gap_raw
-        self.poly       = self.make_polyfit(self.Ez0_tab)
-
     # class variable
     instances = {}    
     @classmethod
@@ -238,6 +225,23 @@ class SFdata(object):
             elif EzPeak == 0. and gap == 0. or (EzPeak == instance.EzPeak and gap == instance.gap):
                 pass
         return instance
+    @property
+    def EzPoly(self):
+        return self.poly
+
+    def __init__(self,input_file):
+        print('READING SF-DATA from "{}"'.format(input_file))
+        self.input_file = input_file
+        self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  # raw data from SF will never be modified!
+        self.EzPeak_raw = max([x.Ez for x in self.Ez0_tab_raw])
+        self.gap_raw    = 2.*max([x.z  for x in self.Ez0_tab_raw])
+
+        self.Ez0_tab    = self.Ez0_tab_raw
+        self.EzAvg      = self.EzAvg_raw
+        self.EzPeak     = self.EzPeak_raw
+        self.gap        = self.gap_raw
+        self.poly       = self.make_polyfit(self.Ez0_tab)
+
     def make_Ez_table(self,input_file):
         """ read raw data and scale to self.EzPeak and self.gap """
         zp = []; rp = []; ep = []
@@ -330,9 +334,6 @@ class SFdata(object):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
         res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
         return res
-    @property
-    def EzPoly(self):
-        return self.poly
 class TestEz0Methods(unittest.TestCase):
     @classmethod
     def displayLR(cls,table,legend):
@@ -348,7 +349,7 @@ class TestEz0Methods(unittest.TestCase):
         Ez  = [+float(x[2]) for x in table]
         plt.plot(z,Ez,label=legend)
     def test0(self):
-        print("\b---------------------------------test_singleton")
+        print("\b---------------------------------test0 (singleton)")
         input_file='SF/SF_WDK2g44.TBL'
         (EzPeak,gap) = (4.0,4.0)
         sfdata1 = SFdata.field_data(input_file,*(EzPeak,gap))
