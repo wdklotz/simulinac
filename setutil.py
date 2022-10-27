@@ -286,9 +286,7 @@ class Functions(object):         #TODO better use pandas?
         return value
     pass
 class SCTainer(object):
-    """
-    A (singleton) container for objects
-    """
+    """ A (singleton) container for objects  (not used, not finished) """
     class _singleton_(object):
         def __init__(self):
             self.objects = []
