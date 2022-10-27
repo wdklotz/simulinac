@@ -430,9 +430,10 @@ class RFG(Node):
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d', fieldtab=None):
         super().__init__()
         def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
             x = gap/(beta*lamb)
-            return NP.sinc(x)
+            res =NP.sinc(x)
+            return res
         self.particle  = particle
         self.position  = position
         self.length    = 0.
@@ -767,11 +768,31 @@ class RFG(Node):
         conv      = WConverter(tkin,freq)
         DEBUG_OFF(dict(DT2T=DT2T,E0T=E0T,phisoll=phisoll,lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
-        # LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
-        w0large   = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
-        # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
-        w0small   = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
-        wmax      = w0large
+        try:
+            # LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
+            sq2l = 2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)
+            w0large = sqrt(sq2l)  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+        except ValueError as ex:
+            exception = ex
+            w0large = -1
+            # print(ex)
+            # print(f'w0large=sqrt({sq2l})')
+        try:
+            # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
+            sq2s = 2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2)
+            w0small = sqrt(sq2s)
+        except ValueError as ex:
+            exception = ex
+            w0small = -1
+            # print(ex)
+            # print(f'w0small=sqrt({sq2l})')
+        if w0large != -1: 
+            wmax = w0large
+        elif w0large == -1 and w0small != -1:
+            wmax = w0small
+        else:
+            DEBUG_ON(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')
+            sys.exit(1)
 
         w0        = (gamma-1.)*DT2T
         emitw_i   = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance

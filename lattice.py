@@ -557,7 +557,7 @@ class Lattice(object):
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
             except (ValueError,ELM.OutOfRadialBoundEx) as ex:
                 reason = ex.__class__.__name__
-                print('@map in cs_traj: {} at s={:6.2f} [m]'.format(reason,s))
+                print('in lattice.cs_traj() when mapping: {} at s={:6.2f} [m]'.format(reason,s))
                 sys.exit(1)
         return (c_fun,s_fun)
     def symplecticity(self):

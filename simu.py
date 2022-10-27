@@ -444,7 +444,7 @@ def simulation(filepath):
 if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
-    group  = parser.add_mutually_exclusive_group()
+    group  = parser.add_mutually_exclusive_group( )
     group.add_argument ("--file", default="simuIN.yml", help="lattice input-file")
     group.add_argument ("--tmpl", help="template number")
     parser.add_argument("--run", help="run number")
