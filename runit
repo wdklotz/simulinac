@@ -1,3 +1,3 @@
 source ~wdklotz/py38/bin/activate
 cd ~wdklotz/SIMULINAC
-python simu.py
+python simu.py --tmpl xxx --run 0
