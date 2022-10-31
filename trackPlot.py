@@ -1,5 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -17,7 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-#TODO full with old unused or unfinished code
+# NOTE full with old unused or unfinished code
 import numpy as NP
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
@@ -27,7 +28,7 @@ from scipy.stats import norm
 from math import sqrt
 from setutil import DEBUG_ON,DEBUG_OFF
 
-#TODO below still used by bunch: from trackPlot import histPlot, poincarePlot 
+# NOTE below still used by bunch: from trackPlot import histPlot, poincarePlot 
 def histPlot(x,mu,sigma):
     """ a historgram plot """
     import matplotlib.mlab as mlab
@@ -133,7 +134,6 @@ def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
             # axHisty.set_ylim(axScatter.get_ylim())
 
     return
-# below used in release
 def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     """
     Create a plot of the covariance confidence ellipse of *x* and *y*.
@@ -278,7 +278,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
     # adjust: left, bottom, right, top, wspace, hspace
     plt.subplots_adjust(wspace=0.15) 
     return
-# TODO below is experimental, maybe unfinished
+# NOTE below is experimental, maybe unfinished
 def poincare_hist(fig,ax,x,y):
     # definitions for the axes
     left, width    = 0.1, 0.65

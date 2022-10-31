@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
+\usepackage[margin=2.5cm]{geometry}
 % vertical whitespace instead of indentation of paragraphs
 \usepackage{parskip}
 
@@ -25,7 +26,7 @@ and units [rad].
 The ellipse intersetcs the $ \Delta\phi $-axis at $ \Delta\phi_{0} $ and the $ w $-axis at $ w_{0} $.
 The intersection with the $w$-axis determines the $\beta$-function by the relation $\beta_{w} = \epsilon_{w}/w_{0}^{2}$. Its units are [$rad$].
 
-Let's change to new coordinates, for instance the pair of canonical variables   $ z\otimes \Delta p/p $, as it is used internally in Trace 3D.
+Let's change to new coordinates, for instance the pair of canonical variables   $ z\otimes \Delta p/p $, as it is used internally in the \emph{ TRACE 3-D} program.
 The transformation from old to new coordinates is:
 $ z = -\kappa\Delta\phi =  -\frac{\beta \lambda} {2 \pi}  \Delta\phi $ and $ \Delta p/p = \tau w = \gamma/(\gamma^{2}-1) w = (\gamma \beta^{2})^{-1} w $.
 This gives the modified ellipse equation:
@@ -59,7 +60,7 @@ Finally for the $ \Delta z\otimes\Delta W $ phase space we get the emittance
 \beta_{zW} = \frac{\beta \lambda} {2 \pi}\frac{1}{mc^{2}}\beta_{w}\quad  [m/eV] \label{}
 \end{equation}
 
-The ESS conceptual design report uses the $•z\otimes z'$ phase space, i.e. the emittance $ \epsilon_{zz'} $. Since $ \delta\gamma = w = \beta^{2}\gamma^{3} \delta\beta / \beta = \beta^{2}\gamma^{3} z' $ and 
+The ESS conceptual design report uses the $z \otimes z'$ phase space, i.e. the emittance $ \epsilon_{zz'} $. Since $ \delta\gamma = w = \beta^{2}\gamma^{3} \delta\beta / \beta = \beta^{2}\gamma^{3} z' $ and 
 $\Delta\phi  = \frac{2\pi}{\beta\lambda}z$ we have:
 \begin{equation}
 \epsilon_{zz'} = \frac{\lambda}{2\pi\beta\gamma^{3}}\epsilon_{w} \label{}
@@ -134,7 +135,7 @@ Example: Phase space $z\otimes\Delta W$ in terms of $\Delta\phi\otimes\delta\gam
 \beta_{zW} = \frac{\kappa}{\tau}\beta_w=\frac{\beta\lambda/2\pi}{mc^2}\beta_w.
 \end{equation}
 
-More interesting details about emittance definitions, normalized and unnormalized, and their units can be found in the UserManual of the \emph{TraceWin} program.
+More interesting details about emittance definitions, normalized and unnormalized, and their units can be found in the UserManual of the \emph{TRACEWIN} program.
 
 \section{Twiss Parameter Values}
 To simplify we assume the twiss parameter $ \alpha = 0 $. The twiss  parameter $ \gamma $ then reduces to $ 1/{\beta} $

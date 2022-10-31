@@ -1,4 +1,4 @@
-___version___='v10.1.0'
+__version__='v10.22.7'
 """ 
 DYNAC_lattice-generator
 converts YAML input file (simuIN.yml) into dynacIN for dynacv7r1.
@@ -167,7 +167,7 @@ def call_Dist(arg):
 def call_FIELD(arg):
     """
     SF-field table on intervall -cavlen <= z <= +cavlen. 
-    Field maximum is at z=0 and normalized to EzPeak Mv/m.   #TODO  z=0?
+    Field maximum is at z=0 and normalized to EzPeak Mv/m.
     """
     
     FH               = arg['freq']
@@ -392,7 +392,7 @@ if __name__ == '__main__':
     
     emity     = util.PARAMS['emity_i']*1E06 # mm*mrad - DYNAC units
     emitw     = util.PARAMS['emitw']        # mm/mrad - DYNAC units
-    tkIN      = util.PARAMS['injection_energy'] # MeV
+    tkIN      = lattice.injection_energy    # MeV
     freq      = lattice.first_gap.freq
     conv      = util.WConverter(tkIN,freq)
     alphaz    = 0.

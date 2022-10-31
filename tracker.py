@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-___version___='v10.2.0'
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -29,21 +29,21 @@ import time
 from string import Template
 from math import sqrt, degrees, radians, ceil
 import argparse
+import unittest
 
 from lattice_generator import factory
 import elements as ELM
-from setutil import PARAMS, FLAGS, dictprnt, Ktp, waccept
-from setutil import WConverter, Functions, DEBUG_ON, DEBUG_OFF
+from setutil import PARAMS, FLAGS, dictprnt, Ktp
+from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
 from trackPlot import scatter11
 
-# max track amplitudes are set here!
+# max limits for track amplitudes
 xlim_max  = ylim_max  =  10.e-3
 xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
-limit     = \
-    sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
+limit     = sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
 def projections(live_lost):
     """  2D phase space projections IN and OUT """
@@ -190,12 +190,12 @@ def track_node(node,particle,options):
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
-        if abs(new_point[Ktp.zp]) < PARAMS['Dp2p_Acceptance']:
+        if abs(new_point[Ktp.zp]) < PARAMS['Dp2pmax']:
             lost = False
         else:
             lost = True
         # check z-acceptance
-        if abs(new_point[Ktp.z]) < PARAMS['z_Acceptance']:
+        if abs(new_point[Ktp.z]) < PARAMS['zmax']:
             lost = False
         else:
             lost = True
@@ -248,23 +248,21 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
     return (bunch,lbunch)
-def track_soll(lattice, injection_energy, start_position=0.):
-    # TODO kann in der neuen Version wegfallen?
+def track_soll(lattice):
     """
     Track the reference particle through the lattice.
     NEW: Energy adjustemenr is already done when the node is added to the lattice.
     OLD: and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
-    soll_track = Track()
-    tp0 = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., injection_energy, 1., start_position, 1.]))
-    soll_track.addpoint(tp0)   # 1st track point
+    
+    soll_track  = Track()
+    tkIN        = lattice.injection_energy
+    position    = 0.
+    tp0         = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., tkIN, 1., position, 1.]))
+    soll_track.addpoint(tp0)              # 1st track point
     for node in iter(lattice):
         pi = soll_track.getpoints()[-1]   # track point at entrance
-        """ OLD: energy adjustment """
-        # node.adjust_energy(pi()[Ktp.T])
-        # apply soll map 
-        # pf = node.soll_map(pi())
         pf = node.map(pi())
         tpoint = Tpoint(pf)               # Tpoint at exit
         soll_track.addpoint(tpoint)
@@ -273,21 +271,28 @@ def tracker(input_file,options):
     """  Prepare and launch tracking  """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
-
-    # !!FIRST!! make lattice
+    # run_mode
+    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
+    if twoflag == (True,True):   mode=0
+    if twoflag == (True,False):  mode=1
+    if twoflag == (False,True):  mode=2
+    if twoflag == (False,False): mode=3
+    FLAGS['mode'] = mode
+    print('running in "'+ RUN_MODE[mode] + '" mode')
+    # make lattice
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
-
-    # No tracking without acceleration
-    if FLAGS['dWf'] == 0:
+    # w acceptance
+    if FLAGS['accON']:
+        res = lattice.first_gap.waccept()
+        # Update PARAMS
+        for k,v in res.items():
+            PARAMS[k] = v
+    else:
+        # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
-
-    # calculate twiss paramters at entrance
-    waccept(lattice.first_gap)
-    tkin     = PARAMS['injection_energy']
-    conv     = WConverter(tkin,lattice.first_gap.freq)
     t1       = time.process_time()
 
     # pull more options
@@ -295,7 +300,6 @@ def tracker(input_file,options):
     save     = options['save']
     skip     = options['skip']
     losses   = options['losses']
-    
     # manipulate options
     if losses:
         show = False
@@ -319,40 +323,40 @@ def tracker(input_file,options):
     sigma_yp  = twy.sigmaV()
     # {z,Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
-    betaz,alfaz,gammaz,emitz = twz()
+    betaz_i,alfaz_i,gammaz_i,emitz_i = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     # Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
-    betaw,alfaw,gammaw,emitw = tww()
+    betaw_i,alfaw_i,gammaw,emitw_i = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
     wmax         = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
-    tracker_log['T-kin..............[MeV]'] = tkin
-    tracker_log["sigma(x,x')i...([m,rad])"] = (sigma_x,sigma_xp)
-    tracker_log["sigma(y,y')i...([m,rad])"] = (sigma_y,sigma_yp)
-    tracker_log["sigma(Dphi,w)i..([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log["sigma(z,Dp2p)i....([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log['betax_i..............[m]'] = betax_i
-    tracker_log['betay_i..............[m]'] = betay_i
-    tracker_log['betaw_i............[rad]'] = betaw
-    tracker_log['betaz_i..........[m/rad]'] = betaz
-    tracker_log['emitx_i..............[m]'] = emitx_i
-    tracker_log['emity_i..............[m]'] = emity_i
-    tracker_log['emitw_i,wmax.......[rad]'] = (emitw, wmax)
-    tracker_log['emitz_i..............[m]'] = emitz
-    # tracker_log['Dp2p,Dp2pmx..........[%]'] = (Dp2p0*1.e2,Dp2pmx*1.e2)
-    tracker_log['Dp2p.................[%]'] = Dp2p0*1.e2
-    tracker_log['acceptance Dp2p......[%]'] = PARAMS['Dp2p_Acceptance']*1.e2
-    tracker_log['accpetance z........[mm]'] = PARAMS['z_Acceptance']*1.e3
-    tracker_log['lattice version.........'] = PARAMS['lattice_version']
-    tracker_log['mapping.................'] = PARAMS['mapping']
-    tracker_log['DT/T-kin................'] = PARAMS['DT2T']
+    tracker_log['mapping.................']           = FLAGS['mapping']
+    tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
+    tracker_log['acceptance..\u0394p/p.....[%]']      = PARAMS['Dp2pmax']*1.e2
+    tracker_log['acceptance..\u0394\u03B3..........'] = wmax
+    tracker_log['accpetance..z.......[mm]']           = PARAMS['zmax']*1.e3
+    tracker_log['\u03B2w_i...............[rad]']      = betaw_i
+    tracker_log['\u03B2x_i.................[m]']      = betax_i
+    tracker_log['\u03B2y_i.................[m]']      = betay_i
+    tracker_log['\u03B2z_i.............[m/rad]']      = betaz_i
+    tracker_log['\u03B5w_i..{\u0394\u03C6,\u0394\u03B3}......[rad]'] = emitw_i
+    tracker_log['\u03B5x_i.................[m]']      = emitx_i
+    tracker_log['\u03B5y_i.................[m]']      = emity_i
+    tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
+    tracker_log['lattice version.........']           = PARAMS['lattice_version']
+    tracker_log["\u03C3(x,x')i.......([m,rad])"]      = (sigma_x,sigma_xp)
+    tracker_log["\u03C3(y,y')i.......([m,rad])"]      = (sigma_y,sigma_yp)
+    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = (sigma_z,sigma_Dp2p)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
+    tracker_log['\u0394p/p0................[%]']      = Dp2p0*1.e2
+    tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
@@ -367,7 +371,7 @@ def tracker(input_file,options):
     # launch tracking and show final with time
     progress(('(track design)', '', '', ''))
     t2 = time.process_time()
-    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
+    track_soll(lattice)  # <----- track soll
     t3 = time.process_time()
     # TmStamp.stamp('START TRACK')
     progress(('(track design)', '(track bunch)', '', ''))
@@ -399,18 +403,19 @@ def tracker(input_file,options):
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
 
-def test0(filepath):
-    print('-----------------------------------------Test0---')
-    lattice = factory(filepath)
-    track_soll(lattice, PARAMS['injection_energy'])  # <----- track soll
-    table = sollTrack.as_table()
-    DEBUG_TEST0('sollTrack:\n'+table)
-    first = sollTrack[0]
-    last  = sollTrack[-1]
-    DEBUG_TEST0('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
+class TestTracker(unittest.TestCase):
+    def setUp(self):
+        self.lattice = factory('unittests/trackerIN_REF.yml')
+    def test_soll_tracking(self):
+        print('---------------------test_soll_tracking---')
+        sollTrack = track_soll(self.lattice)  # <----- track soll
+        table = sollTrack.as_table()
+        DEBUG_OFF('sollTrack:\n'+table)
+        first = sollTrack[0]
+        last  = sollTrack[-1]
+        DEBUG_ON('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
 #----------------main------------
 if __name__ == '__main__':
-    DEBUG_TEST0 = DEBUG_OFF
     DEBUG_OFF(sys.argv)
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
@@ -418,7 +423,7 @@ if __name__ == '__main__':
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
     parser.add_argument("--hide", action="store_false",               help="hide IN/OUT scatter plots")
-    group.add_argument ("--file", default="yml/trackerIN_REF.yml",    help="lattice input-file")
+    group.add_argument ("--file", default="trackerIN.yml",            help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
     group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")
@@ -426,7 +431,7 @@ if __name__ == '__main__':
     parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
     parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
     args = vars(parser.parse_args())
-    DEBUG_ON(f'arguments => {args}')
+    DEBUG_OFF(f'arguments => {args}')
     options = {}
     options['particles_per_bunch'] = args['p']
     options['show']                = args['hide']
@@ -435,7 +440,7 @@ if __name__ == '__main__':
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
 
-    print('tracker.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+    print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
     # adapt to legacy code which uses 'Args'
     Args  = {}
@@ -452,35 +457,36 @@ if __name__ == '__main__':
 
     # let's go. All  input is parsed...
     input_file = Args['file']
-    if sys.platform == 'win32':
-        if Args['mode']   == 'no_m4':
-            pass
-        elif Args['mode'] == 'm4':
-            command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
-            stat = os.system(command)
-            if stat != 0:
-                print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-                print(  'WARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!\n')
-        else:
-            print('Internal error!')
-            sys.exit(1)
-    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        if Args['mode']   == 'no_m4':
-            pass
-        elif Args['mode'] == 'm4':
-            macros_file   = Args['macro']
-            template_file = Args['tmpl']
-            # launch macros script with bash
-            command = 'chmod +x {}'.format(macros_file)
-            command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
-            os.system(command)
-        else:
-            print('Internal error!')
-            sys.exit(1)
+    if DEBUG_OFF():
+        # unittest.main()
+        TestTracker(methodName='test_soll_tracking').run()
     else:
-        print('wrong platform')
-        sys.exit(1)
-
-    # start the tracking
-    tracker(input_file,options)
+        if sys.platform == 'win32':
+            if Args['mode']   == 'no_m4':
+                pass
+            elif Args['mode'] == 'm4':
+                command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
+                stat = os.system(command)
+                if stat != 0:
+                    print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
+            else:
+                print('Internal error!')
+                sys.exit(1)
+        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            if Args['mode']   == 'no_m4':
+                pass
+            elif Args['mode'] == 'm4':
+                macros_file   = Args['macro']
+                template_file = Args['tmpl']
+                # launch macros script with bash
+                command = 'chmod +x {}'.format(macros_file)
+                command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+                os.system(command)
+            else:
+                print('Internal error!')
+                sys.exit(1)
+        else:
+            print('wrong platform')
+            sys.exit(1)
+        # start the tracking
+        tracker(input_file,options)

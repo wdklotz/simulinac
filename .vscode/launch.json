@@ -6,6 +6,14 @@
     "configurations": [
         
         {
+            "name": "Ez0",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "Ez0.py",
+        },
+        {
             "name": "DYNAC_multigap_generator",
             "type": "python",
             "request": "launch",
@@ -37,7 +45,7 @@
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
  //           "args": ["--file","FODO.yml"]
-            "args": ["--file","yml/simuIN_REF.yml"]
+            "args": ["--file","RefRuns/simuIN_REF.yml"]
 },
         {
             "name": "tracker",

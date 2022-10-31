@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-___version___='v10.2.0'
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -18,33 +18,34 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO: Calulate cell phase advance sigma by integration
-#TODO: handle exceptions speziel ValueError   - more or less done
+#TODO: Calulate cell phase advance sigma by integration - maybe
 #TODO: use normalized emittances ?
-#TODO: waccept results are global - each node should carry its own
-#TODO: waccept work and check again - logitudinal acceptance !!!!!
-#TODO: make new simu_manual.tex, README.md, check conversions.tex
+#TODO: make new simu_manual.tex, README.md, check conversions.tex - later
 #TODO: rework the KVout - done in parts
-#TODO: rework verbose printing levels
-#TODO: C.K.Allen's matrices which are XAL as well?
-#TODO: slices as sub-lattice attribute to thick element
-#TODO: for tracker: Plot a confidence ellipse of a two-dimensional dataset: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
+#TODO: rework verbose printing levels - needed?
+#TODO: C.K.Allen's matrices which are XAL as well? - don't know if better
+#TODO: slices as sub-lattice attribute to thick element - too big a modification
+#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - what?
+#done: make waccept a method of RFG node - next planned improvement
+#done: handle exceptions speziel ValueError - more or less done
+#done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 """
 import sys,os
-
 # for PyQt
-# import PyQt5             # works on native W10 but not on WSL2 as docker container
+# import PyQt5            
 # import matplotlib
-# matplotlib.use("Qt5Agg") # works on native W10 but not on WSL2 as docker container
+# matplotlib.use("Qt5Agg") 
 # for Tk
-import tkinter             # works on native W10
+import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
+# NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
+# NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
 import matplotlib
-matplotlib.use("TkAgg")    # works on native W10
+matplotlib.use("TkAgg")
+
 import matplotlib.pyplot as plt
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,waccept
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,RUN_MODE
 from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
@@ -54,9 +55,7 @@ import elements as ELM
 import bucket_size as separatrix
 
 def display0(*args):
-    """
-    C&S-Tracks w/o longitudinal motion
-    """
+    """ C&S-Tracks w/o longitudinal motion """
     #----------*----------*   # unpack
     twiss_func = args[0]
     cos_like   = args[1]
@@ -153,9 +152,7 @@ def display1(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 def display3(*args):
-    """
-    C&S-Tracks with longitudinal motion
-    """
+    """ C&S-Tracks with longitudinal motion """
     #-------------------- unpack
     twiss_fun = args[0]
     cos_like  = args[1]
@@ -199,7 +196,7 @@ def display3(*args):
     # splot311=plt.subplot(10,1,(1,3))
     splot311.set_title('transverse x')
     # mapping box
-    splot311.text(0.01, 1.1, PARAMS['mapping'],transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot311.text(0.01, 1.1,FLAGS.get('mapping'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     if FLAGS['envelope']:
         plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
@@ -261,6 +258,75 @@ def display3(*args):
     ax_r.set_ylabel(r'$\Delta$p/p [%]')
     ax_r.tick_params(axis='y', colors='red')
     ax_r.yaxis.label.set_color('red')
+    ax_r.plot(z1,cdp,label='C',color='red')
+    ax_r.plot(z2,sdp,label='S',color='red',linestyle=':')
+    ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
+    plt.legend(loc='lower right',fontsize='x-small')
+    # lattice elements
+    vscale=ax_l.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    ax_l.plot(vis_abszisse,viseoz,label='',color='black')
+    ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+def display4(*args):
+    """ beta functions and synchrotron oscillations """
+    #-------------------- unpack
+    beta_fun  = args[0]
+    cos_like  = args[1]
+    sin_like  = args[2]
+    lat_plot  = args[3]
+    #-------------------- beta and sigma functions
+    s     = [beta_fun(i,'s')    for i in range(beta_fun.nbpoints)] # Abszisse
+    bx    = [beta_fun(i,'bx')   for i in range(beta_fun.nbpoints)] # envelope (sigma-x)
+    by    = [beta_fun(i,'by')   for i in range(beta_fun.nbpoints)] # envelope (sigma-y)
+    #-------------------- longitudinal trajectories
+    z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
+    cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
+    cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]
+
+    z2=  [sin_like(i,'s')          for i in range(sin_like.nbpoints)]
+    sz=  [sin_like(i,'sz')         for i in range(sin_like.nbpoints)]
+    sdp= [sin_like(i,'sdp')        for i in range(sin_like.nbpoints)]
+    #-------------------- lattice viseo
+    vzero        = [0.                           for i in range(lat_plot.nbpoints)] # zero line
+    vis_abszisse = [lat_plot(i,'s')              for i in range(lat_plot.nbpoints)]
+    vis_ordinate = [lat_plot(i,'viseo')          for i in range(lat_plot.nbpoints)]
+    #-------------------- figure frame
+    width=14; height=7.6
+    # fighdr = 'lattice version = {}, input file = {}'.format(PARAMS['lattice_version'],PARAMS['input_file'])
+    fig = plt.figure(num=1,figsize=(width,height),facecolor='#eaecef',tight_layout=False)
+
+    #-------------------- beta functions
+    splot211=plt.subplot(211)
+    splot211.set_title('beta x,y')
+    # mapping box
+    splot211.text(0.01, 1.1, FLAGS.get('mapping'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    # function plots
+    plt.plot(s,bx,      label=r"$\beta$x  [m]",  color='black', linestyle='-')
+    plt.plot(s,by,      label=r"$\beta$y  [m]",  color='red',   linestyle='-')
+    vscale=splot211.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    plt.plot(vis_abszisse,viseoz,label='',color='black')
+    plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    # zero line
+    splot211.plot(vis_abszisse,vzero,color='green',linestyle='--')
+    plt.legend(loc='lower right',fontsize='x-small')
+
+    #-------------------- longitudinal tracks z, dP/P
+    # ax_l = left abszisse
+    ax_l=plt.subplot(212)
+    # ax_l=plt.subplot(10,1,(7,9))
+    ax_l.set_title('synchrotron oscillation')
+    ax_l.set_ylabel(r"z [mm]")
+    ax_l.tick_params(axis='y', colors='green')
+    ax_l.yaxis.label.set_color('green')
+    ax_l.plot(z1,cz,label='C',color='green')
+    ax_l.plot(z2,sz,label='S',color='green',linestyle=':')
+    plt.legend(loc='lower left',fontsize='x-small')
+    # ax_r = right abszisse
+    ax_r = ax_l.twinx()
+    ax_r.set_ylabel(r'$\Delta$p/p [%]')
+    ax_r.tick_params(axis='y', colors='red')
+    ax_r.yaxis.label.set_color('red')
     ax_r.plot(z2,cdp,label='C',color='red')
     ax_r.plot(z2,sdp,label='S',color='red',linestyle=':')
     ax_r.plot(vis_abszisse,vzero,color='red', linestyle='--')
@@ -270,10 +336,9 @@ def display3(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-
-# ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here
 def simulation(filepath):
     def display(*functions):
+        # dispatch to different plots according to FLAG settings
         plots   = []
         if FLAGS['dWf'] == 0:
             # accel OFF
@@ -283,7 +348,11 @@ def simulation(filepath):
                 plots.append(display1)      # beta functions {x,y}
         else:
             # accel ON
-            plots.append(display3)          # C&S tracks and sigmas {x,y,z}
+            if FLAGS['csTrak']:
+                plots.append(display3)      # C&S tracks and sigmas {x,y}
+            else:
+                plots.append(display4)      # beta functions {x,y}
+
             if FLAGS['bucket']:
                 first_gap_node = lattice.first_gap
                 if first_gap_node != None: 
@@ -294,70 +363,96 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
+    """ ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here """
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #         with links and adjusted energy
     #         using ref_track in lattice.add_node.
+    #         Set run-mode from FLAGS.
     #----------------------------------------------
     lattice = factory(filepath)
-    descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
-    if descriptor != None: print(descriptor)
+    # descriptor
+    PARAMS['descriptor'] = descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
+    if descriptor != None:   print(descriptor)
+    # run-mode
+    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
+    if twoflag == (True,True):   mode=0
+    if twoflag == (True,False):  mode=1
+    if twoflag == (False,True):  mode=2
+    if twoflag == (False,False): mode=3
+    FLAGS['mode'] = mode
+    print('running in "'+ RUN_MODE[mode] + '" mode')
     print("---------------------------------------------------------------------------")
     print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
     #----------------------------------------------
     # STEP 2: calculate longitudinal paramters at entrance
     #----------------------------------------------
-    waccept(lattice.first_gap)
+    if FLAGS['mode'] == 0 or FLAGS['mode'] == 1:
+        res = lattice.first_gap.waccept()
+        # Update PARAMS
+        for k,v in res.items():
+            PARAMS[k] = v
+    else:
+        pass   # no gap no acceleration
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------
-    lattice.stats()
+    res = lattice.stats()
+    SUMMARY['nbof quadrupoles*']   = res['quad_cntr']
+    SUMMARY['nbof cavities*']      = res['cavity_cntr']
+    SUMMARY['Tk_i,Tk_f* [MeV]']    = (res['tki'],res['tkf'])
+    SUMMARY['lattice length* [m]'] = res['latt_length']
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
-    lattice.cell(closed = FLAGS['periodic'])
+    res = lattice.cell(closed = FLAGS['periodic'])
+    # Update PARAMS
+    for k,v in res.items():
+        PARAMS[k] = v
     #---------------------------------------------- 
-    # STEP 5:collect results
+    # STEP 5: collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
     #----------------------------------------------
-    # STEP 6:display results and display them
+    # STEP 6: display results and display them
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
         kv = {}
+        for key in FLAGS:
+            kv['F '+key] = FLAGS[key]
         for key in PARAMS:
-            kv[key] = PARAMS[key]
+            kv['P '+key] = PARAMS[key]
         for key in SUMMARY:
-            kv[key] = SUMMARY[key]
+            kv['S '+key] = SUMMARY[key]
         dictprnt(kv,text='KV',njust=1)
     else:
-        show_data_from_elements() #..................................show ELEMENT attributes
-        dictprnt(SUMMARY,text='Summary') #...........................show summary
-        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #....generate lattice plot
+        show_data_from_elements() #...................................show ELEMENT attributes
+        dictprnt(SUMMARY,text='Summary') #............................show summary
+        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
         steps = 10
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        twiss_func      = lattice.twiss_n_sigmas(steps=steps) #.,,,...........calculate envelope functions
+        twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,......calculate envelope functions
         display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
             DEBUG_OFF(node.toString())
             DEBUG_OFF(node.__dict__)
             node.do_action()
-        """ show all figures - (must be the only one!) """
+        """ show all figures - (must be the only call to show!) """
         plt.show()
 if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()
-    group  = parser.add_mutually_exclusive_group()
-    group.add_argument ("--file", default="yml/simuIN_REF.yml",   help="lattice input-file")
-    group.add_argument ("--tmpl",                             help="template number")
-    parser.add_argument("--run",                              help="run number")
+    group  = parser.add_mutually_exclusive_group( )
+    group.add_argument ("--file", default="simuIN.yml", help="lattice input-file")
+    group.add_argument ("--tmpl", help="template number")
+    parser.add_argument("--run", help="run number")
     args = vars(parser.parse_args())
     DEBUG_OFF(args)
 
-    print('simu.py {} on python {}.{}.{} on {}'.format(___version___,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
-
+    print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+ 
     # adapt to legacy code which uses 'Args'
     Args = {}
     tmpl  = args['tmpl']

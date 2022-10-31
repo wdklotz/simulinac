@@ -36,7 +36,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # csTrak:       False           # {True} plot CS trajectories
     envelope:       True            # {False} plot envelopes
-    bucket:       True            # {False} plot the bucket
+    # bucket:       True            # {False} plot the bucket
     # maction:      True            # {False} call marker actions
     verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
 #...........................................................................................
@@ -45,6 +45,7 @@ FLAGS:
 PARAMETERS:
     Tkin:                 5.0             # [MeV] energy @ injection 
     DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
+    Dphi0:                1.0             # [deg] delta-phi @ iinjection
     frequency:    &freq   816.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance

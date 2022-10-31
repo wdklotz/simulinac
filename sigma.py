@@ -1,5 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -19,48 +20,32 @@ This file is part of the SIMULINAC code
 """
 from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
-from copy import copy,deepcopy
-import pprint, inspect
+from copy import deepcopy
+import unittest
 
-def PRINT_PRETTY(obj):
-    file = inspect.stack()[0].filename
-    print('DEBUG_ON ==============>  '+file)
-    pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
-def PASS(obj):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
-DEBUG_OFF = DEB.get('OFF')
-
-from setutil import Proton, mxprnt, PARAMS, Ktw
-
-DIM=6   # (0=x,1=x',2=y,3=y',4=z,5=dp/p) Trace3D
-
-# DEBUG MODULE
-DEBUG_MODULE = DEBUG_OFF
+from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
 
 class Sigma(object):
-    """ Utility class for handling the sigma-matrix """
-    def __init__(self, twv0, epsx, epsy, epsz):
-        self.matrix = NP.matrix(NP.zeros((DIM,DIM)))      ## sigma matrix (6x6)
+    """ class for the sigma-matrix """
+    def __init__(self, twiss_vec0, epsx, epsy, epsz):
+        self.matrix = NP.eye(6,6)      # 6x6 sigma matrix 
         self.emitx = epsx
         self.emity = epsy
         self.emitz = epsz
-        """ calc sigma-matrix from twiss-parameters """
-        self.matrix[0,0] = self.emitx*twv0[Ktw.bx]
-        self.matrix[2,2] = self.emity*twv0[Ktw.by]
-        self.matrix[4,4] = self.emitz*twv0[Ktw.bz]
+        """ sigma-matrix from initial twiss-parameters """
+        self.matrix[0,0] = self.emitx*twiss_vec0[Ktw.bx]
+        self.matrix[2,2] = self.emity*twiss_vec0[Ktw.by]
+        self.matrix[4,4] = self.emitz*twiss_vec0[Ktw.bz]
 
-        self.matrix[1,1] = self.emitx*twv0[Ktw.gx]
-        self.matrix[3,3] = self.emity*twv0[Ktw.gy]
-        self.matrix[5,5] = self.emitz*twv0[Ktw.gz]
+        self.matrix[1,1] = self.emitx*twiss_vec0[Ktw.gx]
+        self.matrix[3,3] = self.emity*twiss_vec0[Ktw.gy]
+        self.matrix[5,5] = self.emitz*twiss_vec0[Ktw.gz]
         
-        self.matrix[0,1] = self.matrix[1,0] =  -self.emitx*twv0[Ktw.ax]
-        self.matrix[2,3] = self.matrix[3,2] =  -self.emity*twv0[Ktw.ay]
-        self.matrix[4,5] = self.matrix[5,4] =  -self.emitz*twv0[Ktw.az]
-    
-    def twiss(self):
-        """ calc twiss-parameters from sigma-matrix """
+        self.matrix[0,1] = self.matrix[1,0] = -self.emitx*twiss_vec0[Ktw.ax]
+        self.matrix[2,3] = self.matrix[3,2] = -self.emity*twiss_vec0[Ktw.ay]
+        self.matrix[4,5] = self.matrix[5,4] = -self.emitz*twiss_vec0[Ktw.az]
+    def sig_twiss_vec_get(self):
+        """ return twiss-vector from sigma-matrix """
         bx  =  self.matrix[0,0]/self.emitx
         by  =  self.matrix[2,2]/self.emity
         bz  =  self.matrix[4,4]/self.emitz
@@ -71,9 +56,8 @@ class Sigma(object):
         ay  = -self.matrix[2,3]/self.emity
         az  = -self.matrix[4,5]/self.emitz
         return NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
-    
-    def sigv(self):
-        """ calc envelopes from sigma-matrix """
+    def sig_sigma_vec_get(self):
+        """ return sigma-vector from sigma-matrix """
         sgx   = sqrt(self.matrix[0,0])   # sigmax  = <x*x>**1/2   [m]
         sgxp  = sqrt(self.matrix[1,1])   # sigmax' = <x'*x'>**1/2 [-]
         sgy   = sqrt(self.matrix[2,2])
@@ -82,136 +66,144 @@ class Sigma(object):
         sgzp  = sqrt(self.matrix[5,5])
         return NP.array([sgx,sgxp,sgy,sgyp,sgz,sgzp])
 
-    def string(self):
-        str = 'SIGMA:'
-        for i in range(DIM):
-            str += '\n'
-            for k in range(DIM):
-                str += '{:8.4g}  '.format(self.matrix[i,k])
-        return str
-
-    def RSRT(self,R):
-        """
-        Map this sigma-matrix through element R
-        *) input R is ELM._matrix!
-        *) returns the transformed Sigma object
-        """
-        # R(DIM,DIM) is same as R.__call__(DIM,DIM): upper (DIMxDIM) block matrix
-        r6           = R(DIM,DIM)
-        sigma        = deepcopy(self)       # IMPORTANT!!!
-        sigma.matrix = r6 @ sigma.matrix @ r6.T # NP matrix multiplication
-        return sigma
-
-    #TODO: check eg_corr again - still with global delta-phi
-    def apply_eg_corr(self,rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
-        """
-        Apply emmittance growth correction after passage through RF gap 
-        ref: Appendix F Trace3D manual
-        IN:
-            self:      the sigma matrix (object) at gap exit a.k.a. sigma_f
-            rf_gap:    the gap (object) for which the emittance growth correction is added
-            sigma_i:   the sigma matrix (object) at gap entrance
-            delta_phi: the half-width of phase spread [rad]
-            ksi:       tuple (x,y) as bunch center offset 
-        OUT:
-            self:      the corrected sigma matrix (object) at the gap exit a.k.a. sigma_f
-        """
-        def f(dp):
-            res = ((sin(dp)-dp*cos(dp))/dp)
-            res = res*3./(dp*dp)
-            res = res - sin(dp)/dp
-            res = (15.*res)/(dp*dp)
-            return res
-            
-        def g(phis,dphi):
-            res = 0.5*(1.+(sin(phis)**2-cos(phis)**2)*f(2.*dphi))
-            return res
-        
-        Phis          = rf_gap.phisoll
-        E0L           = rf_gap.EzAvg*rf_gap.gap
-        Ttf           = rf_gap.ttf
-        m0c2          = rf_gap.particle.e0
-        lamb          = rf_gap.lamb
-        particlei     = rf_gap.particle
-        particlef     = rf_gap.particlef
-        gamma_beta_f  = particlef.gamma_beta
-        gamma_beta_av = (particlei.gamma_beta+gamma_beta_f)/2.
-        kx            = -pi*E0L*Ttf/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
-        cfactor1      = kx**2*(g(Phis,delta_phi)-(sin(Phis)*f(delta_phi))**2)
-        ksix          = ksi[0]
-        ksiy          = ksi[1]
-        gamma_av      = (particlei.gamma+particlef.gamma)/2.
-        kz            = -2.*kx*gamma_av**2*(1.+(delta_phi**2)/12.)
-        cfactor2      = (kz*delta_phi)**2*((cos(Phis)**2)/8.+delta_phi*sin(Phis)/576.)
-        delta_xp2_av  = cfactor1*(sigma_i.matrix[0,0]+ksix**2)
-        delta_yp2_av  = cfactor1*(sigma_i.matrix[2,2]+ksiy**2)
-        delta_dp2_av  = cfactor2*sigma_i.matrix[4,4]
-        self.matrix[1,1] += delta_xp2_av
-        self.matrix[3,3] += delta_yp2_av
-        self.matrix[5,5] += delta_dp2_av
-        DEBUG_MODULE('Phis {}'.format(degrees(Phis)))
-        DEBUG_MODULE('delta_phi {}'.format(degrees(delta_phi)))
-        DEBUG_MODULE('E0L {}'.format(E0L))
-        DEBUG_MODULE('Ttf {}'.format(Ttf))
-        DEBUG_MODULE('m0c2 {}'.format(m0c2))
-        DEBUG_MODULE('lamb {}'.format(lamb))
-        DEBUG_MODULE('gamma_beta_av {}'.format(gamma_beta_av))
-        DEBUG_MODULE('gamma_beta_f {}'.format(gamma_beta_f))
-        DEBUG_MODULE('gamma_av {}'.format(gamma_av))
-        DEBUG_MODULE('kx {}'.format(kx))
-        DEBUG_MODULE('kz {}'.format(kz))
-        DEBUG_MODULE('cfactor1 {}'.format(cfactor1))
-        DEBUG_MODULE('cfactor2 {}'.format(cfactor2))
-        DEBUG_MODULE('ksi {}'.format(ksi))
-        DEBUG_MODULE('delta_xp2_av {}'.format(delta_xp2_av))
-        DEBUG_MODULE('delta_yp2_av {}'.format(delta_yp2_av))
-        DEBUG_MODULE('delta_dp2_av {}'.format(delta_dp2_av))
-        return self
-def test0():
-    print('-----------------------------Test0--')
-    PARAMS['emitz_i'] = 0.0     # use this for test
-    bx       = 1.
-    ax       = 0.
-    gx       = (1+ax**2)/bx
-    by       = 1.
-    ay       = 0.
-    gy       = (1+ay**2)/bx
-    bz       = 1.
-    az       = 0.
-    gz       = (1+ay**2)/bx
-    twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
-    sg0      = Sigma(twv0,1.,1.,1.)
-    print(sg0.string())
-def test1():
-    from elements import RFG
-    print('-----------------------------Test1--')
-
-    particle = Proton(2.)
-    R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
-
-    bx       = 1.
-    ax       = 0.
-    gx       = (1+ax**2)/bx
-    by       = 1.
-    ay       = 0.
-    gy       = (1+ay**2)/bx
-    bz       = 1.
-    az       = 0.
-    gz       = (1+ay**2)/bx
-    twv0     = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
-    sigma_i  = Sigma(twv0,1.,1.,1.)
-    s1 = sigma_i.matrix
-    sigma_f = sigma_i.RSRT(R)   ## apply map to sigma
-    s2 = sigma_f.matrix
-    DEBUG_TEST1('{{sigma}}\n{}'.format(mxprnt(s1.A)))
-    DEBUG_TEST1('{{sigma_f}} = {{R}}*{{sigma}}*{{RT}}\n{}'.format(mxprnt(s2.A)))
-
-    sigma_fc = deepcopy(sigma_f)
-    sigma_fc.apply_eg_corr(R,sigma_f,radians(25.),ksi=(0.01,0.01))
-    s3 = sigma_fc.matrix
-    DEBUG_TEST1('{{sigma_f}}_corrected minus {{sigma_f}}_uncorrected\n{}'.format(mxprnt((s3-s2).A)))
+def sig_apply_eg_corr(rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
+    """
+    Apply emmittance growth correction after passage through RF gap 
+    ref: Appendix F Trace3D manual
+    IN:
+        rf_gap:    the gap object for which the correction is applied
+        sigma_i:   the sigma object at gap entrance
+        delta_phi: the half-width of phase spread [rad]
+        ksi:       tuple (x,y) as bunch center offset 
+    OUT:
+        sigma_f:   the corrected sigma object at the gap exit
+    """
+    def f(dp):
+        res = ((sin(dp)-dp*cos(dp))/dp)
+        res = res*3./(dp*dp)
+        res = res - sin(dp)/dp
+        res = (15.*res)/(dp*dp)
+        return res
+    def g(phis,dphi):
+        res = 0.5*(1.+(sin(phis)**2-cos(phis)**2)*f(2.*dphi))
+        return res
+    
+    Phis          = rf_gap.phisoll
+    E0L           = rf_gap.EzAvg*rf_gap.gap
+    ttf           = rf_gap.ttf
+    m0c2          = rf_gap.particle.e0
+    lamb          = rf_gap.lamb
+    particlei     = rf_gap.particle
+    particlef     = rf_gap.particlef
+    gamma_beta_f  = particlef.gamma_beta
+    gamma_beta_av = (particlei.gamma_beta+gamma_beta_f)/2.
+    kx            = -pi*E0L*ttf/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
+    cfactor1      = kx**2*(g(Phis,delta_phi)-(sin(Phis)*f(delta_phi))**2)
+    ksix          = ksi[0]
+    ksiy          = ksi[1]
+    gamma_av      = (particlei.gamma+particlef.gamma)/2.
+    kz            = -2.*kx*gamma_av**2*(1.+(delta_phi**2)/12.)
+    cfactor2      = (kz*delta_phi)**2*((cos(Phis)**2)/8.+delta_phi*sin(Phis)/576.)
+    delta_xp2_av  = cfactor1*(sigma_i.matrix[0,0]+ksix**2)
+    delta_yp2_av  = cfactor1*(sigma_i.matrix[2,2]+ksiy**2)
+    delta_dp2_av  = cfactor2*sigma_i.matrix[4,4]
+    
+    sigma         = deepcopy(sigma_i)     # the new sigma object
+    sigma.matrix[1,1] += delta_xp2_av
+    sigma.matrix[3,3] += delta_yp2_av
+    sigma.matrix[5,5] += delta_dp2_av
+    DEBUG_OFF('Phis {}'.format(degrees(Phis)))
+    DEBUG_OFF('delta_phi {}'.format(degrees(delta_phi)))
+    DEBUG_OFF('E0L {}'.format(E0L))
+    DEBUG_OFF('ttf {}'.format(ttf))
+    DEBUG_OFF('m0c2 {}'.format(m0c2))
+    DEBUG_OFF('lamb {}'.format(lamb))
+    DEBUG_OFF('gamma_beta_av {}'.format(gamma_beta_av))
+    DEBUG_OFF('gamma_beta_f {}'.format(gamma_beta_f))
+    DEBUG_OFF('gamma_av {}'.format(gamma_av))
+    DEBUG_OFF('kx {}'.format(kx))
+    DEBUG_OFF('kz {}'.format(kz))
+    DEBUG_OFF('cfactor1 {}'.format(cfactor1))
+    DEBUG_OFF('cfactor2 {}'.format(cfactor2))
+    DEBUG_OFF('ksi {}'.format(ksi))
+    DEBUG_OFF('delta_xp2_av {}'.format(delta_xp2_av))
+    DEBUG_OFF('delta_yp2_av {}'.format(delta_yp2_av))
+    DEBUG_OFF('delta_dp2_av {}'.format(delta_dp2_av))
+    return sigma
+def sig_map(sigma_i,node):
+    """
+    Map this sigma-matrix through element R
+    *) input R is ELM.Node.matrix!
+    *) returns the transformed Sigma object
+    """
+    R              = node.matrix[:6,:6]         # 6x6 trajectory submatrix
+    sigma_f        = deepcopy(sigma_i)          # the new sigma object
+    sigma_f.matrix = R @ sigma_i.matrix @ R.T   # numpy matrix multiplication
+    return sigma_f
+    
+class TestElementMethods(unittest.TestCase):
+    def test_instanciate_sigma(self):
+        print('---------------------test_instanciate_sigma--')
+        PARAMS['emitz_i'] = 0.0     # use this for test
+        bx       = 1.
+        ax       = 0.
+        gx       = (1+ax**2)/bx
+        by       = 1.
+        ay       = 0.
+        gy       = (1+ay**2)/bx
+        bz       = 1.
+        az       = 0.
+        gz       = (1+ay**2)/bx
+        twiss_vec0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        sg0      = Sigma(twiss_vec0,1.,1.,1.)
+        if DEBUG_ON('[sigma]'):
+            print('{}'.format(mxprnt(sg0.matrix)))
+    def test_map_sigma(self):
+        print('---------------------test_map_sigma--')
+        from elements import RFG
+        particle = Proton(2.)
+        R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
+        bx       = 1.
+        ax       = 0.
+        gx       = (1+ax**2)/bx
+        by       = 1.
+        ay       = 0.
+        gy       = (1+ay**2)/bx
+        bz       = 1.
+        az       = 0.
+        gz       = (1+ay**2)/bx
+        twiss_vec0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        sigma_i    = Sigma(twiss_vec0,1.,1.,1.)
+        simx       = sigma_i.matrix
+        sigma_f    = sig_map(sigma_i,R)   ## apply map to sigma
+        sfmx       = sigma_f.matrix
+        if DEBUG_ON('[sigma_i]'):
+            print('{}'.format(mxprnt(simx)))
+        if DEBUG_ON('[sigma_f] = [R]*[sigma]*[R]^T'):
+            print('{}'.format(mxprnt(sfmx)))
+    def test_eg_correction(self):
+        print('---------------------test_eg_correction--')
+        from elements import RFG
+        particle = Proton(2.)
+        R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
+        bx       = 1.
+        ax       = 0.
+        gx       = (1+ax**2)/bx
+        by       = 1.
+        ay       = 0.
+        gy       = (1+ay**2)/bx
+        bz       = 1.
+        az       = 0.
+        gz       = (1+ay**2)/bx
+        twiss_vec0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
+        sigma_i    = Sigma(twiss_vec0,1.,1.,1.)
+        sigma_f    = sig_map(sigma_i,R)   ## map to sigma through R
+        sfmx       = sigma_f.matrix
+        delta_phi  = radians(5.)
+        sigma_fc = sig_apply_eg_corr(R,sigma_f,delta_phi,ksi=(0.01,0.01))
+        sfcmx = sigma_fc.matrix
+        if DEBUG_ON('[sigma_f]-corrected minus [sigma_f]-uncorrected'):
+            print('{}'.format(mxprnt((sfcmx-sfmx))))
 # main ----------
 if __name__ == '__main__':
-    DEBUG_TEST1  = DEBUG_ON
-    test0()    
-    test1()
+    unittest.main()

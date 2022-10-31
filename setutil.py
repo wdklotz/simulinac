@@ -1,5 +1,8 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+# Python 2 and 3 print compatability
+from __future__ import print_function   #TODO still used?
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -17,14 +20,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-# Python 2 and 3 print compatability
-from __future__ import print_function   #TODO still used?
 
 import sys
 import scipy.constants as C
 import scipy.special as SP
 import matplotlib.pyplot as plt
-import warnings
 import time
 import lattice_parser2 as parser
 import unittest
@@ -32,6 +32,7 @@ from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
 
+# DEBUG utility used by all modules
 import pprint, inspect
 def PRINT_PRETTY(*args):
     frameinfo = inspect.stack()[1]    # caller's stack frame
@@ -41,11 +42,12 @@ def PRINT_PRETTY(*args):
     if len(args) == 0: print()
     else:
         for obj in args:
-            pprint.PrettyPrinter(width=200,compact=True).pprint(obj)   
+            pprint.PrettyPrinter(width=200,compact=True).pprint(obj)
+    return True
 def PASS(*args):
-    pass
-DEB = dict(OFF=PASS,ON=PRINT_PRETTY)
-DEBUG_ON = DEB.get('ON')
+    return False
+DEB       = dict(OFF=PASS,ON=PRINT_PRETTY)
+DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 # MDIM: dimension of matrices
@@ -75,40 +77,31 @@ class Ktw(IntEnum):
     gz = 8
     s  = 9      # abszisse for twiss functions
 # for compatability with elder code TODO: replace!
-XKOO=Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z; ZPKOO=Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-#------  DEFAULT "FLAGS" & "PARAMS" and global dicts
-FLAGS  = dict(dWf=1)
-PARAMS = dict(             #TODO better use dict.get()
-        clight               = C.c,              # [m/s]
-        elementarladung      = C.e,              # [coulomb]
-        proton_mass          = C.value('proton mass energy equivalent in MeV'),
-        electron_mass        = C.value('electron mass energy equivalent in MeV'),
-        map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
-        warnmx               = 10,         # max warnings
-        injection_energy     = 50.         # default injection energy
-        # warn_max             = 5,          # max warnings
-        # DT2T                 = None,       # default kinetic energy spread  (T a.k.a W)
-        # emitx_i              = None,       # [m*rad] Vorgabe emittance entrance
-        # emity_i              = None,       # [m*rad] Vorgabe emittance entrance
-        # betax_i              = None,       # [m] Vorgabe twiss beta entrance
-        # betay_i              = None,       # [m] Vorgabe twiss beta entrance
-        # alfax_i              = None,       # Vorgabe twiss alpha entrance
-        # alfay_i              = None,       # Vorgabe twiss alpha entrance
-        # alfaw_i              = None,       # Vorgabe twiss alpha entrance
-        # aperture             = None,       # default aperture = no aperture
-        # mapping              = None,       # default rf gap-model  
-        )              
+XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
+ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
+RUN_MODE = ('ring with cavities','linac','ring w/o cavities','transfer line')
+FLAGS    = dict(
+    # lattice_generator may override some of these FLAGs
+    dWf = 1
+    )
+PARAMS   = dict(
+    # global constants
+    clight               = C.c, # [m/s]
+    elementarladung      = C.e, # [coulomb]
+    proton_mass          = C.value('proton mass energy equivalent in MeV'),
+    electron_mass        = C.value('electron mass energy equivalent in MeV'),
+    map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
+    warnmx               = 10, # max warnings
+    injection_energy     = 50. # default
+    )              
 ELEMENTS = {}
 SUMMARY  = {}
 class Twiss(object):
-    def __init__(self, beta, alfa, epsi):
-        self.epsi  = epsi
+    def __init__(self, beta=1., alfa=0.,epsi=0.):
         self.beta  = beta
         self.alfa  = alfa
-        if beta >= 0.:
-            self.gamma = (1.+self.alfa**2)/self.beta
-        else:
-            self.gamma = None
+        self.epsi  = epsi
+        self.gamma = (1.+self.alfa**2)/self.beta
     def __call__(self):
         return (self.beta,self.alfa,self.gamma,self.epsi)   # (beta,alfa,gamma,epsi)
     def y1(self):
@@ -260,7 +253,7 @@ class WConverter(object):
         emitz = self.emitwToemitz(emitw)
         betaz = self.betawTobetaz(betaw)
         return (z,Dp2p,emitz,betaz)
-class Functions(object):         #TODO better use pandas
+class Functions(object):         #TODO better use pandas?
     """ A class to gather function-values (Ordinaten) over a common independent variable (Abszisse) """
     def __init__(self,names):
         self._values  = [] # [(abzisse, ordinate-1, ordinate-2, ordinate-3,...)]
@@ -293,9 +286,7 @@ class Functions(object):         #TODO better use pandas
         return value
     pass
 class SCTainer(object):
-    """
-    A (singleton) container for objects
-    """
+    """ A (singleton) container for objects  (not used, not finished) """
     class _singleton_(object):
         def __init__(self):
             self.objects = []
@@ -345,110 +336,6 @@ class colors: # You may need to change color settings
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     BLUE = '\033[34m'
-def waccept(node):
-    """
-    Central to calculate longitudinal phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
-        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
-        emitw = w0*Dphi0 = ellipse_area/pi
-    IN
-        node: the 1st rf-gap at the linac entrance (to get gap-specific parameters)
-    """
-    # TODO: use y2,y3 from Twiss or not needed? or is acceptance correct like this!
-    if node is not None and FLAGS['dWf'] == 1:
-        DT2T      = PARAMS['DT2T']
-        E0T       = node.EzAvg*node.ttf  # [MV/m]
-        particle  = node.particle
-        phisoll   = node.phisoll         # [rad]
-        lamb      = node.lamb            # [m]
-        freq      = node.freq            # [Hz]
-        m0c2      = particle.e0          # [MeV]
-        gb        = particle.gamma_beta
-        beta      = particle.beta
-        gamma     = particle.gamma
-        tkin      = particle.tkin
-        conv      = WConverter(tkin,freq)
-
-        """ LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
-        w0large = sqrt(2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2))  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
-        """ SMALL amplitude oscillations (T.Wangler pp.185) """
-        w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))  # small amp. oscillation separatrix (T.Wangler 6.48)
-        wmax    = w0large
-
-        w0       = (gamma-1.)*DT2T
-        emitw    = PARAMS.get('emitw',2.*abs(phisoll)*w0/pi*0.33)   # injected beam emottance
-        Dphi0    = PARAMS.get('Dphi0',pi*emitw/w0)
-        betaw    = emitw/w0**2            # w0 = w-int = sqrt(emitw/betaw) 
-        gammaw   = 1./betaw               # gamma twiss
-        
-        omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
-        omgl0      = omgl0zuomg*2.*pi*freq   # [Hz]
-
-        # longitudinal acceptance check (always done)
-        if wmax <= w0:
-            si,sm,sf = node.position
-            warnings.showwarning(
-                'out of energy acceptance @ s={:.1f} [m]'.format(si),
-                UserWarning,'setutil.py',
-                'waccept()')
-
-        # {z-dp/p}-space  TODO test wToz again!!!!
-        z0,Dp2p0,emitz,betaz = conv.wtoz((Dphi0,w0,emitw,betaw))
-        gammaz = 1./betaz
-        Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
-        res =  dict(
-                # {Dphi,w}
-                emitw    = emitw,       # emittance{Dphi,w} [rad]
-                Dphi0    = Dphi0,       # ellipse dphi-int (1/2 axis)
-                betaw    = betaw,       # beta twiss [rad]
-                gammaw   = gammaw,      # gamma twiss [1/rad]
-                wmax     = wmax,        # separatrix: large amp. oscillations
-                w0       = w0,          # separatrix small amp. osscillations
-                omgl0    = omgl0,       # synchrotron oscillation [Hz]
-                # {z,Dp2p}
-                emitz    = emitz,       # emittance in {z,dp/p} space [m*rad]
-                betaz    = betaz,       # twiss beta [m/rad]
-                gammaz   = gammaz,      # twiss gamma [1/m]
-                Dp2pmax  = Dp2pmax,     # max D/p on separatrix
-                Dp2p0    = Dp2p0,       # ellipse dp/p-int (1/2 axis)
-                z0       = z0,          # ellipse z-int    (1/2 axis) [m]
-                Dp2p_Acceptance = Dp2pmax,
-                z_Acceptance    = conv.DphiToz(2.*phisoll),
-                # {Dphi,DW}
-                DWmax      = wmax*m0c2)       # separatrix: max W in [MeV]
-        
-        for k,v in res.items():
-            PARAMS[k] = v
-        
-        # now we can calculate the Twiss objects at injection
-        alfaw = 0. # always for longitudinal
-        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
-        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        tww = Twiss(PARAMS['betaw'], alfaw, PARAMS['emitw'])
-        twz = Twiss(PARAMS['betaz'],alfaw,PARAMS['emitz'])
-        PARAMS['twiss_x_i'] = twx
-        PARAMS['twiss_y_i'] = twy
-        PARAMS['twiss_w_i'] = tww
-        PARAMS['twiss_z_i'] = twz
-
-    else:
-        # assume no acceleration
-        FLAGS['dWf'] = 0
-        res = {}
-        # we can calculate the Twiss objects at injection ...
-        twx = Twiss(PARAMS['betax_i'], PARAMS['alfax_i'], PARAMS['emitx_i'])
-        twy = Twiss(PARAMS['betay_i'], PARAMS['alfay_i'], PARAMS['emity_i'])
-        # ... and use dummies
-        tww = twz = Twiss(1.,0.,1.)
-        PARAMS['twiss_x_i'] = twx
-        PARAMS['twiss_y_i'] = twy
-        PARAMS['twiss_w_i'] = tww
-        PARAMS['twiss_z_i'] = twz
-        
-    PARAMS['twiss_x_i()'] = twx()   # function pointers
-    PARAMS['twiss_xyi()'] = twy()
-    PARAMS['twiss_w_i()'] = tww()
-    PARAMS['twiss_z_i()'] = twz()
-    return
 def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
@@ -462,6 +349,7 @@ def show_data_from_elements():  #TODO better get data fron lattice objects
         print('{} '.format(elementID),end='')
         dictprnt(element,'(MKSA units)',end='')
 def collect_data_for_summary(lattice):
+    # Unicode characters in python :https://pythonforundergradengineers.com/unicode-characters-in-python.html
     if True:
         SUMMARY['use emittance growth']            =  FLAGS['egf']
         SUMMARY['use sigma tracking']              =  FLAGS['sigma']
@@ -470,28 +358,30 @@ def collect_data_for_summary(lattice):
         SUMMARY['use aperture']                    =  FLAGS['useaper']
         SUMMARY['accON']                           =  FLAGS['accON']
         SUMMARY['lattice version']                 =  PARAMS['lattice_version']
-        SUMMARY['(N)sigma']                        =  PARAMS['nbsigma']
+        SUMMARY['Nsigma']                          =  PARAMS['nbsigma']
         SUMMARY['injection energy [MeV]']          =  PARAMS['injection_energy']
-        SUMMARY['(sigx )i*   [mm]']                =  PARAMS['twiss_x_i'].sigmaH()*1.e3
-        SUMMARY["(sigx')i* [mrad]"]                =  PARAMS['twiss_x_i'].sigmaV()*1.e3
-        SUMMARY['(sigy )i*   [mm]']                =  PARAMS['twiss_y_i'].sigmaH()*1.e3
-        SUMMARY["(sigy')i* [mrad]"]                =  PARAMS['twiss_y_i'].sigmaV()*1.e3
-        SUMMARY["emit{x-x'}[mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
-        SUMMARY["emit{y-y'}[mrad*mm]"]             =  PARAMS['emity_i']*1.e6
-        SUMMARY['(delta-T/T)i spread']             =  '{:8.2e} kinetic energy'.format(PARAMS['DT2T'])
+        SUMMARY['\u03C3x_i*    [mm]']              =  PARAMS['twiss_x_i'].sigmaH()*1.e3
+        SUMMARY["\u03C3x'_i* [mrad]"]              =  PARAMS['twiss_x_i'].sigmaV()*1.e3
+        SUMMARY['\u03C3y_i*    [mm]']              =  PARAMS['twiss_y_i'].sigmaH()*1.e3
+        SUMMARY["\u03C3y'_i* [mrad]"]              =  PARAMS['twiss_y_i'].sigmaV()*1.e3
+        SUMMARY["\u03B5x_i [mrad*mm]"]             =  PARAMS['emitx_i']*1.e6
+        SUMMARY["\u03B5y_i [mrad*mm]"]             =  PARAMS['emity_i']*1.e6
+        SUMMARY["\u03B5w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['emitw_i'])
+        SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
+        SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} norm. energy spread @ injection (w0)'.format(PARAMS['w0'])
+        SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kin. energy spread @ injection'.format(PARAMS['DT2T'])
     
     if FLAGS['dWf'] == 1:
-        SUMMARY['separatrix: DW-max*[MeV]']        =  '{:8.2e} energy'.format(PARAMS['DWmax'])
-        SUMMARY['separatrix: w-max*   [%]']        =  '{:8.2e} delta-gamma'.format(PARAMS['wmax']*1.e2)
-        # SUMMARY['separatrix: Dphi*  [deg]']        =  '{:8.2f}, {:6.2f} to {:6.2f}'.format(degrees(PARAMS['psi']),degrees(PARAMS['phi_2']),degrees(PARAMS['phi_1']))
-        SUMMARY['separatrix: Dp/p-max [%]']        =  '{:8.2e} impulse'.format(PARAMS['Dp2pmax']*100.)
-        SUMMARY['emit{z-Dp/p}*  [mm]']             =  '{:8.2e}'.format(PARAMS['emitz']*1.e3)
-        SUMMARY['emit{phi-w}*  [rad]']             =  '{:8.2e}'.format(PARAMS['emitw'])
-        SUMMARY['(Dp/p)i spread*']                 =  '{:8.2e} impulse'.format(PARAMS['Dp2p0'])
-        SUMMARY['(phi)i spread* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
-        SUMMARY['(z)i spread*    [m]']             =  '{:8.2e} bunch'.format(abs(PARAMS['z0']))
-        SUMMARY['sync.oscillation* [MHz]']         =  PARAMS['omgl0']*1.e-6
-        SUMMARY['(w)i spread']                     =  '{:8.2e} delta-gamma, dE/E0'.format(PARAMS['w0'])
+        SUMMARY['\u0394Wmax_i* [MeV]']            =  '{:8.2e} max \u0394W on separatrix'.format(PARAMS.get('DWmax',0))
+        SUMMARY['wmax*']                           =  '{:8.2e} max \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
+        SUMMARY['\u0394p/pmax_i [%]']             =  '{:8.2e} max \u0394p/p on separatrix'.format(PARAMS.get('Dp2pmax',0)*1.e2)
+        SUMMARY['zmax* [m]']                       =  '{:8.2e} max z on separatrix'.format(abs(PARAMS['zmax']))
+        SUMMARY['\u03B5z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['emitz_i']*1.e3)
+        SUMMARY['\u03B2z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['betaz_i']*1.e3)
+        SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0'])
+        SUMMARY['\u0394\u03C60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0'])
+        SUMMARY['|z0|* [m]']                       =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
+        SUMMARY['\u03C9* [MHz]']                   =  '{:8.2e} synchotron frquency'.format(PARAMS.get('omgl_0',0)*1.e-6)
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')
     return
@@ -501,70 +391,12 @@ def I0(x):
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
     """
     return SP.iv(0,x)
-    # t = x/3.75
-    # if 0. <= x and x < 3.75:
-    #     t2 = t*t
-    #     res = 1.
-    #     res+= 3.5156229*t2
-    #     res+= 3.0899424*t2*t2
-    #     res+= 1.2067492*t2*t2*t2
-    #     res+= 0.2659732*t2*t2*t2*t2
-    #     res+= 0.0360768*t2*t2*t2*t2*t2
-    #     res+= 0.0045813*t2*t2*t2*t2*t2*t2
-    #     DEB.get('OFF')('(I0,x )=({},{})'.format(res,x))
-    # elif 3.75 <= x:
-    #     tm1 = 1./t
-    #     res = 0.39894228
-    #     res+= 0.01328529*tm1
-    #     res+= 0.00225319*tm1*tm1
-    #     res-= 0.00157565*tm1*tm1*tm1
-    #     res+= 0.00916281*tm1*tm1*tm1*tm1
-    #     res-= 0.02057706*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.02635537*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     try:
-    #         res = res*exp(x)/sqrt(x)
-    #     except OverflowError as ex:
-    #         print('STOP: Bessel-function I0 overflow: (arg = {:6.3f})'.format(x))
-    #         sys.exit(1)
-    # return res
 def I1(x):
     """
     Modified Bessel function I of integer order 1
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun pp.379
     """
     return SP.iv(1,x)
-    # t = x/3.75
-    # if 0. <= x and x < 3.75:
-    #     t2 = t*t
-    #     res = 0.5
-    #     res+= 0.87890059*t2
-    #     res+= 0.51498869*t2*t2
-    #     res+= 0.15084934*t2*t2*t2
-    #     res+= 0.02658733*t2*t2*t2*t2
-    #     res+= 0.00301532*t2*t2*t2*t2*t2
-    #     res+= 0.00032411*t2*t2*t2*t2*t2*t2
-    #     res = res*x
-    #     DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-    # elif 3.75 <= x:
-    #     tm1 = 1/t
-    #     res = 0.39894228
-    #     res-= 0.03988024*tm1
-    #     res-= 0.00362018*tm1*tm1
-    #     res+= 0.00163801*tm1*tm1*tm1
-    #     res-= 0.01031555*tm1*tm1*tm1*tm1
-    #     res+= 0.02282967*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.02895312*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res+= 0.01787654*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     res-= 0.00420059*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
-    #     try:
-    #         res = res*exp(x)/sqrt(x)
-    #         DEB.get('OFF')('(I1,x )=({},{})'.format(res,x))
-    #     except OverflowError as ex:
-    #         print('STOP: Bessel-function I1 overflow: (arg = {6.3f})'.format(x))
-    #         sys.exit(1)
-    # return res
 def k0prot(gradient=0.,tkin=0.):         #TODO still used?
     """
     Quadrupole strength as function of kin. energy and gradient (only for protons!)

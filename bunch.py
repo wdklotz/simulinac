@@ -1,5 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -23,62 +24,35 @@ import sys
 import numpy as NP
 from math import sqrt
 import matplotlib.pyplot as plt
-# import pprint
-# import inspect
-
-# def PRINT_PRETTY(obj):
-#     file = inspect.stack()[0].filename
-#     print('DEBUG_ON ==============>  '+file)
-#     pprint.PrettyPrinter(width=200, compact=True).pprint(obj)
-# def PASS(obj):
-#     pass
-# DEB = dict(OFF=PASS, ON=PRINT_PRETTY)
-# DEBUG_ON = DEB.get('ON')
-# DEBUG_OFF = DEB.get('OFF')
-
-# DEBUG
-# DEBUG_OFF = DEB.get('OFF')
-# DEBUG_ON = DEB.get('ON')
 
 # TODO: uniform bucket fill ?
 class Tpoint(object):
-    """ 
-        A track-point is an NP.array of 10 coordinates, 
-        i.e. (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
+    """  A track-point is an NP.array of 10 coordinates.
+         (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
     """
-
     def __init__(self, point=NP.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1])):
         self.point = point
-
     def __call__(self):
         return self.point
-
     def as_str(self):
         s = 'x={:10.03e} x\'={:10.03e} y={:10.03e} y\'={:10.03e} z={:10.03e} z\'={:10.03e} T={:7.02f}  S={:7.02f}'.format(
             self.point[Ktp.x], self.point[Ktp.xp], self.point[Ktp.y], self.point[Ktp.yp], self.point[Ktp.z], self.point[Ktp.zp], self.point[Ktp.T], self.point[Ktp.S])
         return s
 class Track(object):
     """ A Track is a list of Tpoint objects.  """
-
     def __init__(self):
         self._points = []
-
     # evaluation of self[key] for Tpoints in Track
     def __getitem__(self, n):
         return self._points[n]
-
     def getpoints(self):            # points in Track
         return self._points
-
     def nbpoints(self):           # nbof points in Track
         return len(self._points)
-
     def addpoint(self, point):       # add a point to Track
         self._points.append(point)
-
     def removepoint(self, point):
         self._points.remove(point)
-
     def as_table(self):
         tblheadr = ['    x', "    x'", '    y', "    y'",
                     '    z', "    z'", '  tkin', '    s']
@@ -96,58 +70,44 @@ class Track(object):
             ]
             tblrows.append(tblrow)
         return tblprnt(tblheadr, tblrows)
-
     def as_str(self):
         str = ''
         for p in iter(self):
             str += p.as_str()+'\n'
         return str
 class Bunch(object):
-    """
-        A Bunch is a list of Particle objects
-    """
-
+    """ A Bunch is a list of Particle objects """
     def __init__(self):
         self._particles = []
-
     def __iter__(self):
         for particle in self._particles:
             yield particle
-
     def getparticles(self):             # particles in bunch
         return self._particles
-
     def nbparticles(self):            # nbof particles in bunch
         return len(self._particles)
-
     def addparticle(self, particle):     # add particle to bunch
         self._particles.append(particle)
-
     def removeparticle(self, particle):
         self._particles.remove(particle)
 class BunchFactory(object):
-    """
-    BunchFactory creates a multiparticle bunch
-    """
-
+    """ BunchFactory creates a multiparticle bunch """
     def __init__(self):
-        pass
-
+        self.distribution      = None
+        self.twiss             = None
+        self.numberofparticles = None
+        self.tk                = None
+        self.mask              = None
     def setDistribution(self, value):
         self.distribution = value
-
     def setTwiss(self, value):
         self.twiss = value
-
     def setNumberOfParticles(self, value):
         self.numberofparticles = value
-
     def setReferenceEnergy(self, value):
         self.tk = value
-
     def setMask(self, value):
         self.mask = value
-
     def __call__(self):
         bunch = Bunch()
         if self.distribution.__name__ == 'Gauss1D':
@@ -175,18 +135,18 @@ def Gauss1D(twx, twy, twz, npart, mask, tk):
     Out:
         list of Track objects with one initial Tpoint object each
     """
-    sigx = twx.sigmaH()
+    sigx  = twx.sigmaH()
     sigxp = twx.sigmaV()
-    sigy = twy.sigmaH()
+    sigy  = twy.sigmaH()
     sigyp = twy.sigmaV()
-    sigz = twz.sigmaH()
+    sigz  = twz.sigmaH()
     sigzp = twz.sigmaV()
 
-    X = sigx * NP.random.randn(npart)
+    X  = sigx * NP.random.randn(npart)
     XP = sigxp * NP.random.randn(npart)
-    Y = sigy * NP.random.randn(npart)
+    Y  = sigy * NP.random.randn(npart)
     YP = sigyp * NP.random.randn(npart)
-    Z = sigz * NP.random.randn(npart)
+    Z  = sigz * NP.random.randn(npart)
     ZP = sigzp * NP.random.randn(npart)
 
     tracklist = []        # all tracks in a bunch
@@ -373,7 +333,6 @@ def test4():
             yaxis.append(XP)
     fig = plt.figure("test4:figure")
     plt.scatter(xaxis, yaxis, s=0.1)
-
 if __name__ == '__main__':
     test0()
     test1()

@@ -1,5 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -25,7 +26,7 @@ import warnings
 import argparse
 
 from xml_utils.XmlDataAdaptor import XmlDataAdaptor
-from setutil import FLAGS,PARAMS,waccept,DEBUG_ON,DEBUG_OFF
+from setutil import FLAGS,PARAMS,DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 from lattice import Lattice
 import elements as ELM
@@ -35,7 +36,6 @@ def generator(file=None):
     output  = '{}/{}.{}'.format('PyOrbitLattice','generated','xml')
     print("this run ==> input {}, output {}".format(input,output))
 
-    # lattice and longitudinal paramters at entrance
     lattice = factory(input)
 
     # pickle test for whole lattice
@@ -44,30 +44,31 @@ def generator(file=None):
     # lattice           = unpickled_lattice
     # DEBUG_ON('lattice length',lattice.length)
 
-    waccept(lattice.first_gap)
+    # waccept(lattice.first_gap)
+    lattice.first_gap.waccept()
 
-    # transfer a selection of parameters to <PARAMS/>-tag
+    # select parameters for <PARAMS/>-tag
     parameter = dict(
-            clight           = PARAMS['clight'],# [m/s]
+            clight           = PARAMS['clight'],              # [m/s]
             proton_mass      = PARAMS['proton_mass'],         # MeV
+            injection_energy = PARAMS['injection_energy'],    # [MeV]
+            lattice_version  = PARAMS['lattice_version'],
             # EzAvg            = PARAMS['EzAvg'],               # [MV/m]
             # gap              = PARAMS['gap'],                 # [m]
             # cavity_laenge    = PARAMS['cavity_laenge'],       # [m]
             # phisoll          = PARAMS['phisoll'],             # [deg]
             # frequenz         = PARAMS['frequenz'],            # [Hz]
-            injection_energy = PARAMS['injection_energy'],    # [MeV]
-            emitx_i          = PARAMS['emitx_i'],             # [m*rad]
-            emity_i          = PARAMS['emity_i'],             # [m*rad]
-            emitz_i          = PARAMS['emitz'],               # [m*rad]
-            emitw_i          = PARAMS['emitw'],               # [rad]
-            betax_i          = PARAMS['betax_i'],             # [m/rad]
-            betay_i          = PARAMS['betay_i'],             # [m/rad]
-            betaz_i          = PARAMS['betaz'],               # [m/rad]
-            alfax_i          = PARAMS['alfax_i'],             # []
-            alfay_i          = PARAMS['alfay_i'],             # []
+            # emitx_i          = PARAMS['emitx_i'],             # [m*rad]
+            # emity_i          = PARAMS['emity_i'],             # [m*rad]
+            # emitz_i          = PARAMS['emitz'],               # [m*rad]
+            # emitw_i          = PARAMS['emitw'],               # [rad]
+            # betax_i          = PARAMS['betax_i'],             # [m/rad]
+            # betay_i          = PARAMS['betay_i'],             # [m/rad]
+            # betaz_i          = PARAMS['betaz'],               # [m/rad]
+            # alfax_i          = PARAMS['alfax_i'],             # []
+            # alfay_i          = PARAMS['alfay_i'],             # []
             # alfaz_i          = PARAMS['alfaz'],               # []
-            lattice_version  = PARAMS['lattice_version'],
-            z0               = PARAMS['z0'],                  # [m]
+            # z0               = PARAMS['z0'],                  # [m]
             )
     root_da        = XmlDataAdaptor(name='Alceli')
     params_dict_da = root_da.createChild('PARAMS')
@@ -79,7 +80,7 @@ def generator(file=None):
     lattice_da.setParam('length',lattice.length)
 
     print('{}'.format(root_da.makeXmlText()))
-    # print('wait...')
+    print('generating xml for pyOrbit...')
 
     # iterate through the lattice
     accElement_cnt = 0
@@ -109,8 +110,9 @@ def generator(file=None):
                 quad_cnt  += 1
                 quadF_cnt += 1
                 name = '{}:{}'.format(node.label,quad_cnt)
-                k0 = node.k02
-                Bgrad = sqrt(k0)*node.particle.brho
+                # k0 = node.k02
+                # Bgrad = sqrt(k0)*node.particle.brho
+                Bgrad = node.grad
                 if isinstance(node,ELM.QD): 
                     quadF_cnt -= 1
                     quadD_cnt += 1
@@ -170,11 +172,11 @@ def generator(file=None):
                 cavity_da.setValue('frequency',node.freq)
                 cavity_da.setValue('name', name)
                 cavity_da.setValue('pos', sm)
-        if isinstance(node,(ELM.D,ELM.DKD)):
+            DEBUG_OFF('accelm_da: {}'.format(accelm_da.makeXmlText()))
+        elif isinstance(node,(ELM.D,ELM.DKD)):
             drift_cnt += 1
         else:
             pass
-        DEBUG_OFF('accelm_da: {}'.format(accelm_da.makeXmlText()))
     print("accElement_cnt {}".format(accElement_cnt))
     print("gap_cnt        {}".format(gap_cnt))
     print("quadF_cnt      {}".format(quadF_cnt))

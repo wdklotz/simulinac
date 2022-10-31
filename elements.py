@@ -1,5 +1,4 @@
-#!/Users/klotz/anaconda3/bin/python3.6
-# -*- coding: utf-8 -*-
+__version__='v10.22.7'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -20,16 +19,14 @@ This file is part of the SIMULINAC code
 # TODO adjust_energy() and shorten() return new objects. make sure object properties like links are correctly passed.
 import sys
 from math import sqrt, sinh, cosh, sin, cos, tan, modf, pi, radians, degrees, ceil
-from copy import copy, deepcopy
+from copy import copy
 import numpy as NP
 import unittest
+import warnings
 
-from setutil import PARAMS, FLAGS, Particle, DEBUG_ON, DEBUG_OFF
-from setutil import WConverter, dictprnt, objprnt, Proton, Electron
+from setutil import PARAMS, FLAGS, DEBUG_ON, DEBUG_OFF, colors
+from setutil import WConverter, Proton, I0, I1, arrprnt, Twiss
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
-from setutil import dBdxprot, scalek0prot, k0prot, I0, I1, arrprnt, Ktp
-from Ez0     import SFdata
-# from DynacG  import _DYN_G
 
 # used about everywhere
 twopi = 2.*pi
@@ -153,39 +150,6 @@ class Node(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
-    def sigma_beam(self, steps=1, sg=None):
-        """ 
-        Track the Sigma object through a node
-            twiss vector: twv  = NP.array([betax,alphax,gammax,b..y,a..y,g..y,b..z,a..z,g..z])
-            input: sg = SIGMA(twv,epsx,epsy,epsz) Sigma object
-        """
-        si,sm,sf = self.position # entrance
-        sigmas   = []
-        s        = si
-        slices = self.make_slices(anz = steps)
-        for slice in slices:
-            # next_SIGMA = R * SIGMA * transpose(R)
-            sgf = sg.RSRT(slice)
-            # emmitance grow ?
-            if isinstance(slice,RFG) and FLAGS['egf']: # loop slices
-                sgf = sgf.apply_eg_corr(rf_gap=slice, sigma_i=sg, delta_phi=PARAMS['Dphi0'])
-            s += slice.length
-            sigmas.append((sgf,s))
-            sg = sgf
-        # averages
-        av = []
-        for sig,s in sigmas:
-            v = sig.sigv().tolist()
-            av.append(v)
-        avarr = NP.array(av)
-        avm = NP.mean(avarr,axis=0)
-        # sgxm, sgym are mean values of sigmas over slices
-        sgxm  = avm[0]; sgxpm = avm[1]
-        sgym  = avm[2]; sgypm = avm[3]
-        sigxy = (sgxm,sgxpm,sgym,sgypm)
-        # each node has its tuple of average sigmas     
-        self.sigxy = sigxy
-        return sigmas
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label='I'):
@@ -466,9 +430,10 @@ class RFG(Node):
     def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], mapping='t3d', fieldtab=None):
         super().__init__()
         def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65) """
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
             x = gap/(beta*lamb)
-            return NP.sinc(x)
+            res =NP.sinc(x)
+            return res
         self.particle  = particle
         self.position  = position
         self.length    = 0.
@@ -783,7 +748,100 @@ class RFG(Node):
     def adjust_energy(self, tkin):
         adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
+    def waccept(self):
+        """ 
+        Calculate longitudinal acceptance, i.e. phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
+        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
+        emitw = w0*Dphi0 = ellipse_area/pi
+        """
+        DT2T      = PARAMS['DT2T']
+        E0T       = self.EzAvg*self.ttf  # [MV/m]
+        particle  = self.particle
+        phisoll   = self.phisoll         # [rad]
+        lamb      = self.lamb            # [m]
+        freq      = self.freq            # [Hz]
+        m0c2      = particle.e0          # [MeV]
+        gb        = particle.gamma_beta
+        beta      = particle.beta
+        gamma     = particle.gamma
+        tkin      = particle.tkin
+        conv      = WConverter(tkin,freq)
+        DEBUG_OFF(dict(DT2T=DT2T,E0T=E0T,phisoll=phisoll,lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
+        try:
+            # LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
+            sq2l = 2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)
+            w0large = sqrt(sq2l)  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+        except ValueError as ex:
+            exception = ex
+            w0large = -1
+            # print(ex)
+            # print(f'w0large=sqrt({sq2l})')
+        try:
+            # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
+            sq2s = 2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2)
+            w0small = sqrt(sq2s)
+        except ValueError as ex:
+            exception = ex
+            w0small = -1
+            # print(ex)
+            # print(f'w0small=sqrt({sq2l})')
+        if w0large != -1: 
+            wmax = w0large
+        elif w0large == -1 and w0small != -1:
+            wmax = w0small
+        else:
+            DEBUG_ON(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')
+            sys.exit(1)
+
+        w0        = (gamma-1.)*DT2T
+        emitw_i   = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance
+        Dphi0     = pi*emitw_i/w0                # injected phase spread
+        betaw_i   = emitw_i/w0**2                # w0 = w-int = sqrt(emitw/betaw) 
+        
+        omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
+        omgl_0     = omgl0zuomg*2.*pi*freq   # [Hz]
+        DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w0=w0,emitw_i=emitw_i,Dphi0=Dphi0,betaw_i=betaw_i,omgl_0=omgl_0))
+
+        # longitudinal acceptance check (always done)
+        if wmax <= w0:
+            si,sm,sf = self.position
+            warnings.showwarning(
+                colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
+                UserWarning,'elements.py',
+                'waccept()')
+
+        # {z-dp/p}-space  TODO test wToz again!!!!
+        z0,Dp2p0,emitz_i,betaz_i = conv.wtoz((Dphi0,w0,emitw_i,betaw_i))
+        Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
+        alfaz_i = alfaw_i = 0. # always
+
+        res =  dict (
+                # {Dphi,w}
+                emitw_i         = emitw_i,      # emittance{Dphi,w} [rad]
+                Dphi0           = Dphi0,       # ellipse dphi-int (1/2 axis)
+                betaw_i         = betaw_i,      # beta twiss [rad]
+                alfaw_i         = alfaw_i,
+                wmax            = wmax,         # separatrix: large amp. oscillations
+                w0              = w0,          # separatrix small amp. osscillations
+                omgl_0          = omgl_0,       # synchrotron oscillation [Hz]
+                # {z,Dp2p}
+                emitz_i         = emitz_i,      # emittance {z,dp/p} space [m*rad]
+                betaz_i         = betaz_i,      # twiss beta [m/rad]
+                alphaz_i        = alfaz_i,
+                Dp2pmax         = Dp2pmax,     # max D/p on separatrix
+                z0              = z0,           # ellipse z-int    (1/2 axis) [m]
+                Dp2p0           = Dp2p0,       # ellipse dp/p-int (1/2 axis)
+                # Dp2p_Acceptance = Dp2pmax,
+                zmax            = conv.DphiToz(2.*phisoll),  # Wrangler's approximation
+                # {Dphi,DW}
+                DWmax           = wmax*m0c2     # separatrix: max W in [MeV]
+                )
+        # new longitudinal Twiss objects at injection from 1st cavity attributes
+        res['twiss_w_i'] = Twiss(betaw_i, alfaw_i, emitw_i)
+        res['twiss_z_i'] = Twiss(betaz_i, alfaz_i, emitz_i)
+        return res
+                        
 # TODO classes below need unittesting
 # TODO D+K+D models not finished for OXAL_C and TTF_C
 class RFC(RFG):    #TODO

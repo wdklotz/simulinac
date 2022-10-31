@@ -1,0 +1,135 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+
+#...................................................:.......................................
+DESCRIPTOR:  "FODO ohne Bend"
+#..........................................................................................
+## RUN switches
+#..........................................................................................
+FLAGS:
+    NIL_FLAG:      []               # placeholder
+    accON:        False           # {True} accSeleration on/off flag
+    periodic:     True            # {False} treat lattice as ring
+    # egf:          True            # {False} apply emittance growth flag
+    # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # bucket:       True            # {False} plot the bucket
+    # csTrak:       False           # {True} plot CS trajectories else beta functions
+    # maction:      True            # {False} call marker actions
+    envelope:     True            # {False} plot envelopes
+#...........................................................................................
+## INPUT-PARAMETER definitions
+#...........................................................................................
+PARAMETERS:
+    Tkin:                 50.0            # [MeV] energy @ injection 
+    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
+    frequency:    &freq   816.e6          # [Hz] frequency
+    emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    1.902           # [m] twiss beta @ entrance x
+    betay_i:      &bty    0.351           # [m] twiss beta @ entrance y
+    alfax_i:              0.000           # [] twiss alpha x @ entrance
+    alfay_i:              0.000           # [] twiss alpha y @ entrance
+    ql:           &p03    0.1             # [m] 1/2 quad-length
+    quad_bore:    &p04    11.e-3          # [m] quad bore radius
+    phi_sync:     &phs    -20.            # [deg] synchronous phase
+    gap:          &p15    0.044           # [m] RF gap
+    BgradL:       &bgrad1 15.0            # [T/m]
+    BgradH:       &bgrad2 25.0            # [T/m]
+    thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
+    EzPeak:       &p17    2.5             # [MV/m] peak gap field Strengy
+    nbsigma:              2               # [m] sigma aperture
+    aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
+    lattvers:     'FODO ohne Bend'        # lattice version
+    mapping:      &map    t3d             # [t3d, simple, oxal, base, ttf, dyn]
+#...........................................................................................
+## ELEMENTS (a.k.a. NOdes) definitions
+#...........................................................................................
+ELEMENTS:
+#...........................................................................................
+# Nodes
+#...........................................................................................
+    D:                        # ID
+        type:     D            # D class
+        length:   0.500        # [m]
+    QF:                        # ID
+        type:     QF           # QF class
+        length:   *p03         # [m]
+        aperture: *aper        # [m] aperture radius
+        B':       *bgrad1      # [T/m] quadrupole gradient
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        # sec:      LE           # section 
+    QD:                        # ID
+        type:     QD           # QF class
+        length:   *p03         # [m]
+        aperture: *aper        # [m] aperture radius
+        B':       *bgrad1      # [T/m] quadrupole gradient
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        # sec:      LE           # section 
+    Psp:                       # ID   (simu.py marker)
+        type:     MRK          # MRK class
+        action:   pspace       # phase space marker actions
+        active:   True         # {False} action activated
+    Pcc:                       # ID   (tracker.py marker)
+        type:     MRK          # MRK class
+        action:   pcrcut       # Pointcare cut
+        active:   True         # action activated
+        # prefix:   frames     # base dir of frames
+        abscissa: z            # x axis
+        ordinate: zp           # y axis
+# ...........................................................................................
+# ...........................................................................................
+# ...........................................................................................
+# LATTICE definition starts here:  
+# Node is part of Segment is part of Cell is part of Section is part of LINE
+# LATTICE is LINE
+# ===========================================================================================
+SEGMENTS:   
+    NIL_SEG:     [1,[]] # placeholder
+# group ELEMENTs into SEGMENTs:
+# Syntax: [number[node,...,node]]
+# the nested list [node,...,node] is repeated number times
+#...........................................................................................
+# Markers
+    Mkrs:                [1,[Psp,Pcc]]
+# ===========================================================================================
+CELLS:    
+    NIL_CELL:    [1,[]] # placeholder
+# group SEGMENTS into CELLs: order given by list [...] syntax
+#...........................................................................................
+    CELL:        [1,[QF,D,QD,QD,D,QF]]     # D-QF-D-QD
+    # CELL:        [1,[D,QF,QF,D,QD,QD]]     # D-QF-D-QD
+# ===========================================================================================
+SECTIONS:
+    NIL_SEC:    [1,[]] # placeholder
+# group CELLs into SECTIONS
+#...........................................................................................
+# ===========================================================================================
+LATTICE:    
+# group SECTIONs into a LINE a.k.a. LATTICE
+#........................................................................................... 
+    LINE:   [15,[CELL]]
+ 
