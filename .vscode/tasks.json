@@ -6,7 +6,7 @@
         {
             "label": "simu",
             "type": "shell",
-            "command": "bash ~wdklotz/SIMULINAC/runit",
+            "command": "bash ~wdklotz/SIMULINAC/simuit",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
