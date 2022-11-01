@@ -479,8 +479,7 @@ if __name__ == '__main__':
                 macros_file   = Args['macro']
                 template_file = Args['tmpl']
                 # launch macros script with bash
-                command = 'chmod +x {}'.format(macros_file)
-                command = "{0};{1} {2} {3}".format(command,macros_file,template_file, input_file)            
+                command = "chmod +x {0};{1} {2} {3}".format(macros_file, macros_file, template_file, input_file)            
                 os.system(command)
             else:
                 print('Internal error!')

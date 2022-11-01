@@ -4,9 +4,19 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "simu.py",
+            "label": "simu",
             "type": "shell",
             "command": "bash ~wdklotz/SIMULINAC/runit",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "tracker",
+            "type": "shell",
+            "command": "bash ~wdklotz/SIMULINAC/trackit",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
