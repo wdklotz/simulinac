@@ -28,7 +28,6 @@ DESCRIPTOR:  "v10.2.0 compatible, modified: 07.10.2022, IN 20.MeV"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    NIL_FLAG:       []              # placeholder
     # accON:        False           # {True} accSeleration on/off flag
     # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
