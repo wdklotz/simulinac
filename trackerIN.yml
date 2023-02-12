@@ -28,7 +28,6 @@ DESCRIPTOR:  "work run, input compatible with v10.22.7"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    NIL_FLAG:       []              # placeholder
     # accON:        False           # {True} accSeleration on/off flag
     # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
