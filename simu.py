@@ -43,9 +43,10 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
+import json
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,RUN_MODE
+from setutil import PARAMS,FLAGS,SUMMARY, dictprnt, RUN_MODE
 from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
@@ -418,14 +419,20 @@ def simulation(filepath):
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
-        kv = {}
+        kv = {'FLAGS':[],'PARAMS':[],'SUMMARY':[]}
         for key in FLAGS:
-            kv['F '+key] = FLAGS[key]
+            kv['FLAGS'].append({key: FLAGS[key]})
         for key in PARAMS:
-            kv['P '+key] = PARAMS[key]
+            if key in ['twiss_x_i' ,'twiss_y_i','twiss_w_i','twiss_z_i']:
+                kv['PARAMS'].append({key: PARAMS[key]()})
+            else:
+                kv['PARAMS'].append({key: PARAMS[key]})
         for key in SUMMARY:
-            kv['S '+key] = SUMMARY[key]
-        dictprnt(kv,text='KV',njust=1)
+            kv['SUMMARY'].append({key: SUMMARY[key]})
+        print('\n\n-----string-----')
+        print(kv)
+        print('\n\n-----JSON-----')
+        print(json.dumps(kv))
     else:
         show_data_from_elements() #...................................show ELEMENT attributes
         dictprnt(SUMMARY,text='Summary') #............................show summary

@@ -90,7 +90,8 @@ PARAMS   = dict(
     elementarladung      = C.e, # [coulomb]
     proton_mass          = C.value('proton mass energy equivalent in MeV'),
     electron_mass        = C.value('electron mass energy equivalent in MeV'),
-    map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
+    # map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
+    map_set              = ['t3d','simple','base','ttf','dyn','oxal'],
     warnmx               = 10, # max warnings
     injection_energy     = 50. # default
     )              
