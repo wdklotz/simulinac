@@ -32,7 +32,7 @@ FLAGS:
     # periodic:     True            # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
-    KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
@@ -205,8 +205,8 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp]]
 
 
   

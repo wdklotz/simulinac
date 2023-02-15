@@ -246,7 +246,7 @@ def track(lattice,bunch,options):
         if ndcnt%pgceil == 0 or ndcnt == lnode: 
             printProgressBar(ndcnt,lnode,prefix="Progress:",suffix="Complete",length=50)
     live = nbpart - lbunch.nbparticles()
-    print('\nTRACKING DONE (live particles {}, lost particles {})               '.format(live,nlost))
+    print('\nTRACKING DONE (live particles {}, lost particles {})'.format(live,nlost))
     return (bunch,lbunch)
 def track_soll(lattice):
     """
