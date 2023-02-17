@@ -26,6 +26,7 @@ from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
 
 from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF
+
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  Ez0_tab is list(Dpoint)
@@ -191,21 +192,25 @@ class SFdata(object):
     IN: EzPeak peak field [MV/m], gap: full gap [m]
     OUT: SFdata object
     """
-    # class variable
+    # class variables
     instances = {}    
     @classmethod
     def field_data(cls,input_file,EzPeak=0.,gap=0.):
-        def scale(instance,EzPeak,gap):
-            instance.EzPeak = EzPeak
-            instance.gap    = gap
-            instance.Ez0_tab, instance.EzAvg = instance.scale_Ez_table(EzPeak,gap) # scale EzAvg and profile
-            # fit polynomials
-            instance.poly = instance.make_polyfit(instance.Ez0_tab)
-            DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(instance.poly)))
-        instance = cls.instances.get(input_file)
+        def scale(sfdata,EzPeak,gap):
+            sfdata.EzPeak = EzPeak
+            sfdata.gap    = gap
+            sfdata.Ez0_tab, sfdata.EzAvg = sfdata.scale_Ez_table(EzPeak,gap) # scale EzAvg and profile
+            # fit polynomials after scaling
+            sfdata._poly = sfdata.make_polyfit(sfdata.Ez0_tab)
+            DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(sfdata.EzPoly)))
+
         """ field_data body -------- field_data body -------- field_data body -------- field_data body -------- field_data body """
+        # use a key made from <SFdata file name>%<Ezpeak value>%<gap value> to retrieve the corresponding field table instance
+        instance_key = '{}%{}%{}'.format(input_file,EzPeak,gap)
+        # instance with instance_key exists? get it else None
+        instance = cls.instances.get(instance_key)
         if instance == None:
-            # new instance
+            # new scaled instance
             instance = SFdata(input_file)
             if EzPeak != 0. and gap != 0.:
                 scale(instance,EzPeak,gap)
@@ -215,21 +220,13 @@ class SFdata(object):
                 scale(instance,instance.EzPeak_raw,gap)
             elif EzPeak == 0. and gap == 0.:
                 pass
-            SFdata.instances[input_file] = instance
-        else:
-            # return [scaled] instance 
-            if EzPeak != 0. and gap != 0. and (EzPeak != instance.EzPeak or gap != instance.gap):
-                scale(instance,EzPeak,gap)
-            elif EzPeak != 0. and gap == 0.:
-                scale(instance,EzPeak,instance.gap)
-            elif EzPeak == 0. and gap != 0.:
-                scale(instance,instance.EzPeak,gap)
-            elif EzPeak == 0. and gap == 0. or (EzPeak == instance.EzPeak and gap == instance.gap):
-                pass
+            SFdata.instances[instance_key] = instance
+            DEBUG_OFF(SFdata.instances)
         return instance
+
     @property
     def EzPoly(self):
-        return self.poly
+        return self._poly
 
     def __init__(self,input_file):
         print('READING SF-DATA from "{}"'.format(input_file))
@@ -243,11 +240,9 @@ class SFdata(object):
         self.EzAvg      = self.EzAvg_raw
         self.EzPeak     = self.EzPeak_raw
         self.gap        = self.gap_raw
-        # fit polynomials
-        self.poly       = self.make_polyfit(self.Ez0_tab)
-
+        self._poly      = None  # will be set when scaled
     def make_Ez_table(self,input_file):
-        """ read raw data and scale to self.EzPeak and self.gap """
+        """ read raw data and return raw table and raw table's average """
         zp = []; rp = []; ep = []
         leading  =  41      # nbof leading lines to skip
         trailing  = 2       # nbof trailing lines to skip
@@ -330,6 +325,7 @@ class SFdata(object):
             DEBUG_OFF('Ez0_poly::SFdata::make_polyfit: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
         DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(polies)))
         return polies
+
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
         res = Ipoly(z,self.EzPoly) * cos(omega*t+phis)
@@ -338,6 +334,7 @@ class SFdata(object):
         """dE(z,0,t)/dt: time derivative of field value at location z"""
         res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
         return res
+
 class TestEz0Methods(unittest.TestCase):
     @classmethod
     def displayLR(cls,table,legend):
