@@ -27,7 +27,7 @@ def is_prime(n):
 def main():
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for number, prime in zip(PRIMES, executor.map(is_prime, PRIMES)):
-            # print('%d is prime: %s' % (number, prime))
+            print('%d is prime: %s' % (number, prime))
             pass
 
 if __name__ == '__main__':
