@@ -37,7 +37,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # maction:      True            # {False} call marker actions
+    # mactive:       True           # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
     mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
@@ -82,11 +82,13 @@ ELEMENTS:
     Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
-        active:   True         # {False} action activated
+        active:   False        # action activated
+        # viseo:    0            # show markers in plot
     Pcc:                       # ID   (tracker.py marker)
         type:     MRK          # MRK class
         action:   pcrcut       # Pointcare cut
-        active:   True         # action activated
+        # active:   True         # action activated
+        viseo:    0            # show markers in plot
         # prefix:   frames     # base dir of frames
         abscissa: z            # x axis
         ordinate: zp           # y axis
@@ -196,8 +198,8 @@ SECTIONS:
     NIL_SEC:    [1,[]] # placeholder
 # group CELLs into SECTIONS
 #...........................................................................................
-    SECL:      [25,[LE_CELL,Psp]]
-    # SECL:      [25,[LE_CELL,Pcc]]
+    # SECL:      [25,[LE_CELL,Psp]]
+    SECL:      [25,[LE_CELL,Pcc,Psp]]
     SECH:      [127,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
@@ -205,8 +207,8 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,SECH,Psp]]
+    # LINE:   [1,[SECL]]
 
 
   

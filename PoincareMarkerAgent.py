@@ -25,8 +25,8 @@ from setutil import PARAMS,Ktp,Proton,FLAGS,DEBUG_ON,DEBUG_OFF
 
 class PoincareMarkerAgent(MRK):
     """ A Marker agent  """
-    def __init__(self,label,active,prefix,abscissa,ordinate,particle=Proton(PARAMS['injection_energy']),position=(0.,0.,0.)):
-        super().__init__(label, active, particle, position,)
+    def __init__(self,label,active,viseo,prefix,abscissa,ordinate,particle=Proton(PARAMS['injection_energy']),position=(0.,0.,0.)):
+        super().__init__(label, active, viseo, particle=particle, position=position,)
         krows = dict(x=Ktp.x.value, xp=Ktp.xp.value, y=Ktp.y.value, yp=Ktp.yp.value, z=Ktp.z.value, zp=Ktp.zp.value)
         self.tpoints  = []
         self.prefix   = prefix
@@ -34,7 +34,7 @@ class PoincareMarkerAgent(MRK):
         self.ordinate = ordinate
         self.xaxis    = krows[abscissa]
         self.yaxis    = krows[ordinate]
-        self.do_action = self.action if FLAGS['maction'] else self.noaction # toggle
+        self.do_action = self.action if self.active else self.no_action # toggle
 
     def add_track_point(self,track_point):
         self.tpoints.append(track_point)

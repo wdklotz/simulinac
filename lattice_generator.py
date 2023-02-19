@@ -46,15 +46,14 @@ def make_counter():
 counter1 = make_counter()
 counter2 = make_counter()
 
-def check_marker_incompatible_with(prog,ID):
-    ret = False
+def marker_is_compatible_with(prog,ID):
+    ret = True
     head, tail = os.path.split(sys.argv[0])
     this_prog = tail
     UTIL.DEBUG_OFF((prog,this_prog))
     if prog != this_prog:
-        print(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with {this_prog}. Will be skipped'+UTIL.colors.ENDC)
-        ret = True
-        return ret
+        ret = False
+    return ret
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -198,14 +197,16 @@ def instanciate_element(item):
             ELEMENT['sec']    = attributes.get('sec','?')
             ELEMENT['EzAvg']  = EzAvg
         elif type == 'MRK':
-            active  = attributes.get('active',False)
-            if not active: continue       # exclude this marker from lattice
+            active  = attributes.get('active',UTIL.FLAGS['mactive'])
+            viseo   = attributes.get('viseo',3)
             ELEMENT = UTIL.ELEMENTS[ID]
             action  = get_mandatory(attributes,'action',ID)
             if action == 'pspace':
                 # A marker for simu.py ?
-                if check_marker_incompatible_with('simu.py',ID): continue    # exclude this marker from lattice
-                instance  = PSMKR.PsMarkerAgent(ID,active)
+                if not marker_is_compatible_with('simu.py',ID):
+                    active = False
+                    UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
+                instance = PSMKR.PsMarkerAgent(ID,active,viseo)
                 sec = attributes.get('sec','?') 
                 ELEMENT['sec']   = sec
                 UTIL.DEBUG_OFF(ELEMENT)
@@ -213,12 +214,14 @@ def instanciate_element(item):
 
             elif action == 'pcrcut':
                 # A marker for tracker.py ?
-                if check_marker_incompatible_with('tracker.py',ID): continue    # exclude this marker from lattice
+                if not marker_is_compatible_with('tracker.py',ID):
+                    active = False
+                    UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with tracker.py. Will be skipped'+UTIL.colors.ENDC)
                 sec        = attributes.get('sec','?') 
                 prefix     = attributes.get('prefix','frames')
                 abscissa   = attributes.get('abscissa','z')
                 ordinate   = attributes.get('ordinate','zp')
-                instance   = PCMKR.PoincareMarkerAgent(ID,active,prefix,abscissa,ordinate)
+                instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,prefix,abscissa,ordinate)
                 ELEMENT['sec']      = sec
                 ELEMENT['prefix']   = prefix
                 ELEMENT['abscissa'] = abscissa
@@ -256,7 +259,7 @@ def factory(input_file,stop=None):
             useaper  = flags.get('useaper',False),            # use aperture check for quads and rf-gaps
             bucket   = flags.get('bucket',False),             # plot bucket
             csTrak   = flags.get('csTrak',True),              # plot CS trajectories
-            maction  = flags.get('maction',False),            # call marker actions
+            mactive  = flags.get('mactive',False),            # call marker actions
             envelope = flags.get('envelope',False),           # plot transverse envelopes
             mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
         )

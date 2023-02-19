@@ -162,13 +162,14 @@ class MRK(I):
     MaRKer node (a.k.a element): Each marker is parent of an agent that does the specific action.
     The action can be bypassed if the 'maction'-FLAG is False.
     """
-    def __init__(self, label, active, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
+    def __init__(self, label, active, viseo, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):
         super().__init__(label)
         self.active     = active
         self.particle   = copy(particle)
         self.position   = position
-        self.viseo      = 4.
-    def noaction(self,*args):
+        self.viseo      = 3. if self.active else 0.
+        self.viseo      = viseo
+    def no_action(self,*args):
         pass
 class D(Node):
     """  Trace3D drift space  """
