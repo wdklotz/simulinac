@@ -83,12 +83,12 @@ ELEMENTS:
     Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
-        active:   False        # action activated
-        # viseo:    0            # show markers in plot
+        active:   True         # action activated
+        viseo:    3            # show markers in plot
     Pcc:                       # ID   (tracker.py marker)
         type:     MRK          # MRK class
         action:   pcrcut       # Pointcare cut
-        # active:   True         # action activated
+        active:   False        # action activated
         viseo:    0            # show markers in plot
         # prefix:   frames     # base dir of frames
         abscissa: z            # x axis
@@ -193,22 +193,22 @@ CELLS:
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     LE_CELL:   [1,[SGLi, GAPLarr, D10, GAPLarr, SGLm, GAPLarr, D10, GAPLarr, SGLf]] 
-    HE-CELL:   [1,[SGHi, GAPHarr, D10, GAPHarr, SGHm, GAPHarr, D10, GAPHarr, SGHf]] 
+    HE_CELL:   [1,[SGHi, GAPHarr, D10, GAPHarr, SGHm, GAPHarr, D10, GAPHarr, SGHf]] 
 # ===========================================================================================
 SECTIONS:
     NIL_SEC:    [1,[]] # placeholder
 # group CELLs into SECTIONS
 #...........................................................................................
     # SECL:      [25,[LE_CELL,Psp]]
-    SECL:      [25,[LE_CELL,Pcc,Psp]]
-    SECH:      [127,[HE-CELL]]
+    SECL:      [25,[LE_CELL]]
+    SECH:      [127,[HE_CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,SECH,Psp]]
+    LINE:   [1,[Pcc,Psp,SECL,Pcc,Psp,SECH,Pcc,Psp]]
     # LINE:   [1,[SECL]]
 
 

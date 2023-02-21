@@ -456,7 +456,7 @@ class TestEz0Methods(unittest.TestCase):
         EzPeak = 1.2
         gap    = 0.
         sf_data   = SFdata.field_data(input_file,EzPeak=EzPeak,gap=0.)
-        poly_data = sf_data.poly
+        poly_data = sf_data.EzPoly
         particle  = Proton(tkin=100.)
         beta      = particle.beta
         c         = PARAMS['clight']
@@ -488,7 +488,7 @@ class TestEz0Methods(unittest.TestCase):
         DEBUG_OFF('T(k) {}'.format(t))
         DEBUG_OFF("T'(k) {}".format(tp))
         DEBUG_OFF('S(k) {}'.format(s))
-        DEBUG_OFF("S'(k) {}".format(sp))
+        DEBUG_OFF("S'(k) {}".format(sp))                                                
     def test5(self):
         print("\b----------------------------------------test5")
         input_file='SF/PILL-2CM.TBL'
