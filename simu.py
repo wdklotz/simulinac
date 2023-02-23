@@ -40,7 +40,7 @@ import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
 # NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
 # NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
 import matplotlib
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
 
 import matplotlib.pyplot as plt
 import json
