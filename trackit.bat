@@ -1,7 +1,7 @@
 @echo off
 REM
 REM Batch script to prepare and launch tracker.py. This needs cygwin.
-REM Usage: runit <run_version>
+REM Usage: trackit <run_version>
 REM
 set Run_Version=%1
 
@@ -24,6 +24,6 @@ echo "Usage: trackit [run_version | --help]"
 GOTO:EOF
 
 :LAUNCH
-REM launch track.py
-python tracker.py yml\trackIN.yml
+REM launch tracker.py
+python tracker.py trackerIN.yml
 GOTO:EOF

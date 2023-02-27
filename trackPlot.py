@@ -134,29 +134,32 @@ def poincarePlot(ax,xyvalues1, xyvalues2, box, max, projections=(0,0)):
             # axHisty.set_ylim(axScatter.get_ylim())
 
     return
-def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
-    """
-    Create a plot of the covariance confidence ellipse of *x* and *y*.
-    https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
 
-    Parameters
-    ----------
-    x, y : array-like, shape (n, )
-        Input data.
+# https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
+def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
+    # """
+    # Create a plot of the covariance confidence ellipse of `x` and `y`
 
-    ax : matplotlib.axes.Axes
-        The axes object to draw the ellipse into.
+    # Parameters
+    # ----------
+    # x, y : array_like, shape (n, )
+    #     Input data.
 
-    n_std : float
-        The number of standard deviations to determine the ellipse's radiuses.
+    # ax : matplotlib.axes.Axes
+    #     The axes object to draw the ellipse into.
 
-    **kwargs
-        Forwarded to `~matplotlib.patches.Ellipse` 
+    # n_std : float
+    #     The number of standard deviations to determine the ellipse's radiuses.
 
-    Returns
-    -------
-    matplotlib.patches.Ellipse
-    """
+    # Returns
+    # -------
+    # matplotlib.patches.Ellipse
+
+    # Other parameters
+    # ----------------
+    # kwargs : `~matplotlib.patches.Patch` properties
+    # """
+    
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
 
@@ -166,8 +169,7 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     # two-dimensionl dataset.
     ell_radius_x = NP.sqrt(1 + pearson)
     ell_radius_y = NP.sqrt(1 - pearson)
-    ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
-                      facecolor=facecolor, **kwargs)
+    ellipse = Ellipse((0, 0),width=ell_radius_x * 2,height=ell_radius_y * 2,facecolor=facecolor,**kwargs)
 
     # Calculating the stdandard deviation of x from
     # the squareroot of the variance and multiplying
@@ -179,13 +181,11 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     scale_y = NP.sqrt(cov[1, 1]) * n_std
     mean_y = NP.mean(y)
 
-    transf = transforms.Affine2D() \
-        .rotate_deg(45) \
-        .scale(scale_x, scale_y) \
-        .translate(mean_x, mean_y)
+    transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
+
 def scatter11(live,lost,abscisse,ordinate,txt):
     """
     2 scatter plots in a 11 grid
@@ -243,8 +243,12 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         ax.axvline(c='grey', lw=1)
         ax.axhline(c='grey', lw=1)
 
-        # https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-        confidence_ellipse(x,y,ax,n_std=2.0,edgecolor='green')
+        # "https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py"
+        # "https://matplotlib.org/3.1.1/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py"
+        confidence_ellipse(x,y,ax,n_std=1,label=r"$1\sigma$",edgecolor="firebrick")
+        confidence_ellipse(x,y,ax,n_std=2,label=r"$2\sigma$",edgecolor="fuchsia",linestyle="--")
+        confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="blue",linestyle=":")
+        ax.legend()
         ax.scatter(x,y,s=1)
         if nblost !=0: 
             ax.scatter(xlost,ylost,s=1,color='red')

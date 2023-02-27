@@ -255,7 +255,6 @@ def track_soll(lattice):
     OLD: and redefines the lattice 
     element parameters according to the energy of the accelerated reference particle.
     """
-    
     soll_track  = Track()
     tkIN        = lattice.injection_energy
     position    = 0.
@@ -268,7 +267,9 @@ def track_soll(lattice):
         soll_track.addpoint(tpoint)
     return soll_track
 def tracker(input_file,options):
-    """  Prepare and launch tracking  """
+    """ 
+        Prepare and launch tracking  
+    """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
     # run_mode
