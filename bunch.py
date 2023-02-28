@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.23.1'
+__version__='v10.23.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -110,7 +110,7 @@ class BunchFactory(object):
         self.mask = value
     def __call__(self):
         bunch = Bunch()
-        if self.distribution.__name__ == 'Gauss1D':
+        if self.distribution.__name__ == 'Gauss2D':
             initialtracklist = self.distribution(
                 *self.twiss, self.numberofparticles, self.mask, self.tk)
         else:
@@ -122,6 +122,74 @@ class BunchFactory(object):
             bunch.addparticle(particle)
             particle.track = initialtracklist[i]
         return bunch
+def Gauss2D(twx, twy, twz, npart, mask, tk):
+    """ 
+    Generates a bunch with 2D gaussian covariance matrix distributions:
+    covs = ( sigx**2     sigx*sigx'           0           )  <== covariance matrix
+           ( sigx*sigx'  sigx'**2             0           )
+           (         0              sigy**2     sigy*sigy')
+           (         0              sigy*sigy'  sigy'**2  )
+         = ( epsx * (betax  alfax  )               0            )
+           (        (alfax  gammax )               0            )
+           (              0            epsy * (betay   alfay )  )
+           (              0                   (alfay   gammay ) )
+    IN:
+        twx   = Twiss object 
+        twy   = Twiss object
+        twz   = Twiss object 
+        npart = integer
+        mask  = tuple*6  (bool,...,bool)
+        tk    = float
+    Out:
+        list of Track objects with one initial Tpoint object each
+    """
+    # sigmas
+    sigx  = twx.sigmaH()
+    sigxp = twx.sigmaV()
+    sigy  = twy.sigmaH()
+    sigyp = twy.sigmaV()
+    sigz  = twz.sigmaH()
+    sigzp = twz.sigmaV()
+
+    Z  = sigz * NP.random.randn(npart)
+    ZP = sigzp * NP.random.randn(npart)
+
+    means = [0.0, 0.0]    # TODO  non zero?
+    # x,x'
+    if mask[Ktp.x]:
+        bet,alfx,gam,epsx = twx()
+        corr = alfx*epsx
+        covs = [[sigx**2,       corr],
+                [corr,      sigxp**2]]
+        mx = NP.random.multivariate_normal(means, covs, npart).T
+    # y.y'
+    if mask[Ktp.y]:
+        bet,alfy,gam,epsy = twy()
+        corr = alfy*epsy
+        covs = [[sigy**2,       corr],
+                [corr,      sigyp**2]]
+        my = NP.random.multivariate_normal(means, covs, npart).T
+    # fill tracks in a bunch
+    tracklist = []
+    for i in range(npart):
+        start = NP.array([0., 0., 0., 0., 0., 0., tk, 1., 0., 1.])
+        if mask[Ktp.x]:
+            start[Ktp.x] = mx[0][i]
+            start[Ktp.xp] = mx[1][i]
+        if mask[Ktp.y]:
+            start[Ktp.y] = my[0][i]
+            start[Ktp.yp] = my[1][i]
+        if mask[Ktp.z]:
+            start[Ktp.z] = Z[i]
+        if mask[Ktp.zp]:
+            start[Ktp.zp] = ZP[i]
+        tpoint = Tpoint(point=start)
+        track = Track()
+        track.addpoint(tpoint)
+        tracklist.append(track)
+    return tracklist
+        
+
 def Gauss1D(twx, twy, twz, npart, mask, tk):
     """ 
     Generates a bunch with 1D gaussian distribution 

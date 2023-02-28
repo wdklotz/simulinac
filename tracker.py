@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.23.1'
+__version__='v10.23.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -35,7 +35,7 @@ from lattice_generator import factory
 import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp
 from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
-from bunch import BunchFactory, Gauss1D, Track, Tpoint, Bunch
+from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
 import PoincareMarkerAgent as pcmkr
 from trackPlot import scatter11
 
@@ -315,6 +315,7 @@ def tracker(input_file,options):
     # {x,xp}   standard units
     twx = PARAMS['twiss_x_i']
     betax_i,alfax_i,gammax_i,emitx_i = twx()
+    DEBUG_ON(f'betax-i={betax_i}, alfax-i={alfax_i}, gammax-i={gammax_i}')
     sigma_x   = twx.sigmaH()
     sigma_xp  = twx.sigmaV()
     # {y,yp}
@@ -362,7 +363,7 @@ def tracker(input_file,options):
 
     # bunch factory
     bunchfactory = BunchFactory()
-    bunchfactory.setDistribution(Gauss1D)
+    bunchfactory.setDistribution(Gauss2D)
     bunchfactory.setTwiss((twx,twy,twz))
     bunchfactory.setMask(np.array((1,1,1,1,1,1)))
     bunchfactory.setNumberOfParticles(npart)

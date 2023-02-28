@@ -53,7 +53,7 @@ PARAMETERS:
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    1.902           # [m] twiss beta @ entrance x
     betay_i:      &bty    0.351           # [m] twiss beta @ entrance y
-    alfax_i:              0.000           # [] twiss alpha x @ entrance
+    alfax_i:             +1.732           # [] twiss alpha x @ entrance
     alfay_i:              0.000           # [] twiss alpha y @ entrance
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
