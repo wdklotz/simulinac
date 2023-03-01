@@ -19,3 +19,5 @@ KW.py
 dynac/dynacv6_0_modified/
 dynac/generated/
 !dynac/generated/showEzTables.py
+simuIN.vml
+trackerIN.yml

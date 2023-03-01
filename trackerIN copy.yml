@@ -23,35 +23,37 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  "v10.2.0 compatible, modified: 29.8.2022, IN 5MeV"
+DESCRIPTOR:  "work run, input compatible with v10.22.7"
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
 FLAGS:
     # accON:        False           # {True} accSeleration on/off flag
-    # egf:          True            # {False} emittance growth flag
-    sigma:        False             # {True} beam sizes by sigma-matrix
-    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # periodic:     True            # {False} treat lattice as ring
-    # express:      True            # {False} use express version of thin quads
-    useaper:      True            # {False} use aperture check for lattice elements
-    # csTrak:       False           # {True} plot CS trajectories
-    # bucket:       True            # {False} plot the bucket
+    # egf:          True            # {False} apply emittance growth flag
+    # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # bucket:       True            # {False} plot w acceptance
+    # csTrak:       False           # {True} plot CS trajectories else beta functions
     # maction:      True            # {False} call marker actions
-    verbose:      3                 # {0} print flag (0 = minimal print), try 0,1,2,3
+    # envelope:     True            # {False} plot envelopes
+    mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Tkin:                 5.0             # [MeV] energy @ injection 
-    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
-    frequency:    &freq   816.e6          # [Hz] frequency
+    Win:                  5.            # [MeV] energy @ injection 
+    DW2W:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
+    DPHI0:                18.             # [deg] delta-phi @ iinjection
+    frequency:    &freq   408.e6           # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    1.902           # [m] twiss beta @ entrance x
     betay_i:      &bty    0.351           # [m] twiss beta @ entrance y
-    alfax_i:              0.000           # [] twiss alpha x @ entrance
-    alfay_i:              0.000           # [] twiss alpha y @ entrance
+    alfax_i:             -1.732           # [] twiss alpha x @ entrance <0 foc
+    alfay_i:             +1.732           # [] twiss alpha y @ entrance >0 div
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
     phi_sync:     &phs    -20.            # [deg] synchronous phase
@@ -63,8 +65,7 @@ PARAMETERS:
     EzPeak:       &p17    1.0             # [MV/m] peak gap field Strengy
     nbsigma:              2               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
-    lattvers:     'I5O200-19.08.2022'     # lattice version: IN 5, out 200
-    mapping:      &map    base             # [t3d, simple, oxal, base, ttf, dyn]
+    lattvers:     'working version'       # lattice version: IN 5, out 200
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -85,7 +86,7 @@ ELEMENTS:
     Pcc:                       # ID   (tracker.py marker)
         type:     MRK          # MRK class
         action:   pcrcut       # Pointcare cut
-        active:   True         # action activated
+        active:   False        # action activated
         # prefix:   frames     # base dir of frames
         abscissa: z            # x axis
         ordinate: zp           # y axis
@@ -151,7 +152,7 @@ ELEMENTS:
         gap:      0.046        # [m] gap length
         aperture: *aper        # [m] aperture radius
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
-        mapping:  *map          # mapping in cavities
+        mapping:  *map         # mapping in cavities
         sec:      HE           # section 
 
 # ...........................................................................................
@@ -162,7 +163,7 @@ ELEMENTS:
 # LATTICE is LINE
 # ===========================================================================================
 SEGMENTS:   
-    NIL_SEG:     [1,[]]
+    NIL_SEG:     [1,[]]  # placeholder
 # group ELEMENTs into SEGMENTs:
 # Syntax: [number[node,...,node]]
 # the list [node,...,node] is repeated number times
@@ -185,25 +186,27 @@ SEGMENTS:
     GAPHarr:             [10,[GAPH]]
 # ===========================================================================================
 CELLS:    
-    NIL_CELL:    [1,[]]
+    NIL_CELL:    [1,[]] # placeholder
 # group SEGMENTS into CELLs: order given by list [...] syntax
 #...........................................................................................
     LE_CELL:   [1,[SGLi, GAPLarr, D10, GAPLarr, SGLm, GAPLarr, D10, GAPLarr, SGLf]] 
     HE-CELL:   [1,[SGHi, GAPHarr, D10, GAPHarr, SGHm, GAPHarr, D10, GAPHarr, SGHf]] 
 # ===========================================================================================
 SECTIONS:
-    NIL_SEC:    [1,[]]
+    NIL_SEC:    [1,[]] # placeholder
 # group CELLs into SECTIONS
 #...........................................................................................
-    SECL:      [25,[LE_CELL]]
-    SECH:      [137,[HE-CELL]]
+    # SECL:      [25,[LE_CELL,Psp]]
+    SECL:      [25,[LE_CELL,Pcc]]
+    SECH:      [127,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Pcc,SECL,Pcc,SECH,Pcc]]
-    # LINE:   [1,[Psp,SECL,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
+
 
   
