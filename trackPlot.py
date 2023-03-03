@@ -164,7 +164,7 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
         raise ValueError("x and y must be the same size")
 
     cov = NP.cov(x, y)
-    pearson = cov[0, 1]/NP.sqrt(cov[0, 0] * cov[1, 1])
+    pearson = cov[0, 1]/NP.sqrt(cov[0, 0]*cov[1, 1])
     # Using a special case to obtain the eigenvalues of this
     # two-dimensionl dataset.
     ell_radius_x = NP.sqrt(1 + pearson)

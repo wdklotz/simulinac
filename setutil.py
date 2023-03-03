@@ -53,7 +53,7 @@ DEBUG_OFF = DEB.get('OFF')
 # MDIM: dimension of matrices
 MDIM = 10
 class Ktp(IntEnum):
-    """ Koordinaten fuer track points (1x10)"""
+    """ -K-oordinaten -t-rack -p-oints (1x10)"""
     x  = 0     # x
     xp = 1     # x'
     y  = 2     # y
@@ -65,7 +65,7 @@ class Ktp(IntEnum):
     S  = 8     # S = Integral(dS)
     dS = 9     # const 1
 class Ktw(IntEnum):
-    """ Koordinaten fuer twiss vector (1x10) """
+    """ -K-oordinaten -tw-iss vector (1x10) """
     bx = 0      # twiss-beta
     ax = 1      # twiss-alpha
     gx = 2      # twiss-gamma

@@ -188,8 +188,6 @@ def Gauss2D(twx, twy, twz, npart, mask, tk):
         track.addpoint(tpoint)
         tracklist.append(track)
     return tracklist
-        
-
 def Gauss1D(twx, twy, twz, npart, mask, tk):
     """ 
     Generates a bunch with 1D gaussian distribution 

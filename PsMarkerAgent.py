@@ -18,9 +18,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from math import degrees, sqrt, atan
+from math import sqrt
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
+import numpy as np
 
 from elements import MRK
 from setutil import Twiss, PARAMS, Ktw, FLAGS, Proton, DEBUG_ON, DEBUG_OFF
@@ -39,52 +41,75 @@ class PsMarkerAgent(MRK):
         ellipse_plot(self,scale=0.5)
 
 def ellipse_plot(node,scale=1.):   
-    def convert(xy,alfa,beta,emit):
-        """ convert twiss parameters to plot parameters """
-        gamma = (1.+alfa**2)/beta
-        tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))  # see CERN's Formelsammlung
-        a = sqrt(emit*beta)
-        b = sqrt(emit/beta)
-        # return matplot.patches.Ellipse(origin=xy,width=a,height=b,angle=tilt) arguments
-        return (xy,a,b,tilt)
+    def ellipse_and_tranformation(a,b,g,eps,color):
+        # https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html
+        """
+        IN
+            a twiss alfa
+            b twiss beta
+            g twis gamma
+            eps emittance
+            color
+        
+        OUT
+            sigx sigama abcissa
+            sigy sigma ordinate
+            ellipse
+            transformation
+        """
+        # covariance matrix from twiss parameters
+        cov = np.array([[b,-a],[-a,g]])*eps
+        sigx = sqrt(cov[0,0])
+        sigy = sqrt(cov[1,1])
+        # Pearson correlation coefficient
+        pearson = cov[0, 1]/(sigx*sigy)
+        ra  = sqrt(1 + pearson)
+        rb  = sqrt(1 - pearson)
+        # ellipse
+        elli = Ellipse((0,0),width=2*rb, height=2*ra, color=color, fill=False)
+        # transformation: scaling 1 sigma, rotation 45 deg
+        transformation = transforms.Affine2D().rotate_deg(45.).scale(sigx,sigy).translate(0.,0.)
+        return (sigx,sigy,elli,transformation)
 
     #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
     """ display x- and y-phase-space ellipses """
     twiss = node.twiss      # alpha, beta, gamma
     s = node.position[1]    # position
 
-    ax = twiss[Ktw.ax]
-    bx = twiss[Ktw.bx]
-    ay = twiss[Ktw.ay]
-    by = twiss[Ktw.by]
-
-    org = (0,0)
-    ellix = convert(org,ax,bx,PARAMS['emitx_i'])  # emittance
-    elliy = convert(org,ay,by,PARAMS['emity_i'])
-
-    ellipses = [Ellipse(*ellix,color='blue',fill=False),Ellipse(*elliy,color='red',fill=False)]   # classicla Snyder&Courant ellipse
-
-    fig, ax = plt.subplots()
-    fig.suptitle('phase-space {{[m],[rad]}} @ s={:6.2f}[m]'.format(s))
-    fig.legend(ellipses,("{x,x'}","{y,y'}"),loc=1)
-    fig.suptitle('phase-space {{[m],[rad]}} @ s={:6.2f}[m]'.format(s))
-    fig.legend(ellipses,("{x,x'}","{y,y'}"),loc=1)
+    # x,x'
+    a = twiss[Ktw.ax]
+    b = twiss[Ktw.bx]
+    g = twiss[Ktw.gx]
+    eps = PARAMS['emitx_i']*1e6
+    xlim,xplim,ellix,transx = ellipse_and_tranformation(a,b,g,eps,'blue')
     
-    for e in ellipses:
-        # ax.add_artist(e)
-        ax.add_patch(e)
-        e.set_clip_box(ax.bbox)
+    # y,y'
+    a = twiss[Ktw.ay]
+    b = twiss[Ktw.by]
+    g = twiss[Ktw.gy]
+    eps = PARAMS['emity_i']*1e6
+    ylim,yplim,elliy,transy = ellipse_and_tranformation(a,b,g,eps,'red')
 
-    x1 = sqrt(PARAMS['emitx_i']*PARAMS['betax_i'])
-    x2 = sqrt(PARAMS['emity_i']*PARAMS['betay_i'])
-    xmax = max(x1,x2)
-    gammax = (1.+PARAMS['alfax_i']**2)/PARAMS['betax_i']
-    gammay = (1.+PARAMS['alfay_i']**2)/PARAMS['betay_i']
-    y1 = sqrt(PARAMS['emitx_i']*gammax)
-    y2 = sqrt(PARAMS['emity_i']*gammay)
-    ymax = max(y1,y2)
-    plt.xlim(-xmax*scale, xmax*scale)
-    plt.ylim(-ymax*scale, ymax*scale)
+    trafo     = [ transx, transy ]
+    ellipses  = [ ellix, elliy ]
+    
+    fig, ax = plt.subplots(figsize=(5,5))
+    fig.suptitle('phase-space {{[mm],[mrad]}} @ s={:6.2f}[m]'.format(s))
+    ax.legend(ellipses,("{x,x'}","{y,y'}"),loc='best')
+    ax.axvline(c='grey', lw=1)
+    ax.axhline(c='grey', lw=1)
+
+    for i in range(len(ellipses)):
+        e = ellipses[i]
+        trans = trafo[i]
+        e.set_transform(trans+ax.transData)
+        ax.add_patch(e)
+
+    margin = 1.10          # %
+    limx=max(xlim,ylim)*margin
+    limy=max(xplim,yplim)*margin
+    plt.xlim(-limx,limx)
+    plt.ylim(-limy,limy)
     # plt.show()    # do not show now! will be done by simu.py
     return
 
