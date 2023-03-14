@@ -45,7 +45,7 @@
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
  //           "args": ["--file","FODO.yml"]
-            "args": ["--file","RefRuns/simuIN_REF.yml"]
+            "args": ["--file","yml/trackerIN.yml"]
 },
         {
             "name": "tracker",

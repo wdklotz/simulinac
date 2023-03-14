@@ -497,8 +497,8 @@ class Lattice(object):
             y1,y1p = soll_test(PARAMS['twiss_y_i'].y2())
             x4,x4p = soll_test(PARAMS['twiss_x_i'].y3())
             y4,y4p = soll_test(PARAMS['twiss_y_i'].y3())
-        z0     = soll_test(PARAMS.get('z0',0.))    # z0[m] from waccept
-        Dp2p0  = soll_test(PARAMS.get('Dp2p0',0.)) # dp/p0 from waccept
+        z0     = soll_test(PARAMS.get('z0',0.))    # z0[m] from waccept if possible
+        Dp2p0  = soll_test(PARAMS.get('Dp2p0',0.)) # dp/p0 from waccept if possible
         sz,szp = soll_test((0., Dp2p0)) # SIN like
         cz,czp = soll_test((z0, 0.))    # cOS like
         # INITIAL @ entrance
@@ -514,7 +514,6 @@ class Lattice(object):
 
         """ loop through lattice """
         for element in iter(self):
-            if isinstance(element,ELM.MRK): continue     # TODO skip markers, not a permanent solution
             particle = element.particle
             gamma    = particle.gamma
             tkin     = particle.tkin
@@ -590,8 +589,7 @@ class Lattice(object):
     @property
     def first_gap(self):
         """ return the 1st RF gap"""
-        node = -1
-        # for elm in self.seq:
+        node = None
         for elm in iter(self):
             if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
                 node = elm

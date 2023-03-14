@@ -375,8 +375,21 @@ def simulation(filepath):
     # descriptor
     PARAMS['descriptor'] = descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
     if descriptor != None:   print(descriptor)
+    #----------------------------------------------
+    # STEP 2: calculate run mode and longitudinal paramters at entrance
+    #----------------------------------------------
+    node1 = lattice.first_gap
+    if(node1 != None):
+        wacc = node1.waccept()
+        # Update PARAMS
+        for k,v in wacc.items():
+            PARAMS[k] = v
+        FLAGS['accON'] = True
+    else:
+        FLAGS['accON'] = False   # no rf-gaps
+    FLAGS['dWf'] = 1 if FLAGS['accON'] else 0    # acceleration on/off flag 1=on,0=off
     # run-mode
-    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
+    twoflag = (FLAGS.get('accON'), FLAGS.get('periodic',False))
     if twoflag == (True,True):   mode=0
     if twoflag == (True,False):  mode=1
     if twoflag == (False,True):  mode=2
@@ -385,16 +398,6 @@ def simulation(filepath):
     print('running in "'+ RUN_MODE[mode] + '" mode')
     print("---------------------------------------------------------------------------")
     print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
-    #----------------------------------------------
-    # STEP 2: calculate longitudinal paramters at entrance
-    #----------------------------------------------
-    if FLAGS['mode'] == 0 or FLAGS['mode'] == 1:
-        res = lattice.first_gap.waccept()
-        # Update PARAMS
-        for k,v in res.items():
-            PARAMS[k] = v
-    else:
-        pass   # no gap no acceleration
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------

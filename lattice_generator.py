@@ -264,7 +264,6 @@ def factory(input_file,stop=None):
             mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
         )
         """ internal FLAGs """        
-        res['dWf'] = 1 if res['accON'] else 0    # acceleration on/off flag 1=on,0=off
         res['non_linear_mapping'] = False
         return res
     def proces_parameters(parameters):
@@ -278,7 +277,7 @@ def factory(input_file,stop=None):
         DW2W_in = parameters.get('DW2W',0.01) # default 1%
         DT2T_in = parameters.get('DT2T',DW2W_in) # alias DT2T=DW2W
         res['DT2T']             = DT2T_in
-        res['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
+        res['Dphi0']            = radians(parameters.get('DPHI0',10.)) # default [rad]
         # transverse beam parameters
         res['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
         res['betax_i']          = parameters.get('betax_i',1.) # [m]
@@ -311,7 +310,6 @@ def factory(input_file,stop=None):
         res['emitz_i']   = None
         res['alfaz_i']   = None
         res['betaz_i']   = None
-        res['z0']        = None
         return res
     def proces_elements(elements):
         """fills global ELEMENTS"""
