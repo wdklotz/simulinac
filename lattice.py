@@ -586,6 +586,21 @@ class Lattice(object):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
             self.add_node(element)
+        node1 = lattice.first_gap
+    @property
+    def accON(self):
+        node1 = self.first_gap
+        if(node1 != None):
+            wacc = node1.waccept()
+            # Update PARAMS
+            for k,v in wacc.items():
+                PARAMS[k] = v
+            accON = True
+            FLAGS['dWf'] = 1
+        else:
+            accON = False     # no rf-gaps
+            FLAGS['dWf'] = 0  # acceleration on/off flag 1=on,0=off
+        return accON
     @property
     def first_gap(self):
         """ return the 1st RF gap"""

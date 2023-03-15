@@ -126,9 +126,7 @@ def display0(*args):
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 def display1(*args):
-    """
-    beta functions w/o longitudinal motion
-    """
+    """ beta functions w/o longitudinal motion """
     #----------*----------*   # unpack
     twiss_func = args[0]
     lat_plot   = args[3]
@@ -149,7 +147,9 @@ def display1(*args):
     splot111.set_title('beta functions')
     plt.plot(s,bx ,label=r'$\beta$x [m]',color='red', linestyle='-')
     plt.plot(s,by ,label=r'$\beta$y [m]',color='blue',linestyle='-')
-    plt.plot(vis_abszisse,vis_ordinate,label='',color='black')
+    vscale=splot111.axis()[3]*0.25
+    viseoz = [x*vscale for x in vis_ordinate]
+    plt.plot(vis_abszisse,viseoz,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
 def display3(*args):
@@ -378,18 +378,9 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 2: calculate run mode and longitudinal paramters at entrance
     #----------------------------------------------
-    node1 = lattice.first_gap
-    if(node1 != None):
-        wacc = node1.waccept()
-        # Update PARAMS
-        for k,v in wacc.items():
-            PARAMS[k] = v
-        FLAGS['accON'] = True
-    else:
-        FLAGS['accON'] = False   # no rf-gaps
-    FLAGS['dWf'] = 1 if FLAGS['accON'] else 0    # acceleration on/off flag 1=on,0=off
+    FLAGS['accON'] = lattice.accON
     # run-mode
-    twoflag = (FLAGS.get('accON'), FLAGS.get('periodic',False))
+    twoflag = (FLAGS.get('accON'), FLAGS.get('periodic'))
     if twoflag == (True,True):   mode=0
     if twoflag == (True,False):  mode=1
     if twoflag == (False,True):  mode=2

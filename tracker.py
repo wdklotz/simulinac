@@ -272,30 +272,23 @@ def tracker(input_file,options):
     """
     npart = options['particles_per_bunch']
     print('-----------------------track_bunch with {} particles---'.format(npart))
-    # run_mode
-    twoflag = (FLAGS.get('accON',True), FLAGS.get('periodic',False))
-    if twoflag == (True,True):   mode=0
-    if twoflag == (True,False):  mode=1
-    if twoflag == (False,True):  mode=2
-    if twoflag == (False,False): mode=3
-    FLAGS['mode'] = mode
-    print('running in "'+ RUN_MODE[mode] + '" mode')
     # make lattice
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
     # w acceptance
-    if FLAGS['accON']:
-        res = lattice.first_gap.waccept()
-        # Update PARAMS
-        for k,v in res.items():
-            PARAMS[k] = v
-    else:
+    FLAGS['accON'] = lattice.accON
+    if not FLAGS['accON']:
         # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
-    t1       = time.process_time()
+    # run_mode
+    mode = 1
+    FLAGS['mode'] = mode
+    print('running in "'+ RUN_MODE[mode] + '" mode')
 
+    t1       = time.process_time()
+    
     # pull more options
     show     = options['show']
     save     = options['save']
@@ -315,7 +308,7 @@ def tracker(input_file,options):
     # {x,xp}   standard units
     twx = PARAMS['twiss_x_i']
     betax_i,alfax_i,gammax_i,emitx_i = twx()
-    DEBUG_ON(f'betax-i={betax_i}, alfax-i={alfax_i}, gammax-i={gammax_i}')
+    DEBUG_OFF(f'betax-i={betax_i}, alfax-i={alfax_i}, gammax-i={gammax_i}')
     sigma_x   = twx.sigmaH()
     sigma_xp  = twx.sigmaV()
     # {y,yp}

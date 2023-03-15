@@ -250,7 +250,6 @@ def factory(input_file,stop=None):
     def proces_flags(flags):
         """ external FLAGs """        
         res = dict(
-            accON    = flags.get('accON',True),               # acceleration ON
             periodic = flags.get('periodic',False),           # periodic lattice? default
             egf      = flags.get('egf',False),                # emittance grow flag default
             sigma    = flags.get('sigma',True),               # beam sizes by sigma-tracking
