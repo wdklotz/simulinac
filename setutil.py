@@ -79,7 +79,7 @@ class Ktw(IntEnum):
 # for compatability with elder code TODO: replace!
 XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
 ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
-RUN_MODE = ('ring with cavities','linac','ring w/o cavities','transfer line')
+RUN_MODE = {0:'ring with cavities', 1:'linac', 2:'ring w/o cavities', 3:'line w/o cavities'}
 FLAGS    = dict(
     # lattice_generator may override some of these FLAGs
     dWf = 1

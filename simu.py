@@ -381,12 +381,12 @@ def simulation(filepath):
     FLAGS['accON'] = lattice.accON
     # run-mode
     twoflag = (FLAGS.get('accON'), FLAGS.get('periodic'))
-    if twoflag == (True,True):   mode=0
-    if twoflag == (True,False):  mode=1
-    if twoflag == (False,True):  mode=2
-    if twoflag == (False,False): mode=3
+    if twoflag == (True,True):   mode= RUN_MODE[0]
+    if twoflag == (True,False):  mode= RUN_MODE[1]
+    if twoflag == (False,True):  mode= RUN_MODE[2]
+    if twoflag == (False,False): mode= RUN_MODE[3]
     FLAGS['mode'] = mode
-    print('running in "'+ RUN_MODE[mode] + '" mode')
+    print(f'running in \'{FLAGS["mode"]}\' mode')
     print("---------------------------------------------------------------------------")
     print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
     #----------------------------------------------

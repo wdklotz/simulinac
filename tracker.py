@@ -271,7 +271,6 @@ def tracker(input_file,options):
         Prepare and launch tracking  
     """
     npart = options['particles_per_bunch']
-    print('-----------------------track_bunch with {} particles---'.format(npart))
     # make lattice
     t0       = time.process_time()
     filepath = input_file
@@ -283,12 +282,12 @@ def tracker(input_file,options):
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
     # run_mode
-    mode = 1
-    FLAGS['mode'] = mode
-    print('running in "'+ RUN_MODE[mode] + '" mode')
+    FLAGS['mode'] = RUN_MODE[1]
+    print(f'running in \'{FLAGS["mode"]}\' mode')
+    print('-----------------------track_bunch with {} particles---'.format(npart))
 
     t1       = time.process_time()
-    
+
     # pull more options
     show     = options['show']
     save     = options['save']

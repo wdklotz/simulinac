@@ -109,7 +109,6 @@ def instanciate_element(item):
                 mapping = attributes.get('mapping','t3d')
             UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
                 sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
@@ -151,7 +150,6 @@ def instanciate_element(item):
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = attributes.get('mapping','t3d')
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                UTIL.FLAGS['non_linear_mapping'] = True
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
                 sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
@@ -264,19 +262,29 @@ def factory(input_file,stop=None):
         )
         """ internal FLAGs """        
         res['non_linear_mapping'] = False
+        if res['mapping'] == 'ttf' or res['mapping'] == 'base' or res['mapping'] == 'dyn': 
+            res['non_linear_mapping'] = True
         return res
     def proces_parameters(parameters):
         """ external parameters and their default values """
         res = dict()
         # kinetic energy @ injection
-        W_in  = parameters.get("Win",UTIL.PARAMS['injection_energy']) # default PARAMS['injection_energy']
-        tk_in = parameters.get('Tkin',W_in) # alias Tkin=Win
-        res['injection_energy'] = tk_in 
-        # longitudinal in {Dphi,w}-space
-        DW2W_in = parameters.get('DW2W',0.01) # default 1%
-        DT2T_in = parameters.get('DT2T',DW2W_in) # alias DT2T=DW2W
-        res['DT2T']             = DT2T_in
-        res['Dphi0']            = radians(parameters.get('DPHI0',10.)) # default [rad]
+        W_i   = parameters.get("Win",None) 
+        Tk_i  = parameters.get("Tkin",None) 
+        res['injection_energy']     = UTIL.PARAMS['injection_energy']  # default is 50 MeV
+        if W_i != None:
+            res['injection_energy'] = W_i
+        elif Tk_i != None:
+            res['injection_energy'] = Tk_i
+        # longitudinal @ injection in {Dphi,w}-space
+        DW2W_i = parameters.get('DW2W',None) 
+        DT2T_i = parameters.get('DT2T',None) 
+        res['DT2T']    = 0.01 # default 1%
+        if DW2W_i != None:
+            res['DT2T'] = DW2W_i
+        elif DT2T_i != None:
+            res['DT2T'] = DT2T_i
+        res['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
         # transverse beam parameters
         res['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
         res['betax_i']          = parameters.get('betax_i',1.) # [m]
@@ -285,8 +293,8 @@ def factory(input_file,stop=None):
         res['betay_i']          = parameters.get('betay_i',1.)
         res['alfay_i']          = parameters.get('alfay_i',0.)
         # transverse Twiss @ entrance
-        res['twiss_x_i'] = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
-        res['twiss_y_i'] = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
+        res['twiss_x_i']        = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
+        res['twiss_y_i']        = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
         # supplemental global parameters
         res['nbsigma']          = parameters.get('nbsigma',2)
         res['lattice_version']  = parameters.get('lattvers','not given')
@@ -295,7 +303,7 @@ def factory(input_file,stop=None):
         # longitudinal emittance @ entrance
         Dphi0   = res['Dphi0']
         DT2T    = res['DT2T']
-        T       = UTIL.PARAMS['injection_energy']
+        T       = res['injection_energy']
         E0      = UTIL.PARAMS['proton_mass']
         w0      = T/E0*DT2T # Wrangler's definition of w (pp.176)
         emit_w  = Dphi0 * w0 # emittance in {Dphi,w}-space
@@ -305,7 +313,7 @@ def factory(input_file,stop=None):
         res['betaw_i']  = emit_w/w0**2
         # longitudinal TWiss @ entrance
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
-        # set parameters that will be caculated later (f.i. waccept) to None
+        # set parameters that will be caculated by waccept
         res['emitz_i']   = None
         res['alfaz_i']   = None
         res['betaz_i']   = None
