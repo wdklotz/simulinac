@@ -32,9 +32,9 @@ This file is part of the SIMULINAC code
 """
 import sys,os
 # for PyQt
-# import PyQt5            
+# import PyQt5
 # import matplotlib
-# matplotlib.use("Qt5Agg") 
+# matplotlib.use("Qt5Agg")
 # for Tk
 import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
 # NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
@@ -356,7 +356,7 @@ def simulation(filepath):
 
             if FLAGS['bucket']:
                 first_gap_node = lattice.first_gap
-                if first_gap_node != None: 
+                if first_gap_node != None:
                     separatrix.bucket(first_gap_node) # separatrix
                 else:
                     print("No 1st rg-gap in lattice? Can't plot W-acceptance.")
@@ -404,7 +404,7 @@ def simulation(filepath):
     # Update PARAMS
     for k,v in res.items():
         PARAMS[k] = v
-    #---------------------------------------------- 
+    #----------------------------------------------
     # STEP 5: collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
@@ -423,10 +423,11 @@ def simulation(filepath):
                 kv['PARAMS'].append({key: PARAMS[key]})
         for key in SUMMARY:
             kv['SUMMARY'].append({key: SUMMARY[key]})
-        print('\n\n-----string-----')
+        print('\n\n-----as string-----')
         print(kv)
-        print('\n\n-----JSON-----')
-        print(json.dumps(kv))
+        print('-----simuOUT.json written-----')
+        with open("simuOUT.json",'w') as fileobject:
+            fileobject.write(json.dumps(kv))
     else:
         show_data_from_elements() #...................................show ELEMENT attributes
         dictprnt(SUMMARY,text='Summary') #............................show summary
@@ -453,11 +454,11 @@ if __name__ == '__main__':
     DEBUG_OFF(args)
 
     print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
- 
+
     # adapt to legacy code which uses 'Args'
     Args = {}
     tmpl  = args['tmpl']
-    run   = args['run'] 
+    run   = args['run']
     Args['mode']  = 'no_m4' if tmpl == None else 'm4'
     Args['file']  = args['file']
     Args['tmpl']  = ''
@@ -487,7 +488,7 @@ if __name__ == '__main__':
             macros_file   = Args['macro']
             template_file = Args['tmpl']
             # launch macros script with bash
-            command = "chmod +x {0};{1} {2} {3}".format(macros_file, macros_file, template_file, input_file)            
+            command = "chmod +x {0};{1} {2} {3}".format(macros_file, macros_file, template_file, input_file)
             stat = os.system(command)
             if stat != 0:
                 print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
