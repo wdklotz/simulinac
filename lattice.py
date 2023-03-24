@@ -332,13 +332,13 @@ class Lattice(object):
         mess = ""
         if nlFLAG:
             mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
-            mess += 'sigma ENVELOPES from TWISS paramweters'
+            mess += 'sigma ENVELOPES from TWISS parameters'
         elif not nlFLAG:
             if sFLAG:
                 mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
                 sigFLAG = False
             else:
-                mess += 'sigma ENVELOPES from TWISS paramweters'
+                mess += 'sigma ENVELOPES from TWISS parameters'
         if not FLAGS['KVout']: 
             print(mess)
         

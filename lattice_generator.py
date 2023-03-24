@@ -245,7 +245,7 @@ def instanciate_element(item):
     return instance
 def factory(input_file,stop=None):
     """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
-    def proces_flags(flags):
+    def process_flags(flags):
         """ external FLAGs """        
         res = dict(
             periodic = flags.get('periodic',False),           # periodic lattice? default
@@ -265,10 +265,10 @@ def factory(input_file,stop=None):
         if res['mapping'] == 'ttf' or res['mapping'] == 'base' or res['mapping'] == 'dyn': 
             res['non_linear_mapping'] = True
         return res
-    def proces_parameters(parameters):
+    def process_parameters(parameters):
         """ external parameters and their default values """
         res = dict()
-        # kinetic energy @ injection
+        """ kinetic energy @ injection """
         W_i   = parameters.get("Win",None) 
         Tk_i  = parameters.get("Tkin",None) 
         res['injection_energy']     = UTIL.PARAMS['injection_energy']  # default is 50 MeV
@@ -276,7 +276,8 @@ def factory(input_file,stop=None):
             res['injection_energy'] = W_i
         elif Tk_i != None:
             res['injection_energy'] = Tk_i
-        # longitudinal @ injection in {Dphi,w}-space
+
+        """ longitudinal energy spread @ injection: {Dphi,w}-space """
         DW2W_i = parameters.get('DW2W',None) 
         DT2T_i = parameters.get('DT2T',None) 
         res['DT2T']    = 0.01 # default 1%
@@ -285,7 +286,8 @@ def factory(input_file,stop=None):
         elif DT2T_i != None:
             res['DT2T'] = DT2T_i
         res['Dphi0']    = radians(parameters.get('DPHI0',10.)) # default [rad]
-        # transverse beam parameters
+
+        """ transverse beam parameters """
         res['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
         res['betax_i']          = parameters.get('betax_i',1.) # [m]
         res['alfax_i']          = parameters.get('alfax_i',0.)
@@ -300,7 +302,8 @@ def factory(input_file,stop=None):
         res['lattice_version']  = parameters.get('lattvers','not given')
         res['thins']            = parameters.get('thins',1)
         res['input_file']       = None
-        # longitudinal emittance @ entrance
+        
+        """ longitudinal emittance @ entrance """
         Dphi0   = res['Dphi0']
         DT2T    = res['DT2T']
         T       = res['injection_energy']
@@ -313,13 +316,14 @@ def factory(input_file,stop=None):
         res['betaw_i']  = emit_w/w0**2
         # longitudinal TWiss @ entrance
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
-        # set parameters that will be caculated by waccept
+
+        """ parameters that will be caculated by waccept """
         res['emitz_i']   = None
         res['alfaz_i']   = None
         res['betaz_i']   = None
         return res
-    def proces_elements(elements):
-        """fills global ELEMENTS"""
+    def process_elements(elements):
+        """ fills global ELEMENTS """
         return elements
     def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
@@ -359,24 +363,24 @@ def factory(input_file,stop=None):
     # call lattice parser, get results
     results = doInputParser(in_data)
 
-    flags = proces_flags(results.FLAGS)
+    flags = process_flags(results.FLAGS)
     for k,v in flags.items(): UTIL.FLAGS[k] = v
-    UTIL.DEBUG_OFF('global FLAGS after proces_flags():')
+    UTIL.DEBUG_OFF('global FLAGS after process_flags():')
     UTIL.DEBUG_OFF(UTIL.FLAGS)
 
-    parameters = proces_parameters(results.PARAMETERS)
+    parameters = process_parameters(results.PARAMETERS)
     parameters['input_file'] = input_file
     for k,v in parameters.items(): UTIL.PARAMS[k] = v
-    UTIL.DEBUG_OFF('global PARAMS after proces_parameters():')
+    UTIL.DEBUG_OFF('global PARAMS after process_parameters():')
     UTIL.DEBUG_OFF(UTIL.PARAMS)
 
-    elements = proces_elements(results.ELEMENTS)
+    elements = process_elements(results.ELEMENTS)
     UTIL.ELEMENTS = elements
-    UTIL.DEBUG_OFF('ELEMENTS after proces_elements():')
+    UTIL.DEBUG_OFF('ELEMENTS after process_elements():')
     UTIL.DEBUG_OFF(UTIL.ELEMENTS)
 
     lat_elementIDs = results.LAT_ELMIDs
-    UTIL.DEBUG_OFF('LAT_ELMIDs after proces_elements():')
+    UTIL.DEBUG_OFF('LAT_ELMIDs after process_elements():')
     UTIL.DEBUG_OFF(lat_elementIDs)
     lattice = make_lattice(lat_elementIDs)
     # end of factory. return full Lattice object.
