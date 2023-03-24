@@ -6,7 +6,7 @@
         {
             "label": "simu",
             "type": "shell",
-            "command": "bash ~wdklotz/SIMULINAC/simuit",
+            "command": "python3 simu.py",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -16,11 +16,11 @@
         {
             "label": "tracker",
             "type": "shell",
-            "command": "bash ~wdklotz/SIMULINAC/trackit",
+            "command": "python3 tracker.py",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         }
     ]

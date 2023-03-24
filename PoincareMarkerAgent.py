@@ -36,7 +36,7 @@ class PoincareMarkerAgent(MRK):
         self.yaxis    = krows[ordinate]
         self.do_action = self.action if self.active else self.no_action # toggle
 
-    def add_track_point(self,track_point):
+    def appendPhaseSpace(self,track_point):
         self.tpoints.append(track_point)
     def action(self,*args): 
         """ Generate scatter plot of the poincrecut at this marker and dump it to a file """

@@ -71,8 +71,7 @@ def parse(in_data=None):
     if in_data != None:
         UTIL.DEBUG_OFF(in_data)
         PARTS = {}            
-        # descriptor = in_data['DESCRIPTOR'] if 'DESCRIPTOR' in in_data else None
-        descriptor = in_data.get('DESCRIPTOR')  # doing the dame as line above
+        descriptor = in_data.get('DESCRIPTOR')
         UTIL.DEBUG_OFF(descriptor)
 
         UTIL.DEBUG_OFF(HR)

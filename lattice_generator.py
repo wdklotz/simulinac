@@ -362,6 +362,7 @@ def factory(input_file,stop=None):
 
     # call lattice parser, get results
     results = doInputParser(in_data)
+    UTIL.PARAMS['descriptor'] = results.DESCRIPTOR  # get DESCRIPTOR from parsed results
 
     flags = process_flags(results.FLAGS)
     for k,v in flags.items(): UTIL.FLAGS[k] = v
