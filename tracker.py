@@ -22,11 +22,11 @@ This file is part of the SIMULINAC code
 #TODO: how to get the hokey stick?
 #TODO: check w-acceptance at each node entrance
 #TODO: no phase damping - why?
+
 import sys,os
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from string import Template
 from math import sqrt, degrees, radians, ceil
 import argparse
 import unittest
@@ -36,8 +36,9 @@ import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp
 from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
-import PoincareMarkerAgent as pcmkr
+from PoincareMarkerAgent import PoincareMarkerAgent
 from trackPlot import scatter11
+from lattice_parser2 import parse as getParseResult
 
 # max limits for track amplitudes
 xlim_max  = ylim_max  =  10.e-3
@@ -78,7 +79,7 @@ def frames(lattice, skip):
     frames = []
     # gather and count markers
     for node in iter(lattice):
-        if isinstance(node,pcmkr.PoincareMarkerAgent):
+        if isinstance(node,PoincareMarkerAgent):
             agent = node
             agent_cnt += 1
             if agent_cnt%skip == 0:
@@ -151,17 +152,17 @@ def loss_plot(lattice,live_lost):
     ax2.plot(vis_abszisse,vis_zero,color='gray')
     plt.show()
     return
-def progress(tx):
-    """ Show progress """
-    template = Template('$tx1 $tx2 $tx3 $tx4')
-    res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
-    # print('\r{}\r'.format(res),end="")
-    sys.stdout.write('{}\r'.format(res))
+                                        # def progress(tx):
+                                        #     """ Show progress """
+                                        #     template = Template('$tx1 $tx2 $tx3 $tx4')
+                                        #     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
+                                            # print('\r{}\r'.format(res),end="")
+                                            # sys.stdout.write('{}\r'.format(res))
 def track_node(node,particle,options):
     """ Tracks a particle through a node """
     def norm(track):
         track_norm = \
-        sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
+            sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
         return track_norm > limit
     
     track   = particle.track
@@ -176,7 +177,6 @@ def track_node(node,particle,options):
         s = last_tp()[8]
         print('@map in track_node: {} at s={:6.2f} [m]'.format(reason,s))
         lost = True
-        # track.removepoint(last_tp)   done in track()?
         particle.lost = lost
         return lost
 
@@ -184,9 +184,8 @@ def track_node(node,particle,options):
     if not FLAGS['useaper']:
         if norm(last_tp()):
             lost = True
-            # track.removepoint(last_tp)   done in track()?
             particle.lost = lost
-            return
+            return lost
 
     # check Dp2p-acceptance
     if FLAGS['useaper']:
@@ -210,11 +209,11 @@ def track_node(node,particle,options):
     # if we look for losses we keep all track points
     if not lost:
         if track.nbpoints() > 1 and not options['losses']:
-            # !!DISCARD!! last point
+            # !!DISCARD!! last point (losses=False)
             track.removepoint(last_tp)
         track.addpoint(new_tp)
-        if isinstance(node,pcmkr.PoincareMarkerAgent):
-            node.add_track_point(new_tp)
+        if isinstance(node,PoincareMarkerAgent):
+            node.appendPhaseSpaceKs(new_tp)
     particle.lost = lost
     return lost
 def track(lattice,bunch,options):
@@ -248,27 +247,9 @@ def track(lattice,bunch,options):
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})'.format(live,nlost))
     return (bunch,lbunch)
-def track_soll(lattice):
-    """
-    Track the reference particle through the lattice.
-    NEW: Energy adjustemenr is already done when the node is added to the lattice.
-    OLD: and redefines the lattice 
-    element parameters according to the energy of the accelerated reference particle.
-    """
-    soll_track  = Track()
-    tkIN        = lattice.injection_energy
-    position    = 0.
-    tp0         = Tpoint(np.array([ 0., 0., 0., 0., 0., 0., tkIN, 1., position, 1.]))
-    soll_track.addpoint(tp0)              # 1st track point
-    for node in iter(lattice):
-        pi = soll_track.getpoints()[-1]   # track point at entrance
-        pf = node.map(pi())
-        tpoint = Tpoint(pf)               # Tpoint at exit
-        soll_track.addpoint(tpoint)
-    return soll_track
 def tracker(input_file,options):
     """ 
-        Prepare and launch tracking  
+    Prepare and launch tracking  
     """
     npart = options['particles_per_bunch']
     # make lattice
@@ -287,7 +268,6 @@ def tracker(input_file,options):
     print('-----------------------track_bunch with {} particles---'.format(npart))
 
     t1       = time.process_time()
-
     # pull more options
     show     = options['show']
     save     = options['save']
@@ -302,35 +282,43 @@ def tracker(input_file,options):
     options['show']   = show
     options['save']   = save
     options['losses'] = losses
+    DEBUG_OFF(f'(show,save,skip,losses) = {(show,save,skip,losses)}')
 
     # bunch-configuration from PARAMS
     # {x,xp}   standard units
     twx = PARAMS['twiss_x_i']
     betax_i,alfax_i,gammax_i,emitx_i = twx()
-    DEBUG_OFF(f'betax-i={betax_i}, alfax-i={alfax_i}, gammax-i={gammax_i}')
     sigma_x   = twx.sigmaH()
     sigma_xp  = twx.sigmaV()
+    DEBUG_OFF(f'{{x}}x{{xp}} {twx()}')
+
     # {y,yp}
     twy = PARAMS['twiss_y_i']
     betay_i,alfay_i,gammay_i,emity_i = twy()
     sigma_y   = twy.sigmaH()
     sigma_yp  = twy.sigmaV()
+    DEBUG_OFF(f'{{y}}x{{yp}} {twy()}')
+
     # {z,Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
     betaz_i,alfaz_i,gammaz_i,emitz_i = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
+    DEBUG_OFF(f'{{z}}x{{Dp2p}} {twz()}')
     # Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
+
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
     betaw_i,alfaw_i,gammaw,emitw_i = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
+    DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
     wmax         = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
+    tracker_log['Description.............']           = PARAMS.get('descriptor')
     tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = PARAMS['Dp2pmax']*1.e2
@@ -361,19 +349,9 @@ def tracker(input_file,options):
     bunchfactory.setNumberOfParticles(npart)
     bunchfactory.setReferenceEnergy(PARAMS['injection_energy'])
     bunch = bunchfactory()
-
-    # launch tracking and show final with time
-    progress(('(track design)', '', '', ''))
-    t2 = time.process_time()
-    track_soll(lattice)  # <----- track soll
-    t3 = time.process_time()
-    # TmStamp.stamp('START TRACK')
-    progress(('(track design)', '(track bunch)', '', ''))
-
+    t2 = t3 = time.process_time()
     live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
     t4 = time.process_time()
-    # print(TmStamp.as_str())
-
     # make 2D projections
     if show:
         print('FILL PLOTS')
@@ -392,7 +370,6 @@ def tracker(input_file,options):
     print('total time     >> {:6.3f} [sec]'.format(t5-t0))
     print('parse lattice  >> {:6.3f} [sec] {:4.1f} [%]'.format((t1-t0),(t1-t0)/(t5-t0)*1.e2))
     print('generate bunch >> {:6.3f} [sec] {:4.1f} [%]'.format((t2-t1),(t2-t1)/(t5-t0)*1.e2))
-    print('track design   >> {:6.3f} [sec] {:4.1f} [%]'.format((t3-t2),(t3-t2)/(t5-t0)*1.e2))
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
@@ -404,7 +381,7 @@ class TestTracker(unittest.TestCase):
         print('---------------------test_soll_tracking---')
         sollTrack = track_soll(self.lattice)  # <----- track soll
         table = sollTrack.as_table()
-        DEBUG_OFF('sollTrack:\n'+table)
+        DEBUG_ON('sollTrack:\n'+table)
         first = sollTrack[0]
         last  = sollTrack[-1]
         DEBUG_ON('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))

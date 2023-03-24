@@ -31,16 +31,15 @@ This file is part of the SIMULINAC code
 #done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 """
 import sys,os
+import matplotlib
 # for PyQt
 # import PyQt5
-# import matplotlib
 # matplotlib.use("Qt5Agg")
 # for Tk
 import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
+matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
 # NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
 # NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
-import matplotlib
-# matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
 
 import matplotlib.pyplot as plt
 import json
@@ -373,8 +372,7 @@ def simulation(filepath):
     #----------------------------------------------
     lattice = factory(filepath)
     # descriptor
-    PARAMS['descriptor'] = descriptor = getParseResult().DESCRIPTOR  # get DESCRIPTOR from parsed results
-    if descriptor != None:   print(descriptor)
+    SUMMARY['Description'] = PARAMS['descriptor']
     #----------------------------------------------
     # STEP 2: calculate run mode and longitudinal paramters at entrance
     #----------------------------------------------
