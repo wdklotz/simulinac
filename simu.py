@@ -18,6 +18,7 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public Licensedir
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
+#TODO: shift initial beam paramters to bunch.py or new beam.py module -has 1st priority
 #TODO: Calulate cell phase advance sigma by integration - maybe
 #TODO: use normalized emittances ?
 #TODO: make new simu_manual.tex, README.md, check conversions.tex - later

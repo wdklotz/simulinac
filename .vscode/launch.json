@@ -45,7 +45,7 @@
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
  //           "args": ["--file","FODO.yml"]
-            "args": ["--file","yml/trackerIN.yml"]
+            "args": ["--file","SH/trackerIN_smh27-18.yml"]
 },
         {
             "name": "tracker",
@@ -54,7 +54,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "tracker.py",
-            "args": ["--p", "200", "--pcuts"]
+            "args": ["--p", "200", "--file",  "SH/trackerIN_smh27-54.yml"]
         },
         {
             "name": "setutil",

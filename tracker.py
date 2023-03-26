@@ -248,16 +248,16 @@ def track(lattice,bunch,options):
     print('\nTRACKING DONE (live particles {}, lost particles {})'.format(live,nlost))
     return (bunch,lbunch)
 def tracker(input_file,options):
-    """ 
-    Prepare and launch tracking  
-    """
+    """ Prepare and launch tracking  """
     npart = options['particles_per_bunch']
     # make lattice
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
+    DEBUG_ON(PARAMS['twiss_w_i']())
     # w acceptance
     FLAGS['accON'] = lattice.accON
+    DEBUG_ON(PARAMS['twiss_w_i']())
     if not FLAGS['accON']:
         # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
@@ -314,7 +314,7 @@ def tracker(input_file,options):
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
     DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
-    wmax         = PARAMS['wmax']
+    wmax        = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
@@ -338,7 +338,7 @@ def tracker(input_file,options):
     tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = (sigma_z,sigma_Dp2p)
     tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
     tracker_log['\u0394p/p0................[%]']      = Dp2p0*1.e2
-    tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T']
+    tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T_i']
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
