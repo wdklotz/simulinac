@@ -288,17 +288,19 @@ def factory(input_file,stop=None):
         res['Dphi0_i']    = radians(parameters.get('DPHI0',10.)) # default [rad]
 
         """ transverse beam parameters """
-        res['emitx_i']          = parameters.get('emitx_i',10E-6) # [m*rad]
-        res['betax_i']          = parameters.get('betax_i',1.) # [m]
+        res['emitx_i']          = parameters.get('emitx_i',1E-6) # [m*rad]
+        res['betax_i']          = parameters.get('betax_i',1.)   # [m]
         res['alfax_i']          = parameters.get('alfax_i',0.)
-        res['emity_i']          = parameters.get('emity_i',10E-6)
+        res['emity_i']          = parameters.get('emity_i',1E-6)
         res['betay_i']          = parameters.get('betay_i',1.)
         res['alfay_i']          = parameters.get('alfay_i',0.)
         # transverse Twiss @ entrance
         res['twiss_x_i']        = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
         res['twiss_y_i']        = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
+        UTIL.DEBUG_ON(f"twiss_x_i {res['twiss_x_i']()}")
+        UTIL.DEBUG_ON(f"twiss_y_i {res['twiss_y_i']()}")
         # supplemental global parameters
-        res['nbsigma']          = parameters.get('nbsigma',2)
+        res['nbsigma']          = parameters.get('nbsigma',3)
         res['lattice_version']  = parameters.get('lattvers','not given')
         res['thins']            = parameters.get('thins',1)
         res['input_file']       = None

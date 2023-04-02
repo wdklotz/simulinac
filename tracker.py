@@ -109,6 +109,7 @@ def projections1(lattice,live_lost):
         """
         DELTA='\u0394'
         PHI  ='\u03A6'
+        GAMMA='\u03b3'
 
         live,lost=live_lost
         # first,last gap
@@ -136,18 +137,18 @@ def projections1(lattice,live_lost):
              (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
              (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
               ]
-        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}W [deg-%]',scale=scale)
+        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}{GAMMA} [deg,%]',scale=scale)
     
     DELTA='\u0394'
 
     # longitudinal
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m]')
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm-%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
     projection_dPhidW(live_lost,lattice)
     # transverse
-    projection(live_lost,Ktp.x,Ktp.y, f"x-y' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
 
     plt.show()
     return
