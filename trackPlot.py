@@ -185,6 +185,26 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
+def scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax):
+    ax.scatter(xlive,ylive,s=1,color='blue')
+    ax.scatter(xloss,yloss,s=1,color='red')
+
+    plt.xlim(-xymax[0],xymax[0])
+    plt.ylim(-xymax[1],xymax[1])
+
+    ax.axvline(c='grey', lw=1)
+    ax.axhline(c='grey', lw=1)
+    ax.set_title(box_txt)
+
+    # "https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py"
+    # "https://matplotlib.org/3.1.1/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py"
+    x=NP.concatenate((xlive,xloss))
+    y=NP.concatenate((ylive,yloss))
+    confidence_ellipse(x,y,ax,n_std=1,label=r"$1\sigma$",edgecolor="firebrick")
+    confidence_ellipse(x,y,ax,n_std=2,label=r"$2\sigma$",edgecolor="fuchsia",linestyle="--")
+    confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="blue",linestyle=":")
+    ax.legend()
+    return ax
 
 def scatter11(live,lost,abscisse,ordinate,txt):
     """

@@ -90,7 +90,6 @@ PARAMS   = dict(
     elementarladung      = C.e, # [coulomb]
     proton_mass          = C.value('proton mass energy equivalent in MeV'),
     electron_mass        = C.value('electron mass energy equivalent in MeV'),
-    # map_set              = frozenset(['t3d','simple','base','ttf','dyn','oxal']),
     map_set              = ['t3d','simple','base','ttf','dyn','oxal'],
     warnmx               = 10, # max warnings
     injection_energy     = 50. # default
@@ -133,7 +132,7 @@ class Particle(object):
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
         self.lost       = False
-        # self.track      = None
+        self._track     = None
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:
@@ -148,8 +147,6 @@ class Particle(object):
         self.m0c2       = self.e0
         self.m0c3       = self.e0 * PARAMS['clight']
         self.betac      = self.v
-        # self.E          = self.e
-        # self.T          = self.tkin
     def toString(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
@@ -175,6 +172,12 @@ class Proton(Particle):
     def __init__(self,tkin):
         super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')
         self.brho = 3.1297*self.gamma_beta
+        @property
+        def track(self):
+            return self._track
+        @track.setter
+        def track(self,value):
+            self._track=value
 class Electron(Particle):
     def __init__(self,tkin):
         super(Electron,self).__init__(tkin,PARAMS['electron_mass'],'electron')

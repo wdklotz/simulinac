@@ -610,6 +610,17 @@ class Lattice(object):
                 node = elm
                 break
         return node
+    @property
+    def last_gap(self):
+        """ return the last RF gap"""
+        self.toggle_iteration()
+        node = None
+        for elm in iter(self):
+            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
+                node = elm
+                break
+        self.toggle_iteration()
+        return node
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
         print('----------------------------------test_lattice_add_first_6_nodes')

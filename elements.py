@@ -27,6 +27,7 @@ import warnings
 from setutil import PARAMS, FLAGS, DEBUG_ON, DEBUG_OFF, colors
 from setutil import WConverter, Proton, I0, I1, arrprnt, Twiss
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
+from separatrix import w2phi
 
 # used about everywhere
 twopi = 2.*pi
@@ -750,11 +751,14 @@ class RFG(Node):
         return adjusted
     def waccept(self):
         """ 
-        Calculate longitudinal acceptance, i.e. phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
+        Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
         """
         DT2T      = PARAMS['DT2T_i']
+        Ez0       = self.EzAvg
+        ttf       = self.ttf
+        # ttf = 0.8
         E0T       = self.EzAvg*self.ttf  # [MV/m]
         phisoll   = self.phisoll         # [rad]
         lamb      = self.lamb            # [m]
@@ -765,26 +769,23 @@ class RFG(Node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
-        DEBUG_OFF("",dict(DT2T=DT2T,E0T=E0T,phisoll=phisoll,lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
+        DEBUG_OFF("waccept",dict(DT2T=DT2T,E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
         try:
-            # LARGE amplitude oscillations (T.Wangler pp. 175). w = Dgamma = DW/m0c2 normalized energy spread """
-            sq2l = 2.*E0T*gb**3*lamb*(phisoll*cos(phisoll)-sin(phisoll))/(pi*m0c2)
-            w0large = sqrt(sq2l)  # large amp. oscillation separatrix (T.Wangler 6.28)                                                                                                                                                                  
+            # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
+            DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
+            DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0large = -1
-            # print(ex)
-            # print(f'w0large=sqrt({sq2l})')
         try:
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
-            sq2s = 2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2)
-            w0small = sqrt(sq2s)
+            w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
+            DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0small = -1
-            # print(ex)
-            # print(f'w0small=sqrt({sq2l})')
         if w0large != -1: 
             wmax = w0large
         elif w0large == -1 and w0small != -1:
@@ -825,23 +826,22 @@ class RFG(Node):
         res =  dict (
                 # {Dphi,w}
                 emitw_i         = emitw_i,      # emittance{Dphi,w} [rad]
-                # Dphi0           = Dphi0,       # ellipse dphi-int (1/2 axis)
-                # betaw_i         = betaw_i,      # beta twiss [rad]
-                # alfaw_i         = alfaw_i,
                 wmax            = wmax,         # separatrix: large amp. oscillations
-                # w0              = w0,          # separatrix small amp. osscillations
-                omgl_0          = omgl_0,       # synchrotron oscillation [Hz]
-                # {z,Dp2p}
-                # emitz_i         = emitz_i,      # emittance {z,dp/p} space [m*rad]
-                # betaz_i         = betaz_i,      # twiss beta [m/rad]
-                # alphaz_i        = alfaz_i,
-                Dp2pmax         = Dp2pmax,     # max D/p on separatrix
+                Dp2pmax         = Dp2pmax,      # max D/p on separatrix
                 z0              = z0,           # ellipse z-int    (1/2 axis) [m]
-                Dp2p0           = Dp2p0,       # ellipse dp/p-int (1/2 axis)
-                # Dp2p_Acceptance = Dp2pmax,
+                Dp2p0           = Dp2p0,        # ellipse dp/p-int (1/2 axis)
                 zmax            = conv.DphiToz(2.*phisoll),  # Wrangler's approximation
+                DWmax           = wmax*m0c2,    # separatrix: max W in [MeV]
+                # Dphi0           = Dphi0,      # ellipse dphi-int (1/2 axis)
+                # betaw_i         = betaw_i,    # beta twiss [rad]
+                # alfaw_i         = alfaw_i,
+                # w0              = w0,         # separatrix small amp. osscillations
+                # {z,Dp2p}
+                # emitz_i         = emitz_i,    # emittance {z,dp/p} space [m*rad]
+                # betaz_i         = betaz_i,    # twiss beta [m/rad]
+                # alphaz_i        = alfaz_i,
                 # {Dphi,DW}
-                DWmax           = wmax*m0c2     # separatrix: max W in [MeV]
+                omgl_0            = omgl_0      # synchrotron oscillation [Hz]
                 )
         # longitudinal Twiss in {z,Dp2p} space
         # res['twiss_w_i'] = Twiss(betaw_i, alfaw_i, emitw_i)

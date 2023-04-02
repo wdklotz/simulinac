@@ -28,7 +28,8 @@ import matplotlib.pyplot as plt
 # TODO: uniform bucket fill ?
 class Tpoint(object):
     """  A track-point is an NP.array of 10 coordinates.
-         (0=x, 1=x', 2=y, 3=y', 4=z, 5=z', 6=T, 1, 8=S, 1) 
+        track coordinates:
+         (Ktp.x, Ktp.xp, Ktp.y, Ktp.yp, Ktp.z, Ktp.zp, Ktp.T, Ktp.dT=1, Ktp.S, Ktp.dS=1) 
     """
     def __init__(self, point=NP.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1])):
         self.point = point
@@ -84,43 +85,56 @@ class Bunch(object):
             yield particle
     def getparticles(self):             # particles in bunch
         return self._particles
-    def nbparticles(self):            # nbof particles in bunch
+    def nbparticles(self):              # nbof particles in bunch
         return len(self._particles)
-    def addparticle(self, particle):     # add particle to bunch
+    def addparticle(self, particle):    # add particle to bunch
         self._particles.append(particle)
     def removeparticle(self, particle):
         self._particles.remove(particle)
 class BunchFactory(object):
     """ BunchFactory creates a multiparticle bunch """
     def __init__(self):
-        self.distribution      = None
-        self.twiss             = None
-        self.numberofparticles = None
-        self.tk                = None
-        self.mask              = None
-    def setDistribution(self, value):
-        self.distribution = value
-    def setTwiss(self, value):
-        self.twiss = value
-    def setNumberOfParticles(self, value):
-        self.numberofparticles = value
-    def setReferenceEnergy(self, value):
-        self.tk = value
-    def setMask(self, value):
-        self.mask = value
+        # read props
+        self._distribution=Gauss2D
+        self._tk=PARAMS['injection_energy']
+        self._mask=NP.array((1,1,1,1,1,1))
+        # read/write props
+        self._twiss=None
+        self._nbparticles=None
+    @property
+    def distribution(self):
+        return self._distribution
+    @property
+    def twiss(self):
+        return self._twiss
+    @property
+    def numberOfParticles(self):
+        return self._nbparticles
+    @property
+    def referenceEnergy(self):
+        return self._tk
+    @property 
+    def mask(self):
+        return self._mask
+    @twiss.setter
+    def twiss(self, value):
+        self._twiss = value
+    @numberOfParticles.setter
+    def numberOfParticles(self, value):
+        self._nbparticles = value
     def __call__(self):
         bunch = Bunch()
-        if self.distribution.__name__ == 'Gauss2D':
-            initialtracklist = self.distribution(
-                *self.twiss, self.numberofparticles, self.mask, self.tk)
-        else:
-            print('{} distributions implemented!'.format(
-                self.distribution.__name__))
-            sys.exit(1)
-        for i in range(self.numberofparticles):
-            particle = Proton(50.)
+        initialTrackList = self.distribution(*self.twiss, self.numberOfParticles, self.mask, self.referenceEnergy)
+        """
+        bunch initialization
+            each particle starts with injection energy as reference energy
+            each particle gets a starting track from the bunch distribution
+            each track has the particle's reference energy in track coordiante Ktp.T
+        """
+        for i in range(self.numberOfParticles):
+            particle = Proton(self.referenceEnergy)  # should be injection energy
+            particle.track=initialTrackList[i]
             bunch.addparticle(particle)
-            particle.track = initialtracklist[i]
         return bunch
 def Gauss2D(twx, twy, twz, npart, mask, tk):
     """ 

@@ -33,12 +33,12 @@ import unittest
 
 from lattice_generator import factory
 import elements as ELM
-from setutil import PARAMS, FLAGS, dictprnt, Ktp
+from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter
 from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
 from PoincareMarkerAgent import PoincareMarkerAgent
-from trackPlot import scatter11
-from lattice_parser2 import parse as getParseResult
+from trackPlot import scatter11,scatterInOut
+# from lattice_parser2 import parse as getParseResult
 
 # max limits for track amplitudes
 xlim_max  = ylim_max  =  10.e-3
@@ -46,30 +46,109 @@ xplim_max = yplim_max =  10.e-3
 zlim_max  = zplim_max = 100.e-3
 limit     = sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
 
-def projections(live_lost):
-    """  2D phase space projections IN and OUT """
-    symbols = ("x","x'","y","y'","z","\u0394p/p")
-    # (x,xp)
-    abscisse = Ktp.x
-    ordinate = Ktp.xp
-    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    live,lost = live_lost
-    scatter11(live,lost,abscisse,ordinate,text)
-    # (y,yp) 
-    abscisse = Ktp.y
-    ordinate = Ktp.yp
-    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter11(live,lost,abscisse,ordinate,text)
-    # (x,y)
-    abscisse = Ktp.x
-    ordinate = Ktp.y
-    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter11(live,lost,abscisse,ordinate,text)
-    # (z,zp)
-    abscisse = Ktp.z
-    ordinate = Ktp.zp
-    text    = '{}-{}'.format(symbols[abscisse],symbols[ordinate])
-    scatter11(live,lost,abscisse,ordinate,text)
+def projections1(lattice,live_lost):
+    """ 2D projections of 6D phase space """
+    
+    def projection(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
+        """ projection: scatter plots at IN and OUT 
+            ix: track coordinate of plot abscissa
+            iy: track coordinate of plot ordinate
+            fig_text: annotation
+            live_lost: tuple of particle containers with (live,lost)-particles in bunch
+            scale: scales for IN and OUT plots [(xIN,yIN),(xOUT,yOUT)]
+        """
+        inout=dict(IN=0,OUT=-1)
+        live,lost=live_lost
+        nblive=live.nbparticles()
+        nblost=lost.nbparticles()
+
+        golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
+        plt.figure(num=fig_txt,constrained_layout=False, figsize=(width, height))
+
+        xlive=np.zeros(2)
+        ylive=np.zeros(2)
+        for particle in iter(live):
+            track=particle.track
+            point=track.getpoints()[inout['IN']]()
+            xlive=np.append(xlive,point[ix]*scale[inout['IN']][0])
+            ylive=np.append(ylive,point[iy]*scale[inout['IN']][1])
+        livemax=np.array([np.amax(np.abs(xlive)),np.amax(np.abs(ylive))])
+        xloss=np.zeros(2)
+        yloss=np.zeros(2)
+        for particle in iter(lost):
+            track=particle.track
+            point=track.getpoints()[inout['IN']]()
+            xloss=np.append(xloss,point[ix]*scale[inout['IN']][0])
+            yloss=np.append(yloss,point[iy]*scale[inout['IN']][1])
+        lossmax=np.array([np.amax(np.abs(xloss)),np.amax(np.abs(yloss))])
+        xymax=np.fmax(livemax,lossmax)*1.03 # add 3% margin
+        box_txt=f'IN {fig_txt} {nblive+nblost} particles'
+        ax=plt.subplot(121)
+        scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax)
+
+        xlive=np.zeros(2)
+        ylive=np.zeros(2)
+        for particle in iter(live):
+            track=particle.track
+            point=track.getpoints()[inout['OUT']]()
+            xlive=np.append(xlive,point[ix]*scale[inout['OUT']][0])
+            ylive=np.append(ylive,point[iy]*scale[inout['OUT']][1])
+        livemax=np.array([np.amax(np.abs(xlive)),np.amax(np.abs(ylive))])
+        box_txt=f'OUT {fig_txt} {nblive} particles'
+        ax=plt.subplot(122)
+        scatterInOut(xlive,ylive,np.zeros(2),np.zeros(2),xymax,box_txt,ax)
+        return ax
+
+    # TODO can this be made more legantly? This function is ugly and made me much pain.
+    def projection_dPhidW(live_lost,lattice):
+        """
+        To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
+        we need the reference energy of each particle and the gap's frequency.
+        We take the gap's frequency from the cavity.
+        We take the reference energy from a bunch particle that survived.
+        """
+        DELTA='\u0394'
+        PHI  ='\u03A6'
+
+        live,lost=live_lost
+        # first,last gap
+        in_gap= lattice.first_gap
+        out_gap=lattice.last_gap
+        DEBUG_OFF(f'1st gap: {in_gap.toString()}')
+        DEBUG_OFF(f'last gap: {out_gap.toString()}')
+        # frequencies of first,last
+        freqIN= in_gap.freq
+        freqOUT=out_gap.freq
+        # trak-points of particle 0 in bunch
+        points=live.getparticles()[0].track.getpoints()
+        # first track-point
+        point=points[0]
+        # kin energy of first track point
+        tkIN=point()[Ktp.T]
+        # last track-point
+        point=points[-1]
+        # kin energy of last track-point
+        tkOUT=point()[Ktp.T]
+        DEBUG_ON(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
+        convIN=WConverter(tkIN,freqIN)
+        convOUT=WConverter(tkOUT,freqOUT)
+        scale=[
+             (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
+             (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
+              ]
+        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}W [deg-%]',scale=scale)
+    
+    DELTA='\u0394'
+
+    # longitudinal
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m]')
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm-%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    projection_dPhidW(live_lost,lattice)
+    # transverse
+    projection(live_lost,Ktp.x,Ktp.y, f"x-y' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm-mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+
     plt.show()
     return
 def frames(lattice, skip):
@@ -254,10 +333,10 @@ def tracker(input_file,options):
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
-    DEBUG_ON(PARAMS['twiss_w_i']())
+    DEBUG_OFF(PARAMS['twiss_w_i']())
     # w acceptance
     FLAGS['accON'] = lattice.accON
-    DEBUG_ON(PARAMS['twiss_w_i']())
+    DEBUG_OFF(PARAMS['twiss_w_i']())
     if not FLAGS['accON']:
         # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
@@ -305,7 +384,6 @@ def tracker(input_file,options):
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     DEBUG_OFF(f'{{z}}x{{Dp2p}} {twz()}')
-    # Dp2pmx     = PARAMS['Dp2pmx']
     Dp2p0      = PARAMS['Dp2p0']
 
     # {Dphi,w}  T.Wangler units
@@ -343,19 +421,16 @@ def tracker(input_file,options):
 
     # bunch factory
     bunchfactory = BunchFactory()
-    bunchfactory.setDistribution(Gauss2D)
-    bunchfactory.setTwiss((twx,twy,twz))
-    bunchfactory.setMask(np.array((1,1,1,1,1,1)))
-    bunchfactory.setNumberOfParticles(npart)
-    bunchfactory.setReferenceEnergy(PARAMS['injection_energy'])
+    bunchfactory.twiss=(twx,twy,twz)  # twiss parameters for initial bunch distribution
+    bunchfactory.numberOfParticles=npart
     bunch = bunchfactory()
     t2 = t3 = time.process_time()
-    live_lost = track(lattice,bunch,options) # <----- track bunch returns (live,lost)-bunch
+    live_lost = track(lattice,bunch,options) # !-- track: bunch returns (live,lost)-bunch --!
     t4 = time.process_time()
     # make 2D projections
     if show:
         print('FILL PLOTS')
-        projections(live_lost)
+        projections1(lattice,live_lost)
     t5 = time.process_time()
     if save:
         print('SAVE FRAMES')
@@ -364,7 +439,7 @@ def tracker(input_file,options):
     if losses:
         print('SHOW LOSSES')
         loss_plot(lattice,live_lost)
-
+    
     # finish up
     print()
     print('total time     >> {:6.3f} [sec]'.format(t5-t0))

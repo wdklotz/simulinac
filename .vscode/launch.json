@@ -54,7 +54,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "tracker.py",
-            "args": ["--p", "200", "--file",  "SH/trackerIN_smh27-54.yml"]
+            "args": ["--p", "150", "--file",  "SH/trackerIN_smh27-12.yml"]
         },
         {
             "name": "setutil",
