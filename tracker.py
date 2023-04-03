@@ -130,8 +130,9 @@ def projections1(lattice,live_lost):
         point=points[-1]
         # kin energy of last track-point
         tkOUT=point()[Ktp.T]
-        DEBUG_ON(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
-        convIN=WConverter(tkIN,freqIN)
+        DEBUG_OFF(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
+        DEBUG_ON(f'tk(IN,OUT) {(tkIN,tkOUT)}')
+        convIN =WConverter(tkIN,freqIN)
         convOUT=WConverter(tkOUT,freqOUT)
         scale=[
              (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
@@ -140,13 +141,12 @@ def projections1(lattice,live_lost):
         return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}{GAMMA} [deg,%]',scale=scale)
     
     DELTA='\u0394'
-
     # longitudinal
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
+    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
     projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
     projection_dPhidW(live_lost,lattice)
     # transverse
-    projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
 
@@ -175,7 +175,7 @@ def frames(lattice, skip):
     for agent_cnt,agent in iter(frames):
         position = agent.position
         agent.do_action(agent_cnt,xmax,ymax,position)
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -312,7 +312,7 @@ def track(lattice,bunch,options):
     nlost  = 0
     nbpart = bunch.nbparticles()
     lbunch = Bunch()    # lost particles go into this bunch
-    printProgressBar(0,lnode,prefix="Progress:",suffix="Complete",length=50)
+    progress_bar(0,lnode,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
         ndcnt +=1
         for particle in iter(bunch):        # particles
@@ -323,7 +323,7 @@ def track(lattice,bunch,options):
                 nlost += 1
         # showing track-loop progress
         if ndcnt%pgceil == 0 or ndcnt == lnode: 
-            printProgressBar(ndcnt,lnode,prefix="Progress:",suffix="Complete",length=50)
+            progress_bar(ndcnt,lnode,prefix="Progress:",suffix="Complete",length=50)
     live = nbpart - lbunch.nbparticles()
     print('\nTRACKING DONE (live particles {}, lost particles {})'.format(live,nlost))
     return (bunch,lbunch)
@@ -399,25 +399,27 @@ def tracker(input_file,options):
     tracker_log = {}
     tracker_log['Description.............']           = PARAMS.get('descriptor')
     tracker_log['mapping.................']           = FLAGS['mapping']
+    tracker_log['useaper.................']           = FLAGS['useaper']
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
-    tracker_log['acceptance..\u0394p/p.....[%]']      = PARAMS['Dp2pmax']*1.e2
-    tracker_log['acceptance..\u0394\u03B3..........'] = wmax
-    tracker_log['accpetance..z.......[mm]']           = PARAMS['zmax']*1.e3
+    tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
+    tracker_log['acceptance..\u0394\u03B3..........'] = f"{wmax:.2e}"
+    tracker_log['accpetance..z.......[mm]']           = f"{PARAMS['zmax']*1.e3:.3f}"
     tracker_log['\u03B2w_i...............[rad]']      = betaw_i
     tracker_log['\u03B2x_i.................[m]']      = betax_i
     tracker_log['\u03B2y_i.................[m]']      = betay_i
     tracker_log['\u03B2z_i.............[m/rad]']      = betaz_i
-    tracker_log['\u03B5w_i..{\u0394\u03C6,\u0394\u03B3}......[rad]'] = emitw_i
+    tracker_log['\u03B5w_i..{\u0394\u03C6,\u0394\u03B3}......[rad]'] = f"{emitw_i:.2e}"
     tracker_log['\u03B5x_i.................[m]']      = emitx_i
     tracker_log['\u03B5y_i.................[m]']      = emity_i
     tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
     tracker_log['lattice version.........']           = PARAMS['lattice_version']
-    tracker_log["\u03C3(x,x')i.......([m,rad])"]      = (sigma_x,sigma_xp)
-    tracker_log["\u03C3(y,y')i.......([m,rad])"]      = (sigma_y,sigma_yp)
-    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = (sigma_z,sigma_Dp2p)
-    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = (sigma_Dphi,sigma_w)
-    tracker_log['\u0394p/p0................[%]']      = Dp2p0*1.e2
-    tracker_log['\u0394T/T_i..................']      = PARAMS['DT2T_i']
+    tracker_log["\u03C3(x,x')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_x,sigma_xp)
+    tracker_log["\u03C3(y,y')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_y,sigma_yp)
+    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = "{:.2e} {:.2e}".format(sigma_z,sigma_Dp2p)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
+    tracker_log['\u0394p/p0................[%]']      = f"{Dp2p0*1.e2:.3f}"
+    tracker_log['\u0394T/T_i...............[%]']      = f"{PARAMS['DT2T_i']*1e2:.3f}"
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory

@@ -297,8 +297,8 @@ def factory(input_file,stop=None):
         # transverse Twiss @ entrance
         res['twiss_x_i']        = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
         res['twiss_y_i']        = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
-        UTIL.DEBUG_ON(f"twiss_x_i {res['twiss_x_i']()}")
-        UTIL.DEBUG_ON(f"twiss_y_i {res['twiss_y_i']()}")
+        UTIL.DEBUG_OFF(f"twiss_x_i {res['twiss_x_i']()}")
+        UTIL.DEBUG_OFF(f"twiss_y_i {res['twiss_y_i']()}")
         # supplemental global parameters
         res['nbsigma']          = parameters.get('nbsigma',3)
         res['lattice_version']  = parameters.get('lattvers','not given')
@@ -326,10 +326,6 @@ def factory(input_file,stop=None):
         # longitudinal TWiss @ entrance in {Dphi,w}-space
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
 
-        # """ parameters that will be caculated by waccept """
-        # res['emitz_i']   = emitz_i
-        # res['alfaz_i']   = alfaz_i
-        # res['betaz_i']   = betaz_i
         return res
     def process_elements(elements):
         """ fills global ELEMENTS """

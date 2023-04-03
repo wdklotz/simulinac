@@ -830,7 +830,7 @@ class RFG(Node):
                 Dp2pmax         = Dp2pmax,      # max D/p on separatrix
                 z0              = z0,           # ellipse z-int    (1/2 axis) [m]
                 Dp2p0           = Dp2p0,        # ellipse dp/p-int (1/2 axis)
-                zmax            = conv.DphiToz(2.*phisoll),  # Wrangler's approximation
+                zmax            = abs(conv.DphiToz(3.*phisoll)),  # Wrangler's approximation (pp.178) is good up to -58deg
                 DWmax           = wmax*m0c2,    # separatrix: max W in [MeV]
                 # Dphi0           = Dphi0,      # ellipse dphi-int (1/2 axis)
                 # betaw_i         = betaw_i,    # beta twiss [rad]

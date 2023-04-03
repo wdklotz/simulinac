@@ -53,17 +53,18 @@ DEBUG_OFF = DEB.get('OFF')
 # MDIM: dimension of matrices
 MDIM = 10
 class Ktp(IntEnum):
-    """ -K-oordinaten -t-rack -p-oints (1x10)"""
+    """ TrackPoint K-oordinaten Ktp """
     x  = 0     # x
     xp = 1     # x'
     y  = 2     # y
     yp = 3     # y'
     z  = 4     # z
     zp = 5     # z' = Dp/p
-    T  = 6     # T(s) = Ingegral(dT)
+    T  = 6     # current kin energy T(s)
     dT = 7     # const 1
-    S  = 8     # S = Integral(dS)
+    S  = 8     # current position sf
     dS = 9     # const 1
+    # nd = 10    # current node   TODO
 class Ktw(IntEnum):
     """ -K-oordinaten -tw-iss vector (1x10) """
     bx = 0      # twiss-beta
@@ -380,8 +381,6 @@ def collect_data_for_summary(lattice):
         SUMMARY['wmax*']                           =  '{:8.2e} max \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
         SUMMARY['\u0394p/pmax_i [%]']             =  '{:8.2e} max \u0394p/p on separatrix'.format(PARAMS.get('Dp2pmax',0)*1.e2)
         SUMMARY['zmax* [m]']                       =  '{:8.2e} max z on separatrix'.format(abs(PARAMS['zmax']))
-        # SUMMARY['\u03B5z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['emitz_i']*1.e3)
-        # SUMMARY['\u03B2z_i* [mm]']                 =  '{:8.2e} {{z,\u0394p/p}}'.format(PARAMS['betaz_i']*1.e3)
         SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0'])
         SUMMARY['\u0394\u03C60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0_i'])
         SUMMARY['|z0|* [m]']                       =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
