@@ -27,24 +27,55 @@ import sys,os
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from math import sqrt, degrees, radians, ceil
+from math import sqrt, degrees, radians, ceil,pi
 import argparse
 import unittest
 
 from lattice_generator import factory
 import elements as ELM
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter
-from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF
+from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF,Proton
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
 from PoincareMarkerAgent import PoincareMarkerAgent
 from trackPlot import scatter11,scatterInOut
 # from lattice_parser2 import parse as getParseResult
 
 # max limits for track amplitudes
-xlim_max  = ylim_max  =  10.e-3
-xplim_max = yplim_max =  10.e-3
-zlim_max  = zplim_max = 100.e-3
+xlim_max  = ylim_max  =  100.e-3
+xplim_max = yplim_max =  100.e-3
+zlim_max  = zplim_max =  100.e-3
 limit     = sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
+
+class Fifo:
+    def __init__(self):
+        self._first = None
+        self._last = None
+        self._max = 10000
+        self._cnt = 0
+    def append(self,data):
+        self._cnt += 1
+        if self._cnt > self._max: 
+            return
+        node = [data,None]
+        if self._first is None:
+            self._first = node
+        else:
+            self._last[1] = node
+        self._last = node
+    def pop(self):
+        if self._first is None:
+            return None
+        node = self._first
+        self._first = node[1]
+        return node[0]
+    @property
+    def max(self):
+        return self._max
+    @max.setter
+    def max(self,value):
+        self._max = value
+
+fifo = Fifo()
 
 def projections1(lattice,live_lost):
     """ 2D projections of 6D phase space """
@@ -94,9 +125,11 @@ def projections1(lattice,live_lost):
             xlive=np.append(xlive,point[ix]*scale[inout['OUT']][0])
             ylive=np.append(ylive,point[iy]*scale[inout['OUT']][1])
         livemax=np.array([np.amax(np.abs(xlive)),np.amax(np.abs(ylive))])
-        box_txt=f'OUT {fig_txt} {nblive} particles'
+        xloss=np.zeros(2)
+        yloss=np.zeros(2)
+        box_txt=f'OUT {fig_txt} {nblive} live particles'
         ax=plt.subplot(122)
-        scatterInOut(xlive,ylive,np.zeros(2),np.zeros(2),xymax,box_txt,ax)
+        scatterInOut(xlive,ylive,xloss,yloss,livemax,box_txt,ax)
         return ax
 
     # TODO can this be made more legantly? This function is ugly and made me much pain.
@@ -143,12 +176,12 @@ def projections1(lattice,live_lost):
     DELTA='\u0394'
     # longitudinal
     # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
     projection_dPhidW(live_lost,lattice)
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    # projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
 
     plt.show()
     return
@@ -241,12 +274,13 @@ def loss_plot(lattice,live_lost):
 def track_node(node,particle,options):
     """ Tracks a particle through a node """
     def norm(track):
-        track_norm = \
-            sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
+        # track_norm = sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
+        track_norm = sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2)
         return track_norm > limit
     
     track   = particle.track
     last_tp = track.getpoints()[-1]
+    s       = last_tp()[Ktp.S]
     lost    = False
     try:
         """ maping happens here! """
@@ -254,8 +288,9 @@ def track_node(node,particle,options):
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
         reason = ex.__class__.__name__
-        s = last_tp()[8]
-        print('@map in track_node: {} at s={:6.2f} [m]'.format(reason,s))
+        txt = '{} in map @ s={:6.2f} [m]'.format(reason,s)
+        DEBUG_ON(txt)
+        fifo.append(txt)
         lost = True
         particle.lost = lost
         return lost
@@ -265,35 +300,45 @@ def track_node(node,particle,options):
         if norm(last_tp()):
             lost = True
             particle.lost = lost
+            fifo.append(f'loss out of limit at {s:.4e} m')
             return lost
 
-    # check Dp2p-acceptance
+    # check Dp2p- and phase-acceptance
     if FLAGS['useaper']:
         if abs(new_point[Ktp.zp]) < PARAMS['Dp2pmax']:
             lost = False
         else:
+            fifo.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
             lost = True
-        # check z-acceptance
-        if abs(new_point[Ktp.z]) < PARAMS['zmax']:
+        conv,phimin,phisoll,phimax = PARAMS['phaseacc']
+        dphi=conv.zToDphi(new_point[Ktp.z])
+        phi = phisoll+dphi
+        if phimin < phi and phi < phimax:  # Wrangler's approximation (pp.178) is good up to -58deg
             lost = False
         else:
+            fifo.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
             lost = True
 
-    # check aperture
+    # check transverse apertures
     if FLAGS['useaper'] and node.aperture != None:
         if abs(new_point[Ktp.x]) < node.aperture and abs(new_point[Ktp.y]) < node.aperture:
             lost = False
         else:
+            fifo.append(f'loss (x,y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
             lost = True
 
-    # if we look for losses we keep all track points
+    # decide to keep full track when losses are requested
     if not lost:
+        # live particle
         if track.nbpoints() > 1 and not options['losses']:
-            # !!DISCARD!! last point (losses=False)
+            # no losses option (to save memory we remove last tp)
             track.removepoint(last_tp)
+        # add new tp
         track.addpoint(new_tp)
+        # marker gets new tp
         if isinstance(node,PoincareMarkerAgent):
-            node.appendPhaseSpaceKs(new_tp)
+            node.appendPhaseSpace(new_tp)
+
     particle.lost = lost
     return lost
 def track(lattice,bunch,options):
@@ -319,7 +364,7 @@ def track(lattice,bunch,options):
             lost = track_node(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
-                bunch.removeparticle(particle)
+                # bunch.removeparticle(particle)
                 nlost += 1
         # showing track-loop progress
         if ndcnt%pgceil == 0 or ndcnt == lnode: 
@@ -329,6 +374,7 @@ def track(lattice,bunch,options):
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
+    # fifo.max = 10
     npart = options['particles_per_bunch']
     # make lattice
     t0       = time.process_time()
@@ -403,7 +449,6 @@ def tracker(input_file,options):
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
     tracker_log['acceptance..\u0394\u03B3..........'] = f"{wmax:.2e}"
-    tracker_log['accpetance..z.......[mm]']           = f"{PARAMS['zmax']*1.e3:.3f}"
     tracker_log['\u03B2w_i...............[rad]']      = betaw_i
     tracker_log['\u03B2x_i.................[m]']      = betax_i
     tracker_log['\u03B2y_i.................[m]']      = betay_i
@@ -451,6 +496,11 @@ def tracker(input_file,options):
     print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
     print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
     print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
+
+    while True:
+        data = fifo.pop()
+        if data is None: break
+        DEBUG_ON(data)
 
 class TestTracker(unittest.TestCase):
     def setUp(self):

@@ -796,18 +796,11 @@ class RFG(Node):
 
         # {Dphi,w}  T.Wangler units
         betaw_i,alfaw_i,gammaw,emitw_i = PARAMS['twiss_w_i']()
-        # sigma_Dphi  = tww.sigmaH()
-        # sigma_w     = tww.sigmaV()
-        # DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
-        w0        = (gamma-1.)*DT2T
-        # emitw_i   = 2.*abs(phisoll)*w0/pi*0.33 # injected beam emittance
-        # Dphi0     = pi*emitw_i/w0                # injected phase spread
+        w0    = (gamma-1.)*DT2T
         Dphi0 = PARAMS['Dphi0_i']
-        # betaw_i   = emitw_i/w0**2                # w0 = w-int = sqrt(emitw/betaw) 
         
         omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
         omgl_0     = omgl0zuomg*2.*pi*freq   # [Hz]
-        # DEBUG_OFF(dict(pi=pi,DT2T=DT2T,w0=w0,emitw_i=emitw_i,Dphi0=Dphi0,betaw_i=betaw_i,omgl_0=omgl_0))
 
         # longitudinal acceptance check (always done)
         if wmax <= w0:
@@ -821,7 +814,12 @@ class RFG(Node):
         conv = WConverter(tkin,freq)
         z0,Dp2p0,emitz_i,betaz_i = conv.wtoz((Dphi0,w0,emitw_i,betaw_i))
         Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
-        # alfaz_i = alfaw_i = 0. # always
+        
+        # phase acceptance
+        phimin=2.*phisoll
+        phimax=-phisoll
+        phaseacc = (conv,phimin,phisoll,phimax)
+
 
         res =  dict (
                 # {Dphi,w}
@@ -830,21 +828,11 @@ class RFG(Node):
                 Dp2pmax         = Dp2pmax,      # max D/p on separatrix
                 z0              = z0,           # ellipse z-int    (1/2 axis) [m]
                 Dp2p0           = Dp2p0,        # ellipse dp/p-int (1/2 axis)
-                zmax            = abs(conv.DphiToz(3.*phisoll)),  # Wrangler's approximation (pp.178) is good up to -58deg
+                zmax            = conv.DphiToz(-phisoll),    # Wrangler's approximation (pp.178) is good up to -58deg
                 DWmax           = wmax*m0c2,    # separatrix: max W in [MeV]
-                # Dphi0           = Dphi0,      # ellipse dphi-int (1/2 axis)
-                # betaw_i         = betaw_i,    # beta twiss [rad]
-                # alfaw_i         = alfaw_i,
-                # w0              = w0,         # separatrix small amp. osscillations
-                # {z,Dp2p}
-                # emitz_i         = emitz_i,    # emittance {z,dp/p} space [m*rad]
-                # betaz_i         = betaz_i,    # twiss beta [m/rad]
-                # alphaz_i        = alfaz_i,
-                # {Dphi,DW}
-                omgl_0            = omgl_0      # synchrotron oscillation [Hz]
+                phaseacc        = phaseacc,
+                omgl_0          = omgl_0      # synchrotron oscillation [Hz]
                 )
-        # longitudinal Twiss in {z,Dp2p} space
-        # res['twiss_w_i'] = Twiss(betaw_i, alfaw_i, emitw_i)
         alfaz_i = 0.
         res['twiss_z_i'] = Twiss(betaz_i, alfaz_i, emitz_i)
         return res
