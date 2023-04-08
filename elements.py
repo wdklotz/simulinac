@@ -35,8 +35,9 @@ twopi = 2.*pi
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
 class OutOfRadialBoundEx(Exception):
-    def __init__(self,max_r,ID=''):
-        self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
+    def __init__(self,max_r,s,ID=''):
+        self.message = '{} in map @ s={:6.2f} [m]'.format(self.__class__.__name__,s)
+                    # self.message = "OutOfRadialBoundEx: in '{}' out of {} [cm] max radial excursion.".format(ID,max_r*100.)
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
     """ Base class for transfer matrices (linear map)
@@ -609,7 +610,7 @@ class RFG(Node):
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)  # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
+            raise OutOfRadialBoundEx(max_r,S,ID='_PYO_G:base_map')
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)                               # bessel function I0
         i1     = I1(Kr)                               # bessel function I1
@@ -695,7 +696,7 @@ class RFG(Node):
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)   # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(max_r,ID='_PYO_G:base_map')
+            raise OutOfRadialBoundEx(max_r,S,ID='_PYO_G:base_map')
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = I0(Kr)            # bessel function I0
         i1     = I1(Kr)            # bessel function I1

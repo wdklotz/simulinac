@@ -87,10 +87,12 @@ class Bunch(object):
         return self._particles
     def nbparticles(self):              # nbof particles in bunch
         return len(self._particles)
-    def addparticle(self, particle):    # add particle to bunch
-        self._particles.append(particle)
-    def removeparticle(self, particle):
-        self._particles.remove(particle)
+    def addparticle(self,particle):    # add particle to bunch
+        if particle not in self._particles:
+            self._particles.append(particle)
+    def removeparticle(self,particle):
+        if particle in self._particles:
+            self._particles.remove(particle)
 class BunchFactory(object):
     """ BunchFactory creates a multiparticle bunch """
     def __init__(self):

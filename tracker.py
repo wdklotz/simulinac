@@ -38,13 +38,12 @@ from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF,Proton
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
 from PoincareMarkerAgent import PoincareMarkerAgent
 from trackPlot import scatter11,scatterInOut
-# from lattice_parser2 import parse as getParseResult
 
 # max limits for track amplitudes
-xlim_max  = ylim_max  =  100.e-3
-xplim_max = yplim_max =  100.e-3
-zlim_max  = zplim_max =  100.e-3
-limit     = sqrt(xlim_max**2+xplim_max**2+ylim_max**2+yplim_max**2+zlim_max**2+zplim_max**2)
+xlim_max  = 0.1
+ylim_max  = 0.1
+zlim_max  = 0.1
+limit_xyz = sqrt(xlim_max**2+ylim_max**2+zlim_max**2)
 
 class Fifo:
     def __init__(self):
@@ -74,8 +73,16 @@ class Fifo:
     @max.setter
     def max(self,value):
         self._max = value
-
-fifo = Fifo()
+# txt FIFOs
+fifo    = Fifo()   # general losses
+fifo_r  = Fifo()   # radial losses
+fifo_z  = Fifo()   # z losses
+fifo_xy = Fifo()   # xy losses
+# position FIFOs
+sfifo    = Fifo()
+sfifo_xy = Fifo()
+sfifo_r  = Fifo()
+sfifo_z  = Fifo()
 
 def projections1(lattice,live_lost):
     """ 2D projections of 6D phase space """
@@ -127,7 +134,7 @@ def projections1(lattice,live_lost):
         livemax=np.array([np.amax(np.abs(xlive)),np.amax(np.abs(ylive))])
         xloss=np.zeros(2)
         yloss=np.zeros(2)
-        box_txt=f'OUT {fig_txt} {nblive} live particles'
+        box_txt=f'OUT {fig_txt} {nblost} lost particles'
         ax=plt.subplot(122)
         scatterInOut(xlive,ylive,xloss,yloss,livemax,box_txt,ax)
         return ax
@@ -208,7 +215,7 @@ def frames(lattice, skip):
     for agent_cnt,agent in iter(frames):
         position = agent.position
         agent.do_action(agent_cnt,xmax,ymax,position)
-def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -228,117 +235,88 @@ def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, leng
     # Print New Line on Complete
     if iteration == total: 
         print()
-def loss_plot(lattice,live_lost):
-    """ Plot losses along the lattice """
-    # figure
-    width = 15
-    fig,(ax1,ax2) = plt.subplots(2,1,sharex=True)
-    fig.suptitle('losses')
-    fig.set_size_inches(width,width/2.)
-    ax1.set_xlabel('s [m]')
-    ax1.set_ylabel('x [mm]')
-    ax2.set_xlabel('s [m]')
-    ax2.set_ylabel('y [mm]')
-    # data
-    live_bunch, lost_bunch = live_lost
-    for particle in iter(lost_bunch):
-        track  = particle.track
-        lost = Functions(('s','x','y'))
-        for tpoint in iter(track):
-            point  = tpoint()
-            xlost = point[Ktp.x]*1.e3
-            ylost = point[Ktp.y]*1.e3
-            s = point[Ktp.S]
-            lost.append(s,(xlost,ylost))
-        s    = [lost(i,'s') for i in range(lost.nbpoints)]
-        ordx = [lost(i,'x') for i in range(lost.nbpoints)]
-        ordy = [lost(i,'y') for i in range(lost.nbpoints)]
-        ax1.plot(s,ordx)
-        ax2.plot(s,ordy)
-    lat_plot,d   = lattice.lattice_plot_functions()
-    vis_abszisse = [lat_plot(i,'s')     for i in range(lat_plot.nbpoints)]
-    vis_ordinate = [lat_plot(i,'viseo') for i in range(lat_plot.nbpoints)]
-    vis_zero     = [0.                  for i in range(lat_plot.nbpoints)] # zero line
-    ax1.plot(vis_abszisse,vis_ordinate,color='gray')
-    ax1.plot(vis_abszisse,vis_zero,color='gray')
-    ax2.plot(vis_abszisse,vis_ordinate,color='gray')
-    ax2.plot(vis_abszisse,vis_zero,color='gray')
+def loss_histograms(lattice,fifos,binsize=5):
+    """ make histogram plots of losses captured in FIFO buffers """
+    latlen = lattice.length
+    bins   = int(latlen/binsize)
+    golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
+    fig    = plt.figure(num='losses',figsize=(width, height),layout='constrained')
+    axs    = fig.subplots(2,2)
+    for ff_cnt,fifo in enumerate(fifos):
+        fig_txt   = fifo['title']
+        fifo_data = fifo['fifo']
+        sdata = []
+        while(True):
+            data = fifo_data.pop()
+            if data is None: break
+            sdata.append(data)
+        ax = axs.flat[ff_cnt]
+        ax.set_title(fig_txt)
+        ax.set_xlabel(r"s[m]")
+        ax.set_ylabel(r"# particles")
+        ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-    return
-                                        # def progress(tx):
-                                        #     """ Show progress """
-                                        #     template = Template('$tx1 $tx2 $tx3 $tx4')
-                                        #     res = template.substitute(tx1=tx[0] , tx2=tx[1] , tx3=tx[2] , tx4=tx[3] )
-                                            # print('\r{}\r'.format(res),end="")
-                                            # sys.stdout.write('{}\r'.format(res))
 def track_node(node,particle,options):
     """ Tracks a particle through a node """
-    def norm(track):
-        # track_norm = sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2+track[5]**2)
-        track_norm = sqrt(track[0]**2+track[1]**2+track[2]**2+track[3]**2+track[4]**2)
-        return track_norm > limit
+    def norm(tp):
+        tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
+        return tpnorm > limit_xyz
     
     track   = particle.track
     last_tp = track.getpoints()[-1]
     s       = last_tp()[Ktp.S]
     lost    = False
+
+    # maping happens here!
     try:
-        """ maping happens here! """
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
-        reason = ex.__class__.__name__
-        txt = '{} in map @ s={:6.2f} [m]'.format(reason,s)
-        DEBUG_ON(txt)
-        fifo.append(txt)
+        txt = ex.message
+        DEBUG_OFF(txt)
+        fifo_r.append(txt)
+        sfifo_r.append(s)
         lost = True
         particle.lost = lost
         return lost
-
-    # limit to stay physicaly reasonable 
-    if not FLAGS['useaper']:
-        if norm(last_tp()):
-            lost = True
-            particle.lost = lost
-            fifo.append(f'loss out of limit at {s:.4e} m')
-            return lost
-
-    # check Dp2p- and phase-acceptance
+    
+    # check limit to stay in physical reasonable range
+    if norm(new_tp):
+        fifo.append(f'range limits at {s:.4e} m')
+        sfifo.append(s)
+        lost = True
+        particle.lost = lost
+        return lost
+    
+    # aperture checks
     if FLAGS['useaper']:
-        if abs(new_point[Ktp.zp]) < PARAMS['Dp2pmax']:
-            lost = False
-        else:
-            fifo.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-            lost = True
         conv,phimin,phisoll,phimax = PARAMS['phaseacc']
         dphi=conv.zToDphi(new_point[Ktp.z])
         phi = phisoll+dphi
-        if phimin < phi and phi < phimax:  # Wrangler's approximation (pp.178) is good up to -58deg
-            lost = False
-        else:
-            fifo.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
+        # Dp2p- and phase-acceptance
+        if not (phimin < phi and phi < phimax):  # Wrangler's approximation (pp.178) is good up to -58deg
+            fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
+            fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        # transverse apertures
+        elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
+            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
+            sfifo_xy.append(s)
             lost = True
 
-    # check transverse apertures
-    if FLAGS['useaper'] and node.aperture != None:
-        if abs(new_point[Ktp.x]) < node.aperture and abs(new_point[Ktp.y]) < node.aperture:
-            lost = False
-        else:
-            fifo.append(f'loss (x,y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-            lost = True
-
-    # decide to keep full track when losses are requested
-    if not lost:
-        # live particle
-        if track.nbpoints() > 1 and not options['losses']:
-            # no losses option (to save memory we remove last tp)
-            track.removepoint(last_tp)
-        # add new tp
-        track.addpoint(new_tp)
-        # marker gets new tp
-        if isinstance(node,PoincareMarkerAgent):
-            node.appendPhaseSpace(new_tp)
-
+    # live particle
+    if track.nbpoints() > 1:
+        # remove last tp - save memory
+        track.removepoint(last_tp)
+    # add new tp
+    track.addpoint(new_tp)
+    # marker accumulates all tps to make frames
+    if isinstance(node,PoincareMarkerAgent):
+        node.appendPhaseSpace(new_tp)
     particle.lost = lost
     return lost
 def track(lattice,bunch,options):
@@ -351,30 +329,32 @@ def track(lattice,bunch,options):
     
     Input: lattice , bunch, options
     """
-    ndcnt  = 0
-    lnode  = len(lattice.seq)
-    pgceil =  ceil(lnode/100)    # every 1% progress update
-    nlost  = 0
-    nbpart = bunch.nbparticles()
-    lbunch = Bunch()    # lost particles go into this bunch
-    progress_bar(0,lnode,prefix="Progress:",suffix="Complete",length=50)
+    node_cnt    = 0
+    nb_nodes    = len(lattice.seq)
+    pgceil      =  ceil(nb_nodes/100)    # every 1% progress update
+    nbparticles = bunch.nbparticles()
+    lbunch      = Bunch()    # lost particles go into this bunch
+    progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
-        ndcnt +=1
         for particle in iter(bunch):        # particles
             lost = track_node(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
-                # bunch.removeparticle(particle)
-                nlost += 1
+                bunch.removeparticle(particle)
         # showing track-loop progress
-        if ndcnt%pgceil == 0 or ndcnt == lnode: 
-            progress_bar(ndcnt,lnode,prefix="Progress:",suffix="Complete",length=50)
-    live = nbpart - lbunch.nbparticles()
-    print('\nTRACKING DONE (live particles {}, lost particles {})'.format(live,nlost))
+        if node_cnt%pgceil == 0 or node_cnt == nb_nodes: 
+            progress_bar(node_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
+        node_cnt +=1
+    lost = lbunch.nbparticles()
+    print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nbparticles,nbparticles-lost,lost))
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
-    # fifo.max = 10
+    # fifo limits
+    fifo_r.max  = 10
+    fifo_z.max  = 10
+    fifo_xy.max = 10
+
     npart = options['particles_per_bunch']
     # make lattice
     t0       = time.process_time()
@@ -400,10 +380,8 @@ def tracker(input_file,options):
     skip     = options['skip']
     losses   = options['losses']
     # manipulate options
-    if losses:
-        show = False
-        save = False
-    if show or save:
+    if save:
+        show   = False
         losses = False
     options['show']   = show
     options['save']   = save
@@ -446,6 +424,7 @@ def tracker(input_file,options):
     tracker_log['Description.............']           = PARAMS.get('descriptor')
     tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['useaper.................']           = FLAGS['useaper']
+    tracker_log['losses..................']           = losses
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
     tracker_log['acceptance..\u0394\u03B3..........'] = f"{wmax:.2e}"
@@ -486,33 +465,48 @@ def tracker(input_file,options):
     t6 = time.process_time()
     if losses:
         print('SHOW LOSSES')
-        loss_plot(lattice,live_lost)
-    
+        fifos = [
+            dict(title='xy losses',fifo=sfifo_xy),
+            dict(title='z losses',fifo=sfifo_z),
+            dict(title='map losses',fifo=sfifo_r),
+            dict(title='range losses',fifo=sfifo),
+            ]   
+        loss_histograms(lattice,fifos)
+    t7 = time.process_time()
+
     # finish up
     print()
-    print('total time     >> {:6.3f} [sec]'.format(t5-t0))
-    print('parse lattice  >> {:6.3f} [sec] {:4.1f} [%]'.format((t1-t0),(t1-t0)/(t5-t0)*1.e2))
-    print('generate bunch >> {:6.3f} [sec] {:4.1f} [%]'.format((t2-t1),(t2-t1)/(t5-t0)*1.e2))
-    print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(t5-t0)*1.e2))
-    print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(t5-t0)*1.e2))
-    print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(t6-t0)*1.e2))
+    ttotal = t7-t0
+    print('total time     >> {:6.3f} [sec]'.format(ttotal))
+    print('parse lattice  >> {:6.3f} [sec] {:4.1f} [%]'.format((t1-t0),(t1-t0)/(ttotal)*1.e2))
+    print('generate bunch >> {:6.3f} [sec] {:4.1f} [%]'.format((t2-t1),(t2-t1)/(ttotal)*1.e2))
+    print('track bunch    >> {:6.3f} [sec] {:4.1f} [%]'.format((t4-t3),(t4-t3)/(ttotal)*1.e2))
+    print('fill plots     >> {:6.3f} [sec] {:4.1f} [%]'.format((t5-t4),(t5-t4)/(ttotal)*1.e2))
+    print('save frames    >> {:6.3f} [sec] {:4.1f} [%]'.format((t6-t5),(t6-t5)/(ttotal)*1.e2))
+    print('bin losses     >> {:6.3f} [sec] {:4.1f} [%]'.format((t7-t6),(t7-t6)/(ttotal)*1.e2))
 
     while True:
         data = fifo.pop()
         if data is None: break
-        DEBUG_ON(data)
+        DEBUG_OFF(data)
+    while True:
+        data = fifo_xy.pop()
+        if data is None: break
+        DEBUG_OFF(data)
+    while True:
+        data = fifo_r.pop()
+        if data is None: break
+        DEBUG_OFF(data)
+    while True:
+        data = fifo_z.pop()
+        if data is None: break
+        DEBUG_OFF(data)
 
 class TestTracker(unittest.TestCase):
-    def setUp(self):
-        self.lattice = factory('unittests/trackerIN_REF.yml')
-    def test_soll_tracking(self):
-        print('---------------------test_soll_tracking---')
-        sollTrack = track_soll(self.lattice)  # <----- track soll
-        table = sollTrack.as_table()
-        DEBUG_ON('sollTrack:\n'+table)
-        first = sollTrack[0]
-        last  = sollTrack[-1]
-        DEBUG_ON('sollTrack:\n(first): {}\n (last): {}'.format(first.as_str(),last.as_str()))
+    def test_tracking(self):
+        print('---------------------test_tracking---')
+        print('what?')
+
 #----------------main------------
 if __name__ == '__main__':
     DEBUG_OFF(sys.argv)
@@ -558,7 +552,7 @@ if __name__ == '__main__':
     input_file = Args['file']
     if DEBUG_OFF():
         # unittest.main()
-        TestTracker(methodName='test_soll_tracking').run()
+        TestTracker(methodName='test_tracking').run()
     else:
         if sys.platform == 'win32':
             if Args['mode']   == 'no_m4':

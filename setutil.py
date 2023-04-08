@@ -126,14 +126,14 @@ class Twiss(object):
 class Particle(object):
     """ A particle class """
     def __init__(self,tkin,mass,name):
+        self.lost       = False
+        self._track     = None
         self._set_self(tkin,mass,name)
     def _set_self(self,tkin,mass,name):
         self.tkin       = tkin                     # kinetic energy [MeV]
         self.e0         = mass                     # rest mass [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
-        self.lost       = False
-        self._track     = None
         try:
             self.beta   = sqrt(1.-1./(self.gamma*self.gamma))
         except ValueError as ex:
@@ -148,6 +148,12 @@ class Particle(object):
         self.m0c2       = self.e0
         self.m0c3       = self.e0 * PARAMS['clight']
         self.betac      = self.v
+    @property
+    def track(self):
+        return self._track
+    @track.setter
+    def track(self,value):
+        self._track=value
     def toString(self):
         headr = ['particle','B*rho[Tm]','Tk[Mev]','p[Mev/c]','gamma','beta','gamma*beta','E[Mev]']
         records = [[
@@ -173,12 +179,6 @@ class Proton(Particle):
     def __init__(self,tkin):
         super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')
         self.brho = 3.1297*self.gamma_beta
-        @property
-        def track(self):
-            return self._track
-        @track.setter
-        def track(self,value):
-            self._track=value
 class Electron(Particle):
     def __init__(self,tkin):
         super(Electron,self).__init__(tkin,PARAMS['electron_mass'],'electron')

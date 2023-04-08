@@ -27,6 +27,7 @@ On the OUT-plot:
 * The statistical phase spread stays within about a factor 1 to 1.5 the same 
 but goes beyond 3 sigma on positve phase differences (lagging particles). - expected?
 
+## Next:
 ![](Clipboard05.png)
 
 On the IN-plot:
@@ -44,3 +45,10 @@ On the OUT-plot:
 OUT ellipses from simu
 * Size of envelope ellipses similar to size of statistical ellipses - expected!
 * Correlation, i.e. alfa not the same between envelope- and statistical ellipses - expected? not really.
+
+## Next:
+* python tracker.py --file doc\new_hokeystick\trackerIN_smh27-12.yml --losses --p 15000
+
+![](Dphi-Dgamma.png)
+
+![](losses.png)
