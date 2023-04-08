@@ -555,8 +555,7 @@ class Lattice(object):
                     """ end map """
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
             except (ValueError,ELM.OutOfRadialBoundEx) as ex:
-                reason = ex.__class__.__name__
-                print('in lattice.cs_traj() when mapping: {} at s={:6.2f} [m]'.format(reason,s))
+                print(ex.message)
                 sys.exit(1)
         return (c_fun,s_fun)
     def symplecticity(self):
@@ -591,10 +590,7 @@ class Lattice(object):
     def accON(self):
         node1 = self.first_gap
         if(node1 != None):
-            wacc = node1.waccept()
-            # Update PARAMS
-            for k,v in wacc.items():
-                PARAMS[k] = v
+            PARAMS.update(node1.waccept())  # <== fill PARAMS
             accON = True
             FLAGS['dWf'] = 1
         else:
@@ -762,8 +758,7 @@ class TestLattice(unittest.TestCase):
         # cell boundaries
         full_cell = lattice.cell(closed=FLAGS['periodic'])
         # Update PARAMS
-        for k,v in full_cell.items():
-            PARAMS[k] = v
+        PARAMS.update(full_cell)
 
         betax,a,g,e = PARAMS['twiss_x_i']()
         betay,a,g,e = PARAMS['twiss_y_i']()

@@ -370,12 +370,12 @@ def factory(input_file,stop=None):
     UTIL.PARAMS['descriptor'] = results.DESCRIPTOR  # get DESCRIPTOR from parsed results
 
     flags = process_flags(results.FLAGS)
-    for k,v in flags.items(): UTIL.FLAGS[k] = v
+    UTIL.FLAGS.update(flags)
     UTIL.DEBUG_OFF('global FLAGS after process_flags():',UTIL.FLAGS)
 
     parameters = process_parameters(results.PARAMETERS)
     parameters['input_file'] = input_file
-    for k,v in parameters.items(): UTIL.PARAMS[k] = v
+    UTIL.PARAMS.update(parameters)
     UTIL.DEBUG_OFF('global PARAMS after process_parameters():',UTIL.PARAMS)
 
     elements = process_elements(results.ELEMENTS)

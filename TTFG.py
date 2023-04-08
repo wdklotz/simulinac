@@ -146,7 +146,10 @@ class TTF_G(ELM.RFG):
             yp        = f_track[YPKOO]      # [3] Dy/Ds
             z         = f_track[ZKOO]       # [4] z
             zp        = f_track[ZPKOO]      # [5] dp/p
+            max_r     = 0.05                # max radial excursion [m]
             r         = sqrt(x**2+y**2)     # radial coordinate
+            if r > max_r:
+                raise ELM.OutOfRadialBoundEx(S)
             K         = omega/(c*gbs_in)*r
             i0        = I0(K)                      # bessel function I0 
             gammas_in = p.gamma

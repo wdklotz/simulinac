@@ -401,8 +401,7 @@ def simulation(filepath):
     #----------------------------------------------
     res = lattice.cell(closed = FLAGS['periodic'])
     # Update PARAMS
-    for k,v in res.items():
-        PARAMS[k] = v
+    PARAMS.update(res)
     #----------------------------------------------
     # STEP 5: collect results
     #----------------------------------------------
