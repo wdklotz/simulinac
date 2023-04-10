@@ -33,6 +33,8 @@ This file is part of the SIMULINAC code
 """
 import sys,os
 import matplotlib
+import yaml
+import matplotlib.pyplot as plt
 # for PyQt
 # import PyQt5
 # matplotlib.use("Qt5Agg")
@@ -41,9 +43,6 @@ import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
 matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
 # NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
 # NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
-
-import matplotlib.pyplot as plt
-import json
 
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY, dictprnt, RUN_MODE
@@ -411,21 +410,12 @@ def simulation(filepath):
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
-        kv = {'FLAGS':[],'PARAMS':[],'SUMMARY':[]}
-        for key in FLAGS:
-            kv['FLAGS'].append({key: FLAGS[key]})
-        for key in PARAMS:
-            if key in ['twiss_x_i' ,'twiss_y_i','twiss_w_i','twiss_z_i']:
-                kv['PARAMS'].append({key: PARAMS[key]()})
-            else:
-                kv['PARAMS'].append({key: PARAMS[key]})
-        for key in SUMMARY:
-            kv['SUMMARY'].append({key: SUMMARY[key]})
+        kv=dict(FLAGS=FLAGS,PARAMS=PARAMS,SUMMARY=SUMMARY)
         print('\n\n-----as string-----')
         print(kv)
-        print('-----simuOUT.json written-----')
-        with open("simuOUT.json",'w') as fileobject:
-            fileobject.write(json.dumps(kv))
+        print('-----dumped as simuOUT.yml-----')
+        with open("simuOUT.yml",'w') as fileobject:
+            fileobject.write(yaml.dump(kv))
     else:
         show_data_from_elements() #...................................show ELEMENT attributes
         dictprnt(SUMMARY,text='Summary') #............................show summary
