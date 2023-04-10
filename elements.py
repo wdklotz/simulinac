@@ -35,8 +35,13 @@ twopi = 2.*pi
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 
 class OutOfRadialBoundEx(Exception):
+<<<<<<< Updated upstream
     def __init__(self,s):
         self.message = 'OutOfRadialBoundEx in map @ s={:6.2f} [m]'.format(s)
+=======
+    def __init__(self,max_r,s,ID=''):
+        self.message = '{} in map @ s={:6.2f} [m]'.format(self.__class__.__name__,s)
+>>>>>>> Stashed changes
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
     """ Base class for transfer matrices (linear map)
