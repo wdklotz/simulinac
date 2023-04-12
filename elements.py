@@ -817,9 +817,9 @@ class RFG(Node):
         Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
         
         # phase acceptance
-        phimin=2.*phisoll
-        phimax=-phisoll
-        phaseacc = (conv,phimin,phisoll,phimax)
+        phi_2=2.*phisoll
+        phi_1=-phisoll
+        phaseacc = (conv,phi_2,phisoll,phi_1)
 
 
         res =  dict (

@@ -182,14 +182,13 @@ def projections1(lattice,live_lost):
     
     DELTA='\u0394'
     # longitudinal
-    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
-    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
+    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
     projection_dPhidW(live_lost,lattice)
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    # projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     # projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-
     plt.show()
     return
 def frames(lattice, skip):
@@ -290,11 +289,11 @@ def track_node(node,particle,options):
     
     # aperture checks
     if FLAGS['useaper']:
-        conv,phimin,phisoll,phimax = PARAMS['phaseacc']
-        dphi=conv.zToDphi(new_point[Ktp.z])
-        phi = phisoll+dphi
+        conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
+        Dphi=conv.zToDphi(new_point[Ktp.z])
+        phi = phisoll+Dphi
         # Dp2p- and phase-acceptance
-        if not (phimin < phi and phi < phimax):  # Wrangler's approximation (pp.178) is good up to -58deg
+        if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
             sfifo_z.append(s)
             lost = True
@@ -307,7 +306,7 @@ def track_node(node,particle,options):
             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
             sfifo_xy.append(s)
             lost = True
-
+    eins=1
     # live particle
     if track.nbpoints() > 1:
         # remove last tp - save memory
@@ -371,23 +370,9 @@ def tracker(input_file,options):
     # run_mode
     FLAGS['mode'] = RUN_MODE[1]
     print(f'running in \'{FLAGS["mode"]}\' mode')
-    print('-----------------------track_bunch with {} particles---'.format(npart))
+                                # print('-----------------------track_bunch with {} particles---'.format(npart))
 
-    t1       = time.process_time()
-    # pull more options
-    show     = options['show']
-    save     = options['save']
-    skip     = options['skip']
-    losses   = options['losses']
-    # manipulate options
-    if save:
-        show   = False
-        losses = False
-    options['show']   = show
-    options['save']   = save
-    options['losses'] = losses
-    DEBUG_OFF(f'(show,save,skip,losses) = {(show,save,skip,losses)}')
-
+    t1 = time.process_time()
     # bunch-configuration from PARAMS
     # {x,xp}   standard units
     twx = PARAMS['twiss_x_i']
@@ -424,7 +409,7 @@ def tracker(input_file,options):
     tracker_log['Description.............']           = PARAMS.get('descriptor')
     tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['useaper.................']           = FLAGS['useaper']
-    tracker_log['losses..................']           = losses
+    tracker_log['Options.................']           = f'{options}'
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
     tracker_log['acceptance..\u0394\u03B3..........'] = f"{wmax:.2e}"
@@ -452,18 +437,23 @@ def tracker(input_file,options):
     bunchfactory.numberOfParticles=npart
     bunch = bunchfactory()
     t2 = t3 = time.process_time()
-    live_lost = track(lattice,bunch,options) # !-- track: bunch returns (live,lost)-bunch --!
+
+    # !-- track: bunch returns (live,lost)-bunch --!
+    live_lost = track(lattice,bunch,options) 
     t4 = time.process_time()
+
     # make 2D projections
-    if show:
+    if options['show']:
         print('FILL PLOTS')
         projections1(lattice,live_lost)
     t5 = time.process_time()
-    if save:
+    
+    if options['save']:
         print('SAVE FRAMES')
-        frames(lattice, skip)
+        frames(lattice, options['skip'])
     t6 = time.process_time()
-    if losses:
+    
+    if options['losses']:
         print('SHOW LOSSES')
         fifos = [
             dict(title='xy losses',fifo=sfifo_xy),
@@ -515,7 +505,7 @@ if __name__ == '__main__':
     group  = parser.add_mutually_exclusive_group()
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
-    parser.add_argument("--hide", action="store_false",               help="hide IN/OUT scatter plots")
+    parser.add_argument("--hide", action="store_true",                help="hide IN/OUT scatter plots")
     group.add_argument ("--file", default="trackerIN.yml",            help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
@@ -527,11 +517,17 @@ if __name__ == '__main__':
     DEBUG_OFF(f'arguments => {args}')
     options = {}
     options['particles_per_bunch'] = args['p']
-    options['show']                = args['hide']
+    options['show']                = not args['hide']
     options['save']                = args['pcuts']
     options['skip']                = args['skip']
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
+
+    # manipulate options
+    if options['save']:
+        options['show']   = False
+        options['losses'] = False
+    DEBUG_OFF(f'options = {options}')
 
     print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
