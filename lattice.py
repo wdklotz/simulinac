@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v10.23.33'
+__version__='v11.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -497,8 +497,8 @@ class Lattice(object):
             y1,y1p = soll_test(PARAMS['twiss_y_i'].y2())
             x4,x4p = soll_test(PARAMS['twiss_x_i'].y3())
             y4,y4p = soll_test(PARAMS['twiss_y_i'].y3())
-        z0     = soll_test(PARAMS.get('z0',0.))    # z0[m] from waccept if possible
-        Dp2p0  = soll_test(PARAMS.get('Dp2p0',0.)) # dp/p0 from waccept if possible
+        z0     = soll_test(PARAMS.get('z0_i',0.))    # z0[m] from waccept if possible
+        Dp2p0  = soll_test(PARAMS.get('Dp2p0_i',0.)) # dp/p0 from waccept if possible
         sz,szp = soll_test((0., Dp2p0)) # SIN like
         cz,czp = soll_test((z0, 0.))    # cOS like
         # INITIAL @ entrance
@@ -590,7 +590,7 @@ class Lattice(object):
     def accON(self):
         node1 = self.first_gap
         if(node1 != None):
-            PARAMS.update(node1.waccept())  # <== fill PARAMS
+            PARAMS.update(node1.waccept())  # 1st node acceptance parameters ==> PARAMS
             accON = True
             FLAGS['dWf'] = 1
         else:

@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 # Python 2 and 3 print compatability
 from __future__ import print_function   #TODO still used?
-__version__='v10.23.33'
+__version__='v11.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -381,9 +381,9 @@ def collect_data_for_summary(lattice):
         SUMMARY['wmax*']                           =  '{:8.2e} max \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
         SUMMARY['\u0394p/pmax_i [%]']             =  '{:8.2e} max \u0394p/p on separatrix'.format(PARAMS.get('Dp2pmax',0)*1.e2)
         # SUMMARY['zmax* [m]']                       =  '{:8.2e} max z on separatrix'.format(abs(PARAMS['zmax']))
-        SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0'])
+        SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0_i'])
         SUMMARY['\u0394\u03C60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0_i'])
-        SUMMARY['|z0|* [m]']                       =  '{:8.2e} bunch length'.format(abs(PARAMS['z0']))
+        SUMMARY['|z0|* [m]']                       =  '{:8.2e} bunch length'.format(abs(PARAMS['z0_i']))
         SUMMARY['\u03C9* [MHz]']                   =  '{:8.2e} synchotron frquency'.format(PARAMS.get('omgl_0',0)*1.e-6)
     else:
         SUMMARY['separatrix:']                     =  '{}'.format('NO acceleration')

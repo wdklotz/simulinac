@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-__version__='v10.23.33'
+__version__='v11.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -27,7 +27,6 @@ This file is part of the SIMULINAC code
 #TODO: C.K.Allen's matrices which are XAL as well? - don't know if better
 #TODO: slices as sub-lattice attribute to thick element - too big a modification
 #TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - what?
-#done: make waccept a method of RFG node - next planned improvement
 #done: handle exceptions speziel ValueError - more or less done
 #done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 """

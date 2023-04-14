@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v10.23.33'
+__version__='v11.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -74,14 +74,14 @@ class Fifo:
     def max(self,value):
         self._max = value
 # txt FIFOs
-fifo    = Fifo()   # general losses
-fifo_r  = Fifo()   # radial losses
-fifo_z  = Fifo()   # z losses
-fifo_xy = Fifo()   # xy losses
+fifo    = Fifo()   # halo-losses
+fifo_m  = Fifo()   # map-losses
+fifo_z  = Fifo()   # z-losses
+fifo_xy = Fifo()   # xy-losses
 # position FIFOs
 sfifo    = Fifo()
 sfifo_xy = Fifo()
-sfifo_r  = Fifo()
+sfifo_m  = Fifo()
 sfifo_z  = Fifo()
 
 def projections1(lattice,live_lost):
@@ -121,23 +121,26 @@ def projections1(lattice,live_lost):
         lossmax=np.array([np.amax(np.abs(xloss)),np.amax(np.abs(yloss))])
         xymax=np.fmax(livemax,lossmax)*1.03 # add 3% margin
         box_txt=f'IN {fig_txt} {nblive+nblost} particles'
-        ax=plt.subplot(121)
-        scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax)
 
-        xlive=np.zeros(2)
-        ylive=np.zeros(2)
+        xlive1=np.zeros(2)
+        ylive1=np.zeros(2)
         for particle in iter(live):
             track=particle.track
             point=track.getpoints()[inout['OUT']]()
-            xlive=np.append(xlive,point[ix]*scale[inout['OUT']][0])
-            ylive=np.append(ylive,point[iy]*scale[inout['OUT']][1])
-        livemax=np.array([np.amax(np.abs(xlive)),np.amax(np.abs(ylive))])
-        xloss=np.zeros(2)
-        yloss=np.zeros(2)
-        box_txt=f'OUT {fig_txt} {nblost} lost particles'
+            xlive1=np.append(xlive1,point[ix]*scale[inout['OUT']][0])
+            ylive1=np.append(ylive1,point[iy]*scale[inout['OUT']][1])
+        livemax1=np.array([np.amax(np.abs(xlive1)),np.amax(np.abs(ylive1))])
+        xloss1=np.zeros(2)
+        yloss1=np.zeros(2)
+        box1_txt=f'OUT {fig_txt} {nblost} lost particles'
+
+        plotmax=np.array([max(xymax[0],livemax1[0]),max(xymax[1],livemax1[1])])
+        DEBUG_OFF(f'plotmax={plotmax}')
+        ax=plt.subplot(121)
+        scatterInOut(xlive,ylive,xloss,yloss,plotmax,box_txt,ax)
         ax=plt.subplot(122)
-        scatterInOut(xlive,ylive,xloss,yloss,livemax,box_txt,ax)
-        return ax
+        scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
+        return 
 
     # TODO can this be made more legantly? This function is ugly and made me much pain.
     def projection_dPhidW(live_lost,lattice):
@@ -182,13 +185,13 @@ def projections1(lattice,live_lost):
     
     DELTA='\u0394'
     # longitudinal
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
+    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
     projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
-    projection_dPhidW(live_lost,lattice)
+    # projection_dPhidW(live_lost,lattice)
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    # projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    # projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     plt.show()
     return
 def frames(lattice, skip):
@@ -255,7 +258,69 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-def track_node(node,particle,options):
+# def track_node(node,particle,options):
+#     """ Tracks a particle through a node """
+#     def norm(tp):
+#         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
+#         return tpnorm > limit_xyz
+    
+#     track   = particle.track
+#     last_tp = track.getpoints()[-1]
+#     s       = last_tp()[Ktp.S]
+#     lost    = False
+
+#     # maping happens here!
+#     try:
+#         new_point = node.map(last_tp())
+#         new_tp    = Tpoint(point=new_point)
+#     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
+#         txt = ex.message
+#         DEBUG_OFF(txt)
+#         fifo_m.append(txt)
+#         sfifo_m.append(s)
+#         lost = True
+#         particle.lost = lost
+#         return lost
+    
+#     # check limit to stay in physical reasonable range
+#     if norm(new_tp):
+#         fifo.append(f'range limits at {s:.4e} m')
+#         sfifo.append(s)
+#         lost = True
+#         particle.lost = lost
+#         return lost
+    
+#     # aperture checks
+#     if FLAGS['useaper']:
+#         conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
+#         Dphi=conv.zToDphi(new_point[Ktp.z])
+#         phi = phisoll+Dphi
+#         # Dp2p- and phase-acceptance
+#         if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
+#             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
+#             sfifo_z.append(s)
+#             lost = True
+#         elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
+#             fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
+#             sfifo_z.append(s)
+#             lost = True
+#         # transverse apertures
+#         elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
+#             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
+#             sfifo_xy.append(s)
+#             lost = True
+#     # live particle
+#     if track.nbpoints() > 1:
+#         # remove last tp - save memory
+#         track.removepoint(last_tp)
+#     # add new tp
+#     track.addpoint(new_tp)
+#     # marker accumulates all tps to make frames
+#     if isinstance(node,PoincareMarkerAgent):
+#         node.appendPhaseSpace(new_tp)
+#     particle.lost = lost
+#     return lost
+def track_node1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
@@ -266,57 +331,41 @@ def track_node(node,particle,options):
     s       = last_tp()[Ktp.S]
     lost    = False
 
-    # maping happens here!
+    # ********************************************************************************
+    # maping happens here! (map-losses)
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
         txt = ex.message
         DEBUG_OFF(txt)
-        fifo_r.append(txt)
-        sfifo_r.append(s)
+        fifo_m.append(txt)
+        sfifo_m.append(s)
         lost = True
         particle.lost = lost
         return lost
-    
-    # check limit to stay in physical reasonable range
+     # ********************************************************************************
+   
+    # check new_tp against reasonable physical limits (halo-losses)
     if norm(new_tp):
-        fifo.append(f'range limits at {s:.4e} m')
+        fifo.append(f'halo limits at {s:.4e} m')
         sfifo.append(s)
         lost = True
         particle.lost = lost
         return lost
     
-    # aperture checks
+    # aperture checks (z-losses and xy-losses)
     if FLAGS['useaper']:
-        conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
-        Dphi=conv.zToDphi(new_point[Ktp.z])
-        phi = phisoll+Dphi
-        # Dp2p- and phase-acceptance
-        if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
-            fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
-            sfifo_z.append(s)
-            lost = True
-        elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
-            fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-            sfifo_z.append(s)
-            lost = True
-        # transverse apertures
-        elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
-            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-            sfifo_xy.append(s)
-            lost = True
-    eins=1
-    # live particle
+        lost = node.aper_check(new_tp,s,fifo_z=fifo_z,sfifo_z=sfifo_z,fifo_xy=fifo_xy,sfifo_xy=sfifo_xy)
+    particle.lost = lost
+    # eins=1
+    # replace old tp by new tp (save memory)
     if track.nbpoints() > 1:
-        # remove last tp - save memory
         track.removepoint(last_tp)
-    # add new tp
     track.addpoint(new_tp)
-    # marker accumulates all tps to make frames
+    # PoincareMarker keeeps all tps to dump frames
     if isinstance(node,PoincareMarkerAgent):
         node.appendPhaseSpace(new_tp)
-    particle.lost = lost
     return lost
 def track(lattice,bunch,options):
     """
@@ -336,7 +385,7 @@ def track(lattice,bunch,options):
     progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
         for particle in iter(bunch):        # particles
-            lost = track_node(node,particle,options)
+            lost = track_node1(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
@@ -350,7 +399,7 @@ def track(lattice,bunch,options):
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
     # fifo limits
-    fifo_r.max  = 10
+    fifo_m.max  = 10
     fifo_z.max  = 10
     fifo_xy.max = 10
 
@@ -394,7 +443,7 @@ def tracker(input_file,options):
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
     DEBUG_OFF(f'{{z}}x{{Dp2p}} {twz()}')
-    Dp2p0      = PARAMS['Dp2p0']
+    Dp2p0      = PARAMS['Dp2p0_i']
 
     # {Dphi,w}  T.Wangler units
     tww = PARAMS['twiss_w_i']
@@ -402,7 +451,6 @@ def tracker(input_file,options):
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
     DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
-    wmax        = PARAMS['wmax']
 
     # gather for print
     tracker_log = {}
@@ -412,7 +460,7 @@ def tracker(input_file,options):
     tracker_log['Options.................']           = f'{options}'
     tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
     tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
-    tracker_log['acceptance..\u0394\u03B3..........'] = f"{wmax:.2e}"
+    tracker_log['acceptance..\u0394\u03B3..........'] = f"{PARAMS['wmax']:.2e}"
     tracker_log['\u03B2w_i...............[rad]']      = betaw_i
     tracker_log['\u03B2x_i.................[m]']      = betax_i
     tracker_log['\u03B2y_i.................[m]']      = betay_i
@@ -428,7 +476,7 @@ def tracker(input_file,options):
     tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
     tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
     tracker_log['\u0394p/p0................[%]']      = f"{Dp2p0*1.e2:.3f}"
-    tracker_log['\u0394T/T_i...............[%]']      = f"{PARAMS['DT2T_i']*1e2:.3f}"
+    tracker_log['\u0394T/T_i(\u0394W/W_i).......[%]'] = f"{PARAMS['DT2T_i']*1e2:.3f} kin. energy spread"
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
@@ -438,9 +486,11 @@ def tracker(input_file,options):
     bunch = bunchfactory()
     t2 = t3 = time.process_time()
 
-    # !-- track: bunch returns (live,lost)-bunch --!
+    # ********************************************************************************
+    # track: returns tuple (live,lost) bunches
     live_lost = track(lattice,bunch,options) 
     t4 = time.process_time()
+    # ********************************************************************************
 
     # make 2D projections
     if options['show']:
@@ -456,10 +506,10 @@ def tracker(input_file,options):
     if options['losses']:
         print('SHOW LOSSES')
         fifos = [
-            dict(title='xy losses',fifo=sfifo_xy),
-            dict(title='z losses',fifo=sfifo_z),
-            dict(title='map losses',fifo=sfifo_r),
-            dict(title='range losses',fifo=sfifo),
+            dict(title='transverse losses',fifo=sfifo_xy),
+            dict(title='longitudinal losses',fifo=sfifo_z),
+            dict(title='mapping losses',fifo=sfifo_m),
+            dict(title='halo losses',fifo=sfifo),
             ]   
         loss_histograms(lattice,fifos)
     t7 = time.process_time()
@@ -484,7 +534,7 @@ def tracker(input_file,options):
         if data is None: break
         DEBUG_OFF(data)
     while True:
-        data = fifo_r.pop()
+        data = fifo_m.pop()
         if data is None: break
         DEBUG_OFF(data)
     while True:

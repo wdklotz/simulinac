@@ -1,4 +1,4 @@
-__version__='v10.23.33'
+__version__='v11.0.0'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -25,11 +25,10 @@ import unittest
 import warnings
 
 from setutil import PARAMS, FLAGS, DEBUG_ON, DEBUG_OFF, colors
-from setutil import WConverter, Proton, I0, I1, arrprnt, Twiss
+from setutil import WConverter, Proton, I0, I1, arrprnt, Twiss, Ktp
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
 from separatrix import w2phi
 
-# used about everywhere
 twopi = 2.*pi
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
@@ -152,6 +151,8 @@ class Node(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
+    def aper_check(self,new_tp,s,**kwargs):
+        return False   
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label='I'):
@@ -272,6 +273,18 @@ class QF(Node):
     def shorten(self, length):
         shortened = QF(self.label, self.grad, particle=self.particle, position=self.position, length=length, aperture=self.aperture)
         return shortened
+    def aper_check(self,new_tp,s,**kwargs):
+        new_point=new_tp()
+        fifo_xy= kwargs['fifo_xy']
+        sfifo_xy=kwargs['sfifo_xy']
+        lost=False
+
+        # transverse apertures
+        if self.aperture != None and not (abs(new_point[Ktp.x]) < self.aperture or abs(new_point[Ktp.y]) < self.aperture):
+            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
+            sfifo_xy.append(s)
+            lost = True
+        return lost
 class QD(QF):
     """ 
     Trace3D defocussing quad  !!! NEUES API !!!! 
@@ -756,11 +769,9 @@ class RFG(Node):
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
         """
-        DT2T      = PARAMS['DT2T_i']
         Ez0       = self.EzAvg
         ttf       = self.ttf
-        # ttf = 0.8
-        E0T       = self.EzAvg*self.ttf  # [MV/m]
+        E0T       = Ez0*ttf              # [MV/m]
         phisoll   = self.phisoll         # [rad]
         lamb      = self.lamb            # [m]
         freq      = self.freq            # [Hz]
@@ -770,7 +781,10 @@ class RFG(Node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
-        DEBUG_OFF("waccept",dict(DT2T=DT2T,E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
+        DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
+
+        # converter for this node
+        conv = WConverter(tkin,freq)
 
         try:
             # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
@@ -795,49 +809,76 @@ class RFG(Node):
             DEBUG_ON(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')
             sys.exit(1)
 
-        # {Dphi,w}  T.Wangler units
+        # this node Dp/p max on separatrix
+        Dp2pmax = conv.wToDp2p(wmax) 
+
+        #  convert T.Wangler units {Dphi,w} to {z,dp/p} units with 1st cavity parameters
         betaw_i,alfaw_i,gammaw,emitw_i = PARAMS['twiss_w_i']()
-        w0    = (gamma-1.)*DT2T
-        Dphi0 = PARAMS['Dphi0_i']
-        
+        Dphi0_i = PARAMS['Dphi0_i']
+        w0_i = (gamma-1.)*PARAMS['DT2T_i']
+        z0_i,Dp2p0_i,emitz_i,betaz_i = conv.wtoz((Dphi0_i,w0_i,emitw_i,betaw_i))
+        alfaz_i = 0.
+
+        # omega sync for this node
         omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
         omgl_0     = omgl0zuomg*2.*pi*freq   # [Hz]
 
-        # longitudinal acceptance check (always done)
-        if wmax <= w0:
-            si,sm,sf = self.position
-            warnings.showwarning(
-                colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
-                UserWarning,'elements.py',
-                'waccept()')
+        # longitudinal acceptance check (always done)     #TODO
+        # if wmax <= w0_i:
+        #     si,sm,sf = self.position
+        #     warnings.showwarning(
+        #         colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
+        #         UserWarning,'elements.py',
+        #         'waccept')
 
-        #  convert to {z-dp/p}-space with cavity parameters TODO test wToz again!!!!
-        conv = WConverter(tkin,freq)
-        z0,Dp2p0,emitz_i,betaz_i = conv.wtoz((Dphi0,w0,emitw_i,betaw_i))
-        Dp2pmax = conv.wToDp2p(wmax) # Dp/p on separatrix
-        
-        # phase acceptance
+        # phase acceptance (REMARK: phase limits are not dependent on Dp/p aka w)
         phi_2=2.*phisoll
         phi_1=-phisoll
-        phaseacc = (conv,phi_2,phisoll,phi_1)
-
 
         res =  dict (
-                # {Dphi,w}
-                emitw_i         = emitw_i,      # emittance{Dphi,w} [rad]
-                wmax            = wmax,         # separatrix: large amp. oscillations
-                Dp2pmax         = Dp2pmax,      # max D/p on separatrix
-                z0              = z0,           # ellipse z-int    (1/2 axis) [m]
-                Dp2p0           = Dp2p0,        # ellipse dp/p-int (1/2 axis)
-                zmax            = conv.DphiToz(-phisoll),    # Wrangler's approximation (pp.178) is good up to -58deg
-                DWmax           = wmax*m0c2,    # separatrix: max W in [MeV]
-                phaseacc        = phaseacc,
-                omgl_0          = omgl_0      # synchrotron oscillation [Hz]
+                emitw_i         = emitw_i,      # 1st cavity emittance {Dphi,w} units [rad,1]
+                z0_i            = z0_i,         # 1st cavity ellipse z-axe crossing (1/2 axis) [m]
+                Dp2p0_i         = Dp2p0_i,      # 1st cavity ellipse dp/p-axe crossing (1/2 axis)
+                twiss_z_i       = Twiss(betaz_i, alfaz_i, emitz_i), # 1st cavity twis parameters
+                DWmax           = wmax*m0c2,    # this node max delta-W on separatrix [MeV]
+                Dp2pmax         = Dp2pmax,      # this node Dp/p max on separatrix [1]
+                phaseacc        = (conv,phi_2,phisoll,phi_1), # this node phase acceptance [rad]
+                omgl_0          = omgl_0,       # this node synchrotron oscillation [Hz]
+                wmax            = wmax,         # this node w max on separatrix [1] (large amp. oscillations)
+                zmax            = conv.DphiToz(-phisoll) # this node z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
-        alfaz_i = 0.
-        res['twiss_z_i'] = Twiss(betaz_i, alfaz_i, emitz_i)
         return res
-                        
+    def aper_check(self,new_tp,s,**kwargs):
+        new_point=new_tp()
+        fifo_z = kwargs['fifo_z']
+        sfifo_z= kwargs['sfifo_z']
+        fifo_xy= kwargs['fifo_xy']
+        sfifo_xy=kwargs['sfifo_xy']
+        lost=False
+        tkin=self.particle.tkin
+
+        wacc_res=self.waccept()
+        dummy,phi_2,phisoll,phi_1 = wacc_res['phaseacc']   # dummy kept for old track_node
+        conv = WConverter(tkin,self.freq)
+        Dphi=conv.zToDphi(new_point[Ktp.z])
+        phi = phisoll+Dphi
+
+        # longitudinal acceptance
+        if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
+            fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        elif abs(new_point[Ktp.zp]) > wacc_res['Dp2pmax']:
+            fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        # transverse apertures
+        elif self.aperture != None and not (abs(new_point[Ktp.x]) < self.aperture or abs(new_point[Ktp.y]) < self.aperture):
+            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
+            sfifo_xy.append(s)
+            lost = True
+        return lost
+
 # TODO classes below need unittesting
 # TODO D+K+D models not finished for OXAL_C and TTF_C
 class RFC(RFG):    #TODO
