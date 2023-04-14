@@ -26,7 +26,7 @@ import scipy.constants as C
 import scipy.special as SP
 import matplotlib.pyplot as plt
 import time
-import lattice_parser2 as parser
+import lattice_parser_2 as parser
 import unittest
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum

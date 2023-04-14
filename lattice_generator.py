@@ -34,7 +34,7 @@ import PsMarkerAgent       as PSMKR
 import PoincareMarkerAgent as PCMKR
 from lattice import Lattice
 from Ez0 import SFdata
-from lattice_parser2 import parse as doInputParser
+from lattice_parser_2 import parse as doInputParser
 
 def make_counter():
     count = 0

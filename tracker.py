@@ -84,7 +84,7 @@ sfifo_xy = Fifo()
 sfifo_m  = Fifo()
 sfifo_z  = Fifo()
 
-def projections1(lattice,live_lost):
+def projections_1(lattice,live_lost):
     """ 2D projections of 6D phase space """
     
     def projection(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
@@ -433,7 +433,7 @@ def tracker(input_file,options):
     # make 2D projections
     if options['show']:
         print('FILL PLOTS')
-        projections1(lattice,live_lost)
+        projections_1(lattice,live_lost)
     t5 = time.process_time()
     
     if options['save']:

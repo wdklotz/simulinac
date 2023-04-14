@@ -47,7 +47,7 @@ from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 import argparse
-from lattice_parser2 import parse as getParseResult
+from lattice_parser_2 import parse as getParseResult
 import elements as ELM
 import bucket_size as separatrix
 
