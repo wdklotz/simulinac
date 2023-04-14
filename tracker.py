@@ -19,9 +19,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #TODO: statistical analalysis of bunch: position, size, etc ...
-#TODO: how to get the hokey stick?
-#TODO: check w-acceptance at each node entrance
-#TODO: no phase damping - why?
+#TODO: how to get the hokey stick? - done
+#TODO: check w-acceptance at each node entrance - done
+#TODO: no phase damping - why? - solved with version 10.0.0
 
 import sys,os
 import numpy as np
@@ -142,7 +142,7 @@ def projections1(lattice,live_lost):
         scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
         return 
 
-    # TODO can this be made more legantly? This function is ugly and made me much pain.
+    # TODO can this be made more elegantly? This function made me much pain.
     def projection_dPhidW(live_lost,lattice):
         """
         To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
@@ -258,69 +258,7 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-# def track_node(node,particle,options):
-#     """ Tracks a particle through a node """
-#     def norm(tp):
-#         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
-#         return tpnorm > limit_xyz
-    
-#     track   = particle.track
-#     last_tp = track.getpoints()[-1]
-#     s       = last_tp()[Ktp.S]
-#     lost    = False
-
-#     # maping happens here!
-#     try:
-#         new_point = node.map(last_tp())
-#         new_tp    = Tpoint(point=new_point)
-#     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
-#         txt = ex.message
-#         DEBUG_OFF(txt)
-#         fifo_m.append(txt)
-#         sfifo_m.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # check limit to stay in physical reasonable range
-#     if norm(new_tp):
-#         fifo.append(f'range limits at {s:.4e} m')
-#         sfifo.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # aperture checks
-#     if FLAGS['useaper']:
-#         conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
-#         Dphi=conv.zToDphi(new_point[Ktp.z])
-#         phi = phisoll+Dphi
-#         # Dp2p- and phase-acceptance
-#         if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
-#             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
-#             fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         # transverse apertures
-#         elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
-#             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-#             sfifo_xy.append(s)
-#             lost = True
-#     # live particle
-#     if track.nbpoints() > 1:
-#         # remove last tp - save memory
-#         track.removepoint(last_tp)
-#     # add new tp
-#     track.addpoint(new_tp)
-#     # marker accumulates all tps to make frames
-#     if isinstance(node,PoincareMarkerAgent):
-#         node.appendPhaseSpace(new_tp)
-#     particle.lost = lost
-#     return lost
-def track_node1(node,particle,options):
+def track_node_1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
@@ -385,7 +323,7 @@ def track(lattice,bunch,options):
     progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
         for particle in iter(bunch):        # particles
-            lost = track_node1(node,particle,options)
+            lost = track_node_1(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
