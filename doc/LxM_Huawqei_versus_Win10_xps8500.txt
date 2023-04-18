@@ -1,0 +1,4 @@
+W10 on XPS8500 20k particles tracking:      9444 sec
+LxM on Huawei  20K particles tracking:      2516 sec
+
+LxM = XPS8500/3.7   Faktor 4 schneller! 
