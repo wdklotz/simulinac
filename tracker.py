@@ -30,6 +30,8 @@ import time
 from math import sqrt, degrees, radians, ceil,pi
 import argparse
 import unittest
+import h5py
+
 
 from lattice_generator import factory
 import elements as ELM
@@ -258,68 +260,6 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-# def track_node(node,particle,options):
-#     """ Tracks a particle through a node """
-#     def norm(tp):
-#         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
-#         return tpnorm > limit_xyz
-    
-#     track   = particle.track
-#     last_tp = track.getpoints()[-1]
-#     s       = last_tp()[Ktp.S]
-#     lost    = False
-
-#     # maping happens here!
-#     try:
-#         new_point = node.map(last_tp())
-#         new_tp    = Tpoint(point=new_point)
-#     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
-#         txt = ex.message
-#         DEBUG_OFF(txt)
-#         fifo_m.append(txt)
-#         sfifo_m.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # check limit to stay in physical reasonable range
-#     if norm(new_tp):
-#         fifo.append(f'range limits at {s:.4e} m')
-#         sfifo.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # aperture checks
-#     if FLAGS['useaper']:
-#         conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
-#         Dphi=conv.zToDphi(new_point[Ktp.z])
-#         phi = phisoll+Dphi
-#         # Dp2p- and phase-acceptance
-#         if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
-#             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
-#             fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         # transverse apertures
-#         elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
-#             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-#             sfifo_xy.append(s)
-#             lost = True
-#     # live particle
-#     if track.nbpoints() > 1:
-#         # remove last tp - save memory
-#         track.removepoint(last_tp)
-#     # add new tp
-#     track.addpoint(new_tp)
-#     # marker accumulates all tps to make frames
-#     if isinstance(node,PoincareMarkerAgent):
-#         node.appendPhaseSpace(new_tp)
-#     particle.lost = lost
-#     return lost
 def track_node1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
@@ -377,6 +317,30 @@ def track(lattice,bunch,options):
     
     Input: lattice , bunch, options
     """
+    hdf5_file_name = "trdump.hdf5"
+    try:
+        os.remove(hdf5_file_name)
+    except OSError as e:
+        pass
+    finally:
+        print(f'creating new HDF5-file "{hdf5_file_name}"')
+        hdf5File=h5py.File(hdf5_file_name,"w-")
+    print(hdf5File.name)
+
+    hdf5Pos=hdf5File.create_group('position')
+    print(hdf5Pos.name)
+
+    hdf5Life=hdf5Pos.create_group('Live')
+    print(hdf5Life.name)
+
+    hdf5Lost=hdf5Pos.create_group('Lost')
+    print(hdf5Lost.name)
+
+    print(list(hdf5Pos.keys()))
+    exit()
+    h5dLiveSet=h5dGroup.create_dataset("pos/live",(100,),dtype='f',maxshape=(None,))
+    h5dLostSet=h5dGroup.create_dataset("pos/lost",(100,),dtype='f',maxshape=(None,))
+
     node_cnt    = 0
     nb_nodes    = len(lattice.seq)
     pgceil      =  ceil(nb_nodes/100)    # every 1% progress update
