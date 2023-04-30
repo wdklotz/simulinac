@@ -495,7 +495,7 @@ class RFG(Node):
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
             # self.map  =>  # DYN_G has its own mapping method
-        # TODO other mappings not tested TODO
+        # TODO other mappings not tested
         else:
             print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
 
@@ -823,7 +823,7 @@ class RFG(Node):
         omgl0zuomg = sqrt(E0T*lamb*sin(-phisoll)/(2*pi*m0c2*gamma**3*beta))
         omgl_0     = omgl0zuomg*2.*pi*freq   # [Hz]
 
-        # longitudinal acceptance check (always done)     #TODO
+        # longitudinal acceptance check (always done)     #TODO  is this needed?
         # if wmax <= w0_i:
         #     si,sm,sf = self.position
         #     warnings.showwarning(
@@ -857,8 +857,8 @@ class RFG(Node):
         lost=False
         tkin=self.particle.tkin
 
-        wacc_res=self.waccept()
-        dummy,phi_2,phisoll,phi_1 = wacc_res['phaseacc']   # dummy kept for old track_node
+        res=self.waccept()
+        dummy,phi_2,phisoll,phi_1 = res['phaseacc']   # dummy kept for old track_node
         conv = WConverter(tkin,self.freq)
         Dphi=conv.zToDphi(new_point[Ktp.z])
         phi = phisoll+Dphi
@@ -868,7 +868,7 @@ class RFG(Node):
             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
             sfifo_z.append(s)
             lost = True
-        elif abs(new_point[Ktp.zp]) > wacc_res['Dp2pmax']:
+        elif abs(new_point[Ktp.zp]) > res['Dp2pmax']:
             fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
             sfifo_z.append(s)
             lost = True

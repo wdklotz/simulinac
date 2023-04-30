@@ -26,7 +26,7 @@ import scipy.constants as C
 import scipy.special as SP
 import matplotlib.pyplot as plt
 import time
-import lattice_parser2 as parser
+import lattice_parser_2 as parser
 import unittest
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
@@ -64,7 +64,7 @@ class Ktp(IntEnum):
     dT = 7     # const 1
     S  = 8     # current position sf
     dS = 9     # const 1
-    # nd = 10    # current node   TODO
+    # nd = 10    # current node   TODO needed?
 class Ktw(IntEnum):
     """ -K-oordinaten -tw-iss vector (1x10) """
     bx = 0      # twiss-beta
@@ -77,7 +77,7 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
-# for compatability with elder code TODO: replace!
+# for compatability with elder code!
 XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
 ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
 RUN_MODE = {0:'ring with cavities', 1:'linac', 2:'ring w/o cavities', 3:'line w/o cavities'}
@@ -188,7 +188,7 @@ class WConverter(object):
     W is kin energy (Wangler 1.2) (gamma-1)*m0c2
     w is Dgamma (Wangler 6.13)  DW=w*m0c2
     """
-    #TODO extend to other particles not only protons
+    #TODO extend to other particles not only protons: marbe!
     def __init__(self,tk,freq):
         self.pi             = C.pi
         self.lamb           = C.c/freq           # [m]
@@ -341,14 +341,14 @@ class colors: # You may need to change color settings
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     BLUE = '\033[34m'
-def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss
+def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss- maybe?
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
     sigma  = sqrt(epsi*beta)
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
-def show_data_from_elements():  #TODO better get data fron lattice objects
-    eIDs = parser.parse().ELMIDs    # get field from parser results
+def show_data_from_elements():  #TODO better get data fron lattice objects - maybe?
+    eIDs = parser.parse().ELMIDs    # get field from parser results - ??
     for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]
         print('{} '.format(elementID),end='')

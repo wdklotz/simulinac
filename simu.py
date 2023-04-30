@@ -20,15 +20,13 @@ This file is part of the SIMULINAC code
 
 #TODO: shift initial beam paramters to bunch.py or new beam.py module -has 1st priority
 #TODO: Calulate cell phase advance sigma by integration - maybe
-#TODO: use normalized emittances ?
-#TODO: make new simu_manual.tex, README.md, check conversions.tex - later
-#TODO: rework the KVout - done in parts
+#TODO: use normalized emittances why?
 #TODO: rework verbose printing levels - needed?
 #TODO: C.K.Allen's matrices which are XAL as well? - don't know if better
-#TODO: slices as sub-lattice attribute to thick element - too big a modification
-#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - what?
-#done: handle exceptions speziel ValueError - more or less done
-#done: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
+#TODO: slices as sub-lattice attribute to thick element - too big a modification? advantage?
+#TODO: Covariance Ellipse see https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html - done
+#TODO: handle exceptions speziel ValueError - more or less done
+#TODO: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py - done
 """
 import sys,os
 import matplotlib
@@ -49,7 +47,7 @@ from setutil import collect_data_for_summary, show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 import argparse
-from lattice_parser2 import parse as getParseResult
+from lattice_parser_2 import parse as getParseResult
 import elements as ELM
 import bucket_size as separatrix
 
@@ -373,7 +371,7 @@ def simulation(filepath):
     # descriptor
     SUMMARY['Description'] = PARAMS['descriptor']
     #----------------------------------------------
-    # STEP 2: calculate run mode and longitudinal paramters at entrance
+    # STEP 2: calculate run mode
     #----------------------------------------------
     FLAGS['accON'] = lattice.accON
     # run-mode

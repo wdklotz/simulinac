@@ -22,5 +22,5 @@ GOTO:EOF
 
 :LAUNCH
 REM launch simu.py
-python simu.py --file simuIN.yml
+python simu.py --file trackerIN_smh27-3.1.5.work.yml
 GOTO:EOF

@@ -72,7 +72,7 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import inspect
-import lattice_parser2 as parser
+import lattice_parser_2 as parser
 import unittest
 
 from ast import Del

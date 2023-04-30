@@ -19,9 +19,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #TODO: statistical analalysis of bunch: position, size, etc ...
-#TODO: how to get the hokey stick?
-#TODO: check w-acceptance at each node entrance
-#TODO: no phase damping - why?
+#TODO: how to get the hokey stick? - done
+#TODO: check w-acceptance at each node entrance - done
+#TODO: no phase damping - why? - solved with version 10.0.0
 
 import sys,os
 import numpy as np
@@ -86,7 +86,7 @@ sfifo_xy = Fifo()
 sfifo_m  = Fifo()
 sfifo_z  = Fifo()
 
-def projections1(lattice,live_lost):
+def projections_1(lattice,live_lost):
     """ 2D projections of 6D phase space """
     
     def projection(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
@@ -144,7 +144,7 @@ def projections1(lattice,live_lost):
         scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
         return 
 
-    # TODO can this be made more legantly? This function is ugly and made me much pain.
+    # TODO can this be made more elegantly? This function made me much pain.
     def projection_dPhidW(live_lost,lattice):
         """
         To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
@@ -260,7 +260,7 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-def track_node1(node,particle,options):
+def track_node_1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
@@ -349,7 +349,7 @@ def track(lattice,bunch,options):
     progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
     for node in iter(lattice):              # nodes
         for particle in iter(bunch):        # particles
-            lost = track_node1(node,particle,options)
+            lost = track_node_1(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
@@ -459,7 +459,7 @@ def tracker(input_file,options):
     # make 2D projections
     if options['show']:
         print('FILL PLOTS')
-        projections1(lattice,live_lost)
+        projections_1(lattice,live_lost)
     t5 = time.process_time()
     
     if options['save']:

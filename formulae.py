@@ -43,7 +43,7 @@ gamma = W/m0c2
 beta  = math.sqrt(1.-1./gamma**2)
 lamb  = cl/frq    # [m]
 
-def I0(x):      #TODO   kw
+def I0(x):      # not used anymore
     """
     Modified Bessel function I of integer order 0
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
