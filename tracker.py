@@ -318,7 +318,7 @@ def track(lattice,bunch,options):
     Input: lattice , bunch, options
     """
     if options['h5dump']:
-        hd5File_name = "frames.h5"
+        hd5File_name = options['h5file']
         try:
             os.remove(hd5File_name)
         except OSError as e:
@@ -532,6 +532,7 @@ if __name__ == '__main__':
     parser.add_argument("--lrx", metavar="N", default="-1", type=int,        help="take N-th frame as axis limits. first=0, last=-1")
     parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
     parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
+    parser.add_argument("--h5file", default="frames.h5",                     help="HDF5 dump-file")
     args = vars(parser.parse_args())
     DEBUG_OFF(f'arguments => {args}')
     options = {}
@@ -543,6 +544,7 @@ if __name__ == '__main__':
     options['lrx']                 = args['lrx']
     options['h5dump']              = args['h5dump']
     options['h5skip']              = args['h5skip']
+    options['h5file']              = args['h5file']
 
     # manipulate options
     if options['save']:
