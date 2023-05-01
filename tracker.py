@@ -317,48 +317,52 @@ def track(lattice,bunch,options):
     
     Input: lattice , bunch, options
     """
-    hdf5_file_name = "trdump.hdf5"
-    try:
-        os.remove(hdf5_file_name)
-    except OSError as e:
-        pass
-    finally:
-        print(f'creating new HDF5-file "{hdf5_file_name}"')
-        hdf5File=h5py.File(hdf5_file_name,"w-")
-    print(hdf5File.name)
+    if options['h5dump']:
+        hd5File_name = "frames.h5"
+        try:
+            os.remove(hd5File_name)
+        except OSError as e:
+            pass
+        finally:
+            print(f'creating new HDF5-file "{hd5File_name}"')
+            hd5File=h5py.File(hd5File_name,"w-")
+        hd5frames_grp=hd5File.create_group('/frames')
 
-    hdf5Pos=hdf5File.create_group('position')
-    print(hdf5Pos.name)
-
-    hdf5Life=hdf5Pos.create_group('Live')
-    print(hdf5Life.name)
-
-    hdf5Lost=hdf5Pos.create_group('Lost')
-    print(hdf5Lost.name)
-
-    print(list(hdf5Pos.keys()))
-    exit()
-    h5dLiveSet=h5dGroup.create_dataset("pos/live",(100,),dtype='f',maxshape=(None,))
-    h5dLostSet=h5dGroup.create_dataset("pos/lost",(100,),dtype='f',maxshape=(None,))
-
-    node_cnt    = 0
-    nb_nodes    = len(lattice.seq)
-    pgceil      =  ceil(nb_nodes/100)    # every 1% progress update
-    nbparticles = bunch.nbparticles()
-    lbunch      = Bunch()    # lost particles go into this bunch
+    nb_nodes     = len(lattice.seq)
+    nb_particles = bunch.nbparticles()
+    pgceil       =  ceil(nb_nodes/100)    # every 1% progress update
+    lbunch       = Bunch()    # lost particles go into this bunch
     progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
-    for node in iter(lattice):              # nodes
-        for particle in iter(bunch):        # particles
+
+    for n_cnt,node in enumerate(iter(lattice)):              # nodes
+        # current number of particles in bunch
+        current_nb_particles = bunch.nbparticles()
+        hd5dump = options['h5dump'] and (n_cnt%options['h5skip'] == 0)
+        # HDF5 dumping: create data set
+        if hd5dump: 
+            hd5_ds = hd5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
+        for p_cnt,particle in enumerate(iter(bunch)):        # particles
             lost = track_node_1(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
+            else:
+                # HDF5 dumping: fill data set
+                if hd5dump:
+                    tp = particle.track.getpoints()[-1]()
+                    DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
+                    hd5_ds[p_cnt] = tp
+                pass
         # showing track-loop progress
-        if node_cnt%pgceil == 0 or node_cnt == nb_nodes: 
-            progress_bar(node_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
-        node_cnt +=1
+        if n_cnt%pgceil == 0 or n_cnt == nb_nodes: 
+            progress_bar(n_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
+
+    DEBUG_OFF(f'n_cnt= {n_cnt}')
     lost = lbunch.nbparticles()
-    print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nbparticles,nbparticles-lost,lost))
+    print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
+    # closing HDF5 file
+    if options['h5dump']:
+        hd5File.close
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
@@ -383,7 +387,6 @@ def tracker(input_file,options):
     # run_mode
     FLAGS['mode'] = RUN_MODE[1]
     print(f'running in \'{FLAGS["mode"]}\' mode')
-                                # print('-----------------------track_bunch with {} particles---'.format(npart))
 
     t1 = time.process_time()
     # bunch-configuration from PARAMS
@@ -523,10 +526,12 @@ if __name__ == '__main__':
     group.add_argument ("--file", default="trackerIN.yml",            help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
-    group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")
     group1.add_argument("--losses", action="store_true",              help="run in losses mode")
-    parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
-    parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
+    group1.add_argument("--pcuts", action="store_true",                      help="save poincare cuts")
+    parser.add_argument("--skip", metavar="N", default="1", type=int,        help="skip every N poincare cuts")
+    parser.add_argument("--lrx", metavar="N", default="-1", type=int,        help="take N-th frame as axis limits. first=0, last=-1")
+    parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
+    parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
     args = vars(parser.parse_args())
     DEBUG_OFF(f'arguments => {args}')
     options = {}
@@ -536,6 +541,8 @@ if __name__ == '__main__':
     options['skip']                = args['skip']
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
+    options['h5dump']              = args['h5dump']
+    options['h5skip']              = args['h5skip']
 
     # manipulate options
     if options['save']:
