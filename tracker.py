@@ -362,7 +362,7 @@ def track(lattice,bunch,options):
     print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
     # closing HDF5 file
     if options['h5dump']:
-        hd5File.close
+        hd5File.close()
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
