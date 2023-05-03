@@ -1,4 +1,4 @@
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -638,7 +638,7 @@ class RFG(Node):
         phin      = converter.zToDphi(z) + phisoll          # phase (i)
         deltaW    = qE0LT*i0*cos(phin)                   # energy kick
         # win     = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
-        win       =  converter.Dp2pToW(zp) + WIN         # energy (i) dp/p --> dT
+        win       =  converter.Dp2pToDW(zp) + WIN         # energy (i) dp/p --> dT
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
 
@@ -725,7 +725,7 @@ class RFG(Node):
         phiin       = converter.zToDphi(z) + phisoll 
         deg_phiin = degrees(phiin)        # Teilchen phase (I)
         wo_wi       = qE0LT*i0*cos(phiin)                 # energy kick (Shislo 4.2.3)
-        wi          =  converter.Dp2pToW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
+        wi          =  converter.Dp2pToDW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
         wo          = wi + wo_wi                          # Teilchen energy (O)   
         dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
 

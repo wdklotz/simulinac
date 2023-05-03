@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 # Python 2 and 3 print compatability
 from __future__ import print_function   #TODO still used?
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -193,7 +193,8 @@ class WConverter(object):
         self.pi             = C.pi
         self.lamb           = C.c/freq           # [m]
         self.m0c2           = C.value('proton mass energy equivalent in MeV')
-        self.gamma          = 1. + tk/self.m0c2
+        self.tk             = tk
+        self.gamma          = 1. + self.tk/self.m0c2
         self.beta           = sqrt(1.-1./(self.gamma*self.gamma))
         self.b              = self.beta
         self.g              = self.gamma
@@ -219,9 +220,13 @@ class WConverter(object):
         """ Dp2p [] to w=DW/m0c2(a.k.a. Dgamma) [] """
         w = (self.g2-1.)/self.g*Dp2p
         return w # []
-    def Dp2pToW(self,Dp2p):
+    def Dp2pToDW(self,Dp2p):
         """ Dp2p [] to DW=Dw*m0*c^2 [MeV] """
         W = self.Dp2pTow(Dp2p)*self.m0c2
+        return W
+    def Dp2pToDW2W(self,Dp2p):
+        """ Dp2p to DW/W """
+        W = self.Dp2pToDW(Dp2p)/self.tk
         return W
     def DWToDp2p(self,DW):
         """ DW [MeV] to Dp2p [] """
