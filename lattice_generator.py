@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -34,7 +34,7 @@ import PsMarkerAgent       as PSMKR
 import PoincareMarkerAgent as PCMKR
 from lattice import Lattice
 from Ez0 import SFdata
-from lattice_parser2 import parse as doInputParser
+from lattice_parser_2 import parse as doInputParser
 
 def make_counter():
     count = 0

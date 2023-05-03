@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -302,35 +302,6 @@ def scatter11(live,lost,abscisse,ordinate,txt):
     # adjust: left, bottom, right, top, wspace, hspace
     plt.subplots_adjust(wspace=0.15) 
     return
-# NOTE below is experimental, maybe unfinished
-def poincare_hist(fig,ax,x,y):
-    # definitions for the axes
-    left, width    = 0.1, 0.65
-    bottom, height = 0.1, 0.65
-    spacing        = 0.005
-
-
-    rect_scatter = [left, bottom, width, height]
-    rect_histx   = [left, bottom + height + spacing, width, 0.2]
-    rect_histy   = [left + width + spacing, bottom, 0.2, height]
-
-    # start with a square Figure
-    # fig = plt.figure(figsize=(8, 8))
-
-    # Add a gridspec with two rows and two columns and a ratio of 2 to 7 between
-    # the size of the marginal axes and the main axes in both directions.
-    # Also adjust the subplot parameters for a square plot.
-    gs = fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7), left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05)
-
-    ax1       = ax.add_subplot(gs[1, 0])
-    ax_histx = ax.add_subplot(gs[0, 0], sharex=ax)
-    ax_histy = ax.add_subplot(gs[1, 1], sharey=ax)
-    # ax = fig.add_axes(rect_scatter)
-    # ax_histx = fig.add_axes(rect_histx, sharex=ax)
-    # ax_histy = fig.add_axes(rect_histy, sharey=ax)
-
-    # use the previously defined function
-    scatter_hist(x, y, ax1, ax_histx, ax_histy)
 
 if __name__ == '__main__':
     print("what?")

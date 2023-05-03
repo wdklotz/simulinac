@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -19,9 +19,9 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #TODO: statistical analalysis of bunch: position, size, etc ...
-#TODO: how to get the hokey stick?
-#TODO: check w-acceptance at each node entrance
-#TODO: no phase damping - why?
+#TODO: how to get the hokey stick? - done
+#TODO: check w-acceptance at each node entrance - done
+#TODO: no phase damping - why? - solved with version 10.0.0
 
 import sys,os
 import numpy as np
@@ -30,6 +30,8 @@ import time
 from math import sqrt, degrees, radians, ceil,pi
 import argparse
 import unittest
+import h5py
+
 
 from lattice_generator import factory
 import elements as ELM
@@ -84,7 +86,7 @@ sfifo_xy = Fifo()
 sfifo_m  = Fifo()
 sfifo_z  = Fifo()
 
-def projections1(lattice,live_lost):
+def projections_1(lattice,live_lost):
     """ 2D projections of 6D phase space """
     
     def projection(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
@@ -142,7 +144,7 @@ def projections1(lattice,live_lost):
         scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
         return 
 
-    # TODO can this be made more legantly? This function is ugly and made me much pain.
+    # TODO can this be made more elegantly? This function made me much pain.
     def projection_dPhidW(live_lost,lattice):
         """
         To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
@@ -174,20 +176,28 @@ def projections1(lattice,live_lost):
         # kin energy of last track-point
         tkOUT=point()[Ktp.T]
         DEBUG_OFF(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
-        DEBUG_ON(f'tk(IN,OUT) {(tkIN,tkOUT)}')
+        DEBUG_ON(f'(W-IN,W-OUT)={(tkIN,tkOUT)}')
         convIN =WConverter(tkIN,freqIN)
         convOUT=WConverter(tkOUT,freqOUT)
+        # scale=[
+        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
+        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
+        #       ]
+        # scale=[
+        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW2W(1.)*1e2),
+        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW2W(1.)*1e2)
+        #       ]
         scale=[
-             (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
-             (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
+             (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW(1.)*1e3),
+             (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW(1.)*1e3)
               ]
-        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}{GAMMA} [deg,%]',scale=scale)
+        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}W [deg,KeV]',scale=scale)
     
     DELTA='\u0394'
     # longitudinal
     # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
-    # projection_dPhidW(live_lost,lattice)
+    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    projection_dPhidW(live_lost,lattice)
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
@@ -200,6 +210,7 @@ def frames(lattice, skip):
     agent_cnt = 0
     frames = []
     # gather and count markers
+
     for node in iter(lattice):
         if isinstance(node,PoincareMarkerAgent):
             agent = node
@@ -258,69 +269,7 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-# def track_node(node,particle,options):
-#     """ Tracks a particle through a node """
-#     def norm(tp):
-#         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
-#         return tpnorm > limit_xyz
-    
-#     track   = particle.track
-#     last_tp = track.getpoints()[-1]
-#     s       = last_tp()[Ktp.S]
-#     lost    = False
-
-#     # maping happens here!
-#     try:
-#         new_point = node.map(last_tp())
-#         new_tp    = Tpoint(point=new_point)
-#     except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
-#         txt = ex.message
-#         DEBUG_OFF(txt)
-#         fifo_m.append(txt)
-#         sfifo_m.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # check limit to stay in physical reasonable range
-#     if norm(new_tp):
-#         fifo.append(f'range limits at {s:.4e} m')
-#         sfifo.append(s)
-#         lost = True
-#         particle.lost = lost
-#         return lost
-    
-#     # aperture checks
-#     if FLAGS['useaper']:
-#         conv,phi_2,phisoll,phi_1 = PARAMS['phaseacc']
-#         Dphi=conv.zToDphi(new_point[Ktp.z])
-#         phi = phisoll+Dphi
-#         # Dp2p- and phase-acceptance
-#         if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
-#             fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         elif abs(new_point[Ktp.zp]) > PARAMS['Dp2pmax']:
-#             fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-#             sfifo_z.append(s)
-#             lost = True
-#         # transverse apertures
-#         elif node.aperture != None and not (abs(new_point[Ktp.x]) < node.aperture or abs(new_point[Ktp.y]) < node.aperture):
-#             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-#             sfifo_xy.append(s)
-#             lost = True
-#     # live particle
-#     if track.nbpoints() > 1:
-#         # remove last tp - save memory
-#         track.removepoint(last_tp)
-#     # add new tp
-#     track.addpoint(new_tp)
-#     # marker accumulates all tps to make frames
-#     if isinstance(node,PoincareMarkerAgent):
-#         node.appendPhaseSpace(new_tp)
-#     particle.lost = lost
-#     return lost
-def track_node1(node,particle,options):
+def track_node_1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
@@ -377,24 +326,52 @@ def track(lattice,bunch,options):
     
     Input: lattice , bunch, options
     """
-    node_cnt    = 0
-    nb_nodes    = len(lattice.seq)
-    pgceil      =  ceil(nb_nodes/100)    # every 1% progress update
-    nbparticles = bunch.nbparticles()
-    lbunch      = Bunch()    # lost particles go into this bunch
+    if options['h5dump']:
+        h5File_name = options['h5file']
+        try:
+            os.remove(h5File_name)
+        except OSError as e:
+            pass
+        finally:
+            print(f'creating new HDF5-file "{h5File_name}"')
+            h5File=h5py.File(h5File_name,"w-")
+        h5frames_grp=h5File.create_group('/frames')
+
+    nb_nodes     = len(lattice.seq)
+    nb_particles = bunch.nbparticles()
+    pgceil       =  ceil(nb_nodes/100)    # every 1% progress update
+    lbunch       = Bunch()    # lost particles go into this bunch
     progress_bar(0,nb_nodes,prefix="Progress:",suffix="Complete",length=50)
-    for node in iter(lattice):              # nodes
-        for particle in iter(bunch):        # particles
-            lost = track_node1(node,particle,options)
+
+    for n_cnt,node in enumerate(iter(lattice)):              # nodes
+        # current number of particles in bunch
+        current_nb_particles = bunch.nbparticles()
+        h5dump = options['h5dump'] and (n_cnt%options['h5skip'] == 0)
+        # HDF5 dumping: create data set
+        if h5dump: 
+            h5ds = h5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
+        for p_cnt,particle in enumerate(iter(bunch)):        # particles
+            lost = track_node_1(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)
+            else:
+                # HDF5 dumping: fill data set
+                if h5dump:
+                    tp = particle.track.getpoints()[-1]()
+                    DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
+                    h5ds[p_cnt] = tp
+                pass
         # showing track-loop progress
-        if node_cnt%pgceil == 0 or node_cnt == nb_nodes: 
-            progress_bar(node_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
-        node_cnt +=1
+        if n_cnt%pgceil == 0 or n_cnt == nb_nodes: 
+            progress_bar(n_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
+
+    DEBUG_OFF(f'n_cnt= {n_cnt}')
     lost = lbunch.nbparticles()
-    print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nbparticles,nbparticles-lost,lost))
+    print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
+    # closing HDF5 file
+    if options['h5dump']:
+        h5File.close()
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
@@ -419,7 +396,6 @@ def tracker(input_file,options):
     # run_mode
     FLAGS['mode'] = RUN_MODE[1]
     print(f'running in \'{FLAGS["mode"]}\' mode')
-                                # print('-----------------------track_bunch with {} particles---'.format(npart))
 
     t1 = time.process_time()
     # bunch-configuration from PARAMS
@@ -470,13 +446,13 @@ def tracker(input_file,options):
     tracker_log['\u03B5y_i.................[m]']      = emity_i
     tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
     tracker_log['lattice version.........']           = PARAMS['lattice_version']
-    tracker_log["\u03C3(x,x')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_x,sigma_xp)
-    tracker_log["\u03C3(y,y')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_y,sigma_yp)
-    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = "{:.2e} {:.2e}".format(sigma_z,sigma_Dp2p)
-    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
-    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
+    tracker_log["\u03C3(x,x')_i......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_x,sigma_xp)
+    tracker_log["\u03C3(y,y')_i......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_y,sigma_yp)
+    tracker_log["\u03C3(z,\u0394p/p)_i.......([m,])"] = "{:.2e} {:.2e}".format(sigma_z,sigma_Dp2p)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)_i......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)_i......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
     tracker_log['\u0394p/p0................[%]']      = f"{Dp2p0*1.e2:.3f}"
-    tracker_log['\u0394T/T_i(\u0394W/W_i).......[%]'] = f"{PARAMS['DT2T_i']*1e2:.3f} kin. energy spread"
+    tracker_log['\u0394T/T_i..(\u0394W/W).......[%]'] = f"{PARAMS['DT2T_i']*1e2:.3f} kin. energy spread"
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
@@ -495,7 +471,7 @@ def tracker(input_file,options):
     # make 2D projections
     if options['show']:
         print('FILL PLOTS')
-        projections1(lattice,live_lost)
+        projections_1(lattice,live_lost)
     t5 = time.process_time()
     
     if options['save']:
@@ -559,10 +535,13 @@ if __name__ == '__main__':
     group.add_argument ("--file", default="trackerIN.yml",            help="lattice input-file")
     group.add_argument ("--tmpl",                                     help="template number")
     parser.add_argument("--run",                                      help="run number")
-    group1.add_argument("--pcuts", action="store_true",               help="save poincare cuts")
     group1.add_argument("--losses", action="store_true",              help="run in losses mode")
-    parser.add_argument("--skip", metavar="N", default="1", type=int, help="skip every N poincare cuts")
-    parser.add_argument("--lrx", metavar="N", default="-1", type=int, help="take N-th frame for axis limits. first=0, last=-1")
+    group1.add_argument("--pcuts", action="store_true",                      help="save poincare cuts")
+    parser.add_argument("--skip", metavar="N", default="1", type=int,        help="skip every N poincare cuts")
+    parser.add_argument("--lrx", metavar="N", default="-1", type=int,        help="take N-th frame as axis limits. first=0, last=-1")
+    parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
+    parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
+    parser.add_argument("--h5file", default="frames.h5",                     help="HDF5 dump-file")
     args = vars(parser.parse_args())
     DEBUG_OFF(f'arguments => {args}')
     options = {}
@@ -572,6 +551,9 @@ if __name__ == '__main__':
     options['skip']                = args['skip']
     options['losses']              = args['losses']
     options['lrx']                 = args['lrx']
+    options['h5dump']              = args['h5dump']
+    options['h5skip']              = args['h5skip']
+    options['h5file']              = args['h5file']
 
     # manipulate options
     if options['save']:

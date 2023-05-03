@@ -1,4 +1,4 @@
-__version__='v11.0.0'
+__version__='v11.0.1'
 """ 
 DYNAC_lattice-generator
 converts YAML input file (simuIN.yml) into dynacIN for dynacv7r1.
@@ -72,7 +72,7 @@ from matplotlib.patches import Ellipse
 import warnings
 import time
 import inspect
-import lattice_parser2 as parser
+import lattice_parser_2 as parser
 import unittest
 
 from ast import Del

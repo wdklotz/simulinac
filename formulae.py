@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -43,7 +43,7 @@ gamma = W/m0c2
 beta  = math.sqrt(1.-1./gamma**2)
 lamb  = cl/frq    # [m]
 
-def I0(x):      #TODO   kw
+def I0(x):      # not used anymore
     """
     Modified Bessel function I of integer order 0
     ref.: Hanbook of Mathematical Functions, M.Abramowitz & I.A.Stegun
