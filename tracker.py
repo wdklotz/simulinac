@@ -318,15 +318,15 @@ def track(lattice,bunch,options):
     Input: lattice , bunch, options
     """
     if options['h5dump']:
-        hd5File_name = options['h5file']
+        h5File_name = options['h5file']
         try:
-            os.remove(hd5File_name)
+            os.remove(h5File_name)
         except OSError as e:
             pass
         finally:
-            print(f'creating new HDF5-file "{hd5File_name}"')
-            hd5File=h5py.File(hd5File_name,"w-")
-        hd5frames_grp=hd5File.create_group('/frames')
+            print(f'creating new HDF5-file "{h5File_name}"')
+            h5File=h5py.File(h5File_name,"w-")
+        h5frames_grp=h5File.create_group('/frames')
 
     nb_nodes     = len(lattice.seq)
     nb_particles = bunch.nbparticles()
@@ -337,10 +337,10 @@ def track(lattice,bunch,options):
     for n_cnt,node in enumerate(iter(lattice)):              # nodes
         # current number of particles in bunch
         current_nb_particles = bunch.nbparticles()
-        hd5dump = options['h5dump'] and (n_cnt%options['h5skip'] == 0)
+        h5dump = options['h5dump'] and (n_cnt%options['h5skip'] == 0)
         # HDF5 dumping: create data set
-        if hd5dump: 
-            hd5_ds = hd5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
+        if h5dump: 
+            h5ds = h5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
         for p_cnt,particle in enumerate(iter(bunch)):        # particles
             lost = track_node_1(node,particle,options)
             if lost:
@@ -348,10 +348,10 @@ def track(lattice,bunch,options):
                 bunch.removeparticle(particle)
             else:
                 # HDF5 dumping: fill data set
-                if hd5dump:
+                if h5dump:
                     tp = particle.track.getpoints()[-1]()
                     DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
-                    hd5_ds[p_cnt] = tp
+                    h5ds[p_cnt] = tp
                 pass
         # showing track-loop progress
         if n_cnt%pgceil == 0 or n_cnt == nb_nodes: 
@@ -362,7 +362,7 @@ def track(lattice,bunch,options):
     print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
     # closing HDF5 file
     if options['h5dump']:
-        hd5File.close()
+        h5File.close()
     return (bunch,lbunch)
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
