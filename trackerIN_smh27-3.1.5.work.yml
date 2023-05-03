@@ -33,7 +33,7 @@ FLAGS:
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
-    # useaper:      True            # {False} use aperture check for lattice elements
+    useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     # maction:      True            # {False} call marker actions
