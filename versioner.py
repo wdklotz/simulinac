@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 import sys,os
 import glob
 import re

@@ -1,6 +1,6 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
-__version__='v11.0.0'
+__version__='v11.0.1'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -174,20 +174,28 @@ def projections_1(lattice,live_lost):
         # kin energy of last track-point
         tkOUT=point()[Ktp.T]
         DEBUG_OFF(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
-        DEBUG_ON(f'tk(IN,OUT) {(tkIN,tkOUT)}')
+        DEBUG_ON(f'(W-IN,W-OUT)={(tkIN,tkOUT)}')
         convIN =WConverter(tkIN,freqIN)
         convOUT=WConverter(tkOUT,freqOUT)
+        # scale=[
+        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
+        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
+        #       ]
+        # scale=[
+        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW2W(1.)*1e2),
+        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW2W(1.)*1e2)
+        #       ]
         scale=[
-             (degrees(convIN.zToDphi(1.)),   convIN.Dp2pTow(1.)*1e2),
-             (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
+             (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW(1.)*1e3),
+             (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW(1.)*1e3)
               ]
-        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}{GAMMA} [deg,%]',scale=scale)
+        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}W [deg,KeV]',scale=scale)
     
     DELTA='\u0394'
     # longitudinal
     # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
-    projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
-    # projection_dPhidW(live_lost,lattice)
+    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    projection_dPhidW(live_lost,lattice)
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
@@ -200,6 +208,7 @@ def frames(lattice, skip):
     agent_cnt = 0
     frames = []
     # gather and count markers
+
     for node in iter(lattice):
         if isinstance(node,PoincareMarkerAgent):
             agent = node
@@ -408,13 +417,13 @@ def tracker(input_file,options):
     tracker_log['\u03B5y_i.................[m]']      = emity_i
     tracker_log['\u03B5z_i..{z,\u0394p/p}.......[m]'] = emitz_i
     tracker_log['lattice version.........']           = PARAMS['lattice_version']
-    tracker_log["\u03C3(x,x')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_x,sigma_xp)
-    tracker_log["\u03C3(y,y')i.......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_y,sigma_yp)
-    tracker_log["\u03C3(z,\u0394p/p)i........([m,])"] = "{:.2e} {:.2e}".format(sigma_z,sigma_Dp2p)
-    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
-    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)i.......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
+    tracker_log["\u03C3(x,x')_i......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_x,sigma_xp)
+    tracker_log["\u03C3(y,y')_i......([m,rad])"]      = "{:.2e} {:.2e}".format(sigma_y,sigma_yp)
+    tracker_log["\u03C3(z,\u0394p/p)_i.......([m,])"] = "{:.2e} {:.2e}".format(sigma_z,sigma_Dp2p)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)_i......([rad,])"] = "{:.2e} {:.2e}".format(sigma_Dphi,sigma_w)
+    tracker_log["\u03C3(\u0394\u03C6,\u0394\u03B3)_i......([deg,])"] = "{:.2e} {:.2e}".format(degrees(sigma_Dphi),sigma_w)
     tracker_log['\u0394p/p0................[%]']      = f"{Dp2p0*1.e2:.3f}"
-    tracker_log['\u0394T/T_i(\u0394W/W_i).......[%]'] = f"{PARAMS['DT2T_i']*1e2:.3f} kin. energy spread"
+    tracker_log['\u0394T/T_i..(\u0394W/W).......[%]'] = f"{PARAMS['DT2T_i']*1e2:.3f} kin. energy spread"
     dictprnt(tracker_log,'Tracker Log',njust=36); print()
 
     # bunch factory
