@@ -15,6 +15,10 @@
 					"bash"
 				]
 			}
+		},
+		"terminal.integrated.minimumContrastRatio": 1,
+		"workbench.colorCustomizations": {
+			"terminal.background": "#380404"
 		}
 	}
 }
