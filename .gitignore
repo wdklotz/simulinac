@@ -5,6 +5,7 @@
 *.xml
 *.log
 *.h5
+*.stats
 __pycache__
 .DS_Store
 .project
@@ -16,7 +17,7 @@ simuIN.vml
 trackerIN.yml
 toto.py
 tmp.py
-untitled*
+Untitled*
 KW.py
 !dynac/generated/showEzTables.py
 figures/

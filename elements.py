@@ -781,23 +781,23 @@ class RFG(Node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
-        DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
+        # DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
         # converter for this node
         conv = WConverter(tkin,freq)
 
         try:
             # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
-            DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
             w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
-            DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
+            # DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0large = -1
         try:
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
-            DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
+            # DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0small = -1

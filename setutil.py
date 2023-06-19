@@ -203,6 +203,12 @@ class WConverter(object):
         self.bl             = self.b*self.lamb
         self.twopi          = 2.*self.pi
 
+    def zpToDp2p(self,zp):
+        """ Dz/Ds = zp to Dp/p """
+        return self.gamma**2*zp
+    def Dp2pTozp(self,Dp2p):
+        """ Dp/p to zp=Dz/Ds """
+        return Dp2p/self.gamma**2
     def DphiToz(self,Dphi):
         """ delta-phi [rad] to z [m] """
         z = -self.bl/self.twopi*Dphi  # trace-3d pp 4
