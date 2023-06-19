@@ -25,12 +25,6 @@ GOTO:EOF
 
 :LAUNCH
 REM launch tracker.py
-<<<<<<< HEAD
 REM python tracker.py --file trackerIN_smh27-3.1.5.work.yml --p 200
 python tracker.py --file trackerIN_smh27-3.1.5.work.yml --h5dump --h5file h5-2k.h5 --p 2000
 GOTO:EOF
-=======
-rem python tracker.py --file trackerIN_smh27-3.1.5.work.yml --p 200
-python tracker.py --file trackerIN_smh27-3.1.5.work.yml 
-GOTO:EOF
->>>>>>> work
