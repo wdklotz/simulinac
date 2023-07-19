@@ -308,7 +308,7 @@ class SD(Node):
         self.n        = n
         self.particle = copy(particle)
         self.position = position
-        self.length   = None
+        self.length   = rho*radians(self.alpha)
         self.aperture = aperture
         self.viseo    = 0.25
         self.matrix   = self._mx()
@@ -316,9 +316,9 @@ class SD(Node):
         m = NP.eye(MDIM,MDIM)
         beta  = self.particle.beta
         gamma = self.particle.gamma
-        alpha = radians(self.alpha)              # [rad]
+        alpha = radians(self.alpha)      # [rad]
         rho   = self.rho                 # [m]
-        Ds     = abs(rho*alpha)     # [m]
+        Ds     = abs(rho*alpha)          # [m]
         h = alpha/Ds      # [1/m]
         kx = sqrt((1-self.n)*h**2)       # [1/m]
         ky = sqrt(self.n*h**2)

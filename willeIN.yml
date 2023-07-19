@@ -1,0 +1,94 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+
+#...................................................:.......................................
+DESCRIPTOR:  "wille's test cell, input compatible with v10.22.7"
+#..........................................................................................
+## RUN switches
+#..........................................................................................
+FLAGS:
+    periodic:     True              # {False} treat lattice as ring
+    # egf:          True            # {False} apply emittance growth flag
+    # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # bucket:       True            # {False} plot w acceptance
+    csTrak:       False           # {True} plot CS trajectories else beta functions
+    # mactive:      True            # {False} markers active toggle
+    # envelope:     True            # {False} plot envelopes
+    # mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
+#...........................................................................................
+## INPUT-PARAMETER definitions
+#...........................................................................................
+PARAMETERS:
+    lattvers:     'Wille Cell'       # lattice version: IN 5, out 200
+    Win:                  72.             # [MeV] energy @ injection 
+#...........................................................................................
+## ELEMENTS (a.k.a. NOdes) definitions
+#...........................................................................................
+ELEMENTS:
+    D:                        # ID
+        type:     D           # D class
+        length:   0.55        # [m]
+    QF:                       # ID
+        type:     QF          # QF class
+        length:   0.2         # [m]
+        aperture: 0.030       # [m]
+        B':       1.5         # [T/m] quadrupole gradient
+        thins:    0           # if thins == 0|1: one thick element else: many thin elements
+    QD:                       # ID
+        type:     QD          # QD class
+        length:   0.4         # [m] length
+        aperture: 0.030       # [m]
+        B':       1.5         # [T/m] quadrupole gradient
+        thins:    0           # if thins == 0|1: one thick element else: many thin elements
+    RD:
+        type:     RD
+        alpha:    22.50       # [deg]  bend angle
+        rho:      3.8179      # [m]    bend radius
+
+# ===========================================================================================
+# LATTICE definition starts here:  
+# Node is part of Segment is part of Cell is part of Section is part of LINE
+# LATTICE is LINE
+# List syntax: [number[node,...,node]]
+# the list [node,...,node] is repeated number times
+
+SEGMENTS:   
+# group ELEMENTs into SEGMENTs:
+    NIL_SEG:     [1,[]]  # placeholder
+
+CELLS:    
+# group SEGMENTS into CELLs: order given by list [...] syntax
+    NIL_CELL:    [1,[]] # placeholder
+    CELL:        [1,[QF, D, RD, D, QD, D, RD, D, QF]] 
+
+SECTIONS:
+# group CELLs into SECTIONS
+    NIL_SEC:    [1,[]] # placeholder
+
+LATTICE:    
+# group SECTIONs into a LINE a.k.a. LATTICE
+    LINE:       [10,[CELL]]

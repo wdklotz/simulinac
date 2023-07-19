@@ -327,7 +327,10 @@ class Lattice(object):
         """ function body --------------- function body --------------- function body --------------- """
         sFLAG   = FLAGS['sigma']
         nlFLAG  = FLAGS['non_linear_mapping']
-        sigFLAG = True
+        csFLAG  = FLAGS['csTrak']
+        sFLAG = sFLAG if csFLAG else False
+
+        # sigFLAG = True
         
         mess = ""
         if nlFLAG:
@@ -336,7 +339,7 @@ class Lattice(object):
         elif not nlFLAG:
             if sFLAG:
                 mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
-                sigFLAG = False
+                # sigFLAG = False
             else:
                 mess += 'sigma ENVELOPES from TWISS parameters'
         if not FLAGS['KVout']: 
@@ -371,12 +374,14 @@ class Lattice(object):
                 B_matrix   = beta_matrix(R_matrix)
                 Sig        = sig_map(Sig,slice)
                 
-                if sigFLAG:
+                if not sFLAG:
+                # if sigFLAG:
                     twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
                     bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                     by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
                     sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
-                elif not sigFLAG:
+                elif sFLAG:
+                # elif not sigFLAG:
                     twiss_vector = Sig.sig_twiss_vec_get()
                     sigma_vector = Sig.sig_sigma_vec_get()
                     sigx  = sigma_vector[0]; sigxp = sigma_vector[1]              
@@ -393,7 +398,8 @@ class Lattice(object):
             node.twiss = tuple(twiss_vector)    # each noe has twiss
             node.sigxy = tuple(means)           # each node has sigxy
             # aperture check
-            self.aperture_check(node,twiss=sigFLAG)
+            # self.aperture_check(node,twiss=sigFLAG)
+            self.aperture_check(node,twiss=not sFLAG)
             
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
         for row in function_tbl:

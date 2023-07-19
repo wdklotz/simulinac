@@ -83,6 +83,22 @@ def instanciate_element(item):
             aperture       = attributes.get('aperture')
             instance       =  ELM.DKD(ID,length=length,aperture=aperture)
             ELEMENT['sec'] = attributes.get('sec','?')
+        elif type == 'SD':
+            alpha          = get_mandatory(attributes,'alpha',ID)
+            rho            = get_mandatory(attributes,'rho',ID)
+            aperture       = attributes.get('aperture',None)
+            instance       = ELM.SD(ID, alpha, rho, aperture=aperture)
+            ELEMENT['sec'] = attributes.get('sec','?')
+        elif type == 'RD':
+            alpha          = get_mandatory(attributes,'alpha',ID)
+            rho            = get_mandatory(attributes,'rho',ID)
+            aperture       = attributes.get('aperture',None)
+            t3d_wedge      = attributes.get('t3d_wedge',False)
+            wedge          = ELM.Wedge(alpha/2., rho, t3d_wedge=t3d_wedge)
+            instance       = ELM.RD(ID, alpha, rho, wedge, aperture=aperture)
+            ELEMENT['sec'] = attributes.get('sec','?')
+            ELEMENT['length'] = instance.length
+            ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
         elif type == 'QF':
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)
