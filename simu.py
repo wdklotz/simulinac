@@ -1,6 +1,6 @@
 #!python
 # -*- coding: utf-8 -*-
-__version__='v11.0.1'
+__version__='v11.0.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -121,6 +121,7 @@ def display0(*args):
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
+
 def display1(*args):
     """ beta functions w/o longitudinal motion """
     #----------*----------*   # unpack
@@ -130,6 +131,7 @@ def display1(*args):
     s     = [twiss_func(i,'s')  for i in range(twiss_func.nbpoints)]
     bx    = [twiss_func(i,'bx') for i in range(twiss_func.nbpoints)]
     by    = [twiss_func(i,'by') for i in range(twiss_func.nbpoints)]
+    dx    = [twiss_func(i,'dx') for i in range(twiss_func.nbpoints)]
     #-------------------- lattice viseo
     vzero        = [0.                  for i in range(lat_plot.nbpoints)] # zero line
     vis_abszisse = [lat_plot(i,'s')     for i in range(lat_plot.nbpoints)]
@@ -141,13 +143,15 @@ def display1(*args):
     #-------------------- transverse X
     splot111=plt.subplot(111)
     splot111.set_title('beta functions')
-    plt.plot(s,bx ,label=r'$\beta$x [m]',color='red', linestyle='-')
-    plt.plot(s,by ,label=r'$\beta$y [m]',color='blue',linestyle='-')
+    plt.plot(s,bx,  label=r'$\beta_x$ [m]', color='red',  linestyle='-') # beta x
+    plt.plot(s,by,  label=r'$\beta_y$ [m]', color='blue', linestyle='-') # beta y
+    plt.plot(s,dx,  label=r'$\eta_x$ [m]' , color='green',linestyle='-') # dispersion x
     vscale=splot111.axis()[3]*0.25
     viseoz = [x*vscale for x in vis_ordinate]
     plt.plot(vis_abszisse,viseoz,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
+
 def display3(*args):
     """ C&S-Tracks with longitudinal motion """
     #-------------------- unpack
@@ -264,6 +268,7 @@ def display3(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+
 def display4(*args):
     """ beta functions and synchrotron oscillations """
     #-------------------- unpack
@@ -333,6 +338,7 @@ def display4(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
+
 def simulation(filepath):
     def display(*functions):
         # dispatch to different plots according to FLAG settings
@@ -360,6 +366,7 @@ def simulation(filepath):
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
+    
     """ ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here """
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
@@ -428,6 +435,7 @@ def simulation(filepath):
             node.do_action()
         """ show all figures - (must be the only call to show!) """
         plt.show()
+
 if __name__ == '__main__':
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()

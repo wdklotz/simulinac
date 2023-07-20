@@ -87,6 +87,15 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "TTFG.py",
+        },
+        {
+            "name": "wille",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "simu.py",
+            "args": ["--file", "willeIN.yml"]
         }
     ]
 }

@@ -23,7 +23,7 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  "wille's test cell, input compatible with v10.22.7"
+DESCRIPTOR:  "Wille test (chap. 3.1.3.3, pp 120)"
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
@@ -35,16 +35,16 @@ FLAGS:
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
-    csTrak:       False           # {True} plot CS trajectories else beta functions
+    csTrak:       False             # {True} plot CS trajectories else beta functions
     # mactive:      True            # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
-    # mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    lattvers:     'Wille Cell'       # lattice version: IN 5, out 200
-    Win:                  72.             # [MeV] energy @ injection 
+    lattvers:     'Wille 1.0.0'       # lattice version: IN 5, out 200
+    Win:                  72.         # [MeV] energy @ injection 
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -65,16 +65,17 @@ ELEMENTS:
         B':       1.5         # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     RD:
-        type:     RD
+        type:     RD          # RD class
         alpha:    22.50       # [deg]  bend angle
         rho:      3.8179      # [m]    bend radius
 
 # ===========================================================================================
 # LATTICE definition starts here:  
-# Node is part of Segment is part of Cell is part of Section is part of LINE
-# LATTICE is LINE
-# List syntax: [number[node,...,node]]
-# the list [node,...,node] is repeated number times
+# An ELEMENT is part of a SEGMENT is part of a CELL is part of a SECTION is part of a LINE.
+# A LINE is the LATTICE.
+#
+# 2) List syntax: [number[node,...,node]]. The list [node,...,node] is repeated number times
+# 3) never delete placeholders!
 
 SEGMENTS:   
 # group ELEMENTs into SEGMENTs:
@@ -91,4 +92,4 @@ SECTIONS:
 
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
-    LINE:       [10,[CELL]]
+    LINE:       [2,[CELL]]

@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v11.0.1'
+__version__='v11.0.2'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
@@ -330,8 +330,6 @@ class Lattice(object):
         csFLAG  = FLAGS['csTrak']
         sFLAG = sFLAG if csFLAG else False
 
-        # sigFLAG = True
-        
         mess = ""
         if nlFLAG:
             mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
@@ -339,14 +337,12 @@ class Lattice(object):
         elif not nlFLAG:
             if sFLAG:
                 mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
-                # sigFLAG = False
             else:
                 mess += 'sigma ENVELOPES from TWISS parameters'
         if not FLAGS['KVout']: 
             print(mess)
         
-        # INITIAL twiss @ entrance
-        function_tbl = []
+        # INITIAL twiss and dispersion @ entrance
         bx,ax,gx,epsx = PARAMS['twiss_x_i']()
         by,ay,gy,epsy = PARAMS['twiss_y_i']()
         bz,az,gz,epsz = (1.,0.,1.,1.) #this is a dummy to ignore longitudinal
@@ -356,10 +352,14 @@ class Lattice(object):
         sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
         node0.twiss  = tuple(twiss_vector0)
         node0.sigxy  = (sigx,sigxp,sigy,sigyp)
-        function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
-        function_tbl.append(function_row)
+        dx0          = 3.4187   #TODO
+        dxp0         = 0.       #TODO
+        disp_vector0 = NP.array([dx0,dxp0,0,0,0,1])    # dispersion_i (dx,dxp,0,0,0,dp2p) 
+
+        function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx0,dxp0)
+        function_tbl = [function_row]
                 
-        """ loop over all nodes in the lattice to get sliced function values"""
+        """ loop over all nodes in the lattice to get sliced function values """
         B_matrix = NP.eye(9,9)                           # 9x9 cumulated beta-matrix
         R_matrix = NP.eye(6,6)                           # 6x6 cumulated R-matrix
         Sig      = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
@@ -369,39 +369,39 @@ class Lattice(object):
             s = si
             means = []
             for slice in slices:
-                slice_R_mx = slice.matrix[:6,:6]   # 6x6 transport submatrix
-                R_matrix   = NP.dot(slice_R_mx,R_matrix)
-                B_matrix   = beta_matrix(R_matrix)
-                Sig        = sig_map(Sig,slice)
+                slice_R_mx  = slice.matrix[:6,:6]   # 6x6 transport submatrix
+                R_matrix    = NP.dot(slice_R_mx,R_matrix)
+                B_matrix    = beta_matrix(R_matrix)
+                Sig         = sig_map(Sig,slice)
+                disp_vector = NP.dot(R_matrix,disp_vector0)   # map dispersion track
                 
                 if not sFLAG:
-                # if sigFLAG:
-                    twiss_vector = NP.dot(B_matrix,twiss_vector0)     # track twiss-vector
+                    twiss_vector = NP.dot(B_matrix,twiss_vector0)                     # map twiss-vector
                     bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                     by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
-                    sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
+                    sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))  # map sigma envelopes
                 elif sFLAG:
-                # elif not sigFLAG:
-                    twiss_vector = Sig.sig_twiss_vec_get()
-                    sigma_vector = Sig.sig_sigma_vec_get()
+                    twiss_vector = Sig.sig_twiss_vec_get()   # map twiss-vector
+                    sigma_vector = Sig.sig_sigma_vec_get()   # map sigma envelopes
                     sigx  = sigma_vector[0]; sigxp = sigma_vector[1]              
                     sigy  = sigma_vector[2]; sigyp = sigma_vector[3]              
-                    sigz  = sigma_vector[4]; sigzp = sigma_vector[5]              
+                    sigz  = sigma_vector[4]; sigzp = sigma_vector[5] 
                 
-                bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
-                by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
+                bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]  # twiss functions
+                by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]  # twiss functions
                 s += slice.length
-                function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp)
+                dx = disp_vector[0]; dxp = disp_vector[1]  # dispersion track
+
+                function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
                 function_tbl.append(function_row)
                 means.append((sigx,sigxp,sigy,sigyp))
             means = NP.mean(means,axis=0)
-            node.twiss = tuple(twiss_vector)    # each noe has twiss
+            node.twiss = tuple(twiss_vector)    # each node has twiss
             node.sigxy = tuple(means)           # each node has sigxy
             # aperture check
-            # self.aperture_check(node,twiss=sigFLAG)
             self.aperture_check(node,twiss=not sFLAG)
             
-        twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp'))
+        twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp','dx','dxp'))  # function titles
         for row in function_tbl:
             abscisse  = row[0]
             ordinaten = row[1:]
@@ -429,9 +429,9 @@ class Lattice(object):
         v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
         if closed == True:
             m_cell = self.acc_node
-            m11 = m_cell.matrix[0,0]
-            m15 = m_cell.matrix[0,5]
-            d0  =  m15/(1.-m11)     # from H.Wiedemann (6.79) pp.206
+            C = m_cell.matrix[0,0]
+            D = m_cell.matrix[0,5]
+            d0  =  D/(1.-C)     # from H.Wiedemann (6.79) pp.206
             v_0[0] = d0
         s = 0.0
         traj = [(s,v_0[0],v_0[1])]
@@ -726,7 +726,6 @@ class TestLattice(unittest.TestCase):
                     d2   = ELM.D('D2',particle=p,length=ld)
                     d3   = ELM.D('D3',particle=p,length=ld)
                     d4   = ELM.D('D4',particle=p,length=ld)
-                    #TODO test rectangular dipoles (ELM>RD) not done yet
                     # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)  
                     # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
                     sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
