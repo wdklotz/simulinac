@@ -211,10 +211,11 @@ def instanciate_element(item):
             ELEMENT['sec']    = attributes.get('sec','?')
             ELEMENT['EzAvg']  = EzAvg
         elif type == 'MRK':
-            active  = attributes.get('active',UTIL.FLAGS['mactive'])
+            # active  = attributes.get('active',UTIL.FLAGS['maction'])
+            active  = get_mandatory(attributes,'active',ID)
+            action  = get_mandatory(attributes,'action',ID)
             viseo   = attributes.get('viseo',3)
             ELEMENT = UTIL.ELEMENTS[ID]
-            action  = get_mandatory(attributes,'action',ID)
             if action == 'pspace':
                 # A marker for simu.py ?
                 if not marker_is_compatible_with('simu.py',ID):
@@ -272,7 +273,7 @@ def factory(input_file,stop=None):
             useaper  = flags.get('useaper',False),            # use aperture check for quads and rf-gaps
             bucket   = flags.get('bucket',False),             # plot bucket
             csTrak   = flags.get('csTrak',True),              # plot CS trajectories
-            mactive  = flags.get('mactive',False),            # call marker actions
+            maction  = flags.get('maction',True),            # call marker actions
             envelope = flags.get('envelope',False),           # plot transverse envelopes
             mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
         )
@@ -315,6 +316,9 @@ def factory(input_file,stop=None):
         res['twiss_y_i']        = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
         UTIL.DEBUG_OFF(f"twiss_x_i {res['twiss_x_i']()}")
         UTIL.DEBUG_OFF(f"twiss_y_i {res['twiss_y_i']()}")
+        # initial dispersion @ entrance
+        res['dx_i']              = parameters.get('dx_i',0.)
+        res['dxp_i']             = parameters.get('dxp_i',0.)
         # supplemental global parameters
         res['nbsigma']          = parameters.get('nbsigma',3)
         res['lattice_version']  = parameters.get('lattvers','not given')

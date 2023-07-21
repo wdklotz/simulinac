@@ -9922,7 +9922,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # mactive:      True            # {False} markers active toggle
+    # maction:      True            # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
     mapping:      &amp;map    base    # [t3d, simple, oxal, base, ttf, dyn]
 ```
@@ -9939,7 +9939,7 @@ The use of flags in both programs is tabled below.
 |useaper|aperture check for lattice elements|aperture check for lattice elements|
 |bucket|plot the RF bucket|plot the RF bucket|
 |csTrack|plot CS trajectories|not used|
-|mactive|marker activation toggle @@color:red;font-size:small;experimental@@|marker activation toggle @@color:red;font-size:small;experimental@@|
+|maction|marker activation toggle @@color:red;font-size:small;experimental@@|marker activation toggle @@color:red;font-size:small;experimental@@|
 |envelope|plot sigma envelopes|not used|
 |mapping|cavity mapping|cavity mapping|
 
@@ -9950,7 +9950,7 @@ Notes:
 * KVout: True prints many internal parameters and suppresses graphics output.
 * periodic: is used for testing purposes to see if the linear matrices produce correct results.
 * useaper: in envelope calculation the transverse 3-sigma beam envelope is checked against aperture limitations.
-* mactive: activate/deactivate marker nodes placed in the lattice.
+* maction: activate/deactivate marker nodes placed in the lattice.
 * `mapping`: selects which mapping will be used for cavity modeling. Valid mappings are:
 ** `t3d`: [[Trace 3D |Bibliography]] matrices (linear, ~EzAvg = ~EzPeak)
 ** `simple`: simple [[pyOrbit |Bibliography]] matrix model (linear, ~EzAvg=~EzPeak)
@@ -10225,7 +10225,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # mactive:       True           # {False} markers active toggle
+    # maction:       True           # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
     mapping:      &amp;map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................

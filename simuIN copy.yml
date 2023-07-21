@@ -36,7 +36,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # mactive:      True            # {False} markers active toggle
+    # maction:      True            # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
     mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................

@@ -33,11 +33,11 @@ FLAGS:
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
-    useaper:      True            # {False} use aperture check for lattice elements
+    # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
-    # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # maction:      True            # {False} call marker actions
-    envelope:     True            # {False} plot envelopes
+    csTrak:       False           # {True} plot CS trajectories else beta functions
+    maction:      False           # {True} call marker actions
+    # envelope:     True            # {False} plot envelopes
     mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf    # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
@@ -58,6 +58,8 @@ PARAMETERS:
     alfax_i:             +0.000           # [] twiss alpha x @ entrance
     betay_i:      &bty    0.236           # [m] twiss beta @ entrance y
     alfay_i:             -0.000           # [] twiss alpha y @ entrance
+    # dx_i:                0.5              # {0.0} dispersion dx0 [m]
+    # dxp_i:               1.0              # {0.0} dispersion dxp0 [rad]
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
     # phi_sync:     &phs    -30.          # [deg] synchronous phase
@@ -88,12 +90,12 @@ ELEMENTS:
     Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
-        active:   True         # {False} action activated
-        viseo:    2            # vertical marker size
+        active:   True         # action activated
+        viseo:    5            # vertical marker size
     Pcc:                       # ID   (tracker.py marker)
         type:     MRK          # MRK class
         action:   pcrcut       # Pointcare cut
-        active:   True         # action activated
+        active:   False        # action activated
         # prefix:   frames     # base dir of frames
         abscissa: z            # x axis
         ordinate: zp           # y axis

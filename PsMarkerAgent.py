@@ -38,7 +38,8 @@ class PsMarkerAgent(MRK):
         self.do_action    = self.action if self.active else self.no_action # toggle
     def action(self,*args):
         """ the action: plot transvers ellipses """
-        ellipse_plot(self,scale=0.5)
+        maction = FLAGS['maction']
+        if maction: ellipse_plot(self,scale=0.5)
 
 def ellipse_plot(node,scale=1.):   
     def ellipse_and_tranformation(a,b,g,eps,color):

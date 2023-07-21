@@ -386,6 +386,7 @@ def collect_data_for_summary(lattice):
         SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
         SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} norm. energy spread @ injection (w0)'.format(PARAMS['w0_i'])
         SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kin. energy spread @ injection'.format(PARAMS['DT2T_i'])
+        SUMMARY['disp (dx_i,dxp_i) [m,rad]']       =  f"disp ({PARAMS['dx_i']:8.2e}, {PARAMS['dxp_i']:8.2e})"
     
     if FLAGS['dWf'] == 1:
         SUMMARY['\u0394Wmax_i* [MeV]']            =  '{:8.2e} max \u0394W on separatrix'.format(PARAMS.get('DWmax',0))

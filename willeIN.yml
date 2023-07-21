@@ -30,13 +30,13 @@ DESCRIPTOR:  "Wille test (chap. 3.1.3.3, pp 120)"
 FLAGS:
     periodic:     True              # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
-    # sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
+    sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
     # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     csTrak:       False             # {True} plot CS trajectories else beta functions
-    # mactive:      True            # {False} markers active toggle
+    # maction:      False            # {True} markers active toggle
     # envelope:     True            # {False} plot envelopes
     # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
@@ -45,6 +45,8 @@ FLAGS:
 PARAMETERS:
     lattvers:     'Wille 1.0.0'       # lattice version: IN 5, out 200
     Win:                  72.         # [MeV] energy @ injection 
+    # dx_i:                 3.4187
+    # dxp_i:                5.0
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -92,4 +94,4 @@ SECTIONS:
 
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
-    LINE:       [2,[CELL]]
+    LINE:       [3,[CELL]]

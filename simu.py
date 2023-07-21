@@ -127,7 +127,7 @@ def display1(*args):
     #----------*----------*   # unpack
     twiss_func = args[0]
     lat_plot   = args[3]
-    #-------------------- Bahnkoordinate (z)
+    #-------------------- beta x,y & dispersion x
     s     = [twiss_func(i,'s')  for i in range(twiss_func.nbpoints)]
     bx    = [twiss_func(i,'bx') for i in range(twiss_func.nbpoints)]
     by    = [twiss_func(i,'by') for i in range(twiss_func.nbpoints)]
@@ -272,15 +272,16 @@ def display3(*args):
 def display4(*args):
     """ beta functions and synchrotron oscillations """
     #-------------------- unpack
-    beta_fun  = args[0]
-    cos_like  = args[1]
-    sin_like  = args[2]
-    lat_plot  = args[3]
-    #-------------------- beta and sigma functions
-    s     = [beta_fun(i,'s')    for i in range(beta_fun.nbpoints)] # Abszisse
-    bx    = [beta_fun(i,'bx')   for i in range(beta_fun.nbpoints)] # envelope (sigma-x)
-    by    = [beta_fun(i,'by')   for i in range(beta_fun.nbpoints)] # envelope (sigma-y)
-    #-------------------- longitudinal trajectories
+    twiss_func = args[0]
+    cos_like   = args[1]
+    sin_like   = args[2]
+    lat_plot   = args[3]
+    #-------------------- beta x,y & dispersion x
+    s     = [twiss_func(i,'s')    for i in range(twiss_func.nbpoints)] # Abszisse
+    bx    = [twiss_func(i,'bx')   for i in range(twiss_func.nbpoints)] # beta x
+    by    = [twiss_func(i,'by')   for i in range(twiss_func.nbpoints)] # beta y
+    dx    = [twiss_func(i,'dx')   for i in range(twiss_func.nbpoints)] # dispersion x
+#-------------------- longitudinal trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
     cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]
@@ -303,8 +304,9 @@ def display4(*args):
     # mapping box
     splot211.text(0.01, 1.1, FLAGS.get('mapping'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     # function plots
-    plt.plot(s,bx,      label=r"$\beta$x  [m]",  color='black', linestyle='-')
-    plt.plot(s,by,      label=r"$\beta$y  [m]",  color='red',   linestyle='-')
+    plt.plot(s,bx,   label=r"$\beta$x  [m]",  color='black', linestyle='-')
+    plt.plot(s,by,   label=r"$\beta$y  [m]",  color='red',   linestyle='-')
+    plt.plot(s,dx,   label=r'$\eta_x$ [m]' ,  color='green', linestyle='-') # dispersion x
     vscale=splot211.axis()[3]*0.25
     viseoz = [x*vscale for x in vis_ordinate]
     plt.plot(vis_abszisse,viseoz,label='',color='black')

@@ -166,7 +166,7 @@ class Lattice(object):
             transverse Twiss for open and closed lattices
             betatron tunes: mux, muy
         """
-        def ring(mcell):
+        def ring(self,mcell):
             if not isStable(mcell): sys.exit(1)
             # cell matrix (not beta_matrix!)
             cell_matrix = self.acc_node.matrix
@@ -197,7 +197,8 @@ class Lattice(object):
             for i in range(6):
                 if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
             print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
-            ## transverse/longitudinal Twiss @ entrance for periodic lattice
+            # transverse/longitudinal Twiss & Dispersion @ entrance for periodic lattice
+            dummy,dx_i,dxp_i = tuple(self.dispersion()[0])
             res = dict(
                 betax_i         = bax,
                 alfax_i         = alx,
@@ -205,7 +206,9 @@ class Lattice(object):
                 alfay_i         = aly,
                 twiss_x_i       = Twiss(bax, alx, PARAMS['emitx_i']),
                 twiss_y_i       = Twiss(bay, aly, PARAMS['emity_i']),
-                twiss_w_i       = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
+                twiss_w_i       = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i']),
+                dx_i            = dx_i,
+                dxp_i           = dxp_i
                 )
             return res
         def transferline(mcell):
@@ -269,7 +272,7 @@ class Lattice(object):
         # the full acc isinstance(self.acc_node,Lattice)==True
         self.acc_node = mcell
         if closed:
-            params = ring(mcell)
+            params = ring(self,mcell)
         else:
             params = transferline(mcell)
         bax,alx,gmx,epsix = params['twiss_x_i']()
@@ -352,11 +355,11 @@ class Lattice(object):
         sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
         node0.twiss  = tuple(twiss_vector0)
         node0.sigxy  = (sigx,sigxp,sigy,sigyp)
-        dx0          = 3.4187   #TODO
-        dxp0         = 0.       #TODO
-        disp_vector0 = NP.array([dx0,dxp0,0,0,0,1])    # dispersion_i (dx,dxp,0,0,0,dp2p) 
+        # dx, dxp    = (3.4187, 0.)      # Wille's FODO
+        dx, dxp      = (PARAMS['dx_i'],PARAMS['dxp_i']) 
+        disp_vector0 = NP.array([dx,dxp,0,0,0,1])    # dispersion_i (dx,dxp,0,0,0,dp2p) 
 
-        function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx0,dxp0)
+        function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
         function_tbl = [function_row]
                 
         """ loop over all nodes in the lattice to get sliced function values """
@@ -423,28 +426,35 @@ class Lattice(object):
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
     def dispersion(self,steps=10,closed=True):
-        """ track the dispersion function """
-        traj = []
-        # column vector with MDIM rows, 1 column
-        v_0 = NP.array([0.,0.,0.,0.,0.,1.,0.,0.,0.,0.])
+        """ solve for periodic dispersion and track it """
+        dx  = PARAMS['dx_i']
+        dxp = PARAMS['dxp_i']
         if closed == True:
             m_cell = self.acc_node
-            C = m_cell.matrix[0,0]
-            D = m_cell.matrix[0,5]
-            d0  =  D/(1.-C)     # from H.Wiedemann (6.79) pp.206
-            v_0[0] = d0
+            C  = m_cell.matrix[0,0]; S  = m_cell.matrix[0,1]; D  = m_cell.matrix[0,5]
+            Cp = m_cell.matrix[1,0]; Sp = m_cell.matrix[1,1]; Dp = m_cell.matrix[1,5]
+            # from H.Wiedemann (6.79) pp.206
+            # d0  = D/(1.-C)
+            # d0p = 0.
+            # from J.Rossbach, P.Schmueser  CERN 94-01, 1994, Vol 1, pp 73
+            N   = 2-C-Sp          
+            dx  = ((1-Sp)*D+S*Dp)/N
+            dxp = (Cp*D+(1-C)*Dp)/N
+            PARAMS['dx_i']  = dx
+            PARAMS['dxp_i'] = dxp
         s = 0.0
-        traj = [(s,v_0[0],v_0[1])]
+        traj = [(s,dx,dxp)]
         # for element in self.seq:
+        v_0 = NP.array([dx,dxp,0.,0.,0.,1.,0.,0.,0.,0.])
         for element in iter(self):
             slices = element.make_slices(anz = steps)
             for i_element in slices:
                 mx = i_element.matrix
                 v_0 = NP.dot(mx,v_0)
                 s += i_element.length
-                d  = v_0[0]
-                dp = v_0[1]
-                traj.append((s,d,dp))
+                dx  = v_0[0]
+                dxp = v_0[1]
+                traj.append((s,dx,dxp))
         return traj
     def lattice_plot_functions(self):
         """
@@ -486,7 +496,7 @@ class Lattice(object):
             print('{} cosine {} sine {}'.format(elm.type,c,s))
             pass
         """ function body --------------- function body --------------- function body --------------- """
-        print('CALCULATE C+S TRAJECTORIES')
+        print('CALCULATE lattice functions & trajectories')
         
         """ injektion parameters """
         tkin = self.injection_energy

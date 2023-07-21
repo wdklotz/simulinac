@@ -162,7 +162,7 @@ class I(Node):
         self.length   = 0.
 class MRK(I):
     """ 
-    MaRKer node (a.k.a element): Each marker is parent of an agent that does the specific action.
+    Marker node (a.k.a element): Each marker is parent of an agent that does the specific action.
     The action can be bypassed if the 'maction'-FLAG is False.
     """
     def __init__(self, label, active, viseo=1., particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.)):

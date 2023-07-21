@@ -36,7 +36,7 @@ FLAGS:
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
-    # mactive:       True           # {False} markers active toggle
+    # maction:       True           # {False} markers active toggle
     # envelope:     True            # {False} plot envelopes
     mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
@@ -81,12 +81,12 @@ ELEMENTS:
     Psp:                       # ID   (simu.py marker)
         type:     MRK          # MRK class
         action:   pspace       # phase space marker actions
-        active:   False        # action activated
+        # active:   False        # {True} action activated
         # viseo:    0            # show markers in plot
     Pcc:                       # ID   (tracker.py marker)
         type:     MRK          # MRK class
         action:   pcrcut       # Pointcare cut
-        # active:   True         # action activated
+        # active:   False         # {True} action activated
         viseo:    0            # show markers in plot
         # prefix:   frames     # base dir of frames
         abscissa: z            # x axis

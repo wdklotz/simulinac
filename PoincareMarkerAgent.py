@@ -40,6 +40,8 @@ class PoincareMarkerAgent(MRK):
         self.tpoints.append(track_point)
     def action(self,*args): 
         """ Generate scatter plot of the poincrecut at this marker and dump it to a file """
+        maction = FLAGS['maction']
+        if not maction: return
         number   = args[0]
         xmax     = args[1]
         ymax     = args[2]

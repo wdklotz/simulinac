@@ -43,10 +43,10 @@
             "request": "launch",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "program": "simu.py",
- //           "args": ["--file","FODO.yml"]
-            "args": ["--file","SH/trackerIN_smh27-12.2.yml"]
-},
+            "program": "simu.py"
+        //    "args": ["--file","FODO.yml"]
+        //    "args": ["--file","SH/trackerIN_smh27-12.2.yml"]
+        },
         {
             "name": "tracker",
             "type": "python",
