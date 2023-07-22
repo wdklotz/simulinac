@@ -309,7 +309,7 @@ class Lattice(object):
         elif self.iteration == "RL":
             self.iteration = "LR"
     def twiss_funcs(self,steps=1):
-        """ Calulate twiss functions and evelope functions from initial twiss-vector with beta-matrices or sigma-matrix """
+        """ Calulate twiss, dispersion and envelope functions from initial values """
         def beta_matrix(R):
             """ beta-matrix from tranport matrix """
             m11 = R[0,0]; m12=R[0,1]; m21=R[1,0]; m22=R[1,1]
@@ -328,10 +328,10 @@ class Lattice(object):
             ])
             return m_beta
         """ function body --------------- function body --------------- function body --------------- """
-        sFLAG   = FLAGS['sigma']
-        nlFLAG  = FLAGS['non_linear_mapping']
-        csFLAG  = FLAGS['csTrak']
-        sFLAG = sFLAG if csFLAG else False
+        sFLAG   = FLAGS['sigma']                 # flag sigma OR twiss
+        nlFLAG  = FLAGS['non_linear_mapping']    # flag linear OR non-linear
+        csFLAG  = FLAGS['csTrak']                # flag plot C+S OR beta
+        sFLAG   = sFLAG if csFLAG else False
 
         mess = ""
         if nlFLAG:
@@ -355,17 +355,15 @@ class Lattice(object):
         sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))
         node0.twiss  = tuple(twiss_vector0)
         node0.sigxy  = (sigx,sigxp,sigy,sigyp)
-        # dx, dxp    = (3.4187, 0.)      # Wille's FODO
-        dx, dxp      = (PARAMS['dx_i'],PARAMS['dxp_i']) 
-        disp_vector0 = NP.array([dx,dxp,0,0,0,1])    # dispersion_i (dx,dxp,0,0,0,dp2p) 
+        dx, dxp      = (PARAMS['dx_i'],PARAMS['dxp_i']) # (3.4187, 0.) Wille's FODO
+        disp_vector0 = NP.array([dx,dxp,0,0,0,1])       # dispersion_i (dx_i,dxp_i,0,0,0,dp2p=1) 
 
+        """ loop over all nodes in the lattice to get sliced function values """
         function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
         function_tbl = [function_row]
-                
-        """ loop over all nodes in the lattice to get sliced function values """
-        B_matrix = NP.eye(9,9)                           # 9x9 cumulated beta-matrix
-        R_matrix = NP.eye(6,6)                           # 6x6 cumulated R-matrix
-        Sig      = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
+        B_matrix     = NP.eye(9,9)                           # 9x9 cumulated beta-matrix
+        R_matrix     = NP.eye(6,6)                           # 6x6 cumulated R-matrix
+        Sig          = Sigma(twiss_vector0,epsx,epsy,epsz)   # cumulated Sigma object
         for node in iter(self):
             si,sm,sf = node.position
             slices = node.make_slices(anz=steps)
@@ -376,10 +374,10 @@ class Lattice(object):
                 R_matrix    = NP.dot(slice_R_mx,R_matrix)
                 B_matrix    = beta_matrix(R_matrix)
                 Sig         = sig_map(Sig,slice)
-                disp_vector = NP.dot(R_matrix,disp_vector0)   # map dispersion track
+                disp_vector = NP.dot(R_matrix,disp_vector0)   # map dispersion
                 
                 if not sFLAG:
-                    twiss_vector = NP.dot(B_matrix,twiss_vector0)                     # map twiss-vector
+                    twiss_vector = NP.dot(B_matrix,twiss_vector0)  # map twiss-vector
                     bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]
                     by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]
                     sigx,sigxp,sigy,sigyp = (*sigmas(ax,bx,epsx),*sigmas(ay,by,epsy))  # map sigma envelopes
@@ -390,17 +388,17 @@ class Lattice(object):
                     sigy  = sigma_vector[2]; sigyp = sigma_vector[3]              
                     sigz  = sigma_vector[4]; sigzp = sigma_vector[5] 
                 
-                bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]  # twiss functions
-                by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]  # twiss functions
+                bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]  # beta x
+                by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]  # beta y
                 s += slice.length
-                dx = disp_vector[0]; dxp = disp_vector[1]  # dispersion track
+                dx = disp_vector[0]; dxp = disp_vector[1]  # dispersion
 
                 function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
                 function_tbl.append(function_row)
                 means.append((sigx,sigxp,sigy,sigyp))
             means = NP.mean(means,axis=0)
-            node.twiss = tuple(twiss_vector)    # each node has twiss
-            node.sigxy = tuple(means)           # each node has sigxy
+            node.twiss = tuple(twiss_vector)    # each node has its twiss
+            node.sigxy = tuple(means)           # each node has its sigxy
             # aperture check
             self.aperture_check(node,twiss=not sFLAG)
             
@@ -426,31 +424,31 @@ class Lattice(object):
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
     def dispersion(self,steps=10,closed=True):
-        """ solve for periodic dispersion and track it """
+        """ solve for periodic dispersion and map it """
         dx  = PARAMS['dx_i']
         dxp = PARAMS['dxp_i']
         if closed == True:
             m_cell = self.acc_node
             C  = m_cell.matrix[0,0]; S  = m_cell.matrix[0,1]; D  = m_cell.matrix[0,5]
             Cp = m_cell.matrix[1,0]; Sp = m_cell.matrix[1,1]; Dp = m_cell.matrix[1,5]
-            # from H.Wiedemann (6.79) pp.206
+            # from H.Wiedemann, chap. 6.79, pp.206
             # d0  = D/(1.-C)
             # d0p = 0.
-            # from J.Rossbach, P.Schmueser  CERN 94-01, 1994, Vol 1, pp 73
+            # from J.Rossbach, P.Schmueser, CERN 94-01, 1994, Vol 1, pp 73
             N   = 2-C-Sp          
             dx  = ((1-Sp)*D+S*Dp)/N
             dxp = (Cp*D+(1-C)*Dp)/N
             PARAMS['dx_i']  = dx
             PARAMS['dxp_i'] = dxp
+
         s = 0.0
         traj = [(s,dx,dxp)]
-        # for element in self.seq:
         v_0 = NP.array([dx,dxp,0.,0.,0.,1.,0.,0.,0.,0.])
         for element in iter(self):
             slices = element.make_slices(anz = steps)
             for i_element in slices:
                 mx = i_element.matrix
-                v_0 = NP.dot(mx,v_0)
+                v_0 = NP.dot(mx,v_0)  # map
                 s += i_element.length
                 dx  = v_0[0]
                 dxp = v_0[1]

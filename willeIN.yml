@@ -28,7 +28,7 @@ DESCRIPTOR:  "Wille test (chap. 3.1.3.3, pp 120)"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    periodic:     True              # {False} treat lattice as ring
+    # periodic:     True              # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -45,6 +45,12 @@ FLAGS:
 PARAMETERS:
     lattvers:     'Wille 1.0.0'       # lattice version: IN 5, out 200
     Win:                  72.         # [MeV] energy @ injection 
+    emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    9.816           # [m] twiss beta @ entrance x
+    alfax_i:             +0.000           # [] twiss alpha x @ entrance
+    betay_i:      &bty    1.236           # [m] twiss beta @ entrance y
+    alfay_i:             -0.000           # [] twiss alpha y @ entrance
     # dx_i:                 3.4187
     # dxp_i:                5.0
 #...........................................................................................
