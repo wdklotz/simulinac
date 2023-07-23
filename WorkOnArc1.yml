@@ -28,11 +28,11 @@ DESCRIPTOR:  "Wille test (chap. 3.1.3.3, pp 120)"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    periodic:     True              # {False} treat lattice as ring
+    # periodic:     True              # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     csTrak:       False             # {True} plot CS trajectories else beta functions
@@ -43,16 +43,18 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    lattvers:     'Wille 1.0.0'       # lattice version: IN 5, out 200
-    Win:                  72.         # [MeV] energy @ injection 
+    lattvers:     'Wille 1.0.0'           # lattice version: IN 5, out 200
+    Win:                  72.             # [MeV] energy @ injection 
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    9.816           # [m] twiss beta @ entrance x
-    alfax_i:             +0.000           # [] twiss alpha x @ entrance
-    betay_i:      &bty    1.236           # [m] twiss beta @ entrance y
-    alfay_i:             -0.000           # [] twiss alpha y @ entrance
-    # dx_i:                 3.4187
-    # dxp_i:                5.0
+    betax_i:      &btx    6.551          # [m] twiss beta @ entrance x
+    alfax_i:             +0.0             # [] twiss alpha x @ entrance
+    betay_i:      &bty    3.882           # [m] twiss beta @ entrance y
+    alfay_i:             -0.0             # [] twiss alpha y @ entrance
+    # dx_i:                2.           # {0.0} dispersion dx0 [m]
+    # dxp_i:               0.0            # {0.0} dispersion dxp0 [rad]
+    # dx_i:                3.4187         # Wille
+    # dxp_i:               0.0            # Wille
 #...........................................................................................
 ## ELEMENTS (a.k.a. NOdes) definitions
 #...........................................................................................
@@ -64,19 +66,25 @@ ELEMENTS:
         type:     QF          # QF class
         length:   0.2         # [m]
         aperture: 0.030       # [m]
-        B':       &G 1.5         # [T/m] quadrupole gradient
+        # B':       &G1 1.091         # [T/m] quadrupole gradient
+        # B':       &G1 1.48        # [T/m] quadrupole gradient
+        B':       &G1 1.15        # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     QD:                       # ID
         type:     QD          # QD class
         length:   0.4         # [m] length
         aperture: 0.030       # [m]
-        B':       *G         # [T/m] quadrupole gradient
+        B':       *G1        # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     RD:
-        type:     RD          # RD class
-        alpha:    22.50       # [deg]  bend angle
+        type:     SD          # RD class
+        # alpha:    22.50       # [deg]  bend angle
+        alpha:    11.25       # [deg]  bend angle
         rho:      3.8179      # [m]    bend radius
-
+    DD:
+        type:     D          # RD class
+        # length:   1.5        # [m] 
+        length:   0.75        # [m] 
 # ===========================================================================================
 # LATTICE definition starts here:  
 # An ELEMENT is part of a SEGMENT is part of a CELL is part of a SECTION is part of a LINE.
@@ -92,12 +100,18 @@ SEGMENTS:
 CELLS:    
 # group SEGMENTS into CELLs: order given by list [...] syntax
     NIL_CELL:    [1,[]] # placeholder
+    # CELL:        [1,[RD, D, QD, D, RD, D, QF,QF,D]] 
     CELL:        [1,[QF, D, RD, D, QD, D, RD, D, QF]] 
+    CELL0:       [1,[QF, D, DD, D, QD, D, DD, D, QF]] 
 
 SECTIONS:
 # group CELLs into SECTIONS
     NIL_SEC:    [1,[]] # placeholder
+    FODO:       [3,[CELL]]
+    F0D0:       [8,[CELL0]]
 
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
-    LINE:       [1,[CELL]]
+    LINE:       [1,[F0D0,CELL,CELL0,FODO,FODO,FODO,CELL,CELL,CELL,CELL,CELL,CELL0,CELL,F0D0]]
+    # LINE:       [1,[F0D0]]
+    # LINE:       [1,[FODO]]

@@ -230,7 +230,7 @@ class Lattice(object):
                 stable = False
             else:
                 cos_mux = 0.5 * stabx
-                mux = degrees(acos(cos_mux))
+                mux = acos(cos_mux)
 
             staby = fabs(mcell.tracey())
             print_verbose(1,'stability Y? ',staby)
@@ -239,10 +239,11 @@ class Lattice(object):
                 stable = False
             else:
                 cos_muy = 0.5 * staby
-                muy = degrees(acos(cos_muy))
+                muy = acos(cos_muy)
             
             if stable: 
-                print_verbose(1,'\nphase_advance: X[deg]={:3f} Y[deg]={:.3f}\n'.format(mux,muy))
+                print_verbose(1,'\nphase_advance [deg]: x,y={:.3f}, {:.3f}'.format(degrees(mux),degrees(muy)))
+                print_verbose(1,  'phase_advance [rad]: x,y={:.3f}, {:.3f}\n'.format(mux,muy))
                 print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
                 print_verbose(0,self.acc_node.prmatrix())
                 det = LA.det(self.acc_node.matrix)
@@ -357,6 +358,8 @@ class Lattice(object):
         node0.sigxy  = (sigx,sigxp,sigy,sigyp)
         dx, dxp      = (PARAMS['dx_i'],PARAMS['dxp_i']) # (3.4187, 0.) Wille's FODO
         disp_vector0 = NP.array([dx,dxp,0,0,0,1])       # dispersion_i (dx_i,dxp_i,0,0,0,dp2p=1) 
+        phase_advance_x = 0
+        phase_advance_y = 0
 
         """ loop over all nodes in the lattice to get sliced function values """
         function_row = (si,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
@@ -391,6 +394,8 @@ class Lattice(object):
                 bx = twiss_vector[Ktw.bx]; ax = twiss_vector[Ktw.ax]; gx = twiss_vector[Ktw.gx]  # beta x
                 by = twiss_vector[Ktw.by]; ay = twiss_vector[Ktw.ay]; gy = twiss_vector[Ktw.gy]  # beta y
                 s += slice.length
+                phase_advance_x += slice.length/bx   #TODO better integration
+                phase_advance_y += slice.length/by   #TODO better integration
                 dx = disp_vector[0]; dxp = disp_vector[1]  # dispersion
 
                 function_row = (s,bx,ax,gx,by,ay,gy,bz,az,gz,sigx,sigxp,sigy,sigyp,dx,dxp)
@@ -402,6 +407,8 @@ class Lattice(object):
             # aperture check
             self.aperture_check(node,twiss=not sFLAG)
             
+        DEBUG_OFF(f'phase_advance_x,y= {phase_advance_x:.3f}, {phase_advance_y:.3f}')
+        SUMMARY['intg. phase adv. x,y ([deg])'] = f'{phase_advance_x:.3e}, {phase_advance_y:.3e} ({degrees(phase_advance_x):.3e}, {degrees(phase_advance_y):.3e})'
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp','dx','dxp'))  # function titles
         for row in function_tbl:
             abscisse  = row[0]

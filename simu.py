@@ -424,7 +424,7 @@ def simulation(filepath):
             fileobject.write(yaml.dump(kv))
     else:
         show_data_from_elements() #...................................show ELEMENT attributes
-        dictprnt(SUMMARY,text='Summary') #............................show summary
+        # dictprnt(SUMMARY,text='Summary') #............................show summary
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
         steps = 10
         (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
@@ -435,6 +435,7 @@ def simulation(filepath):
             DEBUG_OFF(node.toString())
             DEBUG_OFF(node.__dict__)
             node.do_action()
+        dictprnt(SUMMARY,text='Summary') #............................show summary
         """ show all figures - (must be the only call to show!) """
         plt.show()
 
