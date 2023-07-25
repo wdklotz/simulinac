@@ -28,7 +28,7 @@ DESCRIPTOR:  "Wille test (chap. 3.1.3.3, pp 120)"
 ## RUN switches
 #..........................................................................................
 FLAGS:
-    periodic:     True              # {False} treat lattice as ring
+    # periodic:     True              # {False} treat lattice as ring
     # egf:          True            # {False} apply emittance growth flag
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
@@ -47,9 +47,9 @@ PARAMETERS:
     Win:                  72.             # [MeV] energy @ injection 
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    7.891          # [m] twiss beta @ entrance x
+    betax_i:      &btx    6.516          # [m] twiss beta @ entrance x
     alfax_i:             +0.0             # [] twiss alpha x @ entrance
-    betay_i:      &bty    2.957           # [m] twiss beta @ entrance y
+    betay_i:      &bty    2.950           # [m] twiss beta @ entrance y
     alfay_i:             -0.0             # [] twiss alpha y @ entrance
     # dx_i:                2.           # {0.0} dispersion dx0 [m]
     # dxp_i:               0.0            # {0.0} dispersion dxp0 [rad]
@@ -66,8 +66,8 @@ ELEMENTS:
         type:     QF          # QF class
         length:   0.2         # [m]
         aperture: 0.030       # [m]
-        # B':       &G1 1.3772      # [T/m] quadrupole gradient
-        B':       &G1 1.37743       # [T/m] quadrupole gradient
+        B':       &G1 1.3772      # [T/m] quadrupole gradient
+        # B':       &G1 _G1       # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     QD:                       # ID
         type:     QD          # QD class

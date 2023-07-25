@@ -444,33 +444,26 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group( )
     group.add_argument ("--file", default="simuIN.yml", help="lattice input-file")
-    group.add_argument ("--tmpl", help="template number")
-    parser.add_argument("--run", help="run number")
+    group.add_argument ("--tmpl", help="template file")
+    parser.add_argument("--run",  help="run version")
     args = vars(parser.parse_args())
     DEBUG_OFF(args)
 
     print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    # adapt to legacy code which uses 'Args'
-    Args = {}
-    tmpl  = args['tmpl']
-    run   = args['run']
-    Args['mode']  = 'no_m4' if tmpl == None else 'm4'
-    Args['file']  = args['file']
-    Args['tmpl']  = ''
-    Args['macro'] = ''
-    if Args['mode'] == 'm4':
-        Args['tmpl']   = 'yml/tmpl_{}.yml'.format(tmpl)
-        Args['macro']  = 'yml/macros_{}.{}.sh'.format(tmpl,run) if run != None else 'yml/macros_{}.sh'.format(tmpl)
-    print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
+    m4_mode = 'no_m4' if args['tmpl'] == None else 'm4'
+    macros  = None
+    if m4_mode == 'm4':
+        macros = f'./{args["tmpl"]}.{args["run"]}.sh' if args['run'] != None else f"./{args['tmpl']}.sh"
+    print('This run: input({}), template({}), macros({})'.format(args['file'],args['tmpl'],macros))
 
     # let's go. All  input is parsed...
-    input_file = Args['file']
+    input_file = args['file']    # default simuIN.yml
     if sys.platform == 'win32':
-        if Args['mode']   == 'no_m4':
+        if m4_mode   == 'no_m4':
             pass
-        elif Args['mode'] == 'm4':
-            command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
+        elif 'm4_mode' == 'm4':
+            command = 'yml\m4_launch.bat {} {} {}'.format(args['file'],args['tmpl'],macros)
             stat = os.system(command)
             if stat != 0:
                 print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
@@ -478,13 +471,10 @@ if __name__ == '__main__':
             print('Internal error!')
             sys.exit(1)
     elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        if Args['mode']   == 'no_m4':
+        if m4_mode   == 'no_m4':
             pass
-        elif Args['mode'] == 'm4':
-            macros_file   = Args['macro']
-            template_file = Args['tmpl']
-            # launch macros script with bash
-            command = "chmod +x {0};{1} {2} {3}".format(macros_file, macros_file, template_file, input_file)
+        elif m4_mode == 'm4':
+            command = "chmod +x {0};{1} {2} {3}".format(macros, macros, args['tmpl'], input_file)
             stat = os.system(command)
             if stat != 0:
                 print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
