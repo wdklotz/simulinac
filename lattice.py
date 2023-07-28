@@ -29,6 +29,7 @@ from copy import copy
 # from sty import fg,bg,ef,rs
 
 import elements as ELM
+import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
@@ -407,8 +408,10 @@ class Lattice(object):
             # aperture check
             self.aperture_check(node,twiss=not sFLAG)
             
-        DEBUG_OFF(f'phase_advance_x,y= {phase_advance_x:.3f}, {phase_advance_y:.3f}')
-        SUMMARY['intg. phase adv. x,y ([deg])'] = f'{phase_advance_x:.3e}, {phase_advance_y:.3e} ({degrees(phase_advance_x):.3e}, {degrees(phase_advance_y):.3e})'
+        setutil.PHADVX = phase_advance_x
+        setutil.PHADVY = phase_advance_y
+        DEBUG_OFF(f'phase_advance_x,y= {setutil.PHADVX:.3f}, {setutil.PHADVY:.3f}')
+
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp','dx','dxp'))  # function titles
         for row in function_tbl:
             abscisse  = row[0]

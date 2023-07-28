@@ -89,6 +89,7 @@ def instanciate_element(item):
             aperture       = attributes.get('aperture',None)
             instance       = ELM.SD(ID, alpha, rho, aperture=aperture)
             ELEMENT['sec'] = attributes.get('sec','?')
+            ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
         elif type == 'RD':
             alpha          = get_mandatory(attributes,'alpha',ID)
             rho            = get_mandatory(attributes,'rho',ID)

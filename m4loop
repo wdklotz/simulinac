@@ -1,9 +1,0 @@
-inFile=simuIN.yml
-template=WorkOnArc2.yml
-
-for val in $(seq 1.37735 0.00001 1.37745)
-do
-    echo "-D _G1=$val $template > $inFile"
-    m4 -D _G1=$val $template > $inFile
-    python simu.py
-done

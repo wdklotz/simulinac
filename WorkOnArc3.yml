@@ -32,7 +32,7 @@ FLAGS:
     # egf:          True            # {False} apply emittance growth flag
     sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
     # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
-    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
     # useaper:      True            # {False} use aperture check for lattice elements
     # bucket:       True            # {False} plot w acceptance
     csTrak:       False             # {True} plot CS trajectories else beta functions
@@ -47,11 +47,11 @@ PARAMETERS:
     Win:                  72.             # [MeV] energy @ injection 
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
-    betax_i:      &btx    6.516          # [m] twiss beta @ entrance x
+    betax_i:      &btx    8.320           # [m] twiss beta @ entrance x
     alfax_i:             +0.0             # [] twiss alpha x @ entrance
-    betay_i:      &bty    2.950           # [m] twiss beta @ entrance y
+    betay_i:      &bty    2.705           # [m] twiss beta @ entrance y
     alfay_i:             -0.0             # [] twiss alpha y @ entrance
-    # dx_i:                2.           # {0.0} dispersion dx0 [m]
+    dx_i:                 1.94             # {0.0} dispersion dx0 [m]
     # dxp_i:               0.0            # {0.0} dispersion dxp0 [rad]
     # dx_i:                3.4187         # Wille
     # dxp_i:               0.0            # Wille
@@ -66,14 +66,15 @@ ELEMENTS:
         type:     QF          # QF class
         length:   0.2         # [m]
         aperture: 0.030       # [m]
-        # B':       &G1 1.3772      # [T/m] quadrupole gradient
-        B':       &G1 _G1       # [T/m] quadrupole gradient
+        B':     1.24      # [T/m] quadrupole gradient
+        # B':       _Gf       # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     QD:                       # ID
         type:     QD          # QD class
         length:   0.4         # [m] length
         aperture: 0.030       # [m]
-        B':       *G1        # [T/m] quadrupole gradient
+        B':       1.36        # [T/m] quadrupole gradient
+        # B':       _Gd        # [T/m] quadrupole gradient
         thins:    0           # if thins == 0|1: one thick element else: many thin elements
     RD:
         type:     RD          # RD class
@@ -83,8 +84,14 @@ ELEMENTS:
     SD:
         type:     SD          # RD class
         # alpha:    22.50       # [deg]  bend angle
-        alpha:    11.25       # [deg]  bend angle
-        rho:      3.8179      # [m]    bend radius
+        alpha:    9.0      # [deg]  bend angle
+        rho:      6.37     # [m]    bend radius
+    SD1:
+        type:     SD          # RD class
+        # alpha:    22.50       # [deg]  bend angle
+        alpha:    9.0      # [deg]  bend angle
+        rho:     11.32     # [m]    bend radius
+        # rho:      _RHO     # [m]    bend radius
     DD:
         type:     D          # RD class
         # length:   1.5        # [m] 
@@ -104,9 +111,9 @@ SEGMENTS:
 CELLS:    
 # group SEGMENTS into CELLs: order given by list [...] syntax
     NIL_CELL:    [1,[]] # placeholder
-    # CELL:        [1,[RD, D, QD, D, RD, D, QF,QF,D]] 
-    ARC:        [1,[QF, D, SD, D, QD, D, SD, D, QF]] 
-    EMP:        [1,[QF, D, DD, D, QD, D, DD, D, QF]] 
+    ARC:         [1,[QF, D, SD, D, QD, D, SD, D, QF]] 
+    ARC1:        [1,[QF, D, SD1, D, QD, D, SD1, D, QF]] 
+    EMP:         [1,[QF, D, DD, D, QD, D, DD, D, QF]] 
 
 SECTIONS:
 # group CELLs into SECTIONS
@@ -116,5 +123,8 @@ SECTIONS:
 
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
-    LINE:       [1,[LINAC,LINAC,ARC,EMP,FODO,FODO,FODO,FODO,EMP,ARC,LINAC,LINAC]]
-    # LINE: [1,[LINAC]]
+    # LINE:       [1,[LINAC,LINAC,ARC1,EMP,FODO,EMP,ARC1,LINAC,LINAC]]
+    # LINE:       [1,[FODO,EMP,ARC1,ARC1,LINAC,LINAC]]
+    LINE:       [1,[FODO,LINAC,LINAC]]
+    # LINE: [1,[ARC]]
+    # LINE: [1,[FODO]]

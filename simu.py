@@ -28,22 +28,22 @@ This file is part of the SIMULINAC code
 #TODO: handle exceptions speziel ValueError - more or less done
 #TODO: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py - done
 """
-import sys,os
+import sys
 import matplotlib
-import yaml
 import matplotlib.pyplot as plt
-# for PyQt
-# import PyQt5
-# matplotlib.use("Qt5Agg")
-# for Tk
+# for PyQt use:
+    # import PyQt5
+    # matplotlib.use("Qt5Agg")
+# for Tk use:
 import tkinter # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
 matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
-# NOTE: (wdk 20.10.2022): the next 2 lines are needed for ssh -X forwarded DISPLAY usage.
-# NOTE: (wdk 20.10.2022): the next 2 lines have to commented for jupyter notebook usage
+from math import degrees
+import pandas as pd
 
+import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
-from setutil import PARAMS,FLAGS,SUMMARY, dictprnt, RUN_MODE
-from setutil import collect_data_for_summary, show_data_from_elements
+from setutil import PARAMS,FLAGS,SUMMARY,dictprnt,RUN_MODE
+from setutil import collect_data_for_summary,show_data_from_elements
 from setutil import DEBUG_ON,DEBUG_OFF
 from lattice_generator import factory
 import argparse
@@ -408,27 +408,39 @@ def simulation(filepath):
     # Update PARAMS
     PARAMS.update(res)
     #----------------------------------------------
-    # STEP 5: collect results
+    # STEP 5: lattice functions
+    #----------------------------------------------
+    steps = 10
+    (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
+    twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,......calculate envelope functions
+    #----------------------------------------------
+    # STEP 6: collect results
     #----------------------------------------------
     collect_data_for_summary(lattice)
     #----------------------------------------------
-    # STEP 6: display results and display them
+    # STEP 7: ouput results
     #----------------------------------------------
     kv_only = FLAGS['KVout']
     if kv_only:
-        kv=dict(FLAGS=FLAGS,PARAMS=PARAMS,SUMMARY=SUMMARY)
-        print('\n\n-----as string-----')
-        print(kv)
-        print('-----dumped as simuOUT.yml-----')
-        with open("simuOUT.yml",'w') as fileobject:
-            fileobject.write(yaml.dump(kv))
+        def flatten_dict(d):
+            [flat_dict] = pd.json_normalize(d).to_dict(orient='records')
+            return flat_dict
+        def default():
+            kv=dict(FLAGS=FLAGS,PARAMS=PARAMS,SUMMARY=SUMMARY,ELEMENTS=setutil.ELEMENTS)
+            fkv = flatten_dict(kv)
+            DEBUG_ON(fkv)
+        def custom():
+            kv={}
+            kv['phase_advance'] = '{:.2f} {:.2f}'.format(degrees(setutil.PHADVX),degrees(setutil.PHADVY))
+            kv['B\'f'] = setutil.ELEMENTS['QF']["B'"]
+            kv['B\'d'] = setutil.ELEMENTS['QD']["B'"]
+            print(kv)
+        # out = default
+        out = default
+        out()
     else:
         show_data_from_elements() #...................................show ELEMENT attributes
-        # dictprnt(SUMMARY,text='Summary') #............................show summary
         (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
-        steps = 10
-        (c_like,s_like) = lattice.cs_traj(steps=steps) #..............track sin- and cos-like trajectories
-        twiss_func      = lattice.twiss_funcs(steps=steps) #.,,,......calculate envelope functions
         display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
@@ -444,43 +456,44 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group( )
     group.add_argument ("--file", default="simuIN.yml", help="lattice input-file")
-    group.add_argument ("--tmpl", help="template file")
-    parser.add_argument("--run",  help="run version")
+    # group.add_argument ("--tmpl", help="template file")
+    # parser.add_argument("--run",  help="run version")
     args = vars(parser.parse_args())
     DEBUG_OFF(args)
 
     print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    m4_mode = 'no_m4' if args['tmpl'] == None else 'm4'
-    macros  = None
-    if m4_mode == 'm4':
-        macros = f'./{args["tmpl"]}.{args["run"]}.sh' if args['run'] != None else f"./{args['tmpl']}.sh"
-    print('This run: input({}), template({}), macros({})'.format(args['file'],args['tmpl'],macros))
+    # # m4_mode = 'no_m4' if args['tmpl'] == None else 'm4'
+    # macros  = None
+    # if m4_mode == 'm4':
+    #     macros = f'./{args["tmpl"]}.{args["run"]}.sh' if args['run'] != None else f"./{args['tmpl']}.sh"
+    # print('This run: input({}), template({}), macros({})'.format(args['file'],args['tmpl'],macros))
+    input_file = args['file']    # default simuIN.yml
+    print('This run: input({}))'.format(input_file))
 
     # let's go. All  input is parsed...
-    input_file = args['file']    # default simuIN.yml
-    if sys.platform == 'win32':
-        if m4_mode   == 'no_m4':
+    # if sys.platform == 'win32':
+    #     if m4_mode   == 'no_m4':
+    #         pass
+    #     elif 'm4_mode' == 'm4':
+    #         command = 'yml\m4_launch.bat {} {} {}'.format(args['file'],args['tmpl'],macros)
+    #         stat = os.system(command)
+    #         if stat != 0:
+    #             print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
+    #     else:
+    #         print('Internal error!')
+    #         sys.exit(1)
+    if sys.platform == 'darwin' or sys.platform.startswith('linux'):
+        # if m4_mode   == 'no_m4':
             pass
-        elif 'm4_mode' == 'm4':
-            command = 'yml\m4_launch.bat {} {} {}'.format(args['file'],args['tmpl'],macros)
-            stat = os.system(command)
-            if stat != 0:
-                print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
-        else:
-            print('Internal error!')
-            sys.exit(1)
-    elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        if m4_mode   == 'no_m4':
-            pass
-        elif m4_mode == 'm4':
-            command = "chmod +x {0};{1} {2} {3}".format(macros, macros, args['tmpl'], input_file)
-            stat = os.system(command)
-            if stat != 0:
-                print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
-        else:
-            print('Internal error!')
-            sys.exit(1)
+        # elif m4_mode == 'm4':
+        #     command = "chmod +x {0};{1} {2} {3}".format(macros, macros, args['tmpl'], input_file)
+        #     stat = os.system(command)
+        #     if stat != 0:
+        #         print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
+        # else:
+        #     print('Internal error!')
+        #     sys.exit(1)
     else:
         print('wrong platform')
         sys.exit(1)

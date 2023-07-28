@@ -31,6 +31,7 @@ import unittest
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
+import numpy as np
 
 # DEBUG utility used by all modules
 import pprint, inspect
@@ -51,7 +52,9 @@ DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
 # MDIM: dimension of matrices
-MDIM = 10
+MDIM   = 10
+PHADVX =0
+PHADVY =0
 class Ktp(IntEnum):
     """ TrackPoint K-oordinaten Ktp """
     x  = 0     # x
@@ -384,14 +387,15 @@ def collect_data_for_summary(lattice):
         SUMMARY["\u03B5y_i [mrad*mm]"]             =  PARAMS['emity_i']*1.e6
         SUMMARY["\u03B5w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['emitw_i'])
         SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
-        SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} norm. energy spread @ injection (w0)'.format(PARAMS['w0_i'])
-        SUMMARY['\u0394T/T_i']                     =  '{:8.2e} kin. energy spread @ injection'.format(PARAMS['DT2T_i'])
-        SUMMARY['disp (dx_i,dxp_i) [m,rad]']       =  f"disp ({PARAMS['dx_i']:8.2e}, {PARAMS['dxp_i']:8.2e})"
-    
+        SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} energy-spread'.format(PARAMS['w0_i'])
+        SUMMARY['\u0394T/T_i']                     =  '{:8.2e} energy-spread'.format(PARAMS['DT2T_i'])
+        SUMMARY['disp_i dx,dxp [m,rad]']           =  f"{PARAMS['dx_i']:8.2e}  {PARAMS['dxp_i']:8.2e}"
+        SUMMARY['phase_advance x,y [deg]']         = '{:.2f} {:.2f}'.format(degrees(PHADVX),degrees(PHADVY))
+
     if FLAGS['dWf'] == 1:
-        SUMMARY['\u0394Wmax_i* [MeV]']            =  '{:8.2e} max \u0394W on separatrix'.format(PARAMS.get('DWmax',0))
+        SUMMARY['\u0394Wmax_i* [MeV]']             =  '{:8.2e} max \u0394W on separatrix'.format(PARAMS.get('DWmax',0))
         SUMMARY['wmax*']                           =  '{:8.2e} max \u0394\u03B3 on separatrix'.format(PARAMS.get('wmax',0))
-        SUMMARY['\u0394p/pmax_i [%]']             =  '{:8.2e} max \u0394p/p on separatrix'.format(PARAMS.get('Dp2pmax',0)*1.e2)
+        SUMMARY['\u0394p/pmax_i [%]']              =  '{:8.2e} max \u0394p/p on separatrix'.format(PARAMS.get('Dp2pmax',0)*1.e2)
         # SUMMARY['zmax* [m]']                       =  '{:8.2e} max z on separatrix'.format(abs(PARAMS['zmax']))
         SUMMARY['\u0394p/p0*']                     =  '{:8.2e} impulse spread'.format(PARAMS['Dp2p0_i'])
         SUMMARY['\u0394\u03C60* [rad]']            =  '{:8.2e} phase'.format(PARAMS['Dphi0_i'])
