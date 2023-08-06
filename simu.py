@@ -452,7 +452,7 @@ def simulation(filepath):
         plt.show()
 
 if __name__ == '__main__':
-    # use ArgumentParser to put result in 'args'
+    # ArgumentParser puts result in 'args'
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group( )
     group.add_argument ("--file", default="simuIN.yml", help="lattice input-file")
@@ -463,37 +463,11 @@ if __name__ == '__main__':
 
     print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    # # m4_mode = 'no_m4' if args['tmpl'] == None else 'm4'
-    # macros  = None
-    # if m4_mode == 'm4':
-    #     macros = f'./{args["tmpl"]}.{args["run"]}.sh' if args['run'] != None else f"./{args['tmpl']}.sh"
-    # print('This run: input({}), template({}), macros({})'.format(args['file'],args['tmpl'],macros))
     input_file = args['file']    # default simuIN.yml
     print('This run: input({}))'.format(input_file))
 
-    # let's go. All  input is parsed...
-    # if sys.platform == 'win32':
-    #     if m4_mode   == 'no_m4':
-    #         pass
-    #     elif 'm4_mode' == 'm4':
-    #         command = 'yml\m4_launch.bat {} {} {}'.format(args['file'],args['tmpl'],macros)
-    #         stat = os.system(command)
-    #         if stat != 0:
-    #             print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
-    #     else:
-    #         print('Internal error!')
-    #         sys.exit(1)
     if sys.platform == 'darwin' or sys.platform.startswith('linux'):
-        # if m4_mode   == 'no_m4':
-            pass
-        # elif m4_mode == 'm4':
-        #     command = "chmod +x {0};{1} {2} {3}".format(macros, macros, args['tmpl'], input_file)
-        #     stat = os.system(command)
-        #     if stat != 0:
-        #         print('\nWARNING: system-command returned error - try to use standard launch: "python simu.py <input>.yml" without m4-preprocessing!')
-        # else:
-        #     print('Internal error!')
-        #     sys.exit(1)
+            print(f'Platform {sys.platform}')
     else:
         print('wrong platform')
         sys.exit(1)

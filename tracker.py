@@ -526,24 +526,21 @@ class TestTracker(unittest.TestCase):
 #----------------main------------
 if __name__ == '__main__':
     DEBUG_OFF(sys.argv)
-    # use ArgumentParser to put result in 'args'
+    # ArgumentParser puts result in 'args'
     parser = argparse.ArgumentParser()
     group  = parser.add_mutually_exclusive_group()
     group1 = parser.add_mutually_exclusive_group()
-    parser.add_argument("--p", metavar="N", default=1750, type=int,   help="N particles per bunch")
-    parser.add_argument("--hide", action="store_true",                help="hide IN/OUT scatter plots")
-    group.add_argument ("--file", default="trackerIN.yml",            help="lattice input-file")
-    group.add_argument ("--tmpl",                                     help="template number")
-    parser.add_argument("--run",                                      help="run number")
-    group1.add_argument("--losses", action="store_true",              help="run in losses mode")
-    group1.add_argument("--pcuts", action="store_true",                      help="save poincare cuts")
-    parser.add_argument("--skip", metavar="N", default="1", type=int,        help="skip every N poincare cuts")
-    parser.add_argument("--lrx", metavar="N", default="-1", type=int,        help="take N-th frame as axis limits. first=0, last=-1")
+    parser.add_argument("--p",      metavar="N", default=1750, type=int,     help="N particles per bunch")
+    parser.add_argument("--hide",   action="store_true",                     help="hide IN/OUT scatter plots")
+    group.add_argument ("--file",   default="trackerIN.yml",                 help="lattice input-file")
+    group1.add_argument("--losses", action="store_true",                     help="run in losses mode")
+    group1.add_argument("--pcuts",  action="store_true",                     help="save poincare cuts")
+    parser.add_argument("--skip",   metavar="N", default="1", type=int,      help="skip every N poincare cuts")
+    parser.add_argument("--lrx",    metavar="N", default="-1", type=int,     help="take N-th frame as axis limits. first=0, last=-1")
     parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
     parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
     parser.add_argument("--h5file", default="frames.h5",                     help="HDF5 dump-file")
     args = vars(parser.parse_args())
-    DEBUG_OFF(f'arguments => {args}')
     options = {}
     options['particles_per_bunch'] = args['p']
     options['show']                = not args['hide']
@@ -559,52 +556,17 @@ if __name__ == '__main__':
     if options['save']:
         options['show']   = False
         options['losses'] = False
-    DEBUG_OFF(f'options = {options}')
-
     print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
     
-    # adapt to legacy code which uses 'Args'
-    Args  = {}
-    tmpl  = args['tmpl']
-    run   = args['run'] 
-    Args['mode']  = 'no_m4' if tmpl == None else 'm4'
-    Args['file']  = args['file']
-    Args['tmpl']  = ''
-    Args['macro'] = ''
-    if Args['mode'] == 'm4':
-        Args['tmpl']   = 'yml/tmpl_{}.yml'.format(tmpl)
-        Args['macro']  = 'yml/macros_{}.{}.sh'.format(tmpl,run) if run != None else 'yml/macros_{}.sh'.format(tmpl)
-    print('This run: input({}), template({}), macro({})'.format(Args['file'],Args['tmpl'],Args['macro']))
-
     # let's go. All  input is parsed...
-    input_file = Args['file']
-    if DEBUG_OFF():
+    input_file = args['file']
+    print('This run: input({})'.format(input_file))
+    if False:
         # unittest.main()
         TestTracker(methodName='test_tracking').run()
     else:
-        if sys.platform == 'win32':
-            if Args['mode']   == 'no_m4':
-                pass
-            elif Args['mode'] == 'm4':
-                command = 'yml\m4_launch.bat {} {} {}'.format(Args['file'],Args['tmpl'],Args['macro'])
-                stat = os.system(command)
-                if stat != 0:
-                    print('\nWARNING: system-command returned error - using standard "yml/simuIN.yml" without m4-preprocessing!')
-            else:
-                print('Internal error!')
-                sys.exit(1)
-        elif sys.platform == 'darwin' or sys.platform.startswith('linux'):
-            if Args['mode']   == 'no_m4':
-                pass
-            elif Args['mode'] == 'm4':
-                macros_file   = Args['macro']
-                template_file = Args['tmpl']
-                # launch macros script with bash
-                command = "chmod +x {0};{1} {2} {3}".format(macros_file, macros_file, template_file, input_file)            
-                os.system(command)
-            else:
-                print('Internal error!')
-                sys.exit(1)
+        if sys.platform == 'darwin' or sys.platform.startswith('linux'):
+            print(f'Platform {sys.platform}')
         else:
             print('wrong platform')
             sys.exit(1)
