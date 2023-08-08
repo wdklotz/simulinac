@@ -71,7 +71,7 @@ def I0(x):      # not used anymore
         res-= 0.01647633*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         res+= 0.00392377*tm1*tm1*tm1*tm1*tm1*tm1*tm1*tm1
         try:
-            res = res*exp(x)/sqrt(x)
+            res = res*math.exp(x)/math.sqrt(x)
             print('(I0,x )',(res,x))
         except OverflowError as ex:
             print('Bessel-function I0 overflow: (arg = {:6.3f})! - STOP'.format(x))

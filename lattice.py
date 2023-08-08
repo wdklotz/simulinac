@@ -260,7 +260,7 @@ class Lattice(object):
                 print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
                 print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
             else:
-                print('STOP: unstable lattice!')
+                print(colors.RED+'WARN: unstable lattice!'+colors.ENDC)
             return stable
         """ function body --------------- function body --------------- function body --------------- """
         mcell = None

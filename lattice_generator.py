@@ -18,13 +18,11 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-from sre_parse import FLAGS
 import sys,os
-from math import radians
 import yaml
 import warnings
 import unittest
-
+import math                as M
 import setutil             as UTIL
 import elements            as ELM
 import OXAL                as OXA
@@ -32,9 +30,9 @@ import TTFG                as TTF
 import DYNG                as DYN
 import PsMarkerAgent       as PSMKR
 import PoincareMarkerAgent as PCMKR
-from lattice import Lattice
-from Ez0 import SFdata
-from lattice_parser_2 import parse as doInputParser
+import lattice_parser_2    as LP2
+import lattice             as LAT
+import Ez0                 as EZ
 
 def make_counter():
     count = 0
@@ -115,7 +113,7 @@ def instanciate_element(item):
             ELEMENT['Bpole'] = dBdz*aperture      # Bpole
             ELEMENT['sec']   = attributes.get('sec','?')
         elif type == 'RFG':
-            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             gap       = get_mandatory(attributes,'gap',ID)
             aperture  = get_mandatory(attributes,'aperture',ID)
@@ -128,7 +126,7 @@ def instanciate_element(item):
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
-                sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                sfdata = EZ.SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
@@ -158,7 +156,7 @@ def instanciate_element(item):
                 print(UTIL.colors.RED+"WARN: RFC node is broken"+UTIL.colors.ENDC)
             else:
                 sys.exit(1)
-            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             gap       = get_mandatory(attributes,'gap',ID)
             length    = get_mandatory(attributes,'length',ID)
@@ -169,7 +167,7 @@ def instanciate_element(item):
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
-                sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                sfdata = EZ.SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
                 # if fieldtab not in UTIL.PARAMS:
                 #     gap_cm = gap*100     # Watch out!
                 #     UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
@@ -202,7 +200,7 @@ def instanciate_element(item):
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
+            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             dWf       = UTIL.FLAGS['dWf']
             aperture  = get_mandatory(attributes,'aperture',ID)
@@ -303,7 +301,7 @@ def factory(input_file,stop=None):
             res['DT2T_i'] = DW2W_i
         elif DT2T_i != None:
             res['DT2T_i'] = DT2T_i
-        res['Dphi0_i']    = radians(parameters.get('DPHI0',10.)) # default [rad]
+        res['Dphi0_i']    = M.radians(parameters.get('DPHI0',10.)) # default [rad]
 
         """ transverse beam parameters """
         res['emitx_i']          = parameters.get('emitx_i',1E-6) # [m*rad]
@@ -320,12 +318,11 @@ def factory(input_file,stop=None):
         # initial dispersion @ entrance
         res['dx_i']              = parameters.get('dx_i',0.)
         res['dxp_i']             = parameters.get('dxp_i',0.)
-        # supplemental global parameters
+        # supplemental parameters
         res['nbsigma']          = parameters.get('nbsigma',3)
         res['lattice_version']  = parameters.get('lattvers','not given')
         res['thins']            = parameters.get('thins',1)
         res['input_file']       = None
-        
         """ 
         longitudinal beam emittance @ entrance
             Phase space ellipse parameters nach T.Wangler (6.47-48) pp.185
@@ -349,11 +346,10 @@ def factory(input_file,stop=None):
 
         return res
     def process_elements(elements):
-        """ fills global ELEMENTS """
         return elements
     def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
-        lattice = Lattice(descriptor=UTIL.PARAMS.get('descriptor'))
+        lattice = LAT.Lattice(descriptor=UTIL.PARAMS.get('descriptor'))
         instances = []
         for elementID in elementIDs:
             UTIL.DEBUG_OFF(elementID)
@@ -387,7 +383,7 @@ def factory(input_file,stop=None):
     UTIL.DEBUG_OFF(in_data)
 
     # call lattice parser, get results
-    results = doInputParser(in_data)
+    results = LP2.parse(in_data)
     UTIL.PARAMS['descriptor'] = results.DESCRIPTOR  # get DESCRIPTOR from parsed results
 
     flags = process_flags(results.FLAGS)

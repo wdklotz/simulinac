@@ -565,7 +565,7 @@ if __name__ == '__main__':
         # unittest.main()
         TestTracker(methodName='test_tracking').run()
     else:
-        if sys.platform == 'darwin' or sys.platform.startswith('linux'):
+        if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
             print(f'Platform {sys.platform}')
         else:
             print('wrong platform')

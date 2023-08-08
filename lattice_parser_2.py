@@ -140,7 +140,7 @@ def parse(in_data=None):
         UTIL.DEBUG_OFF(HR)
         sections = in_data['SECTIONS']
         UTIL.DEBUG_OFF(sections)     # this shows what the YAML parser has done
-        sections = nlists(sections)# apply_NTIMES(sections)  # nlists 'ITEMS'
+        sections = nlists(sections)  # apply_NTIMES(sections)  # nlists 'ITEMS'
         UTIL.DEBUG_OFF(sections)
 
         UTIL.DEBUG_OFF(HR)
