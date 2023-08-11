@@ -29,12 +29,10 @@ This file is part of the SIMULINAC code
 #TODO: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py - done
 """
 import matplotlib
-# for PyQt use:
-    # import PyQt5
-    # matplotlib.use("Qt5Agg")
-# for Tk use:
-import tkinter            # works on native W10,W11,WSL,Ubuntu(WSL),jupyter and ???
-matplotlib.use("TkAgg")   # ??? used for what ???  works badly with jupyter qtconsole
+# import PyQt5
+# matplotlib.use("Qt5Agg")
+# import tkinter
+matplotlib.use("TkAgg")
 import sys
 import argparse
 from setutil import DEBUG_ON,DEBUG_OFF,EKOO

@@ -25,6 +25,11 @@ This file is part of the SIMULINAC code
 
 import sys,os
 import numpy as np
+import matplotlib
+# import PyQt5
+# matplotlib.use("Qt5Agg")
+# import tkinter
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import time
 from math import sqrt, degrees, radians, ceil,pi
