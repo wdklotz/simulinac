@@ -1,4 +1,3 @@
-#!/Users/klotz/anaconda3/bin/python3.6
 # -*- coding: utf-8 -*-
 __version__='v11.0.2'
 """
