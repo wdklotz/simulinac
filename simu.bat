@@ -10,8 +10,8 @@ GOTO EOF
 
 :LAUNCH
 REM launch simu.py
-echo launching: python simu.py %1 %2 %3 %4 %5 %6 %7
-python simu.py %1 %2 %3 %4 %5 %6 %7
+echo launching: python simu.py %*
+python simu.py %*
 GOTO EOF
 
 :EOF
