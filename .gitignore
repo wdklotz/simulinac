@@ -6,6 +6,7 @@
 *.log
 *.h5
 *.stats
+*.swp
 __pycache__
 .DS_Store
 .project
@@ -13,8 +14,8 @@ __pycache__
 .ipynb_checkpoints
 h
 t
-simuIN.vml
-trackerIN.yml
+#simuIN.vml
+#trackerIN.yml
 toto.py
 tmp.py
 Untitled*
