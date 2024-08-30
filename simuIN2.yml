@@ -1,0 +1,120 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+
+#...................................................:.......................................
+DESCRIPTOR:  "WorkOnArc0.yml"
+#..........................................................................................
+## RUN switches
+#..........................................................................................
+FLAGS:
+    periodic:     True              # {False} treat lattice as ring
+    # egf:          True            # {False} apply emittance growth flag
+    sigma:        False           # {True} beam sizes by sigma-matrix else twiss functions
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # bucket:       True            # {False} plot w acceptance
+    csTrak:       False             # {True} plot CS trajectories else beta functions
+    # maction:      False            # {True} markers active toggle
+    # envelope:     True            # {False} plot envelopes
+    # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
+#...........................................................................................
+## INPUT-PARAMETER definitions
+#...........................................................................................
+PARAMETERS:
+    lattvers:     'Wille 1.0.0'           # lattice version: IN 5, out 200
+    Win:                  72.             # [MeV] energy @ injection 
+    emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    7.891          # [m] twiss beta @ entrance x
+    alfax_i:             +0.0             # [] twiss alpha x @ entrance
+    betay_i:      &bty    2.957           # [m] twiss beta @ entrance y
+    alfay_i:             -0.0             # [] twiss alpha y @ entrance
+    # dx_i:                2.           # {0.0} dispersion dx0 [m]
+    # dxp_i:               0.0            # {0.0} dispersion dxp0 [rad]
+    # dx_i:                3.4187         # Wille
+    # dxp_i:               0.0            # Wille
+#...........................................................................................
+## ELEMENTS (a.k.a. NOdes) definitions
+#...........................................................................................
+ELEMENTS:
+    D:                        # ID
+        type:     D           # D class
+        length:   0.55        # [m]
+    QF:                       # ID
+        type:     QF          # QF class
+        length:   0.2         # [m]
+        aperture: 0.030       # [m]
+        # B':       &G1 1.3772      # [T/m] quadrupole gradient
+        B':       &G1 1.37743       # [T/m] quadrupole gradient
+        thins:    0           # if thins == 0|1: one thick element else: many thin elements
+    QD:                       # ID
+        type:     QD          # QD class
+        length:   0.4         # [m] length
+        aperture: 0.030       # [m]
+        B':       *G1        # [T/m] quadrupole gradient
+        thins:    0           # if thins == 0|1: one thick element else: many thin elements
+    RD:
+        type:     RD          # RD class
+        # alpha:    22.50       # [deg]  bend angle
+        alpha:    11.25       # [deg]  bend angle
+        rho:      3.8179      # [m]    bend radius
+    SD:
+        type:     SD          # RD class
+        # alpha:    22.50       # [deg]  bend angle
+        alpha:    11.25       # [deg]  bend angle
+        rho:      3.8179      # [m]    bend radius
+    DD:
+        type:     D          # RD class
+        # length:   1.5        # [m] 
+        length:   0.75        # [m] 
+# ===========================================================================================
+# LATTICE definition starts here:  
+# An ELEMENT is part of a SEGMENT is part of a CELL is part of a SECTION is part of a LINE.
+# A LINE is the LATTICE.
+#
+# 2) List syntax: [number[node,...,node]]. The list [node,...,node] is repeated number times
+# 3) never delete placeholders!
+
+SEGMENTS:   
+# group ELEMENTs into SEGMENTs:
+    NIL_SEG:     [1,[]]  # placeholder
+
+CELLS:    
+# group SEGMENTS into CELLs: order given by list [...] syntax
+    NIL_CELL:    [1,[]] # placeholder
+    # CELL:        [1,[RD, D, QD, D, RD, D, QF,QF,D]] 
+    ARC:        [1,[QF, D, SD, D, QD, D, SD, D, QF]] 
+    EMP:        [1,[QF, D, DD, D, QD, D, DD, D, QF]] 
+
+SECTIONS:
+# group CELLs into SECTIONS
+    NIL_SEC:    [1,[]] # placeholder
+    FODO:       [8,[ARC]]
+    LINAC:      [8,[EMP]]
+
+LATTICE:    
+# group SECTIONs into a LINE a.k.a. LATTICE
+    LINE:       [1,[LINAC,LINAC,ARC,EMP,FODO,FODO,FODO,FODO,EMP,ARC,LINAC,LINAC]]
+    # LINE: [1,[LINAC]]
