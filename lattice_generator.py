@@ -343,7 +343,6 @@ def factory(input_file,stop=None):
         res['betaw_i']  = beta_w
         # longitudinal TWiss @ entrance in {Dphi,w}-space
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
-
         return res
     def process_elements(elements):
         return elements
