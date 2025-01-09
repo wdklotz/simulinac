@@ -268,6 +268,7 @@ def factory(input_file,stop=None):
             egf      = flags.get('egf',False),                # emittance grow flag default
             sigma    = flags.get('sigma',True),               # beam sizes by sigma-tracking
             KVout    = flags.get('KVout',False),              # print a dictionary of Key-Value pairs, no display
+            GDisp    = flags.get('GDisp',True),               # display, show graphics, default show
             verbose  = flags.get('verbose',0),                # print flag default = 0
             useaper  = flags.get('useaper',False),            # use aperture check for quads and rf-gaps
             bucket   = flags.get('bucket',False),             # plot bucket

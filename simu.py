@@ -415,6 +415,7 @@ def simulation(filepath):
     # STEP 7: ouput results
     #----------------------------------------------
     kv_only = UTIL.FLAGS['KVout']
+    g_disp  = UTIL.FLAGS['GDisp']
     if kv_only:
         def flatten_dict(d):
             [flat_dict] = pd.json_normalize(d).to_dict(orient='records')
@@ -434,8 +435,9 @@ def simulation(filepath):
         out()
     else:
         UTIL.show_data_from_elements() #...................................show ELEMENT attributes
-        (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
-        display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
+        if g_disp :
+            (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
+            display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
             DEBUG_OFF(node.toString())
@@ -443,7 +445,8 @@ def simulation(filepath):
             node.do_action()
         UTIL.dictprnt(UTIL.SUMMARY,text='Summary') #............................show summary
         """ show all figures - (must be the only call to show!) """
-        plt.show()
+        if g_disp :
+            plt.show()
 
 if __name__ == '__main__':
     # ArgumentParser puts result in 'args'
