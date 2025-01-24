@@ -273,7 +273,7 @@ def factory(input_file,stop=None):
             useaper  = flags.get('useaper',False),            # use aperture check for quads and rf-gaps
             bucket   = flags.get('bucket',False),             # plot bucket
             csTrak   = flags.get('csTrak',True),              # plot CS trajectories
-            maction  = flags.get('maction',True),            # call marker actions
+            maction  = flags.get('maction',True),             # call marker actions
             envelope = flags.get('envelope',False),           # plot transverse envelopes
             mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
         )

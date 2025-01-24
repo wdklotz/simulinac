@@ -197,7 +197,7 @@ class D(Node):
         shortend =  D(self.label, particle=self.particle, position=(0.,0.,0.), length=length, aperture=self.aperture)
         return shortend
 class DKD(D):
-    """  Trace3D drift spacer for Drift_Kick-Drift sandwich (for use with DYNAC CAVNUM cavities) """
+    """  Trace3D drift spacer for Drift-Kick-Drift sandwich (for use with DYNAC CAVNUM cavities) """
     def __init__(self, label, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):
         super().__init__(label,particle=particle,position=position,length=length,aperture=aperture)
 

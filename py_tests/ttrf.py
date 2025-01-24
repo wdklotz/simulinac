@@ -1,12 +1,12 @@
-import sys
-sys.path.insert(0,'..')
+import sys,os
+# print(os.getcwd())
+sys.path.insert(0,os.getcwd())
+# print(sys.path)
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from setutil import tblprnt
-
-from setutil import PARAMS,SUMMARY,Particle,Proton,dictprnt,DEBUG
+from setutil import PARAMS,SUMMARY,Particle,Proton,dictprnt
 
 def test2D(X,Y,Z):
     from matplotlib.ticker import MaxNLocator
@@ -26,7 +26,7 @@ def test2D(X,Y,Z):
     ax.set_title(title)
     ax.set_xlabel('gap [mm]')
     ax.set_ylabel('f [MHz]')
-    plt.show(block=False)
+    plt.show(block=True)
 
 def test3D(X,Y,Z):
     from mpl_toolkits.mplot3d import Axes3D
@@ -38,11 +38,13 @@ def test3D(X,Y,Z):
     ax.set_title(title)
     plt.show(block=False)
 if __name__ == '__main__':
+    gap = 0.025
     tk = 100.
-    tk = 0.1
-    gap = 0.044
+    tk = 5.
     fRF = 816.e6
-    fRF = 40.e6
+    fRF = 900.e6
+    # tk = 0.1
+    # fRF = 40.e6
     anz = 50
     particle = Proton(tk)
     title = 'ttf for {} with tkin[MeV] {:4.1f}'.format(particle.name,particle.tkin)
