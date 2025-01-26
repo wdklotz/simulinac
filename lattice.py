@@ -1,6 +1,6 @@
 #!/Users/klotz/SIMULINAC_env/bin/python
 # -*- coding: utf-8 -*-
-__version__='v11.0.2'
+__version__='11.0.2.3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code

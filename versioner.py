@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-__version__='v11.0.2'
+__version__='11.0.2.3'
 import sys,os
 import glob
 import re
@@ -15,7 +15,7 @@ def replace(fIN):
             match = rep.match(line)
             if match: 
                 # print(match)
-                line = "__version__='v{}'\n".format(new_version)
+                line = "__version__='{}'\n".format(new_version)
             else:
                 pass
             fOUT.write(line)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     rep = re.compile("__version__=['\"]v\d{1,2}[.]\d{1,2}[.]\S{1,3}['\"]") 
     new_version = sys.argv[1] if len(sys.argv) == 2 else None
     if new_version == None:
-        print("usage: versioner.py <new version>")
+        print("usage: versioner.py v<new version>")
         sys.exit(1)
     main()
 

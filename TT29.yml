@@ -40,9 +40,9 @@ FLAGS:
     maction:      False             # {True} call marker actions
     envelope:     True              # {False} plot envelopes
     # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
