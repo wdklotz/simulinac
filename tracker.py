@@ -143,10 +143,10 @@ def projections_1(lattice,live_lost):
         plotmax=np.array([max(xymax[0],livemax1[0]),max(xymax[1],livemax1[1])])
         DEBUG_OFF(f'plotmax={plotmax}')
         ax=plt.subplot(121)
-        scatterInOut(xlive,ylive,xloss,yloss,plotmax,box_txt,ax)
+        rms_emittances_IN = scatterInOut(xlive,ylive,xloss,yloss,plotmax,box_txt,ax)
         ax=plt.subplot(122)
-        scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
-        return 
+        rms_emittances_OUT = scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
+        return (rms_emittances_IN,rms_emittances_OUT)
 
     # TODO can this be made more elegantly? This function made me much pain.
     def projection_dPhidW(live_lost,lattice):
@@ -195,17 +195,41 @@ def projections_1(lattice,live_lost):
              (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW(1.)*1e3),
              (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW(1.)*1e3)
               ]
-        return projection(live_lost,Ktp.z,Ktp.zp,f'{DELTA}{PHI}-{DELTA}W [deg,KeV]',scale=scale)
+        p_space = f'{DELTA}{PHI}-{DELTA}W [deg,KeV]'
+        return projection(live_lost,Ktp.z,Ktp.zp,p_space,scale=scale)
+
+    def pull_emittances(n_sig,emittances):
+        """ pull IN/OUT emittances for a given sigma out of structure emittances """
+        emittances_IN = emittances[0]
+        emittances_OUT = emittances[1]
+        emittance_IN = emittances_IN[n_sig-1][1]
+        emittance_OUT = emittances_OUT[n_sig-1][1]
+        return (emittance_IN,emittance_OUT)
     
     DELTA='\u0394'
+    PHI  ='\u03A6'
+    n_sig = 3    # how many sigma emittances. 1,2 or 3 ?
+
     # longitudinal
     # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
     # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
-    projection_dPhidW(live_lost,lattice)
+    emittances = projection_dPhidW(live_lost,lattice)
+    (IN,OUT) = pull_emittances(n_sig,emittances)
+    log_txt='{}-sigma longitudinal RMS-emittances {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f'{DELTA}{PHI}-{DELTA}W [deg,KeV]',IN,OUT)
+    DEBUG_ON(log_txt)
+
     # transverse
     # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    emittances = projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    (IN,OUT) = pull_emittances(n_sig,emittances)
+    log_txt='{}-sigma transverse RMS-emittances    {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f"x-x' [mm,mrad]",IN,OUT)
+    DEBUG_ON(log_txt)
+
+    emittances = projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    (IN,OUT) = pull_emittances(n_sig,emittances)
+    log_txt='{}-sigma transverse RMS-emittances    {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f"y-y' [mm,mrad]",IN,OUT)
+    DEBUG_ON(log_txt)
+
     plt.show()
     return
 def frames(lattice, skip):

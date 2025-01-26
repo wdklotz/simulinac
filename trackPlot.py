@@ -19,6 +19,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 # NOTE full with old unused or unfinished code
+import scipy.constants as C
 import numpy as NP
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
@@ -154,6 +155,7 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
     # Returns
     # -------
     # matplotlib.patches.Ellipse
+    # scaled ellipse area for rms-emittance estimates
 
     # Other parameters
     # ----------------
@@ -169,6 +171,7 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
     # two-dimensionl dataset.
     ell_radius_x = NP.sqrt(1 + pearson)
     ell_radius_y = NP.sqrt(1 - pearson)
+    ell_area = C.pi*ell_radius_x*ell_radius_y
     ellipse = Ellipse((0, 0),width=ell_radius_x * 2,height=ell_radius_y * 2,facecolor=facecolor,**kwargs)
 
     # Calculating the stdandard deviation of x from
@@ -181,10 +184,14 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
     scale_y = NP.sqrt(cov[1, 1]) * n_std
     mean_y = NP.mean(y)
 
+    scaled_area = ell_area*scale_x*scale_y
+    DEBUG_OFF('scaled_area',scaled_area)
+
     transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
 
     ellipse.set_transform(transf + ax.transData)
-    return ax.add_patch(ellipse)
+    ax.add_patch(ellipse)
+    return scaled_area
 def scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax):
     ax.scatter(xlive,ylive,s=1,color='blue')
     ax.scatter(xloss,yloss,s=1,color='red')
@@ -200,11 +207,20 @@ def scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax):
     # "https://matplotlib.org/3.1.1/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py"
     x=NP.concatenate((xlive,xloss))
     y=NP.concatenate((ylive,yloss))
-    confidence_ellipse(x,y,ax,n_std=1,label=r"$1\sigma$",edgecolor="firebrick")
-    confidence_ellipse(x,y,ax,n_std=2,label=r"$2\sigma$",edgecolor="fuchsia",linestyle="--")
-    confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="blue",linestyle=":")
+
+    rms_emittances = []
+    # 1 sigma
+    rms_emittance = confidence_ellipse(x,y,ax,n_std=1,label=r"$3\sigma$",edgecolor="red",linestyle=":")/C.pi
+    rms_emittances.append((1,rms_emittance))
+    # 2 sigma
+    rms_emittance = confidence_ellipse(x,y,ax,n_std=2,label=r"$3\sigma$",edgecolor="blue",linestyle=":")/C.pi
+    rms_emittances.append((2,rms_emittance))
+    # 3 sigma
+    rms_emittance = confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="green",linestyle=":")/C.pi
+    rms_emittances.append((3,rms_emittance))
+    DEBUG_OFF("{}-sigma RMS-emittance {:.2e}".format(rms_emittances[2][0],rms_emittances[2][1]))
     ax.legend()
-    return ax
+    return rms_emittances
 
 def scatter11(live,lost,abscisse,ordinate,txt):
     """

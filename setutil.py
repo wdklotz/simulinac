@@ -39,7 +39,7 @@ def PRINT_PRETTY(*args):
     frameinfo = inspect.stack()[1]    # caller's stack frame
     file=frameinfo[1]
     line=frameinfo[2]
-    print('DEBUG {}, {} =======> '.format(file,line),end="")
+    print('DEBUG {}, {} ==> '.format(file,line),end="")
     if len(args) == 0: print()
     else:
         for obj in args:
