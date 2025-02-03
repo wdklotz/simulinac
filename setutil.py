@@ -56,7 +56,7 @@ MDIM   = 10
 PHADVX =0
 PHADVY =0
 class Ktp(IntEnum):
-    """ TrackPoint K-oordinaten Ktp """
+    """ TrackPoint Koordinaten Ktp """
     x  = 0     # x
     xp = 1     # x'
     y  = 2     # y
@@ -69,7 +69,7 @@ class Ktp(IntEnum):
     dS = 9     # const 1
     # nd = 10    # current node   TODO needed?
 class Ktw(IntEnum):
-    """ -K-oordinaten -tw-iss vector (1x10) """
+    """ Koordinaten twiss vector (1x10) """
     bx = 0      # twiss-beta
     ax = 1      # twiss-alpha
     gx = 2      # twiss-gamma

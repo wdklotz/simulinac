@@ -115,7 +115,6 @@ def display0(*args):
     plt.plot(vis_abszisse,viseoy,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
-
 def display1(*args):
     """ beta functions w/o longitudinal motion """
     #----------*----------*   # unpack
@@ -145,7 +144,6 @@ def display1(*args):
     plt.plot(vis_abszisse,viseoz,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='black')
     plt.legend(loc='lower right',fontsize='x-small')
-
 def display3(*args):
     """ C&S-Tracks with longitudinal motion """
     #-------------------- unpack
@@ -262,7 +260,6 @@ def display3(*args):
     viseoz = [x*vscale for x in vis_ordinate]
     ax_l.plot(vis_abszisse,viseoz,label='',color='black')
     ax_l.plot(vis_abszisse,vzero,color='green',linestyle='--')
-
 def display4(*args):
     """ beta functions and synchrotron oscillations """
     #-------------------- unpack
@@ -275,7 +272,7 @@ def display4(*args):
     bx    = [twiss_func(i,'bx')   for i in range(twiss_func.nbpoints)] # beta x
     by    = [twiss_func(i,'by')   for i in range(twiss_func.nbpoints)] # beta y
     dx    = [twiss_func(i,'dx')   for i in range(twiss_func.nbpoints)] # dispersion x
-#-------------------- longitudinal trajectories
+    #-------------------- longitudinal trajectories
     z1=  [cos_like(i,'s')          for i in range(cos_like.nbpoints)]
     cz=  [cos_like(i,'cz')         for i in range(cos_like.nbpoints)]
     cdp= [cos_like(i,'cdp')        for i in range(cos_like.nbpoints)]

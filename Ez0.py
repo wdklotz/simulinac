@@ -24,7 +24,6 @@ import unittest
 from operator import eq
 from math import sin,tan,pi,exp,fmod,cos
 from collections import namedtuple
-
 from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF
 
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
@@ -32,11 +31,11 @@ Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0','coeff'])
 # Dpoint: Table data point -  Ez0_tab is list(Dpoint)
 Dpoint  = namedtuple('Dpoint',['z','R','Ez'])
 
-def NGauss(x,sig,mu):
+def NormalGauss(x,sig,mu):
      # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
-def Kpoly(z,sigma,mu,E):
+def GaussPoly(z,sigma,mu,E):
     #  Polynom coefficients from Gauss Normalverteilung
     poly = []
     anz = len(z)
@@ -45,9 +44,9 @@ def Kpoly(z,sigma,mu,E):
         z0  = z[i+1]
         zr  = z[i+2]
         dz  = z0-zl
-        El  = E*NGauss(zl,sigma,mu)
-        E0  = E*NGauss(z0,sigma,mu)
-        Er  = E*NGauss(zr,sigma,mu)
+        El  = E*NormalGauss(zl,sigma,mu)
+        E0  = E*NormalGauss(z0,sigma,mu)
+        Er  = E*NormalGauss(zr,sigma,mu)
         b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation
         a = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
         pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
@@ -69,8 +68,8 @@ def Kpoly(z,sigma,mu,E):
         # print('E0,a,b ',E0,a,b,'\n')
             # END-USING NP.polyfit()
     return poly
-def Ipoly(z,poly):
-    """Interpolation using the polynomial fit"""
+def InterPoly(z,poly):
+    """ Interpolation using the polynomial fit """
     ix = -1
     for i in range(len(poly)):
         zl = poly[i].zl
@@ -79,7 +78,7 @@ def Ipoly(z,poly):
             ix = i
             break
     if ix < 0:
-        raise RuntimeError('Ipoly(): arg out of range! {}'.format(z))
+        raise RuntimeError('InterPoly(): arg out of range! {}'.format(z))
 
     #       USE NP.polyfit()
     # liefert gleiches Resultat wie Langrange 3 Punkt
@@ -96,6 +95,40 @@ def Ipoly(z,poly):
     b  = ival.b
     res = E0*(1.+a*dz+b*dz**2)
     return res
+def RevPoly(EzAvg,poly_data):
+    """ Interpolation of reverse function z(E) using a polynomial fit to get zeff=z(EzAvg) from average energy EzAvg.
+    IN:
+        EzAvg - energy average calculated from SF distribution
+        poly_data - the multi-interval polynomial fits to the the scaled SF distribution
+    OUT:
+        zeff = z(EzAvg) which is effictive 1/2 gap size
+    """
+    ix=-1              # search from right to left (positive z values) for intervals containingin vicinity of EzAvg
+    found = True
+    while(found):
+        polyval = poly_data[ix]
+        # zl = polyval.zl
+        # zr = polyval.zr
+        # dz = polyval.dz
+        e0 = polyval.E0
+        # DEBUG_ON(f"[ix={ix},zl={zl},zr={zr}],dz={dz},E0={e0}") 
+        if e0 < EzAvg:
+            ix = ix-1
+        else:
+            found = False
+    # prepare for numpy's ployfit over two intervals, one of them containing EzAvg
+    z2 = poly_data[ix+1].zr
+    z1 = poly_data[ix+1].zl
+    z0 = poly_data[ix].zl
+    e2 = InterPoly(z2,poly_data)
+    e1 = InterPoly(z1,poly_data)
+    e0 = InterPoly(z0,poly_data)
+    DEBUG_OFF(f"z0 {z0},z1 {z1},z2 {z2},e0 {e0},e1 {e1},e2 {e2},")
+    #   use NP.polyfit(...,deg=2)
+    pfit = NP.polyfit([e0,e1,e2],[z0,z1,z2],deg=2)
+    zeff = pfit[0]*EzAvg**2 + pfit[1]*EzAvg + pfit[2]
+    DEBUG_ON(f"input EzAvg {EzAvg}, fitted EzAvg(zeff) {InterPoly(zeff,poly_data)}, zeff {zeff}")
+    return zeff
 def V0n(poly,n):
     """ Formel (4.4.3) A.Shishlo/J.Holmes """
     E0 = poly[n].E0                       # [MV/m]
@@ -185,68 +218,73 @@ def Sp(poly,k,zintval):
     return sp
 class SFdata(object):
     """ 
-    Cavity E(z,r=0) field profile from Superfish.
-    Raw data can be scaled to fit EzPeak & gap
-    SFdata.field_data(input_file,EzPeak,gap) will return a singleton SFdata object 
-        bound to input_file and scaled to EzPeak and gap.
-    IN: EzPeak peak field [MV/m], gap: full gap [m]
-    OUT: SFdata object
+    Cavity E(z,r=0) a.k.a. Ez0 field profile from Superfish xxx.TBL file.
+    Raw data can be scaled on Ordinate and Abscisse to fit EzPeak & definition interval.
+    SFdata.field_data(input_file,EzPeak,DIntval) will return a singleton SFdata object bound to input_file.
+        IN: EzPeak peak field [MV/m]
+        DIntval: full interval [m] on which Ez0 is defined.
+    OUT: 
+        SFdata object
     """
     # class variables
-    instances = {}    
+    instances = {}    # dict of sigleton objects
     @classmethod
-    def field_data(cls,input_file,EzPeak=0.,gap=0.):
-        def scale(sfdata,EzPeak,gap):
-            sfdata.EzPeak = EzPeak
-            sfdata.gap    = gap
-            sfdata.Ez0_tab, sfdata.EzAvg = sfdata.scale_Ez_table(EzPeak,gap) # scale EzAvg and profile
+    def field_data(cls,input_file,EzPeak=0.,DIntval=0.):
+        def scale(sfdata,EzPeak,DIntval):
+            sfdata.EzPeak     = EzPeak
+            sfdata.DIntval    = DIntval
+            (sfdata.Ez0_tab, sfdata.EzAvg) = sfdata.scale_Ez_table(EzPeak,DIntval)    #NOTE: DIntval is length [-z,+z]
             # fit polynomials after scaling
-            sfdata._poly = sfdata.make_polyfit(sfdata.Ez0_tab)
-            DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(sfdata.EzPoly)))
+            sfdata._Ezpoly = sfdata.make_Ezpoly(sfdata.Ez0_tab)
+            DEBUG_OFF('make_Ezpoly: {} poly intervals'.format(len(sfdata.EzPoly)))
 
         """ field_data body -------- field_data body -------- field_data body -------- field_data body -------- field_data body """
-        # use a key made from <SFdata file name>%<Ezpeak value>%<gap value> to retrieve the corresponding field table instance
-        instance_key = '{}%{}%{}'.format(input_file,EzPeak,gap)
-        # instance with instance_key exists? get it else None
+        """ field_data body -------- field_data body -------- field_data body -------- field_data body -------- field_data body """
+        # use a key made from <SFdata file name>%<Ezpeak value>%<DIntval value> to retrieve the corresponding field table instance
+        instance_key = '{}%{}%{}'.format(input_file,EzPeak,DIntval)
+        # instance with instance_key exists? get it; else None
         instance = cls.instances.get(instance_key)
         if instance == None:
             # new scaled instance
             instance = SFdata(input_file)
-            if EzPeak != 0. and gap != 0.:
-                scale(instance,EzPeak,gap)
-            elif EzPeak != 0. and gap == 0.:
-                scale(instance,EzPeak,instance.gap_raw)
-            elif EzPeak == 0. and gap != 0.:
-                scale(instance,instance.EzPeak_raw,gap)
-            elif EzPeak == 0. and gap == 0.:
+            if EzPeak != 0. and DIntval != 0.:
+                scale(instance,EzPeak,DIntval)
+            elif EzPeak != 0. and DIntval == 0.:
+                scale(instance,EzPeak,instance.DIntval_raw)
+            elif EzPeak == 0. and DIntval != 0.:
+                scale(instance,instance.EzPeak_raw,DIntval)
+            elif EzPeak == 0. and DIntval == 0.:
+                # nothing to scale
                 pass
             SFdata.instances[instance_key] = instance
             DEBUG_OFF(SFdata.instances)
         return instance
-
     @property
     def EzPoly(self):
-        return self._poly
+        return self._Ezpoly
+
+    def Ez0t(self, z, t, omega, phis):
+        """E(z,0,t): time dependent field value at location z"""
+        res = InterPoly(z,self.EzPoly) * cos(omega*t+phis)
+        return res
+    def dEz0tdt(self, z, t, omega, phis):
+        """dE(z,0,t)/dt: time derivative of field value at location z"""
+        res = - omega * InterPoly(z,self.EzPoly) * sin(omega*t+phis)
+        return res
 
     def __init__(self,input_file):
         print('READING SF-DATA from "{}"'.format(input_file))
         self.input_file = input_file
-        # raw data from SF will never be modified!
-        self.Ez0_tab_raw, self.EzAvg_raw = self.make_Ez_table(input_file)  
-        self.EzPeak_raw = max([x.Ez for x in self.Ez0_tab_raw])
-        self.gap_raw    = 2.*max([x.z  for x in self.Ez0_tab_raw])
+        self.make_Ez_table(input_file)  # Ez0_tab_raw is full table on symetric interval [-z,+z]
         # actual [scaled] data will go here
         self.Ez0_tab    = self.Ez0_tab_raw
         self.EzAvg      = self.EzAvg_raw
-        self.EzPeak     = self.EzPeak_raw
-        self.gap        = self.gap_raw
-        self._poly      = None  # will be set when scaled
+        self._Ezpoly      = None  # will be set when scaled
     def make_Ez_table(self,input_file):
         """ read raw data and return raw table and raw table's average """
         zp = []; rp = []; ep = []
         leading  =  41      # nbof leading lines to skip
         trailing  = 2       # nbof trailing lines to skip
-        raw_tab = []
         with open(input_file,'r') as f:
             lines = list(f)
             lines = lines[leading:-trailing]           # remove leading and trailing lines
@@ -266,6 +304,7 @@ class SFdata(object):
                 rp.append(R)
                 ep.append(Ez)
         f.close()
+
         zprev = [-x for x in reversed(zp[1:])]
         zp = zprev+zp
         rprev = [x for x in reversed(rp[1:])]
@@ -274,26 +313,29 @@ class SFdata(object):
         ep = eprev+ep
         N = len(zp)
         EzAvg = 0
+        raw_tab = []
         for i in range(N):
             raw_tab.append(Dpoint(zp[i],rp[i],ep[i]))
             EzAvg += ep[i]
         EzAvg = EzAvg/N
-        return raw_tab,EzAvg
-    def scale_Ez_table(self,EzPeak,gap):   # NOTE: full gap!
+        # raw data from SF will never be modified!
+        self.Ez0_tab_raw  = raw_tab
+        self.EzAvg_raw    = EzAvg
+        self.EzPeak_raw   = max([x.Ez for x in self.Ez0_tab_raw])
+        self.DIntval_raw  = 2.*self.Ez0_tab_raw[-1].z   #NOTE: DIntval_raw is length [-z,+z]
+        return
+    def scale_Ez_table(self,EzPeak,DIntval):   #NOTE: DIntval is length [-z,+z]
         Ez0_tab = []
-        # half_gap = self.gap_raw*0.5
         EzMax = self.EzPeak_raw
-        zmax  = self.gap_raw
+        zmax  = self.DIntval_raw
         for i in range(len(self.Ez0_tab_raw)):
-            z = self.Ez0_tab_raw[i].z*(gap/zmax)       # scale z-axis
-            e = self.Ez0_tab_raw[i].Ez*(EzPeak/EzMax)  # sclae Ez-axis
-            r = self.Ez0_tab_raw[i].R*(gap/zmax)       # scale R same as Z
+            z = self.Ez0_tab_raw[i].z*(DIntval/zmax)       # scale z-axis
+            e = self.Ez0_tab_raw[i].Ez*(EzPeak/EzMax)      # sclae Ez-axis
+            r = self.Ez0_tab_raw[i].R*(DIntval/zmax)       # scale R same as Z
             Ez0_tab.append(Dpoint(z,r,e))
-
-        # self.poly = self.make_polyfit(Ez0_tab)
         EzAvg     = self.EzAvg_raw*(EzPeak/EzMax)
         return Ez0_tab,EzAvg
-    def make_polyfit(self,Ez_table):
+    def make_Ezpoly(self,Ez_table):
         # Polynomial fits to raw data according to Shislo&Holmes
         # In here M adjacent raw intervals are taken as one single interval and fitted with a polynomial
         sf_tab = Ez_table        # SF-table scales applied
@@ -301,9 +343,9 @@ class SFdata(object):
         M      = 8               # raw intervalls/poly interval (must be even number [2,4,6,8,....])
         polies = []              # PolyFit: list(Polyvals)
 
-        DEBUG_OFF('make_polyfit: raw function values: {} in {}'.format(N,range(N-1)))
-        DEBUG_OFF('make_polyfit: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
-        DEBUG_OFF('make_polyfit: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
+        DEBUG_OFF('make_Ezpoly: raw function values: {} in {}'.format(N,range(N-1)))
+        DEBUG_OFF('make_Ezpoly: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
+        DEBUG_OFF('make_Ezpoly: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
         i=0
         while(True):
             il = i
@@ -322,22 +364,45 @@ class SFdata(object):
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
             polies.append(pval)
-            DEBUG_OFF('Ez0_poly::SFdata::make_polyfit: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
-        DEBUG_OFF('make_polyfit: {} poly intervals'.format(len(polies)))
+            DEBUG_OFF('Ez0_poly::SFdata::make_Ezpoly: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
+        DEBUG_OFF('make_Ezpoly: {} poly intervals'.format(len(polies)))
         return polies
+    def make_zEpoly(self,Ez_table):
+        # Polynomial fits to raw data according to Shislo&Holmes
+        # In here M adjacent raw intervals are taken as one single interval and fitted with a polynomial
+        sf_tab = Ez_table        # SF-table scales applied
+        N      = len(sf_tab)     # stuetzpunkte in raw table
+        M      = 8               # raw intervalls/poly interval (must be even number [2,4,6,8,....])
+        polies = []              # PolyFit: list(Polyvals)
 
-    def Ez0t(self, z, t, omega, phis):
-        """E(z,0,t): time dependent field value at location z"""
-        res = Ipoly(z,self.EzPoly) * cos(omega*t+phis)
-        return res
-    def dEz0tdt(self, z, t, omega, phis):
-        """dE(z,0,t)/dt: time derivative of field value at location z"""
-        res = - omega * Ipoly(z,self.EzPoly) * sin(omega*t+phis)
-        return res
+        DEBUG_OFF('make_Ezpoly: raw function values: {} in {}'.format(N,range(N-1)))
+        DEBUG_OFF('make_Ezpoly: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
+        DEBUG_OFF('make_Ezpoly: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
+        i=0
+        while(True):
+            il = i
+            i0 = i+int(M/2)
+            ir = i+M
+            if i>N-1 or i0>N-1 or ir>N-1: break
+            zl = sf_tab[il].z
+            z0 = sf_tab[i0].z
+            zr = sf_tab[ir].z
+            El = sf_tab[il].Ez
+            E0 = sf_tab[i0].Ez
+            Er = sf_tab[ir].Ez
+            i = ir   # next interval
+            dz = z0-zl
+            b  = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation
+            a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
+            pval = Polyval(zl,z0,zr,dz,b,a,E0,0.)
+            polies.append(pval)
+            DEBUG_OFF('Ez0_poly::SFdata::make_Ezpoly: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
+        DEBUG_OFF('make_Ezpoly: {} poly intervals'.format(len(polies)))
+        return polies
 
 class TestEz0Methods(unittest.TestCase):
     @classmethod
-    def displayLR(cls,table,legend):
+    def display_with_mirror(cls,table,legend):
         # display left (L) and right (R) table data
         zp   = [+float(x[0]) for x in table]
         Ezp  = [+float(x[2]) for x in table]
@@ -352,49 +417,50 @@ class TestEz0Methods(unittest.TestCase):
     def test0(self):
         print("\b---------------------------------test0 (singleton)")
         input_file='SF/SF_WDK2g44.TBL'
-        (EzPeak,gap) = (4.0,4.0)
-        sfdata1 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata1.input_file,end="")
+        (EzPeak,DIntval) = (4.0,4.0)
+        sfdata1 = SFdata.field_data(input_file,*(EzPeak,DIntval))
+        print('   ',(EzPeak,DIntval),sfdata1.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        sfdata2 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata2.input_file,end="")
+        sfdata2 = SFdata.field_data(input_file,*(EzPeak,DIntval))
+        print('   ',(EzPeak,DIntval),sfdata2.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        (EzPeak,gap) = (5.0,2.0)
-        sfdata3 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata3.input_file,end="")
+        (EzPeak,DIntval) = (5.0,2.0)
+        sfdata3 = SFdata.field_data(input_file,*(EzPeak,DIntval))
+        print('   ',(EzPeak,DIntval),sfdata3.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        (EzPeak,gap) = (0.,0.)
+        (EzPeak,DIntval) = (0.,0.)
         sfdata4 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata4.input_file,end="")
+        print('   ',(EzPeak,DIntval),sfdata4.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         input_file='SF/SF_WDK2g22.TBL'
         sfdata5 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata5.input_file,end="")
+        print('   ',(EzPeak,DIntval),sfdata5.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        (EzPeak,gap) = (5.0,2.0)
-        sfdata6 = SFdata.field_data(input_file,*(EzPeak,gap))
-        print('   ',(EzPeak,gap),sfdata6.input_file,end="")
+        (EzPeak,DIntval) = (5.0,2.0)
+        sfdata6 = SFdata.field_data(input_file,*(EzPeak,DIntval))
+        print('   ',(EzPeak,DIntval),sfdata6.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
         input_file='SF/SF_WDK2g44.TBL'
-        (EzPeak,gap) = (0.,0.)
+        (EzPeak,DIntval) = (0.,0.)
         sfdata7 = SFdata.field_data(input_file)
-        print('   ',(EzPeak,gap),sfdata7.input_file,end="")
+        print('   ',(EzPeak,DIntval),sfdata7.input_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
     def test1(self):
         print("\b----------------------------------------test1")
-        input_file='SF/PILL-2CM.TBL'
-        input_file='SF/SF_WDK2g44.TBL'
-        sfdata  = SFdata.field_data(input_file,EzPeak=1.5,gap=5.)   #NOTE: full gap
+        # input_file='SF/PILL-2CM.TBL'
+        # input_file='SF/SF_WDK2g44.TBL'
+        input_file='SF/CAV-FLAT-R135-L31.TBL'
+        sfdata  = SFdata.field_data(input_file,EzPeak=1.5,DIntval=5.)   #NOTE: DIntval is length [-z,+z]
         # sfdata  = SFdata(input_file)
         Ez0_tab        = sfdata.Ez0_tab_raw
         Ez1_tab        = sfdata.Ez0_tab
-        Ez2_tab, dummy = sfdata.scale_Ez_table(EzPeak=2.5,gap=2.)
+        Ez2_tab, dummy = sfdata.scale_Ez_table(EzPeak=2.5,DIntval=2.)   #NOTE: DIntval is length [-z,+z]
 
         ax  = plt.subplot(111)
         self.display(Ez0_tab,'SF-raw')
@@ -407,13 +473,13 @@ class TestEz0Methods(unittest.TestCase):
         plt.show()
     def test2(self):
         print("\b----------------------------------------test2")
-        gap = 4.4
-        z = NP.arange(0.,gap,gap/500.)
+        DIntval = 4.4
+        z = NP.arange(0.,DIntval,DIntval/500.)
         sigma = 1.14
-        Ez0_tab = [(x,0.,NGauss(x,sigma,0.)) for x in z]
+        Ez0_tab = [(x,0.,NormalGauss(x,sigma,0.)) for x in z]
 
         ax  = plt.subplot(111)
-        self.displayLR(Ez0_tab,'NG')
+        self.display_with_mirror(Ez0_tab,'NG')
         ax.set_ylabel('Ez0 [MV/m]')
         ax.set_xlabel('z [cm]')
         plt.legend(loc='upper right',fontsize='x-small')
@@ -427,21 +493,21 @@ class TestEz0Methods(unittest.TestCase):
         k        = 2*pi*freq/(c*beta)*1.e-2     # [1/cm]
 
         anz   = 6            # nboff slices
-        gap   = 4.8          # [cm] full gap length
-        zl    = -gap/2.      #left  interval boundary
-        zr    = gap/2.       #right interval boundary
-        sigma = gap/2./1.89  # sigma of NGauss (best fit with SF)
-        # sigma = gap/2./2.2   # sigma of NGauss (best fit with SF)
-        E0    = 1.           # top of NGauss   (best fit with SF)
+        DIntval = 4.8          # [cm] full interval length
+        zl    = -DIntval/2.      #left  interval boundary
+        zr    = DIntval/2.       #right interval boundary
+        sigma = DIntval/2./1.89  # sigma of NormalGauss (best fit with SF)
+        # sigma = DIntval/2./2.2   # sigma of NormalGauss (best fit with SF)
+        E0    = 1.           # top of NormalGauss   (best fit with SF)
 
         z = NP.linspace(zl,zr,2*anz+1)
-        Ez0_tab = [(x,0.,E0*NGauss(x,sigma,0.)) for x in z]
+        Ez0_tab = [(x,0.,E0*NormalGauss(x,sigma,0.)) for x in z]
         # display(Ez0_tab,'slice')
-        poly  = Kpoly(z,sigma,0.,E0*1.)
+        poly  = GaussPoly(z,sigma,0.,E0*1.)
 
         zstep = (zr-zl)/500.
         z = NP.arange(zl,zr,zstep)
-        Ez0_tab = [(x,0.,Ipoly(x, poly)) for x in z]
+        Ez0_tab = [(x,0.,InterPoly(x, poly)) for x in z]
 
         ax  = plt.subplot(111)
         self.display(Ez0_tab,'NG-poly')
@@ -451,24 +517,25 @@ class TestEz0Methods(unittest.TestCase):
         plt.show()
     def test4(self):
         print("\b----------------------------------------test4")
-        input_file='SF/PILL-2CM.TBL'
-        input_file='SF/SF_WDK2g44.TBL'
+        # input_file='SF/PILL-2CM.TBL'
+        # input_file='SF/SF_WDK2g44.TBL'
+        input_file='SF/CAV-FLAT-R135-L31.TBL'
         EzPeak = 1.2
-        gap    = 0.
-        sf_data   = SFdata.field_data(input_file,EzPeak=EzPeak,gap=0.)
+        DIntval    = 0.
+        sf_data   = SFdata.field_data(input_file,EzPeak=EzPeak,DIntval=0.)
         poly_data = sf_data.EzPoly
         particle  = Proton(tkin=100.)
         beta      = particle.beta
         c         = PARAMS['clight']
         freq      = 800.e6
         k         = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
-        zl        = -sf_data.gap/2.
+        zl        = -sf_data.DIntval/2.
         zr        = -zl
         zintval   = (zl,zr)
         zstep     = (zr-zl)/500.
 
         z = NP.arange(zl,zr,zstep)
-        ipoly_werte = [(x,0.,Ipoly(x, poly_data)) for x in z]
+        ipoly_werte = [(x,0.,InterPoly(x, poly_data)) for x in z]
 
         ax  = plt.subplot(111)
         self.display(sf_data.Ez0_tab,'SFdata')
@@ -493,18 +560,36 @@ class TestEz0Methods(unittest.TestCase):
         print("\b----------------------------------------test5")
         input_file='SF/PILL-2CM.TBL'
         input_file='SF/SF_WDK2g44.TBL'
-        EzPeak = 1.2
-        gap    = 0.
-        sfdata = SFdata.field_data(input_file,EzPeak=EzPeak,gap=gap)
+        input_file='SF/CAV-FLAT-R135-L31.TBL'
+        EzPeak  = 9.99
+        DIntval = 0.
+        sfdata = SFdata.field_data(input_file,EzPeak=EzPeak,DIntval=DIntval)
         print("peak:{} -- average:{} -- average/peak {}".format(sfdata.EzPeak,sfdata.EzAvg,sfdata.EzAvg/sfdata.EzPeak))
+    def test6(self):
+        print("\b----------------------------------------test6")
+        input_file='SF/CAV-FLAT-R135-L31.TBL'
+        DIntval = 0.
+        EzPeak  = [9.99,5,1]
+        wbool = True
+        ix = 0
+        while(wbool):
+            print(f"\ncalculation of effective gap for EzPeak {EzPeak[ix]}")
+            sfdata    = SFdata.field_data(input_file,EzPeak=EzPeak[ix],DIntval=DIntval)
+            EzAvg     = sfdata.EzAvg
+            poly_data = sfdata.EzPoly
+            RevPoly(EzAvg,poly_data)
+            ix += 1
+            if ix > 2: wbool = False
+        return
 
 if __name__ == '__main__':
     # unittest.main()
     tests = TestEz0Methods()
-    tests.test0()    
-    tests.test1()
-    tests.test2()
-    tests.test3()
-    tests.test4()
+    # tests.test0()    
+    # tests.test1()
+    # tests.test2()
+    # tests.test3()
+    # tests.test4()
     tests.test5()
+    tests.test6()
     

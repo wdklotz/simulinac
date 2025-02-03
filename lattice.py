@@ -84,7 +84,7 @@ class Lattice(object):
     def add_node(self,node):
         """ 
         Add node to end of lattice. lattice orientation from left to right.
-        Track the reference particle to get the energy kicks and length advances using t3d matrices,.
+        Track the reference particle to get the energy kicks and length advances using t3d matrices.
         Link the lattice nodes in a doubly linked list.
         Calculate the node positions.
          """

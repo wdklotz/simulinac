@@ -19,13 +19,14 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-from math import sin,cos,tan,sqrt,pi,degrees
-from copy import copy
 import numpy as NP
-
-from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
-from Ez0 import SFdata
+import unittest
 import elements as ELM
+
+from math import sin,cos,tan,sqrt,pi,degrees,radians
+from copy import copy
+from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF,Proton
+from Ez0 import SFdata
 
 twopi = 2*pi
 counter_of_polies = 0
@@ -164,17 +165,28 @@ class OXAL_G(ELM.RFG):
         # initialise loop variables
         p        = Proton(particle.tkin)
         phis     = phisoll
+
+        Ws_in     = p.tkin
+        betas_in  = p.beta
+        gammas_in = p.gamma
+        gbs_in    = p.gamma_beta
+        gbs3_in   = gbs_in**3
+        phis_in   = phis
+        ks        = omega/(c*betas_in)
+
         for poly in polies:   # each poly is a slice of the full mat
             # global counter_of_polies   # debugging
             # counter_of_polies += 1     # debugging
             # z         = poly.dz*1.e-2     # [cm] ==> [m]
-            Ws_in     = p.tkin
-            betas_in  = p.beta
-            gammas_in = p.gamma
-            gbs_in    = p.gamma_beta
-            gbs3_in   = gbs_in**3
-            phis_in   = phis
-            ks        = omega/(c*betas_in)
+
+            # speed-up: moved next 7 lines before loop
+            # Ws_in     = p.tkin
+            # betas_in  = p.beta
+            # gammas_in = p.gamma
+            # gbs_in    = p.gamma_beta
+            # gbs3_in   = gbs_in**3
+            # phis_in   = phis
+            # ks        = omega/(c*betas_in)
 
             # ptkin = p.tkin          # debugging
             # psdeg = degrees(phis)   # debugging
@@ -246,5 +258,22 @@ class OXAL_G(ELM.RFG):
         gs2 = (self.particlef.gamma)**2
         f_track[Ktp.zp] = gs2 * f_track[Ktp.zp]         # Dbeta/beta -> Dp/p
         return f_track
+
+class TestOxalEnergyMapping(unittest.TestCase):
+    def test_OXAL(self):
+        """ testing the OXAL mapping for acceleration """
+        injection_energies = [6,12,24,50,100,150,200]
+        EzPeak = 2.0; phisoll = radians(-30.); gap = 0.044; freq = 750.e6; fieldtab="SF/SF_WDK2g44.TBL"
+        gap_cm = 100.*gap   # gap in cm
+        sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+        EzAvg = sfdata.EzAvg
+        ID = "OXAL"
+        for injection_energy in injection_energies:
+            oxal = OXAL_G(ID,EzAvg,phisoll,gap,freq,SFdata=sfdata,particle=Proton(injection_energy))
+            tvectori = NP.array([0, 0, 0, 0, 0, 0, injection_energy, 1, 0, 1])
+            tvectoro = NP.dot(oxal.matrix,tvectori)
+            print(f'EzPeak={EzPeak}, gap={gap}, freq={freq*1e-6}, Wi={tvectori[6]:3.3f}, Wo={tvectoro[6]:3.3f}, dW={oxal.matrix[6,7]:.3e}')
+        return
+
 if __name__ == '__main__':
-    print('what?')
+    unittest.main()

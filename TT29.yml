@@ -40,9 +40,9 @@ FLAGS:
     maction:      False             # {True} call marker actions
     envelope:     True              # {False} plot envelopes
     # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d       # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -65,7 +65,7 @@ PARAMETERS:
     # phi_sync:     &phs    -40.          # [deg] synchronous phase
     windings:             30              # [] quad-coil windings
     gap:          &p15    0.044           # [m] RF gap
-    BgradL:       &bgrad1 40
+    BgradL:       &bgrad1 40.0            # [T/m]
     BgradH:       &bgrad2 40.0            # [T/m]
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     EzPeak:       &p17    1.0             # [MV/m] peak gap field Strengy
@@ -101,10 +101,6 @@ ELEMENTS:
 #...........................................................................................
 # LOW energy section nodes
 #...........................................................................................
-    DGAP1:                     # ID
-        type:     DKD          # DKD class
-        length:   0.011111     # [m] must be gap/2
-        sec:      LE           # section 
     QF1:                       # ID
         type:     QF           # QF class
         length:   *p03         # [m]
@@ -118,6 +114,10 @@ ELEMENTS:
         aperture: *aper        # [m] aperture radius
         B':       *bgrad1      # [T/m] quadrupole gradient'
         thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        sec:      LE           # section 
+    DGAP1:                     # ID
+        type:     DKD          # DKD class
+        length:   0.011111     # [m] must be gap/2
         sec:      LE           # section 
     RFG1:                      # ID
         type:     RFG          # RFC class
@@ -133,10 +133,6 @@ ELEMENTS:
 #...........................................................................................
 # HIGH energy section nodes
 #...........................................................................................
-    DGAP2:                     # ID
-        type:     DKD          # DKD class
-        length:   0.020        # [m] must be gap/2
-        sec:      HE           # section 
     QF2:                       # ID
         type:     QF           # QF class
         length:   *p03         # [m]
@@ -151,13 +147,17 @@ ELEMENTS:
         B':       *bgrad2      # [T/m] quadrupole gradient'
         thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
         sec:      HE           # section 
+    DGAP2:                     # ID
+        type:     DKD          # DKD class
+        length:   0.0200       # [m] must be gap/2
+        sec:      HE           # section 
     RFG2:                      # ID
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] 
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        gap:      0.040        # [m] gap length
+        gap:      0.0400       # [m] gap length
         aperture: *aper        # [m] aperture radius
         SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
         mapping:  *map         # mapping in cavities

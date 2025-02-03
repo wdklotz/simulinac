@@ -484,9 +484,9 @@ class RFG(Node):
             self.particlef = None
             self.map = self.base_map_1
         elif self.mapping == 'oxal':
-            # self.matrix ->  #OXAL has its own matrix
+            # self.matrix ->  OXAL has its own matrix
             self.particlef = None
-            # self.map  =>  # OXAL has its own mapping method
+            # self.map  =>  OXAL has its own mapping method
         elif self.mapping == 'ttf':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
@@ -917,7 +917,6 @@ class RFC(RFG):    #TODO
         else:
             slices.append(self)
         return slices
-
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
     return 0.31952 * gradient/particle.gamma_beta
