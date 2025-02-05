@@ -125,9 +125,10 @@ ELEMENTS:
         EzPeak:   *p17         # [MV/m] 
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        gap:      0.022222     # [m] gap length
+        gap:       0.008       # [m] hard edge gap length
+        cavlen:    0.022222    # cavity length
         aperture: *aper        # [m] aperture radius
-        SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
+        SFdata:   SF/CAV-FLAT-R135-L31.TBL # superfish tbl-data file
         mapping:  *map         # mapping in cavities
         sec:      LE           # section 
 #...........................................................................................
@@ -159,7 +160,7 @@ ELEMENTS:
         freq:     *freq        # [Hz] frequency
         gap:      0.0400       # [m] gap length
         aperture: *aper        # [m] aperture radius
-        SFdata:   SF/SF_WDK2g44.TBL # superfish tbl-data file
+        SFdata:   SF/CAV-FLAT-R135-L31.TBL # superfish tbl-data file
         mapping:  *map         # mapping in cavities
         sec:      HE           # section 
 

@@ -149,7 +149,7 @@ class OXAL_G(ELM.RFG):
         slices = []
         zl = -gap/2.*100.   # [m] --> [cm]
         zr = -zl
-        for poly in SFdata.EzPoly:
+        for poly in SFdata.polyValues:
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
@@ -265,7 +265,7 @@ class TestOxalEnergyMapping(unittest.TestCase):
         injection_energies = [6,12,24,50,100,150,200]
         EzPeak = 2.0; phisoll = radians(-30.); gap = 0.044; freq = 750.e6; fieldtab="SF/SF_WDK2g44.TBL"
         gap_cm = 100.*gap   # gap in cm
-        sfdata = SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+        sfdata = SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
         EzAvg = sfdata.EzAvg
         ID = "OXAL"
         for injection_energy in injection_energies:

@@ -115,18 +115,28 @@ def instanciate_element(item):
         elif type == 'RFG':
             phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
-            gap       = get_mandatory(attributes,'gap',ID)
             aperture  = get_mandatory(attributes,'aperture',ID)
+            cavlen    = get_mandatory(attributes,'cavlen',ID)
             dWf       = UTIL.FLAGS['dWf']
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
             mapping   = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
+            # gap       = get_mandatory(attributes,'gap',ID)
+            heGap      = attributes.get('gap',None)
+            fieldtab   = attributes.get('SFdata',None)
+            effGap     = None
+            if fieldtab != None:
+                sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=cavlen)
+                effGap = 2.*EZ.zEPoly(sfdata.EzAvg,sfdata.polyValues)
+            UTIL.DEBUG_ON(f"length [m]: cavity {cavlen}, gaps: [hard edge {heGap}, effective {effGap}]")
+
+            exit()
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
             UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
-                sfdata = EZ.SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
             else:
                 ELEMENT['EzAvg']  = EzAvg = EzPeak
                 ELEMENT['SFdata'] = None
@@ -167,7 +177,7 @@ def instanciate_element(item):
             if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
-                sfdata = EZ.SFdata.field_data(fieldtab,EzPeak=EzPeak,gap=gap_cm)
+                sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,gap=gap_cm)
                 # if fieldtab not in UTIL.PARAMS:
                 #     gap_cm = gap*100     # Watch out!
                 #     UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
