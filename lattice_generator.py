@@ -56,12 +56,7 @@ def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
     except KeyError:
-        warnings.showwarning(
-                'InputError: Mandatory attribute "{}" missing for element "{}" - STOP'.format(key,item),
-                UserWarning,
-                'lattice_generator.py',
-                'get_mandatory()',
-                )
+        raise(UserWarning('InputError: Mandatory attribute "{}" missing for element "{}"'.format(key,item)))
         sys.exit(1)
     return res
 def instanciate_element(item):
@@ -113,100 +108,53 @@ def instanciate_element(item):
             ELEMENT['Bpole'] = dBdz*aperture      # Bpole
             ELEMENT['sec']   = attributes.get('sec','?')
         elif type == 'RFG':
-            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
-            freq      = float(get_mandatory(attributes,"freq",ID))
-            aperture  = get_mandatory(attributes,'aperture',ID)
-            cavlen    = get_mandatory(attributes,'cavlen',ID)
-            dWf       = UTIL.FLAGS['dWf']
-            EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            mapping   = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
-            # gap       = get_mandatory(attributes,'gap',ID)
-            heGap      = attributes.get('gap',None)
-            fieldtab   = attributes.get('SFdata',None)
-            effGap     = None
-            if fieldtab != None:
-                sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=cavlen)
-                effGap = 2.*EZ.zEPoly(sfdata.EzAvg,sfdata.polyValues)
-            UTIL.DEBUG_ON(f"length [m]: cavity {cavlen}, gaps: [hard edge {heGap}, effective {effGap}]")
+            phiSoll          = M.radians(get_mandatory(attributes,"PhiSync",ID))
+            freq             = float(get_mandatory(attributes,"freq",ID))
+            aperture         = get_mandatory(attributes,'aperture',ID)
+            dWf              = UTIL.FLAGS['dWf']
+            ELEMENT['sec']   = attributes.get('sec','?')
 
-            exit()
+            mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
             UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
-            if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
+            if mapping == 'ttf' or mapping == 'oxal':
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 gap_cm = gap*100     # Watch out!
                 sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
-            else:
-                ELEMENT['EzAvg']  = EzAvg = EzPeak
-                ELEMENT['SFdata'] = None
-            if mapping   == 'oxal':
-                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
-                instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            elif mapping == 'ttf':
-                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
-                instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
+                sys.exit()
+            # else:
+            #     # ELEMENT['EzPeak']  = EzPeak
+            #     ELEMENT['SFdata'] = None
+            # if mapping   == 'oxal':
+            #     EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
+            #     instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+            #     ELEMENT['sec']    = attributes.get('sec','?')
+            #     ELEMENT['EzPeak'] = EzPeak
+            # elif mapping == 'ttf':
+            #     EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
+            #     instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
+            #     ELEMENT['sec']    = attributes.get('sec','?')
+            #     ELEMENT['EzPeak'] = EzPeak
             elif mapping == 'dyn':
-                if counter1() < 5:
-                    print(UTIL.colors.RED+"WARN: dyn mapping is broken"+UTIL.colors.ENDC)
-                EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
-                instance = DYN.DYN_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            else:
-                instance = ELM.RFG(ID,EzAvg,phiSoll,gap,freq,SFdata=None,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            """         elif type == 'RFC':
-            if counter2() < 5:
-                print(UTIL.colors.RED+"WARN: RFC node is broken"+UTIL.colors.ENDC)
-            else:
-                sys.exit(1)
-            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
-            freq      = float(get_mandatory(attributes,"freq",ID))
-            gap       = get_mandatory(attributes,'gap',ID)
-            length    = get_mandatory(attributes,'length',ID)
-            aperture  = get_mandatory(attributes,'aperture',ID)
-            dWf       = UTIL.FLAGS['dWf']
-            EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            mapping   = attributes.get('mapping','t3d')
-            if mapping == 'ttf' or mapping == 'dyn' or mapping == 'oxal': # SF-data
-                fieldtab = get_mandatory(attributes,"SFdata",ID)
-                gap_cm = gap*100     # Watch out!
-                sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,gap=gap_cm)
-                # if fieldtab not in UTIL.PARAMS:
-                #     gap_cm = gap*100     # Watch out!
-                #     UTIL.PARAMS[fieldtab] = SFdata(fieldtab,EzPeak=EzPeak,gap=gap_cm)
-            else:
-                ELEMENT['EzAvg']  = EzAvg = EzPeak
-                ELEMENT['SFdata'] = None
-            if mapping == 'oxal':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                # instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                instance = OXA.OXAL_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            elif mapping == 'ttf':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                # instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                instance = TTF.TTF_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            elif mapping == 'dyn':
-                EzAvg = ELEMENT['EzAvg'] = UTIL.PARAMS[fieldtab].EzAvg
-                # instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=UTIL.PARAMS[fieldtab],aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                instance = DYN.DYN_C(ID,EzAvg,phiSoll,gap,length,freq,SFdata=sfdata,aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            else:
-                instance = ELM.RFC(ID,EzAvg,phiSoll,gap,freq,length,mapping=mapping,aperture=aperture,dWf=dWf,fieldtab=None)
-                ELEMENT['sec']    = attributes.get('sec','?')
-                ELEMENT['EzPeak'] = EzPeak
-            """        
+                raise(UserWarning(UTIL.colors.RED+"dyn mapping is not available any more"+UTIL.colors.ENDC))
+                sys.exit()
+            elif mapping == 't3d'or mapping == "simple":
+                fieldtab = attributes.get('SFdata',None)
+                if fieldtab == None:
+                    EzPeak    = get_mandatory(attributes,"EzPeak",ID)
+                    gap       = get_mandatory(attributes,'gap',ID)
+                    cavlen    = get_mandatory(attributes,'cavlen',ID)
+                    instance  = ELM.RFG(ID,EzPeak,phiSoll,gap,cavlen,freq,SFdata=None,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
+                else:
+                    EzPeak    = get_mandatory(attributes,"EzPeak",ID)
+                    cavlen    = get_mandatory(attributes,'cavlen',ID)  # cavity length [m]
+                    HE_Gap    = get_mandatory(attributes,'gap',ID)     # hard edge gap [m]
+                    gapCM = HE_Gap*100. # [cm]
+                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                    (gapCM,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100.)   # hard edge: HE_Gap [cm], HE_EzPeak [MV/m]
+                    instance  = ELM.RFG(ID,HE_EzPeak,phiSoll,HE_Gap,cavlen,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
+                    ELEMENT['HE_EzPeak'] = HE_EzPeak
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
@@ -253,20 +201,10 @@ def instanciate_element(item):
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.__dict__)
             else:
-                warnings.showwarning(
-                        'InputError: Unknown marker ACTION encountered: "{}" - STOP'.format(action),
-                        UserWarning,
-                        'lattice_generator.py',
-                        'instanciate_element()',
-                        )
+                raise(UserWarning('InputError: Unknown marker ACTION encountered: "{}"'.format(action)))
                 sys.exit(1)
         else:
-            warnings.showwarning(
-                'InputError: Unknown element TYPE encountered: "{}" - STOP'.format(type),
-                UserWarning,
-                'lattice_generator.py',
-                'instanciate_element()',
-                )
+            raise(UserWarning('InputError: Unknown element TYPE encountered: "{}"'.format(type)))
             sys.exit(1)
     return instance
 def factory(input_file,stop=None):
@@ -382,12 +320,7 @@ def factory(input_file,stop=None):
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)
         except Exception as ex:
-            warnings.showwarning(
-                    'InputError: {} - STOP'.format(str(ex)),
-                    UserWarning,
-                    'lattice_generator.py',
-                    'factory()',
-                    )
+            raise(UserWarning('InputError: {}'.format(str(ex))))
             sys.exit(1)
     fileobject.close()
     UTIL.DEBUG_OFF(in_data)

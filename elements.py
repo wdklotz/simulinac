@@ -442,39 +442,45 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  RF-gap of zero length with different kick gap-models """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d', fieldtab=None):
+    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=None, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d', fieldtab=None):
+    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=None, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
         super().__init__()
-        def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-            x = gap/(beta*lamb)
-            res =NP.sinc(x)
-            return res
+        self.label     = label
         self.particle  = particle
         self.position  = position
-        self.length    = 0.
-        self.label     = label
+        self.length    = 0.                  # 0. because it's a kick
+        self.gap       = gap                 # [m] rf-gap
+        self.cavlen    = cavlen              # [m] cavity length
         self.aperture  = aperture
         self.viseo     = 0.25
         self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
-        self.EzAvg     = EzAvg*self.dWf      # [MV/m] average gap field
+        self.EzPeak    = EzPeak*self.dWf     # [MV/m] peak gap field
         self.phisoll   = phisoll             # [radians] soll phase
         self.freq      = freq                # [Hz]  RF frequenz
         self.omega     = twopi*self.freq
         self.lamb      = UTIL.PARAMS['clight']/self.freq
-        self.gap       = gap                 # [m] rf-gap
         self.mapping   = mapping             # map model
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        self.E0L       = self.EzAvg*self.gap
-        self.qE0LT     = self.E0L*self.ttf
-        self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
-        self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
+        # self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.ttf       = None
+        # self.E0L       = self.EzPeak*self.gap
+        self.E0L       = None
+        # self.fieldtab  = fieldtab
+        # self.qE0LT     = self.E0L*self.ttf
+        self.qE0LT     = None
+        # self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
+        self.deltaW    = None
+        # self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
+        self.particlef = None
         self.SFdata    = SFdata               # SuperFish data
+        self.qE0LT     = None
+        self.deltaW    = None
+        self.particlef = None
         self.matrix    = None
         self.map       = None
-        self.fieldtab  = fieldtab
         """ dispatching to different gap models """
         if self.mapping   == 't3d' :
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+            # self.matrix    = self.T3D_matrix(ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+            self.matrix    = self.T3D_matrix()
             self.map = super().map   # delegate mapping to standard matrix multiplication
         elif self.mapping == 'simple':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
@@ -497,28 +503,42 @@ class RFG(Node):
             # self.map  =>  # DYN_G has its own mapping method
         # TODO other mappings not tested
         else:
-            print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
+            # print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
+            raise(Userwarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
+            sys.exit()
 
-    def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW, length):
+    # def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW, length):
+    def T3D_matrix(self):
+        def ttf(lamb, gap, beta):
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+            x = gap/(beta*lamb)
+            res =NP.sinc(x)
+            return res
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m        = NP.eye(MDIM,MDIM)
-        Wav     = particlei.tkin+deltaW/2.   # average tkin
-        pav     = UTIL.Proton(Wav)
-        bav     = pav.beta
-        gav     = pav.gamma
-        m0c2    = pav.e0
-        kz      = twopi*E0L*ttf*M.sin(phisoll)/(m0c2*bav*bav*lamb)
-        ky      = kx = -0.5*kz/(gav*gav)
-        bgi     = particlei.gamma_beta
-        bgf     = particlef.gamma_beta
+        self.E0L = self.EzPeak*self.gap
+        self.ttf = ttf(self.lamb,self.gap,self.particle.beta)
+        self.qE0LT = self.E0L*self.ttf
+        self.deltaW = self.E0L*self.ttf*M.cos(self.phisoll)
+        self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
+        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg    = UTIL.Proton(Wavg)
+        bavg    = pavg.beta
+        gavg    = pavg.gamma
+        m0c2    = pavg.e0
+        kz      = twopi*self.E0L*self.ttf*M.sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky      = kx = -0.5*kz/(gavg*gavg)
+        bgi     = self.particle.gamma_beta
+        bgf     = self.particlef.gamma_beta
         bgi2bgf = bgi/bgf
         m       = NP.eye(MDIM,MDIM)
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
         m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
         m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
         # UPDATE NODE matrix with deltaW
-        m[EKOO, DEKOO] = deltaW
-        m[SKOO, LKOO]  = length
+        m[EKOO, DEKOO] = self.deltaW
+        # m[SKOO, LKOO]  = length
+        m[SKOO, LKOO]  = 0.
         return m
     def simple_map(self, i_track):
         """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
@@ -761,7 +781,7 @@ class RFG(Node):
         self.particlef = particleRo
         return f_track
     def adjust_energy(self, tkin):
-        adjusted = RFG(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
+        adjusted = RFG(self.label,self.EzPeak,self.phisoll,self.gap,self.cavlen,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
     def waccept(self):
         """ 
@@ -769,7 +789,7 @@ class RFG(Node):
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
         """
-        Ez0       = self.EzAvg
+        Ez0       = self.EzPeak
         ttf       = self.ttf
         E0T       = Ez0*ttf              # [MV/m]
         phisoll   = self.phisoll         # [rad]
