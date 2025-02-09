@@ -38,18 +38,19 @@ FLAGS:
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
-    envelope:     True              # {False} plot envelopes
+    # envelope:     True              # {False} plot envelopes
     # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    dyn       # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    simple     # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    dyn     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
     Win:                  6.              # [MeV] energy @ injection 
-    DPHI0:                4.3             # [deg] delta-phi @ iinjection
+    DPHI0:                4.3             # [deg] delta-phi @ injection
     DW2W:                 3.5e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   750.e6          # [Hz] frequency
     emitx_i:      &emx    5.e-7           # [m*rad] {x,x'} emittance @ entrance
@@ -122,11 +123,12 @@ ELEMENTS:
         length:   0.011111     # [m] must be gap/2
         sec:      LE           # section 
     RFG1:                      # ID
-        type:     RFG          # RFG class
+        # type:     RFG          # RFG class
+        type:      RFC         # RFC class
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *p17         # [MV/m] 
-        gap:       0.01254     # [m] gap length 
+        # gap:       0.01254     # [m] gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -154,7 +156,8 @@ ELEMENTS:
         length:   0.0200       # [m] must be gap/2
         sec:      HE           # section 
     RFG2:                      # ID
-        type:     RFG          # RFG class
+        # type:     RFG          # RFG class
+        type:     RFC          # RFC class
         PhiSync:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *p17         # [MV/m] 
@@ -190,9 +193,11 @@ SEGMENTS:
 # LE gaps
     GAPL:                [1,[DGAP1,RFG1,DGAP1]]      # D+G+D sandwich
     GAPLarr:             [18,[GAPL]]
+    # GAPLarr:             [18,[RFG1]]
 # HE gaps
     GAPH:                [1,[DGAP2,RFG2,DGAP2]]      # D+G+D sandwich
     GAPHarr:             [10,[GAPH]]
+    # GAPHarr:             [10,[RFG2]]
 # ===========================================================================================
 CELLS:    
     NIL_CELL:    [1,[]] # placeholder
@@ -213,5 +218,5 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    #LINE:   [1,[Psp,SECL,Psp]]
-     LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
+    #  LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]

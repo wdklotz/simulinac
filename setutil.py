@@ -82,7 +82,7 @@ class Ktw(IntEnum):
     s  = 9      # abszisse for twiss functions
 # for compatability with elder code!
 XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
-ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; LKOO=Ktp.dS
+ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; DSKOO=Ktp.dS
 RUN_MODE = {0:'ring with cavities', 1:'linac', 2:'ring w/o cavities', 3:'line w/o cavities'}
 FLAGS    = dict(
     # lattice_generator may override some of these FLAGs
@@ -389,7 +389,7 @@ def collect_data_for_summary(lattice):
         SUMMARY["\u03B2w_i* [rad]"]                =  '{:8.2e} {{\u0394\u03C6,\u03B4\u03B3}}'.format(PARAMS['betaw_i'])
         SUMMARY["\u03B4\u03B3_i*"]                 =  '{:8.2e} energy-spread'.format(PARAMS['w0_i'])
         SUMMARY['\u0394T/T_i']                     =  '{:8.2e} energy-spread'.format(PARAMS['DT2T_i'])
-        SUMMARY['disp_i dx,dxp [m,rad]']           =  f"{PARAMS['dx_i']:8.2e}  {PARAMS['dxp_i']:8.2e}"
+        SUMMARY["disp_i,disp'_i [m,rad]"]          =  f"{PARAMS['dx_i']:8.2e}  {PARAMS['dxp_i']:8.2e}"
         SUMMARY['phase_advance x,y [deg]']         = '{:.2f} {:.2f}'.format(degrees(PHADVX),degrees(PHADVY))
 
     if FLAGS['dWf'] == 1:

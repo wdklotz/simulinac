@@ -28,7 +28,7 @@ import unittest
 import elements as ELM
 # from setutil import DEB, arrprnt, PARAMS, tblprnt, Ktp, WConverter
 from setutil import DEB, PARAMS, Proton, FLAGS
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
 from Ez0 import SFdata, Polyval
 
 DEBUG_OFF = DEB.get('OFF')

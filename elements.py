@@ -21,7 +21,7 @@ import sys
 import unittest
 from copy import copy
 from separatrix import w2phi
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO, MDIM
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF
 from setutil import Ktp as Ktp
 
@@ -44,17 +44,16 @@ class Node(object):
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
     def __init__(self):
-        self.type         = self.__class__.__name__      # self's node type
-        # self.map          = self._map_# function ptr to mapping method
+        self.type         = self.__class__.__name__  # self's node type
+        self.label        = None
+        self.viseo        = None      # default - invisible
         self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
         self.matrix       = None      # MDIMxMDIM zero matrix used here
         self.position     = None      # [entrance, middle, exit]
         self.length       = None
-        self.label        = None
         self.aperture     = None
         self.next         = None      # link to right Node
         self.prev         = None      # link to jeft Node
-        self.viseo        = None      # default - invisible
         self.twiss        = None      # twiss functions @ middle of Node
         self.sigxy        = None      # envelope function @ middle of Node
         self.ref_particle = None      # ref particle @ exit of Node
@@ -153,6 +152,8 @@ class Node(object):
         return m_beta
     def aper_check(self,new_tp,s,**kwargs):
         return False   
+    # def waccept(self):
+    #     return dict()
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label='I'):
@@ -188,7 +189,7 @@ class D(Node):
         g = self.particle.gamma
         m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
         m[ZKOO, ZPKOO] = self.length/(g*g)
-        m[SKOO, LKOO]  = self.length # Ds the longitudinal length increase
+        m[SKOO, DSKOO]  = self.length # Ds the longitudinal length increase
 
     def adjust_energy(self, tkin):
         adjusted = D(self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
@@ -263,7 +264,7 @@ class QF(Node):
             f = -f
             m[YKOO, YKOO]  = 1.-l/(2.*f); m[YKOO, YPKOO] = l-l**2/(6*f); m[YPKOO, YKOO] = -1./f; m[YPKOO, YPKOO] = m[YKOO, YKOO]
         m[ZKOO, ZPKOO] = rzz12
-        m[SKOO, LKOO]  = self.length # length increase
+        m[SKOO, DSKOO]  = self.length # length increase
         return m
     def isThin(self):
         return self.thin
@@ -339,7 +340,7 @@ class SD(Node):
         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
-        m[SKOO, LKOO]  = self.length  # length increase
+        m[SKOO, DSKOO]  = self.length  # length increase
         return m
     def adjust_energy(self, tkin):
         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
@@ -430,7 +431,7 @@ class GAP(Node):
         m[XPKOO, XKOO] = cxp
         m[YPKOO, YKOO] = cyp
         m[EKOO, DEKOO] = deltaW      # energy increase
-        m[SKOO, LKOO]  = self.length # length increase
+        m[SKOO, DSKOO]  = self.length # length increase
         return deltaW,m
     def ttf(self, beta, lamb, gap):
         """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
@@ -442,9 +443,9 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  RF-gap of zero length with different kick gap-models """
-    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=None, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d', fieldtab=None):
-    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=None, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
         super().__init__()
+        self.viseo     = 0.25
         self.label     = label
         self.particle  = particle
         self.position  = position
@@ -452,39 +453,27 @@ class RFG(Node):
         self.gap       = gap                 # [m] rf-gap
         self.cavlen    = cavlen              # [m] cavity length
         self.aperture  = aperture
-        self.viseo     = 0.25
         self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
         self.EzPeak    = EzPeak*self.dWf     # [MV/m] peak gap field
         self.phisoll   = phisoll             # [radians] soll phase
         self.freq      = freq                # [Hz]  RF frequenz
+        self.mapping   = mapping             # map model
+        self.SFdata    = SFdata              # SuperFish data
         self.omega     = twopi*self.freq
         self.lamb      = UTIL.PARAMS['clight']/self.freq
-        self.mapping   = mapping             # map model
-        # self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
         self.ttf       = None
-        # self.E0L       = self.EzPeak*self.gap
         self.E0L       = None
-        # self.fieldtab  = fieldtab
-        # self.qE0LT     = self.E0L*self.ttf
-        self.qE0LT     = None
-        # self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
-        self.deltaW    = None
-        # self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
-        self.particlef = None
-        self.SFdata    = SFdata               # SuperFish data
         self.qE0LT     = None
         self.deltaW    = None
         self.particlef = None
-        self.matrix    = None
-        self.map       = None
+        self.qE0LT     = None
+        self.deltaW    = None
+        self.particlef = None
         """ dispatching to different gap models """
-        if self.mapping   == 't3d' :
-            # self.matrix    = self.T3D_matrix(ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
+        if self.mapping   == 't3d' :   #NOTE: mapping delegated to super class: matrix multiplication: linear model
             self.matrix    = self.T3D_matrix()
-            self.map = super().map   # delegate mapping to standard matrix multiplication
         elif self.mapping == 'simple':
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
-            self.map = self.simple_map
+            self.matrix    = self.simple_matrix()  #NOTE: mapping delegated to super class: matrix multiplication: linear model
         elif self.mapping == 'base':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
@@ -503,11 +492,8 @@ class RFG(Node):
             # self.map  =>  # DYN_G has its own mapping method
         # TODO other mappings not tested
         else:
-            # print(F"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal].")
             raise(Userwarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
             sys.exit()
-
-    # def T3D_matrix(self,ttf, particlei, particlef, E0L, phisoll, lamb, deltaW, length):
     def T3D_matrix(self):
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
@@ -515,11 +501,11 @@ class RFG(Node):
             res =NP.sinc(x)
             return res
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m        = NP.eye(MDIM,MDIM)
-        self.E0L = self.EzPeak*self.gap
-        self.ttf = ttf(self.lamb,self.gap,self.particle.beta)
-        self.qE0LT = self.E0L*self.ttf
-        self.deltaW = self.E0L*self.ttf*M.cos(self.phisoll)
+        m              = NP.eye(MDIM,MDIM)
+        self.E0L       = self.EzPeak*self.gap
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.qE0LT     = self.E0L*self.ttf
+        self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
         self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
         Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
         pavg    = UTIL.Proton(Wavg)
@@ -535,81 +521,62 @@ class RFG(Node):
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
         m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
         m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-        # UPDATE NODE matrix with deltaW
         m[EKOO, DEKOO] = self.deltaW
-        # m[SKOO, LKOO]  = length
-        m[SKOO, LKOO]  = 0.
+        m[SKOO, DSKOO]  = 0.
         return m
-    def simple_map(self, i_track):
-        """ Mapping (i) to (f) in Simplified Matrix Model. (A.Shislo 4.1) """
-        xi        = i_track[XKOO]       # [0]
-        xpi       = i_track[XPKOO]      # [1]
-        yi        = i_track[YKOO]       # [2]
-        ypi       = i_track[YPKOO]      # [3]
-        zi        = i_track[ZKOO]       # [4] z
-        zpi       = i_track[ZPKOO]      # [5] Dp/p
-        T         = i_track[EKOO]       # [6] kinetic energy REF
-        S         = i_track[SKOO]       # [8] position REF
+    def simple_matrix(self):
+        """ Simplified Matrix Model. (A.Shislo 4.1) """
+        def ttf(lamb, gap, beta):
+            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+            x = gap/(beta*lamb)
+            res =NP.sinc(x)
+            return res
+        self.E0L       = self.EzPeak*self.gap
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.qE0LT     = self.E0L*self.ttf
+        self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
 
+        # xi   = i_track[XKOO]       # 0
+        # xpi  = i_track[XPKOO]      # 1
+        # yi   = i_track[YKOO]       # 2
+        # ypi  = i_track[YPKOO]      # 3
+        # zi   = i_track[ZKOO]       # 4 z
+        # zpi  = i_track[ZPKOO]      # 5 Dp/p
+        # T    = i_track[EKOO]       # 6 kinetic energy REF
+        # dT   = i_track[DEKOO]      # 7 delta energy REF
+        # S    = i_track[SKOO]       # 8 position REF
+        # dS   = i_track[DSKOO]      # 9 delta position REF
+
+        C         = UTIL.PARAMS['clight']
         particle  = self.particle
         m0c2      = particle.e0
         WIN       = particle.tkin
         betai     = particle.beta
         gammai    = particle.gamma
         gbi       = particle.gamma_beta
+
         deltaW    = self.deltaW
         lamb      = self.lamb
         qE0LT     = self.qE0LT
         phisoll   = self.phisoll
-        
 
-        DEBUG_OFF('simple_map: (deltaW,qE0LT,i0,phisoll) = ({},{},{},{})'.format(deltaW,qE0LT,1.,phisoll))
-
-        DW         = deltaW
-        WOUT       = WIN + DW
-        particlef  = copy(particle)(tkin = WOUT) # !!!IMPORTANT!!!
+        WOUT       = WIN + deltaW
+        particlef  = copy(particle)(tkin = WOUT)
         betaf      = particlef.beta
         gammaf     = particlef.gamma
         gbf        = particlef.gamma_beta
 
-        # the longitudinal 2x2 map (always linear!) A.Shishlo/J.Holmes (4.1.6-10)
-        m11 = gbf/gbi
-        m12 = 0.
-        m21 = qE0LT*twopi/(lamb*betai)*M.sin(phisoll)
-        m22 = 1.
- 
-        # Dp/p --> DW
-        condPdT = m0c2*betai**2*gammai
-        dwi     = condPdT*zpi  
+        condTdP = 1./(m0c2*betaf**2*gammaf)  # conversion DW --> Dp/p
+        DDW = self.omega/C/betai*self.qE0LT*M.sin(self.phisoll) # A.Shishlo/J.Holmes (4.1.8)
 
-        # long. (z,DW)
-        zf  = m11*zi + m12*dwi
-        dwf = m21*zi + m22*dwi
-
-        # DW --> Dp/p
-        condTdP = 1./(m0c2*betaf**2*gammaf)
-        zfp     = dwf*condTdP
-
-        # transverse (x',y')
-        xpf  = gbi/gbf*xpi - xi * (UTIL.pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * M.sin(phisoll) # A.Shishlo/J.Holmes 4.1.11)
-        ypf  = gbi/gbf*ypi - yi * (UTIL.pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf)) * M.sin(phisoll)
-
-        # track @ out of node
-        f_track = NP.array([xi, xpf, yi, ypf, zf, zfp, T+deltaW, 1., S, 1.])
-
-        # for DEBUGGING
-        if 0:
-            itr = i_track.copy()
-            ftr = f_track.copy()
-            for i in range(len(f_track)-4):
-                itr[i]  = itr[i]*1.e3
-                ftr[i]  = ftr[i]*1.e3
-            UTIL.arrprnt(itr, fmt = '{:6.3g},', txt = 'simple_map:i_track:')
-            UTIL.arrprnt(ftr, fmt = '{:6.3g},', txt = 'simple_map:f_track:')
-        # TODO 2 lines below still needed?
-        # the parent delegates reading these properties from here
-        # self._particlef = copy(particle)(particle.tkin + deltaW) # !!!IMPORTANT!!!
-        return f_track
+        m = NP.eye(MDIM,MDIM)
+        m[1,0] = m[3,2] = -(UTIL.pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf))*M.sin(phisoll)   # x',x = y',y   (4.1.11)
+        # m[1,1] = m[3,3] = m[5,5] = gbi/gbf # x',x' = y',y'  m[5,5] like T3D
+        m[1,1] = m[3,3] = gbi/gbf            # x',x' = y',y': m[5,5]=1 like in Shishlo's paper
+        m[4,4] = betaf/betai                 # z,z
+        m[5,4] = DDW*condTdP                 # z,z'
+        m[6,7] = deltaW                      # T,dT
+        return m
     def base_map_0(self, i_track):
         """alte map version bis 02.02.2022"""
         # def DEBUG_TRACK(inout,track):
@@ -898,45 +865,25 @@ class RFG(Node):
             sfifo_xy.append(s)
             lost = True
         return lost
+class RFC(RFG):   
+    """ Rf cavity as product DKD*RFG*DKD """
+    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+        super().__init__(label, EzPeak, phisoll, gap, cavlen,freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping=mapping)
 
-# TODO classes below need unittesting
-# TODO D+K+D models not finished for OXAL_C and TTF_C
-class RFC(RFG):    #TODO
-    """ Rf cavity as product DKD*Kick*DKD (DKD-model) """
-    def __init__(self, label, EzAvg, phisoll, gap, length, freq, SFdata=None, particle = UTIL.Proton(UTIL.PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
-        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=None, particle = UTIL.Proton(UTIL.PARAMS['injection_energy']), position = (0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d')
-        self.length  = length if length >= gap else gap
-        self.dri     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
-        self.drf     = DKD(label="-",particle=particle,position=position,length=self.length/2.,aperture=aperture)
-        self.triplet = (self.dri,self,self.drf)
+        self.cavlen  = cavlen
+        self.dr      = DKD(label="-",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
+        # self.drf   = DKD(label="-",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
         # UPDATE energy for downstream drift after gap
-        tkin_f = self.particle.tkin + self._deltaW   # tkin after acc. gap
-        self.drf.adjust_energy(tkin_f)
-        self.matrix = NP.dot(self.drf.matrix,NP.dot(self.matrix,self.dri.matrix))
+        # tkin_f = self.particle.tkin + self._deltaW   # tkin after acc. gap
+        # self.drf.adjust_energy(tkin_f)
+        self.triplet = (self.dr,self,self.dr)
+        self.matrix = NP.dot(self.dr.matrix,NP.dot(self.matrix,self.dr.matrix))
         # DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
     def adjust_energy(self, tkin):
-        adjusted = RFC(self.label,self.EzAvg,self.phisoll,self.gap,self.length,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
+        adjusted = RFC(self.label,self.EzPeak,self.phisoll,self.gap,self.cavlen,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
-    def map(self,i_track):
-        track = copy(i_track)
-        for node in iter(self.triplet):
-            f_track = node.map(track)
-            track = f_track
-        DEBUG_OFF('rfc-map {}'.format(f_track))
-        return f_track
-    def make_slices(self, anz=0):
-        slices = []
-        if len(self.triplet) == 3:
-            dri,kick,drf = self.triplet
-            anz = anz/2 if anz != 0 else 1
-            dri_slices = dri.make_slices(anz=anz)
-            drf_slices = drf.make_slices(anz=anz)
-            slices += dri_slices
-            slices.append(kick)
-            slices += drf_slices
-        else:
-            slices.append(self)
-        return slices
+    def make_slices(self, anz=1):
+        return self.triplet
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
     return 0.31952 * gradient/particle.gamma_beta
@@ -1031,7 +978,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertEqual(Dnode.length,10.)
         g = p.gamma
         d_matrix = NP.eye(MDIM,MDIM)
-        d_matrix[XKOO,XPKOO] = d_matrix[YKOO,YPKOO] = d_matrix[SKOO,LKOO] = l
+        d_matrix[XKOO,XPKOO] = d_matrix[YKOO,YPKOO] = d_matrix[SKOO,DSKOO] = l
         d_matrix[ZKOO,ZPKOO] = l/g**2
         self.assertTrue(NP.array_equal(Dnode.matrix,d_matrix),"matrix")
         tkin = 200.
@@ -1042,7 +989,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertTrue(NP.array_equal(Dnode.matrix,d_matrix),"adjust_energy")
         l = l/2.
         Dnode = Dnode.shorten(l)
-        d_matrix[XKOO,XPKOO] = d_matrix[YKOO,YPKOO] = d_matrix[SKOO,LKOO] = l
+        d_matrix[XKOO,XPKOO] = d_matrix[YKOO,YPKOO] = d_matrix[SKOO,DSKOO] = l
         d_matrix[ZKOO,ZPKOO] = l/g**2
         self.assertTrue(NP.array_equal(Dnode.matrix,d_matrix),"shorten")
         self.assertTrue(Dnode.label == "Drift")
@@ -1170,7 +1117,7 @@ class TestElementMethods(unittest.TestCase):
         mqf[YPKOO,YKOO] = 0.2419;     mqf[YPKOO,YPKOO] = mqf[YKOO,YKOO]
         mqf[ZKOO,ZPKOO] = lqf/p.gamma**2
         mqf[EKOO,EKOO]  = 1.;         mqf[EKOO,DEKOO]  = 0.     # tkin
-        mqf[SKOO,SKOO]  = 1.;         mqf[SKOO,LKOO]   = lqf     # s
+        mqf[SKOO,SKOO]  = 1.;         mqf[SKOO,DSKOO]   = lqf     # s
         # print("\nmqf");print(mqf);print("QF.matrix");print(MQF.matrix)
         for i in range(10):
             for j in range(10):
@@ -1185,7 +1132,7 @@ class TestElementMethods(unittest.TestCase):
         mqd[YPKOO,YKOO] = -0.4648;    mqd[YPKOO,YPKOO] = mqd[YKOO,YKOO]
         mqd[ZKOO,ZPKOO] = lqd/p.gamma**2
         mqd[EKOO,EKOO]  = 1.;         mqd[EKOO,DEKOO]  = 0.     # tkin
-        mqd[SKOO,SKOO]  = 1.;         mqd[SKOO,LKOO]   = lqd     # s
+        mqd[SKOO,SKOO]  = 1.;         mqd[SKOO,DSKOO]   = lqd     # s
         # print("\nmqd");print(mqd);print("MQD.matrix");print(MQD.matrix)
         for i in range(10):
             for j in range(10):
@@ -1200,7 +1147,7 @@ class TestElementMethods(unittest.TestCase):
         mb[YPKOO,YKOO] = -0.0;        mb[YPKOO,YPKOO]  = mb[YKOO,YKOO]
         mb[ZKOO,XKOO]  = -0.3827;     mb[ZKOO,XPKOO]   = -0.2908;       mb[ZKOO,ZPKOO] = 1.1867
         mb[EKOO,EKOO]  = 1.;          mb[EKOO,DEKOO]   = 0.     # tkin
-        mb[SKOO,SKOO]  = 1.;          mb[SKOO,LKOO]    = lb     # s
+        mb[SKOO,SKOO]  = 1.;          mb[SKOO,DSKOO]    = lb     # s
         # print("\nmb");print(mb);print("MB.matrix");print(MB.matrix)
         for i in range(10):
             for j in range(10):
@@ -1220,7 +1167,7 @@ class TestElementMethods(unittest.TestCase):
         md = NP.eye(MDIM,MDIM)
         md[XKOO,XPKOO] = ld; md[YKOO,YPKOO] = md[XKOO,XPKOO]
         md[ZKOO,ZPKOO] = ld/p.gamma**2
-        md[SKOO,LKOO] = ld
+        md[SKOO,DSKOO] = ld
         # print("\nmd");print(md);print("MD.matrix");print(MD.matrix)
         for i in range(10):
             for j in range(10):
@@ -1235,7 +1182,7 @@ class TestElementMethods(unittest.TestCase):
         mz[YKOO,YKOO]  = -0.4114;  mz[YKOO,YPKOO]  = 1.1280
         mz[YPKOO,YKOO] = -0.7365;  mz[YPKOO,YPKOO] = mz[YKOO,YKOO]
         mz[ZKOO,XKOO]  = -0.34707; mz[ZKOO,XPKOO]  = -3.1424;       mz[ZKOO,ZPKOO]  = 4.1844
-        mz[SKOO,LKOO]  = 6.0
+        mz[SKOO,DSKOO]  = 6.0
         # print("\nmz");print(mz);print("MZ.matrix");print(MZ.matrix)
         for i in range(10):
             for j in range(10):
@@ -1334,7 +1281,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertAlmostEqual(rfg.deltaW,0.062206,delta=1.e-4)
         self.assertAlmostEqual(rfg.matrix[EKOO,DEKOO],0.062206,delta=1.e-4)
         self.assertEqual(rfg.length,0.)
-        self.assertEqual(rfg.matrix[SKOO,LKOO],0.)
+        self.assertEqual(rfg.matrix[SKOO,DSKOO],0.)
         rfg = rfg.adjust_energy(250.)
         self.assertAlmostEqual(rfg.deltaW,0.0751,delta=1.e-4)
         self.assertAlmostEqual(rfg.matrix[EKOO,DEKOO],0.0751,delta=1.e-4)

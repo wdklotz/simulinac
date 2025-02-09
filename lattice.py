@@ -29,8 +29,9 @@ from copy import copy
 # from sty import fg,bg,ef,rs
 
 import elements as ELM
+import OXAL as OXA
 import setutil
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, LKOO
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
 from sigma import Sigma, sig_map
@@ -608,7 +609,6 @@ class Lattice(object):
         """Concatenate two Lattice pieces (self+lattice)"""
         for element in iter(lattice):
             self.add_node(element)
-        node1 = lattice.first_gap
     @property
     def accON(self):
         node1 = self.first_gap
@@ -625,7 +625,7 @@ class Lattice(object):
         """ return the 1st RF gap"""
         node = None
         for elm in iter(self):
-            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
+            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP,OXA.OXAL_G)):
                 node = elm
                 break
         return node

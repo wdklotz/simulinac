@@ -34,164 +34,120 @@ trigger_poly_number = 12
 
 class OXAL_G(ELM.RFG):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, SFdata=None, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf'], fieldtab=None):
-        super().__init__(label, EzAvg, phisoll, gap, freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping='oxal', fieldtab=fieldtab)
-        if SFdata == None:
-            raise RuntimeError('OXAL: missing E(z) table - STOP')
-            sys.exit(1)
-        else:
-            self.map       = self.oxal_map   # OXAL's specific mapping method
-            self.SFdata    = SFdata
-            self.polies    = self.poly_slices(self.gap,self.SFdata)
-            self.matrix    = self.make_matrix(self.polies,self.phisoll,self.particle)
-            self.deltaW    = self.matrix[Ktp.T,Ktp.dT]
-            self.particlef = Proton(particle.tkin + self.deltaW)
+    def __init__(self, label, EzPeak, phisoll, cavlen, freq, sfdata, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+        super().__init__(label, EzPeak, phisoll, 0., cavlen,freq, sfdata, particle, position, aperture, dWf)
+        # self.viseo     = 0.25
+        # self.label     = label
+        # self.EzPeak    = EzPeak
+        # self.phisoll   = phisoll
+        self.cavlen    = cavlen
+        self.length    = cavlen
+        # self.freq      = freq
+        # self.SFdata    = sfdata
+        # self.particle  = particle
+        # self.position  = position
+        # self.aperture  = aperture
+        # self.dWf       = dWf
+        self.omega     = twopi*self.freq
+        self.polies    = self.poly_slices()
+        self.matrix    = self.make_matrix()
+        self.deltaW    = self.matrix[Ktp.T,Ktp.dT]
+        self.particlef = Proton(particle.tkin + self.deltaW)
 
-    def I0(self,k,d,cd,sd):
-        return 2.*sd/k   # [cm]
-    def I2(self,k,d,cd,sd):
-        return 2.*(2.*d*cd/k**2+(d**2/k-2./k**3)*sd)   # [cm**3]
-    def H1(self,k,d,cd,sd):
-        return 2.*(sd/k**2-d*cd/k)     # [cm**2]
-    def H3(self,k,d,cd,sd):
-        return 2.*((3.*d**2/k**2-6./k**4)*sd-(d**3/k-6.*d/k**3)*cd) # [cm**4]
-    def I4(self,k,d,cd,sd):
-        return 2.*(d**4*sd/k-4./k*self.H3(k, d, cd, sd))   # [cm**5]
     def V0(self, poly):
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
-        # E0 = poly.E0                        # [MV/m]
+        E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
-        v0 = (2*dz+2./3.*b*dz**3)             # [cm]
-        # v0 = v0*E0*self.dWf
-        return v0                    # NOTE V0 is in [cm]
-    def T(self, poly, k):
-        """
-        # poly = 1+a[1/cm]*z+b[1/cm**2]*z**2   
-        # k = omega/(c*beta) [1/m]
-        """
-        """ T(k) A.Shishlo/J.Holmes (4.4.6) """
-        b  = poly.b        # [1/cm**2]
-        dz = poly.dz       # [cm]
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        tk = (self.I0(k,dz,cd,sd) +b*self.I2(k,dz,cd,sd))  # [cm]
-        tk = tk/v0         # []
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON('OXAL_slice:(T,k) {} [_]'.format((tk,k)))
-        return tk   # []
-    def S(self, poly, k):
-        """ S(k) A.Shishlo/J.Holmes (4.4.7) """
-        a  = poly.a
-        dz = poly.dz
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        sk = a*self.H1(k,dz,cd,sd)    # [cm]
-        sk = sk/v0                     # []
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON('OXAL_slice:(S,k) {} [_]'.format((sk,k)))
-        return sk    # []
-    def Tp(self, poly, k):
-        """ 1st derivative T'(k) A.Shishlo/J.Holmes (4.4.8) """
+        v0 = E0*(2*dz+2./3.*b*dz**3)*1.e-2    # [MV]
+        return v0 
+    def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
         dz = poly.dz
-        k  = k*1.e-2      # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        tp = -(self.H1(k,dz,cd,sd) +b*self.H3(k,dz,cd,sd))  # [cm**2]
-        tp = tp/v0   # [cm]
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(T',k) {} [cm]".format((tp,k)))
-        return tp*1.e-2   #[m]
-    def Sp(self, poly, k):
-        """ 1st derivative S'(k) A.Shishlo/J.Holmes (4.4.9) """
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
+        t  = f1*f2
+        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        return t
+    def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
         a  = poly.a
         b  = poly.b
         dz = poly.dz
-        k  = k*1.e-2      # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        sp = a* self.I2(k,dz,cd,sd)    #[cm**2]
-        sp = sp/v0      # [cm]
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(S',k) {} [cm]".format((sp,k)))
-        return sp*1.e-2      # [m]
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        f2 = 1.-k*dz/tan(k*dz)
+        s  = f1*f2
+        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        return s
+    def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        tp  = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/tan(k*dz)*(1.+b*dz**2-6*b/k**2))
+        tp  = tp*1.e-2     # [cm] --> [m]
+        return tp
+    def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        sp  = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
+        sp  = sp*(dz**2-2./k**2+dz/tan(k*dz)*2/k)
+        sp  = sp*1.e-2     # [cm] --> [m]
+        return sp
     def Tpp(self, poly, k):
         """ 2nd derivative T''(k) """
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        tpp = -(self.I2(k,dz,cd,sd) + b*self.I4(k,dz,cd,sd) +a*self.H1(k,dz,cd,sd))  # [cm**3]
-        tpp = tpp/v0    # [cm**2]
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(T'',k) {} [cm**2]".format((tpp,k)))
-        return tpp*1.e-4      # [m**2]
+        return 0
     def Spp(self, poly, k):
         """ 2nd derivative S''(k) """
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        v0 = self.V0(poly) # [cm]
-        cd = cos(k*dz)
-        sd = sin(k*dz)
-        spp = -a*self.H3(k,dz,cd,sd)   #[cm**3]
-        spp = spp/v0   # [cm**2] 
-        # if counter_of_polies == trigger_poly_number: DEBUG_ON("OXAL_slice:(S'',k) {} [cm**2]".format((spp,k)))
-        return spp*1.e-4     # [m**2]
-    def poly_slices(self, gap, SFdata):
-        """Slice the RF gap"""
+        return 0
+    def poly_slices(self):
+        """Slice the RF cavity"""
+        L = self.cavlen
+        sfdata = self.SFdata
         slices = []
-        zl = -gap/2.*100.   # [m] --> [cm]
+        zl = -L/2.*100.   # [m] --> [cm]
         zr = -zl
-        for poly in SFdata.polyValues:
+        for poly in sfdata.polies:
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
             slices.append(poly)
         return slices
-    def make_matrix(self, polies, phisoll, particle):
+    def make_matrix(self):
+        polies   = self.polies
         c        = PARAMS['clight']
-        m0c2     = particle.m0c2
+        m0c2     = self.particle.m0c2
         m0c3     = m0c2*c
         omega    = self.omega
         matrix   = NP.eye(MDIM,MDIM)
 
         # initialise loop variables
-        p        = Proton(particle.tkin)
-        phis     = phisoll
-
-        Ws_in     = p.tkin
-        betas_in  = p.beta
-        gammas_in = p.gamma
-        gbs_in    = p.gamma_beta
-        gbs3_in   = gbs_in**3
-        phis_in   = phis
-        ks        = omega/(c*betas_in)
+        psoll        = Proton(self.particle.tkin)
+        phis     = self.phisoll
 
         for poly in polies:   # each poly is a slice of the full mat
             # global counter_of_polies   # debugging
             # counter_of_polies += 1     # debugging
-            # z         = poly.dz*1.e-2     # [cm] ==> [m]
+            # z = poly.dz*1.e-2     # [cm] ==> [m]
 
-            # speed-up: moved next 7 lines before loop
-            # Ws_in     = p.tkin
-            # betas_in  = p.beta
-            # gammas_in = p.gamma
-            # gbs_in    = p.gamma_beta
-            # gbs3_in   = gbs_in**3
-            # phis_in   = phis
-            # ks        = omega/(c*betas_in)
+            # IN variables
+            Ws_in     = psoll.tkin
+            betas_in  = psoll.beta
+            gammas_in = psoll.gamma
+            gbs_in    = psoll.gamma_beta
+            gbs3_in   = gbs_in**3
+            phis_in   = phis
+            g3b2s_in  = gammas_in**3*betas_in**2    # gamma**3*beta**2 in
+            g2s_in    = gammas_in**2
+            ks        = omega/(c*betas_in)
 
-            # ptkin = p.tkin          # debugging
+            # ptkin = psoll.tkin      # debugging
             # psdeg = degrees(phis)   # debugging
             
-            qV0m   = self.V0(poly)*1.e-2*poly.E0     # NOTE change units V0 is in [cm]->[m]
+            qV0    = self.V0(poly)     # [MV]
             Tks    = self.T(poly,ks)
             Sks    = self.S(poly,ks)
             Tpks   = self.Tp(poly,ks)
@@ -203,35 +159,37 @@ class OXAL_G(ELM.RFG):
             cphis  = cos(phis)
 
             # kin.energy increase ref-particle
-            DWs       = qV0m*(Tks*cphis - Sks*sphis)     # Shishlo 4.6.1
-            Ws_out    = Ws_in + DWs
+            DWs       = qV0*(Tks*cphis - Sks*sphis)     # Shishlo 4.6.1
             # phase increase ref-particle
-            Dphis = qV0m*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
-            phis_out   = phis_in + Dphis
+            Dphis = qV0*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
+            Ws_out    = Ws_in + DWs
+            phis_out  = phis_in + Dphis
 
-            # OXAL-matrix 
-            g3b2s_in    = gammas_in**3*betas_in**2    # gamma**3*beta**2 in
+            # OUT variables
             gammas_out  = 1. + Ws_out/m0c2            # gamma  out
             gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta) out
             betas_out   = gbs_out/gammas_out          # beta out
             g3b2s_out   = gammas_out**3*betas_out**2  # gamma-s**3*beta-s**2 out
+            g2s_out     = gammas_out**2
             #======================================================================================="""        
+            # OXAL-matrix 
             # (4.6.11) in Shishlo's paper:
-            factor = qV0m*betas_out/m0c2/gbs3_in
+            factor  = qV0*betas_out/m0c2/gbs3_in
+            factor1 = qV0*omega/m0c3/betas_in/g3b2s_in
             r44 = betas_out/betas_in + factor*omega/c/betas_in*(Tpks*cphis - Spks*sphis)
             r45 = factor*(3*gammas_in**2*(Tpks*sphis + Spks*cphis) + omega/c/betas_in*(Tppks*sphis+Sppks*cphis))
             # (4.6.9) in Shishlo's paper:
-            r54 = qV0m*omega/(g3b2s_out*m0c3*betas_in)*(Tks*sphis + Sks*cphis)
-            r55 = (g3b2s_in/g3b2s_out - qV0m*omega/(m0c3*betas_in*g3b2s_out)*(Tpks*cphis - Spks*sphis))
+            r54 = factor1*(Tks*sphis + Sks*cphis)
+            r55 = (g3b2s_in/g3b2s_out - factor1*(Tpks*cphis - Spks*sphis))
             #======================================================================================="""        
             # {z, Dbeta/betas}: linear sub matrix
             # NOTE: Shislo's Formeln sind fuer (z,Dbeta/betas) longitudinal
             mx = NP.eye(MDIM,MDIM)
-            mx[Ktp.z, Ktp.z] = r44; mx[Ktp.z, Ktp.zp ] = r45
-            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55
+            mx[Ktp.z, Ktp.z] = r44;         mx[Ktp.z, Ktp.zp ] = r45/g2s_in  # apply conversion DBeta/Beta=gamma**(-2)*Dp/p
+            mx[Ktp.zp,Ktp.z] = r54*g2s_out; mx[Ktp.zp, Ktp.zp] = r55         # apply conversion Dp/p=gamma**2*DBeta/Beta
             # {x,x'}: linear sub-matrix
-            factor = qV0m*omega/(2.*m0c3*gbs_out*gbs_in**2)
-            mx[Ktp.xp,Ktp.x ] = -factor * (Tks*sphis + Sks*cphis)
+            factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
+            mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
             mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out
             # {y,y'}: linear sub-matrix
             mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp, Ktp.x]
@@ -239,25 +197,16 @@ class OXAL_G(ELM.RFG):
             # energy and length increase
             mx[Ktp.T,Ktp.dT] = DWs
             mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
-            # add slice-matrix to oxal-matrix
+            # left muöltiplication of slice-matrix to oxal-matrix
             matrix = NP.dot(mx,matrix)
 
             # refresh loop variables
-            # p = Proton(Ws_out)
-            p = p(Ws_out)   # NOTE using the call method for Particle
+            psoll = psoll(Ws_out)   # NOTE using the call method for Particle
             phis = phis_out
         return matrix
     def adjust_energy(self, tkin):
-        adjusted = OXAL_G(self.label, self.EzAvg, self.phisoll, self.gap, self.freq, SFdata=self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf,fieldtab=self.fieldtab)
+        adjusted = OXAL_G(self.label, self.EzPeak, self.phisoll, self.cavlen, self.freq, self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf)
         return adjusted
-    def oxal_map(self,i_track):
-        gs2 = (self.particle.gamma)**2
-        i_track = copy(i_track)
-        i_track[Ktp.zp] = 1./gs2 * i_track[Ktp.zp]      # Dp/p -> Dbeta/beta
-        f_track = NP.dot(self.matrix,i_track)
-        gs2 = (self.particlef.gamma)**2
-        f_track[Ktp.zp] = gs2 * f_track[Ktp.zp]         # Dbeta/beta -> Dp/p
-        return f_track
 
 class TestOxalEnergyMapping(unittest.TestCase):
     def test_OXAL(self):

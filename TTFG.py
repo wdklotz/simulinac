@@ -25,7 +25,7 @@ import numpy as NP
 import unittest
 
 from setutil import PARAMS,I0,I1,tblprnt,arrprnt,Proton,FLAGS
-from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,LKOO
+from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
 from setutil import DEBUG_ON,DEBUG_OFF
 from Ez0 import SFdata
 import elements as ELM
