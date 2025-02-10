@@ -237,11 +237,11 @@ class SFdata(object):
         if instance == None:
             instance = SFdata(TBL_file)   # new scaled instance
             if EzPeak != 0. and L != 0.:
-                instance.scaleEzTable(EzPeak,L)
+                instance.scaleEzTable(EzPeak,2*L)
             elif EzPeak != 0. and L == 0.:
                 instance.scaleEzTable(EzPeak,instance._L)
             elif EzPeak == 0. and L != 0.:
-                instance.scaleEzTable(instance._EzPeak,L)
+                instance.scaleEzTable(instance._EzPeak,2*L)
             elif EzPeak == 0. and L == 0.:
                 instance.scaleEzTable(instance._EzPeak,instance._L)
             SFdata.instances[instance_key] = instance
