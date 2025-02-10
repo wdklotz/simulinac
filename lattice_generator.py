@@ -130,35 +130,34 @@ def instanciate_element(item):
                     gap       = get_mandatory(attributes,'gap',ID)
                     cavlen    = get_mandatory(attributes,'cavlen',ID)
                     instance  = ELM.RFG(ID,EzPeak,phiSoll,gap,cavlen,freq,SFdata=None,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
+                    ELEMENT['HE_Gap'] ='ignored'
                     pass
                 else:
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)
                     cavlen    = get_mandatory(attributes,'cavlen',ID)  # cavity length [m]
-                    HE_Gap    = get_mandatory(attributes,'gap',ID)     # hard edge gap [m]
-                    gapCM = HE_Gap*100. # [cm]
-                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
-                    (gapCM,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100.)   # hard edge: HE_Gap [cm], HE_EzPeak [MV/m]
+                    HE_Gap    = get_mandatory(attributes,'HE_Gap',ID)  # hard edge gap [m]
+                    gapCM     = HE_Gap*100. # [cm]
+                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+                    (dummy,HE_EzPeak) = sfdata.hardEdge(gapCM)   # hard edge: HE_Gap [cm], HE_EzPeak [MV/m]
                     instance  = ELM.RFG(ID,HE_EzPeak,phiSoll,HE_Gap,cavlen,freq,SFdata=sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
+                    ELEMENT['gap']       = 'ignored'
                     pass
             elif mapping == 'oxal':
                 fieldtab = get_mandatory(attributes,"SFdata",ID)
                 EzPeak   = get_mandatory(attributes,"EzPeak",ID)
                 cavlen   = get_mandatory(attributes,"cavlen",ID)
-                sfdata   = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                sfdata   = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
                 instance = OXA.OXAL_G(ID,EzPeak,phiSoll,cavlen,freq,sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf)
+                ELEMENT['HE_Gap'] ='ignored'
+                ELEMENT['gap']    ='ignored'
                 pass
             elif mapping == 'ttf':
                 raise(UserWarning(wrapRED(f'Element "{type}" can\'t be used with mapping "{mapping}". Use "RFC" instead.')))
                 sys.exit()
             elif mapping == 'dyn':
-                raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not available any more')))
+                raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not available')))
                 sys.exit()
-
-
-
-
-
         elif type == 'RFC':
             phiSoll          = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq             = float(get_mandatory(attributes,"freq",ID))
@@ -170,21 +169,6 @@ def instanciate_element(item):
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
             UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
-                                                # if mapping == 'ttf' or mapping == 'oxal':
-                                                #     fieldtab = get_mandatory(attributes,"SFdata",ID)
-                                                #     gap_cm = gap*100     # Watch out!
-                                                #     sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
-                                                #     sys.exit()
-                                                # if mapping   == 'oxal':
-                                                #     EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
-                                                #     instance = OXA.OXAL_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                                                #     ELEMENT['sec']    = attributes.get('sec','?')
-                                                #     ELEMENT['EzPeak'] = EzPeak
-                                                # elif mapping == 'ttf':
-                                                #     EzAvg = ELEMENT['EzAvg'] = sfdata.EzAvg
-                                                #     instance = TTF.TTF_G(ID,EzAvg,phiSoll,gap,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,fieldtab=fieldtab)
-                                                #     ELEMENT['sec']    = attributes.get('sec','?')
-                                                #     ELEMENT['EzPeak'] = EzPeak
             if mapping == 'dyn':
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not available any more')))
                 sys.exit()
@@ -200,18 +184,15 @@ def instanciate_element(item):
                     cavlen    = get_mandatory(attributes,'cavlen',ID)  # cavity length [m]
                     HE_Gap    = get_mandatory(attributes,'gap',ID)     # hard edge gap [m]
                     gapCM = HE_Gap*100. # [cm]
-                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2*100.)   # scaled field distribution
                     (gapCM,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100.)   # hard edge: HE_Gap [cm], HE_EzPeak [MV/m]
                     instance  = ELM.RFC(ID,HE_EzPeak,phiSoll,HE_Gap,cavlen,freq,SFdata=sfdata,particle=UTIL.Proton(UTIL.PARAMS['injection_energy']),position=(0.,0.,0.),aperture=aperture,dWf=dWf,mapping=mapping)
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
             elif mapping == 'oxal':
                 fieldtab  = get_mandatory(attributes,'SFdata',ID)
-                                                            # if fieldtab == None:
-                                                            #     raise(UserWarning(wrapRED('Mapping "{}" needs a (Superfish) field table.'.format(mapping))))
-                                                            #     sys.exit(1)
                 EzPeak    = get_mandatory(attributes,"EzPeak",ID)
                 cavlen    = get_mandatory(attributes,'cavlen',ID)  # cavity length [m]
-                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
                 instance  = OXA.OXAL_G(ID, EzPeak, phiSoll, cavlen, freq, sfdata, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.),aperture=aperture, dWf=dWf) 
                 ELEMENT['gap'] = 'undef'
             elif mapping == 'ttf':

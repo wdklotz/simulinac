@@ -39,17 +39,19 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True              # {False} plot envelopes
-    # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    simple     # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
+    # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    dyn     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Win:                  6.              # [MeV] energy @ injection 
+    # Win:                  6.              # [MeV] energy @ injection 
+    Win:                  50.             # [MeV] energy @ injection 
     DPHI0:                4.3             # [deg] delta-phi @ injection
     DW2W:                 3.5e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   750.e6          # [Hz] frequency
@@ -63,14 +65,14 @@ PARAMETERS:
     # dxp_i:               1.0            # {0.0} dispersion dxp0 [rad]
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
-    # phi_sync:     &phs    -30.          # [deg] synchronous phase
+    phi_sync:     &phs    -30.          # [deg] synchronous phase
     # phi_sync:     &phs    -40.          # [deg] synchronous phase
     windings:             30              # [] quad-coil windings
     gap:          &p15    0.044           # [m] RF gap
     BgradL:       &bgrad1 40.0            # [T/m]
     BgradH:       &bgrad2 40.0            # [T/m]
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
-    EzPeak:       &p17    1.5             # [MV/m] peak gap field Strengy
+    EzPeak:       &ezp    1.5             # [MV/m] peak gap field Strengy
     nbsigma:              3               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
     lattvers:     'working version'       # lattice version: IN 5, out 200
@@ -123,15 +125,16 @@ ELEMENTS:
         length:   0.011111     # [m] must be gap/2
         sec:      LE           # section 
     RFG1:                      # ID
-        # type:     RFG          # RFG class
-        type:      RFC         # RFC class
-        PhiSync:  -30.0        # [deg] synchronous phase
+        type:     RFG          # RFG class
+        # type:      RFC         # RFC class
+        PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        EzPeak:   *p17         # [MV/m] 
-        # gap:       0.01254     # [m] gap length 
+        EzPeak:   *ezp         # [MV/m] 
+        gap:       0.01254     # [m] gap length 
+        HE_Gap:    0.01254     # [m] hard edge gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
-        SFdata:   *sfd         # superfish tbl-data file
+        # SFdata:   *sfd         # superfish tbl-data file
         mapping:  *map         # mapping in cavities
         sec:      LE           # section 
 #...........................................................................................
@@ -156,12 +159,13 @@ ELEMENTS:
         length:   0.0200       # [m] must be gap/2
         sec:      HE           # section 
     RFG2:                      # ID
-        # type:     RFG          # RFG class
-        type:     RFC          # RFC class
-        PhiSync:  -30.0        # [deg] synchronous phase
+        type:     RFG          # RFG class
+        # type:     RFC          # RFC class
+        PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
-        EzPeak:   *p17         # [MV/m] 
+        EzPeak:   *ezp         # [MV/m] 
         gap:      0.023        # [m] gap length
+        HE_Gap:   0.023        # [m] hard edge gap length
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -212,11 +216,12 @@ SECTIONS:
 #...........................................................................................
     SECL:      [50,[LE_CELL]]
     SECH:      [250,[HE-CELL]]
+    # SECH:      [2,[HE-CELL]]
 # ===========================================================================================
 LATTICE:    
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
-    # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp]]
-    #  LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
