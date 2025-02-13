@@ -18,13 +18,12 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
-#TODO: Formeln für Tpp und SPP
+#TODO: Formeln für Tpp und Spp
+#TODO: unittests
 """
 import sys
 import numpy as NP
 import unittest
-import elements as ELM
-
 from math import sin,cos,tan,sqrt,pi,degrees,radians
 from copy import copy
 from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF,Proton
@@ -38,17 +37,33 @@ twothird = 2./3.
 def cot(x):
     return -tan(x+pihalf)
 
-class OXAL_G(ELM.RFG):
+class OXAL_G(object):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
-    def __init__(self, label, EzPeak, phisoll, cavlen, freq, sfdata, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-        super().__init__(label, EzPeak, phisoll, 0., cavlen,freq, sfdata, particle, position, aperture, dWf)
-        self.cavlen    = cavlen
-        self.polies    = self.poly_slices()
-        self.matrix    = self.make_matrix()
-        self.deltaW    = self.matrix[Ktp.T,Ktp.dT]
-        self.particlef = Proton(particle.tkin + self.deltaW)
+    # def __init__(self, label, EzPeak, phisoll, cavlen, freq, sfdata, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
+    def __init__(self, label, **kwargs):
+        self.label        = label
+        self.length       = 0. # 0. because it's a kick
+        self.viseo        = 0.25
+        self.accelerating = True
+        self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
 
-    def V0(self, poly):
+        self.EzPeak    = kwargs.get('EzPeak',None)
+        self.phisoll   = kwargs.get('phisoll',None)
+        self.cavlen    = kwargs.get('cavlen',None)
+        self.freq      = kwargs.get('freq',None)
+        self.SFdata    = kwargs.get('SFdata',None)
+        self.particle  = kwargs.get('particle',None)
+        self.position  = kwargs.get('position',None)
+        self.aperture  = kwargs.get('aperture',None)
+
+        self.lamb      = PARAMS['clight']/self.freq
+        self.omega     = twopi*self.freq
+        self.polies    = self.poly_slices()
+        (self.matrix,self.ttf,self.deltaW) = self.make_matrix()
+
+        self.particlef = Proton(self.particle.tkin + self.deltaW)
+
+    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
@@ -91,20 +106,19 @@ class OXAL_G(ELM.RFG):
         sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
-    def Tpp(self, poly, k):
+    def Tpp(self, poly, k):  #TODO
         """ 2nd derivative T''(k) """
         return 0
-    def Spp(self, poly, k):
+    def Spp(self, poly, k):  #TODO
         """ 2nd derivative S''(k) """
         return 0
     def poly_slices(self):
         """Slice the RF cavity"""
         L = self.cavlen/2.
-        sfdata = self.SFdata
         slices = []
         zl = -L*100.   # [m] --> [cm]
         zr = -zl
-        for poly in sfdata.polies:
+        for poly in self.SFdata.polies:
             zil = poly.zl
             zir = poly.zr
             if zil < zl or zir > zr: continue
@@ -117,6 +131,7 @@ class OXAL_G(ELM.RFG):
         m0c2     = self.particle.m0c2
         m0c3     = m0c2*c
         omega    = self.omega
+        ttf      = 0.
         matrix   = NP.eye(MDIM,MDIM)
 
         # initialise loop variables
@@ -128,9 +143,9 @@ class OXAL_G(ELM.RFG):
             gammas_in  = 1. + Ts/m0c2              # gamma 
             gbs_in     = sqrt(gammas_in**2-1.)     # (gamma*beta)
             betas_in   = gbs_in/gammas_in          # beta
-            gbs3_in   = gbs_in**3                  # (gamma*beta)**3
-            g3b2s_in  = gammas_in**3*betas_in**2   # gamma**3*beta**2
-            g2s_in    = gammas_in**2               # gamma**2
+            gbs3_in    = gbs_in**3                  # (gamma*beta)**3
+            g3b2s_in   = gammas_in**3*betas_in**2   # gamma**3*beta**2
+            g2s_in     = gammas_in**2               # gamma**2
 
             ks     = omega/(c*betas_in)    # omega/(beta*c)
             qV0    = self.V0(poly)         # [MV]
@@ -150,6 +165,8 @@ class OXAL_G(ELM.RFG):
             dPhis = qV0*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
             Ts_out    = Ts + dTs
             phis_out  = phis + dPhis
+            # ttf estimate
+            ttf = ttf + Tks+Sks+Tpks+Spks+Tppks+Sppks
 
             # OUT variables
             gammas_out  = 1. + Ts_out/m0c2            # gamma 
@@ -169,7 +186,7 @@ class OXAL_G(ELM.RFG):
             r55 = (g3b2s_in/g3b2s_out - factor1*(Tpks*cphis - Spks*sphis))
             #======================================================================================="""        
             # {z, dP/P}: linear sub matrix
-            # NOTE: Shislo's Formeln sind fuer (z,dBeta/Beta)
+            # NOTE: Shishlo's Formeln sind fuer (z,dBeta/Beta)
             mx = NP.eye(MDIM,MDIM)
             mx[Ktp.z, Ktp.z] = r44;         mx[Ktp.z, Ktp.zp ] = r45/g2s_in  # apply conversion dBeta/Beta=gamma**(-2)*dP/P
             mx[Ktp.zp,Ktp.z] = r54*g2s_out; mx[Ktp.zp, Ktp.zp] = r55         # apply conversion dP/P=gamma**2*dBeta/Beta
@@ -190,10 +207,24 @@ class OXAL_G(ELM.RFG):
             # refresh loop variables
             Ts    = Ts_out
             phis  = phis_out
-        return matrix
-    def adjust_energy(self, tkin):
-        adjusted = OXAL_G(self.label, self.EzPeak, self.phisoll, self.cavlen, self.freq, self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf)
-        return adjusted
+        ttf    = ttf/len(polies)  # ttf estimate
+        deltaW = matrix[Ktp.T,Ktp.dT]
+        return (matrix,ttf,deltaW)
+    def OXAL_matrix(self,tkin):
+        self.particle = Proton(tkin)
+        (self.matrix,self.ttf,self.deltaW) = self.make_matrix()
+        return (self.matrix,self.ttf,self.deltaW) 
+    def map(self,i_track):
+        """ standard mapping with T3D matrix """
+        # ftrack = copy(itrack)    #TODO needed? think NO!
+        f_track = NP.dot(self.matrix,i_track)
+        return f_track
+    # def adjust_energy(self, tkin):
+    #     adjusted = OXAL_G(self.label, self.EzPeak, self.phisoll, self.cavlen, self.freq, self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf)
+    #     return adjusted
+    @property
+    def isAccelerating(self):
+        return self.accelerating
 
 class TestOxalEnergyMapping(unittest.TestCase):
     def test_OXAL(self):

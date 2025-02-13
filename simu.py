@@ -45,6 +45,8 @@ import elements          as ELM
 import pandas            as pd
 import bucket_size       as BKTSZ
 
+def wrapRED(str):
+    return UTIL.colors.RED+str+UTIL.colors.ENDC
 def display0(*args):
     """ C&S-Tracks w/o longitudinal motion """
     #----------*----------*   # unpack
@@ -382,8 +384,7 @@ def simulation(filepath):
     if twoflag == (False,False): mode= UTIL.RUN_MODE[3]
     UTIL.FLAGS['mode'] = mode
     print(f'running in \'{UTIL.FLAGS["mode"]}\' mode')
-    print("---------------------------------------------------------------------------")
-    print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd')
+    print(wrapRED(f'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd'))
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------

@@ -605,11 +605,21 @@ class TestEz0Methods(unittest.TestCase):
         (HE_Gap, HE_EzPeak) = sfdata.hardEdge(gap)
         DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
         self.assertAlmostEqual(HE_EzPeak*reduc,sfdata.EzAvg,msg='hard edge field',places=3)
+    def test9(self):
+        print("\b----------------------------------------test9")
+        print('test TTF calculation according to T.Wangler pp. 39 (2.14)')
+        TBL_file='SF/SF_WDK2g22.TBL'
+        # TBL_file='SF/SF_WDK2g44.TBL'
+        # TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        sfdata = SFdata.InstanciateAndScale(TBL_file)    # raw, no scaling
+        Ez0_tab = sfdata.Ez0_tab
+        DEBUG_ON('Ez0 table',Ez0_tab)
+
 
 
 if __name__ == '__main__': 
-    unittest.main()
-    # tests = TestEz0Methods()
+    # unittest.main()
+    tests = TestEz0Methods()
     # tests.test0()    
     # tests.test1()
     # tests.test2()
@@ -619,4 +629,5 @@ if __name__ == '__main__':
     # tests.test6()
     # tests.test7()
     # tests.test8()
+    tests.test9()
     

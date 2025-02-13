@@ -22,16 +22,20 @@ import unittest
 from copy import copy
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import DEBUG_ON,DEBUG_OFF
-from setutil import Ktp as Ktp
-
+from setutil import DEBUG_ON,DEBUG_OFF,Proton
+# from setutil import Ktp as Ktp
+from setutil import Ktp
+import warnings
 import math    as M
 import numpy   as NP
 import setutil as UTIL
+import OXAL as OX
 
 twopi = 2.*M.pi
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
+def wrapRED(str):
+    return UTIL.colors.RED+str+UTIL.colors.ENDC
 
 class OutOfRadialBoundEx(Exception):
     def __init__(self,s):
@@ -45,6 +49,7 @@ class Node(object):
     """
     def __init__(self):
         self.type         = self.__class__.__name__  # self's node type
+        self.accelerating = False
         self.label        = None
         self.viseo        = None      # default - invisible
         self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
@@ -152,8 +157,9 @@ class Node(object):
         return m_beta
     def aper_check(self,new_tp,s,**kwargs):
         return False   
-    # def waccept(self):
-    #     return dict()
+    @property
+    def isAccelerating(self):
+        return self.accelerating
 class I(Node):
     """  Unity matrix: the unity Node """
     def __init__(self, label='I'):
@@ -405,6 +411,7 @@ class GAP(Node):
     def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
         """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
         super().__init__()
+        self.accelerating = True
         self.label    = label
         self.EzAvg    = EzAvg*dWf
         self.phisoll  = phisoll
@@ -443,22 +450,27 @@ class GAP(Node):
         return adjusted
 class RFG(Node):
     """  RF-gap of zero length with different kick gap-models """
-    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label, **kwargs):
         super().__init__()
-        self.viseo     = 0.25
-        self.label     = label
-        self.particle  = particle
-        self.position  = position
-        self.length    = 0.                  # 0. because it's a kick
-        self.gap       = gap                 # [m] rf-gap
-        self.cavlen    = cavlen              # [m] cavity length
-        self.aperture  = aperture
-        self.dWf       = dWf                 # dWf=1 wirh acceleration else 0
-        self.EzPeak    = EzPeak*self.dWf     # [MV/m] peak gap field
-        self.phisoll   = phisoll             # [radians] soll phase
-        self.freq      = freq                # [Hz]  RF frequenz
-        self.mapping   = mapping             # map model
-        self.SFdata    = SFdata              # SuperFish data
+        self.label        = label
+        self.length       = 0. # 0. because it's a kick
+        self.viseo        = 0.25
+        self.accelerating = True
+        self.dWf          = UTIL.FLAGS['dWf']                 # dWf=1 with acceleration =0 else
+
+        self.EzPeak    = kwargs.get('EzPeak',0)                 # [MV/m] peak gap field
+        self.phisoll   = kwargs.get('phisoll',None)             # [radians] soll phase
+        self.gap       = kwargs.get('gap',None)                 # [m] rf-gap
+        self.cavlen    = kwargs.get('cavlen',None)              # [m] cavity length
+        self.freq      = kwargs.get('freq',None)                # [Hz]  RF frequenz
+        self.SFdata    = kwargs.get('SFdata',None)              # SuperFish data
+        self.particle  = kwargs.get('particle',None)
+        self.position  = kwargs.get('position',None)
+        self.aperture  = kwargs.get('aperture',None)
+        self.mapping   = kwargs.get('mapping',None)             # map model
+
+        self.EzPeak    = self.EzPeak*self.dWf         # [MV/m] peak gap field
         self.omega     = twopi*self.freq
         self.lamb      = UTIL.PARAMS['clight']/self.freq
         self.ttf       = None
@@ -466,22 +478,26 @@ class RFG(Node):
         self.qE0LT     = None
         self.deltaW    = None
         self.particlef = None
-        self.qE0LT     = None
-        self.deltaW    = None
-        self.particlef = None
+        self.rf_gap    = None
+
+    def dispatch_model_matrix(self):
         """ dispatching to different gap models """
-        if self.mapping   == 't3d' :   #NOTE: mapping delegated to super class: matrix multiplication: linear model
-            self.matrix    = self.T3D_matrix()
+        if self.mapping   == 't3d' :   #NOTE: t3d mapping is matrix multiplication
+            self.matrix    = self.gap_object.T3D_matrix()
+            # DEBUG_OFF('matrix',self.matrix)
+            pass
         elif self.mapping == 'simple':
-            self.matrix    = self.simple_matrix()  #NOTE: mapping delegated to super class: matrix multiplication: linear model
+            self.matrix    = self.gap_object.simple_matrix()  #NOTE: simple mapping is matrix multiplication
+            # DEBUG_OFF('matrix',self.matrix)
+            pass
+        elif self.mapping == 'oxal':
+            (self.matrix,self.ttf,self.deltaW)  = self.gap_object.OXAL_matrix(self.particle.tkin) #NOTE: OXAL mapping is matrix multiplication
+            DEBUG_ON(f'{self.gap_object},matrix',self.matrix)
+            pass
         elif self.mapping == 'base':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
             self.map = self.base_map_1
-        elif self.mapping == 'oxal':
-            # self.matrix ->  OXAL has its own matrix
-            self.particlef = None
-            # self.map  =>  OXAL has its own mapping method
         elif self.mapping == 'ttf':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
             self.particlef = None
@@ -492,8 +508,16 @@ class RFG(Node):
             # self.map  =>  # DYN_G has its own mapping method
         # TODO other mappings not tested
         else:
-            raise(Userwarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
+            raise(UserWarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
             sys.exit()
+
+    @property
+    def gap_object(self):
+        return self.rf_gap
+    @gap_object.setter
+    def gap_object(self,rf_gap):
+        self.rf_gap = rf_gap
+
     def T3D_matrix(self):
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
@@ -748,7 +772,15 @@ class RFG(Node):
         self.particlef = particleRo
         return f_track
     def adjust_energy(self, tkin):
-        adjusted = RFG(self.label,self.EzPeak,self.phisoll,self.gap,self.cavlen,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
+        if self.gap_object == self:
+            adjusted = RFG(self.label,EzPeak=self.EzPeak,phisoll=self.phisoll,gap=self.gap,cavlen=self.cavlen,freq=self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
+            adjusted.gap_object = adjusted
+            adjusted.dispatch_model_matrix()
+        elif self.mapping == 'oxal':
+            self.particle = UTIL.Proton(tkin)
+            self.gap_object.OXAL_matrix(tkin)
+            adjusted = self
+            # adjusted.dispatch_model_matrix()
         return adjusted
     def waccept(self):
         """ 
@@ -756,13 +788,16 @@ class RFG(Node):
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
         """
-        Ez0       = self.EzPeak
-        ttf       = self.ttf
+        rf_gap    = self.gap_object      # this RF gap to use: can be self or others like OXAL_G or TTF_G
+
+        Ez0       = rf_gap.EzPeak
+        ttf       = rf_gap.ttf
+        phisoll   = rf_gap.phisoll         # [rad]
+        lamb      = rf_gap.lamb            # [m]
+        freq      = rf_gap.freq            # [Hz]
+        particle  = rf_gap.particle
+
         E0T       = Ez0*ttf              # [MV/m]
-        phisoll   = self.phisoll         # [rad]
-        lamb      = self.lamb            # [m]
-        freq      = self.freq            # [Hz]
-        particle  = self.particle
         m0c2      = particle.e0          # [MeV]
         gb        = particle.gamma_beta
         beta      = particle.beta
@@ -793,7 +828,7 @@ class RFG(Node):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            DEBUG_ON(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')
+            DEBUG_ON(f'{exception} reason: ttf={rf_gap.ttf}, E0T={E0T}')
             sys.exit(1)
 
         # this node Dp/p max on separatrix
@@ -841,12 +876,15 @@ class RFG(Node):
         sfifo_z= kwargs['sfifo_z']
         fifo_xy= kwargs['fifo_xy']
         sfifo_xy=kwargs['sfifo_xy']
-        lost=False
-        tkin=self.particle.tkin
 
-        res=self.waccept()
+        rf_gap = self.gap_object      # this RF gap to use: can be self or others like OXAL_G or TTF_G
+
+        lost=False
+        tkin=rf_gap.particle.tkin
+
+        res = self.waccept()
         dummy,phi_2,phisoll,phi_1 = res['phaseacc']   # dummy kept for old track_node
-        conv = UTIL.WConverter(tkin,self.freq)
+        conv = UTIL.WConverter(tkin,rf_gap.freq)
         Dphi=conv.zToDphi(new_point[Ktp.z])
         phi = phisoll+Dphi
 
@@ -860,30 +898,57 @@ class RFG(Node):
             sfifo_z.append(s)
             lost = True
         # transverse apertures
-        elif self.aperture != None and not (abs(new_point[Ktp.x]) < self.aperture or abs(new_point[Ktp.y]) < self.aperture):
+        elif rf_gap.aperture != None and not (abs(new_point[Ktp.x]) < rf_gap.aperture or abs(new_point[Ktp.y]) < rf_gap.aperture):
             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
             sfifo_xy.append(s)
             lost = True
         return lost
+
 class RFC(RFG):   
     """ Rf cavity as product DKD*RFG*DKD """
     def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
-        super().__init__(label, EzPeak, phisoll, gap, cavlen,freq, SFdata=SFdata, particle=particle, position=position, aperture=aperture, dWf=dWf, mapping=mapping)
+        super().__init__(label, EzPeak, phisoll, gap, cavlen,freq, SFdata, particle, position, aperture, dWf, mapping)
 
-        self.cavlen  = cavlen
-        self.dr      = DKD(label="-",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
-        # self.drf   = DKD(label="-",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
-        # UPDATE energy for downstream drift after gap
-        # tkin_f = self.particle.tkin + self._deltaW   # tkin after acc. gap
-        # self.drf.adjust_energy(tkin_f)
-        self.triplet = (self.dr,self,self.dr)
-        self.matrix = NP.dot(self.dr.matrix,NP.dot(self.matrix,self.dr.matrix))
-        # DEBUG_OFF("det[RFC.matrix] = {}".format((NP.linalg.det(self.matrix))))
+        self.accelerating = True
+        # self.label     = label
+        # self.EzPeak    = EzPeak
+        # self.phisoll   = phisoll
+        # self.gap       = gap
+        # self.cavlen    = cavlen
+        # self.freq      = freq
+        # self.SFdata    = SFdata
+        # self.particle  = particle
+        # self.position  = position
+        # self.aperture  = aperture
+        # self.dWf       = dWf
+        # self.mapping   = mapping
+        self.lengh     = None
+        self.kick      = None
+        self.ttf       = None
+        self.deltaW    = None
+        self.matrix    = None
+        self.particlef = None
+
+        self.dr = DKD(label="D-D",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
+
+        if self.mapping == "t3d" or self.mapping == 'simple':
+            raise(UserWarning(wrapRED('mising implementation')))
+            sys.exit()
+
+        if self.mapping == "oxal":
+            self.kick = OX.OXAL_G(label,EzPeak,phisoll,cavlen,freq,SFdata,particle,position,aperture,dWf)
+            self.matrix = NP.dot(self.dr.matrix,NP.dot(self.kick.matrix,self.dr.matrix))
+            self.length = self.matrix[Ktp.S,Ktp.S]   # length should be cavlen
+            self.ttf    = self.kick.ttf
+            self.deltaW = self.kick.deltaW
+            self.particlef = Proton(particle.tkin + self.deltaW)
+            
     def adjust_energy(self, tkin):
         adjusted = RFC(self.label,self.EzPeak,self.phisoll,self.gap,self.cavlen,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
         return adjusted
     def make_slices(self, anz=1):
-        return self.triplet
+        return [self]
+
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
     return 0.31952 * gradient/particle.gamma_beta

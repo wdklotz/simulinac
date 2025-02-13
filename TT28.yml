@@ -23,7 +23,7 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  "Input file from Steve: TT29.yml"
+DESCRIPTOR:  "Input file from Steve: TT28.yml"
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
@@ -45,7 +45,7 @@ FLAGS:
     # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
     # mapping:      &map    dyn     # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -123,7 +123,7 @@ ELEMENTS:
         sec:      LE           # section 
     DGAP1:                     # ID
         type:     DKD          # DKD class
-        length:   0.011111     # [m] must be gap/2
+        length:   0.011111     # [m] must be cavlen/2
         sec:      LE           # section 
     RFG1:                      # ID
         type:     RFG          # RFG class
@@ -131,7 +131,7 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        # gap:       0.01254     # [m] gap length 
+        gap:       0.01254     # [m] gap length 
         HE_Gap:    0.01254     # [m] hard edge gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
@@ -157,7 +157,7 @@ ELEMENTS:
         sec:      HE           # section 
     DGAP2:                     # ID
         type:     DKD          # DKD class
-        length:   0.0200       # [m] must be gap/2
+        length:   0.0200       # [m] must be cavlen/2
         sec:      HE           # section 
     RFG2:                      # ID
         type:     RFG          # RFG class
@@ -165,7 +165,7 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        # gap:      0.023        # [m] gap length
+        gap:      0.023        # [m] gap length
         HE_Gap:   0.023        # [m] hard edge gap length
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
@@ -223,6 +223,6 @@ LATTICE:
 # group SECTIONs into a LINE a.k.a. LATTICE
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
-    # LINE:   [1,[Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECH,Psp]]
     # LINE:   [1,[Psp,SECL,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]

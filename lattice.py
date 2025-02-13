@@ -27,7 +27,6 @@ from numpy import linalg as LA
 from copy import copy
 # from termcolor import colored
 # from sty import fg,bg,ef,rs
-
 import elements as ELM
 import OXAL as OXA
 import setutil
@@ -95,7 +94,6 @@ class Lattice(object):
             tk_injection = self.injection_energy
             ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
             node_adj     = node.adjust_energy(tk_injection)    # energy ADJUST
-            # ref_track    = NP.dot(node.matrix,ref_track)     # track @ out of 1st node
             ref_track_m  = node_adj.map(ref_track)
             ref_particle = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
             node_adj.prev = node.next = None
@@ -625,7 +623,7 @@ class Lattice(object):
         """ return the 1st RF gap"""
         node = None
         for elm in iter(self):
-            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP,OXA.OXAL_G)):
+            if elm.isAccelerating:
                 node = elm
                 break
         return node
@@ -635,7 +633,7 @@ class Lattice(object):
         self.toggle_iteration()
         node = None
         for elm in iter(self):
-            if isinstance(elm,(ELM.RFG,ELM.RFC,ELM.GAP)):
+            if elm.isAccelerating:
                 node = elm
                 break
         self.toggle_iteration()

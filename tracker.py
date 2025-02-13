@@ -31,14 +31,12 @@ import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import time
-from math import sqrt, degrees, radians, ceil,pi
 import argparse
 import unittest
 import h5py
-
-
-from lattice_generator import factory
 import elements as ELM
+from lattice_generator import factory
+from math import sqrt, degrees, radians, ceil,pi
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter
 from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF,Proton
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
