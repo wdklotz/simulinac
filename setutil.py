@@ -540,9 +540,9 @@ def tblprnt(headr,records):
     for row in rows:
             s+=" | ".join((val.ljust(width) for val,width in zip(row, widths)))+'\n'
     return s
-def mxprnt(matrix):
+def mxprnt(matrix,fmt='+.3e'):
     """Simple matrix print"""
-    s = [['{:+.3e}  '.format(e) for e in row] for row in matrix]
+    s = [['{:{}}  '.format(e,fmt) for e in row] for row in matrix]
     lens = [max(map(len, col)) for col in zip(*s)]
     fmt = ''.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
@@ -553,6 +553,9 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     for val in array:
         print(fmt.format(val),end='')
     print('')
+def wrapRED(str):
+    return colors.RED+str+colors.ENDC
+
 class Test_set_utilities(unittest.TestCase):
     def test_particle(self):
         print('----------------------------------test_particle')
