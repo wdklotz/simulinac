@@ -297,7 +297,7 @@ class SFdata(object):
         ep = eprev+ep
         N = len(zp)
         raw_tab = [Dpoint(zp[i],rp[i],ep[i]) for i in range(N)]
-        EzAvg = NP.trapz(ep,dx=dz)/L
+        EzAvg = float((NP.trapz(ep,dx=dz)/L))
         DEBUG_OFF(f'[(Ez,z)]: [({E0},{z0}),({EL},{zL})], L/2 {L2}, dz {dz}, EyAvg {EzAvg}')
 
         # raw data from SF will never be modified!

@@ -23,7 +23,6 @@ from copy import copy
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF,Proton
-# from setutil import Ktp as Ktp
 from setutil import Ktp
 import warnings
 import math    as M
@@ -448,7 +447,7 @@ class GAP(Node):
     def adjust_energy(self, tkin):
         adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
-class RFG(Node):
+class RFG_OLD(Node):
     """  RF-gap of zero length with different kick gap-models """
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
     def __init__(self, label, **kwargs):
@@ -904,50 +903,113 @@ class RFG(Node):
             lost = True
         return lost
 
-class RFC(RFG):   
-    """ Rf cavity as product DKD*RFG*DKD """
-    def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
-        super().__init__(label, EzPeak, phisoll, gap, cavlen,freq, SFdata, particle, position, aperture, dWf, mapping)
+class RFG(Node):   
+    """  RF-gap of zero length for different kick gap-models """
+    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label,mapping):
+        super().__init__()
 
+        self.viseo        = 0.25
+        self.label        = label
+        self.mapping      = mapping
+        self.length       = 0.
         self.accelerating = True
-        # self.label     = label
-        # self.EzPeak    = EzPeak
-        # self.phisoll   = phisoll
-        # self.gap       = gap
-        # self.cavlen    = cavlen
-        # self.freq      = freq
-        # self.SFdata    = SFdata
-        # self.particle  = particle
-        # self.position  = position
-        # self.aperture  = aperture
-        # self.dWf       = dWf
-        # self.mapping   = mapping
-        self.lengh     = None
-        self.kick      = None
-        self.ttf       = None
-        self.deltaW    = None
-        self.matrix    = None
-        self.particlef = None
+        self.particle     = None
+        self.mapper       = None
+        self.ttf          = None
+        self.deltaw       = None
+        self.particlef    = None
+        self.matrix       = None
 
-        self.dr = DKD(label="D-D",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
+        # self.dr = DKD(label="D-D",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
 
-        if self.mapping == "t3d" or self.mapping == 'simple':
+    def register_mapping(self,mapper):
+        self.mapper = mapper
+        mapper.accept_register(self)
+
+    def configure(self,**kwargs): 
+        self.particle = kwargs['particle']  
+        if self.mapping == "t3d":
+            self.mapper.configure(**kwargs)
+
+        elif self.mapping == 'simple':
             raise(UserWarning(wrapRED('mising implementation')))
             sys.exit()
 
-        if self.mapping == "oxal":
-            self.kick = OX.OXAL_G(label,EzPeak,phisoll,cavlen,freq,SFdata,particle,position,aperture,dWf)
-            self.matrix = NP.dot(self.dr.matrix,NP.dot(self.kick.matrix,self.dr.matrix))
-            self.length = self.matrix[Ktp.S,Ktp.S]   # length should be cavlen
-            self.ttf    = self.kick.ttf
-            self.deltaW = self.kick.deltaW
-            self.particlef = Proton(particle.tkin + self.deltaW)
-            
+        elif self.mapping == "oxal":
+            raise(UserWarning(wrapRED('mising implementation')))
+        
+        else:
+            raise(UserWarning(wrapRED('mising implementation')))
+
     def adjust_energy(self, tkin):
-        adjusted = RFC(self.label,self.EzPeak,self.phisoll,self.gap,self.cavlen,self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
-        return adjusted
+        self.mapper.adjust_energy(tkin)
+        at_exit        = self.mapper.values_at_exit()
+        self.ttf       = at_exit['ttf']
+        self.deltaw    = at_exit['deltaw']
+        self.particlef = at_exit['particlef']
+        self.matrix    = at_exit['matrix']
+        return self
+    def map(self,i_track):
+        return self.mapper.map(i_track)
     def make_slices(self, anz=1):
         return [self]
+    def waccept(self):
+        return self.mapper.waccept()
+
+class RFC(Node):   
+    """ Rf cavity as product DKD*RFG*DKD """
+    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
+    def __init__(self, label,mapping):
+        super().__init__()
+
+        self.viseo        = 0.25
+        self.label        = label
+        self.mapping      = mapping
+        self.length       = 0.
+        self.accelerating = True
+        self.particle     = None
+        self.mapper       = None
+        self.ttf          = None
+        self.deltaw       = None
+        self.particlef    = None
+        self.matrix       = None
+
+        # self.dr = DKD(label="D-D",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
+
+    def register_mapping(self,mapper):
+        self.mapper = mapper
+        mapper.accept_register(self)
+
+    def configure(self,**kwargs): 
+        self.particle = kwargs['particle']  
+        if self.mapping == "t3d":
+            self.mapper.configure(**kwargs)
+
+        elif self.mapping == 'simple':
+            raise(UserWarning(wrapRED('mising implementation')))
+            sys.exit()
+
+        elif self.mapping == "oxal":
+            raise(UserWarning(wrapRED('mising implementation')))
+        
+        else:
+            raise(UserWarning(wrapRED('mising implementation')))
+
+    def adjust_energy(self, tkin):
+        self.mapper.adjust_energy(tkin)
+        at_exit        = self.mapper.values_at_exit()
+        self.ttf       = at_exit['ttf']
+        self.deltaw    = at_exit['deltaw']
+        self.particlef = at_exit['particlef']
+        self.matrix    = at_exit['matrix']
+        return self
+    def map(self,i_track):
+        return self.mapper.map(i_track)
+    def make_slices(self, anz=1):
+        return [self]
+    def waccept(self):
+        return self.mapper.waccept()
 
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """

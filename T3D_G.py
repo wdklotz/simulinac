@@ -21,11 +21,11 @@ class T3D_G(IGap.IGap):
 
     def configure(self,**kwargs):
         self.length       = 0. # 0. because it's a kick
-        self.viseo        = 0.25
-        self.accelerating = True
+        # self.viseo        = 0.25
         self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
 
-        self.label     = kwargs.get('label','M3')  
+        self.kwargs    = kwargs
+        self.label     = kwargs.get('label','3D')  
         self.EzPeak    = kwargs.get('EzPeak',None)*self.dWf # [MV/m]
         self.phisoll   = kwargs.get('phisoll',None)         # [radians] soll phase
         self.gap       = kwargs.get('gap',None)             # [m] rf-gap
@@ -43,8 +43,12 @@ class T3D_G(IGap.IGap):
         self.qE0LT     = None
         self.deltaW    = None
         self.particlef = None
-        self.matrix    = self.T3D_matrix()
+        self.matrix    = None
+        self.T3D_matrix()
         pass
+
+    def values_at_exit(self):
+        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
 
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
@@ -70,7 +74,8 @@ class T3D_G(IGap.IGap):
         m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
         m[EKOO, DEKOO] = self.deltaW
         m[SKOO, DSKOO]  = 0.
-        return m
+        self.matrix = m
+        return
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
@@ -83,19 +88,19 @@ class T3D_G(IGap.IGap):
 
     def adjust_energy(self,tkin):
         self.particle = Proton(tkin)
-        self.matrix   = self.T3D_matrix()
+        self.T3D_matrix()
         pass
 
-    def waccept(self,**kwargs):
+    def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
         (w/w0)**2 + (Dphi/Dphi0)**2 = 1
         emitw = w0*Dphi0 = ellipse_area/pi
         """
         # key-word parameters
-        twiss_w_i = kwargs.get('twiss',None)    # beta, alpha, gamma, eittance @ entrance (callable oject!)
-        Dphi0_i   = kwargs.get('Dphi0',0.)      # Delta-phi @ entrance [rad]
-        DT2T_i    = kwargs.get('DT2T',0.)       # Delta-T/T @ entrance
+        twiss_w_i = PARAMS['twiss_w_i']    # beta, alpha, gamma, eittance @ entrance (callable oject!)
+        Dphi0_i   = PARAMS['Dphi0_i']      # Delta-phi @ entrance [rad]
+        DT2T_i    = PARAMS['DT2T_i']       # Delta-T/T @ entrance
 
         # instance members
         Ez0       = self.EzPeak
@@ -142,25 +147,16 @@ class T3D_G(IGap.IGap):
 
         try:
             #  convert T.Wangler units {Dphi,w} to {z,dp/p} units with entrance parameters
-            beta_wsp,dummy,dummy,emit_wsp = twiss_w_i()
+            (beta_wsp,dummy,dummy,emit_wsp) = twiss_w_i()
             w0_i = (gamma-1.)*DT2T_i
             z0_i,Dp2p0_i,emitz_i,betaz_i = conv.wtoz((Dphi0_i,w0_i,emit_wsp,beta_wsp))
             alfaz_i = 0.
-        except ex:
+        except RuntimeError as ex:
             print(wrapRED(ex))
             sys.exit()
 
         # omega sync for this node
         omgl_0 = sqrt(E0T*lamb*sin(-phisoll)/(twopi*m0c2*gamma**3*beta))*twopi*freq   # [Hz]
-
-        #TODO  is this needed?
-        # longitudinal acceptance check (always done)     
-        # if wmax <= w0_i:
-        #     si,sm,sf = self.position
-        #     warnings.showwarning(
-        #         colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
-        #         UserWarning,'elements.py',
-        #         'waccept')
 
         # phase acceptance (REMARK: phase limits are not dependent on Dp/p aka w)
         phi_2=2.*phisoll
@@ -180,9 +176,13 @@ class T3D_G(IGap.IGap):
                 )
         return res
 
-    def register(self): pass
+    def register_mapper(self,master):
+        master.register_mapping(self)
+        pass
 
-    def accept(self):pass
+    def accept_register(self,master):
+        self.master = master
+        pass
 
 class TestElementMethods(unittest.TestCase):
     def testT3D1(self):
@@ -198,7 +198,7 @@ class TestElementMethods(unittest.TestCase):
         t3dg.configure(**gap_parameter)
         print(f'transfer matrix T3D for {t3dg.particle.tkin} MeV (default)')
         print(t3dg.toString())
-        
+
         tkin = 100.
         print(f'transfer matrix T3D for {tkin} MeV')
         t3dg.adjust_energy(tkin)
@@ -212,8 +212,10 @@ class TestElementMethods(unittest.TestCase):
         w0         = tkin/E0*DT2T # Wrangler's definition of w (pp.176)
         emit       = Dphi0*w0     # emittance  in {Dphi,w}-space
         betaw      = emit/w0**2   # twiss-beta in {Dphi,w}-space
-        long_twiss = Twiss(beta=betaw,alfa=0.,epsi=emit)
-        res = t3dg.waccept(twiss=long_twiss,Dphi0=Dphi0,DT2T=DT2T)
+        PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
+        PARAMS['Dphi0_i']   = Dphi0
+        PARAMS['DT2T_i']    = DT2T
+        res = t3dg.waccept()
         dictprnt(what=res,text='waccept',njust=25)
 
 if __name__ == '__main__':
