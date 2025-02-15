@@ -21,7 +21,6 @@ class T3D_G(IGap.IGap):
 
     def configure(self,**kwargs):
         self.length       = 0. # 0. because it's a kick
-        # self.viseo        = 0.25
         self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
 
         self.kwargs    = kwargs
