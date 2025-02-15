@@ -198,7 +198,6 @@ def instanciate_element(item):
                         position  = position,
                         aperture  = aperture
                     )
-                    # instance  = ELM.RFC(ID,EzPeak,phiSoll,gap,cavlen,freq,SFdata=0,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
                     instance = ELM.RFG(ID,mapping)
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
@@ -220,7 +219,6 @@ def instanciate_element(item):
                         position  = position,
                         aperture  = aperture
                     )
-                    # instance  = ELM.RFC(ID,HE_EzPeak,phiSoll,HE_Gap,cavlen,freq,SFdata=sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
                     instance = ELM.RFG(ID,mapping)
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
@@ -245,7 +243,6 @@ def instanciate_element(item):
                     position  = position,
                     aperture  = aperture
                 )
-                # instance  = ELM.RFC(ID,EzPeak,phiSoll,0.,cavlen,freq,SFdata=sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(OXAL_G())
                 instance.configure(**gap_parameters)

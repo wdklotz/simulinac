@@ -905,7 +905,6 @@ class RFG_OLD(Node):
 
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
-    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
     def __init__(self, label,mapping):
         super().__init__()
 
@@ -920,8 +919,6 @@ class RFG(Node):
         self.deltaw       = None
         self.particlef    = None
         self.matrix       = None
-
-        # self.dr = DKD(label="D-D",particle=particle,position=position,length=self.cavlen/2.,aperture=aperture)
 
     def register_mapping(self,mapper):
         self.mapper = mapper
