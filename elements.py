@@ -937,7 +937,7 @@ class RFG(Node):
             sys.exit()
 
         elif self.mapping == "oxal":
-            raise(UserWarning(wrapRED('mising implementation')))
+            self.mapper.configure(**kwargs)
         
         else:
             raise(UserWarning(wrapRED('mising implementation')))

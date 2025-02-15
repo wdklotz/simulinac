@@ -39,13 +39,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True              # {False} plot envelopes
-    # mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    simple     # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
-    # mapping:      &map    dyn     # [t3d, simple, oxal, base, ttf, dyn]
-    mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    oxal     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -169,8 +163,9 @@ ELEMENTS:
         HE_Gap:   0.025        # [m] hard edge gap length
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
-        # SFdata:   *sfd         # superfish tbl-data file
+        SFdata:   *sfd         # superfish tbl-data file
         mapping:  *map         # mapping in cavities
+        # mapping:   t3d         # mapping in cavities
         sec:      HE           # section 
 
 # ...........................................................................................

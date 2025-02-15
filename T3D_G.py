@@ -1,3 +1,24 @@
+#!/Users/klotz/anaconda3/bin/python3.6
+# -*- coding: utf-8 -*-
+__version__='11.0.2.3'
+"""
+Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+This file is part of the SIMULINAC code
+
+    SIMULINAC is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    any later version.
+
+    SIMULINAC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
 import IGap
 import unittest
 import numpy as NP
@@ -16,6 +37,7 @@ def ttf(lamb, gap, beta):
     return res
 
 class T3D_G(IGap.IGap):
+    """ Trace 3D RF Gap-Model """
     def __init__(self):
         pass
 
@@ -48,33 +70,6 @@ class T3D_G(IGap.IGap):
 
     def values_at_exit(self):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
-
-    def T3D_matrix(self):
-        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m              = NP.eye(MDIM,MDIM)
-        self.E0L       = self.EzPeak*self.gap
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        self.qE0LT     = self.E0L*self.ttf
-        self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
-        self.particlef = Proton(self.particle.tkin+self.deltaW)
-        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
-        pavg    = Proton(Wavg)
-        bavg    = pavg.beta
-        gavg    = pavg.gamma
-        m0c2    = pavg.e0
-        kz      = twopi*self.E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
-        ky      = kx = -0.5*kz/(gavg*gavg)
-        bgi     = self.particle.gamma_beta
-        bgf     = self.particlef.gamma_beta
-        bgi2bgf = bgi/bgf
-        m       = NP.eye(MDIM,MDIM)
-        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
-        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-        m[EKOO, DEKOO] = self.deltaW
-        m[SKOO, DSKOO]  = 0.
-        self.matrix = m
-        return
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
@@ -183,8 +178,36 @@ class T3D_G(IGap.IGap):
         self.master = master
         pass
 
+    def T3D_matrix(self):
+        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
+        m              = NP.eye(MDIM,MDIM)
+        self.E0L       = self.EzPeak*self.gap
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.qE0LT     = self.E0L*self.ttf
+        self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
+        self.particlef = Proton(self.particle.tkin+self.deltaW)
+        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg    = Proton(Wavg)
+        bavg    = pavg.beta
+        gavg    = pavg.gamma
+        m0c2    = pavg.e0
+        kz      = twopi*self.E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky      = kx = -0.5*kz/(gavg*gavg)
+        bgi     = self.particle.gamma_beta
+        bgf     = self.particlef.gamma_beta
+        bgi2bgf = bgi/bgf
+        m       = NP.eye(MDIM,MDIM)
+        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
+        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
+        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
+        m[EKOO, DEKOO] = self.deltaW
+        m[SKOO, DSKOO]  = 0.
+        self.matrix = m
+        return
+
 class TestElementMethods(unittest.TestCase):
     def testT3D1(self):
+        """ testing the Trace 3D mapping for acceleration """
         print(wrapRED('------------------ testT3D1'))
         gap_parameter = dict(
             EzPeak    = 1,

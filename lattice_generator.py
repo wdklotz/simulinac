@@ -27,13 +27,13 @@ import setutil             as UTIL
 import elements            as ELM
 import OXAL                as OXA
 import TTFG                as TTF
-# import DYNG                as DYN
 import PsMarkerAgent       as PSMKR
 import PoincareMarkerAgent as PCMKR
 import lattice_parser_2    as LP2
 import lattice             as LAT
 import Ez0                 as EZ
 from T3D_G import T3D_G
+from OXAL import OXAL_G
 
 
 def wrapRED(str):
@@ -175,13 +175,13 @@ def instanciate_element(item):
             particle         = UTIL.Proton(UTIL.PARAMS['injection_energy'])
             position         = (0.,0.,0.)
             dWf              = UTIL.FLAGS['dWf']
+            mapping          = attributes.get('mapping',None)
             ELEMENT['sec']   = attributes.get('sec','?')
 
-            mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             if mapping == None:
-                mapping = attributes.get('mapping','t3d')
+                mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             UTIL.ELEMENTS[ID]['mapping'] = mapping  
-            # if mapping == 't3d' or mapping == "simple":
+
             if mapping == 't3d':
                 fieldtab = attributes.get('SFdata',None)
                 if fieldtab == None:
@@ -227,12 +227,28 @@ def instanciate_element(item):
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
                     ELEMENT['gap']       = 'ignored'
                     pass
+            elif mapping == 'simple':
+                raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not ready. Must be implemented')))
+                sys.exit()
             elif mapping == 'oxal':
                 fieldtab  = get_mandatory(attributes,'SFdata',ID)
                 EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-                cavlen    = get_mandatory(attributes,'cavlen',ID)  # cavity length [m]
+                cavlen    = get_mandatory(attributes,'cavlen',ID)
                 sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
-                instance  = ELM.RFC(ID,EzPeak,phiSoll,0.,cavlen,freq,SFdata=sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
+                gap_parameters = dict(
+                    EzPeak    = EzPeak,     # [MV/m] requested peak field
+                    phisoll   = phisoll,    # [radians] requested soll phase
+                    cavlen    = cavlen,
+                    freq      = freq,       # [Hz]  requested RF frequenz
+                    SFdata    = sfdata,     # SF field distribution
+                    particle  = particle,
+                    position  = position,
+                    aperture  = aperture
+                )
+                # instance  = ELM.RFC(ID,EzPeak,phiSoll,0.,cavlen,freq,SFdata=sfdata,particle=particle,position=position,aperture=aperture,dWf=dWf,mapping=mapping)
+                instance = ELM.RFG(ID,mapping)
+                instance.register_mapping(OXAL_G())
+                instance.configure(**gap_parameters)
                 ELEMENT['HE_Gap'] ='ignored'
                 ELEMENT['gap']    ='ignored'
                 pass
@@ -391,7 +407,7 @@ def factory(input_file,stop=None):
             csTrak   = flags.get('csTrak',True),              # plot CS trajectories
             maction  = flags.get('maction',True),             # call marker actions
             envelope = flags.get('envelope',False),           # plot transverse envelopes
-            mapping  = flags.get('mapping'),                  # global mapping overrides individula mapping (default to None)
+            mapping  = flags.get('mapping','t3d')             # global mapping overrides individula mapping (default to t3d)
         )
         """ internal FLAGs """        
         res['dWf'] = 1 if res['accON'] else 0    # acceleration on/off flag 1=on,0=off

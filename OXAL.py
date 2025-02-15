@@ -22,12 +22,15 @@ This file is part of the SIMULINAC code
 #TODO: unittests
 """
 import sys
-import numpy as NP
+import IGap
 import unittest
+import numpy as NP
 from math import sin,cos,tan,sqrt,pi,degrees,radians
-from copy import copy
 from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF,Proton
+from setutil import wrapRED,mxprnt,Twiss,WConverter,dictprnt
 from Ez0 import SFdata
+from separatrix import w2phi
+import Ez0 as EZ
 
 twopi = 2*pi
 pihalf = pi/2
@@ -37,95 +40,148 @@ twothird = 2./3.
 def cot(x):
     return -tan(x+pihalf)
 
-class OXAL_G(object):
+class OXAL_G(IGap.IGap):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
-    # def __init__(self, label, EzPeak, phisoll, cavlen, freq, sfdata, particle=Proton(PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=FLAGS['dWf']):
-    def __init__(self, label, **kwargs):
-        self.label        = label
-        self.length       = 0. # 0. because it's a kick
-        self.viseo        = 0.25
-        self.accelerating = True
-        self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
+    def __init__(self):
+        pass
 
+    def configure(self,**kwargs):
+        self.length       = 0. # 0. because it's a kick
+        self.dWf          = FLAGS['dWf']
+
+        self.kwargs    = kwargs
+        self.label     = kwargs.get('label','OX')  
         self.EzPeak    = kwargs.get('EzPeak',None)
         self.phisoll   = kwargs.get('phisoll',None)
         self.cavlen    = kwargs.get('cavlen',None)
         self.freq      = kwargs.get('freq',None)
         self.SFdata    = kwargs.get('SFdata',None)
-        self.particle  = kwargs.get('particle',None)
+        self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
+        self.mapping   = kwargs.get('mapping','oxal') # map model
 
-        self.lamb      = PARAMS['clight']/self.freq
         self.omega     = twopi*self.freq
+        self.lamb      = PARAMS['clight']/self.freq
+        self.ttf       = None
+        self.deltaW    = None
+        self.particlef = None
+        self.matrix    = None
         self.polies    = self.poly_slices()
-        (self.matrix,self.ttf,self.deltaW) = self.make_matrix()
+        self.OXAL_matrix()
+        pass
 
-        self.particlef = Proton(self.particle.tkin + self.deltaW)
+    def values_at_exit(self):
+        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
 
-    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
-        """ V0 A.Shishlo/J.Holmes (4.4.3) """
-        E0 = poly.E0                          # [MV/m]
-        b  = poly.b                           # [1/cm**2]
-        dz = poly.dz                          # [cm]
-        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2    # [MV]
-        return v0 
-    def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
-        b  = poly.b
-        dz = poly.dz
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
-        t  = f1*f2
-        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
-        return t
-    def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
-        a  = poly.a
-        b  = poly.b
-        dz = poly.dz
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        f2 = 1.-k*dz*cot(k*dz)
-        s  = f1*f2
-        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
-        return s
-    def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        tp  = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
-        tp  = tp*1.e-2     # [cm] --> [m]
-        return tp
-    def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        sp  = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
-        sp  = sp*1.e-2     # [cm] --> [m]
-        return sp
-    def Tpp(self, poly, k):  #TODO
-        """ 2nd derivative T''(k) """
-        return 0
-    def Spp(self, poly, k):  #TODO
-        """ 2nd derivative S''(k) """
-        return 0
-    def poly_slices(self):
-        """Slice the RF cavity"""
-        L = self.cavlen/2.
-        slices = []
-        zl = -L*100.   # [m] --> [cm]
-        zr = -zl
-        for poly in self.SFdata.polies:
-            zil = poly.zl
-            zir = poly.zr
-            if zil < zl or zir > zr: continue
-            slices.append(poly)
-        DEBUG_OFF('slices',slices)
-        return slices
-    def make_matrix(self):
+    def map(self,i_track):
+        return NP.dot(self.matrix,i_track)
+
+    def toString(self):
+        return mxprnt(self.matrix,'4g')
+
+    def isAccelerating(self):
+        return True
+
+    def waccept(self,**kwargs):
+        """ 
+        Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
+        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
+        emitw = w0*Dphi0 = ellipse_area/pi
+        """
+        # key-word parameters
+        twiss_w_i = PARAMS['twiss_w_i']    # beta, alpha, gamma, eittance @ entrance (callable oject!)
+        Dphi0_i   = PARAMS['Dphi0_i']      # Delta-phi @ entrance [rad]
+        DT2T_i    = PARAMS['DT2T_i']       # Delta-T/T @ entrance
+
+        # instance members
+        Ez0       = self.EzPeak
+        ttf       = self.ttf
+        phisoll   = self.phisoll         # [rad]
+        lamb      = self.lamb            # [m]
+        freq      = self.freq            # [Hz]
+        particle  = self.particle
+
+        # calculated variables
+        E0T       = Ez0*ttf              # [MV/m]
+        m0c2      = particle.e0          # [MeV]
+        gb        = particle.gamma_beta
+        beta      = particle.beta
+        gamma     = particle.gamma
+        tkin      = particle.tkin
+
+        # converter for this object 
+        conv = WConverter(tkin,freq)
+
+        try:
+            # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
+            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
+        except ValueError as ex:
+            exception = ex
+            w0large = -1
+        try:
+            # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
+            w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
+        except ValueError as ex:
+            w0small = -1
+
+        if w0large != -1: 
+            wmax = w0large
+        elif w0large == -1 and w0small != -1:
+            wmax = w0small
+        else:
+            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            sys.exit(1)
+
+        # Dp/p max on separatrix
+        Dp2pmax = conv.wToDp2p(wmax) 
+
+        try:
+            #  convert T.Wangler units {Dphi,w} to {z,dp/p} units with entrance parameters
+            (beta_wsp,dummy,dummy,emit_wsp) = twiss_w_i()
+            w0_i = (gamma-1.)*DT2T_i
+            z0_i,Dp2p0_i,emitz_i,betaz_i = conv.wtoz((Dphi0_i,w0_i,emit_wsp,beta_wsp))
+            alfaz_i = 0.
+        except RuntimeError as ex:
+            print(wrapRED(ex))
+            sys.exit()
+
+        # omega sync for this node
+        omgl_0 = sqrt(E0T*lamb*sin(-phisoll)/(twopi*m0c2*gamma**3*beta))*twopi*freq   # [Hz]
+
+        # phase acceptance (REMARK: phase limits are not dependent on Dp/p aka w)
+        phi_2=2.*phisoll
+        phi_1=-phisoll
+
+        res =  dict (
+                emitw_i         = emit_wsp,     # emittance {Dphi,w} units [rad,1]
+                z0_i            = z0_i,         # ellipse z-axe crossing (1/2 axis) [m]
+                Dp2p0_i         = Dp2p0_i,      # ellipse dp/p-axe crossing (1/2 axis)
+                twiss_z_i       = Twiss(betaz_i, alfaz_i, emitz_i), # cavity twiss parameters
+                DWmax           = wmax*m0c2,    # max delta-W on separatrix [MeV]
+                Dp2pmax         = Dp2pmax,      # Dp/p max on separatrix [1]
+                phaseacc        = (conv,phi_2,phisoll,phi_1), # phase acceptance [rad]
+                omgl_0          = omgl_0,       # synchrotron oscillation [Hz]
+                wmax            = wmax,         # w max on separatrix [1] (large amp. oscillations)
+                zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
+                )
+        return res
+
+    def register_mapper(self,master):
+        master.register_mapping(self)
+        pass
+
+    def accept_register(self,master):
+        self.master = master
+        pass
+
+    def adjust_energy(self, tkin):
+        self.particle = Proton(tkin)
+        self.OXAL_matrix()
+        pass
+
+    def OXAL_matrix(self):
         polies   = self.polies
         c        = PARAMS['clight']
         m0c2     = self.particle.m0c2
@@ -207,40 +263,127 @@ class OXAL_G(object):
             # refresh loop variables
             Ts    = Ts_out
             phis  = phis_out
-        ttf    = ttf/len(polies)  # ttf estimate
-        deltaW = matrix[Ktp.T,Ktp.dT]
-        return (matrix,ttf,deltaW)
-    def OXAL_matrix(self,tkin):
-        self.particle = Proton(tkin)
-        (self.matrix,self.ttf,self.deltaW) = self.make_matrix()
-        return (self.matrix,self.ttf,self.deltaW) 
-    def map(self,i_track):
-        """ standard mapping with T3D matrix """
-        # ftrack = copy(itrack)    #TODO needed? think NO!
-        f_track = NP.dot(self.matrix,i_track)
-        return f_track
-    # def adjust_energy(self, tkin):
-    #     adjusted = OXAL_G(self.label, self.EzPeak, self.phisoll, self.cavlen, self.freq, self.SFdata, particle=Proton(tkin), position=self.position, aperture=self.aperture, dWf=self.dWf)
-    #     return adjusted
-    @property
-    def isAccelerating(self):
-        return self.accelerating
+        self.ttf       = ttf/len(polies)  # ttf estimate
+        self.deltaW    = matrix[Ktp.T,Ktp.dT]
+        self.matrix    = matrix
+        self.particlef = Proton(self.particle.tkin+self.deltaW)
+        return
+    def poly_slices(self):
+        """Slice the RF cavity"""
+        L = self.cavlen/2.
+        slices = []
+        zl = -L*100.   # [m] --> [cm]
+        zr = -zl
+        for poly in self.SFdata.polies:
+            zil = poly.zl
+            zir = poly.zr
+            if zil < zl or zir > zr: continue
+            slices.append(poly)
+        DEBUG_OFF('slices',slices)
+        return slices
+    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
+        """ V0 A.Shishlo/J.Holmes (4.4.3) """
+        E0 = poly.E0                          # [MV/m]
+        b  = poly.b                           # [1/cm**2]
+        dz = poly.dz                          # [cm]
+        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2    # [MV]
+        return v0 
+    def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
+        t  = f1*f2
+        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        return t
+    def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
+        a  = poly.a
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        f2 = 1.-k*dz*cot(k*dz)
+        s  = f1*f2
+        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        return s
+    def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        tp  = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
+        tp  = tp*1.e-2     # [cm] --> [m]
+        return tp
+    def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        sp  = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
+        sp  = sp*1.e-2     # [cm] --> [m]
+        return sp
+    def Tpp(self, poly, k):  #TODO
+        """ 2nd derivative T''(k) """
+        return 0
+    def Spp(self, poly, k):  #TODO
+        """ 2nd derivative S''(k) """
+        return 0
 
 class TestOxalEnergyMapping(unittest.TestCase):
     def test_OXAL(self):
         """ testing the OXAL mapping for acceleration """
-        injection_energies = [6,12,24,50,100,150,200]
-        EzPeak = 2.0; phisoll = radians(-30.); gap = 0.044; freq = 750.e6; fieldtab="SF/SF_WDK2g44.TBL"
-        gap_cm = 100.*gap   # gap in cm
-        sfdata = SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
-        EzAvg = sfdata.EzAvg
-        ID = "OXAL"
-        for injection_energy in injection_energies:
-            oxal = OXAL_G(ID,EzAvg,phisoll,gap,freq,SFdata=sfdata,particle=Proton(injection_energy))
-            tvectori = NP.array([0, 0, 0, 0, 0, 0, injection_energy, 1, 0, 1])
-            tvectoro = NP.dot(oxal.matrix,tvectori)
-            print(f'EzPeak={EzPeak}, gap={gap}, freq={freq*1e-6}, Wi={tvectori[6]:3.3f}, Wo={tvectoro[6]:3.3f}, dW={oxal.matrix[6,7]:.3e}')
-        return
+        print(wrapRED('------------------ test_OXAL'))
+        gap_parameter = dict(
+            EzPeak    = 1,
+            phisoll   = radians(-30.),
+            gap       = 0.022,
+            cavlen    = 0.44,
+            freq      = 750e6,
+        )
+        fieldtab  = 'SF/CAV-FLAT-R135-L31.TBL'
+        EzPeak    = gap_parameter['EzPeak']
+        cavlen    = gap_parameter['cavlen']
+        sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+        gap_parameter['SFdata'] = sfdata
+
+        oxag = OXAL_G()    # create object instance
+        oxag.configure(**gap_parameter)
+        print(f'transfer matrix OXAL for {oxag.particle.tkin} MeV (default)')
+        print(oxag.toString())
+
+        tkin = 100.
+        print(f'transfer matrix OXAL for {tkin} MeV')
+        oxag.adjust_energy(tkin)
+        print(oxag.toString())
+        #=============================================================
+        tkin       = 10
+        print(f'\n test waccept(...) for {tkin} MeV protons')
+        DT2T       = 2e-3  # DT/T
+        Dphi0      = 5.    # Dphi/phi [deg]
+        E0         = PARAMS['proton_mass']
+        w0         = tkin/E0*DT2T # Wrangler's definition of w (pp.176)
+        emit       = Dphi0*w0     # emittance  in {Dphi,w}-space
+        betaw      = emit/w0**2   # twiss-beta in {Dphi,w}-space
+        PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
+        PARAMS['Dphi0_i']   = Dphi0
+        PARAMS['DT2T_i']    = DT2T
+        res = oxag.waccept()
+        dictprnt(what=res,text='waccept',njust=25)
+
+        # injection_energies = [6,12,24,50,100,150,200]
+        # EzPeak = 2.0; phisoll = radians(-30.); gap = 0.044; freq = 750.e6; fieldtab="SF/SF_WDK2g44.TBL"
+        # gap_cm = 100.*gap   # gap in cm
+        # sfdata = SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
+        # EzAvg = sfdata.EzAvg
+        # ID = "OXAL"
+        # for injection_energy in injection_energies:
+        #     oxal = OXAL_G(ID,EzAvg,phisoll,gap,freq,SFdata=sfdata,particle=Proton(injection_energy))
+        #     tvectori = NP.array([0, 0, 0, 0, 0, 0, injection_energy, 1, 0, 1])
+        #     tvectoro = NP.dot(oxal.matrix,tvectori)
+        #     print(f'EzPeak={EzPeak}, gap={gap}, freq={freq*1e-6}, Wi={tvectori[6]:3.3f}, Wo={tvectoro[6]:3.3f}, dW={oxal.matrix[6,7]:.3e}')
+        # return
 
 if __name__ == '__main__':
     unittest.main()
