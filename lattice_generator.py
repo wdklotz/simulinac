@@ -22,18 +22,17 @@ import sys,os
 import yaml
 import warnings
 import unittest
-import math                as M
 import setutil             as UTIL
 import elements            as ELM
-import OXAL                as OXA
-import TTFG                as TTF
 import PsMarkerAgent       as PSMKR
 import PoincareMarkerAgent as PCMKR
 import lattice_parser_2    as LP2
 import lattice             as LAT
 import Ez0                 as EZ
-from T3D_G import T3D_G
-from OXAL import OXAL_G
+from math import radians
+from T3D_G  import T3D_G
+from OXAL   import OXAL_G
+from Base_M import Base_M
 
 
 def wrapRED(str):
@@ -169,7 +168,7 @@ def instanciate_element(item):
             instance.dispatch_model_matrix()
             pass
         elif type == 'RFG':
-            phisoll          = M.radians(get_mandatory(attributes,"PhiSync",ID))
+            phisoll          = radians(get_mandatory(attributes,"PhiSync",ID))
             freq             = float(get_mandatory(attributes,"freq",ID))
             aperture         = get_mandatory(attributes,'aperture',ID)
             particle         = UTIL.Proton(UTIL.PARAMS['injection_energy'])
@@ -188,6 +187,8 @@ def instanciate_element(item):
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
                     gap       = get_mandatory(attributes,'gap',ID)      # [m] requested gap length
                     cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
+                    HE_Gap    = attributes.get('HE_Gap',None)
+                    # SFdata    = attributes.get('SFdata',None)
                     gap_parameters = dict(
                         EzPeak    = EzPeak,
                         phisoll   = phisoll,         # [radians] requested soll phase
@@ -201,12 +202,13 @@ def instanciate_element(item):
                     instance = ELM.RFG(ID,mapping)
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
-                    ELEMENT['HE_Gap'] ='ignored'
+                    if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                     pass
                 else:
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
                     cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
                     HE_Gap    = get_mandatory(attributes,'HE_Gap',ID)   # [m] requested gap length [m]
+                    gap       = attributes.get('gap',None)
                     sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2*100.)   # scaled field distribution
                     (dummy,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100)     # [MV/m] equivalent hard edge peak field
                     gap_parameters = dict(
@@ -223,7 +225,7 @@ def instanciate_element(item):
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
-                    ELEMENT['gap']       = 'ignored'
+                    if gap != None: ELEMENT['gap'] = 'ignored'
                     pass
             elif mapping == 'simple':
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not ready. Must be implemented')))
@@ -232,6 +234,8 @@ def instanciate_element(item):
                 fieldtab  = get_mandatory(attributes,'SFdata',ID)
                 EzPeak    = get_mandatory(attributes,"EzPeak",ID)
                 cavlen    = get_mandatory(attributes,'cavlen',ID)
+                HE_Gap    = attributes.get('HE_Gap',None)
+                gap       = attributes.get('gap',None)
                 sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
                 gap_parameters = dict(
                     EzPeak    = EzPeak,     # [MV/m] requested peak field
@@ -246,8 +250,30 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(OXAL_G())
                 instance.configure(**gap_parameters)
-                ELEMENT['HE_Gap'] ='ignored'
-                ELEMENT['gap']    ='ignored'
+                if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
+                if gap    != None: ELEMENT['gap']    ='ignored'
+                pass
+            elif mapping == 'base':
+                EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
+                cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
+                HE_Gap    = attributes.get('HE_Gap',None)
+                gap       = attributes.get('gap',None)
+                SFdata    = attributes.get('SFdata',None)
+                gap_parameters = dict(
+                    EzPeak    = EzPeak,
+                    phisoll   = phisoll,    # [rad:ians] requested soll phase
+                    cavlen    = cavlen,
+                    freq      = freq,       # [Hz]  requested RF frequenz
+                    particle  = particle,
+                    position  = position,
+                    aperture  = aperture
+                )
+                instance = ELM.RFG(ID,mapping)
+                instance.register_mapping(Base_M())
+                instance.configure(**gap_parameters)
+                if gap    != None: ELEMENT['gap']    = 'ignored'
+                if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
+                if SFdata != None: ELEMENT['SFdata'] = 'ignored'
                 pass
             elif mapping == 'ttf':
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not ready. Must be implemented')))
@@ -432,7 +458,7 @@ def factory(input_file,stop=None):
             res['DT2T_i'] = DW2W_i
         elif DT2T_i != None:
             res['DT2T_i'] = DT2T_i
-        res['Dphi0_i']    = M.radians(parameters.get('DPHI0',10.)) # default [rad]
+        res['Dphi0_i']    = radians(parameters.get('DPHI0',10.)) # default [rad]
 
         """ transverse beam parameters """
         res['emitx_i']          = parameters.get('emitx_i',1E-6) # [m*rad]

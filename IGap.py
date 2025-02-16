@@ -23,6 +23,9 @@ class IGap(ABC):
     def waccept(self,**kwargs): pass
 
     @abstractmethod
+    def values_at_exit(self): pass
+
+    @abstractmethod
     def register_mapper(self,obj): pass
 
     @abstractmethod

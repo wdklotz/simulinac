@@ -17,19 +17,16 @@ This file is part of the SIMULINAC code
 
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
-
-
 """
-
-
 import sys
 import IGap
 import unittest
 import numpy   as NP
 from copy import copy
-from math import sqrt,degrees,cos
-from setutil import I0,I1,WConverter,Proton
-# from separatrix import w2phi
+from math import sqrt,degrees,cos,sin,pi
+from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
+from separatrix import w2phi
 # from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 # from setutil import DEBUG_ON,DEBUG_OFF,Proton
 # from setutil import Ktp
@@ -53,18 +50,22 @@ class Base_M(IGap.IGap):
         self.kwargs       = kwargs
         self.label        = 'BM' 
 
-        self.particle  = kwargs.get('particle',Proton(50.))
-        self.freq      = kwargs.get('freq',None)
+        self.EzPeak    = kwargs.get('EzPeak',None)
         self.phisoll   = kwargs.get('phisoll',None)
+        self.cavlen    = kwargs.get('cavlen',None)
+        self.freq      = kwargs.get('freq',None)
+        self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
 
         self.lamb      = PARAMS['clight']/self.freq
+        self.gap       = self.cavlen*0.57   # 57%: a best guess ?
+        self.matrix    = NP.eye(MDIM,MDIM)
         self.ttf       = None
-        self.qE0LT     = None
         self.deltaW    = None
-        self.particlef = None  
-        pass
+        self.particlef = None
+        self.master    = None
+        # self.adjust_energy(self.particle.tkin)
 
     def values_at_exit(self):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
@@ -78,7 +79,90 @@ class Base_M(IGap.IGap):
     def isAccelerating(self):
         return True
 
-    def waccept(self,**kwargs): pass
+    def waccept(self):
+        """ 
+        Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
+        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
+        emitw = w0*Dphi0 = ellipse_area/pi
+        """
+        # key-word parameters
+        twiss_w_i = PARAMS['twiss_w_i']    # beta, alpha, gamma, eittance @ entrance (callable oject!)
+        Dphi0_i   = PARAMS['Dphi0_i']      # Delta-phi @ entrance [rad]
+        DT2T_i    = PARAMS['DT2T_i']       # Delta-T/T @ entrance
+
+        # instance members
+        Ez0       = self.EzPeak
+        ttf       = self.ttf
+        phisoll   = self.phisoll         # [rad]
+        lamb      = self.lamb            # [m]
+        freq      = self.freq            # [Hz]
+        particle  = self.particle
+
+        # calculated variables
+        E0T       = Ez0*ttf              # [MV/m]
+        m0c2      = particle.e0          # [MeV]
+        gb        = particle.gamma_beta
+        beta      = particle.beta
+        gamma     = particle.gamma
+        tkin      = particle.tkin
+
+        # converter for this object 
+        conv = WConverter(tkin,freq)
+
+        try:
+            # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
+            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
+        except ValueError as ex:
+            exception = ex
+            w0large = -1
+        try:
+            # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
+            w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
+        except ValueError as ex:
+            w0small = -1
+
+        if w0large != -1: 
+            wmax = w0large
+        elif w0large == -1 and w0small != -1:
+            wmax = w0small
+        else:
+            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            sys.exit(1)
+
+        # Dp/p max on separatrix
+        Dp2pmax = conv.wToDp2p(wmax) 
+
+        try:
+            #  convert T.Wangler units {Dphi,w} to {z,dp/p} units with entrance parameters
+            (beta_wsp,dummy,dummy,emit_wsp) = twiss_w_i()
+            w0_i = (gamma-1.)*DT2T_i
+            z0_i,Dp2p0_i,emitz_i,betaz_i = conv.wtoz((Dphi0_i,w0_i,emit_wsp,beta_wsp))
+            alfaz_i = 0.
+        except RuntimeError as ex:
+            print(wrapRED(ex))
+            sys.exit()
+
+        # omega sync for this node
+        omgl_0 = sqrt(E0T*lamb*sin(-phisoll)/(twopi*m0c2*gamma**3*beta))*twopi*freq   # [Hz]
+
+        # phase acceptance (REMARK: phase limits are not dependent on Dp/p aka w)
+        phi_2=2.*phisoll
+        phi_1=-phisoll
+
+        res =  dict (
+                emitw_i         = emit_wsp,     # emittance {Dphi,w} units [rad,1]
+                z0_i            = z0_i,         # ellipse z-axe crossing (1/2 axis) [m]
+                Dp2p0_i         = Dp2p0_i,      # ellipse dp/p-axe crossing (1/2 axis)
+                twiss_z_i       = Twiss(betaz_i, alfaz_i, emitz_i), # cavity twiss parameters
+                DWmax           = wmax*m0c2,    # max delta-W on separatrix [MeV]
+                Dp2pmax         = Dp2pmax,      # Dp/p max on separatrix [1]
+                phaseacc        = (conv,phi_2,phisoll,phi_1), # phase acceptance [rad]
+                omgl_0          = omgl_0,       # synchrotron oscillation [Hz]
+                wmax            = wmax,         # w max on separatrix [1] (large amp. oscillations)
+                zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
+                )
+        return res
 
     def register_mapper(self,master):
         master.register_mapping(self)
@@ -89,94 +173,97 @@ class Base_M(IGap.IGap):
         pass
 
     def adjust_energy(self, tkin):
-        self.particle = Proton(tkin)
-        self.OXAL_matrix()
+        self.particle  = Proton(tkin)
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
+        self.particlef = Proton(tkin + self.deltaW)
         pass
 
-    def base_map_1(self, i_track):
-        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen. 
-           Produziert dasselbe Verhalten wie base_map_0 """
-        # def DEBUG_TRACK(inout,track):
-        #     print('{} {} {}'.format('base_map',inout,track))
-        # function body ================= function body ================= function body ================= 
-        """ Mapping (i) to (O) in Base RF-Gap Model. (A.Shislo 4.2) """
+    def base_map(self, i_track):
+        """ Neue map Version ab 16.02.2025
+            Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
-        S        = i_track[SKOO]       # [8] position gap
+        T        = i_track[EKOO]       # [6] kinetic energy soll
+        s        = i_track[SKOO]       # [8] gap position soll
 
-        particleRi = self.particle   # ref Teilchen (I)
-        m0c2       = particleRi.e0
-        betai      = particleRi.beta
-        gammai     = particleRi.gamma
-        gbi        = particleRi.gamma_beta
-        wRi        = particleRi.tkin
+        particle   = self.particle   # Soll-Teilchen IN
+        m0c2       = particle.e0
+        betaIn     = particle.beta
+        gbIn       = particle.gamma_beta
+        tkin       = particle.tkin
         freq       = self.freq
         lamb       = self.lamb
         phisoll    = self.phisoll
-        deg_phisoll= degrees(phisoll)
-        qE0LT      = self.qE0LT
-        deltaW     = self.deltaW
-        
-        # if 0: 
-        #     DEBUG_ON()
-        #     DEBUG_TRACK('tr_i',i_track)
+        L          = self.gap
+        ttf        = self.ttf
+        qE0LT      = self.EzPeak * L * ttf
 
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)   # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(S)
-        Kr     = (twopi*r)/(lamb*gbi)
+            raise OutOfRadialBoundEx(s)
+        Kr     = (twopi*r)/(lamb*gbIn)
         i0     = I0(Kr)            # bessel function I0
         i1     = I1(Kr)            # bessel function I1
 
-        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
-
-        # ref Teilchen
-        wRo = wRi + deltaW                           # ref Teilchen energy (O)
+        # Soll-Teilchen
+        deltaW  = qE0LT*i0*cos(phisoll)    # Shishlo pp 13 (4.2.3)
+        tkinOut = tkin + deltaW            # soll out energy
  
-        # Teilchen
-        converter   = WConverter(wRi,freq)
-        deg_converter = degrees(converter.zToDphi(z)) 
-        phiin       = converter.zToDphi(z) + phisoll 
-        deg_phiin   = degrees(phiin)        # Teilchen phase (I)
-        wo_wi       = qE0LT*i0*cos(phiin)                 # energy kick (Shislo 4.2.3)
-        wi          = converter.Dp2pToDW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
-        wo          = wi + wo_wi                          # Teilchen energy (O)   
-        dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
+        # Teilchen off soll
+        converter   = WConverter(tkin,freq)
+        phiIn       = converter.zToDphi(z) + phisoll 
+        # deg_phiin = degrees(phiin)                  # Teilchen phase (I)
+        deltaWOut   = qE0LT*i0*cos(phiIn)             # energy kick (Shislo 4.2.3)
 
-        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+        particlef    = Proton(tkinOut)
+        betaOut      = particlef.beta
+        gbOut        = particlef.gamma_beta
+        gbIn2GbOut   = gbIn/gbOut
 
-        particleRo = Proton(wRo)
-        betao      = particleRo.beta
-        gammao     = particleRo.gamma
-        gbo        = particleRo.gamma_beta
+        zOut         = betaOut/betaIn*z               # z Shishlo (4.2.5)
+        zpOut        = converter.DWToDp2p(deltaWOut)  # dW --> dp/p Soll out
 
-        zo         = betao/betai*z                     # z (O) (4.2.5) A.Shishlo/J.Holmes
-        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
+        if r < 1e-5:
+            factor = qE0LT/(m0c2*gbIn*gbOut)*0.5      # common factor für lim(r->0) I1(r)/r = 1/2
+        else:
+            factor = qE0LT/(m0c2*gbIn*gbOut)*i1/r     # common factor
+        xp  = gbIn2GbOut*xp - x*factor*sin(phiIn)     # A.Shishlo/J.Holmes (4.2.6)
+        yp  = gbIn2GbOut*yp - y*factor*sin(phiIn)
 
-        # if 0: print('z ',z,'zpf ',zpf)
-
-        factor = qE0LT/(m0c2*gbi*gbo)*i1               # common factor
-        if r > 0.:
-            xp  = gbi/gbo*xp - x/r*factor*M.sin(phiin)   # Formel 4.2.6 A.Shishlo/J.Holmes
-            yp  = gbi/gbo*yp - y/r*factor*M.sin(phiin)
-        elif r == 0.:
-            xp  = gbi/gbo*xp
-            yp  = gbi/gbo*yp
-
-        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
-
-        # for DEBUGGING
-        # if 0: DEBUG_TRACK('tr_f',f_track)
-        # if 0:
-        #     arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-        #     arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-
-        # """ the parent reads these attributes below """
-        self.particlef = particleRo
+        f_track = NP.array([x, xp, y, yp, zOut, zpOut, tkinOut, 1., s, 1.])
         return f_track
+
+def ttf(lamb, gap, beta):
+    """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+    x = gap/(beta*lamb)
+    res =NP.sinc(x)
+    return res
+
+class OutOfRadialBoundEx(Exception):
+    def __init__(self,s):
+        self.message = wrapRED('Out of radial boundEx in map @ s={:6.2f} [m]'.format(s))
+
+
+class TestBaseMapping(unittest.TestCase):
+    def test_BASE_M(self):
+        """ testing the base mapping for acceleration """
+        print(wrapRED('------------------ test_BASE_M'))
+        gap_parameter = dict(
+            EzPeak    = 1,
+            phisoll   = radians(-30.),
+            cavlen    = 0.44,
+            freq      = 750e6,
+        )
+        bmap = BASE_M()    # create object instance
+        bmap.configure(**gap_parameter)
+        print(bmap.toString())
+
+if __name__ == '__main__':
+    unittest.main()
+

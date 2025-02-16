@@ -39,12 +39,12 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True              # {False} plot envelopes
-    mapping:      &map    oxal     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Win:                  6.              # [MeV] energy @ injection 
+    Win:                  60.              # [MeV] energy @ injection 
     DPHI0:                5.              # [deg] delta-phi @ injection
     DW2W:                 2.0e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   750.e6          # [Hz] frequency
@@ -125,9 +125,9 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        # gap:       0.01254     # [m] gap length 
+        gap:       0.01254     # [m] gap length 
         # gap:       0.02222     # [m] gap length 
-        HE_Gap:    0.01111     # [m] hard edge gap length 
+        # HE_Gap:    0.01111     # [m] hard edge gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -161,13 +161,12 @@ ELEMENTS:
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
         # gap:      0.023        # [m] gap length
-        # gap:      0.040        # [m] gap length
+        gap:      0.040        # [m] gap length
         HE_Gap:   0.0200       # [m] hard edge gap length
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
         mapping:  *map         # mapping in cavities
-        # mapping:   t3d         # mapping in cavities
         sec:      HE           # section 
 
 # ...........................................................................................

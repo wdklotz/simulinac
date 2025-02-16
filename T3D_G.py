@@ -65,6 +65,7 @@ class T3D_G(IGap.IGap):
         self.deltaW    = None
         self.particlef = None
         self.matrix    = None
+        self.master    = None
         self.T3D_matrix()
         pass
 

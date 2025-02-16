@@ -36,9 +36,9 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 def wrapRED(str):
     return UTIL.colors.RED+str+UTIL.colors.ENDC
 
-class OutOfRadialBoundEx(Exception):
-    def __init__(self,s):
-        self.message = 'OutOfRadialBoundEx in map @ s={:6.2f} [m]'.format(s)
+# class OutOfRadialBoundEx(Exception):
+#     def __init__(self,s):
+#         self.message = 'OutOfRadialBoundEx in map @ s={:6.2f} [m]'.format(s)
 
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
@@ -447,7 +447,6 @@ class GAP(Node):
     def adjust_energy(self, tkin):
         adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
-
 class RFG_OLD(Node):
     """  RF-gap of zero length with different kick gap-models """
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
@@ -906,7 +905,7 @@ class RFG_OLD(Node):
 
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
-    def __init__(self, label,mapping):
+    def __init__(self,label,mapping):
         super().__init__()
 
         self.viseo        = 0.25
@@ -926,23 +925,19 @@ class RFG(Node):
         mapper.accept_register(self)
 
     def configure(self,**kwargs): 
-        self.particle = kwargs['particle']  
-        if self.mapping == "t3d":
+        if self.mapping in ['t3d','oxal','base']:
+            self.particle = kwargs['particle']  
             self.mapper.configure(**kwargs)
-
-        elif self.mapping == 'simple':
-            raise(UserWarning(wrapRED('mising implementation')))
+        elif self.mapping in ['simple','dyn']:
+            raise(UserWarning(wrapRED(f'mapping not ready {mapping}')))
             sys.exit()
-
-        elif self.mapping == "oxal":
-            self.mapper.configure(**kwargs)
-        
         else:
-            raise(UserWarning(wrapRED('mising implementation')))
+            raise(UserWarning(wrapRED(f'missing implementation {mapping}')))
+            sys.exit()
 
     def adjust_energy(self, tkin):
         self.mapper.adjust_energy(tkin)
-        at_exit        = self.mapper.values_at_exit()
+        at_exit = self.mapper.values_at_exit()
         self.ttf       = at_exit['ttf']
         self.deltaw    = at_exit['deltaw']
         self.particlef = at_exit['particlef']
