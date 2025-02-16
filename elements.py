@@ -447,6 +447,7 @@ class GAP(Node):
     def adjust_energy(self, tkin):
         adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
+
 class RFG_OLD(Node):
     """  RF-gap of zero length with different kick gap-models """
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):

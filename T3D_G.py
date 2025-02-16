@@ -44,9 +44,10 @@ class T3D_G(IGap.IGap):
     def configure(self,**kwargs):
         self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
+        self.mapping      = 't23d'        # map model
+        self.kwargs       = kwargs
+        self.label        = 'T3D' 
 
-        self.kwargs    = kwargs
-        self.label     = kwargs.get('label','3D')  
         self.EzPeak    = kwargs.get('EzPeak',None)*self.dWf # [MV/m]
         self.phisoll   = kwargs.get('phisoll',None)         # [radians] soll phase
         self.gap       = kwargs.get('gap',None)             # [m] rf-gap
@@ -55,7 +56,6 @@ class T3D_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
-        self.mapping   = kwargs.get('mapping','t23d')        # map model
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq

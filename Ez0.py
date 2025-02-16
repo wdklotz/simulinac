@@ -618,7 +618,7 @@ class TestEz0Methods(unittest.TestCase):
 
 
 if __name__ == '__main__': 
-    # unittest.main()
+    unittest.main()
     tests = TestEz0Methods()
     # tests.test0()    
     # tests.test1()
@@ -629,5 +629,5 @@ if __name__ == '__main__':
     # tests.test6()
     # tests.test7()
     # tests.test8()
-    tests.test9()
+    # tests.test9()
     

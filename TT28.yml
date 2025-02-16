@@ -66,7 +66,7 @@ PARAMETERS:
     BgradH:       &bgrad2 40.0            # [T/m]
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
     # EzPeak:       &ezp    1.0             # [MV/m] peak gap field Strengy
-    EzPeak:       &ezp    1.7             # [MV/m] peak gap field Strengy
+    EzPeak:       &ezp    1.5             # [MV/m] peak gap field Strengy
     nbsigma:              3               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
     lattvers:     'working version'       # lattice version: IN 5, out 200
@@ -125,8 +125,9 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        gap:       0.01254     # [m] gap length 
-        HE_Gap:    0.0130      # [m] hard edge gap length 
+        # gap:       0.01254     # [m] gap length 
+        # gap:       0.02222     # [m] gap length 
+        HE_Gap:    0.01111     # [m] hard edge gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -159,8 +160,9 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        gap:      0.023        # [m] gap length
-        HE_Gap:   0.025        # [m] hard edge gap length
+        # gap:      0.023        # [m] gap length
+        # gap:      0.040        # [m] gap length
+        HE_Gap:   0.0200       # [m] hard edge gap length
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file

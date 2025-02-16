@@ -48,9 +48,10 @@ class OXAL_G(IGap.IGap):
     def configure(self,**kwargs):
         self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']
+        self.mapping      = 'oxal'        # map model
+        self.kwargs       = kwargs
+        self.label        = 'OX'
 
-        self.kwargs    = kwargs
-        self.label     = kwargs.get('label','OX')  
         self.EzPeak    = kwargs.get('EzPeak',None)
         self.phisoll   = kwargs.get('phisoll',None)
         self.cavlen    = kwargs.get('cavlen',None)
@@ -59,7 +60,6 @@ class OXAL_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
-        self.mapping   = kwargs.get('mapping','oxal') # map model
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
