@@ -34,9 +34,8 @@ from T3D_G  import T3D_G
 from OXAL   import OXAL_G
 from Base_M import Base_M
 
+wrapRED = UTIL.wrapRED
 
-def wrapRED(str):
-    return UTIL.colors.RED+str+UTIL.colors.ENDC
 def make_counter():
     count = 0
     def inner():
@@ -55,6 +54,7 @@ def marker_is_compatible_with(prog,ID):
     if prog != this_prog:
         ret = False
     return ret
+
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -62,6 +62,7 @@ def get_mandatory(attributes,key,item):
         raise(UserWarning(wrapRED('Mandatory attribute "{}" missing for element "{}"'.format(key,item))))
         sys.exit(1)
     return res
+
 def instanciate_element(item):
     """ item: {ID:{attributes}} for each node """
     instance = None     # will be defined below and returned
@@ -169,7 +170,7 @@ def instanciate_element(item):
             pass
         elif type == 'RFG':
             phisoll          = radians(get_mandatory(attributes,"PhiSync",ID))
-            freq             = float(get_mandatory(attributes,"freq",ID))
+            freq             = get_mandatory(attributes,"freq",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
             particle         = UTIL.Proton(UTIL.PARAMS['injection_energy'])
             position         = (0.,0.,0.)
@@ -181,14 +182,14 @@ def instanciate_element(item):
                 mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             UTIL.ELEMENTS[ID]['mapping'] = mapping  
 
-            if mapping == 't3d':
+            if mapping   == 't3d':
                 fieldtab = attributes.get('SFdata',None)
                 if fieldtab == None:
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
                     gap       = get_mandatory(attributes,'gap',ID)      # [m] requested gap length
                     cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
                     HE_Gap    = attributes.get('HE_Gap',None)
-                    # SFdata    = attributes.get('SFdata',None)
+                    SFdata    = attributes.get('SFdata',None)
                     gap_parameters = dict(
                         EzPeak    = EzPeak,
                         phisoll   = phisoll,         # [radians] requested soll phase
@@ -203,6 +204,7 @@ def instanciate_element(item):
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
                     if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
+                    if SFdata != None: ELEMENT['SFdata'] ='ignored'
                     pass
                 else:
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
@@ -285,6 +287,8 @@ def instanciate_element(item):
                 raise(UserWarning(wrapRED(f'Invalid mapping "{mapping}"')))
                 sys.exit()
         elif type == 'RFC':
+            raise(UserWarning(wrapRED(f'Element "{type}" is not ready. Must be implemented')))
+            sys.exit()
             phisoll          = M.radians(get_mandatory(attributes,"PhiSync",ID))
             freq             = float(get_mandatory(attributes,"freq",ID))
             aperture         = get_mandatory(attributes,'aperture',ID)
@@ -410,11 +414,13 @@ def instanciate_element(item):
                 raise(UserWarning(wrapRED('Unknown marker ACTION encountered: "{}"'.format(action))))
                 sys.exit(1)
         else:
-            raise(UserWarning(wrapRED('Unknown element TYPE encountered: "{}"'.format(type))))
+            raise(UserWarning(wrapRED('Unknown element "{}" encountered.'.format(type))))
             sys.exit(1)
     return instance
+
 def factory(input_file,stop=None):
     """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
+    
     def process_flags(flags):
         """ external FLAGs """        
         res = dict(
@@ -438,6 +444,7 @@ def factory(input_file,stop=None):
         if res['mapping'] == 'ttf' or res['mapping'] == 'base' or res['mapping'] == 'dyn': 
             res['non_linear_mapping'] = True
         return res
+
     def process_parameters(parameters):
         """ external parameters and injected beam partameters """
         res = dict()
@@ -501,8 +508,10 @@ def factory(input_file,stop=None):
         # longitudinal TWiss @ entrance in {Dphi,w}-space
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
         return res
+
     def process_elements(elements):
         return elements
+
     def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
         lattice = LAT.Lattice(descriptor=UTIL.PARAMS.get('descriptor'))
@@ -523,7 +532,8 @@ def factory(input_file,stop=None):
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
-    """ factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- factory body -------- """
+    
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)

@@ -18,8 +18,8 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 #TODO: statistical analalysis of bunch: position, size, etc ...
-#TODO: how to get the hokey stick? - done
-#TODO: check w-acceptance at each node entrance - done
+#TODO: how to get the hokey stick?                                    - done
+#TODO: check w-acceptance at each node entrance                       - done
 #TODO: no phase damping - why? - solved with version 10.0.0
 
 import sys,os
@@ -34,11 +34,12 @@ import time
 import argparse
 import unittest
 import h5py
-import elements as ELM
+# import elements as ELM
 from lattice_generator import factory
 from math import sqrt, degrees, radians, ceil,pi
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter
 from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF,Proton
+from setutil import OutOfRadialBoundEx
 from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
 from PoincareMarkerAgent import PoincareMarkerAgent
 from trackPlot import scatter11,scatterInOut
@@ -77,6 +78,7 @@ class Fifo:
     @max.setter
     def max(self,value):
         self._max = value
+
 # txt FIFOs
 fifo    = Fifo()   # halo-losses
 fifo_m  = Fifo()   # map-losses
@@ -97,8 +99,7 @@ def projections_1(lattice,live_lost):
             iy: track coordinate of plot ordinate
             fig_text: annotation
             live_lost: tuple of particle containers with (live,lost)-particles in bunch
-            scale: scales for IN and OUT plots [(xIN,yIN),(xOUT,yOUT)]
-        """
+            scale: scales for IN and OUT plots [(xIN,yIN),(xOUT,yOUT)] """
         inout=dict(IN=0,OUT=-1)
         live,lost=live_lost
         nblive=live.nbparticles()
@@ -152,8 +153,7 @@ def projections_1(lattice,live_lost):
         To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
         we need the reference energy of each particle and the gap's frequency.
         We take the gap's frequency from the cavity.
-        We take the reference energy from a bunch particle that survived.
-        """
+        We take the reference energy from a bunch particle that survived. """
         DELTA='\u0394'
         PHI  ='\u03A6'
         GAMMA='\u03b3'
@@ -230,19 +230,21 @@ def projections_1(lattice,live_lost):
 
     plt.show()
     return
+
 def frames(lattice, skip):
     """ 2D phase space projection at marker position """
     plt.figure()    # new figure instance
     agent_cnt = 0
     frames = []
-    # gather and count markers
 
+    # gather and count markers
     for node in iter(lattice):
         if isinstance(node,PoincareMarkerAgent):
             agent = node
             agent_cnt += 1
             if agent_cnt%skip == 0:
                 frames.append((agent_cnt,agent))
+
     # make an estimate for x- and y-axis
     lrx = options['lrx']
     dummy,lrx_frame = frames[lrx]
@@ -250,10 +252,12 @@ def frames(lattice, skip):
     y = [abs(tp()[lrx_frame.yaxis]) for tp in lrx_frame.tpoints]
     xmax = max(x)*1.5
     ymax = max(y)*1.5
+
     # invoke actions on Marker
     for agent_cnt,agent in iter(frames):
         position = agent.position
         agent.do_action(agent_cnt,xmax,ymax,position)
+
 def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
@@ -271,9 +275,11 @@ def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, lengt
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+
     # Print New Line on Complete
     if iteration == total: 
         print()
+
 def loss_histograms(lattice,fifos,binsize=5):
     """ make histogram plots of losses captured in FIFO buffers """
     latlen = lattice.length
@@ -295,23 +301,23 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
+
 def track_node_1(node,particle,options):
     """ Tracks a particle through a node """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
         return tpnorm > limit_xyz
-    
     track   = particle.track
     last_tp = track.getpoints()[-1]
     s       = last_tp()[Ktp.S]
     lost    = False
 
     # ********************************************************************************
-    # maping happens here! (map-losses)
+    # mapping happens here! (map-losses)
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
-    except (ValueError,OverflowError,UTIL.OutOfRadialBoundEx) as ex:
+    except (ValueError,OverflowError,OutOfRadialBoundEx) as ex:
         txt = ex.message
         DEBUG_OFF(txt)
         fifo_m.append(txt)
@@ -319,8 +325,8 @@ def track_node_1(node,particle,options):
         lost = True
         particle.lost = lost
         return lost
-     # ********************************************************************************
-   
+    # ********************************************************************************
+
     # check new_tp against reasonable physical limits (halo-losses)
     if norm(new_tp):
         fifo.append(f'halo limits at {s:.4e} m')
@@ -328,20 +334,22 @@ def track_node_1(node,particle,options):
         lost = True
         particle.lost = lost
         return lost
-    
+
     # aperture checks (z-losses and xy-losses)
     if FLAGS['useaper']:
         lost = node.aper_check(new_tp,s,fifo_z=fifo_z,sfifo_z=sfifo_z,fifo_xy=fifo_xy,sfifo_xy=sfifo_xy)
     particle.lost = lost
-    # eins=1
+
     # replace old tp by new tp (save memory)
     if track.nbpoints() > 1:
         track.removepoint(last_tp)
     track.addpoint(new_tp)
+
     # PoincareMarker keeeps all tps to dump frames
     if isinstance(node,PoincareMarkerAgent):
         node.appendPhaseSpace(new_tp)
     return lost
+
 def track(lattice,bunch,options):
     """
     Tracks a bunch of particles through the lattice using maps
@@ -388,6 +396,7 @@ def track(lattice,bunch,options):
                     DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
                     h5ds[p_cnt] = tp
                 pass
+
         # showing track-loop progress
         if n_cnt%pgceil == 0 or n_cnt == nb_nodes: 
             progress_bar(n_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
@@ -395,10 +404,12 @@ def track(lattice,bunch,options):
     DEBUG_OFF(f'n_cnt= {n_cnt}')
     lost = lbunch.nbparticles()
     print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
+
     # closing HDF5 file
     if options['h5dump']:
         h5File.close()
     return (bunch,lbunch)
+
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
     # fifo limits
@@ -412,6 +423,7 @@ def tracker(input_file,options):
     filepath = input_file
     lattice  = factory(filepath)
     DEBUG_OFF(PARAMS['twiss_w_i']())
+
     # w acceptance
     FLAGS['accON'] = lattice.accON
     DEBUG_OFF(PARAMS['twiss_w_i']())
@@ -419,6 +431,7 @@ def tracker(input_file,options):
         # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
         sys.exit()
+
     # run_mode
     FLAGS['mode'] = RUN_MODE[1]
     print(f'running in \'{FLAGS["mode"]}\' mode')
@@ -492,7 +505,6 @@ def tracker(input_file,options):
     # track: returns tuple (live,lost) bunches
     live_lost = track(lattice,bunch,options) 
     t4 = time.process_time()
-    # ********************************************************************************
 
     # make 2D projections
     if options['show']:

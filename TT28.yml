@@ -39,7 +39,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True              # {False} plot envelopes
-    mapping:      &map    base     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -47,7 +47,7 @@ PARAMETERS:
     Win:                  6.              # [MeV] energy @ injection 
     DPHI0:                5.              # [deg] delta-phi @ injection
     DW2W:                 2.0e-3          # delta-T/T kinetic energy spread @ injection
-    frequency:    &freq   750.e6          # [Hz] frequency
+    frequency:    &freq   750.e+6         # [Hz] frequency
     emitx_i:      &emx    5.e-7           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    5.e-7           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    0.920           # [m] twiss beta @ entrance x

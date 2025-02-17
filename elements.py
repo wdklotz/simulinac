@@ -904,12 +904,18 @@ class RFG(Node):
     def __init__(self,label,mapping):
         super().__init__()
 
+        # static value parameters
         self.viseo        = 0.25
         self.label        = label
         self.mapping      = mapping
         self.length       = 0.
         self.accelerating = True
+        
+        # variable parameters filled before gap configuration
+        self.freq         = None
         self.particle     = None
+
+        # variable parameters filled after gap configuration
         self.mapper       = None
         self.ttf          = None
         self.deltaw       = None
@@ -923,6 +929,7 @@ class RFG(Node):
     def configure(self,**kwargs): 
         if self.mapping in ['t3d','oxal','base']:
             self.particle = kwargs['particle']  
+            self.freq     = kwargs['freq']
             self.mapper.configure(**kwargs)
         elif self.mapping in ['simple','dyn']:
             raise(UserWarning(wrapRED(f'mapping not ready {mapping}')))

@@ -21,20 +21,12 @@ This file is part of the SIMULINAC code
 import sys
 import IGap
 import unittest
-import numpy   as NP
+import numpy as NP
 from copy import copy
 from math import sqrt,degrees,cos,sin,pi
 from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from separatrix import w2phi
-# from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-# from setutil import DEBUG_ON,DEBUG_OFF,Proton
-# from setutil import Ktp
-# import warnings
-# import math    as M
-# import numpy   as NP
-# import setutil as UTIL
-# import OXAL as OX
 
 twopi = 2.*pi
 
