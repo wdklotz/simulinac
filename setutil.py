@@ -355,6 +355,9 @@ class colors: # You may need to change color settings
     GREEN = '\033[32m'
     YELLOW = '\033[33m'
     BLUE = '\033[34m'
+class OutOfRadialBoundEx(Exception):
+    def __init__(self,s):
+        self.message = wrapRED('Out of radial boundary in map @ s={:6.2f} [m]'.format(s))
 def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss- maybe?
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta

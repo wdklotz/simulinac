@@ -33,6 +33,7 @@ import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
 from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
+from setutil import OutOfRadialBoundEx
 from sigma import Sigma, sig_map
 
 class Lattice(object):
@@ -576,7 +577,7 @@ class Lattice(object):
                     s_fun.append(s,s_1)
                     """ end map """
                     if 0: DEBUG_TRACKs(i_element,(cx,cxp,cy,cyp,cz,cdp),(sx,sxp,sy,syp,sz,sdp))
-            except (ValueError,ELM.OutOfRadialBoundEx) as ex:
+            except (ValueError,OutOfRadialBoundEx) as ex:
                 print(ex.message)
                 sys.exit(1)
         return (c_fun,s_fun)

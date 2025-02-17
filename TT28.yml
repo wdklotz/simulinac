@@ -44,7 +44,7 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Win:                  60.              # [MeV] energy @ injection 
+    Win:                  6.              # [MeV] energy @ injection 
     DPHI0:                5.              # [deg] delta-phi @ injection
     DW2W:                 2.0e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   750.e6          # [Hz] frequency
@@ -127,7 +127,7 @@ ELEMENTS:
         EzPeak:   *ezp         # [MV/m] 
         gap:       0.01254     # [m] gap length 
         # gap:       0.02222     # [m] gap length 
-        # HE_Gap:    0.01111     # [m] hard edge gap length 
+        HE_Gap:    0.01111     # [m] hard edge gap length 
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file

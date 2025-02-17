@@ -149,7 +149,7 @@ class TTF_G(ELM.RFG):
             max_r     = 0.05                # max radial excursion [m]
             r         = sqrt(x**2+y**2)     # radial coordinate
             if r > max_r:
-                raise ELM.OutOfRadialBoundEx(S)
+                raise UTIL.OutOfRadialBoundEx(S)
             K         = omega/(c*gbs_in)*r
             i0        = I0(K)                      # bessel function I0 
             gammas_in = p.gamma

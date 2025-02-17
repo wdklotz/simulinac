@@ -311,7 +311,7 @@ def track_node_1(node,particle,options):
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
-    except (ValueError,OverflowError,ELM.OutOfRadialBoundEx) as ex:
+    except (ValueError,OverflowError,UTIL.OutOfRadialBoundEx) as ex:
         txt = ex.message
         DEBUG_OFF(txt)
         fifo_m.append(txt)

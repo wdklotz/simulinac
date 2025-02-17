@@ -24,7 +24,7 @@ import unittest
 import numpy   as NP
 from copy import copy
 from math import sqrt,degrees,cos,sin,pi
-from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss
+from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from separatrix import w2phi
 # from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
@@ -71,7 +71,7 @@ class Base_M(IGap.IGap):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
 
     def map(self,i_track):
-        return self.base_map(i_track)
+        return self.base_map_1(i_track)
 
     def toString(self):
         return 'base mapping: Base_M.base_map_1'
@@ -179,7 +179,75 @@ class Base_M(IGap.IGap):
         self.particlef = Proton(tkin + self.deltaW)
         pass
 
-    def base_map(self, i_track):
+    def base_map_1(self, i_track):
+        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit 
+           der Rechnung zu testen. 
+           Produziert dasselbe Verhalten wie base_map_0
+           Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
+        x        = i_track[XKOO]       # [0]
+        xp       = i_track[XPKOO]      # [1]
+        y        = i_track[YKOO]       # [2]
+        yp       = i_track[YPKOO]      # [3]
+        z        = i_track[ZKOO]       # [4] z
+        zp       = i_track[ZPKOO]      # [5] dp/p
+        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
+        S        = i_track[SKOO]       # [8] position gap
+
+        particleRi = self.particle   # ref Teilchen (I)
+        m0c2       = particleRi.e0
+        betai      = particleRi.beta
+        gammai     = particleRi.gamma
+        gbi        = particleRi.gamma_beta
+        wRi        = particleRi.tkin
+        freq       = self.freq
+        lamb       = self.lamb
+        phisoll    = self.phisoll
+        # deg_phisoll= degrees(phisoll)
+        L          = self.gap
+        ttf        = self.ttf
+        qE0LT      = self.EzPeak * L * ttf
+        deltaW     = self.deltaW
+        
+        max_r  = 0.05              # max radial excursion [m]
+        r      = sqrt(x**2+y**2)   # radial coordinate
+        if r > max_r:
+            raise OutOfRadialBoundEx(S)
+        Kr     = (twopi*r)/(lamb*gbi)
+        i0     = I0(Kr)            # bessel function I0
+        i1     = I1(Kr)            # bessel function I1
+
+        # ref Teilchen
+        wRo = wRi + deltaW                           # ref Teilchen energy (O)
+ 
+        # Teilchen
+        converter   = WConverter(wRi,freq)
+        deg_converter = degrees(converter.zToDphi(z)) 
+        phiin       = converter.zToDphi(z) + phisoll 
+        # deg_phiin   = degrees(phiin)                 # Teilchen phase (I)
+        wo_wi       = qE0LT*i0*cos(phiin)            # energy kick (Shislo 4.2.3)
+        wi          =  converter.Dp2pToDW(zp) + wRi  # Teilchen energy (I) dp/p --> dT
+        wo          = wi + wo_wi                     # Teilchen energy (O)   
+        dw          = wo - wRo                       # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
+
+        particleRo = Proton(wRo)
+        betao      = particleRo.beta
+        gammao     = particleRo.gamma
+        gbo        = particleRo.gamma_beta
+
+        zo         = betao/betai*z                     # z A.Shishlo/J.Holmes (O) (4.2.5) 
+        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
+
+        # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
+        i12r = i1/2 if r > 1.e-6 else 0.5*twopi/lamb/gbi
+        factor = qE0LT/(m0c2*gbi*gbo)*i12r*sin(phiin)  # common factor
+        gbi2gbo = gbi/gbo
+        xp  = gbi2gbo*xp - x*factor   # Formel 4.2.6 A.Shishlo/J.Holmes
+        yp  = gbi2gbo*yp - y*factor
+
+        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
+        return f_track
+
+    def base_map_new(self, i_track):
         """ Neue map Version ab 16.02.2025
             Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
@@ -210,24 +278,27 @@ class Base_M(IGap.IGap):
         Kr     = (twopi*r)/(lamb*gbIn)
         i0     = I0(Kr)            # bessel function I0
         i1     = I1(Kr)            # bessel function I1
+        # i0=i1=1
 
         # Soll-Teilchen
-        deltaW  = qE0LT*i0*cos(phisoll)    # Shishlo pp 13 (4.2.3)
-        tkinOut = tkin + deltaW            # soll out energy
+        deltaWs  =   qE0LT*i0*cos(phisoll)    # Shishlo pp 13 (4.2.3)
+        tkinOuts = tkin + deltaWs             # soll out energy
  
         # Teilchen off soll
         converter   = WConverter(tkin,freq)
-        phiIn       = converter.zToDphi(z) + phisoll 
-        # deg_phiin = degrees(phiin)                  # Teilchen phase (I)
-        deltaWOut   = qE0LT*i0*cos(phiIn)             # energy kick (Shislo 4.2.3)
+        phiIn       = converter.zToDphi(z) + phisoll  # Teilchen phase
+        # deg_phiin = degrees(phiin)                 
+        deltaW      = qE0LT*i0*cos(phiIn)             # Shishlo pp 13 (4.2.3)
+        tkinOut     = tkin + deltaW
 
         particlef    = Proton(tkinOut)
         betaOut      = particlef.beta
         gbOut        = particlef.gamma_beta
         gbIn2GbOut   = gbIn/gbOut
 
-        zOut         = betaOut/betaIn*z               # z Shishlo (4.2.5)
-        zpOut        = converter.DWToDp2p(deltaWOut)  # dW --> dp/p Soll out
+        zOut         = betaOut/betaIn*z # z Shishlo (4.2.5)
+        # zpOut        = converter.DWToDp2p(tkinOut-tkinOuts)  # d(dw-dws) converted to dp/p
+        zpOut        = converter.DWToDp2p(deltaW)  # d(dw-dws) converted to dp/p
 
         if r < 1e-5:
             factor = qE0LT/(m0c2*gbIn*gbOut)*0.5      # common factor für lim(r->0) I1(r)/r = 1/2
@@ -244,11 +315,6 @@ def ttf(lamb, gap, beta):
     x = gap/(beta*lamb)
     res =NP.sinc(x)
     return res
-
-class OutOfRadialBoundEx(Exception):
-    def __init__(self,s):
-        self.message = wrapRED('Out of radial boundEx in map @ s={:6.2f} [m]'.format(s))
-
 
 class TestBaseMapping(unittest.TestCase):
     def test_BASE_M(self):

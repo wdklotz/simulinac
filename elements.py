@@ -36,10 +36,6 @@ NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
 def wrapRED(str):
     return UTIL.colors.RED+str+UTIL.colors.ENDC
 
-# class OutOfRadialBoundEx(Exception):
-#     def __init__(self,s):
-#         self.message = 'OutOfRadialBoundEx in map @ s={:6.2f} [m]'.format(s)
-
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
     """ Base class for transfer matrices (linear map)
@@ -633,7 +629,7 @@ class RFG_OLD(Node):
         max_r  = 0.05              # max radial excursion [m]
         r      = M.sqrt(x**2+y**2)  # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(S)
+            raise UTIL.OutOfRadialBoundEx(S)
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = UTIL.I0(Kr)                               # bessel function I0
         i1     = UTIL.I1(Kr)                               # bessel function I1
@@ -719,7 +715,7 @@ class RFG_OLD(Node):
         max_r  = 0.05              # max radial excursion [m]
         r      = M.sqrt(x**2+y**2)   # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(S)
+            raise UTIL.OutOfRadialBoundEx(S)
         Kr     = (twopi*r)/(lamb*gbi)
         i0     = UTIL.I0(Kr)            # bessel function I0
         i1     = UTIL.I1(Kr)            # bessel function I1
