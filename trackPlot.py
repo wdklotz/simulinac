@@ -210,10 +210,10 @@ def scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax):
 
     rms_emittances = []
     # 1 sigma
-    rms_emittance = confidence_ellipse(x,y,ax,n_std=1,label=r"$3\sigma$",edgecolor="red",linestyle=":")/C.pi
+    rms_emittance = confidence_ellipse(x,y,ax,n_std=1,label=r"$1\sigma$",edgecolor="red",linestyle=":")/C.pi
     rms_emittances.append((1,rms_emittance))
     # 2 sigma
-    rms_emittance = confidence_ellipse(x,y,ax,n_std=2,label=r"$3\sigma$",edgecolor="blue",linestyle=":")/C.pi
+    rms_emittance = confidence_ellipse(x,y,ax,n_std=2,label=r"$2\sigma$",edgecolor="blue",linestyle=":")/C.pi
     rms_emittances.append((2,rms_emittance))
     # 3 sigma
     rms_emittance = confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="green",linestyle=":")/C.pi

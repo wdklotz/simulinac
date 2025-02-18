@@ -67,7 +67,7 @@ class Base_M(IGap.IGap):
         # return self.base_map_2(i_track)
 
     def toString(self):
-        return 'base mapping: Base_M.base_map_1'
+        return 'base mapping: Base_M.base_map'
 
     def isAccelerating(self):
         return True
