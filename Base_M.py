@@ -57,7 +57,6 @@ class Base_M(IGap.IGap):
         self.deltaW    = None
         self.particlef = None
         self.master    = None
-        # self.adjust_energy(self.particle.tkin)
 
     def values_at_exit(self):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
@@ -230,16 +229,20 @@ class Base_M(IGap.IGap):
         zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
 
         # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
-        i12r = i1/2 if r > 1.e-6 else 0.5*twopi/lamb/gbi
+        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbi
         factor = qE0LT/(m0c2*gbi*gbo)*i12r*sin(phiin)  # common factor
         gbi2gbo = gbi/gbo
-        xp  = gbi2gbo*xp - x*factor   # Formel 4.2.6 A.Shishlo/J.Holmes
-        yp  = gbi2gbo*yp - y*factor
+        xp  = gbi2gbo*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
+        yp  = gbi2gbo*yp - factor*x
 
         f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
         return f_track
 
-    def base_map_new(self, i_track):
+    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
+    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
+    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
+    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
+    def base_map_2(self, i_track):
         """ Neue map Version ab 16.02.2025
             Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
@@ -286,18 +289,17 @@ class Base_M(IGap.IGap):
         particlef    = Proton(tkinOut)
         betaOut      = particlef.beta
         gbOut        = particlef.gamma_beta
-        gbIn2GbOut   = gbIn/gbOut
 
         zOut         = betaOut/betaIn*z # z Shishlo (4.2.5)
         # zpOut        = converter.DWToDp2p(tkinOut-tkinOuts)  # d(dw-dws) converted to dp/p
         zpOut        = converter.DWToDp2p(deltaW)  # d(dw-dws) converted to dp/p
 
-        if r < 1e-5:
-            factor = qE0LT/(m0c2*gbIn*gbOut)*0.5      # common factor für lim(r->0) I1(r)/r = 1/2
-        else:
-            factor = qE0LT/(m0c2*gbIn*gbOut)*i1/r     # common factor
-        xp  = gbIn2GbOut*xp - x*factor*sin(phiIn)     # A.Shishlo/J.Holmes (4.2.6)
-        yp  = gbIn2GbOut*yp - y*factor*sin(phiIn)
+        # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
+        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIn
+        factor = qE0LT/(m0c2*gbIn*gbOut)*i12r*sin(phiIn)  # common factor
+        gbIn2GbOut   = gbIn/gbOut
+        xp  = gbIn2GbOut*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
+        yp  = gbIn2GbOut*yp - factor*x
 
         f_track = NP.array([x, xp, y, yp, zOut, zpOut, tkinOut, 1., s, 1.])
         return f_track

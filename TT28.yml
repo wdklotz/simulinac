@@ -39,7 +39,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True              # {False} plot envelopes
-    mapping:      &map    t3d     # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base     # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -217,5 +217,5 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
