@@ -26,6 +26,7 @@ from copy import copy
 from math import sqrt,degrees,cos,sin,pi
 from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
+from setutil import DEBUG_ON,DEBUG_OFF
 from separatrix import w2phi
 
 twopi = 2.*pi
@@ -63,6 +64,7 @@ class Base_M(IGap.IGap):
 
     def map(self,i_track):
         return self.base_map_1(i_track)
+        # return self.base_map_2(i_track)
 
     def toString(self):
         return 'base mapping: Base_M.base_map_1'
@@ -171,10 +173,10 @@ class Base_M(IGap.IGap):
         pass
 
     def base_map_1(self, i_track):
-        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit 
-           der Rechnung zu testen. 
-           Produziert dasselbe Verhalten wie base_map_0
-           Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
+        """ Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit 
+            der Rechnung zu testen. 
+            Produziert dasselbe Verhalten wie base_map_0
+            Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -212,7 +214,7 @@ class Base_M(IGap.IGap):
  
         # Teilchen
         converter   = WConverter(wRi,freq)
-        deg_converter = degrees(converter.zToDphi(z)) 
+        # deg_converter = degrees(converter.zToDphi(z)) 
         phiin       = converter.zToDphi(z) + phisoll 
         # deg_phiin   = degrees(phiin)                 # Teilchen phase (I)
         wo_wi       = qE0LT*i0*cos(phiin)            # energy kick (Shislo 4.2.3)
@@ -236,10 +238,15 @@ class Base_M(IGap.IGap):
         yp  = gbi2gbo*yp - factor*x
 
         f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
+
+        S1 = 49.760    # from
+        S2 = 49.765    # to 
+        log_what_in_interval(S,(S1,S2),f'Base_M.base_map_1: f_track: {f_track}\n')
+
         return f_track
 
     # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
-    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
+    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKE[N !!!!!!
     # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
     # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
     def base_map_2(self, i_track):
@@ -252,7 +259,7 @@ class Base_M(IGap.IGap):
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
         T        = i_track[EKOO]       # [6] kinetic energy soll
-        s        = i_track[SKOO]       # [8] gap position soll
+        S        = i_track[SKOO]       # [8] gap position soll
 
         particle   = self.particle   # Soll-Teilchen IN
         m0c2       = particle.e0
@@ -269,7 +276,7 @@ class Base_M(IGap.IGap):
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)   # radial coordinate
         if r > max_r:
-            raise OutOfRadialBoundEx(s)
+            raise OutOfRadialBoundEx(S)
         Kr     = (twopi*r)/(lamb*gbIn)
         i0     = I0(Kr)            # bessel function I0
         i1     = I1(Kr)            # bessel function I1
@@ -301,8 +308,23 @@ class Base_M(IGap.IGap):
         xp  = gbIn2GbOut*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
         yp  = gbIn2GbOut*yp - factor*x
 
-        f_track = NP.array([x, xp, y, yp, zOut, zpOut, tkinOut, 1., s, 1.])
+        f_track = NP.array([x, xp, y, yp, zOut, zpOut, tkinOut, 1., S, 1.])
+
+        S1 = 49.760    # from
+        S2 = 49.765    # to 
+        log_what_in_interval(S,(S1,S2),f'Base:M.base_map_2: f_track: {f_track}\n')
+
         return f_track
+
+def log_what_in_interval(position,interval,what):
+    """ filter what in position interval [S1,S2] """
+    file ='Base_M.log'
+    S1 = interval[0]
+    S2 = interval[1]
+    with open(file,'a+') as fileobject:
+        if position > S1 and position < S2:
+            fileobject.write(what)
+    fileobject.close()
 
 def ttf(lamb, gap, beta):
     """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
