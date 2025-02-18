@@ -53,7 +53,7 @@ class Base_M(IGap.IGap):
 
         self.lamb      = PARAMS['clight']/self.freq
         self.gap       = self.cavlen*0.57   # 57%: a best guess ?
-        self.matrix    = NP.eye(MDIM,MDIM)
+        self.matrix    = None
         self.ttf       = None
         self.deltaW    = None
         self.particlef = None
@@ -170,6 +170,7 @@ class Base_M(IGap.IGap):
         self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
         self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
         self.particlef = Proton(tkin + self.deltaW)
+        self.T3D_matrix()
         pass
 
     def base_map(self, i_track):
@@ -235,6 +236,31 @@ class Base_M(IGap.IGap):
         # log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
 
         return f_track
+
+    def T3D_matrix(self):
+        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
+        m       = NP.eye(MDIM,MDIM)
+        E0L     = self.EzPeak*self.gap
+        qE0LT   = E0L*self.ttf
+        deltaW  = E0L*self.ttf*cos(self.phisoll)
+        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg    = Proton(Wavg)
+        bavg    = pavg.beta
+        gavg    = pavg.gamma
+        m0c2    = pavg.e0
+        kz      = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky      = kx = -0.5*kz/(gavg*gavg)
+        bgi     = self.particle.gamma_beta
+        bgf     = self.particlef.gamma_beta
+        bgi2bgf = bgi/bgf
+        m       = NP.eye(MDIM,MDIM)
+        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
+        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
+        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
+        m[EKOO, DEKOO] = deltaW
+        m[SKOO, DSKOO]  = 0.
+        self.matrix = m
+        return
 
 def log_what_in_interval(position,interval,what):
     """ filter what in position interval [S1,S2] """
