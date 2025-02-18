@@ -37,6 +37,7 @@ pihalf = pi/2
 counter_of_polies = 0
 trigger_poly_number = 12
 twothird = 2./3.
+
 def cot(x):
     return -tan(x+pihalf)
 

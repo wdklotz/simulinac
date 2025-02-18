@@ -63,7 +63,7 @@ class Base_M(IGap.IGap):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
 
     def map(self,i_track):
-        return self.base_map_1(i_track)
+        return self.base_map(i_track)
         # return self.base_map_2(i_track)
 
     def toString(self):
@@ -172,10 +172,8 @@ class Base_M(IGap.IGap):
         self.particlef = Proton(tkin + self.deltaW)
         pass
 
-    def base_map_1(self, i_track):
-        """ Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit 
-            der Rechnung zu testen. 
-            Produziert dasselbe Verhalten wie base_map_0
+    def base_map(self, i_track):
+        """ Neue überarbeitete map Version vom 17.02.2025 (wdk)
             Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
@@ -183,136 +181,58 @@ class Base_M(IGap.IGap):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
+        T        = i_track[EKOO]       # [6] kinetic energy Sollteilchen
         S        = i_track[SKOO]       # [8] position gap
 
-        particleRi = self.particle   # ref Teilchen (I)
-        m0c2       = particleRi.e0
-        betai      = particleRi.beta
-        gammai     = particleRi.gamma
-        gbi        = particleRi.gamma_beta
-        wRi        = particleRi.tkin
-        freq       = self.freq
-        lamb       = self.lamb
-        phisoll    = self.phisoll
-        # deg_phisoll= degrees(phisoll)
-        L          = self.gap
-        ttf        = self.ttf
-        qE0LT      = self.EzPeak * L * ttf
-        deltaW     = self.deltaW
+        paerticleIs = self.particle   # Sollteilchen energy In
+        m0c2        = paerticleIs.e0
+        betaIs      = paerticleIs.beta
+        gbIs        = paerticleIs.gamma_beta
+        tkinIs      = paerticleIs.tkin
+        freq        = self.freq
+        lamb        = self.lamb
+        phisoll     = self.phisoll
+        L           = self.gap
+        ttf         = self.ttf
+        qE0LT       = self.EzPeak * L * ttf
+        DtkinS      = self.deltaW
+        tkinSo      = tkinIs + DtkinS  # Sollteilchen energy Out
         
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)   # radial coordinate
         if r > max_r:
             raise OutOfRadialBoundEx(S)
-        Kr     = (twopi*r)/(lamb*gbi)
+        Kr     = (twopi*r)/(lamb*gbIs)
         i0     = I0(Kr)            # bessel function I0
         i1     = I1(Kr)            # bessel function I1
 
-        # ref Teilchen
-        wRo = wRi + deltaW                           # ref Teilchen energy (O)
- 
         # Teilchen
-        converter   = WConverter(wRi,freq)
-        # deg_converter = degrees(converter.zToDphi(z)) 
-        phiin       = converter.zToDphi(z) + phisoll 
-        # deg_phiin   = degrees(phiin)                 # Teilchen phase (I)
-        wo_wi       = qE0LT*i0*cos(phiin)            # energy kick (Shislo 4.2.3)
-        wi          =  converter.Dp2pToDW(zp) + wRi  # Teilchen energy (I) dp/p --> dT
-        wo          = wi + wo_wi                     # Teilchen energy (O)   
-        dw          = wo - wRo                       # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
+        converter   = WConverter(tkinIs,freq)
+        phiI        = converter.zToDphi(z) + phisoll    # Phase Teilchen In
+        Dtkin       = qE0LT*i0*cos(phiI)                # Teilchen energy kick (Shislo 4.2.3)
+        tkinI       = converter.Dp2pToDW(zp) + tkinIs   # Teilchen energy In 
+        tkinO       = tkinI + Dtkin                     # Teilchen energy Out   
+        DDtkin      = tkinO - tkinSo                    # Differenz von Teichen und Sollteilchen Out
 
-        particleRo = Proton(wRo)
-        betao      = particleRo.beta
-        gammao     = particleRo.gamma
-        gbo        = particleRo.gamma_beta
+        particleOs  = Proton(tkinSo)
+        betaOs      = particleOs.beta
+        gbOs        = particleOs.gamma_beta
 
-        zo         = betao/betai*z                     # z A.Shishlo/J.Holmes (O) (4.2.5) 
-        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
+        zo          = betaOs/betaIs*z                     # z A.Shishlo/J.Holmes (4.2.5) 
+        zpo         = converter.DWToDp2p(DDtkin)         # DDtkin --> dp/p
 
         # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
-        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbi
-        factor = qE0LT/(m0c2*gbi*gbo)*i12r*sin(phiin)  # common factor
-        gbi2gbo = gbi/gbo
+        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
+        factor = qE0LT/(m0c2*gbIs*gbOs)*i12r*sin(phiI)  # common factor
+        gbi2gbo = gbIs/gbOs
         xp  = gbi2gbo*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
         yp  = gbi2gbo*yp - factor*x
 
-        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
+        f_track = NP.array([x, xp, y, yp, zo, zpo, T+DtkinS, 1., S, 1.])
 
-        S1 = 49.760    # from
-        S2 = 49.765    # to 
-        log_what_in_interval(S,(S1,S2),f'Base_M.base_map_1: f_track: {f_track}\n')
-
-        return f_track
-
-    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
-    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKE[N !!!!!!
-    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
-    # base_map_2 funktioniert nicht BROKEN BROKEN BROKEN BROKEN !!!!!!
-    def base_map_2(self, i_track):
-        """ Neue map Version ab 16.02.2025
-            Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
-        x        = i_track[XKOO]       # [0]
-        xp       = i_track[XPKOO]      # [1]
-        y        = i_track[YKOO]       # [2]
-        yp       = i_track[YPKOO]      # [3]
-        z        = i_track[ZKOO]       # [4] z
-        zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy soll
-        S        = i_track[SKOO]       # [8] gap position soll
-
-        particle   = self.particle   # Soll-Teilchen IN
-        m0c2       = particle.e0
-        betaIn     = particle.beta
-        gbIn       = particle.gamma_beta
-        tkin       = particle.tkin
-        freq       = self.freq
-        lamb       = self.lamb
-        phisoll    = self.phisoll
-        L          = self.gap
-        ttf        = self.ttf
-        qE0LT      = self.EzPeak * L * ttf
-
-        max_r  = 0.05              # max radial excursion [m]
-        r      = sqrt(x**2+y**2)   # radial coordinate
-        if r > max_r:
-            raise OutOfRadialBoundEx(S)
-        Kr     = (twopi*r)/(lamb*gbIn)
-        i0     = I0(Kr)            # bessel function I0
-        i1     = I1(Kr)            # bessel function I1
-        # i0=i1=1
-
-        # Soll-Teilchen
-        deltaWs  =   qE0LT*i0*cos(phisoll)    # Shishlo pp 13 (4.2.3)
-        tkinOuts = tkin + deltaWs             # soll out energy
- 
-        # Teilchen off soll
-        converter   = WConverter(tkin,freq)
-        phiIn       = converter.zToDphi(z) + phisoll  # Teilchen phase
-        # deg_phiin = degrees(phiin)                 
-        deltaW      = qE0LT*i0*cos(phiIn)             # Shishlo pp 13 (4.2.3)
-        tkinOut     = tkin + deltaW
-
-        particlef    = Proton(tkinOut)
-        betaOut      = particlef.beta
-        gbOut        = particlef.gamma_beta
-
-        zOut         = betaOut/betaIn*z # z Shishlo (4.2.5)
-        # zpOut        = converter.DWToDp2p(tkinOut-tkinOuts)  # d(dw-dws) converted to dp/p
-        zpOut        = converter.DWToDp2p(deltaW)  # d(dw-dws) converted to dp/p
-
-        # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
-        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIn
-        factor = qE0LT/(m0c2*gbIn*gbOut)*i12r*sin(phiIn)  # common factor
-        gbIn2GbOut   = gbIn/gbOut
-        xp  = gbIn2GbOut*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
-        yp  = gbIn2GbOut*yp - factor*x
-
-        f_track = NP.array([x, xp, y, yp, zOut, zpOut, tkinOut, 1., S, 1.])
-
-        S1 = 49.760    # from
-        S2 = 49.765    # to 
-        log_what_in_interval(S,(S1,S2),f'Base:M.base_map_2: f_track: {f_track}\n')
+        # S1 = 49.750    # from
+        # S2 = 49.770    # to 
+        # log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
 
         return f_track
 

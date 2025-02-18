@@ -34,7 +34,6 @@ import time
 import argparse
 import unittest
 import h5py
-# import elements as ELM
 from lattice_generator import factory
 from math import sqrt, degrees, radians, ceil,pi
 from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter

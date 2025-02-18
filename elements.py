@@ -940,7 +940,7 @@ class RFG(Node):
 
     def adjust_energy(self, tkin):
         self.mapper.adjust_energy(tkin)
-        at_exit = self.mapper.values_at_exit()
+        at_exit        = self.mapper.values_at_exit()
         self.ttf       = at_exit['ttf']
         self.deltaw    = at_exit['deltaw']
         self.particlef = at_exit['particlef']
@@ -1010,6 +1010,7 @@ class RFC(Node):
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
     return 0.31952 * gradient/particle.gamma_beta
+
 class TestElementMethods(unittest.TestCase):
     def Matrix(self,v):
         matrix = NP.eye(MDIM,MDIM)
