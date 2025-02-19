@@ -28,7 +28,7 @@ import warnings
 import math    as M
 import numpy   as NP
 import setutil as UTIL
-import OXAL as OX
+import OXAL_G as OX
 
 twopi = 2.*M.pi
 # numpy pretty printing
@@ -909,7 +909,6 @@ class RFG(Node):
         self.label        = label
         self.mapping      = mapping
         self.length       = 0.
-        self.accelerating = True
         
         # variable parameters filled before gap configuration
         self.freq         = None
@@ -927,7 +926,7 @@ class RFG(Node):
         mapper.accept_register(self)
 
     def configure(self,**kwargs): 
-        if self.mapping in ['t3d','oxal','base']:
+        if self.mapping in ['t3d','oxal','base','ttf']:
             self.particle = kwargs['particle']  
             self.freq     = kwargs['freq']
             self.mapper.configure(**kwargs)
@@ -937,6 +936,13 @@ class RFG(Node):
         else:
             raise(UserWarning(wrapRED(f'missing implementation {mapping}')))
             sys.exit()
+
+    @property
+    def isAccelerating(self):
+        return self.mapper.isAccelerating()
+    @property
+    def toString(self):
+        return self.mapper.toString()
 
     def adjust_energy(self, tkin):
         self.mapper.adjust_energy(tkin)
@@ -954,7 +960,7 @@ class RFG(Node):
         return self.mapper.waccept()
 
 class RFC(Node):   
-    """ Rf cavity as product DKD*RFG*DKD """
+    """ Rf cavity as product DKD*RFG*DKD 
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
     def __init__(self, label,mapping):
         super().__init__()
@@ -1005,7 +1011,7 @@ class RFC(Node):
     def make_slices(self, anz=1):
         return [self]
     def waccept(self):
-        return self.mapper.waccept()
+        return self.mapper.waccept() """
 
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """

@@ -47,9 +47,8 @@ class OXAL_G(IGap.IGap):
         pass
 
     def configure(self,**kwargs):
-        self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']
-        self.mapping      = 'oxal'        # map model
+        self.mapping      = 'oxal'
         self.kwargs       = kwargs
         self.label        = 'OX'
 
@@ -288,7 +287,7 @@ class OXAL_G(IGap.IGap):
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
         dz = poly.dz                          # [cm]
-        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2    # [MV]
+        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2 # [MV]
         return v0 
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b

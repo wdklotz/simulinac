@@ -28,7 +28,6 @@ from copy import copy
 # from termcolor import colored
 # from sty import fg,bg,ef,rs
 import elements as ELM
-import OXAL as OXA
 import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp

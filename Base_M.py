@@ -26,18 +26,18 @@ from copy import copy
 from math import sqrt,degrees,cos,sin,pi
 from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import DEBUG_ON,DEBUG_OFF
+from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
 from separatrix import w2phi
 
 twopi = 2.*pi
 
-class Base_M(IGap.IGap):
+class Base_G(IGap.IGap):
     """ Base RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
         pass
 
     def configure(self,**kwargs):
-        self.length       = 0. # 0. because it's a kick
+        # self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']
         self.mapping      = 'base'        # map model
         self.kwargs       = kwargs
@@ -67,7 +67,7 @@ class Base_M(IGap.IGap):
         # return self.base_map_2(i_track)
 
     def toString(self):
-        return 'base mapping: Base_M.base_map'
+        return f'{self.mapping} mapping in: Base_M.base_map()'
 
     def isAccelerating(self):
         return True
@@ -185,11 +185,11 @@ class Base_M(IGap.IGap):
         T        = i_track[EKOO]       # [6] kinetic energy Sollteilchen
         S        = i_track[SKOO]       # [8] position gap
 
-        paerticleIs = self.particle   # Sollteilchen energy In
-        m0c2        = paerticleIs.e0
-        betaIs      = paerticleIs.beta
-        gbIs        = paerticleIs.gamma_beta
-        tkinIs      = paerticleIs.tkin
+        particleIs = self.particle   # Sollteilchen energy In
+        m0c2        = particleIs.e0
+        betaIs      = particleIs.beta
+        gbIs        = particleIs.gamma_beta
+        tkinIs      = particleIs.tkin
         freq        = self.freq
         lamb        = self.lamb
         phisoll     = self.phisoll
@@ -219,8 +219,8 @@ class Base_M(IGap.IGap):
         betaOs      = particleOs.beta
         gbOs        = particleOs.gamma_beta
 
-        zo          = betaOs/betaIs*z                     # z A.Shishlo/J.Holmes (4.2.5) 
-        zpo         = converter.DWToDp2p(DDtkin)         # DDtkin --> dp/p
+        zO          = betaOs/betaIs*z                     # z A.Shishlo/J.Holmes (4.2.5) 
+        zpO         = converter.DWToDp2p(DDtkin)         # DDtkin --> dp/p
 
         # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
         i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
@@ -229,7 +229,7 @@ class Base_M(IGap.IGap):
         xp  = gbi2gbo*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
         yp  = gbi2gbo*yp - factor*x
 
-        f_track = NP.array([x, xp, y, yp, zo, zpo, T+DtkinS, 1., S, 1.])
+        f_track = NP.array([x, xp, y, yp, zO, zpO, T+DtkinS, 1., S, 1.])
 
         # S1 = 49.750    # from
         # S2 = 49.770    # to 
@@ -261,16 +261,6 @@ class Base_M(IGap.IGap):
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
         return
-
-def log_what_in_interval(position,interval,what):
-    """ filter what in position interval [S1,S2] """
-    file ='Base_M.log'
-    S1 = interval[0]
-    S2 = interval[1]
-    with open(file,'a+') as fileobject:
-        if position > S1 and position < S2:
-            fileobject.write(what)
-    fileobject.close()
 
 def ttf(lamb, gap, beta):
     """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """

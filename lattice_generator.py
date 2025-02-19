@@ -29,10 +29,11 @@ import PoincareMarkerAgent as PCMKR
 import lattice_parser_2    as LP2
 import lattice             as LAT
 import Ez0                 as EZ
-from math import radians
+from math   import radians
 from T3D_G  import T3D_G
-from OXAL   import OXAL_G
-from Base_M import Base_M
+from OXAL_G import OXAL_G
+from Base_M import Base_G
+from TTF_M  import TTF_G
 
 wrapRED = UTIL.wrapRED
 
@@ -271,15 +272,36 @@ def instanciate_element(item):
                     aperture  = aperture
                 )
                 instance = ELM.RFG(ID,mapping)
-                instance.register_mapping(Base_M())
+                instance.register_mapping(Base_G())
                 instance.configure(**gap_parameters)
                 if gap    != None: ELEMENT['gap']    = 'ignored'
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
                 if SFdata != None: ELEMENT['SFdata'] = 'ignored'
                 pass
             elif mapping == 'ttf':
-                raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not ready. Must be implemented')))
-                sys.exit()
+                fieldtab  = get_mandatory(attributes,'SFdata',ID)
+                EzPeak    = get_mandatory(attributes,"EzPeak",ID)
+                cavlen    = get_mandatory(attributes,'cavlen',ID)
+                HE_Gap    = attributes.get('HE_Gap',None)
+                gap       = attributes.get('gap',None)
+                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+                gap_parameters = dict(
+                    EzPeak    = EzPeak,     # [MV/m] requested peak field
+                    dWf       = dWf,
+                    phisoll   = phisoll,    # [radians] requested soll phase
+                    cavlen    = cavlen,
+                    freq      = freq,       # [Hz]  requested RF frequenz
+                    SFdata    = sfdata,     # SF field distribution
+                    particle  = particle,
+                    position  = position,
+                    aperture  = aperture
+                )
+                instance = ELM.RFG(ID,mapping)
+                instance.register_mapping(TTF_G())
+                instance.configure(**gap_parameters)
+                if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
+                if gap    != None: ELEMENT['gap']    ='ignored'
+                pass
             elif mapping == 'dyn':
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not available any more')))
                 sys.exit()
@@ -533,7 +555,7 @@ def factory(input_file,stop=None):
             lattice.add_node(instance)
         return lattice   # the complete lattice
     
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>> factory >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     with open(input_file,'r') as fileobject:
         try:
             in_data = yaml.load(fileobject,Loader=yaml.Loader)

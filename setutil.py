@@ -558,6 +558,15 @@ def arrprnt(array,fmt='{:8.4f}, ',txt=''):
     print('')
 def wrapRED(str):
     return colors.RED+str+colors.ENDC
+def log_what_in_interval(position,interval,what):
+    """ filter what in position interval [S1,S2] """
+    file ='simu.log'
+    S1 = interval[0]
+    S2 = interval[1]
+    with open(file,'a+') as fileobject:
+        if position > S1 and position < S2:
+            fileobject.write(what)
+    fileobject.close()
 
 class Test_set_utilities(unittest.TestCase):
     def test_particle(self):

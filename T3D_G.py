@@ -42,7 +42,7 @@ class T3D_G(IGap.IGap):
         pass
 
     def configure(self,**kwargs):
-        self.length       = 0. # 0. because it's a kick
+        # self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
         self.mapping      = 't23d'        # map model
         self.kwargs       = kwargs
