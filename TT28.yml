@@ -217,5 +217,5 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp]]
-    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    LINE:   [1,[Psp,SECL,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
