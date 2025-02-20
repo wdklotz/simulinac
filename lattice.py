@@ -261,7 +261,7 @@ class Lattice(object):
             else:
                 print(colors.RED+'WARN: unstable lattice!'+colors.ENDC)
             return stable
-        """ function body --------------- function body --------------- function body --------------- """
+        """ ======================== cell ======================================================================= """
         mcell = None
         """ loop over all lattice nodes """
         for count,element in enumerate(iter(self)):

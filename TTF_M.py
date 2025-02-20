@@ -23,11 +23,11 @@ import IGap
 from math import sin,cos,tan,pi,sqrt
 import numpy as NP
 import unittest
-from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton
+from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
 from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
 from Ez0 import SFdata
-from copy import copy
+# from copy import copy
 from separatrix import w2phi
 
 twopi = 2.*pi
@@ -67,6 +67,7 @@ class TTF_G(IGap.IGap):
         self.deltaW    = None
         self.particlef = None
         self.master    = None
+        pass
 
     def values_at_exit(self):
         return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
@@ -204,14 +205,13 @@ class TTF_G(IGap.IGap):
         m[EKOO, DEKOO] = deltaW
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
-        return
-
+        return    
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/cot(k*dz))
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
         t  = f1*f2
         DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
@@ -221,7 +221,7 @@ class TTF_G(IGap.IGap):
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.-k*dz/cot(k*dz)
+        f2 = 1.-k*dz*cot(k*dz)
         s  = f1*f2
         DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
@@ -230,7 +230,7 @@ class TTF_G(IGap.IGap):
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
         tp  = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz/cot(k*dz)*(1.+b*dz**2-6*b/k**2))
+        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
     def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
@@ -239,7 +239,7 @@ class TTF_G(IGap.IGap):
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
         sp  = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        sp  = sp*(dz**2-2./k**2+dz/cot(k*dz)*2/k)
+        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
     def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
@@ -261,50 +261,155 @@ class TTF_G(IGap.IGap):
         return slices
     def ttf_map(self, i_track):
         def ttf_formeln(particle,phiIN,poly,r):
-            # particle = kwargs['particle'] 
-            # phiIN    = kwargs['phiIN']
-            # z        = kwargs['z']
-            # zp       = kwargs['zp']
-            # r        = kwargs['r']
-            # poly     = kwargs['poly']
-            # freq     = self.freq
-            # omega    = self.omega
-            c          = PARAMS['clight']
-            m0c2       = particle.m0c2
-            m0c3       = m0c2*c
+            omega = self.omega
+            c     = PARAMS['clight']
+            m0c2  = particle.m0c2
+            m0c3 = m0c2*c
             g    = particle.gamma
             b    = particle.beta
             tkin = particle.tkin
             gb   = particle.gamma_beta
             gb3  = gb**3
-            k    = self.omega/(c*gb)
-            V0   = V0(poly)
+            k    = self.omega/(c*b)
+            V0   = self.V0(poly)
             Tk   = self.T(poly,k)
             Sk   = self.S(poly,k)
             Tkp  = self.Tp(poly,k)
             Skp  = self.Sp(poly,k)
-            # converter = Wconverter(tkins,freq)
-            # phiz      = converter.zToDphi(z)    # Sollabweichung
-            # DWzp      = converter.Dp2pToDW(zp)
             cphi = cos(phiIN)
             sphi = sin(phiIN)
-            kr   = k*r
+            kr   = k/g*r
+            i0   = I0(kr)
+            i1   = I1(kr)
+            DW   = V0*i0*(Tk*cphi - Sk*sphi)   # Shishlo 4.3.1
+            Dphi = V0*omega/(m0c3*gb3)*(i0*(Tkp*sphi+Skp*cphi)+g*r*i1*(Tk*sphi+Sk*cphi)) # Shislo 4.3.2
+            return (DW,Dphi,i0,i1,V0,Tk,Sk,Tkp,Skp)
+        #===================== ttf_map =====================================
+        # Teilchen Koordinaten IN
+        x         = i_track[XKOO]       # [0]
+        xp        = i_track[XPKOO]      # [1] Dx/Ds
+        y         = i_track[YKOO]       # [2]
+        yp        = i_track[YPKOO]      # [3] Dy/Ds
+        z         = i_track[ZKOO]       # [4] z
+        zp        = i_track[ZPKOO]      # [5] dp/p
+        T         = i_track[EKOO]       # [6] kinetic energy Sollteilchen
+        S         = i_track[SKOO]       # [8] position gap
+
+        max_r     = 0.05                # max radial excursion [m]
+        r         = sqrt(x**2+y**2)     # radial coordinate
+        if r > max_r:
+            raise OutOfRadialBoundEx(S)
+
+        lamb         = self.lamb
+        phisoll      = self.phisoll
+        freq         = self.freq
+
+        """ 
+        ptcles Soll particle
+        Ws     kin energy Soll
+        phis   phase Soll
+
+        ptcle Off particle
+        W     kin energy 
+        phi   phase
+        """
+        # Soll
+        ptcles   = self.particle
+        Ws       = ptcles.tkin
+        phis     = self.phisoll
+
+        # Off
+        converter = WConverter(Ws,freq)
+        Dphi      = converter.zToDphi(z)    # z->phi
+        DW        = converter.Dp2pToDW(zp)  # zp->W
+        phi       = phis + Dphi
+        W         = Ws + DW
+        ptcle     = Proton(W)
+
+        self.deltaW  = 0.
+        self.ttf     = 0.
+        
+        for poly in self.polies:
+            """ Map through poly Formeln 4.3.1 und 4.3.2 A.Shishlo/J.Holmes """
+            gbIs = ptcles.gamma_beta
+            cphi = cos(phis)
+            sphi = sin(phis)
+
+            # Soll IN
+            (DWs,Dphis,i0,i1,V0,Tk,Sk,Tkp,Skp) = ttf_formeln(ptcles,phis,poly,r)
+            # Soll OUT  (W,phi)
+            Ws         = Ws + DWs
+            phis       = phis + Dphis
+            ptcles     = Proton(Ws)
+            gbOs       = ptcles.gamma_beta
+
+            # Off IN
+            (DW,Dphi,i0x,i1x,V0x,Tkx,Skx,Tkpx,Skpx) = ttf_formeln(ptcle,phi,poly,r)
+            # Off OUT
+            W         = W + DW
+            phi       = phi + Dphi
+            ptcle     = Proton(W)
+
+            i12r      = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
+            faktor    = V0/(self.m0c2*gbIs*gbOs)*i12r
+            gbIs2gbOs = gbIs/gbOs
+            xp        = gbIs2gbOs*xp-faktor*(Tk*sphi + Sk*cphi)*x
+            yp        = gbIs2gbOs*yp-faktor*(Tk*sphi + Sk*cphi)*y
+
+            self.deltaW   = self.deltaW + DWs
+            self.ttf      = self.ttf + Tk
+            pass
+        
+        T = T + self.deltaW
+        # # Umwandlung longitudinale Koordinaten
+        zO      = converter.DphiToz(phi-phis)
+        zpO     = converter.DWToDp2p(W-Ws)
+        f_track = NP.array([x,xp,y,yp,zO,zpO,T,1.,S,1.])
+        self.particlef = ptcles
+        self.ttf       = self.ttf/len(self.polies) # gap's ttf
+
+        # S1 = 1    # from
+        # S2 = 20    # to 
+        # log_what_in_interval(S,(S1,S2),f'TTF_M.ttf_map: f_track: {f_track}\n')
+
+        return f_track
+
+    def ttf_map_A(self, i_track):
+        def ttf_formeln(particle,phiIN,poly,r):
+            omega = self.omega
+            c     = PARAMS['clight']
+            m0c2  = particle.m0c2
+            m0c3 = m0c2*c
+            g    = particle.gamma
+            b    = particle.beta
+            tkin = particle.tkin
+            gb   = particle.gamma_beta
+            gb3  = gb**3
+            k    = self.omega/(c*b)
+            V0   = self.V0(poly)
+            Tk   = self.T(poly,k)
+            Sk   = self.S(poly,k)
+            Tkp  = self.Tp(poly,k)
+            Skp  = self.Sp(poly,k)
+            cphi = cos(phiIN)
+            sphi = sin(phiIN)
+            kr   = k/g*r
             i0   = I0(kr)
             i1   = I1(kr)
             DW   = V0*i0*(Tk*cphi - Sk*sphi)   # Shisklo 4.3.1
-            Dphi = V0*omega/(m0c3*gb3)*(i0*(Tkp*sphi+Skp*cphi)+gs*r*i1*(Tk*sphi+Sk*cphi)) # Shislo 4.3.2
-            # tkinOut = tkins + DWzp + DW
-            # phiOut = phis + Dphiz + Dphi
-            return (DW,Dphi,i0,i1)
-
-        phiIs        = self.phisoll
+            Dphi = V0*omega/(m0c3*gb3)*(i0*(Tkp*sphi+Skp*cphi)+g*r*i1*(Tk*sphi+Sk*cphi)) # Shislo 4.3.2
+            return (DW,Dphi,i0,i1,V0,Tk,Sk,Tkp,Skp)
+        #===================== ttf_map =====================================
         lamb         = self.lamb
-
+        phisoll      = self.phisoll
+        freq         = self.freq
         """ initialise loop variables """
         particleIs   = self.particle
+        WIs          = particleIs.tkin
+        phiIs        = self.phisoll
         self.deltaW  = 0.
         self.ttf     = 0.
-        f_track      = copy(i_track)
+        f_track      = NP.copy(i_track)
         
         for poly in self.polies:
             """ Map through interval poly Formeln 4.3.1 und 4.3.2 A.Shishlo/J.Holmes """
@@ -322,27 +427,32 @@ class TTF_G(IGap.IGap):
             max_r     = 0.05                # max radial excursion [m]
             r         = sqrt(x**2+y**2)     # radial coordinate
             if r > max_r:
-                raise UTIL.OutOfRadialBoundEx(S)
+                raise OutOfRadialBoundEx(S)
 
             # Sollteilchen IN
             (DWs,Dphis,i0,i1,V0,Tk,Sk,Tkp,Skp) = ttf_formeln(particleIs,phiIs,poly,r)
-            tkinIs      = particleIs.tkin 
-            WIs         = tkins
+            # Sollteilchen OUT
             WOs         = WIs + DWs
+            phiOs       = phiIs + Dphis
 
             # Teilchen IN
-            converter = WConverter(tkinIs,freq)
-            phiI      = converter.zToDphi(z) + phiIs     # z->phi
-            WI        = converter.Dp2pToDW(zp) + tkinIs  # zp->W
+            converter = WConverter(WIs,freq)
+            phiI      = converter.zToDphi(z) + phiIs  # z->phi
+            WI        = converter.Dp2pToDW(zp) + WIs  # zp->W
             particleI = Proton(WI)
             (DW,Dphi,i0x,i1x,V0x,Tkx,Skx,Tkpx,Skpx) = ttf_formeln(particleI,phiI,poly,r)
 
-            """ Teilchen OUT """
+            # Teilchen OUT
             WO        = WI + DW
             phiO      = phiI + Dphi
             # particleO = Proton(WO)
 
-            """ Transversale Koordinaten OUT (4.3.3 Shishlo/Holmes) """
+            # Umwandlung longitudinale Koordinaten OUT
+            # converter = WConverter(WIs,freq)
+            zO  = converter.DphiToz(Dphi)
+            zpO = converter.DWToDp2p(DW) + zp
+   
+            # transversale Koordinaten OUT Shishlo/Holmes 4.3.3
             particleOs  = Proton(WOs)
             gbOs        = particleOs.gamma_beta
             gbIs        = particleIs.gamma_beta
@@ -350,33 +460,26 @@ class TTF_G(IGap.IGap):
             i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
             faktor    = V0/(self.m0c2*gbIs*gbOs)*i12r
             gbIs2gbOs = gbIs/gbOs
-            cphiIs = cos(phiIs)
-            sphiIs = sin(phiIs)
-            xp = gbIs2gbOs*xp-faktor*(Tk*sphiIs + Sk*cphiIs)*x  # Shishlo 4.3.3
-            yp = gbIs2gbOs*yp-faktor*(Tk*sphiIs + Sk*cphiIs)*y
+            cphiI = cos(phiI)
+            sphiI = sin(phiI)
+            xp = gbIs2gbOs*xp-faktor*(Tk*sphiI + Sk*cphiI)*x
+            yp = gbIs2gbOs*yp-faktor*(Tk*sphiI + Sk*cphiI)*y
 
-            """ Longitudinalen Koordinaten OUT (4.3.3 Shishlo/Holmes) """
-            bOs = particleOs.beta
-            """ z: Dphi = -360/(beta*lambda) * z """
-            zO     = - bOs*c/omega * (DphiI + phiOmphiI - phiOsmphiIs)
-            """ Dp/p: Delta-W = (gamma+1)/gamma * Delta-p/p * W """
-            zpO    = gOs/(gOs+1) * (DWI + WOmWI - DWs)/WOs
-   
-            """ Offteilchen OUT """
-            T = WOs
-
-            """ Reset loop """
-            f_track       = NP.array([x,xp,y,yp,zO,zpO,T,1.,S,1.])
+            # new poly-loop values """
             particleIs    = particleOs
+            WIs           = WOs
             phiIs         = phiOs
+            self.deltaW   = self.deltaW + DWs
             self.ttf      = self.ttf + Tk
-
+            f_track       = NP.array([x,xp,y,yp,zO,zpO,WOs,1.,S,1.])
+            pass
+        
+        DEBUG_OFF(f'WOs {WOs}, S {S}, r {r}')
         self.particlef = particleOs
-        self.deltaW    = particleOs.tkin
         self.ttf       = self.ttf/len(self.polies) # gap's ttf  (better as Panofski?)
 
-        S1 = 49.750    # from
-        S2 = 49.770    # to 
+        S1 = 1    # from
+        S2 = 20    # to 
         log_what_in_interval(S,(S1,S2),f'TTF_M.ttf_map: f_track: {f_track}\n')
 
         return f_track
