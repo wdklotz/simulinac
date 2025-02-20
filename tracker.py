@@ -161,8 +161,8 @@ def projections_1(lattice,live_lost):
         # first,last gap
         in_gap= lattice.first_gap
         out_gap=lattice.last_gap
-        DEBUG_OFF(f'1st gap: {in_gap.toString()}')
-        DEBUG_OFF(f'last gap: {out_gap.toString()}')
+        DEBUG_OFF(f'1st gap: {in_gap.toString}')
+        DEBUG_OFF(f'last gap: {out_gap.toString}')
         # frequencies of first,last
         freqIN= in_gap.freq
         freqOUT=out_gap.freq
