@@ -27,7 +27,6 @@ from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
 from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
 from Ez0 import SFdata
-# from copy import copy
 from separatrix import w2phi
 
 twopi = 2.*pi
@@ -37,15 +36,16 @@ def cot(x):
     return -tan(x+pihalf)
 
 class TTF_G(IGap.IGap):
-    """ Transition Time Factors RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
+    """ 3 Point TTF Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self):
         pass
 
     def configure(self,**kwargs):
+        # static
         self.mapping      = 'ttf'
         self.kwargs       = kwargs
         self.label        = 'TTF' 
-
+        # injected
         self.EzPeak    = kwargs.get('EzPeak',None)
         self.dWf       = kwargs.get('dWf',1)
         self.phisoll   = kwargs.get('phisoll',None)
@@ -55,13 +55,13 @@ class TTF_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
-
+        # calculated
         self.lamb      = PARAMS['clight']/self.freq
-        self.gap       = self.cavlen*0.57   # 57%: a best guess ?
+        self.gap       = self.cavlen*0.875   # 87.5%: of cavlen
         self.omega     = twopi*self.freq
         self.polies    = self.poly_slices()
         self.m0c2      = self.particle.m0c2
-        self.moc3      = self.m0c2**3
+        self.m0c3      = self.m0c2**3
         self.ttf       = None
         self.matrix    = None
         self.deltaW    = None
@@ -261,10 +261,10 @@ class TTF_G(IGap.IGap):
         return slices
     def ttf_map(self, i_track):
         def ttf_formeln(particle,phiIN,poly,r):
-            omega = self.omega
-            c     = PARAMS['clight']
-            m0c2  = particle.m0c2
-            m0c3 = m0c2*c
+            omega= self.omega
+            c    = PARAMS['clight']
+            # m0c2 = self.m0c2
+            m0c3 = self.m0c3
             g    = particle.gamma
             b    = particle.beta
             tkin = particle.tkin
@@ -299,12 +299,13 @@ class TTF_G(IGap.IGap):
         r         = sqrt(x**2+y**2)     # radial coordinate
         if r > max_r:
             raise OutOfRadialBoundEx(S)
+            sys.exit()
 
         lamb         = self.lamb
         phisoll      = self.phisoll
         freq         = self.freq
 
-        """ 
+        """
         ptcles Soll particle
         Ws     kin energy Soll
         phis   phase Soll
@@ -330,7 +331,7 @@ class TTF_G(IGap.IGap):
         self.ttf     = 0.
         
         for poly in self.polies:
-            """ Map through poly Formeln 4.3.1 und 4.3.2 A.Shishlo/J.Holmes """
+            """ Map through poly; use Formel 4.3.1 & 4.3.2 A.Shishlo/J.Holmes """
             gbIs = ptcles.gamma_beta
             cphi = cos(phis)
             sphi = sin(phis)
@@ -350,7 +351,7 @@ class TTF_G(IGap.IGap):
             phi       = phi + Dphi
             ptcle     = Proton(W)
 
-            i12r      = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
+            i12r      = i1/r if r > 1.e-6 else pi/lamb/gbIs
             faktor    = V0/(self.m0c2*gbIs*gbOs)*i12r
             gbIs2gbOs = gbIs/gbOs
             xp        = gbIs2gbOs*xp-faktor*(Tk*sphi + Sk*cphi)*x

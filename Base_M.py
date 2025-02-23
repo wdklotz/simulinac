@@ -45,14 +45,13 @@ class Base_G(IGap.IGap):
 
         self.EzPeak    = kwargs.get('EzPeak',None)
         self.phisoll   = kwargs.get('phisoll',None)
-        self.cavlen    = kwargs.get('cavlen',None)
+        self.gap       = kwargs.get('gap',None)
         self.freq      = kwargs.get('freq',None)
-        self.particle  = kwargs.get('particle',Proton(50.))
+        self.particle  = kwargs.get('particle',None)
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
 
         self.lamb      = PARAMS['clight']/self.freq
-        self.gap       = self.cavlen*0.57   # 57%: a best guess ?
         self.matrix    = None
         self.ttf       = None
         self.deltaW    = None
@@ -64,7 +63,6 @@ class Base_G(IGap.IGap):
 
     def map(self,i_track):
         return self.base_map(i_track)
-        # return self.base_map_2(i_track)
 
     def toString(self):
         return f'{self.mapping} mapping in: Base_M.base_map()'
@@ -120,7 +118,7 @@ class Base_G(IGap.IGap):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            raise(UserWarning(wrapRED(f'{ex} reason: ttf={self.ttf}, E0T={E0T}')))
             sys.exit(1)
 
         # Dp/p max on separatrix
@@ -167,7 +165,7 @@ class Base_G(IGap.IGap):
 
     def adjust_energy(self, tkin):
         self.particle  = Proton(tkin)
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)  # Panofsky
         self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
         self.particlef = Proton(tkin + self.deltaW)
         self.T3D_matrix()
@@ -182,10 +180,10 @@ class Base_G(IGap.IGap):
         yp       = i_track[YPKOO]      # [3]
         z        = i_track[ZKOO]       # [4] z
         zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy Sollteilchen
+        T        = i_track[EKOO]       # [6] kin energy Soll
         S        = i_track[SKOO]       # [8] position gap
 
-        particleIs = self.particle   # Sollteilchen energy In
+        particleIs  = self.particle   # Soll energy In
         m0c2        = particleIs.e0
         betaIs      = particleIs.beta
         gbIs        = particleIs.gamma_beta
@@ -193,11 +191,9 @@ class Base_G(IGap.IGap):
         freq        = self.freq
         lamb        = self.lamb
         phisoll     = self.phisoll
-        L           = self.gap
-        ttf         = self.ttf
-        qE0LT       = self.EzPeak * L * ttf
+        qE0LT       = self.EzPeak * self.gap * self.ttf
         DtkinS      = self.deltaW
-        tkinSo      = tkinIs + DtkinS  # Sollteilchen energy Out
+        tkinSo      = tkinIs + DtkinS  # Soll energy Out
         
         max_r  = 0.05              # max radial excursion [m]
         r      = sqrt(x**2+y**2)   # radial coordinate
@@ -213,27 +209,27 @@ class Base_G(IGap.IGap):
         Dtkin       = qE0LT*i0*cos(phiI)                # Teilchen energy kick (Shislo 4.2.3)
         tkinI       = converter.Dp2pToDW(zp) + tkinIs   # Teilchen energy In 
         tkinO       = tkinI + Dtkin                     # Teilchen energy Out   
-        DDtkin      = tkinO - tkinSo                    # Differenz von Teichen und Sollteilchen Out
+        DDtkin      = tkinO - tkinSo                    # Differenz von Teichen und Soll Out
 
         particleOs  = Proton(tkinSo)
         betaOs      = particleOs.beta
         gbOs        = particleOs.gamma_beta
 
-        zO          = betaOs/betaIs*z                     # z A.Shishlo/J.Holmes (4.2.5) 
-        zpO         = converter.DWToDp2p(DDtkin)         # DDtkin --> dp/p
+        zO          = betaOs/betaIs*z                     # z (Shishlo 4.2.5) 
+        zpO         = converter.DWToDp2p(DDtkin)          # DDtkin --> dp/p
 
         # 17.02.2025 wdk: verbessertes Abfangen wenn lim(r)->0
-        i12r = i1/r if r > 1.e-6 else 0.5*twopi/lamb/gbIs
+        i12r = i1/r if r > 1.e-6 else pi/(lamb*gbIs)
         factor = qE0LT/(m0c2*gbIs*gbOs)*i12r*sin(phiI)  # common factor
         gbi2gbo = gbIs/gbOs
         xp  = gbi2gbo*xp - factor*x   # Formel 4.2.6 A.Shishlo/J.Holmes
-        yp  = gbi2gbo*yp - factor*x
+        yp  = gbi2gbo*yp - factor*y
 
         f_track = NP.array([x, xp, y, yp, zO, zpO, T+DtkinS, 1., S, 1.])
 
-        # S1 = 49.750    # from
-        # S2 = 49.770    # to 
-        # log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
+        S1 = 48    # from
+        S2 = 51    # to 
+        log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
 
         return f_track
 
@@ -263,7 +259,7 @@ class Base_G(IGap.IGap):
         return
 
 def ttf(lamb, gap, beta):
-    """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+    """ Panofsky transit-time-factor (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
     x = gap/(beta*lamb)
     res =NP.sinc(x)
     return res
@@ -275,7 +271,7 @@ class TestBaseMapping(unittest.TestCase):
         gap_parameter = dict(
             EzPeak    = 1,
             phisoll   = radians(-30.),
-            cavlen    = 0.44,
+            gap       = 0.44,
             freq      = 750e6,
         )
         bmap = BASE_M()    # create object instance

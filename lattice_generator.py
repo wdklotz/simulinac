@@ -258,14 +258,14 @@ def instanciate_element(item):
                 pass
             elif mapping == 'base':
                 EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
-                cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
+                gap       = get_mandatory(attributes,'gap',ID)      # [m] requested gap length
                 HE_Gap    = attributes.get('HE_Gap',None)
-                gap       = attributes.get('gap',None)
+                cavlen    = attributes.get('cavlen',None)
                 SFdata    = attributes.get('SFdata',None)
                 gap_parameters = dict(
                     EzPeak    = EzPeak,
                     phisoll   = phisoll,    # [rad:ians] requested soll phase
-                    cavlen    = cavlen,
+                    gap       = gap,
                     freq      = freq,       # [Hz]  requested RF frequenz
                     particle  = particle,
                     position  = position,
@@ -274,8 +274,8 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(Base_G())
                 instance.configure(**gap_parameters)
-                if gap    != None: ELEMENT['gap']    = 'ignored'
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
+                if cavlen != None: ELEMENT['cavlen'] = 'ignored'
                 if SFdata != None: ELEMENT['SFdata'] = 'ignored'
                 pass
             elif mapping == 'ttf':

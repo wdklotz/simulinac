@@ -23,7 +23,7 @@
 #   and thereafter referenced with an asterisk ( * ).
 
 #...................................................:.......................................
-DESCRIPTOR:  "Input file from Steve: TT28.yml"
+DESCRIPTOR:  "Full linac run: TT28.yml (Steve)"
 #..........................................................................................
 ## RUN switches
 #..........................................................................................
@@ -38,8 +38,8 @@ FLAGS:
     # bucket:       True            # {False} plot w acceptance
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
-    # envelope:     True              # {False} plot envelopes
-    mapping:      &map    ttf     # [t3d, simple, oxal, base, ttf, dyn]
+    # envelope:     True            # {False} plot envelopes
+    mapping:      &map    ttf       # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................
@@ -51,25 +51,29 @@ PARAMETERS:
     emitx_i:      &emx    5.e-7           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    5.e-7           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    0.920           # [m] twiss beta @ entrance x
-    alfax_i:             +0.000           # [] twiss alpha x @ entrance
     betay_i:      &bty    0.236           # [m] twiss beta @ entrance y
+    # betay_i:      &bty    0.920           # [m] twiss beta @ entrance y
+    alfax_i:             +0.00           # [] twiss alpha x @ entrance
+    # alfax_i:             +1.500           # [] twiss alpha x @ entrance
     alfay_i:             -0.000           # [] twiss alpha y @ entrance
+    # alfay_i:             -1.500           # [] twiss alpha y @ entrance
     # dx_i:                0.5            # {0.0} dispersion dx0 [m]
     # dxp_i:               1.0            # {0.0} dispersion dxp0 [rad]
     ql:           &p03    0.02            # [m] 1/2 quad-length
     quad_bore:    &p04    11.e-3          # [m] quad bore radius
-    phi_sync:     &phs    -30.          # [deg] synchronous phase
+    phi_sync:     &phs    -30.            # [deg] synchronous phase
     # phi_sync:     &phs    -40.          # [deg] synchronous phase
-    windings:             30              # [] quad-coil windings
-    gap:          &p15    0.044           # [m] RF gap
+    # windings:             30              # [] quad-coil windings
+    # gap:          &p15    0.044           # [m] RF gap
     BgradL:       &bgrad1 40.0            # [T/m]
     BgradH:       &bgrad2 40.0            # [T/m]
     thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
+    # EzPeak:       &ezp    0.8             # [MV/m] peak gap field Strengy
     # EzPeak:       &ezp    1.0             # [MV/m] peak gap field Strengy
-    EzPeak:       &ezp    1.5             # [MV/m] peak gap field Strengy
+    EzPeak:       &ezp    1.75             # [MV/m] peak gap field Strengy
     nbsigma:              3               # [m] sigma aperture
     aperture:     &aper   11.e-3          # [m] global aperture radius setting (default = None)
-    lattvers:     'working version'       # lattice version: IN 5, out 200
+    lattvers:             'working: 6->200MeV,LE,HE,300m'     # lattice version
     SFTabfile:    &sfd    'SF/CAV-FLAT-R135-L31.TBL' # superfish tbl-data file
     # SFTabfile:    &sfd    'SF/SF_WDK2g44.TBL' # superfish tbl-data file
 
@@ -125,9 +129,8 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        gap:       0.01254     # [m] gap length 
-        # gap:       0.02222     # [m] gap length 
-        HE_Gap:    0.01111     # [m] hard edge gap length 
+        gap:       0.0289      # [m] gap length 1/2*beta*lambda @ 10Mev
+        HE_Gap:    0.0178      # [m] hard edge gap length (guess 80% cavlen)
         cavlen:    0.02222     # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -160,9 +163,8 @@ ELEMENTS:
         PhiSync:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
-        # gap:      0.023        # [m] gap length
-        gap:      0.040        # [m] gap length
-        HE_Gap:   0.0200       # [m] hard edge gap length
+        gap:      0.0856       # [m]gap length 1/2*beta*lambda @ 100Mev
+        HE_Gap:   0.032        # [m] hard edge gap length (guess 80% cavlen)
         cavlen:   0.0400       # cavity length
         aperture: *aper        # [m] aperture radius
         SFdata:   *sfd         # superfish tbl-data file
@@ -173,7 +175,7 @@ ELEMENTS:
 # ...........................................................................................
 # ...........................................................................................
 # LATTICE definition starts here:  
-# Node is part of Segment is part of Cell is part of Section is part of LINE is LATTICE
+# Node is part of Segment is part of Cell is part of Section is part of LINE a.k.a. LATTICE
 # ===========================================================================================
 SEGMENTS:   
     NIL_SEG:     [1,[]]  # placeholder
@@ -217,5 +219,5 @@ LATTICE:
 #........................................................................................... 
     # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
     # LINE:   [1,[Psp,SECH,Psp]]
-    LINE:   [1,[Psp,SECL,Psp]]
-    # LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]

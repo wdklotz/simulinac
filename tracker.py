@@ -89,10 +89,9 @@ sfifo_xy = Fifo()
 sfifo_m  = Fifo()
 sfifo_z  = Fifo()
 
-def projections_1(lattice,live_lost):
+def make_plots(lattice,live_lost):
     """ 2D projections of 6D phase space """
-    
-    def projection(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
+    def INOUT(live_lost,ix,iy,fig_txt,scale=[(1.,1.),(1.,1.)]):
         """ projection: scatter plots at IN and OUT 
             ix: track coordinate of plot abscissa
             iy: track coordinate of plot ordinate
@@ -145,9 +144,7 @@ def projections_1(lattice,live_lost):
         ax=plt.subplot(122)
         rms_emittances_OUT = scatterInOut(xlive1,ylive1,xloss1,yloss1,plotmax,box1_txt,ax)
         return (rms_emittances_IN,rms_emittances_OUT)
-
-    # TODO can this be made more elegantly? This function made me much pain.
-    def projection_dPhidW(live_lost,lattice):
+    def prep_dPhidW_for_INOUT(live_lost,lattice):
         """
         To get scales for {Dphi-DW} plots from internal {Dz-Dp/p} coordinates
         we need the reference energy of each particle and the gap's frequency.
@@ -193,36 +190,36 @@ def projections_1(lattice,live_lost):
              (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW(1.)*1e3)
               ]
         p_space = f'{DELTA}{PHI}-{DELTA}W [deg,KeV]'
-        return projection(live_lost,Ktp.z,Ktp.zp,p_space,scale=scale)
-
+        return INOUT(live_lost,Ktp.z,Ktp.zp,p_space,scale=scale)
     def pull_emittances(n_sig,emittances):
-        """ pull IN/OUT emittances for a given sigma out of structure emittances """
+        """ pull IN/OUT n_sig-emittances out of nested emittances list """
         emittances_IN = emittances[0]
         emittances_OUT = emittances[1]
         emittance_IN = emittances_IN[n_sig-1][1]
         emittance_OUT = emittances_OUT[n_sig-1][1]
         return (emittance_IN,emittance_OUT)
-    
+
+    #========================== make_plots =======================================================================
     DELTA='\u0394'
     PHI  ='\u03A6'
     n_sig = 3    # how many sigma emittances. 1,2 or 3 ?
 
     # longitudinal
-    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
-    # projection(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
-    emittances = projection_dPhidW(live_lost,lattice)
+    # INOUT(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [m,]')
+    # INOUT(live_lost,Ktp.z,Ktp.zp,f'z-{DELTA}p/p [mm,%]',scale=[(1.e3,1.e2),(1.e3,1.e2)])
+    emittances = prep_dPhidW_for_INOUT(live_lost,lattice)
     (IN,OUT) = pull_emittances(n_sig,emittances)
     log_txt='{}-sigma longitudinal RMS-emittances {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f'{DELTA}{PHI}-{DELTA}W [deg,KeV]',IN,OUT)
     DEBUG_ON(log_txt)
 
     # transverse
-    # projection(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
-    emittances = projection(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    # INOUT(live_lost,Ktp.x,Ktp.y, f"x-y [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    emittances = INOUT(live_lost,Ktp.x,Ktp.xp,f"x-x' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     (IN,OUT) = pull_emittances(n_sig,emittances)
     log_txt='{}-sigma transverse RMS-emittances    {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f"x-x' [mm,mrad]",IN,OUT)
     DEBUG_ON(log_txt)
 
-    emittances = projection(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
+    emittances = INOUT(live_lost,Ktp.y,Ktp.yp,f"y-y' [mm,mrad]",scale=[(1.e3,1.e3),(1.e3,1.e3)])
     (IN,OUT) = pull_emittances(n_sig,emittances)
     log_txt='{}-sigma transverse RMS-emittances    {}: IN={:.2e} OUT={:.2e}'.format(n_sig,f"y-y' [mm,mrad]",IN,OUT)
     DEBUG_ON(log_txt)
@@ -274,13 +271,12 @@ def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, lengt
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-
     # Print New Line on Complete
     if iteration == total: 
         print()
 
 def loss_histograms(lattice,fifos,binsize=5):
-    """ make histogram plots of losses captured in FIFO buffers """
+    """ make histogram plots of losses, capture in FIFO buffers """
     latlen = lattice.length
     bins   = int(latlen/binsize)
     golden = (1.+sqrt(5.))/2.; width = 10; height = width/golden
@@ -301,18 +297,19 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
 
-def track_node_1(node,particle,options):
-    """ Tracks a particle through a node """
+def Track_The_Node(node,particle,options):
+    """ Tracks a particle through a node, flags particle as lost and returns True """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
         return tpnorm > limit_xyz
+
     track   = particle.track
     last_tp = track.getpoints()[-1]
     s       = last_tp()[Ktp.S]
     lost    = False
 
     # ********************************************************************************
-    # mapping happens here! (map-losses)
+    # mapping happens here! (catch map-losses)
     try:
         new_point = node.map(last_tp())
         new_tp    = Tpoint(point=new_point)
@@ -324,9 +321,9 @@ def track_node_1(node,particle,options):
         lost = True
         particle.lost = lost
         return lost
-    # ********************************************************************************
 
-    # check new_tp against reasonable physical limits (halo-losses)
+    # ********************************************************************************
+    # check new_tp against reasonable physical limits (catch halo-losses)
     if norm(new_tp):
         fifo.append(f'halo limits at {s:.4e} m')
         sfifo.append(s)
@@ -334,9 +331,11 @@ def track_node_1(node,particle,options):
         particle.lost = lost
         return lost
 
-    # aperture checks (z-losses and xy-losses)
+    # ********************************************************************************
+    # aperture checks (catch z-losses and xy-losses)
     if FLAGS['useaper']:
         lost = node.aper_check(new_tp,s,fifo_z=fifo_z,sfifo_z=sfifo_z,fifo_xy=fifo_xy,sfifo_xy=sfifo_xy)
+
     particle.lost = lost
 
     # replace old tp by new tp (save memory)
@@ -344,9 +343,10 @@ def track_node_1(node,particle,options):
         track.removepoint(last_tp)
     track.addpoint(new_tp)
 
-    # PoincareMarker keeeps all tps to dump frames
+    # PoincareMarker takes all tps for phasespace scatterplots
     if isinstance(node,PoincareMarkerAgent):
         node.appendPhaseSpace(new_tp)
+
     return lost
 
 def track(lattice,bunch,options):
@@ -384,10 +384,10 @@ def track(lattice,bunch,options):
         if h5dump: 
             h5ds = h5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
         for p_cnt,particle in enumerate(iter(bunch)):        # particles
-            lost = track_node_1(node,particle,options)
+            lost = Track_The_Node(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
-                bunch.removeparticle(particle)
+                bunch.removeparticle(particle)   # will not be tracked again
             else:
                 # HDF5 dumping: fill data set
                 if h5dump:
@@ -508,7 +508,7 @@ def tracker(input_file,options):
     # make 2D projections
     if options['show']:
         print('FILL PLOTS')
-        projections_1(lattice,live_lost)
+        make_plots(lattice,live_lost)
     t5 = time.process_time()
     
     if options['save']:

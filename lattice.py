@@ -611,7 +611,7 @@ class Lattice(object):
     def accON(self):
         node1 = self.first_gap
         if(node1 != None):
-            PARAMS.update(node1.waccept())  # 1st node acceptance parameters ==> PARAMS
+            PARAMS.update(node1.waccept())  # 1st node acceptance parameters: PARAMS.update(dict())
             accON = True
             FLAGS['dWf'] = 1
         else:

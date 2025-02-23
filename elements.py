@@ -444,6 +444,7 @@ class GAP(Node):
         adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
         return adjusted
 class RFG_OLD(Node):
+    """ KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE """
     """  RF-gap of zero length with different kick gap-models """
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
     def __init__(self, label, **kwargs):
@@ -474,7 +475,6 @@ class RFG_OLD(Node):
         self.deltaW    = None
         self.particlef = None
         self.rf_gap    = None
-
     def dispatch_model_matrix(self):
         """ dispatching to different gap models """
         if self.mapping   == 't3d' :   #NOTE: t3d mapping is matrix multiplication
@@ -505,14 +505,12 @@ class RFG_OLD(Node):
         else:
             raise(UserWarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
             sys.exit()
-
     @property
     def gap_object(self):
         return self.rf_gap
     @gap_object.setter
     def gap_object(self,rf_gap):
         self.rf_gap = rf_gap
-
     def T3D_matrix(self):
         def ttf(lamb, gap, beta):
             """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
@@ -898,7 +896,6 @@ class RFG_OLD(Node):
             sfifo_xy.append(s)
             lost = True
         return lost
-
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
     def __init__(self,label,mapping):
@@ -954,10 +951,46 @@ class RFG(Node):
         return self
     def map(self,i_track):
         return self.mapper.map(i_track)
+
     def make_slices(self, anz=1):
         return [self]
+
     def waccept(self):
         return self.mapper.waccept()
+
+    def aper_check(self,new_tp,s,**kwargs):
+        new_point=new_tp()            # calling bunch.Tpoint() object
+
+        fifo_z   = kwargs['fifo_z']   # collect losses in tracker.Fifo objects
+        sfifo_z  = kwargs['sfifo_z']
+        fifo_xy  = kwargs['fifo_xy']
+        sfifo_xy = kwargs['sfifo_xy']
+
+        lost   = False
+        mapper = self.mapper
+        tkin   = mapper.particle.tkin
+
+        res  = self.waccept()    # test energy acceptance
+        (dummy,phi_2,phisoll,phi_1) = res['phaseacc']   # dummy kept for old track_node
+        conv = UTIL.WConverter(tkin, mapper.freq)
+        Dphi = conv.zToDphi(new_point[Ktp.z])
+        phi  = mapper.phisoll+Dphi
+
+        # longitudinal acceptance
+        if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58 [deg]
+            fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        elif abs(new_point[Ktp.zp]) > res['Dp2pmax']:
+            fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
+            sfifo_z.append(s)
+            lost = True
+        # transverse apertures
+        elif mapper.aperture != None and not (abs(new_point[Ktp.x]) < mapper.aperture or abs(new_point[Ktp.y]) < mapper.aperture):
+            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
+            sfifo_xy.append(s)
+            lost = True
+        return lost
 
 class RFC(Node):   
     """ Rf cavity as product DKD*RFG*DKD 
