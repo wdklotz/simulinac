@@ -50,6 +50,7 @@ class Base_G(IGap.IGap):
         self.particle  = kwargs.get('particle',None)
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
+        self.sec       = kwargs.get('sec')
 
         self.lamb      = PARAMS['clight']/self.freq
         self.matrix    = None
@@ -165,7 +166,7 @@ class Base_G(IGap.IGap):
 
     def adjust_energy(self, tkin):
         self.particle  = Proton(tkin)
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)  # Panofsky
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta,self.aperture)  # Wrangler
         self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
         self.particlef = Proton(tkin + self.deltaW)
         self.T3D_matrix()
@@ -258,10 +259,13 @@ class Base_G(IGap.IGap):
         self.matrix = m
         return
 
-def ttf(lamb, gap, beta):
-    """ Panofsky transit-time-factor (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-    x = gap/(beta*lamb)
-    res =NP.sinc(x)
+def ttf(lamb, gap, beta, aperture):
+    """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """
+    x   = gap/(beta*lamb)
+    res = NP.sinc(x)
+    gamma = 1/sqrt(1-beta**2)
+    Ka = twopi/(lamb*gamma*beta)*aperture
+    res = res/I0(Ka)
     return res
 
 class TestBaseMapping(unittest.TestCase):

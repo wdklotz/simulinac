@@ -55,6 +55,7 @@ class TTF_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
+        self.sec       = kwargs.get('sec')
         # calculated
         self.lamb      = PARAMS['clight']/self.freq
         self.gap       = self.cavlen*0.875   # 87.5%: of cavlen

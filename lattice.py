@@ -136,17 +136,15 @@ class Lattice(object):
         """ gather lattice statistics """
         cavity_counter = 0
         quad_counter   = 0
-        ttfmin = +1.e+50
-        ttfmax = +1.e-50
+        ttfs = []
         """ loop over all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 quad_counter += 1
             if isinstance(element,(ELM.RFG,ELM.RFC)):
                 cavity_counter += 1
-                ttfmin = min(element.ttf,ttfmin)
-                ttfmax = max(element.ttf,ttfmax)
-        if ttfmin != +1.e+50: SUMMARY['ttf_min,ttf_max*']   = (ttfmin,ttfmax)
+                ttfs.append(element.ttf)
+        SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))
         tki   = self.injection_energy
         tkf   = self.seq[-1].ref_track[EKOO]
         res = dict(

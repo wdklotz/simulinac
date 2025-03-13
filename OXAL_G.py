@@ -60,6 +60,7 @@ class OXAL_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
+        self.sec       = kwargs.get('sec')
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
@@ -195,7 +196,7 @@ class OXAL_G(IGap.IGap):
         Ts       = self.particle.tkin                 # T
         phis     = self.phisoll                       # phi
 
-        for poly in polies:   # each poly is a slice of the full mat
+        for poly in polies:   # each poly is a slice of the full Ez-dist
             # IN variables
             gammas_in  = 1. + Ts/m0c2              # gamma 
             gbs_in     = sqrt(gammas_in**2-1.)     # (gamma*beta)
@@ -222,8 +223,7 @@ class OXAL_G(IGap.IGap):
             dPhis = qV0*omega/m0c3/gbs3_in*(Tpks*sphis + Spks*cphis)  # Shishlo 4.6.2
             Ts_out    = Ts + dTs
             phis_out  = phis + dPhis
-            # ttf estimate
-            ttf = ttf + Tks+Sks+Tpks+Spks+Tppks+Sppks
+            ttf = ttf + qV0
 
             # OUT variables
             gammas_out  = 1. + Ts_out/m0c2            # gamma 
@@ -245,8 +245,8 @@ class OXAL_G(IGap.IGap):
             # {z, dP/P}: linear sub matrix
             # NOTE: Shishlo's Formeln sind fuer (z,dBeta/Beta)
             mx = NP.eye(MDIM,MDIM)
-            mx[Ktp.z, Ktp.z] = r44;         mx[Ktp.z, Ktp.zp ] = r45/g2s_in  # apply conversion dBeta/Beta=gamma**(-2)*dP/P
-            mx[Ktp.zp,Ktp.z] = r54*g2s_out; mx[Ktp.zp, Ktp.zp] = r55         # apply conversion dP/P=gamma**2*dBeta/Beta
+            mx[Ktp.z, Ktp.z] = r44;         mx[Ktp.z, Ktp.zp ] = r45/g2s_in  # g2s_in: apply conversion dBeta/Beta=gamma**(-2)*dP/P
+            mx[Ktp.zp,Ktp.z] = r54*g2s_out; mx[Ktp.zp, Ktp.zp] = r55         # g2s_out: apply conversion dP/P=gamma**2*dBeta/Beta
             # {x,x'}: linear sub-matrix
             factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
             mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
@@ -264,8 +264,8 @@ class OXAL_G(IGap.IGap):
             # refresh loop variables
             Ts    = Ts_out
             phis  = phis_out
-        self.ttf       = ttf/len(polies)  # ttf estimate
         self.deltaW    = matrix[Ktp.T,Ktp.dT]
+        self.ttf       = self.deltaW/ttf
         self.matrix    = matrix
         self.particlef = Proton(self.particle.tkin+self.deltaW)
         return

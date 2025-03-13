@@ -195,8 +195,10 @@ def Sp(poly,k,zintval):
 
 class SFdata(object):
     """ 
-    Cavity E(z,r=0) a.k.a. Ez0 field profile from Superfish xxx.TBL file.
-    Raw data can be scaled on ordinate (EzPeak) and abscissa [0,LInterv] (longitudial definition interval).
+    Cavity E(z,r=0) a.k.a. Ez0 field profile from SF *.TBL file.
+    Raw data can be scaled for max ordinate (EzPeak) and max abscissa (L)
+    Data from SF are defined on positive interval z in [0,+L/2]
+    Final data will be symmetric, i.e. E(-z)=E(+z) for z in [-L/2,+L/2]
     """
     def __init__(self,TBL_file):
         print('READING SF-DATA from "{}"'.format(TBL_file))
@@ -217,47 +219,6 @@ class SFdata(object):
         self.TBL_file = TBL_file
         self.readRawData()  
 
-    # class variables
-    instances = {}    # dict of sigleton objects
-
-    @classmethod
-    def InstanciateAndScale(cls,TBL_file,EzPeak=0.,L=0.):
-        """ 
-        Return a singleton scaled SFdata object bound to TBL_file.
-        IN: 
-            EzPeak peak field [MV/m]
-            L [cm]: interval z in [0,L], L>0 on which Ez0 is defined.
-        OUT: 
-            SFdata object 
-        """
-        # use a key made from <SFdata file name>%<Ezpeak value>%<LInterv value> to retrieve the corresponding field table instance
-        instance_key = '{}%{}%{}'.format(TBL_file,EzPeak,L)
-        # instance with instance_key exists? get it; else None
-        instance = cls.instances.get(instance_key)
-        if instance == None:
-            instance = SFdata(TBL_file)   # new scaled instance
-            if EzPeak != 0. and L != 0.:
-                instance.scaleEzTable(EzPeak,2*L)
-            elif EzPeak != 0. and L == 0.:
-                instance.scaleEzTable(EzPeak,instance._L)
-            elif EzPeak == 0. and L != 0.:
-                instance.scaleEzTable(instance._EzPeak,2*L)
-            elif EzPeak == 0. and L == 0.:
-                instance.scaleEzTable(instance._EzPeak,instance._L)
-            SFdata.instances[instance_key] = instance
-            DEBUG_OFF(SFdata.instances)
-            instance.makeEPoly()
-            DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
-        return instance
-
-    def Ez0t(self, z, t, omega, phis):
-        """E(z,0,t): time dependent field value at location z"""
-        res = EPoly(z,self.polyValues) * cos(omega*t+phis)
-        return res
-    def dEz0tdt(self, z, t, omega, phis):
-        """dE(z,0,t)/dt: time derivative of field value at location z"""
-        res = - omega * EPoly(z,self.polyValues) * sin(omega*t+phis)
-        return res
     def readRawData(self):
         """ read raw raw table, mirror data on ordinate and calc table's average (EzAvg_raw) """
         zp = []; rp = []; ep = []
@@ -283,11 +244,14 @@ class SFdata(object):
         f.close()
 
         # construct symmetric table for interval [-L/2,+L/2]
-        (E0,z0)=(ep[0],zp[0])
-        (EL,zL)=(ep[-1],zp[-1])
-        L2=(zL-z0)/2
-        L = 2*L2
-        dz=zp[1]-zp[0]
+        # (E0,z0)=(ep[0],zp[0])
+        # (ER,zL)=(ep[-1],zp[-1])
+        EzPeak=El=ep[0]
+        EzMin=Er=ep[-1]
+        zl = zp[0]
+        zr = zp[-1]
+        L  =(zr-zl)*2
+        dz = zp[1]-zp[0]
 
         zprev = [-x for x in reversed(zp[1:])]
         zp = zprev+zp
@@ -297,27 +261,71 @@ class SFdata(object):
         ep = eprev+ep
         N = len(zp)
         raw_tab = [Dpoint(zp[i],rp[i],ep[i]) for i in range(N)]
-        EzAvg = float((NP.trapezoid(ep,dx=dz)/L))
-        DEBUG_OFF(f'[(Ez,z)]: [({E0},{z0}),({EL},{zL})], L/2 {L2}, dz {dz}, EyAvg {EzAvg}')
+        DEBUG_OFF('raw_tab',raw_tab)
+        _EzAvg = float((NP.trapezoid(ep,dx=dz)/L))
+        DEBUG_OFF(f'[(Ez,z)]=[({EzPeak},{zl}),({EzMin},{zr})], L={L}, dz={dz}, EzAvg ={_EzAvg}')
 
         # raw data from SF will never be modified!
         self._Ez0_tab = raw_tab #NOTE: defined on  [-L/2,+L/2]
         self._L       = L       #NOTE: _L is length of [-L/2,+L/2]
-        self._EzPeak  = E0
-        self._EzAvg   = EzAvg
+        self._EzPeak  = EzPeak
+        self._EzAvg   = _EzAvg
         # self.Ez0_tab  = raw_tab
         # self.L        = L
         # self.EzPeak   = E0
         return
+
+    # class variables
+    instances = {}    # dict of sigleton objects
+
+    @classmethod
+    def InstanciateAndScale(cls,TBL_file,EzPeak=0.,L=0.):
+        """ 
+        Return a singleton scaled SFdata object bound to TBL_file.
+        IN: 
+            EzPeak peak field [MV/m]
+            L [cm]: interval z in [-L/2,+L/2] on which Ez0 is defined.
+        OUT: 
+            SFdata object 
+        """
+        # use a key made from <SFdata file name>%<Ezpeak value>%<LInterv value> to retrieve the corresponding field table instance
+        instance_key = '{}%{}%{}'.format(TBL_file,EzPeak,L)
+        # instance with instance_key exists? get it; else None
+        instance = cls.instances.get(instance_key)
+        if instance == None:
+            instance = SFdata(TBL_file)   # new scaled instance
+            if EzPeak != 0. and L != 0.:
+                instance.scaleEzTable(EzPeak,L)
+            elif EzPeak != 0. and L == 0.:
+                instance.scaleEzTable(EzPeak,instance._L)
+            elif EzPeak == 0. and L != 0.:
+                instance.scaleEzTable(instance._EzPeak,L)
+            elif EzPeak == 0. and L == 0.:
+                instance.scaleEzTable(instance._EzPeak,instance._L)
+            SFdata.instances[instance_key] = instance
+            DEBUG_OFF(SFdata.instances)
+            DEBUG_OFF('self.Ez0_tab',instance.Ez0_tab,'================= EOF Ez0_tab')
+            instance.makeEPoly()
+            DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
+        return instance
+
+    def Ez0t(self, z, t, omega, phis):
+        """E(z,0,t): time dependent field value at location z"""
+        res = EPoly(z,self.polyValues) * cos(omega*t+phis)
+        return res
+    def dEz0tdt(self, z, t, omega, phis):
+        """dE(z,0,t)/dt: time derivative of field value at location z"""
+        res = - omega * EPoly(z,self.polyValues) * sin(omega*t+phis)
+        return res
     def scaleEzTable(self,EzPeak,L):   #NOTE: L is length [-L/2,+L/2] in [cm]
         self.EzPeak = EzPeak
         self.L = L
         Ez0_tab = []
         Ex = self._EzPeak
-        zx  = self._L
+        Lx  = self._L
         for ix in range(len(self._Ez0_tab)):
-            z = self._Ez0_tab[ix].z*(L/zx)       # scale z-axis
-            r = self._Ez0_tab[ix].R*(L/zx)       # scale R same as z
+            z = self._Ez0_tab[ix].z*(L/Lx)       # scale z-axis
+            r = self._Ez0_tab[ix].R*(L/Lx)       # scale R same as z
             e = self._Ez0_tab[ix].Ez*(EzPeak/Ex) # sclae Ez-axis
             Ez0_tab.append(Dpoint(z,r,e))
         self.EzAvg = self._EzAvg*(EzPeak/Ex)
@@ -386,7 +394,8 @@ class TestEz0Methods(unittest.TestCase):
         print("\b---------------------------------test0 (singleton)")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         (EzPeak,L) = (0.0,0.0)
         sfdata1 = SFdata.InstanciateAndScale(TBL_file,*(EzPeak,L))
         print('   ',(EzPeak,L),sfdata1.TBL_file,end="")
@@ -402,7 +411,8 @@ class TestEz0Methods(unittest.TestCase):
         print('   ',(EzPeak,L),sfdata4.TBL_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        TBL_file='SF/SF_WDK2g22.TBL'
+        # TBL_file='SF/SF_WDK2g22.TBL'
+        TBL_file='SF/ALCELI-750.0-2.02.TBL'
         sfdata5 = SFdata.InstanciateAndScale(TBL_file)
         print('   ',(EzPeak,L),sfdata5.TBL_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
@@ -412,7 +422,8 @@ class TestEz0Methods(unittest.TestCase):
         print('   ',(EzPeak,L),sfdata6.TBL_file,end="")
         print(' => SFdata.instances ',[id(x) for x in SFdata.instances])
 
-        TBL_file='SF/SF_WDK2g44.TBL'
+        # TBL_file='SF/SF_WDK2g44.TBL'
+        TBL_file='SF/ALCELI-750.0-2.02.TBL'
         (EzPeak,L) = (0.,0.)
         sfdata7 = SFdata.InstanciateAndScale(TBL_file)
         print('   ',(EzPeak,L),sfdata7.TBL_file,end="")
@@ -421,7 +432,8 @@ class TestEz0Methods(unittest.TestCase):
         print("\b----------------------------------------test1")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         sfdata  = SFdata.InstanciateAndScale(TBL_file,EzPeak=1.5,L=5.)
         Ez0_tab        = sfdata._Ez0_tab    # raw
         Ez1_tab        = sfdata.Ez0_tab     # scaled
@@ -485,7 +497,8 @@ class TestEz0Methods(unittest.TestCase):
         print("\b----------------------------------------test4")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         EzPeak    = 1.2
         sf_data   = SFdata.InstanciateAndScale(TBL_file,EzPeak=EzPeak,L=0.)
         polyValues= sf_data.polies
@@ -494,7 +507,7 @@ class TestEz0Methods(unittest.TestCase):
         c         = PARAMS['clight']
         freq      = 800.e6
         k         = 2*pi*freq/(c*beta)*1.e-2    # [1/cm]
-        zr        = sf_data.L
+        zr        = sf_data.L/2
         zl        = -zr
         zintval   = (zl,zr)
         zstep     = (zr-zl)/500.
@@ -511,21 +524,22 @@ class TestEz0Methods(unittest.TestCase):
         plt.legend(loc='upper right',fontsize='x-small')
         plt.show()
         # TTF calculations
-        v0  = V0(polyValues,zintval)
-        t   = T(polyValues,k,zintval)
-        s   = S(polyValues,k,zintval)
-        tp  = Tp(polyValues,k,zintval)
-        sp  = Sp(polyValues,k,zintval)
-        DEBUG_OFF('V0 {}'.format(v0))
-        DEBUG_OFF('T(k) {}'.format(t))
-        DEBUG_OFF('S(k) {}'.format(s))
-        DEBUG_OFF("T'(k) {}".format(tp))
-        DEBUG_OFF("S'(k) {}".format(sp))                                           
+        v0  = V0(polyValues,    zintval)
+        t   = T( polyValues, k, zintval)
+        s   = S( polyValues, k, zintval)
+        tp  = Tp( polyValues,k, zintval)
+        sp  = Sp( polyValues,k, zintval)
+        DEBUG_OFF('V0',['{:.4g}'.format(x) for x in v0])
+        DEBUG_OFF('T(k)',['{:.4g}'.format(x) for x in t])
+        DEBUG_OFF('S(k)',['{:.4g}'.format(x) for x in s])
+        DEBUG_OFF("T'(k)",tp)
+        DEBUG_OFF("S'(k)",sp)                                         
     def test5(self):
         print("\b----------------------------------------test5")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         EzPeak  = 10
         L = 0.
         sfdata = SFdata.InstanciateAndScale(TBL_file,EzPeak=EzPeak,L=L)
@@ -540,7 +554,8 @@ class TestEz0Methods(unittest.TestCase):
         print("\b----------------------------------------test6")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         L = 0.
         EzPeak  = [0,1,5,15]
         zeff = []
@@ -562,7 +577,8 @@ class TestEz0Methods(unittest.TestCase):
         print("\b----------------------------------------test7")
         # TBL_file='SF/PILL-2CM.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         L = [0,3,9,18]
         EzAvg = []
         zeff = []
@@ -583,9 +599,10 @@ class TestEz0Methods(unittest.TestCase):
         return
     def test8(self):
         print("\b----------------------------------------test8")
-        TBL_file='SF/SF_WDK2g22.TBL'
         # TBL_file='SF/SF_WDK2g44.TBL'
-        # TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        TBL_file='SF/SF_WDK2g22.TBL'
+        TBL_file='SF/ALCELI-750.0-2.02.TBL'
         sfdata = SFdata.InstanciateAndScale(TBL_file)    # raw, no scaling
         reduc = 0.57   # reduce L by 57%
         gap = sfdata.L * reduc
@@ -607,13 +624,15 @@ class TestEz0Methods(unittest.TestCase):
         self.assertAlmostEqual(HE_EzPeak*reduc,sfdata.EzAvg,msg='hard edge field',places=3)
     def test9(self):
         print("\b----------------------------------------test9")
-        print('test TTF calculation according to T.Wangler pp. 39 (2.14)')
-        TBL_file='SF/SF_WDK2g22.TBL'
+        # print('test TTF calculation according to T.Wangler pp. 39 (2.14)')
         # TBL_file='SF/SF_WDK2g44.TBL'
-        # TBL_file='SF/CAV-FLAT-R135-L31.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/SF_WDK2g22.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
         sfdata = SFdata.InstanciateAndScale(TBL_file)    # raw, no scaling
         Ez0_tab = sfdata.Ez0_tab
         DEBUG_ON('Ez0 table',Ez0_tab)
+        pass
 
 
 

@@ -391,7 +391,7 @@ def simulation(filepath):
     res = lattice.stats()
     UTIL.SUMMARY['nbof quadrupoles*']   = res['quad_cntr']
     UTIL.SUMMARY['nbof cavities*']      = res['cavity_cntr']
-    UTIL.SUMMARY['Tk_i,Tk_f* [MeV]']    = (res['tki'],res['tkf'])
+    UTIL.SUMMARY['Tkin (i,f) [MeV]']    = (res['tki'],res['tkf'])
     UTIL.SUMMARY['lattice length* [m]'] = res['latt_length']
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...

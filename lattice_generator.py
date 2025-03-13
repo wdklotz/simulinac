@@ -124,7 +124,7 @@ def instanciate_element(item):
             mapping = UTIL.FLAGS.get('mapping')    # global FLAG overrides local mapping
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
-            UTIL.ELEMENTS[ID]['mapping'] = mapping   # maybe overriden by global mapping
+            ELEMENT['mapping'] = mapping   # maybe overriden by global mapping
 
             if mapping == 't3d'or mapping == "simple":
                 fieldtab = attributes.get('SFdata',None)
@@ -173,22 +173,20 @@ def instanciate_element(item):
             phisoll          = radians(get_mandatory(attributes,"PhiSync",ID))
             freq             = get_mandatory(attributes,"freq",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
+            sec              = attributes.get('sec','?')
             particle         = UTIL.Proton(UTIL.PARAMS['injection_energy'])
-            position         = (0.,0.,0.)
             dWf              = UTIL.FLAGS['dWf']
-            mapping          = attributes.get('mapping',None)
-            ELEMENT['sec']   = attributes.get('sec','?')
-
-            if mapping == None:
-                mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
-            UTIL.ELEMENTS[ID]['mapping'] = mapping  
+            position         = (0.,0.,0.)
+            
+            mapping            = UTIL.FLAGS.get('mapping')    # global mapping FLAG same for all
+            ELEMENT['mapping'] = mapping
 
             if mapping   == 't3d':
                 fieldtab = attributes.get('SFdata',None)
                 if fieldtab == None:
                     EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
                     gap       = get_mandatory(attributes,'gap',ID)      # [m] requested gap length
-                    cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
+                    cavlen    = attributes.get('cavlen',ID)             # [m] requested cavity length
                     HE_Gap    = attributes.get('HE_Gap',None)
                     SFdata    = attributes.get('SFdata',None)
                     gap_parameters = dict(
@@ -199,11 +197,13 @@ def instanciate_element(item):
                         freq      = freq,            # [Hz]  requested RF frequenz
                         particle  = particle,
                         position  = position,
-                        aperture  = aperture
+                        aperture  = aperture,
+                        sec       = sec
                     )
                     instance = ELM.RFG(ID,mapping)
                     instance.register_mapping(T3D_G())
                     instance.configure(**gap_parameters)
+                    if cavlen != None: ELEMENT['cavlen'] ='ignored'
                     if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                     if SFdata != None: ELEMENT['SFdata'] ='ignored'
                     pass
@@ -212,7 +212,7 @@ def instanciate_element(item):
                     cavlen    = get_mandatory(attributes,'cavlen',ID)   # [m] requested cavity length
                     HE_Gap    = get_mandatory(attributes,'HE_Gap',ID)   # [m] requested gap length [m]
                     gap       = attributes.get('gap',None)
-                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2*100.)   # scaled field distribution
+                    sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                     (dummy,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100)     # [MV/m] equivalent hard edge peak field
                     gap_parameters = dict(
                         EzPeak    = HE_EzPeak,
@@ -222,7 +222,8 @@ def instanciate_element(item):
                         freq      = freq,       # [Hz]  requested RF frequenz
                         particle  = particle,
                         position  = position,
-                        aperture  = aperture
+                        aperture  = aperture,
+                        sec       = sec
                     )
                     instance = ELM.RFG(ID,mapping)
                     instance.register_mapping(T3D_G())
@@ -239,7 +240,7 @@ def instanciate_element(item):
                 cavlen    = get_mandatory(attributes,'cavlen',ID)
                 HE_Gap    = attributes.get('HE_Gap',None)
                 gap       = attributes.get('gap',None)
-                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                 gap_parameters = dict(
                     EzPeak    = EzPeak,     # [MV/m] requested peak field
                     phisoll   = phisoll,    # [radians] requested soll phase
@@ -248,7 +249,8 @@ def instanciate_element(item):
                     SFdata    = sfdata,     # SF field distribution
                     particle  = particle,
                     position  = position,
-                    aperture  = aperture
+                    aperture  = aperture,
+                    sec       = sec
                 )
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(OXAL_G())
@@ -269,7 +271,8 @@ def instanciate_element(item):
                     freq      = freq,       # [Hz]  requested RF frequenz
                     particle  = particle,
                     position  = position,
-                    aperture  = aperture
+                    aperture  = aperture,
+                    sec       = sec
                 )
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(Base_G())
@@ -294,7 +297,8 @@ def instanciate_element(item):
                     SFdata    = sfdata,     # SF field distribution
                     particle  = particle,
                     position  = position,
-                    aperture  = aperture
+                    aperture  = aperture,
+                    sec       = sec
                 )
                 instance = ELM.RFG(ID,mapping)
                 instance.register_mapping(TTF_G())
@@ -322,7 +326,7 @@ def instanciate_element(item):
             mapping = UTIL.FLAGS.get('mapping')    # global mapping FLAG overrides individual mapping
             if mapping == None:
                 mapping = attributes.get('mapping','t3d')
-            UTIL.ELEMENTS[ID]['mapping'] = mapping  
+            ELEMENT['mapping'] = mapping  
             # if mapping == 't3d' or mapping == "simple":
             if mapping == 't3d':
                 fieldtab = attributes.get('SFdata',None)
@@ -404,7 +408,7 @@ def instanciate_element(item):
             active  = get_mandatory(attributes,'active',ID)
             action  = get_mandatory(attributes,'action',ID)
             viseo   = attributes.get('viseo',3)
-            ELEMENT = UTIL.ELEMENTS[ID]
+            ELEMENT = ELEMENT
             if action == 'pspace':
                 # A marker for simu.py ?
                 if not marker_is_compatible_with('simu.py',ID):

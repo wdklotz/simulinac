@@ -44,7 +44,7 @@ class T3D_G(IGap.IGap):
     def configure(self,**kwargs):
         # self.length       = 0. # 0. because it's a kick
         self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
-        self.mapping      = 't23d'        # map model
+        self.mapping      = 't3d'        # map model
         self.kwargs       = kwargs
         self.label        = 'T3D' 
 
@@ -56,6 +56,7 @@ class T3D_G(IGap.IGap):
         self.particle  = kwargs.get('particle',Proton(50.))
         self.position  = kwargs.get('position',None)
         self.aperture  = kwargs.get('aperture',None)
+        self.sec       = kwargs.get('sec')
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
