@@ -1,0 +1,23 @@
+qV0,k,ks,phis,om,mc3,gbs,cl,db,bs,z,ps = symbols('qV0,k,ks,phis,om,mc3,gbs,cl,db,bs,z,ps')
+Tk,Tks,Tpk,Tpks,Sk,Sks,Spk,Spks =symbols('Tk,Tks,Tpk,Tpks,Sk,Sks,Spk,Spks')
+Tk=Tks-Tpks*ks*db/bs          (4.6.3)
+Sk=Sks-Spks*ks*db/bs
+cphi=cos(ps)+sin(ps)*ks*z     (4.6.6)
+sphi=sin(ps)-cos(ps)*ks*z
+WoWi=qV0*(Tk*cphi-Sk*sphi)    (4.6.1)
+display_pretty(factor(WoWi))
+display_latex(Math(r'W^{1}-W^{2} = {0}'.format(WoWi,'{out}','{in}')))
+
+WoWi=Wout-Win=qV0*(
++ (Tks*cos(ps)  - Sks*sin(ps))*bs            # O(0)    sollTeilchen
++ (Tks*sin(ps)  + Sks*cos(ps))*bs*ks*z       # O(1)   ~z,              ist 0 fÜr z=0              \
+- (Tpks*cos(ps) + Spks*sin(ps))*ks*db        # O(1)   ~(delta beta),   ist 0 für (delta beta)=0    |  i.e. offTeilchen
+- (Tpks*sin(ps) - Spks*cos(ps))*ks**2*z*db   # O(2)   ~(delta beta)*z, ist 0 für (delta beta)=z=0 /
+)/bs
+
+PoPi=Phiout-Phiin=qV0*(bs**4*gs - 3*db*gbs**3)*(
++ (Spks*cos(ps)  + Tpks*sin(ps))*bs          # O(0) sollTeilchen
++ (Spks*sin(ps)  - Tpks*cos(ps))*bs*ks*z     # O(1) ~z
+- (Sppks*cos(ps) - Tppks*sin(ps))*ks*db      # O(1) ~(delta beta)
+- (Sppks*sin(ps) + Tppks*cos(ps))*ks**2*z*db # O(2) ~(delta beta)*z
+)/(bs**5*gbs**3*gs*mc3)

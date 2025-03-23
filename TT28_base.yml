@@ -39,7 +39,7 @@ FLAGS:
     # csTrak:       False           # {True} plot CS trajectories else beta functions
     maction:      False             # {True} call marker actions
     # envelope:     True            # {False} plot envelopes
-    mapping:      &map    oxal    # [t3d, simple, oxal, base, ttf, dyn]
+    mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
 #...........................................................................................
 ## INPUT-PARAMETER definitions
 #...........................................................................................

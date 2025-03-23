@@ -70,7 +70,7 @@ class OXAL_G(IGap.IGap):
         self.matrix    = None
         self.master    = None
         self.polies    = self.poly_slices()
-        self.OXAL_matrix()
+        self.OXAL_matrix_1()
         pass
 
     def values_at_exit(self):
@@ -269,6 +269,108 @@ class OXAL_G(IGap.IGap):
         self.matrix    = matrix
         self.particlef = Proton(self.particle.tkin+self.deltaW)
         return
+    def OXAL_matrix_1(self):
+        #====================================================================== sympy ==========
+        def OUTminusIN(qV0,T,S,Tp,Sp,Tpp,Spp,k,g,m0c3,phis,z=0,zp=0):
+            """ k = omega/(c*beta), g = gamma
+                T,S,Tp,Sp,Tpp,Spp = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
+            """
+            g2   = g**2      # gamma**2
+            cphi = cos(phis)
+            sphi = sin(phis)  
+            Db2b = zp/g2     # Delta-beta/beta
+            Dp2p = - k*z     # Delta-phi/phi
+
+            WoWi= qV0*(
+                +(T*cphi  - S*sphi)                 # O(0)
+                +(T*sphi  + S*cphi)*k*z             # O(1)   ~z,             0 fÜr z=0
+                -(Tp*cphi + Sp*sphi)*k*Db2b         # O(1)   ~(delta/beta)   0 für (delta/beta)=0
+                # -(Tp*sphi - Sp*cphi)*k**2*z*Db2b  # O(2)   ~(delta/beta)*z
+                )
+            PoPi= qV0*( 
+                    +(Sp*g2*cphi            + Tp*g2*sphi)              # O(0)
+                    +(Sp*g2*k*z*sphi        - Tp*g2*k*z*cphi)          # O(1)  ~z
+                    -(Spp*Dp2p*k*cphi       - Tpp*Dp2p*k*sphi)         # O(1)  ~dp2p
+                    # - Spp*Dp2p*k**2*z*sphi   + Tpp*Dp2p*k**2*z*cphi  # O(2)  ~dpd2p*z
+                    -3*Dp2p*(	
+                        # + Sp*g2*k*z*sphi      - Tp*g2*k*z*cphi           # O(2)
+                        # - Spp*Dp2p*k*cphi     - Tpp*Dp2p*k*sphi          # O(2)
+                        +(Sp*g2*cphi            + Tp*g2*sphi)              # O(1)  ~dp2p
+                        # - Spp*Dp2p*k**2*z*sphi   + Tpp*Dp2p*k**2*z*cphi  # O(3)
+                        )
+                )/(g**5*m0c3)
+            return (WoWi,PoPi)
+
+        polies   = self.polies
+        c        = PARAMS['clight']
+        m0c2     = self.particle.m0c2
+        m0c3     = m0c2*c
+        omega    = self.omega
+        ttf      = 0.
+        matrix   = NP.eye(MDIM,MDIM)
+
+        # initialise loop variables
+        Ts       = self.particle.tkin                 # T-soll
+        phis     = self.phisoll                       # phi-soll
+
+        for poly in polies:   # each poly is a slice of the full Ez-dist
+            # IN variables
+            gammas_in  = 1. + Ts/m0c2               # gamma 
+            gbs_in     = sqrt(gammas_in**2-1.)      # (gamma*beta)
+            betas_in   = gbs_in/gammas_in           # beta
+
+            ks     = omega/(c*betas_in)    # omega/(beta*c)
+            qV0    = self.V0(poly)         # [MV]
+            Tks    = self.T(poly,ks)
+            Sks    = self.S(poly,ks)
+            Tpks   = self.Tp(poly,ks)
+            Spks   = self.Sp(poly,ks)
+            Tppks  = self.Tpp(poly,ks)  
+            Sppks  = self.Spp(poly,ks) 
+
+            sphis  = sin(phis)
+            cphis  = cos(phis)
+
+            # kin.energy increase ref-particle
+            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=0,zp=0)
+            Ts_out    = Ts + dTs
+            phis_out  = phis + dPhis
+            ttf       = ttf + qV0
+
+            # OUT variables
+            gammas_out  = 1. + Ts_out/m0c2            # gamma 
+            gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta)
+            #======================================================================================="""        
+            # OXAL-matrix 
+            (r44,r54) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=1,zp=0)
+            (r45,r55) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=0,zp=1)
+            #======================================================================================="""        
+            # {z, dP/P}: linear sub matrix
+            mx = NP.eye(MDIM,MDIM)
+            mx[Ktp.z, Ktp.z] = r44; mx[Ktp.z, Ktp.zp ] = r45 
+            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55 
+            # {x,x'}: linear sub-matrix
+            factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
+            mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
+            mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out
+            # {y,y'}: linear sub-matrix
+            mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp, Ktp.x]
+            mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp, Ktp.xp]
+            # energy and length increase
+            mx[Ktp.T,Ktp.dT] = dTs
+            mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
+
+            # left multiplication of slice-matrix with oxal-matrix
+            matrix = NP.dot(mx,matrix)
+
+            # refresh loop variables
+            Ts    = Ts_out
+            phis  = phis_out
+        self.deltaW    = matrix[Ktp.T,Ktp.dT]
+        self.ttf       = self.deltaW/ttf
+        self.matrix    = matrix
+        self.particlef = Proton(self.particle.tkin+self.deltaW)
+        return
     def poly_slices(self):
         """Slice the RF cavity"""
         L = self.cavlen/2.
@@ -325,12 +427,22 @@ class OXAL_G(IGap.IGap):
         sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
-    def Tpp(self, poly, k):  #TODO
+    def Tpp(self, poly, k):  # sympy calculation Tpp.ipynb
         """ 2nd derivative T''(k) """
-        return 0
-    def Spp(self, poly, k):  #TODO
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        I1 = 2*dz**2*sin(dz*k)/k + 4*dz*cos(dz*k)/k**2 - 4*sin(dz*k)/k**3
+        I3 = -b*(-dz**4*sin(dz*k)/k - 4*dz**3*cos(dz*k)/k**2 + 12*dz**2*sin(dz*k)/k**3 + 24*dz*cos(dz*k)/k**4 - 24*sin(dz*k)/k**5) + b*(dz**4*sin(dz*k)/k + 4*dz**3*cos(dz*k)/k**2 - 12*dz**2*sin(dz*k)/k**3 - 24*dz*cos(dz*k)/k**4 + 24*sin(dz*k)/k**5)
+        r = I1+I3
+        return r
+    def Spp(self, poly, k):  # sympy calculation Spp.ipynb
         """ 2nd derivative S''(k) """
-        return 0
+        a   = poly.a
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        r = 2*dz**3*a*cos(dz*k)/k - 6*dz**2*a*sin(dz*k)/k**2 - 12*dz*a*cos(dz*k)/k**3 + 12*a*sin(dz*k)/k**4
+        return r
 
 class TestOxalEnergyMapping(unittest.TestCase):
     def test_OXAL(self):
