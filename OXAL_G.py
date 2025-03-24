@@ -271,33 +271,36 @@ class OXAL_G(IGap.IGap):
         return
     def OXAL_matrix_1(self):
         #====================================================================== sympy ==========
-        def OUTminusIN(qV0,T,S,Tp,Sp,Tpp,Spp,k,b,g,m0c3,phis,om,z=0,zp=0):
+        def OUTminusIN(qV0,Tk,Sk,Tpk,Spk,Tppk,Sppk,k,b,g,m0c3,phis,om,z=0,zp=0):
             """ k = omega/(c*beta), b = beta, g = gamma, om=omega
-                T,S,Tp,Sp,Tpp,Spp = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
+                Tk,Sk,Tpk,Spk,Tppk,Sppk = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
+                Formeln mit sympy gerechnet Shishlo-OpenXal-1.ipynb
             """
             g2   = g**2      # gamma**2
+            gb3  = (g*b)**3  # (gamma*beta)**3
             cphi = cos(phis)
             sphi = sin(phis)  
-            Db2b = zp/g2     # Delta-beta/beta
-            Dp2p = - k*z     # Delta-phi/phi
 
-            WoWi = qV0/g2*(
-            #  - (Spks*cos(p) + Tpks*k*sin(p))*Dp2p*k**2*z    # O2
-               + (Sp*sphi - Tp*cphi)*Dp2p*k           # O1   delta-p/p
-               + (S*cphi  + T*sphi)*g2*k*z          # O1   z
-               - (S*sphi  - T*cphi)*g2)             # O0
-
-            PoPi = -om*qV0/(b**3*g**5*m0c3)*(3*Dp2p*(
-            #	- (Sppks*sin(p) - Tppks*cos(p))*Dp2p*k**2*z    # O3
-            #	- (Sppks*cos(p) + Tppks*sin(p))*Dp2p*k         # O2
-            #	+ (Spks*sin(p)  - Tpks*cos(p))*g**2*k*z        # O2
-                + (Sp*cphi  + Tp*sphi)*g2)           # ~Dp2p
-            - 1*(
-            #	- (Sppks*sin(p) - Tppks*cos(p))*Dp2p*k**2*z    # O2
-                - (Spp*cphi + Tpp*sphi)*Dp2p*k         # ~Dp2p
-                + (Sp*sphi  - Tp*cphi)*g2*k*z        # ~z
-                + (Sp*cphi  + Tp*sphi)*g2)           # O0
+            WoWi = qV0/g2*(     # Shishlo 4.6.1
+              (Sk*cphi     - Tk*sphi)*g2*k*z        # ~z
+            - (Spk*sphi    - Tpk*cphi)*k*zp         # ~zp
+            - (Tk*cphi     - Sk*sphi)*g2
+            # - (Spk*cphi    - Tpk*sphi)*k**2*z*zp    # ~z*zp
             )
+
+            PoPi = om*qV0/(b**3*g*g2**2*gb3*m0c3)*(b**3*g*g2*(   # Shishlo 4.6.2
+              (Spk*cphi  + Tpk*sphi)*g2
+            + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~z
+            - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp
+            # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp
+              )
+            - 3*gb3*zp*( 
+              (Spk*cphi  + Tpk*sphi)*g2             # ~zp
+            # + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~zp*z
+            # - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp*zp
+            # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp*zp
+              )
+            )       
             return (WoWi,PoPi)
 
         polies   = self.polies
@@ -330,7 +333,7 @@ class OXAL_G(IGap.IGap):
             sphis  = sin(phis)
             cphis  = cos(phis)
 
-            # kin.energy increase ref-particle
+            # kin.energy and phase increase ref-particle
             (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=0)
 
             Ts_out    = Ts + dTs
