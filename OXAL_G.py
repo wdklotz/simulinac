@@ -271,8 +271,8 @@ class OXAL_G(IGap.IGap):
         return
     def OXAL_matrix_1(self):
         #====================================================================== sympy ==========
-        def OUTminusIN(qV0,T,S,Tp,Sp,Tpp,Spp,k,g,m0c3,phis,z=0,zp=0):
-            """ k = omega/(c*beta), g = gamma
+        def OUTminusIN(qV0,T,S,Tp,Sp,Tpp,Spp,k,b,g,m0c3,phis,om,z=0,zp=0):
+            """ k = omega/(c*beta), b = beta, g = gamma, om=omega
                 T,S,Tp,Sp,Tpp,Spp = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
             """
             g2   = g**2      # gamma**2
@@ -281,24 +281,23 @@ class OXAL_G(IGap.IGap):
             Db2b = zp/g2     # Delta-beta/beta
             Dp2p = - k*z     # Delta-phi/phi
 
-            WoWi= qV0*(
-                +(T*cphi  - S*sphi)                 # O(0)
-                +(T*sphi  + S*cphi)*k*z             # O(1)   ~z,             0 fÜr z=0
-                -(Tp*cphi + Sp*sphi)*k*Db2b         # O(1)   ~(delta/beta)   0 für (delta/beta)=0
-                # -(Tp*sphi - Sp*cphi)*k**2*z*Db2b  # O(2)   ~(delta/beta)*z
-                )
-            PoPi= qV0*( 
-                    +(Sp*g2*cphi            + Tp*g2*sphi)              # O(0)
-                    +(Sp*g2*k*z*sphi        - Tp*g2*k*z*cphi)          # O(1)  ~z
-                    -(Spp*Dp2p*k*cphi       - Tpp*Dp2p*k*sphi)         # O(1)  ~dp2p
-                    # - Spp*Dp2p*k**2*z*sphi   + Tpp*Dp2p*k**2*z*cphi  # O(2)  ~dpd2p*z
-                    -3*Dp2p*(	
-                        # + Sp*g2*k*z*sphi      - Tp*g2*k*z*cphi           # O(2)
-                        # - Spp*Dp2p*k*cphi     - Tpp*Dp2p*k*sphi          # O(2)
-                        +(Sp*g2*cphi            + Tp*g2*sphi)              # O(1)  ~dp2p
-                        # - Spp*Dp2p*k**2*z*sphi   + Tpp*Dp2p*k**2*z*cphi  # O(3)
-                        )
-                )/(g**5*m0c3)
+            WoWi = qV0/g2*(
+            #  - (Spks*cos(p) + Tpks*k*sin(p))*Dp2p*k**2*z    # O2
+               + (Sp*sphi - Tp*cphi)*Dp2p*k           # O1   delta-p/p
+               + (S*cphi  + T*sphi)*g2*k*z          # O1   z
+               - (S*sphi  - T*cphi)*g2)             # O0
+
+            PoPi = -om*qV0/(b**3*g**5*m0c3)*(3*Dp2p*(
+            #	- (Sppks*sin(p) - Tppks*cos(p))*Dp2p*k**2*z    # O3
+            #	- (Sppks*cos(p) + Tppks*sin(p))*Dp2p*k         # O2
+            #	+ (Spks*sin(p)  - Tpks*cos(p))*g**2*k*z        # O2
+                + (Sp*cphi  + Tp*sphi)*g2)           # ~Dp2p
+            - 1*(
+            #	- (Sppks*sin(p) - Tppks*cos(p))*Dp2p*k**2*z    # O2
+                - (Spp*cphi + Tpp*sphi)*Dp2p*k         # ~Dp2p
+                + (Sp*sphi  - Tp*cphi)*g2*k*z        # ~z
+                + (Sp*cphi  + Tp*sphi)*g2)           # O0
+            )
             return (WoWi,PoPi)
 
         polies   = self.polies
@@ -332,7 +331,8 @@ class OXAL_G(IGap.IGap):
             cphis  = cos(phis)
 
             # kin.energy increase ref-particle
-            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=0,zp=0)
+            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=0)
+
             Ts_out    = Ts + dTs
             phis_out  = phis + dPhis
             ttf       = ttf + qV0
@@ -342,8 +342,8 @@ class OXAL_G(IGap.IGap):
             gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta)
             #======================================================================================="""        
             # OXAL-matrix 
-            (r44,r54) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=1,zp=0)
-            (r45,r55) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,gammas_in,m0c3,phis,z=0,zp=1)
+            (r44,r54) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=1,zp=0)
+            (r45,r55) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=1)
             #======================================================================================="""        
             # {z, dP/P}: linear sub matrix
             mx = NP.eye(MDIM,MDIM)
