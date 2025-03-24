@@ -14,6 +14,14 @@
             "program": "Ez0.py",
         },
         {
+            "name": "Base_M",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "Base_M.py",
+        },
+        {
             "name": "DYNAC_multigap_generator",
             "type": "debugpy",
             "request": "launch",

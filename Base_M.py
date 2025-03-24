@@ -23,7 +23,7 @@ import IGap
 import unittest
 import numpy as NP
 from copy import copy
-from math import sqrt,degrees,cos,sin,pi
+from math import sqrt,degrees,radians,cos,sin,pi
 from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
@@ -66,7 +66,7 @@ class Base_G(IGap.IGap):
         return self.base_map(i_track)
 
     def toString(self):
-        return f'{self.mapping} mapping in: Base_M.base_map()'
+        return f'{self.mapping} mapping in: Base_G.base_map()'
 
     def isAccelerating(self):
         return True
@@ -253,7 +253,7 @@ class Base_G(IGap.IGap):
         m       = NP.eye(MDIM,MDIM)
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
         m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
+        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf
         m[EKOO, DEKOO] = deltaW
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
@@ -269,18 +269,37 @@ def ttf(lamb, gap, beta, aperture):
     return res
 
 class TestBaseMapping(unittest.TestCase):
-    def test_BASE_M(self):
+    def test_BASE_G(self):
         """ testing the base mapping for acceleration """
-        print(wrapRED('------------------ test_BASE_M'))
+        print(wrapRED('------------------ test_Base_G'))
         gap_parameter = dict(
-            EzPeak    = 1,
+            EzPeak    = 2,
             phisoll   = radians(-30.),
-            gap       = 0.44,
+            gap       = 0.044,
+            aperture  = 0.010,
             freq      = 750e6,
         )
-        bmap = BASE_M()    # create object instance
+        bmap = Base_G()    # create object instance
         bmap.configure(**gap_parameter)
+        bmap.adjust_energy(50.)
         print(bmap.toString())
+        print(bmap.__dict__)
+        print()
+        x  = 1e-3
+        xp = 1e-3
+        y  = 1e-3
+        yp = 1e-3
+        z  = 10e-3
+        zp = 1e-3
+        T  = 50
+        S  = 99
+        intrack=NP.array([x, xp, y, yp, z, zp, T, 1, S, 1])
+        outrack1=bmap.map(intrack)
+        outrack2=NP.dot(bmap.matrix,intrack)
+        prec=9
+        print(f'map: {NP.array_repr(outrack1,precision=prec,suppress_small=True,max_line_width=180)}')
+        print(f't3d: {NP.array_repr(outrack2,precision=prec,suppress_small=True,max_line_width=180)}')
+        print(f' -   {NP.array_repr(outrack1-outrack2,precision=prec,suppress_small=True,max_line_width=180)}')
 
 if __name__ == '__main__':
     unittest.main()
