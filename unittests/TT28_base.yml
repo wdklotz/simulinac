@@ -1,0 +1,254 @@
+# Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
+# This file is part of the SIMULINAC code
+
+# SIMULINAC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# SIMULINAC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
+
+#..........................................................................................
+# Input file for FODO linac simulator
+# Input file follows YAML syntax (http:\\http://yaml.org/)
+#
+# Note:
+#   Repeated nodes are initially denoted by an ampersand ( & )
+#   and thereafter referenced with an asterisk ( * ).
+
+#...................................................:.......................................
+DESCRIPTOR:  "Full linac run: TT28_base.yml"
+#..........................................................................................
+## RUN switches
+#..........................................................................................
+FLAGS:
+    # periodic:     True            # {False} treat lattice as ring
+    # egf:          True            # {False} apply emittance growth flag
+    sigma:        False             # {True} beam sizes by sigma-matrix else twiss functions
+    # KVout:        True            # {False} print a dictionary of Key-Value pairs, no display
+    # GDisp:        False           # {True} display graphics
+    # verbose:      3               # {0} print flag (0 = minimal print), try 0,1,2,3
+    # useaper:      True            # {False} use aperture check for lattice elements
+    # bucket:       True            # {False} plot w acceptance
+    # csTrak:       False           # {True} plot CS trajectories else beta functions
+    maction:      False             # {True} call marker actions
+    # envelope:     True            # {False} plot envelopes
+    mapping:      &map    base    # [t3d, simple, oxal, base, ttf, dyn]
+#...........................................................................................
+## INPUT-PARAMETER definitions
+#...........................................................................................
+PARAMETERS:
+    Win:                  6.              # [MeV] energy @ injection 
+    # Win:                  32.             # [MeV] H-energy @ injection 
+    DPHI0:                5.              # [deg] delta-phi @ injection
+    DW2W:                 2.0e-3          # delta-T/T kinetic energy spread @ injection
+    frequency:    &freq   750.e+6         # [Hz] frequency
+    emitx_i:      &emx    5.e-7           # [m*rad] {x,x'} emittance @ entrance
+    emity_i:      &emy    5.e-7           # [m*rad] {y,y'} emittance @ entrance
+    betax_i:      &btx    4.920           # [m] twiss beta @ entrance x
+    # betax_i:      &btx    3.920           # [m] twiss beta @ entrance x
+    # betax_i:      &btx    2.920           # [m] twiss beta @ entrance x
+    # betax_i:      &btx    1.920           # [m] twiss beta @ entrance x
+    # betax_i:      &btx    0.920           # [m] twiss beta @ entrance x
+    betay_i:      &bty    0.236           # [m] twiss beta @ entrance y
+    alfax_i:             +0.00           # [] twiss alpha x @ entrance
+    alfay_i:             -0.000           # [] twiss alpha y @ entrance
+    ql:           &p03    0.02            # [m] 1/2 quad-length
+    quad_bore:    &p04    11.e-3          # [m] quad bore radius
+    phi_sync:     &phs    -30.            # [deg] synchronous phase
+    # BgradL:       &bgrad1 40.0            # [T/m]
+    # BgradL:       &bgrad1 20.0            # [T/m]
+    # BgradL:       &bgrad1 20.0            # [T/m]
+    # BgradL:       &bgrad1 20.0            # [T/m]
+    # BgradL:       &bgrad1 20.0            # [T/m]
+    # BgradL:       &bgrad1 23.0            # [T/m]
+    # BgradL:       &bgrad1 22.0            # [T/m]
+    BgradL:       &bgrad1 21.0            # [T/m]
+    # BgradL:       &bgrad1 20.0            # [T/m]
+    # BgradL:       &bgrad1 19.0            # [T/m]
+    # BgradL:       &bgrad1 18.0            # [T/m]
+    # BgradL:       &bgrad1 17.0            # [T/m]
+    # BgradL:       &bgrad1 16.0            # [T/m]
+    # BgradL:       &bgrad1 15.0            # [T/m]
+    # BgradL:       &bgrad1 14.0            # [T/m]
+    # BgradL:       &bgrad1 13.0            # [T/m]
+    BgradH:       &bgrad2 21.0            # [T/m]
+    thins:        &ths    1               # if thins == 0|1: one thick element else: many thin elements
+    # EzPeak:       &ezp    1.6             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    1.5             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    1.4             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    1.3             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    1.2             # [MV/m] peak gap field Strengy
+    EzPeak:       &ezp    1.1             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    1.0             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.9             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.8             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.7             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.6             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.5             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.4             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.3             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.2             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.1             # [MV/m] peak gap field Strengy
+    # EzPeak:       &ezp    0.005           # [MV/m] peak gap field Strengy
+    nbsigma:              3               # [m] sigma aperture
+    lattvers:             'working: 6->200MeV,base,LE,HE,300m'     # lattice version
+    SFTabfile:    &sfd    'SF/CAV-FLAT-R135-L32.TBL' # superfish tbl-data file
+    # SFTabfile:    &sfd    'SF/SF_WDK2g44.TBL' # superfish tbl-data file
+
+#...........................................................................................
+## ELEMENTS (a.k.a. NOdes) definitions
+#...........................................................................................
+ELEMENTS:
+#...........................................................................................
+# COMMON Nodes 
+#...........................................................................................
+    D3:                        # ID
+        type:     D            # D class
+        length:   0.030        # [m]
+    D10:                       # ID
+        type:     D            # D class
+        length:   0.050        # [m]
+    Psp:                       # ID   (simu.py marker)
+        type:     MRK          # MRK class
+        action:   pspace       # phase space marker actions
+        active:   True         # action activated
+        viseo:    5            # vertical marker size
+    Pcc:                       # ID   (tracker.py marker)
+        type:     MRK          # MRK class
+        action:   pcrcut       # Pointcare cut
+        active:   False        # action activated
+        # prefix:   frames     # base dir of frames
+        abscissa: z            # x axis
+        ordinate: zp           # y axis
+#...........................................................................................
+# LOW energy section nodes
+#...........................................................................................
+    QF1:                       # ID
+        type:     QF           # QF class
+        length:   *p03         # [m]
+        aperture: *p04         # [m] aperture radius
+        B':       *bgrad1      # [T/m] quadrupole gradient'
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        sec:      LE           # section 
+    QD1:                       # ID
+        type:     QD           # QD class
+        length:   *p03         # [m] length
+        aperture: *p04        # [m] aperture radius
+        B':       *bgrad1      # [T/m] quadrupole gradient'
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        sec:      LE           # section 
+    DGAP1:                     # ID
+        type:     DKD          # DKD class
+        length:   0.0217       # [m] must be cavlen/2
+        sec:      LE           # section 
+    RFG1:                      # ID
+        type:     RFG          # RFG class
+        # type:      RFC         # RFC class
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        EzPeak:   *ezp         # [MV/m] 
+        gap:       0.0217      # [m] gap length 3/8*betalamda 0.0217 10MeV
+        HE_Gap:    0.0178      # [m] hard edge gap length (guess 80% cavlen)
+        cavlen:    0.0434      # cavity length 2*gap
+        aperture:  0.011       # [m] aperture radius
+        SFdata:   *sfd        # superfish tbl-data file
+        sec:       LE           # section 
+#...........................................................................................
+# HIGH energy section nodes
+#...........................................................................................
+    QF2:                       # ID
+        type:     QF           # QF class
+        length:   *p03         # [m]
+        aperture: *p04        # [m] aperture radius
+        B':       *bgrad2      # [T/m] quadrupole gradient'
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        sec:      HE           # section 
+    QD2:                       # ID
+        type:     QD           # QD class
+        length:   *p03         # [m] length
+        aperture: *p04        # [m] aperture radius
+        B':       *bgrad2      # [T/m] quadrupole gradient'
+        thins:    *ths         # if thins == 0|1: one thick element else: many thin elements
+        sec:      HE           # section 
+    DGAP2:                     # ID
+        type:     DKD          # DKD class
+        length:   0.0471       # [m] must be cavlen/2
+        sec:      HE           # section 
+    RFG2:                      # ID
+        type:     RFG          # RFG class
+        # type:     RFC          # RFC class
+        PhiSync:  *phs         # [deg] synchronous phase
+        freq:     *freq        # [Hz] frequency
+        # EzPeak:   *ezp         # [MV/m] 
+        EzPeak:   1.5          # [MV/m] 
+        # gap:      0.0471       # [m] gap length 3/8*betalamda 0.0217 50MeV
+        gap:      0.0642       # [m] gap length 3/8*betalamda 0.0217 100MeV
+        HE_Gap:   0.0420       # [m] hard edge gap length (guess 80% cavlen)
+        cavlen:   0.0942       # cavity length
+        aperture: 0.011        # [m] aperture radius
+        SFdata:   *sfd         # superfish tbl-data file
+        sec:      HE           # section 
+
+# ...........................................................................................
+# ...........................................................................................
+# ...........................................................................................
+# LATTICE definition starts here:  
+# Node is part of Segment is part of Cell is part of Section is part of LINE a.k.a. LATTICE
+# ===========================================================================================
+SEGMENTS:   
+    NIL_SEG:     [1,[]]  # placeholder
+# group ELEMENTs into SEGMENTs:
+# Syntax: [number,[node,...,node]]
+# the list [node,...,node] is repeated number times
+#...........................................................................................
+# Markers
+    Mkrs:                [1,[Psp,Pcc]]
+# LE section segment
+    SGLi:                [1,[QF1, D3]]               # QF+D
+    SGLm:                [1,[D3, QD1, QD1, D3]]      # D+QD+QD+D
+    SGLf:                [1,[D3, QF1]]               # D+QF
+# HE section segment
+    SGHi:                [1,[QF2, D3]]               # Qf+D
+    SGHm:                [1,[D3, QD2, QD2, D3]]      # D+QD+QD+D
+    SGHf:                [1,[D3, QF2]]               # D+QF
+# LE gaps
+    GAPL:                [1,[DGAP1,RFG1,DGAP1]]      # D+G+D sandwich
+    GAPLarr:             [18,[GAPL]]
+# HE gaps
+    GAPH:                [1,[DGAP2,RFG2,DGAP2]]      # D+G+D sandwich
+    GAPHarr:             [10,[GAPH]]
+# ===========================================================================================
+CELLS:    
+    NIL_CELL:    [1,[]] # placeholder
+# group SEGMENTS into CELLs: order given by list [...] syntax
+#...........................................................................................
+    LE_CELL:   [1,[SGLi, GAPLarr, SGLm, GAPLarr, SGLf]] 
+    HE-CELL:   [1,[SGHi, GAPHarr, SGHm, GAPHarr, SGHf]] 
+# ===========================================================================================
+SECTIONS:
+    NIL_SEC:    [1,[]] # placeholder
+# group CELLs into SECTIONS
+#...........................................................................................
+    SECL:      [50,[LE_CELL]]
+    # SECH:      [250,[HE-CELL]]
+    # SECH:      [200,[HE-CELL]]
+    # SECH:      [180,[HE-CELL]]
+    # SECH:      [160,[HE-CELL]]
+    SECH:      [140,[HE-CELL]]
+    # SECH:      [120,[HE-CELL]]
+    # SECH:      [100,[HE-CELL]]
+# ===========================================================================================
+LATTICE:    
+# group SECTIONs into a LINE a.k.a. LATTICE
+#........................................................................................... 
+    # LINE:   [1,[Mkrs,SECL,Mkrs,SECH,Mkrs]]
+    # LINE:   [1,[Psp,SECH,Psp]]
+    # LINE:   [1,[Psp,SECL,Psp]]
+    LINE:   [1,[Psp,SECL,Psp,SECH,Psp]]

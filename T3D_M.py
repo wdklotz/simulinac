@@ -39,39 +39,50 @@ def ttf(lamb, gap, beta):
 class T3D_G(IGap.IGap):
     """ Trace 3D RF Gap-Model """
     def __init__(self):
-        pass
+        self.master       = None
+        self.label        = 'T3D_G'
 
     def configure(self,**kwargs):
-        # self.length       = 0. # 0. because it's a kick
-        self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
-        self.mapping      = 't3d'        # map model
-        self.kwargs       = kwargs
-        self.label        = 'T3D' 
-
-        self.EzPeak    = kwargs.get('EzPeak',None)*self.dWf # [MV/m]
-        self.phisoll   = kwargs.get('phisoll',None)         # [radians] soll phase
-        self.gap       = kwargs.get('gap',None)             # [m] rf-gap
-        self.cavlen    = kwargs.get('cavlen',None)          # [m] cavity length
-        self.freq      = kwargs.get('freq',None)            # [Hz]  RF frequenz
-        self.particle  = kwargs.get('particle',Proton(50.))
-        self.position  = kwargs.get('position',None)
-        self.aperture  = kwargs.get('aperture',None)
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.phisoll   = kwargs.get('phisoll')
+        self.gap       = kwargs.get('gap')
+        self.cavlen    = kwargs.get('cavlen')
+        self.freq      = kwargs.get('freq')
+        self.aperture  = kwargs.get('aperture')
         self.sec       = kwargs.get('sec')
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
-        self.ttf       = None
         self.E0L       = None
         self.qE0LT     = None
-        self.deltaW    = None
-        self.particlef = None
-        self.matrix    = None
-        self.master    = None
         self.T3D_matrix()
         pass
 
-    def values_at_exit(self):
-        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
+    # mutable properties shared with master
+    @property
+    def deltaW(self): return self.master.deltaW
+    @deltaW.setter
+    def deltaW(self,v): self.master.deltaW = v
+
+    @property
+    def ttf(self): return self.master.ttf
+    @ttf.setter
+    def ttf(self,v): self.master.ttf = v
+
+    @property
+    def particle(self): return self.master.particle
+    @particle.setter
+    def particle(self,v): self.master.particle = v
+
+    @property
+    def particlef(self): return self.master.particlef
+    @particlef.setter
+    def particlef(self,v): self.master.particlef = v
+
+    @property
+    def matrix(self): return self.master.matrix
+    @matrix.setter
+    def matrix(self,v): self.master.matrix = v
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
@@ -172,11 +183,7 @@ class T3D_G(IGap.IGap):
                 )
         return res
 
-    def register_mapper(self,master):
-        master.register_mapping(self)
-        pass
-
-    def accept_register(self,master):
+    def register(self,master):
         self.master = master
         pass
 
@@ -210,7 +217,8 @@ class T3D_G(IGap.IGap):
 class TestElementMethods(unittest.TestCase):
     def testT3D1(self):
         """ testing the Trace 3D mapping for acceleration """
-        print(wrapRED('------------------ testT3D1'))
+        print(wrapRED('------------------------------------------------------------ testT3D1'))
+        FLAGS['mapping'] = 't3d'
         gap_parameter = dict(
             EzPeak    = 1,
             phisoll   = radians(-30.),
@@ -218,18 +226,19 @@ class TestElementMethods(unittest.TestCase):
             cavlen    = 0.44,
             freq      = 750e6,
         )
-        t3dg = T3D_G()    # create object instance
-        t3dg.configure(**gap_parameter)
-        print(f'transfer matrix T3D for {t3dg.particle.tkin} MeV (default)')
-        print(t3dg.toString())
+        instance = ELM.RFG('RFG')
+        instance.register(T3D_G())
+        instance.configure(**gap_parameter)
+        print(f'transfer matrix T3D for {instance.particle.tkin} MeV (default)')
+        print(instance.mapper.toString())
 
         tkin = 100.
         print(f'transfer matrix T3D for {tkin} MeV')
-        t3dg.adjust_energy(tkin)
-        print(t3dg.toString())
+        instance.adjust_energy(tkin)
+        print(instance.mapper.toString())
         #=============================================================
         tkin       = 10
-        print(f'\n test waccept(...) for {tkin} MeV protons')
+        print(wrapRED(f'\n test waccept(...) for {tkin} MeV protons'))
         DT2T       = 2e-3  # DT/T
         Dphi0      = 5.    # Dphi/phi [deg]
         E0         = PARAMS['proton_mass']
@@ -239,8 +248,9 @@ class TestElementMethods(unittest.TestCase):
         PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
         PARAMS['Dphi0_i']   = Dphi0
         PARAMS['DT2T_i']    = DT2T
-        res = t3dg.waccept()
+        res = instance.waccept()
         dictprnt(what=res,text='waccept',njust=25)
 
 if __name__ == '__main__':
+    import elements as ELM
     unittest.main()

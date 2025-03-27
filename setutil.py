@@ -593,24 +593,26 @@ class Test_set_utilities(unittest.TestCase):
         def ellicp(xy,alfa,beta,emit):
             """ convert twiss parameters to plot parameters """
             gamma = (1.+alfa**2)/beta
-            H = 0.5*(beta+gamma)     # see CERN's Formelsammlung
-            a = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
-            b = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
+            L = 1/gamma # see CERN's Formelsammlung
+            S = -alfa/gamma # see CERN's Formelsammlung
+            H = 0.5*(beta+gamma) # see CERN's Formelsammlung
+            long_ax = sqrt(0.5*emit)*(sqrt(H+1.)+sqrt(H-1.))
+            short_ax = sqrt(0.5*emit)*(sqrt(H+1.)-sqrt(H-1.))
             tilt = degrees(0.5*atan(2*alfa/(gamma-beta)))
-            # return plot prameters as  (origin,width,height,tilt)
-            return (xy,a,b,tilt)
-        args = ellicp((0,0),0.5,100.,1.e-6)
-        ells = [Ellipse(*args,fill=False,color='red')]
-
-        # fig, ax = plt.subplots(subplot_kw={'aspect': 'equal'})
+            return (xy,long_ax,short_ax,tilt) # return plot prameters as  (origin,width,height,tilt)
+        pi=3.142
+        alfas=[0,pi]
+        beta = 10.
+        emit = 10e-6
         fig, ax = plt.subplots()
-        for e in ells:
-            ax.add_artist(e)
-            e.set_clip_box(ax.bbox)
 
-        width  = args[1]
-        height = args[2]
-        scale = 0.7
+        for alfa in alfas:
+            args = (xy,width,height,tilt) = ellicp((0,0),alfa,beta,emit)
+            elli = Ellipse(xy,width,height,angle=tilt,fill=False,color='red')
+            ax.add_artist(elli)
+            elli.set_clip_box(ax.bbox)
+
+        scale = 1.5
         ax.set_xlim(-width*scale, width*scale)
         ax.set_ylim(-height*scale, height*scale)
         plt.show()

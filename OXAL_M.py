@@ -458,7 +458,7 @@ class TestOxalEnergyMapping(unittest.TestCase):
             cavlen    = 0.44,
             freq      = 750e6,
         )
-        fieldtab  = 'SF/CAV-FLAT-R135-L31.TBL'
+        fieldtab  = 'unittests/CAV-FLAT-R135-L32.TBL'
         EzPeak    = gap_parameter['EzPeak']
         cavlen    = gap_parameter['cavlen']
         sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution

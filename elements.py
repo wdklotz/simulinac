@@ -24,17 +24,17 @@ from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF,Proton
 from setutil import Ktp
+from T3D_M   import T3D_G
 import warnings
 import math    as M
 import numpy   as NP
 import setutil as UTIL
-import OXAL_G as OX
+import OXAL_M as OX
 
 twopi = 2.*M.pi
 # numpy pretty printing
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format})
-def wrapRED(str):
-    return UTIL.colors.RED+str+UTIL.colors.ENDC
+def wrapRED(str): return UTIL.colors.RED+str+UTIL.colors.ENDC
 
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
@@ -898,36 +898,46 @@ class RFG_OLD(Node):
         return lost
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
-    def __init__(self,label,mapping):
+    def __init__(self,label):
         super().__init__()
-
-        # static value parameters
-        self.viseo        = 0.25
         self.label        = label
-        self.mapping      = mapping
-        self.length       = 0.
-        
-        # variable parameters filled before gap configuration
-        self.freq         = None
-        self.particle     = None
+        self.viseo        = 0.25
+        self.length       = 0
+        self.dWf          = UTIL.FLAGS['dWf']
+        self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
+        self.position     = (0,0,0)
 
-        # variable parameters filled after gap configuration
         self.mapper       = None
+        self.EzPeak       = None
+        self.phisoll      = None
+        self.gap          = None
+        self.cavlen       = None
+        self.freq         = None
+        self.aperture     = None
+        self.sec          = None
+        self.mapping      = None
+        self.deltaW       = None
         self.ttf          = None
-        self.deltaw       = None
         self.particlef    = None
         self.matrix       = None
 
-    def register_mapping(self,mapper):
-        self.mapper = mapper
-        mapper.accept_register(self)
+    def register(self,mapper):
+        self.mapper  = mapper
+        self.mapper.register(self)
+        pass
 
     def configure(self,**kwargs): 
-        if self.mapping in ['t3d','oxal','base','ttf']:
-            self.particle = kwargs['particle']  
-            self.freq     = kwargs['freq']
+        mapping = UTIL.FLAGS.get('mapping')
+        if mapping in ['t3d','oxal','base','ttf']:
+            self.EzPeak    = kwargs.get('EzPeak')*self.dWf # [MV/m]
+            self.phisoll   = kwargs.get('phisoll')         # [radians] soll phase
+            self.gap       = kwargs.get('gap')             # [m] rf-gap
+            self.cavlen    = kwargs.get('cavlen')          # [m] cavity length
+            self.freq      = kwargs.get('freq')            # [Hz]  RF frequenz
+            self.aperture  = kwargs.get('aperture')
+            self.sec       = kwargs.get('sec')
             self.mapper.configure(**kwargs)
-        elif self.mapping in ['simple','dyn']:
+        elif mapping in ['simple','dyn']:
             raise(UserWarning(wrapRED(f'mapping not ready {mapping}')))
             sys.exit()
         else:
@@ -943,12 +953,8 @@ class RFG(Node):
 
     def adjust_energy(self, tkin):
         self.mapper.adjust_energy(tkin)
-        at_exit        = self.mapper.values_at_exit()
-        self.ttf       = at_exit['ttf']
-        self.deltaw    = at_exit['deltaw']
-        self.particlef = at_exit['particlef']
-        self.matrix    = at_exit['matrix']
         return self
+
     def map(self,i_track):
         return self.mapper.map(i_track)
 
@@ -1435,19 +1441,36 @@ class TestElementMethods(unittest.TestCase):
         self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.023817,delta=1.e-4)
     def test_RFG_Node_with_T3D_G_map(self):
         print("\b----------------------------------------test_RFG_Node_with_T3D_G_map")
-        EzAvg = 2.1; phisoll = M.radians(-30.); gap = 0.044; freq = 816.e6
-        rfg = RFG("RFG",EzAvg,phisoll,gap,freq)
-        self.assertEqual(rfg.mapping,"t3d")
-        self.assertEqual(rfg.label,"RFG")
-        self.assertEqual(rfg.EzAvg,2.1)
-        self.assertEqual(rfg.phisoll,M.radians(-30.))
-        self.assertAlmostEqual(rfg.deltaW,0.062206,delta=1.e-4)
-        self.assertAlmostEqual(rfg.matrix[EKOO,DEKOO],0.062206,delta=1.e-4)
-        self.assertEqual(rfg.length,0.)
-        self.assertEqual(rfg.matrix[SKOO,DSKOO],0.)
-        rfg = rfg.adjust_energy(250.)
-        self.assertAlmostEqual(rfg.deltaW,0.0751,delta=1.e-4)
-        self.assertAlmostEqual(rfg.matrix[EKOO,DEKOO],0.0751,delta=1.e-4)
+        ID        = 'RFG mit T3D_G'
+        EzPeak    = 2.1
+        phisoll   = M.radians(-30.)
+        gap_parameters = dict(
+            EzPeak    = EzPeak,
+            phisoll   = phisoll,         # [radians] requested soll phase
+            gap       = 0.044,
+            cavlen    = 0.064,
+            freq      = 816.e6,            # [Hz]  requested RF frequenz
+            particle  = Proton(50.),
+            position  = (0,0,0),
+            aperture  = 0.011,
+            sec       = 'xx'
+        )
+        instance = RFG(ID)
+        instance.register_mapping(T3D_G())
+        instance.configure(**gap_parameters)
+        
+        self.assertEqual(instance.mapping,'t3d')
+        self.assertEqual(instance.label,'RFG mit T3D_G')
+        self.assertEqual(instance.mapper.label,'T3D_G')
+        self.assertEqual(instance.mapper.EzPeak,EzPeak)
+        self.assertEqual(instance.mapper.phisoll,M.radians(-30.))
+        self.assertAlmostEqual(instance.mapper.deltaW,0.062206,delta=1.e-4)
+        self.assertAlmostEqual(instance.mapper.matrix[EKOO,DEKOO],0.062206,delta=1.e-4)
+        self.assertEqual(instance.length,0.)
+        self.assertEqual(instance.mapper.matrix[SKOO,DSKOO],0.)
+        instance.adjust_energy(250.)
+        self.assertAlmostEqual(instance.mapper.deltaW,0.0751,delta=1.e-4)
+        self.assertAlmostEqual(instance.matrix[EKOO,DEKOO],0.0751,delta=1.e-4)
 
 if __name__ == '__main__':
     UTIL.FLAGS['verbose'] = 3

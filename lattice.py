@@ -654,13 +654,13 @@ class TestLattice(unittest.TestCase):
             print(lattice.seq[i].ref_track, lattice.seq[i].particle.tkin,lattice.seq[i].label)
     def test_lattice_generator(self):
         print('----------------------------------test_lattice_generator')
-        input_file = "unittests/simuIN.yml"
+        input_file = "unittests/TT28_base.yml"
         lattice = factory(input_file)
         print(lattice.__class__.__name__,F"{len(lattice.seq)} elements")
         print(lattice.__class__.__name__,F"length {len(lattice.seq)} [m]")
         self.assertEqual(lattice.__class__.__name__,"Lattice")
     def test_lattice_iterator(self):
-        input_file = "unittests/simuIN.yml"
+        input_file = "unittests/TT28_base.yml"
         print('---------------------------------test_lattice_iterator')
         lattice = factory(input_file)
         # node = None
@@ -700,7 +700,7 @@ class TestLattice(unittest.TestCase):
             print(lattice1.seq[i].label,lattice1.seq[i].position)
     def test_first_last_gap(self):
         print('----------------------------------test_first_last_gap')
-        input_file = "unittests/simuIN.yml"
+        input_file = "unittests/TT28_base.yml"
         lattice = factory(input_file)
         print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
         lattice.toggle_iteration()

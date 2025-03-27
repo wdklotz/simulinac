@@ -5,9 +5,6 @@ class IGap(ABC):
     def configure(self,**kwargs): pass
 
     @abstractmethod
-    def values_at_exit(self): pass
-
-    @abstractmethod
     def map(self,i_track): pass
 
     @abstractmethod
@@ -23,10 +20,4 @@ class IGap(ABC):
     def waccept(self,**kwargs): pass
 
     @abstractmethod
-    def values_at_exit(self): pass
-
-    @abstractmethod
-    def register_mapper(self,obj): pass
-
-    @abstractmethod
-    def accept_register(self): pass
+    def register(self,obj): pass

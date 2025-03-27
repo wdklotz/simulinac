@@ -22,8 +22,9 @@ from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
 from copy import deepcopy
 import unittest
-
 from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
+from T3D_M import T3D_G
+from elements import RFG
 
 class Sigma(object):
     """ class for the sigma-matrix """
@@ -143,7 +144,7 @@ def sig_map(sigma_i,node):
     
 class TestElementMethods(unittest.TestCase):
     def test_instanciate_sigma(self):
-        print('---------------------test_instanciate_sigma--')
+        print('-----------------------------------test_instanciate_sigma--')
         PARAMS['emitz_i'] = 0.0     # use this for test
         bx       = 1.
         ax       = 0.
@@ -159,10 +160,18 @@ class TestElementMethods(unittest.TestCase):
         if DEBUG_ON('[sigma]'):
             print('{}'.format(mxprnt(sg0.matrix)))
     def test_map_sigma(self):
-        print('---------------------test_map_sigma--')
-        from elements import RFG
+        print('-----------------------------------test_map_sigma--')
         particle = Proton(2.)
-        R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
+        gap_parameters = dict(
+            EzPeak=5.0,
+            phisoll=radians(-30.),
+            gap=0.022,
+            freq=816.e6,
+            particle=particle
+            )
+        R = RFG('test-gap')
+        R.register_mapping(T3D_G())
+        R.configure(**gap_parameters)
         bx       = 1.
         ax       = 0.
         gx       = (1+ax**2)/bx
@@ -175,17 +184,25 @@ class TestElementMethods(unittest.TestCase):
         twiss_vec0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
         sigma_i    = Sigma(twiss_vec0,1.,1.,1.)
         simx       = sigma_i.matrix
-        sigma_f    = sig_map(sigma_i,R)   ## apply map to sigma
+        sigma_f    = sig_map(sigma_i,R.mapper)   ## apply map to sigma
         sfmx       = sigma_f.matrix
         if DEBUG_ON('[sigma_i]'):
             print('{}'.format(mxprnt(simx)))
         if DEBUG_ON('[sigma_f] = [R]*[sigma]*[R]^T'):
             print('{}'.format(mxprnt(sfmx)))
     def test_eg_correction(self):
-        print('---------------------test_eg_correction--')
-        from elements import RFG
+        print('-----------------------------------test_eg_correction--')
         particle = Proton(2.)
-        R = RFG('test-gap',5.0, -30.,0.022, 816.E6, particle=particle)
+        gap_parameters = dict(
+            EzPeak=5.0,
+            phisoll=radians(-30.),
+            gap=0.022,
+            freq=816.e6,
+            particle=particle
+            )
+        R = RFG('test-gap')
+        R.register_mapping(T3D_G())
+        R.configure(**gap_parameters)
         bx       = 1.
         ax       = 0.
         gx       = (1+ax**2)/bx
@@ -197,11 +214,11 @@ class TestElementMethods(unittest.TestCase):
         gz       = (1+ay**2)/bx
         twiss_vec0 = NP.array([bx,ax,gx,by,ay,gy,bz,az,gz])
         sigma_i    = Sigma(twiss_vec0,1.,1.,1.)
-        sigma_f    = sig_map(sigma_i,R)   ## map to sigma through R
+        sigma_f    = sig_map(sigma_i,R.mapper)   ## map to sigma through R
         sfmx       = sigma_f.matrix
         delta_phi  = radians(5.)
-        sigma_fc = sig_apply_eg_corr(R,sigma_f,delta_phi,ksi=(0.01,0.01))
-        sfcmx = sigma_fc.matrix
+        sigma_fc   = sig_apply_eg_corr(R,sigma_f,delta_phi,ksi=(0.01,0.01))
+        sfcmx      = sigma_fc.matrix
         if DEBUG_ON('[sigma_f]-corrected minus [sigma_f]-uncorrected'):
             print('{}'.format(mxprnt((sfcmx-sfmx))))
 # main ----------

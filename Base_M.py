@@ -34,14 +34,14 @@ twopi = 2.*pi
 class Base_G(IGap.IGap):
     """ Base RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
+        self.length       = 0. # 0. because it's a kick
+        self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
+        self.mapping      = 'base'        # map model
+        self.label        = 'Base_G'
         pass
 
     def configure(self,**kwargs):
-        # self.length       = 0. # 0. because it's a kick
-        self.dWf          = FLAGS['dWf']
-        self.mapping      = 'base'        # map model
         self.kwargs       = kwargs
-        self.label        = 'BM' 
 
         self.EzPeak    = kwargs.get('EzPeak',None)
         self.phisoll   = kwargs.get('phisoll',None)
@@ -70,6 +70,14 @@ class Base_G(IGap.IGap):
 
     def isAccelerating(self):
         return True
+
+    def adjust_energy(self, tkin):
+        self.particle  = Proton(tkin)
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta,self.aperture)  # Wrangler
+        self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
+        self.particlef = Proton(tkin + self.deltaW)
+        self.T3D_matrix()
+        pass
 
     def waccept(self):
         """ 
@@ -164,13 +172,30 @@ class Base_G(IGap.IGap):
         self.master = master
         pass
 
-    def adjust_energy(self, tkin):
-        self.particle  = Proton(tkin)
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta,self.aperture)  # Wrangler
-        self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
-        self.particlef = Proton(tkin + self.deltaW)
-        self.T3D_matrix()
-        pass
+    def T3D_matrix(self):
+        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
+        m       = NP.eye(MDIM,MDIM)
+        E0L     = self.EzPeak*self.gap
+        qE0LT   = E0L*self.ttf
+        deltaW  = E0L*self.ttf*cos(self.phisoll)
+        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg    = Proton(Wavg)
+        bavg    = pavg.beta
+        gavg    = pavg.gamma
+        m0c2    = pavg.e0
+        kz      = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky      = kx = -0.5*kz/(gavg*gavg)
+        bgi     = self.particle.gamma_beta
+        bgf     = self.particlef.gamma_beta
+        bgi2bgf = bgi/bgf
+        m       = NP.eye(MDIM,MDIM)
+        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
+        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
+        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf
+        m[EKOO, DEKOO] = deltaW
+        m[SKOO, DSKOO]  = 0.
+        self.matrix = m
+        return
 
     def base_map(self, i_track):
         """ Neue überarbeitete map Version vom 17.02.2025 (wdk)
@@ -233,31 +258,6 @@ class Base_G(IGap.IGap):
         log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
 
         return f_track
-
-    def T3D_matrix(self):
-        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m       = NP.eye(MDIM,MDIM)
-        E0L     = self.EzPeak*self.gap
-        qE0LT   = E0L*self.ttf
-        deltaW  = E0L*self.ttf*cos(self.phisoll)
-        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
-        pavg    = Proton(Wavg)
-        bavg    = pavg.beta
-        gavg    = pavg.gamma
-        m0c2    = pavg.e0
-        kz      = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
-        ky      = kx = -0.5*kz/(gavg*gavg)
-        bgi     = self.particle.gamma_beta
-        bgf     = self.particlef.gamma_beta
-        bgi2bgf = bgi/bgf
-        m       = NP.eye(MDIM,MDIM)
-        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
-        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf
-        m[EKOO, DEKOO] = deltaW
-        m[SKOO, DSKOO]  = 0.
-        self.matrix = m
-        return
 
 def ttf(lamb, gap, beta, aperture):
     """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """

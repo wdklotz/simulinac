@@ -52,7 +52,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["--file","TT28.yml"]
+            "args": ["--file","TT28_t3d.yml"]
         //    "args": ["--file","SH/trackerIN_smh27-12.2.yml"]
         },
         {
@@ -104,6 +104,15 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
+            "args": ["--file", "willeIN.yml"]
+        }
+        {
+            "name": "bunch",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "bunch.py",
             "args": ["--file", "willeIN.yml"]
         }
     ]
