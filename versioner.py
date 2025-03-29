@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-__version__='11.0.2.3'
+__version__='11.0.2.4'
 import sys,os
 import glob
 import re
@@ -39,8 +39,10 @@ def main():
 
 if __name__ == '__main__':
     # match __version__='vxx.yy.zzz'  xx=main, yy=year, zzz=minor
-    rep = re.compile("__version__=['\"]v\d{1,2}[.]\d{1,2}[.]\S{1,3}['\"]") 
+    rep = re.compile("__version__=['\"]v\d{1,2}[.]\d{1,2}[.]\S{1,5}['\"]") 
+    # rep = re.compile("__version__=['\"]\d{1,2}[.]\d{1,2}[.]\S{1,5}['\"]") 
     new_version = sys.argv[1] if len(sys.argv) == 2 else None
+    print(f'new version: {new_version}')
     if new_version == None:
         print("usage: versioner.py v<new version>")
         sys.exit(1)

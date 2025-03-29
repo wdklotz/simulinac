@@ -130,5 +130,14 @@
             "program": "bunch.py",
             "args": ["--file", "willeIN.yml"]
         }
+        {
+            "name": "versioner",
+            "type": "debugpy",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "program": "versioner.py",
+            "args": ["v11.0.2.4"]
+        }
     ]
 }
