@@ -60,25 +60,25 @@ class T3D_G(IGap.IGap):
 
     # mutable properties shared with master
     @property
-    def deltaW(self): return self.master.deltaW
+    def deltaW(self):    return self.master.deltaW
     @deltaW.setter
-    def deltaW(self,v): self.master.deltaW = v
+    def deltaW(self,v):         self.master.deltaW = v
     @property
-    def matrix(self): return self.master.matrix
+    def matrix(self):    return self.master.matrix
     @matrix.setter
-    def matrix(self,v): self.master.matrix = v
+    def matrix(self,v):         self.master.matrix = v
     @property
-    def particle(self): return self.master.particle
+    def particle(self):  return self.master.particle
     @particle.setter
-    def particle(self,v): self.master.particle = v
+    def particle(self,v):       self.master.particle = v
     @property
     def particlef(self): return self.master.particlef
     @particlef.setter
-    def particlef(self,v): self.master.particlef = v
+    def particlef(self,v):      self.master.particlef = v
     @property
-    def ttf(self): return self.master.ttf
+    def ttf(self):       return self.master.ttf
     @ttf.setter
-    def ttf(self,v): self.master.ttf = v
+    def ttf(self,v):            self.master.ttf = v
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
@@ -87,7 +87,6 @@ class T3D_G(IGap.IGap):
     def isAccelerating(self):
         return True
     def adjust_energy(self,tkin):
-        self.particle = Proton(tkin)
         self.T3D_matrix()
         pass
     def waccept(self):
@@ -131,6 +130,7 @@ class T3D_G(IGap.IGap):
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
         except ValueError as ex:
+            exception = ex
             w0small = -1
 
         if w0large != -1: 
@@ -138,7 +138,7 @@ class T3D_G(IGap.IGap):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            raise(UserWarning(wrapRED(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')))
             sys.exit(1)
 
         # Dp/p max on separatrix

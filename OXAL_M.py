@@ -40,12 +40,6 @@ twothird = 2./3.
 def cot(x):
     return -tan(x+pihalf)
 
-# def ttf(lamb, gap, beta):
-#     """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-#     x = gap/(beta*lamb)
-#     res =NP.sinc(x)
-#     return res
-
 class OXAL_G(IGap.IGap):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
@@ -70,25 +64,25 @@ class OXAL_G(IGap.IGap):
 
     # mutable properties shared with master
     @property
-    def deltaW(self): return self.master.deltaW
+    def deltaW(self):    return self.master.deltaW
     @deltaW.setter
-    def deltaW(self,v): self.master.deltaW = v
+    def deltaW(self,v):         self.master.deltaW = v
     @property
-    def matrix(self): return self.master.matrix
+    def matrix(self):    return self.master.matrix
     @matrix.setter
-    def matrix(self,v): self.master.matrix = v
+    def matrix(self,v):         self.master.matrix = v
     @property
-    def particle(self): return self.master.particle
+    def particle(self):  return self.master.particle
     @particle.setter
-    def particle(self,v): self.master.particle = v
+    def particle(self,v):       self.master.particle = v
     @property
     def particlef(self): return self.master.particlef
     @particlef.setter
-    def particlef(self,v): self.master.particlef = v
+    def particlef(self,v):      self.master.particlef = v
     @property
-    def ttf(self): return self.master.ttf
+    def ttf(self):       return self.master.ttf
     @ttf.setter
-    def ttf(self,v): self.master.ttf = v
+    def ttf(self,v):            self.master.ttf = v
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
@@ -97,7 +91,6 @@ class OXAL_G(IGap.IGap):
     def isAccelerating(self):
         return True
     def adjust_energy(self, tkin):
-        self.particle = Proton(tkin)
         self.OXAL_matrix()
         pass
     def waccept(self,**kwargs):
@@ -274,7 +267,135 @@ class OXAL_G(IGap.IGap):
         self.particlef = Proton(self.particle.tkin+self.deltaW)
         self.matrix    = matrix
         return
-    def OXAL_matrix_kaputt(self):
+    def poly_slices(self):
+        """Slice the RF cavity"""
+        L = self.cavlen/2.
+        slices = []
+        zl = -L*100.   # [m] --> [cm]
+        zr = -zl
+        for poly in self.SFdata.polies:
+            zil = poly.zl
+            zir = poly.zr
+            if zil < zl or zir > zr: continue
+            slices.append(poly)
+        DEBUG_OFF('slices',slices)
+        return slices
+
+    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
+        """ V0 A.Shishlo/J.Holmes (4.4.3) """
+        E0 = poly.E0                          # [MV/m]
+        b  = poly.b                           # [1/cm**2]
+        dz = poly.dz                          # [cm]
+        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2 # [MV]
+        return v0 
+    def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
+        t  = f1*f2
+        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        return t
+    def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
+        a  = poly.a
+        b  = poly.b
+        dz = poly.dz
+        k  = k*1.e-2       # [1/m] --> [1/cm]
+        f1 = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        f2 = 1.-k*dz*cot(k*dz)
+        s  = f1*f2
+        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        return s
+    def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        tp  = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
+        tp  = tp*1.e-2     # [cm] --> [m]
+        return tp
+    def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
+        a   = poly.a
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        sp  = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
+        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
+        sp  = sp*1.e-2     # [cm] --> [m]
+        return sp
+    def Tpp(self, poly, k):  # sympy calculation Tpp.ipynb
+        """ 2nd derivative T''(k) """
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        I1 = 2*dz**2*sin(dz*k)/k + 4*dz*cos(dz*k)/k**2 - 4*sin(dz*k)/k**3
+        I3 = -b*(-dz**4*sin(dz*k)/k - 4*dz**3*cos(dz*k)/k**2 + 12*dz**2*sin(dz*k)/k**3 + 24*dz*cos(dz*k)/k**4 - 24*sin(dz*k)/k**5) + b*(dz**4*sin(dz*k)/k + 4*dz**3*cos(dz*k)/k**2 - 12*dz**2*sin(dz*k)/k**3 - 24*dz*cos(dz*k)/k**4 + 24*sin(dz*k)/k**5)
+        r = I1+I3
+        return r
+    def Spp(self, poly, k):  # sympy calculation Spp.ipynb
+        """ 2nd derivative S''(k) """
+        a   = poly.a
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        r = 2*dz**3*a*cos(dz*k)/k - 6*dz**2*a*sin(dz*k)/k**2 - 12*dz*a*cos(dz*k)/k**3 + 12*a*sin(dz*k)/k**4
+        return r
+
+
+class TestOxalEnergyMapping(unittest.TestCase):
+    def test_OXAL(self):
+        """ testing the OXAL mapping for acceleration """
+        print(wrapRED('---------------------------------------- OXAL_G.OXAL_matrix()'))
+        gap_parameter = dict(
+            aperture   = 0.01,
+            cavlen     = 0.044,
+            EzPeak     = 1.1,
+            freq       = 750.e+6,
+            gap        = 0.022,
+            phisoll    = radians(-30.),
+            sec        = 'test',
+            SFdata     = None,
+        )
+        FLAGS['mapping'] = 'oxal'
+        fieldtab  = 'unittests/CAV-FLAT-R135-L32.TBL'
+        L         = gap_parameter['cavlen']
+        EzPeak    = gap_parameter['EzPeak']
+        sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=L*100.)   # scaled field distribution
+        gap_parameter['SFdata'] = sfdata
+        instance = ELM.RFG('RFG')
+        instance.register(OXAL_G())
+        instance.configure(**gap_parameter)
+
+        tkin = instance.particle.tkin
+        print(f'transfer matrix OXAL for {tkin} MeV (default)')
+        print(instance.mapper.toString())
+
+        print(wrapRED('-------------------------------------------- OXAL_G.waccept()'))
+        DT2T       = 2e-3  # DT/T
+        Dphi0      = 5.    # Dphi/phi [deg]
+        E0         = PARAMS['proton_mass']
+        w0         = tkin/E0*DT2T # Wrangler's definition of w (pp.176)
+        emit       = Dphi0*w0     # emittance  in {Dphi,w}-space
+        betaw      = emit/w0**2   # twiss-beta in {Dphi,w}-space
+        PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
+        PARAMS['Dphi0_i']   = Dphi0
+        PARAMS['DT2T_i']    = DT2T
+        pprint.pp(instance.waccept())
+        print('twiss_z_i')
+        pprint.pp(vars(instance.waccept()['twiss_z_i']))
+
+if __name__ == '__main__':
+    import elements as ELM
+    import pprint
+    unittest.main()
+
+
+
+""" altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
+""" altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
+""" altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
+class KW():
+    def OXAL_matrix(self):
         #====================================================================== sympy ==========
         #     """ k = omega/(c*beta), b = beta, g = gamma, om=omega
         #         Tk,Sk,Tpk,Spk,Tppk,Sppk = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
@@ -436,123 +557,3 @@ class OXAL_G(IGap.IGap):
         self.matrix    = matrix
         pass
         return
-    def poly_slices(self):
-        """Slice the RF cavity"""
-        L = self.cavlen/2.
-        slices = []
-        zl = -L*100.   # [m] --> [cm]
-        zr = -zl
-        for poly in self.SFdata.polies:
-            zil = poly.zl
-            zir = poly.zr
-            if zil < zl or zir > zr: continue
-            slices.append(poly)
-        DEBUG_OFF('slices',slices)
-        return slices
-
-    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
-        """ V0 A.Shishlo/J.Holmes (4.4.3) """
-        E0 = poly.E0                          # [MV/m]
-        b  = poly.b                           # [1/cm**2]
-        dz = poly.dz                          # [cm]
-        v0 = E0*(2*dz+twothird*b*dz**3)*1.e-2 # [MV]
-        return v0 
-    def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
-        b  = poly.b
-        dz = poly.dz
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
-        t  = f1*f2
-        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
-        return t
-    def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
-        a  = poly.a
-        b  = poly.b
-        dz = poly.dz
-        k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        f2 = 1.-k*dz*cot(k*dz)
-        s  = f1*f2
-        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
-        return s
-    def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        tp  = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
-        tp  = tp*1.e-2     # [cm] --> [m]
-        return tp
-    def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
-        a   = poly.a
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        sp  = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
-        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
-        sp  = sp*1.e-2     # [cm] --> [m]
-        return sp
-    def Tpp(self, poly, k):  # sympy calculation Tpp.ipynb
-        """ 2nd derivative T''(k) """
-        b   = poly.b
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        I1 = 2*dz**2*sin(dz*k)/k + 4*dz*cos(dz*k)/k**2 - 4*sin(dz*k)/k**3
-        I3 = -b*(-dz**4*sin(dz*k)/k - 4*dz**3*cos(dz*k)/k**2 + 12*dz**2*sin(dz*k)/k**3 + 24*dz*cos(dz*k)/k**4 - 24*sin(dz*k)/k**5) + b*(dz**4*sin(dz*k)/k + 4*dz**3*cos(dz*k)/k**2 - 12*dz**2*sin(dz*k)/k**3 - 24*dz*cos(dz*k)/k**4 + 24*sin(dz*k)/k**5)
-        r = I1+I3
-        return r
-    def Spp(self, poly, k):  # sympy calculation Spp.ipynb
-        """ 2nd derivative S''(k) """
-        a   = poly.a
-        dz  = poly.dz
-        k   = k*1.e-2      # [1/m] --> [1/cm]
-        r = 2*dz**3*a*cos(dz*k)/k - 6*dz**2*a*sin(dz*k)/k**2 - 12*dz*a*cos(dz*k)/k**3 + 12*a*sin(dz*k)/k**4
-        return r
-
-class TestOxalEnergyMapping(unittest.TestCase):
-    def test_OXAL(self):
-        """ testing the OXAL mapping for acceleration """
-        print(wrapRED('---------------------------------------- OXAL_G.OXAL_matrix()'))
-        gap_parameter = dict(
-            aperture   = 0.01,
-            cavlen     = 0.044,
-            EzPeak     = 1.1,
-            freq       = 750.e+6,
-            gap        = 0.022,
-            phisoll    = radians(-30.),
-            sec        = 'test',
-            SFdata     = None,
-        )
-        FLAGS['mapping'] = 'oxal'
-        fieldtab  = 'unittests/CAV-FLAT-R135-L32.TBL'
-        L         = gap_parameter['cavlen']
-        EzPeak    = gap_parameter['EzPeak']
-        sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=L*100.)   # scaled field distribution
-        gap_parameter['SFdata'] = sfdata
-        instance = ELM.RFG('RFG')
-        instance.register(OXAL_G())
-        instance.configure(**gap_parameter)
-
-        tkin = instance.particle.tkin
-        print(f'transfer matrix OXAL for {tkin} MeV (default)')
-        print(instance.mapper.toString())
-
-        print(wrapRED('-------------------------------------------- OXAL_G.waccept()'))
-        DT2T       = 2e-3  # DT/T
-        Dphi0      = 5.    # Dphi/phi [deg]
-        E0         = PARAMS['proton_mass']
-        w0         = tkin/E0*DT2T # Wrangler's definition of w (pp.176)
-        emit       = Dphi0*w0     # emittance  in {Dphi,w}-space
-        betaw      = emit/w0**2   # twiss-beta in {Dphi,w}-space
-        PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
-        PARAMS['Dphi0_i']   = Dphi0
-        PARAMS['DT2T_i']    = DT2T
-        pprint.pp(instance.waccept())
-        print('twiss_z_i')
-        pprint.pp(vars(instance.waccept()['twiss_z_i']))
-
-if __name__ == '__main__':
-    import elements as ELM
-    import pprint
-    unittest.main()

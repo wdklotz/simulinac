@@ -145,12 +145,14 @@ class Particle(object):
             # sys.exit(1)
         self.gamma_beta = self.gamma * self.beta
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
-        self.v          = self.beta * PARAMS['clight']    # velocity [m/s]
+        self.v = self.betac = self.beta * PARAMS['clight']    # velocity [m/s]
         self.brho       = 1.e+6 / PARAMS['clight'] * self.gamma_beta * self.e0 # [T*m]
         self.name       = name
         self.m0c2       = self.e0
         self.m0c3       = self.e0 * PARAMS['clight']
-        self.betac      = self.v
+    def __call__(self,tkin):  # make callable to change energy
+        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
+        return self
     @property
     def track(self):
         return self._track
@@ -175,9 +177,6 @@ class Particle(object):
         teta = 0.5 * teta
         ttf = sin(teta)/teta
         return ttf
-    def __call__(self,tkin):  # make callable to change energy
-        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
-        return self
 class Proton(Particle):
     def __init__(self,tkin):
         super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')

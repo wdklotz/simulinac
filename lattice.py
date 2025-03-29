@@ -88,15 +88,14 @@ class Lattice(object):
         Link the lattice nodes in a doubly linked list.
         Calculate the node positions.
          """
-        """ the 1st node """
         if len(self.seq) == 0:
             """ the 1st node """
-            tk_injection = self.injection_energy
-            ref_track    = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
-            node_adj     = node.adjust_energy(tk_injection)    # energy ADJUST
-            ref_track_m  = node_adj.map(ref_track)
-            ref_particle = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
-            node_adj.prev = node.next = None
+            tk_injection  = self.injection_energy
+            ref_track     = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
+            node_adj      = node.adjust_energy(tk_injection)    # energy ADJUST
+            ref_track_m   = node_adj.map(ref_track)
+            ref_particle  = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
+            node_adj.prev = node_adj.next = None
             sf = node_adj.length
             sf = ref_track_m[SKOO]
             node_adj.position     = (0.,sf/2.,sf)
@@ -104,17 +103,18 @@ class Lattice(object):
             node_adj.ref_particle = ref_particle
         else:
             """ all nodes after 1st """
-            prev         = self.seq[-1]
-            ref_track    = prev.ref_track
+            node_prev    = self.seq[-1]
+            ref_track    = node_prev.ref_track
             si           = ref_track[SKOO]
             tkin         = ref_track[EKOO]
             node_adj     = node.adjust_energy(tkin)
             # ref_track = NP.dot(node.matrix,ref_track)
             ref_track_m  = node_adj.map(ref_track)
             ref_particle = Proton(ref_track_m[EKOO])
-            prev.next = node_adj
-            node_adj.prev = prev
-            sf        = ref_track_m[SKOO]
+            node_prev.next = node_adj
+            node_adj.prev  = node_prev
+            node_adj.next  = None
+            sf = ref_track_m[SKOO]
             node_adj.position     = (si,(si+sf)/2,sf)
             node_adj.ref_track    = ref_track_m
             node_adj.ref_particle = ref_particle
@@ -141,7 +141,7 @@ class Lattice(object):
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 quad_counter += 1
-            if isinstance(element,(ELM.RFG,ELM.RFC)):
+            if isinstance(element,(ELM.RFG,ELM.RFC_TODO)):
                 cavity_counter += 1
                 ttfs.append(element.ttf)
         SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))

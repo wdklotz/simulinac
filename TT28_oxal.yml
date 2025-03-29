@@ -44,7 +44,7 @@ FLAGS:
 ## INPUT-PARAMETER definitions
 #...........................................................................................
 PARAMETERS:
-    Win:                  60.              # [MeV] energy @ injection 
+    Win:                  6.              # [MeV] energy @ injection 
     # Win:                  32.             # [MeV] H-energy @ injection 
     DPHI0:                5.              # [deg] delta-phi @ injection
     DT2T:                 2.0e-3          # delta-T/T kinetic energy spread @ injection

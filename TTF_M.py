@@ -31,57 +31,67 @@ from separatrix import w2phi
 
 twopi = 2.*pi
 pihalf = pi/2
-
+def ttf(lamb, gap, beta, aperture):
+    """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """
+    x   = gap/(beta*lamb)
+    res = NP.sinc(x)
+    gamma = 1/sqrt(1-beta**2)
+    Ka = twopi/(lamb*gamma*beta)*aperture
+    res = res/I0(Ka)
+    return res
 def cot(x):
     return -tan(x+pihalf)
 
 class TTF_G(IGap.IGap):
     """ 3 Point TTF Model (A.Shishlo/J.Holmes ORNL/TM-2015/247)"""
     def __init__(self):
-        pass
+        self.master     = None
+        self.label = 'TTF_G'
 
     def configure(self,**kwargs):
-        # static
-        self.mapping      = 'ttf'
-        self.kwargs       = kwargs
-        self.label        = 'TTF' 
-        # injected
-        self.EzPeak    = kwargs.get('EzPeak',None)
-        self.dWf       = kwargs.get('dWf',1)
-        self.phisoll   = kwargs.get('phisoll',None)
-        self.cavlen    = kwargs.get('cavlen',None)
-        self.freq      = kwargs.get('freq',None)
-        self.SFdata    = kwargs.get('SFdata',None)
-        self.particle  = kwargs.get('particle',Proton(50.))
-        self.position  = kwargs.get('position',None)
-        self.aperture  = kwargs.get('aperture',None)
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.gap       = kwargs.get('gap')
+        self.HE_Gap    = kwargs.get('HE_Gap')
+        self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
-        # calculated
+        self.SFdata    = kwargs.get('SFdata')
+
         self.lamb      = PARAMS['clight']/self.freq
-        self.gap       = self.cavlen*0.875   # 87.5%: of cavlen
+        self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
         self.omega     = twopi*self.freq
         self.polies    = self.poly_slices()
-        self.m0c2      = self.particle.m0c2
-        self.m0c3      = self.m0c2**3
-        self.ttf       = None
-        self.matrix    = None
-        self.deltaW    = None
-        self.particlef = None
-        self.master    = None
-        pass
+        self.adjust_energy(self.particle.tkin)
 
-    def values_at_exit(self):
-        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
+    @property
+    def deltaW(self):    return self.master.deltaW
+    @deltaW.setter
+    def deltaW(self,v):         self.master.deltaW = v
+    @property
+    def matrix(self):    return self.master.matrix
+    @matrix.setter
+    def matrix(self,v):         self.master.matrix = v
+    @property
+    def particle(self):  return self.master.particle
+    @particle.setter
+    def particle(self,v):       self.master.particle = v
+    @property
+    def particlef(self): return self.master.particlef
+    @particlef.setter
+    def particlef(self,v):      self.master.particlef = v
+    @property
+    def ttf(self):       return self.master.ttf
+    @ttf.setter
+    def ttf(self,v):            self.master.ttf = v
 
     def map(self,i_track):
         return self.ttf_map(i_track)
-
     def toString(self):
         return f'{self.mapping} mapping in: TTF_M.ttf_map()'
-
     def isAccelerating(self):
         return True
-
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -123,6 +133,7 @@ class TTF_G(IGap.IGap):
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
         except ValueError as ex:
+            exception = ex
             w0small = -1
 
         if w0large != -1: 
@@ -130,7 +141,7 @@ class TTF_G(IGap.IGap):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            raise(UserWarning(wrapRED(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')))
             sys.exit(1)
 
         # Dp/p max on separatrix
@@ -166,40 +177,31 @@ class TTF_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-
-    def register_mapper(self,master):
-        master.register_mapping(self)
-        pass
-
-    def accept_register(self,master):
+    def register(self,master):
         self.master = master
         pass
-
     def adjust_energy(self,tkin):
-        self.particle  = Proton(tkin)
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
-        self.particlef = Proton(tkin + self.deltaW)
+        self.ttf = ttf(self.lamb, self.gap_estim, self.particle.beta, self.aperture)
         self.T3D_matrix()
         pass
-
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m       = NP.eye(MDIM,MDIM)
-        E0L     = self.EzPeak*self.gap
-        qE0LT   = E0L*self.ttf
-        deltaW  = E0L*self.ttf*cos(self.phisoll)
-        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
-        pavg    = Proton(Wavg)
-        bavg    = pavg.beta
-        gavg    = pavg.gamma
-        m0c2    = pavg.e0
-        kz      = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
-        ky      = kx = -0.5*kz/(gavg*gavg)
-        bgi     = self.particle.gamma_beta
-        bgf     = self.particlef.gamma_beta
-        bgi2bgf = bgi/bgf
-        m       = NP.eye(MDIM,MDIM)
+        m         = NP.eye(MDIM,MDIM)
+        E0L       = self.EzPeak*self.gap_estim
+        qE0LT     = E0L*self.ttf
+        deltaW    = self.deltaW =E0L*self.ttf*cos(self.phisoll)
+        Wavg      = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg      = Proton(Wavg)
+        bavg      = pavg.beta
+        gavg      = pavg.gamma
+        m0c2      = pavg.e0
+        kz        = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky        = kx = -0.5*kz/(gavg*gavg)
+        bgi       = self.particle.gamma_beta
+        particlef = self.particlef = Proton(self.particle.tkin + deltaW)
+        bgf       = particlef.gamma_beta
+        bgi2bgf   = bgi/bgf
+        m         = NP.eye(MDIM,MDIM)
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
         m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
         m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
@@ -243,6 +245,22 @@ class TTF_G(IGap.IGap):
         sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
+    def Tpp(self, poly, k):  # sympy calculation Tpp.ipynb
+        """ 2nd derivative T''(k) """
+        b   = poly.b
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        I1 = 2*dz**2*sin(dz*k)/k + 4*dz*cos(dz*k)/k**2 - 4*sin(dz*k)/k**3
+        I3 = -b*(-dz**4*sin(dz*k)/k - 4*dz**3*cos(dz*k)/k**2 + 12*dz**2*sin(dz*k)/k**3 + 24*dz*cos(dz*k)/k**4 - 24*sin(dz*k)/k**5) + b*(dz**4*sin(dz*k)/k + 4*dz**3*cos(dz*k)/k**2 - 12*dz**2*sin(dz*k)/k**3 - 24*dz*cos(dz*k)/k**4 + 24*sin(dz*k)/k**5)
+        r = I1+I3
+        return r
+    def Spp(self, poly, k):  # sympy calculation Spp.ipynb
+        """ 2nd derivative S''(k) """
+        a   = poly.a
+        dz  = poly.dz
+        k   = k*1.e-2      # [1/m] --> [1/cm]
+        r = 2*dz**3*a*cos(dz*k)/k - 6*dz**2*a*sin(dz*k)/k**2 - 12*dz*a*cos(dz*k)/k**3 + 12*a*sin(dz*k)/k**4
+        return r
     def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
         E0 = poly.E0                          # [MV/m]
         b  = poly.b                           # [1/cm**2]
@@ -252,7 +270,7 @@ class TTF_G(IGap.IGap):
     def poly_slices(self):
         """ Slice the RF gap """
         slices = []
-        zl = -self.gap/2.*100.   # [m] --> [cm]
+        zl = -self.gap_estim/2.*100.   # [m] --> [cm]
         zr = -zl
         for poly in self.SFdata.polies:
             zil = poly.zl
@@ -264,8 +282,7 @@ class TTF_G(IGap.IGap):
         def ttf_formeln(particle,phiIN,poly,r):
             omega= self.omega
             c    = PARAMS['clight']
-            # m0c2 = self.m0c2
-            m0c3 = self.m0c3
+            m0c3 = particle.m0c3
             g    = particle.gamma
             b    = particle.beta
             tkin = particle.tkin
@@ -277,6 +294,8 @@ class TTF_G(IGap.IGap):
             Sk   = self.S(poly,k)
             Tkp  = self.Tp(poly,k)
             Skp  = self.Sp(poly,k)
+            # Tkpp  = self.Tpp(poly,k)
+            # Skpp  = self.Spp(poly,k)
             cphi = cos(phiIN)
             sphi = sin(phiIN)
             kr   = k/g*r
@@ -336,6 +355,7 @@ class TTF_G(IGap.IGap):
             gbIs = ptcles.gamma_beta
             cphi = cos(phis)
             sphi = sin(phis)
+            m0c2 = self.particle.m0c2
 
             # Soll IN
             (DWs,Dphis,i0,i1,V0,Tk,Sk,Tkp,Skp) = ttf_formeln(ptcles,phis,poly,r)
@@ -353,7 +373,7 @@ class TTF_G(IGap.IGap):
             ptcle     = Proton(W)
 
             i12r      = i1/r if r > 1.e-6 else pi/lamb/gbIs
-            faktor    = V0/(self.m0c2*gbIs*gbOs)*i12r
+            faktor    = V0/(m0c2*gbIs*gbOs)*i12r
             gbIs2gbOs = gbIs/gbOs
             xp        = gbIs2gbOs*xp-faktor*(Tk*sphi + Sk*cphi)*x
             yp        = gbIs2gbOs*yp-faktor*(Tk*sphi + Sk*cphi)*y
@@ -368,19 +388,15 @@ class TTF_G(IGap.IGap):
         zpO     = converter.DWToDp2p(W-Ws)
         f_track = NP.array([x,xp,y,yp,zO,zpO,T,1.,S,1.])
         self.particlef = ptcles
-        self.ttf       = self.ttf/len(self.polies) # gap's ttf
+        self.ttf       = abs(self.ttf)/len(self.polies) # gap's ttf
 
-        # S1 = 1    # from
-        # S2 = 20    # to 
-        # log_what_in_interval(S,(S1,S2),f'TTF_M.ttf_map: f_track: {f_track}\n')
+        S1 = 1    # from
+        S2 = 20    # to 
+        debug = DEBUG_OFF
+        if debug == DEBUG_ON:
+            log_what_in_interval(S,(S1,S2),f'TTF_M.ttf_map: f_track: {f_track}\n')
 
         return f_track
-
-def ttf(lamb, gap, beta):
-    """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-    x = gap/(beta*lamb)
-    res =NP.sinc(x)
-    return res
 
 class TestTransitTimeFactorsGapModel(unittest.TestCase):
     def test_TTFG_mapping(self):

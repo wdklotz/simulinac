@@ -183,9 +183,9 @@ def instanciate_element(item):
             mapping    = ELEMENT['mapping'] = UTIL.FLAGS.get('mapping')
             phisoll    = attributes.get('phisoll')
             SFdata     = attributes.get('SFdata')
-            sec        = attributes.get('sec')
+            sec        = attributes.get('sec','?')
             
-            if mapping == 't3d':
+            if mapping   == 't3d':
                 if SFdata == None:
                     if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
                     if(EzPeak   == None): mandatory_warning("EzPeak",ID)   # [MV/m] requested peak field
@@ -253,6 +253,7 @@ def instanciate_element(item):
                     EzPeak    = EzPeak,
                     freq      = freq,
                     gap       = gap,
+                    HE_Gap    = HE_Gap,
                     phisoll   = radians(phisoll),
                     sec       = sec,
                     SFdata    = sfdata,
@@ -264,52 +265,54 @@ def instanciate_element(item):
                 if gap    != None: ELEMENT['gap']    ='ignored'
                 pass
             elif mapping == 'base':
-                EzPeak    = get_mandatory(attributes,"EzPeak",ID)   # [MV/m] requested peak field
-                gap       = get_mandatory(attributes,'gap',ID)      # [m] requested gap length
-                HE_Gap    = attributes.get('HE_Gap',None)
-                cavlen    = attributes.get('cavlen',None)
-                SFdata    = attributes.get('SFdata',None)
+                if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
+                if(EzPeak   == None): mandatory_warning("EzPeak",ID)
+                if(freq     == None): mandatory_warning("freq",ID)   # [MV/m] requested frequency
+                if(gap      == None): mandatory_warning("gap",ID)
+                if(phisoll  == None): mandatory_warning("phisoll",ID)  # [MV/m] requested synch phase
                 gap_parameters = dict(
-                    EzPeak    = EzPeak,
-                    phisoll   = phisoll,    # [rad:ians] requested soll phase
-                    gap       = gap,
-                    freq      = freq,       # [Hz]  requested RF frequenz
-                    # particle  = particle,
-                    # position  = position,
                     aperture  = aperture,
-                    sec       = sec
+                    cavlen    = cavlen,
+                    EzPeak    = EzPeak,
+                    freq      = freq,
+                    gap       = gap,
+                    HE_Gap    = HE_Gap,
+                    phisoll   = radians(phisoll),
+                    sec       = sec,
+                    SFdata    = SFdata,
                 )
                 instance = ELM.RFG(ID)
-                instance.register_mapping(Base_G())
+                instance.register(Base_G())
                 instance.configure(**gap_parameters)
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
                 if cavlen != None: ELEMENT['cavlen'] = 'ignored'
                 if SFdata != None: ELEMENT['SFdata'] = 'ignored'
                 pass
             elif mapping == 'ttf':
-                fieldtab  = get_mandatory(attributes,'SFdata',ID)
-                EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-                cavlen    = get_mandatory(attributes,'cavlen',ID)
-                HE_Gap    = attributes.get('HE_Gap',None)
-                gap       = attributes.get('gap',None)
-                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+                if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
+                if(cavlen == None): mandatory_warning("cavlen",ID) # [MV/m] requested aperture
+                if(EzPeak   == None): mandatory_warning("EzPeak",ID)
+                if(freq     == None): mandatory_warning("freq",ID)   # [MV/m] requested frequency
+                if(phisoll  == None): mandatory_warning("phisoll",ID)  # [MV/m] requested synch phase
+                if(SFdata   == None): mandatory_warning("SFdata",ID)  # [MV/m] requested synch phase
+
+                sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
                 gap_parameters = dict(
-                    EzPeak    = EzPeak,     # [MV/m] requested peak field
-                    dWf       = dWf,
-                    phisoll   = phisoll,    # [radians] requested soll phase
-                    cavlen    = cavlen,
-                    freq      = freq,       # [Hz]  requested RF frequenz
-                    SFdata    = sfdata,     # SF field distribution
-                    particle  = particle,
-                    position  = position,
                     aperture  = aperture,
-                    sec       = sec
+                    cavlen    = cavlen,
+                    EzPeak    = EzPeak,
+                    freq      = freq,
+                    gap       = gap,
+                    HE_Gap    = HE_Gap,
+                    phisoll   = radians(phisoll),
+                    sec       = sec,
+                    SFdata    = sfdata,
                 )
                 instance = ELM.RFG(ID)
-                instance.register_mapping(TTF_G())
+                instance.register(TTF_G())
                 instance.configure(**gap_parameters)
-                if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 if gap    != None: ELEMENT['gap']    ='ignored'
+                if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 pass
             elif mapping == 'dyn':
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not available any more')))

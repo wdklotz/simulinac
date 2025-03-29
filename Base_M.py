@@ -30,55 +30,67 @@ from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
 from separatrix import w2phi
 
 twopi = 2.*pi
+def ttf(lamb, gap, beta, aperture):
+    """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """
+    x   = gap/(beta*lamb)
+    res = NP.sinc(x)
+    gamma = 1/sqrt(1-beta**2)
+    Ka = twopi/(lamb*gamma*beta)*aperture
+    res = res/I0(Ka)
+    return res
 
 class Base_G(IGap.IGap):
     """ Base RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
-        self.length       = 0. # 0. because it's a kick
-        self.dWf          = FLAGS['dWf']                 # dWf=1 with acceleration =0 else
-        self.mapping      = 'base'        # map model
+        self.master       = None
         self.label        = 'Base_G'
-        pass
 
     def configure(self,**kwargs):
-        self.kwargs       = kwargs
-
-        self.EzPeak    = kwargs.get('EzPeak',None)
-        self.phisoll   = kwargs.get('phisoll',None)
-        self.gap       = kwargs.get('gap',None)
-        self.freq      = kwargs.get('freq',None)
-        self.particle  = kwargs.get('particle',None)
-        self.position  = kwargs.get('position',None)
-        self.aperture  = kwargs.get('aperture',None)
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.gap       = kwargs.get('gap')
+        self.HE_Gap    = kwargs.get('HE_Gap')
+        self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
+        self.SFdata    = kwargs.get('SFdata')
 
         self.lamb      = PARAMS['clight']/self.freq
-        self.matrix    = None
-        self.ttf       = None
-        self.deltaW    = None
-        self.particlef = None
-        self.master    = None
+        self.adjust_energy(self.particle.tkin)
+        pass
 
-    def values_at_exit(self):
-        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
+    @property
+    def deltaW(self):    return self.master.deltaW
+    @deltaW.setter
+    def deltaW(self,v):         self.master.deltaW = v
+    @property
+    def matrix(self):    return self.master.matrix
+    @matrix.setter
+    def matrix(self,v):         self.master.matrix = v
+    @property
+    def particle(self):  return self.master.particle
+    @particle.setter
+    def particle(self,v):       self.master.particle = v
+    @property
+    def particlef(self): return self.master.particlef
+    @particlef.setter
+    def particlef(self,v):      self.master.particlef = v
+    @property
+    def ttf(self):       return self.master.ttf
+    @ttf.setter
+    def ttf(self,v):            self.master.ttf = v
 
     def map(self,i_track):
         return self.base_map(i_track)
-
     def toString(self):
         return f'{self.mapping} mapping in: Base_G.base_map()'
-
     def isAccelerating(self):
         return True
-
     def adjust_energy(self, tkin):
-        self.particle  = Proton(tkin)
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta,self.aperture)  # Wrangler
-        self.deltaW    = self.EzPeak * self.ttf * self.gap * cos(self.phisoll)
-        self.particlef = Proton(tkin + self.deltaW)
+        self.ttf = ttf(self.lamb, self.gap, self.particle.beta, self.aperture)
         self.T3D_matrix()
         pass
-
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -120,6 +132,7 @@ class Base_G(IGap.IGap):
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
         except ValueError as ex:
+            exception = ex
             w0small = -1
 
         if w0large != -1: 
@@ -127,7 +140,7 @@ class Base_G(IGap.IGap):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            raise(UserWarning(wrapRED(f'{ex} reason: ttf={self.ttf}, E0T={E0T}')))
+            raise(UserWarning(wrapRED(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')))
             sys.exit(1)
 
         # Dp/p max on separatrix
@@ -163,32 +176,27 @@ class Base_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-
-    def register_mapper(self,master):
-        master.register_mapping(self)
-        pass
-
-    def accept_register(self,master):
+    def register(self,master):
         self.master = master
         pass
-
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m       = NP.eye(MDIM,MDIM)
-        E0L     = self.EzPeak*self.gap
-        qE0LT   = E0L*self.ttf
-        deltaW  = E0L*self.ttf*cos(self.phisoll)
-        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
-        pavg    = Proton(Wavg)
-        bavg    = pavg.beta
-        gavg    = pavg.gamma
-        m0c2    = pavg.e0
-        kz      = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
-        ky      = kx = -0.5*kz/(gavg*gavg)
-        bgi     = self.particle.gamma_beta
-        bgf     = self.particlef.gamma_beta
-        bgi2bgf = bgi/bgf
-        m       = NP.eye(MDIM,MDIM)
+        m         = NP.eye(MDIM,MDIM)
+        E0L       = self.EzPeak*self.gap
+        qE0LT     = E0L*self.ttf
+        deltaW    = self.deltaW = E0L*self.ttf*cos(self.phisoll)
+        Wavg      = self.particle.tkin+self.deltaW/2.   # average tkin
+        pavg      = Proton(Wavg)
+        bavg      = pavg.beta
+        gavg      = pavg.gamma
+        m0c2      = pavg.e0
+        kz        = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
+        ky        = kx = -0.5*kz/(gavg*gavg)
+        bgi       = self.particle.gamma_beta
+        particlef = self.particlef = Proton(self.particle.tkin + deltaW)
+        bgf       = particlef.gamma_beta
+        bgi2bgf   = bgi/bgf
+        m         = NP.eye(MDIM,MDIM)
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
         m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
         m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf
@@ -196,7 +204,6 @@ class Base_G(IGap.IGap):
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
         return
-
     def base_map(self, i_track):
         """ Neue überarbeitete map Version vom 17.02.2025 (wdk)
             Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
@@ -255,18 +262,11 @@ class Base_G(IGap.IGap):
 
         S1 = 48    # from
         S2 = 51    # to 
-        log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
+        debug = DEBUG_OFF
+        if debug == DEBUG_ON:
+            log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
 
         return f_track
-
-def ttf(lamb, gap, beta, aperture):
-    """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """
-    x   = gap/(beta*lamb)
-    res = NP.sinc(x)
-    gamma = 1/sqrt(1-beta**2)
-    Ka = twopi/(lamb*gamma*beta)*aperture
-    res = res/I0(Ka)
-    return res
 
 class TestBaseMapping(unittest.TestCase):
     def test_BASE_G(self):
