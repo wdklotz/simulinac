@@ -114,7 +114,7 @@ ELEMENTS:
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] 
-        PhiSync:  -20.0        # [deg] synchronous phase
+        phisoll:  -20.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.020        # [m] gap length
         cavlen:   0.040
@@ -147,7 +147,7 @@ ELEMENTS:
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] 
-        PhiSync:  -30.0        # [deg] synchronous phase
+        phisoll:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.046        # [m] gap length
         aperture: *aper        # [m] aperture radius

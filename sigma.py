@@ -22,7 +22,7 @@ from math import pi,radians,degrees,sin,cos,sqrt
 import numpy as NP
 from copy import deepcopy
 import unittest
-from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF
+from setutil import Proton, mxprnt, PARAMS, Ktw, MDIM, DEBUG_ON, DEBUG_OFF,FLAGS
 from T3D_M import T3D_G
 from elements import RFG
 
@@ -90,10 +90,10 @@ def sig_apply_eg_corr(rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
         return res
     
     Phis          = rf_gap.phisoll
-    E0L           = rf_gap.EzAvg*rf_gap.gap
+    E0L           = rf_gap.EzPeak*rf_gap.gap
     ttf           = rf_gap.ttf
     m0c2          = rf_gap.particle.e0
-    lamb          = rf_gap.lamb
+    lamb          = rf_gap.mapper.lamb
     particlei     = rf_gap.particle
     particlef     = rf_gap.particlef
     gamma_beta_f  = particlef.gamma_beta
@@ -170,7 +170,7 @@ class TestElementMethods(unittest.TestCase):
             particle=particle
             )
         R = RFG('test-gap')
-        R.register_mapping(T3D_G())
+        R.register(T3D_G())
         R.configure(**gap_parameters)
         bx       = 1.
         ax       = 0.
@@ -201,7 +201,7 @@ class TestElementMethods(unittest.TestCase):
             particle=particle
             )
         R = RFG('test-gap')
-        R.register_mapping(T3D_G())
+        R.register(T3D_G())
         R.configure(**gap_parameters)
         bx       = 1.
         ax       = 0.
@@ -223,4 +223,5 @@ class TestElementMethods(unittest.TestCase):
             print('{}'.format(mxprnt((sfcmx-sfmx))))
 # main ----------
 if __name__ == '__main__':
+    FLAGS['mapping'] = 't3d'
     unittest.main()

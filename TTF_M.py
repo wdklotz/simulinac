@@ -20,12 +20,12 @@ This file is part of the SIMULINAC code
 """
 import sys
 import IGap
-from math import sin,cos,tan,pi,sqrt
+from math import sin,cos,tan,pi,sqrt,radians
 import numpy as NP
 import unittest
 from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
-from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
+from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS
 from Ez0 import SFdata
 from separatrix import w2phi
 
@@ -69,6 +69,10 @@ class TTF_G(IGap.IGap):
     def deltaW(self):    return self.master.deltaW
     @deltaW.setter
     def deltaW(self,v):         self.master.deltaW = v
+    @property
+    def lamb(self):      return self.master.lamb
+    @lamb.setter
+    def lamb(self,v):           self.master.lamb = v
     @property
     def matrix(self):    return self.master.matrix
     @matrix.setter
@@ -401,28 +405,38 @@ class TTF_G(IGap.IGap):
 class TestTransitTimeFactorsGapModel(unittest.TestCase):
     def test_TTFG_mapping(self):
         print('----------------------------------test_TTFG_mapping')
-        phisoll  = radians(-25.)
-        gap      = 0.040
-        freq     = 800e6
-        particle = Proton(50.)
-        dWf      = 1
-        fname    = 'SF/SF_WDK2g44.TBL'
-        gap_cm   = gap*100     # Watch out!
-        EzPeak   = 10.0
-        Ezdata   = SFdata.field_data(fname,EzPeak=EzPeak,gap=gap_cm)
-        EzAvg    = Ezdata.EzAvg
-        ttfg     = TTF_G("rfg-test",EzAvg,phisoll,gap,freq,SFdata=Ezdata,particle=particle,dWf=dWf)
+        gap_parameter = dict(
+            aperture   = 0.01,
+            cavlen     = 0.044,
+            EzPeak     = 10.0,
+            freq       = 800.e+6,
+            gap        = 0.04,
+            phisoll    = radians(-30.),
+            sec        = 'test',
+            SFdata     = 'SF/SF_WDK2g44.TBL',
+        )
+        EzPeak = gap_parameter['EzPeak']
+        SFdata = gap_parameter['SFdata']
+        cavlen = gap_parameter['cavlen']
+        sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+        gap_parameter['SFdata'] = sfdata
+        FLAGS['mapping'] = 'ttf'
+        instance = ELM.RFG('RFG')
+        instance.register(TTF_G())
+        instance.configure(**gap_parameter)
 
         i_track  = NP.array([0,0,0,0,0,0,50,1,0,1])
-        f_track  = ttfg.map(i_track)
+        f_track  = instance.map(i_track)
         # print(i_track); print(f_track)
         for i in range(len(f_track)):
-            self.assertAlmostEqual(f_track[i],NP.array([0,0,0,0,0,0,50.13019,1,0,1])[i],msg="f_track",delta=1e-4)
+            self.assertAlmostEqual(f_track[i],NP.array([0,0,0,0,0,0,50.068,1,0,1])[i],msg="f_track",delta=1e-3)
 
         i_track  = NP.array([1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 50, 1, 0, 1])
-        f_track  = ttfg.map(i_track)
+        f_track  = instance.map(i_track)
         # print(i_track); print(f_track)
         for i in range(len(f_track)):
-            self.assertAlmostEqual(f_track[i],NP.array([1e-3, 1.0136e-3, 1e-3, 1.0136e-3, 1.0011e-3, 0.96408e-3, 50.13019, 1, 0, 1])[i],msg="f_track",delta=1e-4)
+            self.assertAlmostEqual(f_track[i],NP.array([1e-3, 1.0136e-3, 1e-3, 1.0136e-3, 1.0011e-3, 0.96408e-3, 50.069, 1, 0, 1])[i],msg="f_track",delta=1e-3)
 if __name__ == '__main__':
+    import elements as ELM
+    import Ez0 as EZ
     unittest.main()

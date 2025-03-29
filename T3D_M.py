@@ -64,6 +64,10 @@ class T3D_G(IGap.IGap):
     @deltaW.setter
     def deltaW(self,v):         self.master.deltaW = v
     @property
+    def lamb(self):      return self.master.lamb
+    @lamb.setter
+    def lamb(self,v):           self.master.lamb = v
+    @property
     def matrix(self):    return self.master.matrix
     @matrix.setter
     def matrix(self,v):         self.master.matrix = v

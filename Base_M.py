@@ -65,6 +65,10 @@ class Base_G(IGap.IGap):
     @deltaW.setter
     def deltaW(self,v):         self.master.deltaW = v
     @property
+    def lamb(self):      return self.master.lamb
+    @lamb.setter
+    def lamb(self,v):           self.master.lamb = v
+    @property
     def matrix(self):    return self.master.matrix
     @matrix.setter
     def matrix(self,v):         self.master.matrix = v
@@ -84,7 +88,7 @@ class Base_G(IGap.IGap):
     def map(self,i_track):
         return self.base_map(i_track)
     def toString(self):
-        return f'{self.mapping} mapping in: Base_G.base_map()'
+        return f'{self.master} mapping in: Base_G.base_map()'
     def isAccelerating(self):
         return True
     def adjust_energy(self, tkin):
@@ -271,7 +275,7 @@ class Base_G(IGap.IGap):
 class TestBaseMapping(unittest.TestCase):
     def test_BASE_G(self):
         """ testing the base mapping for acceleration """
-        print(wrapRED('------------------ test_Base_G'))
+        print(wrapRED('---------------------------------------------------------- test_Base_G'))
         gap_parameter = dict(
             EzPeak    = 2,
             phisoll   = radians(-30.),
@@ -279,11 +283,16 @@ class TestBaseMapping(unittest.TestCase):
             aperture  = 0.010,
             freq      = 750e6,
         )
-        bmap = Base_G()    # create object instance
-        bmap.configure(**gap_parameter)
-        bmap.adjust_energy(50.)
-        print(bmap.toString())
-        print(bmap.__dict__)
+        FLAGS['mapping'] = 'base'
+        instance = ELM.RFG('RFG')
+        instance.register(Base_G())
+        instance.configure(**gap_parameter)
+
+        # bmap = Base_G()    # create object instance
+        # bmap.configure(**gap_parameter)
+        # bmap.adjust_energy(50.)
+        print(instance.mapper.toString())
+        print(instance.mapper.__dict__)
         print()
         x  = 1e-3
         xp = 1e-3
@@ -294,13 +303,14 @@ class TestBaseMapping(unittest.TestCase):
         T  = 50
         S  = 99
         intrack=NP.array([x, xp, y, yp, z, zp, T, 1, S, 1])
-        outrack1=bmap.map(intrack)
-        outrack2=NP.dot(bmap.matrix,intrack)
+        outrack1=instance.map(intrack)
+        outrack2=NP.dot(instance.matrix,intrack)
         prec=9
         print(f'map: {NP.array_repr(outrack1,precision=prec,suppress_small=True,max_line_width=180)}')
         print(f't3d: {NP.array_repr(outrack2,precision=prec,suppress_small=True,max_line_width=180)}')
         print(f' -   {NP.array_repr(outrack1-outrack2,precision=prec,suppress_small=True,max_line_width=180)}')
 
 if __name__ == '__main__':
+    import elements as ELM
     unittest.main()
 

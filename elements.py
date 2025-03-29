@@ -22,7 +22,7 @@ import unittest
 from copy import copy
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import DEBUG_ON,DEBUG_OFF,Proton
+from setutil import DEBUG_ON,DEBUG_OFF,Proton,PARAMS
 from setutil import Ktp
 from T3D_M   import T3D_G
 import warnings
@@ -458,10 +458,10 @@ class RFG(Node):
         self.freq         = None
         self.gap          = None
         self.label        = label
+        self.lamb         = None
         self.length       = 0
         self.mapper       = None
         self.mapping      = UTIL.FLAGS.get('mapping')
-        # self.matrix       = None
         self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
         self.particlef    = None
         self.position     = (0,0,0)
@@ -488,11 +488,11 @@ class RFG(Node):
 
             self.mapper.configure(**kwargs)
             pass
-        elif mapping in ['simple','dyn']:
-            raise(UserWarning(wrapRED(f'mapping not ready {mapping}')))
+        elif self.mapping in ['simple','dyn']:
+            raise(UserWarning(wrapRED(f'mapping not ready {self.mapping}')))
             sys.exit()
         else:
-            raise(UserWarning(wrapRED(f'missing implementation {mapping}')))
+            raise(UserWarning(wrapRED(f'missing implementation {self.mapping}')))
             sys.exit()
     @property
     def isAccelerating(self):
@@ -944,7 +944,7 @@ class TestElementMethods(unittest.TestCase):
             sec       = 'xx'
         )
         instance = RFG(ID)
-        instance.register_mapping(T3D_G())
+        instance.register(T3D_G())
         instance.configure(**gap_parameters)
         
         self.assertEqual(instance.mapping,'t3d')
@@ -962,6 +962,7 @@ class TestElementMethods(unittest.TestCase):
 
 if __name__ == '__main__':
     UTIL.FLAGS['verbose'] = 3
+    UTIL.FLAGS['mapping'] = 't3d'
     unittest.main()
 
 

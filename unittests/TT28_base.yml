@@ -151,7 +151,7 @@ ELEMENTS:
     RFG1:                      # ID
         type:     RFG          # RFG class
         # type:      RFC         # RFC class
-        PhiSync:  *phs         # [deg] synchronous phase
+        phisoll:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
         gap:       0.0217      # [m] gap length 3/8*betalamda 0.0217 10MeV
@@ -184,7 +184,7 @@ ELEMENTS:
     RFG2:                      # ID
         type:     RFG          # RFG class
         # type:     RFC          # RFC class
-        PhiSync:  *phs         # [deg] synchronous phase
+        phisoll:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         # EzPeak:   *ezp         # [MV/m] 
         EzPeak:   1.5          # [MV/m] 
