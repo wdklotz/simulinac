@@ -174,32 +174,32 @@ def instanciate_element(item):
             instance.dispatch_model_matrix()
             pass
         elif type == 'RFG':
-            mapping    = ELEMENT['mapping'] = UTIL.FLAGS.get('mapping')
+            aperture   = attributes.get('aperture')
+            cavlen     = attributes.get('cavlen')
             EzPeak     = attributes.get('EzPeak')
             freq       = attributes.get('freq')
-            phisoll    = attributes.get('phisoll')
             gap        = attributes.get('gap')
             HE_Gap     = attributes.get('HE_Gap')
-            cavlen     = attributes.get('cavlen')
-            aperture   = attributes.get('aperture')
+            mapping    = ELEMENT['mapping'] = UTIL.FLAGS.get('mapping')
+            phisoll    = attributes.get('phisoll')
             SFdata     = attributes.get('SFdata')
             sec        = attributes.get('sec')
             
             if mapping == 't3d':
                 if SFdata == None:
+                    if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
                     if(EzPeak   == None): mandatory_warning("EzPeak",ID)   # [MV/m] requested peak field
+                    if(freq     == None): mandatory_warning("freq",ID)   # [MV/m] requested frequency
                     if(gap      == None): mandatory_warning("gap",ID)      # [MV/m] requested gap
                     if(phisoll  == None): mandatory_warning("phisoll",ID)  # [MV/m] requested synch phase
-                    if(freq     == None): mandatory_warning("EzPeak",ID)   # [MV/m] requested frequency
-                    if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
 
                     gap_parameters = dict(
-                        EzPeak    = EzPeak,            # [MV/m]
-                        phisoll   = radians(phisoll),  # [radians] 
-                        gap       = gap,               # [m]
-                        cavlen    = cavlen,            # [m]
-                        freq      = freq,              # [Hz] 
                         aperture  = aperture,          # [m]
+                        cavlen    = cavlen,            # [m]
+                        EzPeak    = EzPeak,            # [MV/m]
+                        freq      = freq,              # [Hz] 
+                        gap       = gap,               # [m]
+                        phisoll   = radians(phisoll),  # [radians] 
                         sec       = sec                # string
                     )
                     instance = ELM.RFG(ID)
@@ -210,24 +210,24 @@ def instanciate_element(item):
                     if SFdata != None: ELEMENT['SFdata'] ='ignored'
                     pass
                 elif SFdata != None:
-                    fieldtab    = attributes.get('SFdata',None)
-                    if(EzPeak   == None): mandatory_warning("EzPeak",ID)
+                    if(aperture == None): mandatory_warning("aperture",ID)
                     if(cavlen   == None): mandatory_warning("cavlen",ID)
+                    if(EzPeak   == None): mandatory_warning("EzPeak",ID)
+                    if(freq     == None): mandatory_warning("EzPeak",ID)
                     if(HE_Gap   == None): mandatory_warning("HE_Gap",ID)
                     if(phisoll  == None): mandatory_warning("phisoll",ID)
-                    if(freq     == None): mandatory_warning("EzPeak",ID)
-                    if(aperture == None): mandatory_warning("aperture",ID)
 
-                    sfdata = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                    # fieldtab = attributes.get('SFdata',None)
+                    sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                     (dummy,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100)     # [MV/m] equivalent hard edge peak field
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
                     gap_parameters = dict(
-                        EzPeak    = HE_EzPeak,
-                        phisoll   = radians(phisoll),    # [radians] requested soll phase
-                        gap       = HE_Gap,
-                        cavlen    = cavlen,
-                        freq      = freq,       # [Hz]  requested RF frequenz
                         aperture  = aperture,
+                        cavlen    = cavlen,
+                        EzPeak    = HE_EzPeak,
+                        freq      = freq,       # [Hz]  requested RF frequenz
+                        gap       = HE_Gap,
+                        phisoll   = radians(phisoll),    # [radians] requested soll phase
                         sec       = sec
                     )
                     instance = ELM.RFG(ID)
@@ -239,25 +239,26 @@ def instanciate_element(item):
                 raise(UserWarning(wrapRED(f'Mapping "{mapping}" is not ready. Must be implemented')))
                 sys.exit()
             elif mapping == 'oxal':
-                fieldtab  = get_mandatory(attributes,'SFdata',ID)
-                EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-                cavlen    = get_mandatory(attributes,'cavlen',ID)
-                HE_Gap    = attributes.get('HE_Gap',None)
-                gap       = attributes.get('gap',None)
-                sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
+                if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
+                if(cavlen   == None): mandatory_warning("cavlen",ID)
+                if(EzPeak   == None): mandatory_warning("EzPeak",ID)
+                if(freq     == None): mandatory_warning("freq",ID)   # [MV/m] requested frequency
+                if(phisoll  == None): mandatory_warning("phisoll",ID)  # [MV/m] requested synch phase
+                if(SFdata   == None): mandatory_warning("SFdata",ID)
+
+                sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                 gap_parameters = dict(
-                    EzPeak    = EzPeak,     # [MV/m] requested peak field
-                    phisoll   = phisoll,    # [radians] requested soll phase
-                    cavlen    = cavlen,
-                    freq      = freq,       # [Hz]  requested RF frequenz
-                    SFdata    = sfdata,     # SF field distribution
-                    particle  = particle,
-                    position  = position,
                     aperture  = aperture,
-                    sec       = sec
+                    cavlen    = cavlen,
+                    EzPeak    = EzPeak,
+                    freq      = freq,
+                    gap       = gap,
+                    phisoll   = radians(phisoll),
+                    sec       = sec,
+                    SFdata    = sfdata,
                 )
                 instance = ELM.RFG(ID)
-                instance.register_mapping(OXAL_G())
+                instance.register(OXAL_G())
                 instance.configure(**gap_parameters)
                 if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 if gap    != None: ELEMENT['gap']    ='ignored'
@@ -273,8 +274,8 @@ def instanciate_element(item):
                     phisoll   = phisoll,    # [rad:ians] requested soll phase
                     gap       = gap,
                     freq      = freq,       # [Hz]  requested RF frequenz
-                    particle  = particle,
-                    position  = position,
+                    # particle  = particle,
+                    # position  = position,
                     aperture  = aperture,
                     sec       = sec
                 )
@@ -488,11 +489,11 @@ def factory(input_file,stop=None):
             res['injection_energy'] = Tk_i
 
         """ longitudinal energy spread @ injection: {Dphi,w}-space """
-        DW2W_i = parameters.get('DW2W',None) 
+        DT2T_i = parameters.get('DT2T',None) 
         DT2T_i = parameters.get('DT2T',None) 
         res['DT2T_i']    = 0.01 # default 1%
-        if DW2W_i != None:
-            res['DT2T_i'] = DW2W_i
+        if DT2T_i != None:
+            res['DT2T_i'] = DT2T_i
         elif DT2T_i != None:
             res['DT2T_i'] = DT2T_i
         res['Dphi0_i']    = radians(parameters.get('DPHI0',10.)) # default [rad]

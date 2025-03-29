@@ -182,8 +182,8 @@ def make_plots(lattice,live_lost):
         #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pTow(1.)*1e2)
         #       ]
         # scale=[
-        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW2W(1.)*1e2),
-        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDW2W(1.)*1e2)
+        #      (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDT2T(1.)*1e2),
+        #      (degrees(convOUT.zToDphi(1.)),  convOUT.Dp2pToDT2T(1.)*1e2)
         #       ]
         scale=[
              (degrees(convIN.zToDphi(1.)),   convIN.Dp2pToDW(1.)*1e3),

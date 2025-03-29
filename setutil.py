@@ -233,7 +233,7 @@ class WConverter(object):
         """ Dp2p [] to DW=Dw*m0*c^2 [MeV] """
         W = self.Dp2pTow(Dp2p)*self.m0c2
         return W
-    def Dp2pToDW2W(self,Dp2p):
+    def Dp2pToDT2T(self,Dp2p):
         """ Dp2p to DW/W """
         W = self.Dp2pToDW(Dp2p)/self.tk
         return W

@@ -49,8 +49,8 @@ PARAMETERS:
     Win:                  6.              # [MeV] energy @ injection 
     # DPHI0:                3.              # [deg] delta-phi @ iinjection
     DPHI0:                18.              # [deg] delta-phi @ iinjection
-    # DW2W:                 1.5e-3          # delta-T/T kinetic energy spread @ injection
-    DW2W:                 9.0e-3          # delta-T/T kinetic energy spread @ injection
+    # DT2T:                 1.5e-3          # delta-T/T kinetic energy spread @ injection
+    DT2T:                 9.0e-3          # delta-T/T kinetic energy spread @ injection
     frequency:    &freq   750.e6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance

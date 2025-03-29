@@ -45,7 +45,7 @@ FLAGS:
 #...........................................................................................
 PARAMETERS:
     Win:                  _TIN            # [MeV] energy @ injection 
-    DW2W:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
+    DT2T:                 6.0e-3          # delta-T/T kinetic energy spread @ injection
     DPHI0:                18.             # [deg] delta-phi @ iinjection
     frequency:    &freq   _FREQ           # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance

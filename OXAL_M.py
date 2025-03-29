@@ -17,9 +17,6 @@ This file is part of the SIMULINAC code
 
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
-
-#TODO: Formeln für Tpp und Spp
-#TODO: unittests
 """
 import sys
 import IGap
@@ -31,6 +28,8 @@ from setutil import wrapRED,mxprnt,Twiss,WConverter,dictprnt
 from Ez0 import SFdata
 from separatrix import w2phi
 import Ez0 as EZ
+# from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
+
 
 twopi = 2*pi
 pihalf = pi/2
@@ -41,50 +40,66 @@ twothird = 2./3.
 def cot(x):
     return -tan(x+pihalf)
 
+# def ttf(lamb, gap, beta):
+#     """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+#     x = gap/(beta*lamb)
+#     res =NP.sinc(x)
+#     return res
+
 class OXAL_G(IGap.IGap):
     """ OpenXAL RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
-        pass
+        self.master      = None
+        self.label       = 'OXAL_G'
 
     def configure(self,**kwargs):
-        self.dWf          = FLAGS['dWf']
-        self.mapping      = 'oxal'
-        self.kwargs       = kwargs
-        self.label        = 'OX'
-
-        self.EzPeak    = kwargs.get('EzPeak',None)
-        self.phisoll   = kwargs.get('phisoll',None)
-        self.cavlen    = kwargs.get('cavlen',None)
-        self.freq      = kwargs.get('freq',None)
-        self.SFdata    = kwargs.get('SFdata',None)
-        self.particle  = kwargs.get('particle',Proton(50.))
-        self.position  = kwargs.get('position',None)
-        self.aperture  = kwargs.get('aperture',None)
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
+        self.SFdata    = kwargs.get('SFdata')
 
         self.omega     = twopi*self.freq
         self.lamb      = PARAMS['clight']/self.freq
-        self.ttf       = None
-        self.deltaW    = None
-        self.particlef = None
-        self.matrix    = None
-        self.master    = None
         self.polies    = self.poly_slices()
-        self.OXAL_matrix_1()
+
+        self.OXAL_matrix()
         pass
 
-    def values_at_exit(self):
-        return dict(deltaw=self.deltaW,ttf=self.ttf,particlef=self.particlef,matrix=self.matrix)
+    # mutable properties shared with master
+    @property
+    def deltaW(self): return self.master.deltaW
+    @deltaW.setter
+    def deltaW(self,v): self.master.deltaW = v
+    @property
+    def matrix(self): return self.master.matrix
+    @matrix.setter
+    def matrix(self,v): self.master.matrix = v
+    @property
+    def particle(self): return self.master.particle
+    @particle.setter
+    def particle(self,v): self.master.particle = v
+    @property
+    def particlef(self): return self.master.particlef
+    @particlef.setter
+    def particlef(self,v): self.master.particlef = v
+    @property
+    def ttf(self): return self.master.ttf
+    @ttf.setter
+    def ttf(self,v): self.master.ttf = v
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
-
     def toString(self):
         return mxprnt(self.matrix,'4g')
-
     def isAccelerating(self):
         return True
-
+    def adjust_energy(self, tkin):
+        self.particle = Proton(tkin)
+        self.OXAL_matrix()
+        pass
     def waccept(self,**kwargs):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -117,7 +132,7 @@ class OXAL_G(IGap.IGap):
 
         try:
             # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
-            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            # DEBUG_ON(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
             w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
         except ValueError as ex:
             exception = ex
@@ -126,6 +141,7 @@ class OXAL_G(IGap.IGap):
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = sqrt(2.*E0T*gb**3*lamb*phisoll**2*sin(-phisoll)/(pi*m0c2))
         except ValueError as ex:
+            exception = ex
             w0small = -1
 
         if w0large != -1: 
@@ -133,7 +149,7 @@ class OXAL_G(IGap.IGap):
         elif w0large == -1 and w0small != -1:
             wmax = w0small
         else:
-            raise(UserWarning(wrapRED(f'{ex} reason: ttf={rf_gap.ttf}, E0T={E0T}')))
+            raise(UserWarning(wrapRED(f'{exception} reason: ttf={self.ttf}, E0T={E0T}')))
             sys.exit(1)
 
         # Dp/p max on separatrix
@@ -169,20 +185,9 @@ class OXAL_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-
-    def register_mapper(self,master):
-        master.register_mapping(self)
-        pass
-
-    def accept_register(self,master):
+    def register(self,master):
         self.master = master
         pass
-
-    def adjust_energy(self, tkin):
-        self.particle = Proton(tkin)
-        self.OXAL_matrix()
-        pass
-
     def OXAL_matrix(self):
         polies   = self.polies
         c        = PARAMS['clight']
@@ -266,41 +271,89 @@ class OXAL_G(IGap.IGap):
             phis  = phis_out
         self.deltaW    = matrix[Ktp.T,Ktp.dT]
         self.ttf       = self.deltaW/ttf
-        self.matrix    = matrix
         self.particlef = Proton(self.particle.tkin+self.deltaW)
+        self.matrix    = matrix
         return
-    def OXAL_matrix_1(self):
+    def OXAL_matrix_kaputt(self):
         #====================================================================== sympy ==========
-        def OUTminusIN(qV0,Tk,Sk,Tpk,Spk,Tppk,Sppk,k,b,g,m0c3,phis,om,z=0,zp=0):
-            """ k = omega/(c*beta), b = beta, g = gamma, om=omega
-                Tk,Sk,Tpk,Spk,Tppk,Sppk = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
-                Formeln mit sympy gerechnet Shishlo-OpenXal-1.ipynb
-            """
-            g2   = g**2      # gamma**2
-            gb3  = (g*b)**3  # (gamma*beta)**3
-            cphi = cos(phis)
-            sphi = sin(phis)  
+        #     """ k = omega/(c*beta), b = beta, g = gamma, om=omega
+        #         Tk,Sk,Tpk,Spk,Tppk,Sppk = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
+        #         Formeln mit sympy gerechnet Shishlo-OpenXal-1.ipynb
+        #     """
+        #     g2   = g**2      # gamma**2
+        #     gb3  = (g*b)**3  # (gamma*beta)**3
+        #     cphi = cos(phis)
+        #     sphi = sin(phis)  
 
-            WoWi = qV0/g2*(     # Shishlo 4.6.1
-              (Sk*cphi     - Tk*sphi)*g2*k*z        # ~z
-            - (Spk*sphi    - Tpk*cphi)*k*zp         # ~zp
-            - (Tk*cphi     - Sk*sphi)*g2
-            # - (Spk*cphi    - Tpk*sphi)*k**2*z*zp    # ~z*zp
-            )
+        #     # WoWi = qV0/g2*(     # Shishlo 4.6.1
+        #     #   (Sk*cphi     - Tk*sphi)*g2*k*z        # ~z
+        #     # - (Spk*sphi    - Tpk*cphi)*k*zp         # ~zp
+        #     # - (Tk*cphi     - Sk*sphi)*g2
+        #     # # - (Spk*cphi    - Tpk*sphi)*k**2*z*zp    # ~z*zp
+        #     # )
+        #     WoWi = qV0*(Sk*cphi*g2*k*z 
+        #     - Sk*g2*sphi 
+        #     # - Spk*cphi*k**2*z*zp 
+        #     + Spk*k*sphi*zp 
+        #     + Tk*cphi*g2 
+        #     + Tk*g2*k*sphi*z 
+        #     - Tpk*cphi*k*zp 
+        #     # - Tpk*k**2*sphi*z*zp
+        #     )/g2
 
-            PoPi = om*qV0/(b**3*g*g2**2*gb3*m0c3)*(b**3*g*g2*(   # Shishlo 4.6.2
-              (Spk*cphi  + Tpk*sphi)*g2
-            + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~z
-            - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp
-            # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp
-              )
-            - 3*gb3*zp*( 
-              (Spk*cphi  + Tpk*sphi)*g2             # ~zp
-            # + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~zp*z
-            # - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp*zp
-            # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp*zp
-              )
-            )       
+        # PoPi = om*qV0/(b**3*g*g2**2*gb3*m0c3)*(b**3*g*g2*(   # Shishlo 4.6.2
+        #   (Spk*cphi  + Tpk*sphi)*g2
+        # + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~z
+        # - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp
+        # # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp
+        #   )
+        # - 3*gb3*zp*( 
+        #   (Spk*cphi  + Tpk*sphi)*g2             # ~zp
+        # # + (Spk*sphi  - Tpk*cphi)*g2*k*z         # ~zp*z
+        # # - (Sppk*cphi + Tppk*sphi)*k*zp          # ~zp*zp
+        # # - (Sppk*sphi - Tppk*cphi)*k**2*z*zp     # ~z*zp*zp
+        #   )
+        # )
+        # PoPi = om*qV0/(b**3*g*g2**2*gb3*m0c3)*((b**3*g*g2)*(
+        #     Spk*cphi*g2 
+        #     + Spk*g2*k*sphi*z 
+        #     - Sppk*cphi*k*zp 
+        #     # - Sppk*k**2*sphi*z*zp 
+        #     - Tpk*cphi*g2*k*z 
+        #     + Tpk*g2*sphi 
+        #     # + Tppk*cphi*k**2*z*zp 
+        #     - Tppk*k*sphi*zp)  
+        # - 3*gb3*zp*(
+        #     Spk*cphi*g2 
+        #     # + Spk*g2*k*sphi*z 
+        #     # - Sppk*cphi*k*zp 
+        #     # - Sppk*k**2*sphi*z*zp 
+        #     # - Tpk*cphi*g2*k*z 
+        #     + Tpk*g2*sphi 
+        #     # + Tppk*cphi*k**2*z*zp 
+        #     # - Tppk*k*sphi*zp
+        #     )) 
+            # PoPi = om*qV0*(1/gb3 - 3*zp/(b**3*g*g2))*((Spk - Sppk*k*zp/g2)*(cphi + k*sphi*z) + (Tpk - Tppk*k*zp/g2)*(-cphi*k*z + sphi))/m0c3
+        def OUTminusIN(qV0,Tk,Sk,Tpk,Spk,Tppk,Sppk,k,Db2b,Dphi,om,b,g,gb3,mc3,cphi,sphi):
+            WoWi = qV0*(
+            # Db2b*Dphi*Spk*cphi*k 
+            # + Db2b*Dphi*Tpk*k*sphi 
+            + Db2b*Spk*k*sphi 
+            - Db2b*Tpk*cphi*k 
+            - Dphi*Sk*cphi 
+            - Dphi*Tk*sphi 
+            - Sk*sphi 
+            + Tk*cphi)
+        
+            PoPi = -om*qV0*(-3*Db2b*gb3*(
+            # Dphi*Spk*sphi 
+            # - Dphi*Tpk*cphi 
+            - Spk*cphi 
+            - Tpk*sphi) 
+            + b**3*g*(Dphi*Spk*sphi 
+            - Dphi*Tpk*cphi 
+            - Spk*cphi 
+            - Tpk*sphi))/(b**3*g*gb3*mc3)
             return (WoWi,PoPi)
 
         polies   = self.polies
@@ -321,7 +374,7 @@ class OXAL_G(IGap.IGap):
             gbs_in     = sqrt(gammas_in**2-1.)      # (gamma*beta)
             betas_in   = gbs_in/gammas_in           # beta
 
-            ks     = omega/(c*betas_in)    # omega/(beta*c)
+            ks     = omega/(c*betas_in)    # [1/m] omega/(beta*c)
             qV0    = self.V0(poly)         # [MV]
             Tks    = self.T(poly,ks)
             Sks    = self.S(poly,ks)
@@ -334,7 +387,15 @@ class OXAL_G(IGap.IGap):
             cphis  = cos(phis)
 
             # kin.energy and phase increase ref-particle
-            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=0)
+            cphi = cphis
+            sphi = sphis
+            om = self.omega
+            bets = betas_in
+            gams = gammas_in
+            gb3s = (bets*gams)**3
+            Db2b = 0.
+            Dphi  = 0.
+            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,Db2b,Dphi,om,bets,gams,gb3s,m0c3,cphi,sphi)
 
             Ts_out    = Ts + dTs
             phis_out  = phis + dPhis
@@ -350,8 +411,8 @@ class OXAL_G(IGap.IGap):
             #======================================================================================="""        
             # {z, dP/P}: linear sub matrix
             mx = NP.eye(MDIM,MDIM)
-            mx[Ktp.z, Ktp.z] = r44; mx[Ktp.z, Ktp.zp ] = r45 
-            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55 
+            mx[Ktp.z, Ktp.z] = r44 + 1; mx[Ktp.z, Ktp.zp ] = r45*(1/ks)
+            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55*(1/ks) + 1
             # {x,x'}: linear sub-matrix
             factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
             mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
@@ -364,15 +425,16 @@ class OXAL_G(IGap.IGap):
             mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
 
             # left multiplication of slice-matrix with oxal-matrix
-            matrix = NP.dot(mx,matrix)
+            matrix = NP.matmul(mx,matrix)
 
             # refresh loop variables
             Ts    = Ts_out
             phis  = phis_out
         self.deltaW    = matrix[Ktp.T,Ktp.dT]
-        self.ttf       = self.deltaW/ttf
-        self.matrix    = matrix
+        self.ttf       = abs(self.deltaW/ttf)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
+        self.matrix    = matrix
+        pass
         return
     def poly_slices(self):
         """Slice the RF cavity"""
@@ -387,6 +449,7 @@ class OXAL_G(IGap.IGap):
             slices.append(poly)
         DEBUG_OFF('slices',slices)
         return slices
+
     def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
         E0 = poly.E0                          # [MV/m]
@@ -450,32 +513,32 @@ class OXAL_G(IGap.IGap):
 class TestOxalEnergyMapping(unittest.TestCase):
     def test_OXAL(self):
         """ testing the OXAL mapping for acceleration """
-        print(wrapRED('------------------ test_OXAL'))
+        print(wrapRED('---------------------------------------- OXAL_G.OXAL_matrix()'))
         gap_parameter = dict(
-            EzPeak    = 1,
-            phisoll   = radians(-30.),
-            gap       = 0.022,
-            cavlen    = 0.44,
-            freq      = 750e6,
+            aperture   = 0.01,
+            cavlen     = 0.044,
+            EzPeak     = 1.1,
+            freq       = 750.e+6,
+            gap        = 0.022,
+            phisoll    = radians(-30.),
+            sec        = 'test',
+            SFdata     = None,
         )
+        FLAGS['mapping'] = 'oxal'
         fieldtab  = 'unittests/CAV-FLAT-R135-L32.TBL'
+        L         = gap_parameter['cavlen']
         EzPeak    = gap_parameter['EzPeak']
-        cavlen    = gap_parameter['cavlen']
-        sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+        sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=L*100.)   # scaled field distribution
         gap_parameter['SFdata'] = sfdata
+        instance = ELM.RFG('RFG')
+        instance.register(OXAL_G())
+        instance.configure(**gap_parameter)
 
-        oxag = OXAL_G()    # create object instance
-        oxag.configure(**gap_parameter)
-        print(f'transfer matrix OXAL for {oxag.particle.tkin} MeV (default)')
-        print(oxag.toString())
+        tkin = instance.particle.tkin
+        print(f'transfer matrix OXAL for {tkin} MeV (default)')
+        print(instance.mapper.toString())
 
-        tkin = 100.
-        print(f'transfer matrix OXAL for {tkin} MeV')
-        oxag.adjust_energy(tkin)
-        print(oxag.toString())
-        #=============================================================
-        tkin       = 10
-        print(f'\n test waccept(...) for {tkin} MeV protons')
+        print(wrapRED('-------------------------------------------- OXAL_G.waccept()'))
         DT2T       = 2e-3  # DT/T
         Dphi0      = 5.    # Dphi/phi [deg]
         E0         = PARAMS['proton_mass']
@@ -485,21 +548,11 @@ class TestOxalEnergyMapping(unittest.TestCase):
         PARAMS['twiss_w_i'] = Twiss(beta=betaw,alfa=0.,epsi=emit)
         PARAMS['Dphi0_i']   = Dphi0
         PARAMS['DT2T_i']    = DT2T
-        res = oxag.waccept()
-        dictprnt(what=res,text='waccept',njust=25)
-
-        # injection_energies = [6,12,24,50,100,150,200]
-        # EzPeak = 2.0; phisoll = radians(-30.); gap = 0.044; freq = 750.e6; fieldtab="SF/SF_WDK2g44.TBL"
-        # gap_cm = 100.*gap   # gap in cm
-        # sfdata = SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,IntgInterval=gap_cm)
-        # EzAvg = sfdata.EzAvg
-        # ID = "OXAL"
-        # for injection_energy in injection_energies:
-        #     oxal = OXAL_G(ID,EzAvg,phisoll,gap,freq,SFdata=sfdata,particle=Proton(injection_energy))
-        #     tvectori = NP.array([0, 0, 0, 0, 0, 0, injection_energy, 1, 0, 1])
-        #     tvectoro = NP.dot(oxal.matrix,tvectori)
-        #     print(f'EzPeak={EzPeak}, gap={gap}, freq={freq*1e-6}, Wi={tvectori[6]:3.3f}, Wo={tvectoro[6]:3.3f}, dW={oxal.matrix[6,7]:.3e}')
-        # return
+        pprint.pp(instance.waccept())
+        print('twiss_z_i')
+        pprint.pp(vars(instance.waccept()['twiss_z_i']))
 
 if __name__ == '__main__':
+    import elements as ELM
+    import pprint
     unittest.main()

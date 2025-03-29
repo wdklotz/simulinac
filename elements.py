@@ -900,70 +900,65 @@ class RFG(Node):
     """  RF-gap of zero length for different kick gap-models """
     def __init__(self,label):
         super().__init__()
-        self.label        = label
-        self.viseo        = 0.25
-        self.length       = 0
-        self.dWf          = UTIL.FLAGS['dWf']
-        self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
-        self.position     = (0,0,0)
-
-        self.mapper       = None
-        self.EzPeak       = None
-        self.phisoll      = None
-        self.gap          = None
-        self.cavlen       = None
-        self.freq         = None
         self.aperture     = None
-        self.sec          = None
-        self.mapping      = None
+        self.cavlen       = None
         self.deltaW       = None
-        self.ttf          = None
+        self.dWf          = UTIL.FLAGS['dWf']
+        self.EzPeak       = None
+        self.freq         = None
+        self.gap          = None
+        self.label        = label
+        self.length       = 0
+        self.mapper       = None
+        self.mapping      = UTIL.FLAGS.get('mapping')
+        # self.matrix       = None
+        self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
         self.particlef    = None
-        self.matrix       = None
+        self.position     = (0,0,0)
+        self.phisoll      = None
+        self.SFdata       = None
+        self.sec          = None
+        self.ttf          = None
+        self.viseo        = 0.25
 
     def register(self,mapper):
         self.mapper  = mapper
         self.mapper.register(self)
         pass
-
     def configure(self,**kwargs): 
-        mapping = UTIL.FLAGS.get('mapping')
-        if mapping in ['t3d','oxal','base','ttf']:
-            self.EzPeak    = kwargs.get('EzPeak')*self.dWf # [MV/m]
-            self.phisoll   = kwargs.get('phisoll')         # [radians] soll phase
-            self.gap       = kwargs.get('gap')             # [m] rf-gap
-            self.cavlen    = kwargs.get('cavlen')          # [m] cavity length
-            self.freq      = kwargs.get('freq')            # [Hz]  RF frequenz
+        if self.mapping in ['t3d','oxal','base','ttf']:
             self.aperture  = kwargs.get('aperture')
+            self.cavlen    = kwargs.get('cavlen')          # [m] cavity length
+            self.EzPeak    = kwargs.get('EzPeak')*self.dWf # [MV/m]
+            self.freq      = kwargs.get('freq')            # [Hz]  RF frequenz
+            self.gap       = kwargs.get('gap')             # [m] rf-gap
+            self.phisoll   = kwargs.get('phisoll')         # [radians] soll phase
             self.sec       = kwargs.get('sec')
+            self.SFdata    = kwargs.get('SFdata')
+
             self.mapper.configure(**kwargs)
+            pass
         elif mapping in ['simple','dyn']:
             raise(UserWarning(wrapRED(f'mapping not ready {mapping}')))
             sys.exit()
         else:
             raise(UserWarning(wrapRED(f'missing implementation {mapping}')))
             sys.exit()
-
     @property
     def isAccelerating(self):
         return self.mapper.isAccelerating()
     @property
     def toString(self):
         return self.mapper.toString()
-
     def adjust_energy(self, tkin):
         self.mapper.adjust_energy(tkin)
         return self
-
     def map(self,i_track):
         return self.mapper.map(i_track)
-
     def make_slices(self, anz=1):
         return [self]
-
     def waccept(self):
         return self.mapper.waccept()
-
     def aper_check(self,new_tp,s,**kwargs):
         new_point=new_tp()            # calling bunch.Tpoint() object
 
@@ -997,7 +992,6 @@ class RFG(Node):
             sfifo_xy.append(s)
             lost = True
         return lost
-
 class RFC(Node):   
     """ Rf cavity as product DKD*RFG*DKD 
     # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
