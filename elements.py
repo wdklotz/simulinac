@@ -487,9 +487,11 @@ class RFG(Node):
             self.sec       = kwargs.get('sec')
             self.SFdata    = kwargs.get('SFdata')
         
-            self.lamb      = UTIL.PARAMS['clight']/self.freq
-            self.omega     = twopi*self.freq
-
+            self.lamb       = UTIL.PARAMS['clight']/self.freq
+            self.omega      = twopi*self.freq
+            kwargs['lamb']     = self.lamb
+            kwargs['omega']    = self.omega
+            kwargs['particle'] = self.particle
             self.mapper.configure(**kwargs)
             pass
         elif self.mapping in ['simple','dyn']:

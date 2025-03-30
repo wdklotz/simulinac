@@ -60,6 +60,9 @@ class TTF_G(IGap.IGap):
         self.SFdata    = kwargs.get('SFdata')
 
         self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
+        self.lamb      = kwargs.get('lamb')
+        self.omega     = kwargs.get('omega')  
+        self.particle  = kwargs['particle']
         self.polies    = self.poly_slices()
         self.adjust_energy(self.particle.tkin)
 
@@ -68,17 +71,9 @@ class TTF_G(IGap.IGap):
     @deltaW.setter
     def deltaW(self,v):         self.master.deltaW = v
     @property
-    def lamb(self):      return self.master.lamb
-    @property
     def matrix(self):    return self.master.matrix
     @matrix.setter
     def matrix(self,v):         self.master.matrix = v
-    @property
-    def omega(self):      return self.master.omega
-    @property
-    def particle(self):  return self.master.particle
-    @particle.setter
-    def particle(self,v):       self.master.particle = v
     @property
     def particlef(self): return self.master.particlef
     @particlef.setter

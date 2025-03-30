@@ -39,10 +39,11 @@ def ttf(lamb, gap, beta):
 class T3D_G(IGap.IGap):
     """ Trace 3D RF Gap-Model """
     def __init__(self):
-        self.master       = None
         self.label        = 'T3D_G'
+        self.master       = None
 
     def configure(self,**kwargs):
+        # copies from master
         self.aperture  = kwargs.get('aperture')
         self.cavlen    = kwargs.get('cavlen')
         self.EzPeak    = kwargs.get('EzPeak')
@@ -51,6 +52,9 @@ class T3D_G(IGap.IGap):
         self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
 
+        self.lamb      = kwargs.get('lamb')
+        self.omega     = kwargs.get('omega')  
+        self.particle  = kwargs['particle']
         self.E0L       = None
         self.qE0LT     = None
         self.T3D_matrix()
@@ -58,29 +62,21 @@ class T3D_G(IGap.IGap):
 
     # mutable properties shared with master
     @property
-    def deltaW(self):    return self.master.deltaW
+    def deltaW(self):        return self.master.deltaW          # deltaW
     @deltaW.setter
-    def deltaW(self,v):         self.master.deltaW = v
+    def deltaW(self,v):             self.master.deltaW = v
     @property
-    def lamb(self):      return self.master.lamb
-    @property
-    def matrix(self):    return self.master.matrix
+    def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
-    def matrix(self,v):         self.master.matrix = v
+    def matrix(self,v):             self.master.matrix = v
     @property
-    def omega(self):      return self.master.omega
-    @property
-    def particle(self):  return self.master.particle
-    @particle.setter
-    def particle(self,v):       self.master.particle = v
-    @property
-    def particlef(self): return self.master.particlef
+    def particlef(self): return     self.master.particlef       # particlef
     @particlef.setter
-    def particlef(self,v):      self.master.particlef = v
+    def particlef(self,v):          self.master.particlef = v
     @property
-    def ttf(self):       return self.master.ttf
+    def ttf(self):       return     self.master.ttf             # ttf
     @ttf.setter
-    def ttf(self,v):            self.master.ttf = v
+    def ttf(self,v):                self.master.ttf = v
 
     def map(self,i_track):
         return NP.dot(self.matrix,i_track)
