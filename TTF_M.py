@@ -60,28 +60,29 @@ class TTF_G(IGap.IGap):
         self.SFdata    = kwargs.get('SFdata')
 
         self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
-        self.lamb      = kwargs.get('lamb')
-        self.omega     = kwargs.get('omega')  
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
         self.particle  = kwargs['particle']
         self.polies    = self.poly_slices()
         self.adjust_energy(self.particle.tkin)
 
+    # mutable properties shared with master
     @property
-    def deltaW(self):    return self.master.deltaW
+    def deltaW(self):        return self.master.deltaW          # deltaW
     @deltaW.setter
-    def deltaW(self,v):         self.master.deltaW = v
+    def deltaW(self,v):             self.master.deltaW = v
     @property
-    def matrix(self):    return self.master.matrix
+    def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
-    def matrix(self,v):         self.master.matrix = v
+    def matrix(self,v):             self.master.matrix = v
     @property
-    def particlef(self): return self.master.particlef
+    def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
-    def particlef(self,v):      self.master.particlef = v
+    def particlef(self,v):          self.master.particlef = v
     @property
-    def ttf(self):       return self.master.ttf
+    def ttf(self):           return self.master.ttf             # ttf
     @ttf.setter
-    def ttf(self,v):            self.master.ttf = v
+    def ttf(self,v):                self.master.ttf = v
 
     def map(self,i_track):
         return self.ttf_map(i_track)

@@ -52,13 +52,12 @@ class T3D_G(IGap.IGap):
         self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
 
-        self.lamb      = kwargs.get('lamb')
-        self.omega     = kwargs.get('omega')  
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
         self.particle  = kwargs['particle']
         self.E0L       = None
         self.qE0LT     = None
         self.T3D_matrix()
-        pass
 
     # mutable properties shared with master
     @property
@@ -70,11 +69,11 @@ class T3D_G(IGap.IGap):
     @matrix.setter
     def matrix(self,v):             self.master.matrix = v
     @property
-    def particlef(self): return     self.master.particlef       # particlef
+    def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
     def particlef(self,v):          self.master.particlef = v
     @property
-    def ttf(self):       return     self.master.ttf             # ttf
+    def ttf(self):           return self.master.ttf             # ttf
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
