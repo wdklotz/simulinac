@@ -461,7 +461,7 @@ class RFG(Node):
         self.lamb         = None
         self.length       = 0
         self.mapper       = None
-        self.mapping      = UTIL.FLAGS.get('mapping')
+        self.mapping      = UTIL.FLAGS['mapping']
         self.omega        = None
         self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
         self.particlef    = None
@@ -487,8 +487,8 @@ class RFG(Node):
             self.sec       = kwargs.get('sec')
             self.SFdata    = kwargs.get('SFdata')
         
-            self.lamb       = UTIL.PARAMS['clight']/self.freq
-            self.omega      = twopi*self.freq
+            self.lamb      = UTIL.PARAMS['clight']/self.freq
+            self.omega     = twopi*self.freq
             kwargs['lamb']     = self.lamb
             kwargs['omega']    = self.omega
             kwargs['particle'] = self.particle
@@ -973,8 +973,8 @@ if __name__ == '__main__':
 
 
 
-""" Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug  """
-""" Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug Altes Zeug  """
+""" totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
+""" totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
 class RFC_TODO(Node):   
     """ Rf cavity as product DKD*RFG*DKD """
     pass
