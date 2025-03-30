@@ -51,8 +51,6 @@ class T3D_G(IGap.IGap):
         self.phisoll   = kwargs.get('phisoll')
         self.sec       = kwargs.get('sec')
 
-        self.omega     = twopi*self.freq
-        self.lamb      = PARAMS['clight']/self.freq
         self.E0L       = None
         self.qE0LT     = None
         self.T3D_matrix()
@@ -65,12 +63,12 @@ class T3D_G(IGap.IGap):
     def deltaW(self,v):         self.master.deltaW = v
     @property
     def lamb(self):      return self.master.lamb
-    @lamb.setter
-    def lamb(self,v):           self.master.lamb = v
     @property
     def matrix(self):    return self.master.matrix
     @matrix.setter
     def matrix(self,v):         self.master.matrix = v
+    @property
+    def omega(self):      return self.master.omega
     @property
     def particle(self):  return self.master.particle
     @particle.setter

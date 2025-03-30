@@ -462,6 +462,7 @@ class RFG(Node):
         self.length       = 0
         self.mapper       = None
         self.mapping      = UTIL.FLAGS.get('mapping')
+        self.omega        = None
         self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
         self.particlef    = None
         self.position     = (0,0,0)
@@ -485,6 +486,9 @@ class RFG(Node):
             self.phisoll   = kwargs.get('phisoll')         # [radians] soll phase
             self.sec       = kwargs.get('sec')
             self.SFdata    = kwargs.get('SFdata')
+        
+            self.lamb      = UTIL.PARAMS['clight']/self.freq
+            self.omega     = twopi*self.freq
 
             self.mapper.configure(**kwargs)
             pass

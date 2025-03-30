@@ -199,8 +199,10 @@ def instanciate_element(item):
                         EzPeak    = EzPeak,            # [MV/m]
                         freq      = freq,              # [Hz] 
                         gap       = gap,               # [m]
+                        HE_Gap    = HE_Gap,               # [m]
                         phisoll   = radians(phisoll),  # [radians] 
-                        sec       = sec                # string
+                        sec       = sec,               # string
+                        SFdata    = SFdata,
                     )
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())         # register T3D
@@ -227,8 +229,10 @@ def instanciate_element(item):
                         EzPeak    = HE_EzPeak,
                         freq      = freq,       # [Hz]  requested RF frequenz
                         gap       = HE_Gap,
+                        HE_Gap    = HE_Gap,               # [m]
                         phisoll   = radians(phisoll),    # [radians] requested soll phase
-                        sec       = sec
+                        sec       = sec,
+                        SFdata    = sfdata,
                     )
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())
