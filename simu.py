@@ -384,7 +384,8 @@ def simulation(filepath):
     if twoflag == (False,False): mode= UTIL.RUN_MODE[3]
     UTIL.FLAGS['mode'] = mode
     print(f'running in \'{UTIL.FLAGS["mode"]}\' mode')
-    print(wrapRED(f'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd'))
+    # print(wrapRED(f'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd'))
+    print(wrapRED(f'\u26dd  FINAL particle kinetic energy {lattice.last_gap.particle.tkin:.3f} [MeV] \u26dd'))
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------
