@@ -32,7 +32,7 @@ import Ez0                 as EZ
 from math    import radians
 from T3D_M   import T3D_G
 from OXAL_M  import OXAL_G
-from Base_M  import Base_G
+from BASE_M  import BASE_G
 from TTF_M   import TTF_G
 
 wrapRED = UTIL.wrapRED
@@ -228,7 +228,7 @@ def instanciate_element(item):
                     SFdata    = SFdata,
                 )
                 instance = ELM.RFG(ID)
-                instance.register(Base_G())
+                instance.register(BASE_G())
                 instance.configure(**gap_parameters)
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
                 if cavlen != None: ELEMENT['cavlen'] = 'ignored'

@@ -40,7 +40,7 @@ def K(gradient, particle):
 
 """ ------- The mother of all lattice element objects (a.k.a. nodes)# ------ """
 class Node(object):
-    """ Base class for transfer matrices (linear map)
+    """ base class for transfer matrices (linear map)
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
@@ -1134,7 +1134,7 @@ class RFG_OLD(Node):
         # def DEBUG_TRACK(inout,track):
         #     print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
-        """ Mapping (i) to (f) in Base RF-Gap Model. (A.Shislo 4.2) """
+        """ Mapping (i) to (f) in BASE RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -1218,7 +1218,7 @@ class RFG_OLD(Node):
         # def DEBUG_TRACK(inout,track):
         #     print('{} {} {}'.format('base_map',inout,track))
         # function body ================= function body ================= function body ================= 
-        """ Mapping (i) to (O) in Base RF-Gap Model. (A.Shislo 4.2) """
+        """ Mapping (i) to (O) in BASE RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]

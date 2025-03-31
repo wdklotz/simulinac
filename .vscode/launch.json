@@ -30,12 +30,12 @@
             "program": "OXAL_M.py",
         },
         {
-            "name": "Base_M",
+            "name": "BASE_M",
             "type": "debugpy",
             "request": "launch",
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
-            "program": "Base_M.py",
+            "program": "BASE_M.py",
         },
         {
             "name": "DYNAC_multigap_generator",

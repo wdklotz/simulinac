@@ -39,11 +39,11 @@ def ttf(lamb, gap, beta, aperture):
     res = res/I0(Ka)
     return res
 
-class Base_G(IGap.IGap):
-    """ Base RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
+class BASE_G(IGap.IGap):
+    """ BASE RF Gap-Model (A.Shishlo/J.Holmes ORNL/TM-2015/247) """
     def __init__(self):
         self.master       = None
-        self.label        = 'Base_G'
+        self.label        = 'BASE_G'
 
     def configure(self,**kwargs):
         self.aperture  = kwargs.get('aperture')
@@ -82,7 +82,7 @@ class Base_G(IGap.IGap):
     def map(self,i_track):
         return self.base_map(i_track)
     def toString(self):
-        return f'{self.master} mapping in: Base_G.base_map()'
+        return f'{self.master} mapping in: BASE_G.base_map()'
     def isAccelerating(self):
         return True
     def adjust_energy(self, tkin):
@@ -204,7 +204,7 @@ class Base_G(IGap.IGap):
         return
     def base_map(self, i_track):
         """ Neue überarbeitete map Version vom 17.02.2025 (wdk)
-            Mapping in Base RF-Gap Model. (A.Shislo 4.2) """
+            Mapping in BASE RF-Gap Model. (A.Shislo 4.2) """
         x        = i_track[XKOO]       # [0]
         xp       = i_track[XPKOO]      # [1]
         y        = i_track[YKOO]       # [2]
@@ -262,14 +262,14 @@ class Base_G(IGap.IGap):
         S2 = 51    # to 
         debug = DEBUG_OFF
         if debug == DEBUG_ON:
-            log_what_in_interval(S,(S1,S2),f'Base_M.base_map: f_track: {f_track}\n')
+            log_what_in_interval(S,(S1,S2),f'BASE_M.base_map: f_track: {f_track}\n')
 
         return f_track
 
-class TestBaseMapping(unittest.TestCase):
+class TestBASEMapping(unittest.TestCase):
     def test_BASE_G(self):
         """ testing the base mapping for acceleration """
-        print(wrapRED('---------------------------------------------------------- test_Base_G'))
+        print(wrapRED('---------------------------------------------------------- test_BASE_G'))
         gap_parameter = dict(
             EzPeak    = 2,
             phisoll   = radians(-30.),
@@ -279,10 +279,10 @@ class TestBaseMapping(unittest.TestCase):
         )
         FLAGS['mapping'] = 'base'
         instance = ELM.RFG('RFG')
-        instance.register(Base_G())
+        instance.register(BASE_G())
         instance.configure(**gap_parameter)
 
-        # bmap = Base_G()    # create object instance
+        # bmap = BASE_G()    # create object instance
         # bmap.configure(**gap_parameter)
         # bmap.adjust_energy(50.)
         print(instance.mapper.toString())
