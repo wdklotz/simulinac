@@ -25,7 +25,7 @@ import numpy as NP
 import unittest
 from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
-from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS
+from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS,mxprnt
 from Ez0 import SFdata
 from separatrix import w2phi
 
@@ -87,7 +87,7 @@ class TTF_G(IGap.IGap):
     def map(self,i_track):
         return self.ttf_map(i_track)
     def toString(self):
-        return f'{self.mapping} mapping in: TTF_M.ttf_map()'
+        return mxprnt(self.matrix,'4g')
     def isAccelerating(self):
         return True
     def waccept(self):
