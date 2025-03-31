@@ -58,8 +58,6 @@ class BASE_G(IGap.IGap):
 
         self.lamb      = kwargs['lamb']
         self.omega     = kwargs['omega'] 
-        self.particle  = kwargs['particle']
-        self.adjust_energy(self.particle.tkin)
 
     # mutable properties shared with master
     @property
@@ -70,6 +68,8 @@ class BASE_G(IGap.IGap):
     def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
     def matrix(self,v):             self.master.matrix = v
+    @property
+    def particle(self):      return self.master.particle        # particle
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
@@ -281,10 +281,8 @@ class TestBASEMapping(unittest.TestCase):
         instance = ELM.RFG('RFG')
         instance.register(BASE_G())
         instance.configure(**gap_parameter)
+        instance.adjust_energy(PARAMS['injection_energy'])
 
-        # bmap = BASE_G()    # create object instance
-        # bmap.configure(**gap_parameter)
-        # bmap.adjust_energy(50.)
         print(instance.mapper.toString())
         print(instance.mapper.__dict__)
         print()

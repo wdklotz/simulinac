@@ -478,20 +478,20 @@ class RFG(Node):
         pass
     def configure(self,**kwargs): 
         if self.mapping in ['t3d','oxal','base','ttf']:
-            self.aperture  = kwargs.get('aperture')
+            self.aperture  = kwargs.get('aperture')        # [m]
             self.cavlen    = kwargs.get('cavlen')          # [m] cavity length
             self.EzPeak    = kwargs.get('EzPeak')*self.dWf # [MV/m]
             self.freq      = kwargs.get('freq')            # [Hz]  RF frequenz
             self.gap       = kwargs.get('gap')             # [m] rf-gap
             self.phisoll   = kwargs.get('phisoll')         # [radians] soll phase
             self.sec       = kwargs.get('sec')
-            self.SFdata    = kwargs.get('SFdata')
+            self.SFdata    = kwargs.get('SFdata')          # SuperFish data
         
             self.lamb      = UTIL.PARAMS['clight']/self.freq
             self.omega     = twopi*self.freq
+            # add attributes to kwargs and configure the mapper
             kwargs['lamb']     = self.lamb
             kwargs['omega']    = self.omega
-            kwargs['particle'] = self.particle
             self.mapper.configure(**kwargs)
             pass
         elif self.mapping in ['simple','dyn']:

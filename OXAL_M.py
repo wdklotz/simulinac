@@ -57,9 +57,7 @@ class OXAL_G(IGap.IGap):
 
         self.lamb      = kwargs['lamb']
         self.omega     = kwargs['omega'] 
-        self.particle  = kwargs['particle']
         self.polies    = self.poly_slices()
-        self.OXAL_matrix()
 
     # mutable properties shared with master
     @property
@@ -70,6 +68,8 @@ class OXAL_G(IGap.IGap):
     def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
     def matrix(self,v):             self.master.matrix = v
+    @property
+    def particle(self):      return self.master.particle        # particle
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
@@ -360,6 +360,7 @@ class TestOxalEnergyMapping(unittest.TestCase):
         instance = ELM.RFG('RFG')
         instance.register(OXAL_G())
         instance.configure(**gap_parameter)
+        instance.adjust_energy(PARAMS['injection_energy'])
 
         tkin = instance.particle.tkin
         print(f'transfer matrix OXAL for {tkin} MeV (default)')

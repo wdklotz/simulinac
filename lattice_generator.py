@@ -150,6 +150,7 @@ def instanciate_element(item):
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())         # register T3D
                     instance.configure(**gap_parameters)
+                    instance.adjust_energy(UTIL.PARAMS['injection_energy'])
                     if cavlen != None: ELEMENT['cavlen'] ='ignored'
                     if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                     if SFdata != None: ELEMENT['SFdata'] ='ignored'
@@ -179,6 +180,7 @@ def instanciate_element(item):
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())
                     instance.configure(**gap_parameters)
+                    instance.adjust_energy(UTIL.PARAMS['injection_energy'])
                     if gap != None: ELEMENT['gap'] = 'ignored'
                     pass
             elif mapping == 'simple':
@@ -207,6 +209,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(OXAL_G())
                 instance.configure(**gap_parameters)
+                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
                 if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 if gap    != None: ELEMENT['gap']    ='ignored'
                 pass
@@ -230,6 +233,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(BASE_G())
                 instance.configure(**gap_parameters)
+                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
                 if cavlen != None: ELEMENT['cavlen'] = 'ignored'
                 if SFdata != None: ELEMENT['SFdata'] = 'ignored'
@@ -257,6 +261,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(TTF_G())
                 instance.configure(**gap_parameters)
+                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
                 if gap    != None: ELEMENT['gap']    ='ignored'
                 if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 pass

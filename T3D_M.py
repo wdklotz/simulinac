@@ -54,10 +54,8 @@ class T3D_G(IGap.IGap):
 
         self.lamb      = kwargs['lamb']
         self.omega     = kwargs['omega'] 
-        self.particle  = kwargs['particle']
         self.E0L       = None
         self.qE0LT     = None
-        self.T3D_matrix()
 
     # mutable properties shared with master
     @property
@@ -68,6 +66,8 @@ class T3D_G(IGap.IGap):
     def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
     def matrix(self,v):             self.master.matrix = v
+    @property
+    def particle(self):      return self.master.particle        # particle
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
@@ -220,6 +220,7 @@ class TestElementMethods(unittest.TestCase):
         instance = ELM.RFG('RFG')
         instance.register(T3D_G())
         instance.configure(**gap_parameter)
+        instance.adjust_energy(PARAMS['injection_energy'])
 
         tkin = instance.particle.tkin
         print(f'transfer matrix T3D for {tkin} MeV (default)')

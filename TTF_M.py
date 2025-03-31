@@ -62,9 +62,7 @@ class TTF_G(IGap.IGap):
         self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
         self.lamb      = kwargs['lamb']
         self.omega     = kwargs['omega'] 
-        self.particle  = kwargs['particle']
         self.polies    = self.poly_slices()
-        self.adjust_energy(self.particle.tkin)
 
     # mutable properties shared with master
     @property
@@ -75,6 +73,8 @@ class TTF_G(IGap.IGap):
     def matrix(self):        return self.master.matrix          # matrix
     @matrix.setter
     def matrix(self,v):             self.master.matrix = v
+    @property
+    def particle(self):      return self.master.particle        # particle
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
