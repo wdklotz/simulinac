@@ -86,6 +86,7 @@ class Node(object):
         return ret
     def adjust_energy(self, tkin):
         """ dummy adjust """
+        self.particle(tkin)
         return self
     def shorten(self, length):
         """ dummy shorten """
