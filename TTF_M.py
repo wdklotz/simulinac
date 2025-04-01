@@ -207,12 +207,19 @@ class TTF_G(IGap.IGap):
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
         return    
+    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
+        E0 = poly.E0                          # [MV/m]
+        b  = poly.b                           # [1/cm**2]
+        dz = poly.dz                          # [cm]
+        v0 = E0*(2*dz+2./3.*b*dz**3)*1.e-2    # [MV]
+        return v0
     def T(self, poly, k):    # A.Shishlo/J.Holmes (4.4.6)
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
+        kdz = k*dz
+        f1 = 2*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
+        f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(kdz))
         t  = f1*f2
         DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
@@ -221,8 +228,9 @@ class TTF_G(IGap.IGap):
         b  = poly.b
         dz = poly.dz
         k  = k*1.e-2       # [1/m] --> [1/cm]
-        f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        f2 = 1.-k*dz*cot(k*dz)
+        kdz = k*dz
+        f1 = 2*a*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
+        f2 = 1.-k*dz*cot(kdz)
         s  = f1*f2
         DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
@@ -230,8 +238,9 @@ class TTF_G(IGap.IGap):
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        tp  = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(k*dz)*(1.+b*dz**2-6*b/k**2))
+        kdz = k*dz
+        tp  = 2*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
+        tp  = tp*((1.+3*b*dz**2-6*b/k**2)/k-dz*cot(kdz)*(1.+b*dz**2-6*b/k**2))
         tp  = tp*1.e-2     # [cm] --> [m]
         return tp
     def Sp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.9)
@@ -239,8 +248,9 @@ class TTF_G(IGap.IGap):
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        sp  = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
-        sp  = sp*(dz**2-2./k**2+dz*cot(k*dz)*2/k)
+        kdz = k*dz
+        sp  = 2*a*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
+        sp  = sp*(dz**2-2./k**2+dz*cot(kdz)*2/k)
         sp  = sp*1.e-2     # [cm] --> [m]
         return sp
     def Tpp(self, poly, k):  # sympy calculation Tpp.ipynb
@@ -248,8 +258,9 @@ class TTF_G(IGap.IGap):
         b   = poly.b
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        I1 = 2*dz**2*sin(dz*k)/k + 4*dz*cos(dz*k)/k**2 - 4*sin(dz*k)/k**3
-        I3 = -b*(-dz**4*sin(dz*k)/k - 4*dz**3*cos(dz*k)/k**2 + 12*dz**2*sin(dz*k)/k**3 + 24*dz*cos(dz*k)/k**4 - 24*sin(dz*k)/k**5) + b*(dz**4*sin(dz*k)/k + 4*dz**3*cos(dz*k)/k**2 - 12*dz**2*sin(dz*k)/k**3 - 24*dz*cos(dz*k)/k**4 + 24*sin(dz*k)/k**5)
+        kdz = k*dz
+        I1 = 2*dz**2*sin(kdz)/k + 4*dz*cos(kdz)/k**2 - 4*sin(kdz)/k**3
+        I3 = -b*(-dz**4*sin(kdz)/k - 4*dz**3*cos(kdz)/k**2 + 12*dz**2*sin(kdz)/k**3 + 24*dz*cos(kdz)/k**4 - 24*sin(kdz)/k**5) + b*(dz**4*sin(kdz)/k + 4*dz**3*cos(kdz)/k**2 - 12*dz**2*sin(kdz)/k**3 - 24*dz*cos(kdz)/k**4 + 24*sin(kdz)/k**5)
         r = I1+I3
         return r
     def Spp(self, poly, k):  # sympy calculation Spp.ipynb
@@ -257,14 +268,9 @@ class TTF_G(IGap.IGap):
         a   = poly.a
         dz  = poly.dz
         k   = k*1.e-2      # [1/m] --> [1/cm]
-        r = 2*dz**3*a*cos(dz*k)/k - 6*dz**2*a*sin(dz*k)/k**2 - 12*dz*a*cos(dz*k)/k**3 + 12*a*sin(dz*k)/k**4
+        kdz = k*dz
+        r = 2*dz**3*a*cos(kdz)/k - 6*dz**2*a*sin(kdz)/k**2 - 12*dz*a*cos(kdz)/k**3 + 12*a*sin(kdz)/k**4
         return r
-    def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
-        E0 = poly.E0                          # [MV/m]
-        b  = poly.b                           # [1/cm**2]
-        dz = poly.dz                          # [cm]
-        v0 = E0*(2*dz+2./3.*b*dz**3)*1.e-2    # [MV]
-        return v0
     def poly_slices(self):
         """ Slice the RF gap """
         slices = []
@@ -279,14 +285,13 @@ class TTF_G(IGap.IGap):
     def ttf_map(self, i_track):
         def ttf_formeln(particle,phiIN,poly,r):
             omega= self.omega
-            c    = PARAMS['clight']
-            m0c3 = particle.m0c3
+            m0c3 = Proton().m0c3
             g    = particle.gamma
             b    = particle.beta
             tkin = particle.tkin
             gb   = particle.gamma_beta
             gb3  = gb**3
-            k    = self.omega/(c*b)
+            k    = self.omega/(PARAMS['clight']*b)
             V0   = self.V0(poly)
             Tk   = self.T(poly,k)
             Sk   = self.S(poly,k)
@@ -322,6 +327,7 @@ class TTF_G(IGap.IGap):
         lamb         = self.lamb
         phisoll      = self.phisoll
         freq         = self.freq
+        m0c2         = Proton().m0c2
 
         """
         ptcles Soll particle
@@ -350,10 +356,6 @@ class TTF_G(IGap.IGap):
         
         for poly in self.polies:
             """ Map through poly; use Formel 4.3.1 & 4.3.2 A.Shishlo/J.Holmes """
-            gbIs = ptcles.gamma_beta
-            cphi = cos(phis)
-            sphi = sin(phis)
-            m0c2 = self.particle.m0c2
 
             # Soll IN
             (DWs,Dphis,i0,i1,V0,Tk,Sk,Tkp,Skp) = ttf_formeln(ptcles,phis,poly,r)
@@ -361,7 +363,6 @@ class TTF_G(IGap.IGap):
             Ws         = Ws + DWs
             phis       = phis + Dphis
             ptcles     = Proton(Ws)
-            gbOs       = ptcles.gamma_beta
 
             # Off IN
             (DW,Dphi,i0x,i1x,V0x,Tkx,Skx,Tkpx,Skpx) = ttf_formeln(ptcle,phi,poly,r)
@@ -370,9 +371,13 @@ class TTF_G(IGap.IGap):
             phi       = phi + Dphi
             ptcle     = Proton(W)
 
+            gbIs      = ptcles.gamma_beta
+            gbOs      = ptcles.gamma_beta
+            gbIs2gbOs = gbIs/gbOs
             i12r      = i1/r if r > 1.e-6 else pi/lamb/gbIs
             faktor    = V0/(m0c2*gbIs*gbOs)*i12r
-            gbIs2gbOs = gbIs/gbOs
+            cphi      = cos(phis)
+            sphi      = sin(phis)
             xp        = gbIs2gbOs*xp-faktor*(Tk*sphi + Sk*cphi)*x
             yp        = gbIs2gbOs*yp-faktor*(Tk*sphi + Sk*cphi)*y
 
