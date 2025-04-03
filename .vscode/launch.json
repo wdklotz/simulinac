@@ -68,7 +68,7 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
-            "args": ["--file","TT28_oxal.yml"]
+            "args": ["--file","TT28_t3d.yml"]
         },
         {
             "name": "tracker",
@@ -120,7 +120,7 @@
             "cwd": "${workspaceRoot}",
             "program": "simu.py",
             "args": ["--file", "willeIN.yml"]
-        }
+        },
         {
             "name": "bunch",
             "type": "debugpy",
@@ -129,7 +129,7 @@
             "cwd": "${workspaceRoot}",
             "program": "bunch.py",
             "args": ["--file", "willeIN.yml"]
-        }
+        },
         {
             "name": "versioner",
             "type": "debugpy",

@@ -75,8 +75,8 @@ class TTF_G(IGap.IGap):
     def matrix(self,v):             self.master.matrix = v
     @property
     def particle(self):      return self.master.particle        # particle
-    @particle.setter
-    def particle(self,v):           self.master.particle = v
+    # @particle.setter
+    # def particle(self,v):           self.master.particle = v
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter
@@ -198,8 +198,8 @@ class TTF_G(IGap.IGap):
         kz        = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
         ky        = kx = -0.5*kz/(gavg*gavg)
         bgi       = self.particle.gamma_beta
-        particlef = self.particlef = Proton(self.particle.tkin + deltaW)
-        bgf       = particlef.gamma_beta
+        self.particlef = Proton(self.particle.tkin + deltaW)
+        bgf       = self.particlef.gamma_beta
         bgi2bgf   = bgi/bgf
         m         = NP.eye(MDIM,MDIM)
         m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
@@ -287,7 +287,7 @@ class TTF_G(IGap.IGap):
     def ttf_map(self, i_track):
         def ttf_formeln(particle,phiIN,r,i0,i1,V0,Tk,Sk,Tkp,Skp):
             omega= self.omega
-            m0c3 = Proton().m0c3
+            m0c3 = particle.m0c3
             g    = particle.gamma
             gb3  = particle.gamma_beta**3
             cphi = cos(phiIN)
@@ -322,6 +322,7 @@ class TTF_G(IGap.IGap):
         phi              off phase
         """
         # Soll
+        ptcles    = self.particle
         Ws        = self.particle.tkin
 
         # Off
@@ -332,17 +333,17 @@ class TTF_G(IGap.IGap):
         W         = Ws + DW
         ptcle     = Proton(W)
 
-        k         = self.omega/(PARAMS['clight']*self.particle.beta)
-        kr        = k/self.particle.gamma*r
-        i0        = I0(kr)
-        i1        = I1(kr)
-        i12r      = i1/r if r > 1.e-6 else pi/self.lamb/self.particle.gamma
-
         self.deltaW  = 0.
         self.ttf     = 0.
         
         for poly in self.polies:
             """ Map through poly; use Formel 4.3.1 & 4.3.2 A.Shishlo/J.Holmes """
+
+            k         = self.omega/(PARAMS['clight']*ptcles.beta)
+            kr        = k/ptcles.gamma*r
+            i0        = I0(kr)
+            i1        = I1(kr)
+            i12r      = i1/r if r > 1.e-6 else pi/self.lamb/ptcles.gamma
 
             V0   = self.V0(poly)
             Tk   = self.T(poly,k)
@@ -353,26 +354,26 @@ class TTF_G(IGap.IGap):
             # Skpp  = self.Spp(poly,k)
 
             # Soll IN
-            (DWs,Dphis) = ttf_formeln(self.particle,self.phisoll,r,i0,i1,V0,Tk,Sk,Tkp,Skp)
+            (DWs,Dphis) = ttf_formeln(ptcles,self.phisoll,r,i0,i1,V0,Tk,Sk,Tkp,Skp)
+            gbIs              = ptcles.gamma_beta
             # Soll OUT  (W,phi)
-            Ws         = Ws + DWs
-            self.phisoll       = self.phisoll + Dphis
-            self.particle     = Proton(Ws)
+            Ws                = Ws + DWs
+            self.phisoll      = self.phisoll + Dphis
+            ptcles(Ws)
+            gbOs              = ptcles.gamma_beta
 
             # Off IN
             (DW,Dphi) = ttf_formeln(ptcle,phi,r,i0,i1,V0,Tk,Sk,Tkp,Skp)
             # Off OUT
             W         = W + DW
             phi       = phi + Dphi
-            ptcle     = Proton(W)
+            ptcle(W)
 
-            gbIs      = self.particle.gamma_beta
-            gbOs      = self.particle.gamma_beta
-            gbIs2gbOs = gbIs/gbOs
-            m0c2      = Proton().m0c2
+            m0c2      = ptcle.m0c2
             faktor    = V0/(m0c2*gbIs*gbOs)*i12r
             cphi      = cos(self.phisoll)
             sphi      = sin(self.phisoll)
+            gbIs2gbOs = gbIs/gbOs
             xp        = gbIs2gbOs*xp-faktor*(Tk*sphi + Sk*cphi)*x
             yp        = gbIs2gbOs*yp-faktor*(Tk*sphi + Sk*cphi)*y
 
@@ -385,7 +386,7 @@ class TTF_G(IGap.IGap):
         zO      = converter.DphiToz(phi-self.phisoll)
         zpO     = converter.DWToDp2p(W-Ws)
         f_track = NP.array([x,xp,y,yp,zO,zpO,T,1.,S,1.])
-        self.particlef = self.particle
+        self.particlef = ptcle
         self.ttf       = abs(self.ttf)/len(self.polies) # gap's ttf
 
         S1 = 1    # from

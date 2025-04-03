@@ -55,7 +55,6 @@ def marker_is_compatible_with(prog,ID):
     if prog != this_prog:
         ret = False
     return ret
-
 def get_mandatory(attributes,key,item):
     try:
         res = attributes[key]
@@ -63,14 +62,13 @@ def get_mandatory(attributes,key,item):
         raise(UserWarning(wrapRED('Mandatory attribute "{}" missing for element "{}"'.format(key,item))))
         sys.exit(1)
     return res
-
 def mandatory_warning(key,item):
     raise(UserWarning(wrapRED('Mandatory attribute "{}" missing for element "{}"'.format(key,item))))
     sys.exit(1)
-
 def instanciate_element(item):
     """ item: {ID:{attributes}} for each node """
     instance = None     # will be defined below and returned
+    tsoll    = UTIL.PARAMS['injection_energy']
     for ID,attributes in item.items():
         UTIL.DEBUG_OFF(F"ID={ID} attributes={attributes}")
         ELEMENT = UTIL.ELEMENTS[ID]          # the item in the ELEMENT list
@@ -78,13 +76,15 @@ def instanciate_element(item):
         if type   == 'D':
             length         = get_mandatory(attributes,'length',ID)
             aperture       = attributes.get('aperture')
-            instance       =  ELM.D(ID,length=length,aperture=aperture)
-            ELEMENT['sec'] = attributes.get('sec','?')
+            sec            = attributes.get('sec','?')
+            instance       = ELM.D(ID,length,aperture,tsoll)
+            ELEMENT['sec'] = sec
         elif type == 'DKD':
             length         = get_mandatory(attributes,'length',ID)
             aperture       = attributes.get('aperture')
-            instance       =  ELM.DKD(ID,length=length,aperture=aperture)
-            ELEMENT['sec'] = attributes.get('sec','?')
+            sec            = attributes.get('sec','?')
+            instance       = ELM.DKD(ID,length,aperture,tsoll)
+            ELEMENT['sec'] = sec
         elif type == 'SD':
             alpha          = get_mandatory(attributes,'alpha',ID)
             rho            = get_mandatory(attributes,'rho',ID)
@@ -106,16 +106,18 @@ def instanciate_element(item):
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
-            instance         = ELM.QF(ID,dBdz,length=length,aperture=aperture)
-            ELEMENT['Bpole'] = dBdz*aperture      # Bpole
-            ELEMENT['sec']   = attributes.get('sec','?')
+            sec              = attributes.get('sec','?')
+            instance         = ELM.QF(ID,dBdz,length,aperture,tsoll)
+            ELEMENT['sec']   = sec
+            ELEMENT['Bpole'] = dBdz*aperture # Bpole
         elif type == 'QD':
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)
             aperture         = get_mandatory(attributes,'aperture',ID)
-            instance         = ELM.QD(ID,dBdz,length=length,aperture=aperture)
+            sec              = attributes.get('sec','?')
+            instance         = ELM.QD(ID,dBdz,length,aperture,tsoll)
+            ELEMENT['sec']   = sec
             ELEMENT['Bpole'] = dBdz*aperture      # Bpole
-            ELEMENT['sec']   = attributes.get('sec','?')
         elif type == 'RFG':
             aperture   = attributes.get('aperture')
             cavlen     = attributes.get('cavlen')
@@ -127,6 +129,7 @@ def instanciate_element(item):
             phisoll    = attributes.get('phisoll')
             SFdata     = attributes.get('SFdata')
             sec        = attributes.get('sec','?')
+            ELEMENT['sec'] = sec
             
             if mapping   == 't3d':
                 if SFdata == None:
@@ -150,7 +153,7 @@ def instanciate_element(item):
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())         # register T3D
                     instance.configure(**gap_parameters)
-                    instance.adjust_energy(UTIL.PARAMS['injection_energy'])
+                    instance.adjust_energy(tsoll)
                     if cavlen != None: ELEMENT['cavlen'] ='ignored'
                     if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                     if SFdata != None: ELEMENT['SFdata'] ='ignored'
@@ -180,7 +183,7 @@ def instanciate_element(item):
                     instance = ELM.RFG(ID)
                     instance.register(T3D_G())
                     instance.configure(**gap_parameters)
-                    instance.adjust_energy(UTIL.PARAMS['injection_energy'])
+                    instance.adjust_energy(tsoll)
                     if gap != None: ELEMENT['gap'] = 'ignored'
                     pass
             elif mapping == 'simple':
@@ -209,7 +212,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(OXAL_G())
                 instance.configure(**gap_parameters)
-                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
+                instance.adjust_energy(tsoll)
                 if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 if gap    != None: ELEMENT['gap']    ='ignored'
                 pass
@@ -233,7 +236,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(BASE_G())
                 instance.configure(**gap_parameters)
-                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
+                instance.adjust_energy(tsoll)
                 if HE_Gap != None: ELEMENT['HE_Gap'] = 'ignored'
                 if cavlen != None: ELEMENT['cavlen'] = 'ignored'
                 if SFdata != None: ELEMENT['SFdata'] = 'ignored'
@@ -261,7 +264,7 @@ def instanciate_element(item):
                 instance = ELM.RFG(ID)
                 instance.register(TTF_G())
                 instance.configure(**gap_parameters)
-                instance.adjust_energy(UTIL.PARAMS['injection_energy'])
+                instance.adjust_energy(tsoll)
                 if gap    != None: ELEMENT['gap']    ='ignored'
                 if HE_Gap != None: ELEMENT['HE_Gap'] ='ignored'
                 pass
@@ -287,19 +290,18 @@ def instanciate_element(item):
             ELEMENT['sec']    = attributes.get('sec','?')
             ELEMENT['EzAvg']  = EzAvg
         elif type == 'MRK':
-            # active  = attributes.get('active',UTIL.FLAGS['maction'])
             active  = get_mandatory(attributes,'active',ID)
             action  = get_mandatory(attributes,'action',ID)
             viseo   = attributes.get('viseo',3)
-            ELEMENT = ELEMENT
+            sec     = attributes.get('sec','?') 
+            # ELEMENT = ELEMENT
+            ELEMENT['sec'] = sec
             if action == 'pspace':
                 # A marker for simu.py ?
                 if not marker_is_compatible_with('simu.py',ID):
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
                 instance = PSMKR.PsMarkerAgent(ID,active,viseo)
-                sec = attributes.get('sec','?') 
-                ELEMENT['sec']   = sec
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.toString())
 
@@ -308,12 +310,10 @@ def instanciate_element(item):
                 if not marker_is_compatible_with('tracker.py',ID):
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with tracker.py. Will be skipped'+UTIL.colors.ENDC)
-                sec        = attributes.get('sec','?') 
                 prefix     = attributes.get('prefix','frames')
                 abscissa   = attributes.get('abscissa','z')
                 ordinate   = attributes.get('ordinate','zp')
                 instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,prefix,abscissa,ordinate)
-                ELEMENT['sec']      = sec
                 ELEMENT['prefix']   = prefix
                 ELEMENT['abscissa'] = abscissa
                 ELEMENT['ordinate'] = ordinate
@@ -326,10 +326,8 @@ def instanciate_element(item):
             raise(UserWarning(wrapRED('Unknown element "{}" encountered.'.format(type))))
             sys.exit(1)
     return instance
-
 def factory(input_file,stop=None):
     """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
-    
     def process_flags(flags):
         """ external FLAGs """        
         res = dict(
@@ -353,7 +351,6 @@ def factory(input_file,stop=None):
         if res['mapping'] == 'ttf' or res['mapping'] == 'base' or res['mapping'] == 'dyn': 
             res['non_linear_mapping'] = True
         return res
-
     def process_parameters(parameters):
         """ external parameters and injected beam partameters """
         res = dict()
@@ -417,10 +414,8 @@ def factory(input_file,stop=None):
         # longitudinal TWiss @ entrance in {Dphi,w}-space
         res['twiss_w_i'] = UTIL.Twiss(res['betaw_i'], res['alfaw_i'],res['emitw_i'])
         return res
-
     def process_elements(elements):
         return elements
-
     def make_lattice(elementIDs):
         UTIL.DEBUG_OFF(elementIDs)
         lattice = LAT.Lattice(descriptor=UTIL.PARAMS.get('descriptor'))

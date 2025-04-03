@@ -191,7 +191,7 @@ class BASE_G(IGap.IGap):
         kz        = twopi*E0L*self.ttf*sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
         ky        = kx = -0.5*kz/(gavg*gavg)
         bgi       = self.particle.gamma_beta
-        particlef = self.particlef = Proton(self.particle.tkin + deltaW)
+        particlef = Proton(self.particle.tkin + deltaW)
         bgf       = particlef.gamma_beta
         bgi2bgf   = bgi/bgf
         m         = NP.eye(MDIM,MDIM)

@@ -19,17 +19,17 @@ This file is part of the SIMULINAC code
 # TODO adjust_energy() and shorten() return new objects. make sure object properties like links are correctly passed.
 import sys
 import unittest
-from copy import copy
+# from copy import copy
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF,Proton,PARAMS
 from setutil import Ktp
-from T3D_M   import T3D_G
+# from T3D_M   import T3D_G
 import warnings
 import math    as M
 import numpy   as NP
 import setutil as UTIL
-import OXAL_M as OX
+# import OXAL_M as OX
 
 twopi = 2.*M.pi
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format}) # numpy pretty printing
@@ -44,39 +44,47 @@ class Node(object):
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
-    def __init__(self):
+    def __init__(self, tsoll= UTIL.PARAMS['injection_energy']):
         self.type         = self.__class__.__name__  # self's node type
+        self._tsoll       = tsoll # private read-only
         self.accelerating = False
-        self.label        = None
-        self.viseo        = None      # default - invisible
-        self.particle     = None      # !!!IMPORTANT!!! local copy of the particle object
-        self.matrix       = None      # MDIMxMDIM zero matrix used here
-        self.position     = None      # [entrance, middle, exit]
-        self.length       = None
+        self.label        = ''
+        self.viseo        = 0                   # default - invisible
+        self.particle     = Proton(self._tsoll) # Sollteilchen
+        self.particlef    = Proton(self._tsoll) # Teichen am Ausgang
+        self.matrix       = NP.eye(MDIM)        # MDIMxMDIM zero matrix used here
+        self.position     = (0,0,0)             # [entrance, middle, exit]
+        self.length       = 0.
         self.aperture     = None
-        self.next         = None      # link to right Node
-        self.prev         = None      # link to jeft Node
+        self.next         = self      # next Node
+        self.prev         = self      # pevious Node
         self.twiss        = None      # twiss functions @ middle of Node
         self.sigxy        = None      # envelope function @ middle of Node
-        self.ref_particle = None      # ref particle @ exit of Node
-        self.ref_track    = None      # rerence track @ exit of Node
-    def __call__(self, n = MDIM, m = MDIM):
-        # return upper left n, m submatrix
-        return self.matrix[:n, :m]
+        self.sec          = ''        # section
+        self.soll_track   = None      # soll track @ exit of Node
     def __mul__(self, other):
-        """ define the (*) operator for Node objects """
+        """ 
+        the (*) operator for Node objects produces a 
+        new Node with:
+            *) concatenated label
+            *) product of both Nodes matrices, self(*)other
+         """
         res = Node()
-        if (self.label == '' or isinstance(self,DKD)):
-            res.label = other.label
-        else:
-            res.label = self.label+'*'+other.label
-        res.length = self.length + other.length
-        """ matrix product """
+        if (isinstance(other,DKD)): pass
+        else: res.label = self.label+'*'+other.label
         res.matrix = NP.dot(self.matrix, other.matrix)
         return res
+
+    @property
+    def isAccelerating(self):    return self.accelerating
+    @property
+    def tsoll(self): return self._tsoll    # Sollenergie
+
+    def submx(self, n = MDIM, m = MDIM):
+        # return upper left n, m submatrix
+        return self.matrix[:n, :m]
     def map(self,i_track):
         """ standard mapping with T3D matrix """
-        # ftrack = copy(itrack)    #TODO needed? think NO!
         f_track = NP.dot(self.matrix,i_track)
         return f_track
     def toString(self):
@@ -85,25 +93,29 @@ class Node(object):
             ret+= '\n{}:{}'.format(k,v)
         return ret
     def adjust_energy(self, tkin):
-        """ dummy adjust """
+        """ minimal adjust """
+        self._tsoll = tkin
         self.particle(tkin)
+        self.particlef(tkin)
         return self
     def shorten(self, length):
-        """ dummy shorten """
+        """ nothing to shorten """
         return self
-    def prmatrix(self):
-        n  = 500
-        nx = 1000
+    def printmx(self):
+        n  = 50
+        nx = 200
         if len(self.label) > nx:
-            # make short when too long
+            # reduce when too long
             label = self.label[:n]+'.....'+self.label[-n:]
         else:
             label = self.label
         # try because sections are not mandatory
-        try:
-            s = '{} [{}]\n'.format(label, self.sec)
-        except AttributeError:
-            s = '{}\n'.format(label)
+        # try:
+        #     s = '{} [{}]\n'.format(label, self.sec)
+        # except AttributeError:
+        #     s = '{}\n'.format(label)
+        print(label)
+        s=''
         for i in range(MDIM):
             for j in range(MDIM):
                 s+='{:8.4g} '.format(self.matrix[i, j])
@@ -122,12 +134,13 @@ class Node(object):
             res += self.matrix[i, i]
         return res
     def make_slices(self, anz=1):
-        slices = []
-        if self.length == 0. or anz <=0:    anz = 1
-        step = self.length/anz 
-        mx   = self.shorten(step)
-        for i in range(anz):
-            slices.append(mx)
+        """ nothing to slice """
+        slices = [self]
+        # if self.length == 0. or anz <=0:    anz = 1
+        # step = self.length/anz 
+        # mx   = self.shorten(step)
+        # for i in range(anz):
+        #     slices.append(mx)
         return slices
     def beta_matrix(self):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
@@ -154,94 +167,87 @@ class Node(object):
         ])
         return m_beta
     def aper_check(self,new_tp,s,**kwargs):
+        """ nothing to check """
         return False   
-    @property
-    def isAccelerating(self):
-        return self.accelerating
 
 class I(Node):
-    """  Unity matrix: the unity Node """
-    def __init__(self, label='I'):
+    """  Unit matrix Node """
+    def __init__(self,label='I'):
         super().__init__()
         self.label    = label
-        self.matrix   = NP.eye(MDIM,MDIM) # set the NODE's member variable
-        self.length   = 0.
+        # self.matrix   = NP.eye(MDIM)
+        # self.length   = 0.
 class MRK(I):
     """ 
     Marker node (a.k.a element): Each marker is parent of an agent that does the specific action.
     The action can be bypassed if the 'maction'-FLAG is False.
     """
-    def __init__(self, label, active, viseo=1., particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.)):
+    # def __init__(self, label, active, viseo=1., particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.)):
+    def __init__(self, label, active, viseo):
         super().__init__(label)
         self.active     = active
-        self.particle   = copy(particle)
-        self.position   = position
         self.viseo      = viseo if self.active else 0.
-    def no_action(self,*args):
-        pass
+        # self._particle  = copy(particle)
+        # self.position   = position
+    def no_action(self,*args): pass
 class D(Node):
     """  Trace3D drift space  """
-    def __init__(self, label, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):
-        super().__init__()
+    def __init__(self, label, length, aperture=None, tsoll=UTIL.PARAMS['injection_energy']):
+        super().__init__(tsoll)
         self.label    = label
-        self.particle = copy(particle)
-        self.position = position
+        # self._particle = copy(particle)
+        # self.position = position
         self.length   = length
         self.aperture = aperture
         self.viseo    = 0.
-        self.matrix   = NP.eye(MDIM,MDIM)
-        m = self.matrix 
+        # self.matrix   = NP.eye(MDIM)
+        # m = self.matrix 
         g = self.particle.gamma
-        m[XKOO, XPKOO] = m[YKOO, YPKOO] = self.length
-        m[ZKOO, ZPKOO] = self.length/(g*g)
-        m[SKOO, DSKOO]  = self.length # Ds the longitudinal length increase
+        self.matrix[XKOO, XPKOO] = self.matrix[YKOO, YPKOO] = self.length
+        self.matrix[ZKOO, ZPKOO] = self.length/(g*g)
+        self.matrix[SKOO, DSKOO] = self.length # Delta-s longitudinal length increase
 
     def adjust_energy(self, tkin):
-        adjusted = D(self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        adjusted = D(self.label, self.length, self.aperture, tkin)
         return adjusted
     def shorten(self, length):
-        shortend =  D(self.label, particle=self.particle, position=(0.,0.,0.), length=length, aperture=self.aperture)
+        shortend =  D(self.label, length, self.aperture, self.tsoll)
         return shortend
 class DKD(D):
     """  Trace3D drift spacer for Drift-Kick-Drift sandwich (for use with DYNAC CAVNUM cavities) """
-    def __init__(self, label, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0.,aperture=None):
-        super().__init__(label,particle=particle,position=position,length=length,aperture=aperture)
+    def __init__(self, label, length, aperture=None, tsoll=UTIL.PARAMS['injection_energy']):
+        super().__init__(label, length, aperture, tsoll)
 
     def adjust_energy(self, tkin):
-        adjusted = DKD(self.label, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        adjusted = DKD(self.label, self.length, self.aperture, tkin)
         return adjusted
     def shorten(self, length):
-        shortend =  DKD(self.label, particle=self.particle, position=(0.,0.,0.), length=length, aperture=self.aperture)
+        shortend =  DKD(self.label, length, self.aperture, self.tsoll)
         return shortend
 class QF(Node):
-    """ 
-    Trace3D focussing quad  !!! NEUES API !!!!
-    """
-    def __init__(self, label, grad, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
-        super().__init__()
+    """ Trace3D focussing quad """
+    def __init__(self, label, grad, length, aperture, tsoll=UTIL.PARAMS['injection_energy']):
+        super().__init__(tsoll)
         self.label    = label
         self.grad     = abs(grad)                        # [T/m]
-        self.particle = copy(particle)
-        self.k02      = K(self.grad,self.particle)       # [1/m**2]
-        self.position = position
+        # self.k02      = K(self.grad,self.particle)       # [1/m**2]
         self.length   = length
         self.aperture = aperture
         self.viseo    = +0.5
         self.thin     = False
-        self.matrix   = self._mx()
-    def _mx(self):
-        m = NP.eye(MDIM,MDIM)
+        self.matrix   = self.mx()
+    def mx(self):
+        m = NP.eye(MDIM)
         g = self.particle.gamma
         rzz12 = self.length/(g*g)
-        k0w   = M.sqrt(self.k02)
+        k02 = K(self.grad,self.particle)       # [1/m**2]
+        k0w   = M.sqrt(k02)
         l = self.length
-        k02 = self.k02
         phi = l*k0w
         f = 1./(k02*l)
-        if f/l > 50.: self.thin = True
-        DEBUG_OFF(F"{self.type}: k02={k02:.2f} \tf={f:.2f} >> l={l:.2f}? {self.thin}")
+        # if f/l > 50.: self.thin = True
+        # DEBUG_OFF(F"{self.type}: k02={k02:.2f} \tf={f:.2f} >> l={l:.2f}? {self.thin}")
         if self.thin != True:
-        # if True:
             """ thick quad """
             # focusing
             cf   = M.cos(phi)
@@ -250,8 +256,8 @@ class QF(Node):
             sfp  = cf 
             # defocusing
             cd  =  M.cosh(phi)
-            sd  = M.sinh(phi)/k0w
-            cdp = k0w*M.sinh(phi)
+            sd  =  M.sinh(phi)/k0w
+            cdp =  k0w*M.sinh(phi)
             sdp = cd
             if self.type == "QF":
                 m[XKOO, XKOO]  = cf; m[XKOO, XPKOO] = sf; m[XPKOO, XKOO] = cfp; m[XPKOO, XPKOO] = sfp
@@ -271,20 +277,19 @@ class QF(Node):
         m[ZKOO, ZPKOO] = rzz12
         m[SKOO, DSKOO]  = self.length # length increase
         return m
-    def isThin(self):
-        return self.thin
+    # def isThin(self):
+    #     return self.thin
     def adjust_energy(self, tkin):
-        adjusted = QF(self.label, self.grad, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        adjusted = QF(self.label, self.grad, self.length, self.aperture, tkin)
         return adjusted
     def shorten(self, length):
-        shortened = QF(self.label, self.grad, particle=self.particle, position=self.position, length=length, aperture=self.aperture)
+        shortened = QF(self.label, self.grad, length, self.aperture, self.tsoll)
         return shortened
     def aper_check(self,new_tp,s,**kwargs):
         new_point=new_tp()
         fifo_xy= kwargs['fifo_xy']
         sfifo_xy=kwargs['sfifo_xy']
         lost=False
-
         # transverse apertures
         if self.aperture != None and not (abs(new_point[Ktp.x]) < self.aperture or abs(new_point[Ktp.y]) < self.aperture):
             fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
@@ -293,165 +298,166 @@ class QF(Node):
         return lost
 class QD(QF):
     """ 
-    Trace3D defocussing quad  !!! NEUES API !!!! 
+    Trace3D defocussing quad
     """
-    def __init__(self, label, grad, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
-        super().__init__(label, grad, particle=particle, position=position, length=length, aperture=aperture)
+    def __init__(self, label, grad, length, aperture, tsoll=UTIL.PARAMS['injection_energy']):
+    # def __init__(self, label, grad, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
+        super().__init__(label, grad, length, aperture, tsoll)
         self.viseo = -0.5
     def adjust_energy(self, tkin):
-        adjusted = QD(self.label, self.grad, particle=self.particle(tkin), position=self.position, length=self.length, aperture=self.aperture)
+        adjusted = QD(self.label, self.grad, self.length, self.aperture, tkin)
         return adjusted
     def shorten(self, length):
-        shortened = QD(self.label, self.grad, particle=self.particle, position=self.position, length=length,  aperture=self.aperture)
+        shortened = QD(self.label, self.grad, length,  self.aperture, self.tsoll)
         return shortened
-class SD(Node):
-    """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-        super().__init__()
-        self.label    = label
-        self.alpha    = alpha   # [deg]
-        self.rho      = rho     # [m]
-        self.n        = n
-        self.particle = copy(particle)
-        self.position = position
-        self.length   = rho*M.radians(self.alpha)
-        self.aperture = aperture
-        self.viseo    = 0.25
-        self.matrix   = self._mx()
-    def _mx(self):
-        m = NP.eye(MDIM,MDIM)
-        beta  = self.particle.beta
-        gamma = self.particle.gamma
-        alpha = M.radians(self.alpha)      # [rad]
-        rho   = self.rho                 # [m]
-        Ds     = abs(rho*alpha)          # [m]
-        h = alpha/Ds      # [1/m]
-        kx = M.sqrt((1-self.n)*h**2)       # [1/m]
-        ky = M.sqrt(self.n*h**2)
-        self.length = Ds
-        cx = M.cos(kx*Ds)
-        sx = M.sin(kx*Ds)
-        cy = M.cos(ky*Ds)
-        sy = M.sin(ky*Ds)
+# class SD(Node):
+#     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+#     def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+#         super().__init__()
+#         self.label    = label
+#         self.alpha    = alpha   # [deg]
+#         self.rho      = rho     # [m]
+#         self.n        = n
+#         self._particle = copy(particle)
+#         self.position = position
+#         self.length   = rho*M.radians(self.alpha)
+#         self.aperture = aperture
+#         self.viseo    = 0.25
+#         self.matrix   = self._mx()
+#     def _mx(self):
+#         m = NP.eye(MDIM,MDIM)
+#         beta  = self.particle.beta
+#         gamma = self.particle.gamma
+#         alpha = M.radians(self.alpha)      # [rad]
+#         rho   = self.rho                 # [m]
+#         Ds     = abs(rho*alpha)          # [m]
+#         h = alpha/Ds      # [1/m]
+#         kx = M.sqrt((1-self.n)*h**2)       # [1/m]
+#         ky = M.sqrt(self.n*h**2)
+#         self.length = Ds
+#         cx = M.cos(kx*Ds)
+#         sx = M.sin(kx*Ds)
+#         cy = M.cos(ky*Ds)
+#         sy = M.sin(ky*Ds)
 
-        m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
-        m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
-        m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
-        m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
-        # z,z'-plane
-        m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
-        m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
-        m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
-        m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
-        m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
-        m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
-        m[SKOO, DSKOO]  = self.length  # length increase
-        return m
-    def adjust_energy(self, tkin):
-        adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-        return adjusted
-    def shorten(self, alpha):
-        shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
-        return shortSD
-    def make_slices(self, anz=2):
-        shortSD = self.shorten(self.alpha/anz)
-        slices = []
-        for i in range(anz):
-            slices.append(shortSD)
-        return slices
-class RD(SD):
-    """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-    def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-        super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
-        self.wedge  = wedge
-        self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
-    def adjust_energy(self, tkin):
-        adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-        return adjusted
-    def shorten(self, alpha):
-        shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
-        return shortSD
-    def make_slices(self, anz=2):
-        if anz < 2: anz = 2
-        slicewinkel   = self.alpha/anz
-        sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-        sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
-        slices  = [sdi]          # wedge @ entrance
-        for i in range(1,anz-1):
-            shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-            slices.append(shortRD)
-        sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-        sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
-        slices.append(sdf)
-        return slices
-class Wedge(Node):
-    """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
-    def __init__(self, kwinkel, rho, t3d_wedge=True):
-        super().__init__()
-        self.kwinkel = kwinkel     # [deg ] kantenwinkel
-        self.rho = rho
-        self.t3d_wedge = t3d_wedge
-        self.label = "W"
-        self.length = 0.
-        beta = M.radians(self.kwinkel)    
-        g = 0.050    # fixed gap of 50 mm assumed
-        K1=0.45
-        K2=2.8
-        psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
-        mxpx = M.tan(beta)/rho
-        mypy = M.tan(beta-psi)/rho
-        mx   = NP.eye(MDIM,MDIM)
-        mx[XPKOO, XKOO] = mxpx
-        mx[YPKOO, YKOO] = -mypy
-        self.matrix = mx
-class GAP(Node):
-    """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-    ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
-    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
-        """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
-        super().__init__()
-        self.accelerating = True
-        self.label    = label
-        self.EzAvg    = EzAvg*dWf
-        self.phisoll  = phisoll
-        self.gap      = gap
-        self.freq     = freq
-        self.particle = copy(particle)
-        self.position = position
-        self.aperture = aperture
-        self.dWf      = dWf
-        self.viseo    = 0.25
-        self.length   = 0.
-        E0L           = self.EzAvg*self.gap            # Spaltspannung
-        self.deltaW,self.matrix = self._mx(E0L)
-    def _mx(self,E0L):
-        """ cavity nach Dr.Tiede pp.33 """
-        lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
-        beta   = self.particle.beta                    # beta Einstein
-        ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
-        bg     = self.particle.gamma_beta
-        m0c2   = self.particle.e0
-        deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
-        m      = NP.eye(MDIM,MDIM)
-        cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
-        m[XPKOO, XKOO] = cxp
-        m[YPKOO, YKOO] = cyp
-        m[EKOO, DEKOO] = deltaW      # energy increase
-        m[SKOO, DSKOO]  = self.length # length increase
-        return deltaW,m
-    def ttf(self, beta, lamb, gap):
-        """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-        x = UTIL.pi*gap/(beta*lamb)
-        ttf = NP.sinc(x/UTIL.pi)
-        return ttf
-    def adjust_energy(self, tkin):
-        adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
-        return adjusted
+#         m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
+#         m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
+#         m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
+#         m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
+#         # z,z'-plane
+#         m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
+#         m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
+#         m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
+#         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
+#         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
+#         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
+#         m[SKOO, DSKOO]  = self.length  # length increase
+#         return m
+#     def adjust_energy(self, tkin):
+#         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+#         return adjusted
+#     def shorten(self, alpha):
+#         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
+#         return shortSD
+#     def make_slices(self, anz=2):
+#         shortSD = self.shorten(self.alpha/anz)
+#         slices = []
+#         for i in range(anz):
+#             slices.append(shortSD)
+#         return slices
+# class RD(SD):
+#     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+#     def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+#         super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
+#         self.wedge  = wedge
+#         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
+#     def adjust_energy(self, tkin):
+#         adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+#         return adjusted
+#     def shorten(self, alpha):
+#         shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
+#         return shortSD
+#     def make_slices(self, anz=2):
+#         if anz < 2: anz = 2
+#         slicewinkel   = self.alpha/anz
+#         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#         sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
+#         slices  = [sdi]          # wedge @ entrance
+#         for i in range(1,anz-1):
+#             shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#             slices.append(shortRD)
+#         sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#         sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
+#         slices.append(sdf)
+#         return slices
+# class Wedge(Node):
+#     """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
+#     def __init__(self, kwinkel, rho, t3d_wedge=True):
+#         super().__init__()
+#         self.kwinkel = kwinkel     # [deg ] kantenwinkel
+#         self.rho = rho
+#         self.t3d_wedge = t3d_wedge
+#         self.label = "W"
+#         self.length = 0.
+#         beta = M.radians(self.kwinkel)    
+#         g = 0.050    # fixed gap of 50 mm assumed
+#         K1=0.45
+#         K2=2.8
+#         psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
+#         mxpx = M.tan(beta)/rho
+#         mypy = M.tan(beta-psi)/rho
+#         mx   = NP.eye(MDIM,MDIM)
+#         mx[XPKOO, XKOO] = mxpx
+#         mx[YPKOO, YKOO] = -mypy
+#         self.matrix = mx
+# class GAP(Node):
+    # """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
+    # ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
+    # def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
+    #     """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
+    #     super().__init__()
+    #     self.accelerating = True
+    #     self.label    = label
+    #     self.EzAvg    = EzAvg*dWf
+    #     self.phisoll  = phisoll
+    #     self.gap      = gap
+    #     self.freq     = freq
+    #     self._particle = copy(particle)
+    #     self.position = position
+    #     self.aperture = aperture
+    #     self.dWf      = dWf
+    #     self.viseo    = 0.25
+    #     self.length   = 0.
+    #     E0L           = self.EzAvg*self.gap            # Spaltspannung
+    #     self.deltaW,self.matrix = self._mx(E0L)
+    # def _mx(self,E0L):
+    #     """ cavity nach Dr.Tiede pp.33 """
+    #     lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
+    #     beta   = self.particle.beta                    # beta Einstein
+    #     ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
+    #     bg     = self.particle.gamma_beta
+    #     m0c2   = self.particle.e0
+    #     deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
+    #     m      = NP.eye(MDIM,MDIM)
+    #     cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
+    #     m[XPKOO, XKOO] = cxp
+    #     m[YPKOO, YKOO] = cyp
+    #     m[EKOO, DEKOO] = deltaW      # energy increase
+    #     m[SKOO, DSKOO]  = self.length # length increase
+    #     return deltaW,m
+    # def ttf(self, beta, lamb, gap):
+    #     """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+    #     x = UTIL.pi*gap/(beta*lamb)
+    #     ttf = NP.sinc(x/UTIL.pi)
+    #     return ttf
+    # def adjust_energy(self, tkin):
+    #     adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+    #     return adjusted
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
-    def __init__(self,label):
-        super().__init__()
-        self.aperture     = None
+    def __init__(self,label, tsoll=UTIL.PARAMS['injection_energy']):
+        super().__init__(tsoll)
+        # self.aperture     = None
         self.cavlen       = None
         self.deltaW       = None
         self.dWf          = UTIL.FLAGS['dWf']
@@ -460,16 +466,16 @@ class RFG(Node):
         self.gap          = None
         self.label        = label
         self.lamb         = None
-        self.length       = 0
+        # self.length       = 0
         self.mapper       = None
         self.mapping      = UTIL.FLAGS['mapping']
         self.omega        = None
-        self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
-        self.particlef    = None
-        self.position     = (0,0,0)
+        # self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
+        # self.particlef    = None
+        # self.position     = (0,0,0)
         self.phisoll      = None
         self.SFdata       = None
-        self.sec          = None
+        # self.sec          = None
         self.ttf          = None
         self.viseo        = 0.25
 
@@ -502,13 +508,12 @@ class RFG(Node):
             raise(UserWarning(wrapRED(f'missing implementation {self.mapping}')))
             sys.exit()
     @property
-    def isAccelerating(self):
-        return self.mapper.isAccelerating()
+    def isAccelerating(self):    return self.mapper.isAccelerating()
     @property
-    def toString(self):
-        return self.mapper.toString()
+    def toString(self):    return self.mapper.toString()
     def adjust_energy(self, tkin):
-        self.particle(tkin)
+        # self._particle(tkin)
+        super().adjust_energy(tkin)
         self.mapper.adjust_energy(tkin)
         return self
     def map(self,i_track):
@@ -976,459 +981,3 @@ if __name__ == '__main__':
 
 """ totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
 """ totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
-class RFC_TODO(Node):   
-    """ Rf cavity as product DKD*RFG*DKD """
-    pass
-class RFG_OLD(Node):
-    """ KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE  KAPUTT-BROKEN-HORS SERVICE """
-    """  RF-gap of zero length with different kick gap-models """
-    # def __init__(self, label, EzPeak, phisoll, gap, cavlen,freq, SFdata=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf'], mapping='t3d'):
-    def __init__(self, label, **kwargs):
-        super().__init__()
-        self.label        = label
-        self.length       = 0. # 0. because it's a kick
-        self.viseo        = 0.25
-        self.accelerating = True
-        self.dWf          = UTIL.FLAGS['dWf']                 # dWf=1 with acceleration =0 else
-
-        self.EzPeak    = kwargs.get('EzPeak',0)                 # [MV/m] peak gap field
-        self.phisoll   = kwargs.get('phisoll',None)             # [radians] soll phase
-        self.gap       = kwargs.get('gap',None)                 # [m] rf-gap
-        self.cavlen    = kwargs.get('cavlen',None)              # [m] cavity length
-        self.freq      = kwargs.get('freq',None)                # [Hz]  RF frequenz
-        self.SFdata    = kwargs.get('SFdata',None)              # SuperFish data
-        self.particle  = kwargs.get('particle',None)
-        self.position  = kwargs.get('position',None)
-        self.aperture  = kwargs.get('aperture',None)
-        self.mapping   = kwargs.get('mapping',None)             # map model
-
-        self.EzPeak    = self.EzPeak*self.dWf         # [MV/m] peak gap field
-        self.omega     = twopi*self.freq
-        self.lamb      = UTIL.PARAMS['clight']/self.freq
-        self.ttf       = None
-        self.E0L       = None
-        self.qE0LT     = None
-        self.deltaW    = None
-        self.particlef = None
-        self.rf_gap    = None
-    def dispatch_model_matrix(self):
-        """ dispatching to different gap models """
-        if self.mapping   == 't3d' :   #NOTE: t3d mapping is matrix multiplication
-            self.matrix    = self.gap_object.T3D_matrix()
-            # DEBUG_OFF('matrix',self.matrix)
-            pass
-        elif self.mapping == 'simple':
-            self.matrix    = self.gap_object.simple_matrix()  #NOTE: simple mapping is matrix multiplication
-            # DEBUG_OFF('matrix',self.matrix)
-            pass
-        elif self.mapping == 'oxal':
-            (self.matrix,self.ttf,self.deltaW)  = self.gap_object.OXAL_matrix(self.particle.tkin) #NOTE: OXAL mapping is matrix multiplication
-            DEBUG_ON(f'{self.gap_object},matrix',self.matrix)
-            pass
-        elif self.mapping == 'base':
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
-            self.particlef = None
-            self.map = self.base_map_1
-        elif self.mapping == 'ttf':
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
-            self.particlef = None
-            # self.map  =>  # TTF_G has its own mapping method
-        elif self.mapping == 'dyn':
-            self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
-            self.particlef = None
-            # self.map  =>  # DYN_G has its own mapping method
-        # TODO other mappings not tested
-        else:
-            raise(UserWarning(f"INFO: RFG is a kick-model and does not work with {self.mapping} mapping! Use one of [t3d,simple,base,ttf,oxal]."))
-            sys.exit()
-    @property
-    def gap_object(self):
-        return self.rf_gap
-    @gap_object.setter
-    def gap_object(self,rf_gap):
-        self.rf_gap = rf_gap
-    def T3D_matrix(self):
-        def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-            x = gap/(beta*lamb)
-            res =NP.sinc(x)
-            return res
-        """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
-        m              = NP.eye(MDIM,MDIM)
-        self.E0L       = self.EzPeak*self.gap
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        self.qE0LT     = self.E0L*self.ttf
-        self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
-        self.particlef = UTIL.Proton(self.particle.tkin+self.deltaW)
-        Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
-        pavg    = UTIL.Proton(Wavg)
-        bavg    = pavg.beta
-        gavg    = pavg.gamma
-        m0c2    = pavg.e0
-        kz      = twopi*self.E0L*self.ttf*M.sin(self.phisoll)/(m0c2*bavg*bavg*self.lamb)
-        ky      = kx = -0.5*kz/(gavg*gavg)
-        bgi     = self.particle.gamma_beta
-        bgf     = self.particlef.gamma_beta
-        bgi2bgf = bgi/bgf
-        m       = NP.eye(MDIM,MDIM)
-        m[XPKOO, XKOO] = kx/bgf;    m[XPKOO, XPKOO] = bgi2bgf
-        m[YPKOO, YKOO] = ky/bgf;    m[YPKOO, YPKOO] = bgi2bgf
-        m[ZPKOO, ZKOO] = kz/bgf;    m[ZPKOO, ZPKOO] = bgi2bgf   # koppelt z,z'
-        m[EKOO, DEKOO] = self.deltaW
-        m[SKOO, DSKOO]  = 0.
-        return m
-    def simple_matrix(self):
-        """ Simplified Matrix Model. (A.Shislo 4.1) """
-        def ttf(lamb, gap, beta):
-            """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-            x = gap/(beta*lamb)
-            res =NP.sinc(x)
-            return res
-        self.E0L       = self.EzPeak*self.gap
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        self.qE0LT     = self.E0L*self.ttf
-        self.deltaW    = self.E0L*self.ttf*M.cos(self.phisoll)
-
-        # xi   = i_track[XKOO]       # 0
-        # xpi  = i_track[XPKOO]      # 1
-        # yi   = i_track[YKOO]       # 2
-        # ypi  = i_track[YPKOO]      # 3
-        # zi   = i_track[ZKOO]       # 4 z
-        # zpi  = i_track[ZPKOO]      # 5 Dp/p
-        # T    = i_track[EKOO]       # 6 kinetic energy REF
-        # dT   = i_track[DEKOO]      # 7 delta energy REF
-        # S    = i_track[SKOO]       # 8 position REF
-        # dS   = i_track[DSKOO]      # 9 delta position REF
-
-        C         = UTIL.PARAMS['clight']
-        particle  = self.particle
-        m0c2      = particle.e0
-        WIN       = particle.tkin
-        betai     = particle.beta
-        gammai    = particle.gamma
-        gbi       = particle.gamma_beta
-
-        deltaW    = self.deltaW
-        lamb      = self.lamb
-        qE0LT     = self.qE0LT
-        phisoll   = self.phisoll
-
-        WOUT       = WIN + deltaW
-        particlef  = copy(particle)(tkin = WOUT)
-        betaf      = particlef.beta
-        gammaf     = particlef.gamma
-        gbf        = particlef.gamma_beta
-
-        condTdP = 1./(m0c2*betaf**2*gammaf)  # conversion DW --> Dp/p
-        DDW = self.omega/C/betai*self.qE0LT*M.sin(self.phisoll) # A.Shishlo/J.Holmes (4.1.8)
-
-        m = NP.eye(MDIM,MDIM)
-        m[1,0] = m[3,2] = -(UTIL.pi*qE0LT/(m0c2*lamb*gbi*gbi*gbf))*M.sin(phisoll)   # x',x = y',y   (4.1.11)
-        # m[1,1] = m[3,3] = m[5,5] = gbi/gbf # x',x' = y',y'  m[5,5] like T3D
-        m[1,1] = m[3,3] = gbi/gbf            # x',x' = y',y': m[5,5]=1 like in Shishlo's paper
-        m[4,4] = betaf/betai                 # z,z
-        m[5,4] = DDW*condTdP                 # z,z'
-        m[6,7] = deltaW                      # T,dT
-        return m
-    def base_map_0(self, i_track):
-        """alte map version bis 02.02.2022"""
-        # def DEBUG_TRACK(inout,track):
-        #     print('{} {} {}'.format('base_map',inout,track))
-        # function body ================= function body ================= function body ================= 
-        """ Mapping (i) to (f) in BASE RF-Gap Model. (A.Shislo 4.2) """
-        x        = i_track[XKOO]       # [0]
-        xp       = i_track[XPKOO]      # [1]
-        y        = i_track[YKOO]       # [2]
-        yp       = i_track[YPKOO]      # [3]
-        z        = i_track[ZKOO]       # [4] z
-        zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy SOLL
-        S        = i_track[SKOO]       # [8] position SOLL
-
-        particle = self.particle
-        m0c2     = particle.e0
-        betai    = particle.beta
-        gammai   = particle.gamma
-        gbi      = particle.gamma_beta
-        tki      = particle.tkin
-        freq     = self.freq
-        lamb     = self.lamb
-        phisoll  = self.phisoll
-        qE0LT    = self.qE0LT
-        deltaW   = self.deltaW
-        
-        # if 0: 
-        #     DEBUG_ON()
-        #     DEBUG_TRACK('tr_i',i_track)
-        max_r  = 0.05              # max radial excursion [m]
-        r      = M.sqrt(x**2+y**2)  # radial coordinate
-        if r > max_r:
-            raise UTIL.OutOfRadialBoundEx(S)
-        Kr     = (twopi*r)/(lamb*gbi)
-        i0     = UTIL.I0(Kr)                               # bessel function I0
-        i1     = UTIL.I1(Kr)                               # bessel function I1
-        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
-        # SOLL
-        WIN       = tki                               # energy (i)
-        DELTAW    = deltaW                       # energy kick
-        WOUT      = WIN + DELTAW                      # energy (f) (4.1.6) A.Shishlo/J.Holmes
-        # PARTICLE
-        converter = UTIL.WConverter(WIN,freq)
-        # phin      = -z * twopi/(betai*lamb) + phis     # phase (i)  alte methode
-        phin      = converter.zToDphi(z) + phisoll          # phase (i)
-        deltaW    = qE0LT*i0*M.cos(phin)                   # energy kick
-        # win     = (zp * (gammai+1.)/gammai +1.) * WIN  # energy (i) dp/p --> dT alte methode
-        win       =  converter.Dp2pToDW(zp) + WIN         # energy (i) dp/p --> dT
-        wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
-        dw        = wout - WOUT                          # d(deltaW)
-
-        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
-
-        particlef = UTIL.Proton(WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
-        betaf     = particlef.beta
-        gammaf    = particlef.gamma
-        gbf       = particlef.gamma_beta
-
-        # converter = WConverter(WOUT,frq)
-        z         = betaf/betai*z                     # z (f) (4.2.5) A.Shishlo/J.Holmes
-        # zpf     = gammaf/(gammaf+1.) * dw/WOUT      # dW --> dp/p (f)  alte methode
-        zpf       = converter.DWToDp2p(dw)            # dW --> dp/p (f)
-        # if 0: print('z ',z,'zpf ',zpf)
-
-        commonf = qE0LT/(m0c2*gbi*gbf)*i1             # common factor
-        if r > 0.:
-            xp  = gbi/gbf*xp - x/r*commonf*M.sin(phin)  # Formel 4.2.6 A.Shishlo/J.Holmes
-            yp  = gbi/gbf*yp - y/r*commonf*M.sin(phin)  # should be phi-middle
-        elif r == 0.:
-            xp  = gbi/gbf*xp
-            yp  = gbi/gbf*yp
-
-        f_track = NP.array([x, xp, y, yp, z, zpf, T+deltaW, 1., S, 1.])
-
-        # for DEBUGGING
-        # if 0: DEBUG_TRACK('tr_f',f_track)
-        if 0:
-            UTIL.arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-            UTIL.arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-        # the parent reads these attributes below
-        self.particlef = particlef
-        return f_track
-    def base_map_1(self, i_track):
-        """Neue map Version ab 03.02.2022 ist ein Remake um Korrecktheit der Rechnung zu testen. 
-           Produziert dasselbe Verhalten wie base_map_0 """
-        # def DEBUG_TRACK(inout,track):
-        #     print('{} {} {}'.format('base_map',inout,track))
-        # function body ================= function body ================= function body ================= 
-        """ Mapping (i) to (O) in BASE RF-Gap Model. (A.Shislo 4.2) """
-        x        = i_track[XKOO]       # [0]
-        xp       = i_track[XPKOO]      # [1]
-        y        = i_track[YKOO]       # [2]
-        yp       = i_track[YPKOO]      # [3]
-        z        = i_track[ZKOO]       # [4] z
-        zp       = i_track[ZPKOO]      # [5] dp/p
-        T        = i_track[EKOO]       # [6] kinetic energy ref Teilchen
-        S        = i_track[SKOO]       # [8] position gap
-
-        particleRi = self.particle   # ref Teilchen (I)
-        m0c2       = particleRi.e0
-        betai      = particleRi.beta
-        gammai     = particleRi.gamma
-        gbi        = particleRi.gamma_beta
-        wRi        = particleRi.tkin
-        freq       = self.freq
-        lamb       = self.lamb
-        phisoll    = self.phisoll
-        deg_phisoll= M.degrees(phisoll)
-        qE0LT      = self.qE0LT
-        deltaW     = self.deltaW
-        
-        # if 0: 
-        #     DEBUG_ON()
-        #     DEBUG_TRACK('tr_i',i_track)
-
-        max_r  = 0.05              # max radial excursion [m]
-        r      = M.sqrt(x**2+y**2)   # radial coordinate
-        if r > max_r:
-            raise UTIL.OutOfRadialBoundEx(S)
-        Kr     = (twopi*r)/(lamb*gbi)
-        i0     = UTIL.I0(Kr)            # bessel function I0
-        i1     = UTIL.I1(Kr)            # bessel function I1
-
-        # if 0: print('Kr=',Kr,'r=',r,'gbi=',gbi,'i0=',i0,'i1=',i1)
-
-        # ref Teilchen
-        wRo = wRi + deltaW                           # ref Teilchen energy (O)
- 
-        # Teilchen
-        converter   = UTIL.WConverter(wRi,freq)
-        deg_converter = M.degrees(converter.zToDphi(z)) 
-        phiin       = converter.zToDphi(z) + phisoll 
-        deg_phiin   = M.degrees(phiin)        # Teilchen phase (I)
-        wo_wi       = qE0LT*i0*M.cos(phiin)                 # energy kick (Shislo 4.2.3)
-        wi          =  converter.Dp2pToDW(zp) + wRi        # Teilchen energy (I) dp/p --> dT
-        wo          = wi + wo_wi                          # Teilchen energy (O)   
-        dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
-
-        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
-
-        particleRo = UTIL.Proton(wRo)
-        betao      = particleRo.beta
-        gammao     = particleRo.gamma
-        gbo        = particleRo.gamma_beta
-
-        zo         = betao/betai*z                     # z (O) (4.2.5) A.Shishlo/J.Holmes
-        zpo        = converter.DWToDp2p(dw)            # dW --> dp/p (O)
-
-        # if 0: print('z ',z,'zpf ',zpf)
-
-        factor = qE0LT/(m0c2*gbi*gbo)*i1               # common factor
-        if r > 0.:
-            xp  = gbi/gbo*xp - x/r*factor*M.sin(phiin)   # Formel 4.2.6 A.Shishlo/J.Holmes
-            yp  = gbi/gbo*yp - y/r*factor*M.sin(phiin)
-        elif r == 0.:
-            xp  = gbi/gbo*xp
-            yp  = gbi/gbo*yp
-
-        f_track = NP.array([x, xp, y, yp, zo, zpo, T+deltaW, 1., S, 1.])
-
-        # for DEBUGGING
-        # if 0: DEBUG_TRACK('tr_f',f_track)
-        # if 0:
-        #     arrprnt([x*1.e3 for x in i_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-        #     arrprnt([x*1.e3 for x in f_track[:-4]], fmt = '{:7.4g},', txt = 'base_map:i_track(x[mm],xp,y[mm],yp,z[mm],zp)=')
-
-        # """ the parent reads these attributes below """
-        self.particlef = particleRo
-        return f_track
-    def adjust_energy(self, tkin):
-        if self.gap_object == self:
-            adjusted = RFG(self.label,EzPeak=self.EzPeak,phisoll=self.phisoll,gap=self.gap,cavlen=self.cavlen,freq=self.freq,SFdata=self.SFdata,particle=UTIL.Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf,mapping=self.mapping)
-            adjusted.gap_object = adjusted
-            adjusted.dispatch_model_matrix()
-        elif self.mapping == 'oxal':
-            self.particle = UTIL.Proton(tkin)
-            self.gap_object.OXAL_matrix(tkin)
-            adjusted = self
-            # adjusted.dispatch_model_matrix()
-        return adjusted
-    def waccept(self):
-        """ 
-        Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
-        (w/w0)**2 + (Dphi/Dphi0)**2 = 1
-        emitw = w0*Dphi0 = ellipse_area/pi
-        """
-        rf_gap    = self.gap_object      # this RF gap to use: can be self or others like OXAL_G or TTF_G
-
-        Ez0       = rf_gap.EzPeak
-        ttf       = rf_gap.ttf
-        phisoll   = rf_gap.phisoll         # [rad]
-        lamb      = rf_gap.lamb            # [m]
-        freq      = rf_gap.freq            # [Hz]
-        particle  = rf_gap.particle
-
-        E0T       = Ez0*ttf              # [MV/m]
-        m0c2      = particle.e0          # [MeV]
-        gb        = particle.gamma_beta
-        beta      = particle.beta
-        gamma     = particle.gamma
-        tkin      = particle.tkin
-        # DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
-
-        # converter for this node
-        conv = UTIL.WConverter(tkin,freq)
-
-        try:
-            # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
-            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
-            w0large = M.sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
-            # DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
-        except ValueError as ex:
-            exception = ex
-            w0large = -1
-        try:
-            # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
-            w0small = M.sqrt(2.*E0T*gb**3*lamb*phisoll**2*M.sin(-phisoll)/(M.pi*m0c2))
-            # DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
-        except ValueError as ex:
-            exception = ex
-            w0small = -1
-        if w0large != -1: 
-            wmax = w0large
-        elif w0large == -1 and w0small != -1:
-            wmax = w0small
-        else:
-            DEBUG_ON(f'{exception} reason: ttf={rf_gap.ttf}, E0T={E0T}')
-            sys.exit(1)
-
-        # this node Dp/p max on separatrix
-        Dp2pmax = conv.wToDp2p(wmax) 
-
-        #  convert T.Wangler units {Dphi,w} to {z,dp/p} units with 1st cavity parameters
-        betaw_i,alfaw_i,gammaw,emitw_i = UTIL.PARAMS['twiss_w_i']()
-        Dphi0_i = UTIL.PARAMS['Dphi0_i']
-        w0_i = (gamma-1.)*UTIL.PARAMS['DT2T_i']
-        z0_i,Dp2p0_i,emitz_i,betaz_i = conv.wtoz((Dphi0_i,w0_i,emitw_i,betaw_i))
-        alfaz_i = 0.
-
-        # omega sync for this node
-        omgl0zuomg = M.sqrt(E0T*lamb*M.sin(-phisoll)/(2*M.pi*m0c2*gamma**3*beta))
-        omgl_0     = omgl0zuomg*twopi*freq   # [Hz]
-
-        # longitudinal acceptance check (always done)     #TODO  is this needed?
-        # if wmax <= w0_i:
-        #     si,sm,sf = self.position
-        #     warnings.showwarning(
-        #         colors.RED+'out of energy acceptance @ s={:.1f} [m]'.format(si)+colors.ENDC,
-        #         UserWarning,'elements.py',
-        #         'waccept')
-
-        # phase acceptance (REMARK: phase limits are not dependent on Dp/p aka w)
-        phi_2=2.*phisoll
-        phi_1=-phisoll
-
-        res =  dict (
-                emitw_i         = emitw_i,      # 1st cavity emittance {Dphi,w} units [rad,1]
-                z0_i            = z0_i,         # 1st cavity ellipse z-axe crossing (1/2 axis) [m]
-                Dp2p0_i         = Dp2p0_i,      # 1st cavity ellipse dp/p-axe crossing (1/2 axis)
-                twiss_z_i       = UTIL.Twiss(betaz_i, alfaz_i, emitz_i), # 1st cavity twis parameters
-                DWmax           = wmax*m0c2,    # this node max delta-W on separatrix [MeV]
-                Dp2pmax         = Dp2pmax,      # this node Dp/p max on separatrix [1]
-                phaseacc        = (conv,phi_2,phisoll,phi_1), # this node phase acceptance [rad]
-                omgl_0          = omgl_0,       # this node synchrotron oscillation [Hz]
-                wmax            = wmax,         # this node w max on separatrix [1] (large amp. oscillations)
-                zmax            = conv.DphiToz(-phisoll) # this node z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
-                )
-        return res
-    def aper_check(self,new_tp,s,**kwargs):
-        new_point=new_tp()
-        fifo_z = kwargs['fifo_z']
-        sfifo_z= kwargs['sfifo_z']
-        fifo_xy= kwargs['fifo_xy']
-        sfifo_xy=kwargs['sfifo_xy']
-
-        rf_gap = self.gap_object      # this RF gap to use: can be self or others like OXAL_G or TTF_G
-
-        lost=False
-        tkin=rf_gap.particle.tkin
-
-        res = self.waccept()
-        dummy,phi_2,phisoll,phi_1 = res['phaseacc']   # dummy kept for old track_node
-        conv = UTIL.WConverter(tkin,rf_gap.freq)
-        Dphi=conv.zToDphi(new_point[Ktp.z])
-        phi = phisoll+Dphi
-
-        # longitudinal acceptance
-        if not (phi_2 < phi and phi < phi_1):  # Wrangler's approximation (pp.178) is good up to -58deg
-            fifo_z.append(f'loss (z) {new_point[Ktp.z]:.3e} at {s:.4e} m')
-            sfifo_z.append(s)
-            lost = True
-        elif abs(new_point[Ktp.zp]) > res['Dp2pmax']:
-            fifo_z.append(f'loss (zp) {new_point[Ktp.zp]:.3e} at {s:.4e} m')
-            sfifo_z.append(s)
-            lost = True
-        # transverse apertures
-        elif rf_gap.aperture != None and not (abs(new_point[Ktp.x]) < rf_gap.aperture or abs(new_point[Ktp.y]) < rf_gap.aperture):
-            fifo_xy.append(f'loss (x|y) ({new_point[Ktp.x]:.3e},{new_point[Ktp.y]:.3e}) at {s:.4e} m')
-            sfifo_xy.append(s)
-            lost = True
-        return lost

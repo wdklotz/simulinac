@@ -23,7 +23,7 @@ import IGap
 import unittest
 import numpy as NP
 from math import sin,cos,tan,sqrt,pi,degrees,radians
-from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF,Proton
+from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
 from setutil import wrapRED,mxprnt,Twiss,WConverter,dictprnt
 from Ez0 import SFdata
 from separatrix import w2phi

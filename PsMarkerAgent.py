@@ -32,10 +32,11 @@ class PsMarkerAgent(MRK):
     Is an agent for the Marker node which performs 
     a phase-space ellipse plot at the marker's position.
     """
-    def __init__(self, label, active, viseo, particle=Proton(PARAMS['injection_energy']), position=[0,0,0], twiss_values=(0.5,0.5)):
-        super().__init__(label, active, viseo, particle, position,)
+    # def __init__(self, label, active, viseo, particle=Proton(PARAMS['injection_energy']), position=[0,0,0], twiss_values=(0.5,0.5)):
+    def __init__(self, label, active, viseo, twiss_values=(0.5,0.5)):
+        super().__init__(label, active, viseo)
         self.twiss_values = twiss_values
-        self.do_action    = self.action if self.active else self.no_action # toggle
+        self.do_action    = self.action if self.active else self.no_action
     def action(self,*args):
         """ the action: plot transvers ellipses """
         maction = FLAGS['maction']
@@ -75,7 +76,7 @@ def ellipse_plot(node,scale=1.):
     #------ function body ------ function body ------ function body ------ function body ------ function body ------ function body 
     """ display x- and y-phase-space ellipses """
     twiss = node.twiss      # alpha, beta, gamma
-    s = node.position[1]    # position
+    # s = node.position[1]    # position
 
     # x,x'
     a = twiss[Ktw.ax]

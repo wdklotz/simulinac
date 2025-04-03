@@ -94,13 +94,14 @@ class Lattice(object):
             ref_track     = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
             node_adj      = node.adjust_energy(tk_injection)    # energy ADJUST
             ref_track_m   = node_adj.map(ref_track)
-            ref_particle  = Proton(ref_track_m[EKOO])           # ref_particle @ out of 1st node
+            ref_particle  = Proton(ref_track_m[EKOO])           # ref_particle @ exit of 1st node
             node_adj.prev = node_adj.next = None
             sf = node_adj.length
             sf = ref_track_m[SKOO]
             node_adj.position     = (0.,sf/2.,sf)
             node_adj.ref_track    = ref_track_m
-            node_adj.ref_particle = ref_particle
+            # node_adj.ref_particle = ref_particle
+            node_adj._particle = ref_particle
         else:
             """ all nodes after 1st """
             node_prev    = self.seq[-1]
@@ -117,7 +118,8 @@ class Lattice(object):
             sf = ref_track_m[SKOO]
             node_adj.position     = (si,(si+sf)/2,sf)
             node_adj.ref_track    = ref_track_m
-            node_adj.ref_particle = ref_particle
+            # node_adj.ref_particle = ref_particle
+            node_adj._particle = ref_particle
         self.length = sf    # lattice length
         self.seq.append(node_adj)
     def toString(self):
@@ -141,7 +143,8 @@ class Lattice(object):
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 quad_counter += 1
-            if isinstance(element,(ELM.RFG,ELM.RFC_TODO)):
+            # if isinstance(element,(ELM.RFG,ELM.RFC_TODO)):
+            if isinstance(element,ELM.RFG):
                 cavity_counter += 1
                 ttfs.append(element.ttf)
         SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))
@@ -243,7 +246,7 @@ class Lattice(object):
                 print_verbose(1,'\nphase_advance [deg]: x,y={:.3f}, {:.3f}'.format(degrees(mux),degrees(muy)))
                 print_verbose(1,  'phase_advance [rad]: x,y={:.3f}, {:.3f}\n'.format(mux,muy))
                 print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
-                print_verbose(0,self.acc_node.prmatrix())
+                print_verbose(0,self.acc_node.printmx())
                 det = LA.det(self.acc_node.matrix)
                 print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
                 # Determinate M-I == 0 ?

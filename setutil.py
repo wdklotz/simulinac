@@ -131,10 +131,11 @@ class Particle(object):
     def __init__(self,tkin,mass,name):
         self.lost       = False
         self._track     = None
-        self._set_self(tkin,mass,name)
-    def _set_self(self,tkin,mass,name):
-        self.tkin       = tkin                     # kinetic energy [MeV]
         self.e0         = mass                     # rest mass [MeV]
+        self.name       = name
+        self._set_self(tkin)
+    def _set_self(self,tkin):
+        self.tkin       = tkin                     # kinetic energy [MeV]
         self.e          = self.e0+self.tkin        # total energy [MeV]
         self.gamma      = self.e/self.e0
         try:
@@ -147,9 +148,8 @@ class Particle(object):
         self.p          = self.gamma_beta * self.e0   # impulse [Mev]
         self.v          = self.beta * PARAMS['clight']    # velocity [m/s]
         self.brho       = 1.e+6 / PARAMS['clight'] * self.gamma_beta * self.e0 # [T*m]
-        self.name       = name
     def __call__(self,tkin):  # make callable to change energy
-        self._set_self(tkin=tkin,mass=self.e0,name=self.name)
+        self._set_self(tkin)
         return self
     @property
     def m0c2(self):  return self.e0                          # m0c2
@@ -186,7 +186,7 @@ class Particle(object):
 class Proton(Particle):
     def __init__(self,tkin=0):
         super(Proton,self).__init__(tkin,PARAMS['proton_mass'],'proton')
-        self.brho = 3.1297*self.gamma_beta
+        # self.brho = 3.1297*self.gamma_beta
 class Electron(Particle):
     def __init__(self,tkin):
         super(Electron,self).__init__(tkin,PARAMS['electron_mass'],'electron')
