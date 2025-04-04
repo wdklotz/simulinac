@@ -472,7 +472,7 @@ def tracker(input_file,options):
     tracker_log['mapping.................']           = FLAGS['mapping']
     tracker_log['useaper.................']           = FLAGS['useaper']
     tracker_log['Options.................']           = f'{options}'
-    tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.injection_energy)
+    tracker_log['Tk_i...............[MeV]']           = '{} kin. energy @ injection'.format(lattice.seq[0].tsoll)
     tracker_log['acceptance..\u0394p/p.....[%]']      = f"{PARAMS['Dp2pmax']*1.e2:.3f}"
     tracker_log['acceptance..\u0394\u03B3..........'] = f"{PARAMS['wmax']:.2e}"
     tracker_log['\u03B2w_i...............[rad]']      = betaw_i

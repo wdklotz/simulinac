@@ -249,149 +249,6 @@ class QD(QF):
     def shorten(self, length):
         shortened = QD(self.label, self.grad, length,  self.aperture, self.tsoll)
         return shortened
-# class SD(Node):
-#     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-#     def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-#         super().__init__()
-#         self.label    = label
-#         self.alpha    = alpha   # [deg]
-#         self.rho      = rho     # [m]
-#         self.n        = n
-#         self._particle = copy(particle)
-#         self.position = position
-#         self.length   = rho*M.radians(self.alpha)
-#         self.aperture = aperture
-#         self.viseo    = 0.25
-#         self.matrix   = self._mx()
-#     def _mx(self):
-#         m = NP.eye(MDIM,MDIM)
-#         beta  = self.particle.beta
-#         gamma = self.particle.gamma
-#         alpha = M.radians(self.alpha)      # [rad]
-#         rho   = self.rho                 # [m]
-#         Ds     = abs(rho*alpha)          # [m]
-#         h = alpha/Ds      # [1/m]
-#         kx = M.sqrt((1-self.n)*h**2)       # [1/m]
-#         ky = M.sqrt(self.n*h**2)
-#         self.length = Ds
-#         cx = M.cos(kx*Ds)
-#         sx = M.sin(kx*Ds)
-#         cy = M.cos(ky*Ds)
-#         sy = M.sin(ky*Ds)
-
-#         m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
-#         m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
-#         m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
-#         m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
-#         # z,z'-plane
-#         m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
-#         m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
-#         m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
-#         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
-#         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
-#         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
-#         m[SKOO, DSKOO]  = self.length  # length increase
-#         return m
-#     def adjust_energy(self, tkin):
-#         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-#         return adjusted
-#     def shorten(self, alpha):
-#         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
-#         return shortSD
-#     def make_slices(self, anz=2):
-#         shortSD = self.shorten(self.alpha/anz)
-#         slices = []
-#         for i in range(anz):
-#             slices.append(shortSD)
-#         return slices
-# class RD(SD):
-#     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-#     def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-#         super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
-#         self.wedge  = wedge
-#         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
-#     def adjust_energy(self, tkin):
-#         adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-#         return adjusted
-#     def shorten(self, alpha):
-#         shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
-#         return shortSD
-#     def make_slices(self, anz=2):
-#         if anz < 2: anz = 2
-#         slicewinkel   = self.alpha/anz
-#         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#         sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
-#         slices  = [sdi]          # wedge @ entrance
-#         for i in range(1,anz-1):
-#             shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#             slices.append(shortRD)
-#         sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#         sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
-#         slices.append(sdf)
-#         return slices
-# class Wedge(Node):
-#     """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
-#     def __init__(self, kwinkel, rho, t3d_wedge=True):
-#         super().__init__()
-#         self.kwinkel = kwinkel     # [deg ] kantenwinkel
-#         self.rho = rho
-#         self.t3d_wedge = t3d_wedge
-#         self.label = "W"
-#         self.length = 0.
-#         beta = M.radians(self.kwinkel)    
-#         g = 0.050    # fixed gap of 50 mm assumed
-#         K1=0.45
-#         K2=2.8
-#         psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
-#         mxpx = M.tan(beta)/rho
-#         mypy = M.tan(beta-psi)/rho
-#         mx   = NP.eye(MDIM,MDIM)
-#         mx[XPKOO, XKOO] = mxpx
-#         mx[YPKOO, YKOO] = -mypy
-#         self.matrix = mx
-# class GAP(Node):
-    # """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-    # ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
-    # def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
-    #     """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
-    #     super().__init__()
-    #     self.accelerating = True
-    #     self.label    = label
-    #     self.EzAvg    = EzAvg*dWf
-    #     self.phisoll  = phisoll
-    #     self.gap      = gap
-    #     self.freq     = freq
-    #     self._particle = copy(particle)
-    #     self.position = position
-    #     self.aperture = aperture
-    #     self.dWf      = dWf
-    #     self.viseo    = 0.25
-    #     self.length   = 0.
-    #     E0L           = self.EzAvg*self.gap            # Spaltspannung
-    #     self.deltaW,self.matrix = self._mx(E0L)
-    # def _mx(self,E0L):
-    #     """ cavity nach Dr.Tiede pp.33 """
-    #     lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
-    #     beta   = self.particle.beta                    # beta Einstein
-    #     ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
-    #     bg     = self.particle.gamma_beta
-    #     m0c2   = self.particle.e0
-    #     deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
-    #     m      = NP.eye(MDIM,MDIM)
-    #     cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
-    #     m[XPKOO, XKOO] = cxp
-    #     m[YPKOO, YKOO] = cyp
-    #     m[EKOO, DEKOO] = deltaW      # energy increase
-    #     m[SKOO, DSKOO]  = self.length # length increase
-    #     return deltaW,m
-    # def ttf(self, beta, lamb, gap):
-    #     """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-    #     x = UTIL.pi*gap/(beta*lamb)
-    #     ttf = NP.sinc(x/UTIL.pi)
-    #     return ttf
-    # def adjust_energy(self, tkin):
-    #     adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
-    #     return adjusted
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
     def __init__(self,label, tsoll):
@@ -913,5 +770,148 @@ if __name__ == '__main__':
 
 
 
-""" totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
-""" totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug totes Zeug  """
+""" tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug  """
+""" tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug  """
+# class SD(Node):
+#     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+#     def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+#         super().__init__()
+#         self.label    = label
+#         self.alpha    = alpha   # [deg]
+#         self.rho      = rho     # [m]
+#         self.n        = n
+#         self._particle = copy(particle)
+#         self.position = position
+#         self.length   = rho*M.radians(self.alpha)
+#         self.aperture = aperture
+#         self.viseo    = 0.25
+#         self.matrix   = self._mx()
+#     def _mx(self):
+#         m = NP.eye(MDIM,MDIM)
+#         beta  = self.particle.beta
+#         gamma = self.particle.gamma
+#         alpha = M.radians(self.alpha)      # [rad]
+#         rho   = self.rho                 # [m]
+#         Ds     = abs(rho*alpha)          # [m]
+#         h = alpha/Ds      # [1/m]
+#         kx = M.sqrt((1-self.n)*h**2)       # [1/m]
+#         ky = M.sqrt(self.n*h**2)
+#         self.length = Ds
+#         cx = M.cos(kx*Ds)
+#         sx = M.sin(kx*Ds)
+#         cy = M.cos(ky*Ds)
+#         sy = M.sin(ky*Ds)
+
+#         m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
+#         m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
+#         m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
+#         m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
+#         # z,z'-plane
+#         m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
+#         m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
+#         m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
+#         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
+#         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
+#         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
+#         m[SKOO, DSKOO]  = self.length  # length increase
+#         return m
+#     def adjust_energy(self, tkin):
+#         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+#         return adjusted
+#     def shorten(self, alpha):
+#         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
+#         return shortSD
+#     def make_slices(self, anz=2):
+#         shortSD = self.shorten(self.alpha/anz)
+#         slices = []
+#         for i in range(anz):
+#             slices.append(shortSD)
+#         return slices
+# class RD(SD):
+#     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+#     def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+#         super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
+#         self.wedge  = wedge
+#         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
+#     def adjust_energy(self, tkin):
+#         adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+#         return adjusted
+#     def shorten(self, alpha):
+#         shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
+#         return shortSD
+#     def make_slices(self, anz=2):
+#         if anz < 2: anz = 2
+#         slicewinkel   = self.alpha/anz
+#         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#         sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
+#         slices  = [sdi]          # wedge @ entrance
+#         for i in range(1,anz-1):
+#             shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#             slices.append(shortRD)
+#         sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+#         sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
+#         slices.append(sdf)
+#         return slices
+# class Wedge(Node):
+#     """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
+#     def __init__(self, kwinkel, rho, t3d_wedge=True):
+#         super().__init__()
+#         self.kwinkel = kwinkel     # [deg ] kantenwinkel
+#         self.rho = rho
+#         self.t3d_wedge = t3d_wedge
+#         self.label = "W"
+#         self.length = 0.
+#         beta = M.radians(self.kwinkel)    
+#         g = 0.050    # fixed gap of 50 mm assumed
+#         K1=0.45
+#         K2=2.8
+#         psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
+#         mxpx = M.tan(beta)/rho
+#         mypy = M.tan(beta-psi)/rho
+#         mx   = NP.eye(MDIM,MDIM)
+#         mx[XPKOO, XKOO] = mxpx
+#         mx[YPKOO, YKOO] = -mypy
+#         self.matrix = mx
+# class GAP(Node):
+    # """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
+    # ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
+    # def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
+    #     """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
+    #     super().__init__()
+    #     self.accelerating = True
+    #     self.label    = label
+    #     self.EzAvg    = EzAvg*dWf
+    #     self.phisoll  = phisoll
+    #     self.gap      = gap
+    #     self.freq     = freq
+    #     self._particle = copy(particle)
+    #     self.position = position
+    #     self.aperture = aperture
+    #     self.dWf      = dWf
+    #     self.viseo    = 0.25
+    #     self.length   = 0.
+    #     E0L           = self.EzAvg*self.gap            # Spaltspannung
+    #     self.deltaW,self.matrix = self._mx(E0L)
+    # def _mx(self,E0L):
+    #     """ cavity nach Dr.Tiede pp.33 """
+    #     lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
+    #     beta   = self.particle.beta                    # beta Einstein
+    #     ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
+    #     bg     = self.particle.gamma_beta
+    #     m0c2   = self.particle.e0
+    #     deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
+    #     m      = NP.eye(MDIM,MDIM)
+    #     cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
+    #     m[XPKOO, XKOO] = cxp
+    #     m[YPKOO, YKOO] = cyp
+    #     m[EKOO, DEKOO] = deltaW      # energy increase
+    #     m[SKOO, DSKOO]  = self.length # length increase
+    #     return deltaW,m
+    # def ttf(self, beta, lamb, gap):
+    #     """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+    #     x = UTIL.pi*gap/(beta*lamb)
+    #     ttf = NP.sinc(x/UTIL.pi)
+    #     return ttf
+    # def adjust_energy(self, tkin):
+    #     adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+    #     return adjusted
