@@ -75,8 +75,6 @@ class TTF_G(IGap.IGap):
     def matrix(self,v):             self.master.matrix = v
     @property
     def particle(self):      return self.master.particle        # particle
-    # @particle.setter
-    # def particle(self,v):           self.master.particle = v
     @property
     def particlef(self):     return self.master.particlef       # particlef
     @particlef.setter

@@ -390,8 +390,8 @@ if __name__ == '__main__':
 """ altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
 """ altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
 """ altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug """
-class KW():
-    def OXAL_matrix(self):
+# class KW():
+#     def OXAL_matrix(self):
         #====================================================================== sympy ==========
         #     """ k = omega/(c*beta), b = beta, g = gamma, om=omega
         #         Tk,Sk,Tpk,Spk,Tppk,Sppk = T(k),S(k),T'(k),S'(k),T''(k),S''(k) Fourierfaktoren
@@ -451,105 +451,105 @@ class KW():
         #     # - Tppk*k*sphi*zp
         #     )) 
             # PoPi = om*qV0*(1/gb3 - 3*zp/(b**3*g*g2))*((Spk - Sppk*k*zp/g2)*(cphi + k*sphi*z) + (Tpk - Tppk*k*zp/g2)*(-cphi*k*z + sphi))/m0c3
-        def OUTminusIN(qV0,Tk,Sk,Tpk,Spk,Tppk,Sppk,k,Db2b,Dphi,om,b,g,gb3,mc3,cphi,sphi):
-            WoWi = qV0*(
-            # Db2b*Dphi*Spk*cphi*k 
-            # + Db2b*Dphi*Tpk*k*sphi 
-            + Db2b*Spk*k*sphi 
-            - Db2b*Tpk*cphi*k 
-            - Dphi*Sk*cphi 
-            - Dphi*Tk*sphi 
-            - Sk*sphi 
-            + Tk*cphi)
+        # def OUTminusIN(qV0,Tk,Sk,Tpk,Spk,Tppk,Sppk,k,Db2b,Dphi,om,b,g,gb3,mc3,cphi,sphi):
+        #     WoWi = qV0*(
+        #     # Db2b*Dphi*Spk*cphi*k 
+        #     # + Db2b*Dphi*Tpk*k*sphi 
+        #     + Db2b*Spk*k*sphi 
+        #     - Db2b*Tpk*cphi*k 
+        #     - Dphi*Sk*cphi 
+        #     - Dphi*Tk*sphi 
+        #     - Sk*sphi 
+        #     + Tk*cphi)
         
-            PoPi = -om*qV0*(-3*Db2b*gb3*(
-            # Dphi*Spk*sphi 
-            # - Dphi*Tpk*cphi 
-            - Spk*cphi 
-            - Tpk*sphi) 
-            + b**3*g*(Dphi*Spk*sphi 
-            - Dphi*Tpk*cphi 
-            - Spk*cphi 
-            - Tpk*sphi))/(b**3*g*gb3*mc3)
-            return (WoWi,PoPi)
+        #     PoPi = -om*qV0*(-3*Db2b*gb3*(
+        #     # Dphi*Spk*sphi 
+        #     # - Dphi*Tpk*cphi 
+        #     - Spk*cphi 
+        #     - Tpk*sphi) 
+        #     + b**3*g*(Dphi*Spk*sphi 
+        #     - Dphi*Tpk*cphi 
+        #     - Spk*cphi 
+        #     - Tpk*sphi))/(b**3*g*gb3*mc3)
+        #     return (WoWi,PoPi)
 
-        polies   = self.polies
-        c        = PARAMS['clight']
-        m0c2     = self.particle.m0c2
-        m0c3     = m0c2*c
-        omega    = self.omega
-        ttf      = 0.
-        matrix   = NP.eye(MDIM,MDIM)
+        # polies   = self.polies
+        # c        = PARAMS['clight']
+        # m0c2     = self.particle.m0c2
+        # m0c3     = m0c2*c
+        # omega    = self.omega
+        # ttf      = 0.
+        # matrix   = NP.eye(MDIM,MDIM)
 
-        # initialise loop variables
-        Ts       = self.particle.tkin                 # T-soll
-        phis     = self.phisoll                       # phi-soll
+        # # initialise loop variables
+        # Ts       = self.particle.tkin                 # T-soll
+        # phis     = self.phisoll                       # phi-soll
 
-        for poly in polies:   # each poly is a slice of the full Ez-dist
-            # IN variables
-            gammas_in  = 1. + Ts/m0c2               # gamma 
-            gbs_in     = sqrt(gammas_in**2-1.)      # (gamma*beta)
-            betas_in   = gbs_in/gammas_in           # beta
+        # for poly in polies:   # each poly is a slice of the full Ez-dist
+        #     # IN variables
+        #     gammas_in  = 1. + Ts/m0c2               # gamma 
+        #     gbs_in     = sqrt(gammas_in**2-1.)      # (gamma*beta)
+        #     betas_in   = gbs_in/gammas_in           # beta
 
-            ks     = omega/(c*betas_in)    # [1/m] omega/(beta*c)
-            qV0    = self.V0(poly)         # [MV]
-            Tks    = self.T(poly,ks)
-            Sks    = self.S(poly,ks)
-            Tpks   = self.Tp(poly,ks)
-            Spks   = self.Sp(poly,ks)
-            Tppks  = self.Tpp(poly,ks)  
-            Sppks  = self.Spp(poly,ks) 
+        #     ks     = omega/(c*betas_in)    # [1/m] omega/(beta*c)
+        #     qV0    = self.V0(poly)         # [MV]
+        #     Tks    = self.T(poly,ks)
+        #     Sks    = self.S(poly,ks)
+        #     Tpks   = self.Tp(poly,ks)
+        #     Spks   = self.Sp(poly,ks)
+        #     Tppks  = self.Tpp(poly,ks)  
+        #     Sppks  = self.Spp(poly,ks) 
 
-            sphis  = sin(phis)
-            cphis  = cos(phis)
+        #     sphis  = sin(phis)
+        #     cphis  = cos(phis)
 
-            # kin.energy and phase increase ref-particle
-            cphi = cphis
-            sphi = sphis
-            om = self.omega
-            bets = betas_in
-            gams = gammas_in
-            gb3s = (bets*gams)**3
-            Db2b = 0.
-            Dphi  = 0.
-            (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,Db2b,Dphi,om,bets,gams,gb3s,m0c3,cphi,sphi)
+        #     # kin.energy and phase increase ref-particle
+        #     cphi = cphis
+        #     sphi = sphis
+        #     om = self.omega
+        #     bets = betas_in
+        #     gams = gammas_in
+        #     gb3s = (bets*gams)**3
+        #     Db2b = 0.
+        #     Dphi  = 0.
+        #     (dTs,dPhis) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,Db2b,Dphi,om,bets,gams,gb3s,m0c3,cphi,sphi)
 
-            Ts_out    = Ts + dTs
-            phis_out  = phis + dPhis
-            ttf       = ttf + qV0
+        #     Ts_out    = Ts + dTs
+        #     phis_out  = phis + dPhis
+        #     ttf       = ttf + qV0
 
-            # OUT variables
-            gammas_out  = 1. + Ts_out/m0c2            # gamma 
-            gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta)
-            #======================================================================================="""        
-            # OXAL-matrix 
-            (r44,r54) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=1,zp=0)
-            (r45,r55) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=1)
-            #======================================================================================="""        
-            # {z, dP/P}: linear sub matrix
-            mx = NP.eye(MDIM,MDIM)
-            mx[Ktp.z, Ktp.z] = r44 + 1; mx[Ktp.z, Ktp.zp ] = r45*(1/ks)
-            mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55*(1/ks) + 1
-            # {x,x'}: linear sub-matrix
-            factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
-            mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
-            mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out
-            # {y,y'}: linear sub-matrix
-            mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp, Ktp.x]
-            mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp, Ktp.xp]
-            # energy and length increase
-            mx[Ktp.T,Ktp.dT] = dTs
-            mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
+        #     # OUT variables
+        #     gammas_out  = 1. + Ts_out/m0c2            # gamma 
+        #     gbs_out     = sqrt(gammas_out**2-1.)      # (gamma*beta)
+        #     #======================================================================================="""        
+        #     # OXAL-matrix 
+        #     (r44,r54) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=1,zp=0)
+        #     (r45,r55) = OUTminusIN(qV0,Tks,Sks,Tpks,Spks,Tppks,Sppks,ks,betas_in,gammas_in,m0c3,phis,omega,z=0,zp=1)
+        #     #======================================================================================="""        
+        #     # {z, dP/P}: linear sub matrix
+        #     mx = NP.eye(MDIM,MDIM)
+        #     mx[Ktp.z, Ktp.z] = r44 + 1; mx[Ktp.z, Ktp.zp ] = r45*(1/ks)
+        #     mx[Ktp.zp,Ktp.z] = r54; mx[Ktp.zp, Ktp.zp] = r55*(1/ks) + 1
+        #     # {x,x'}: linear sub-matrix
+        #     factor2 = qV0*omega/(2.*m0c3*gbs_out*gbs_in**2)
+        #     mx[Ktp.xp,Ktp.x ] = -factor2 * (Tks*sphis + Sks*cphis)
+        #     mx[Ktp.xp,Ktp.xp] = gbs_in/gbs_out
+        #     # {y,y'}: linear sub-matrix
+        #     mx[Ktp.yp,Ktp.y]  = mx[Ktp.xp, Ktp.x]
+        #     mx[Ktp.yp,Ktp.yp] = mx[Ktp.xp, Ktp.xp]
+        #     # energy and length increase
+        #     mx[Ktp.T,Ktp.dT] = dTs
+        #     mx[Ktp.S,Ktp.dS] = 0     # 0 length: oxal-gap is kick
 
-            # left multiplication of slice-matrix with oxal-matrix
-            matrix = NP.matmul(mx,matrix)
+        #     # left multiplication of slice-matrix with oxal-matrix
+        #     matrix = NP.matmul(mx,matrix)
 
-            # refresh loop variables
-            Ts    = Ts_out
-            phis  = phis_out
-        self.deltaW    = matrix[Ktp.T,Ktp.dT]
-        self.ttf       = abs(self.deltaW/ttf)
-        self.particlef = Proton(self.particle.tkin+self.deltaW)
-        self.matrix    = matrix
-        pass
-        return
+        #     # refresh loop variables
+        #     Ts    = Ts_out
+        #     phis  = phis_out
+        # self.deltaW    = matrix[Ktp.T,Ktp.dT]
+        # self.ttf       = abs(self.deltaW/ttf)
+        # self.particlef = Proton(self.particle.tkin+self.deltaW)
+        # self.matrix    = matrix
+        # pass
+        # return

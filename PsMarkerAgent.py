@@ -33,8 +33,8 @@ class PsMarkerAgent(MRK):
     a phase-space ellipse plot at the marker's position.
     """
     # def __init__(self, label, active, viseo, particle=Proton(PARAMS['injection_energy']), position=[0,0,0], twiss_values=(0.5,0.5)):
-    def __init__(self, label, active, viseo, twiss_values=(0.5,0.5)):
-        super().__init__(label, active, viseo)
+    def __init__(self, label, active, viseo, tsoll, twiss_values=(0.5,0.5)):
+        super().__init__(label, active, viseo, tsoll)
         self.twiss_values = twiss_values
         self.do_action    = self.action if self.active else self.no_action
     def action(self,*args):

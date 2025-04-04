@@ -30,7 +30,7 @@ from copy import copy
 import elements as ELM
 import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
-from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp
+from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp,mxprnt
 from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
 from setutil import OutOfRadialBoundEx
 from sigma import Sigma, sig_map
@@ -68,12 +68,13 @@ class Lattice(object):
             else:
                 raise StopIteration    
     def __init__(self,descriptor="lattice"):
-        self.seq              = []       # list of _Node objects z.B. [D,QD,GAP,QF....]
-        self.iteration        = "LR"  # default: iterating lattice left-right
+        self.seq              = []       # list of Node objects z.B. [D,QD,GAP,QF....]
+        self.iteration        = "LR"     # default iterating left-right
         self.length           = 0.
-        self.acc_node         = None
-        self.injection_energy = PARAMS.get('injection_energy',50.)
+        self.matrix           = NP.eye(MDIM)
         self.descriptor       = descriptor
+        self.label            = ''     # long label
+        self.slabel           = ''     # short label
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -81,6 +82,39 @@ class Lattice(object):
         elif self.iteration == "LR":
             iterator = self.LRiterator(self)
         return iterator
+
+    @property
+    def accON(self):
+        node1 = self.first_gap
+        if(node1 != None):
+            PARAMS.update(node1.waccept())  # 1st node acceptance parameters: PARAMS.update(dict())
+            accON = True
+            FLAGS['dWf'] = 1
+        else:
+            accON = False     # no rf-gaps
+            FLAGS['dWf'] = 0  # acceleration on/off flag 1=on,0=off
+        return accON
+    @property
+    def first_gap(self):
+        """ return the 1st RF gap"""
+        node = None
+        for elm in iter(self):
+            if elm.isAccelerating:
+                node = elm
+                break
+        return node
+    @property
+    def last_gap(self):
+        """ return the last RF gap"""
+        self.toggle_iteration()
+        node = None
+        for elm in iter(self):
+            if elm.isAccelerating:
+                node = elm
+                break
+        self.toggle_iteration()
+        return node
+
     def add_node(self,node):
         """ 
         Add node to end of lattice. lattice orientation from left to right.
@@ -90,56 +124,66 @@ class Lattice(object):
          """
         if len(self.seq) == 0:
             """ the 1st node """
-            tk_injection  = self.injection_energy
-            ref_track     = NP.array([0.,0.,0.,0.,0.,0.,tk_injection,1.,0.,1.])
-            node_adj      = node.adjust_energy(tk_injection)    # energy ADJUST
-            ref_track_m   = node_adj.map(ref_track)
-            ref_particle  = Proton(ref_track_m[EKOO])           # ref_particle @ exit of 1st node
-            node_adj.prev = node_adj.next = None
-            sf = node_adj.length
-            sf = ref_track_m[SKOO]
-            node_adj.position     = (0.,sf/2.,sf)
-            node_adj.ref_track    = ref_track_m
-            # node_adj.ref_particle = ref_particle
-            node_adj._particle = ref_particle
+            track = NP.array([0.,0.,0.,0.,0.,0.,node._tsoll,1.,0.,1.])
+            node  = node.adjust_energy(node._tsoll)    # energy ADJUST
+            track = node.map(track)
+            node._tsoll = track[EKOO]
+            node.particlef(node._tsoll)
+            node.soll_track = track
+            node.prev = node.next = None
+            si = self.length
+            sf = si + node.length
+            node.position = (si,(si+sf)/2.,sf)
         else:
             """ all nodes after 1st """
-            node_prev    = self.seq[-1]
-            ref_track    = node_prev.ref_track
-            si           = ref_track[SKOO]
-            tkin         = ref_track[EKOO]
-            node_adj     = node.adjust_energy(tkin)
-            # ref_track = NP.dot(node.matrix,ref_track)
-            ref_track_m  = node_adj.map(ref_track)
-            ref_particle = Proton(ref_track_m[EKOO])
-            node_prev.next = node_adj
-            node_adj.prev  = node_prev
-            node_adj.next  = None
-            sf = ref_track_m[SKOO]
-            node_adj.position     = (si,(si+sf)/2,sf)
-            node_adj.ref_track    = ref_track_m
-            # node_adj.ref_particle = ref_particle
-            node_adj._particle = ref_particle
+            node_prev = self.seq[-1]
+            track     = node_prev.soll_track
+            si        = node_prev.position[2]
+            tki       = node_prev._tsoll
+            node      = node.adjust_energy(tki)
+            track     = node.map(track)
+            node._tsoll     = track[EKOO]
+            node.soll_track = track
+            node.particlef(node._tsoll)
+            node_prev.next = node
+            node.prev      = node_prev
+            node.next      = None
+            sf = si + node.length
+            node.position = (si,(si+sf)/2,sf)
         self.length = sf    # lattice length
-        self.seq.append(node_adj)
+        self.seq.append(node)
+        pass
     def toString(self):
-       # TODO needs improvement
-        """ log lattice layout to string (could be even better?) """
-        mcell = ELM.I(label='')   #  chain matrices
-        # for element in self.seq:
-        for element in iter(self):
-        # for element in iter(self):
-            DEBUG_OFF('{:10s}({:d}) length={:.3f} from-to: {:.3f} - {:.3f}'.format(element.label,id(element),element.length,element.position[0],element.position[2]))
-            # ACHTUNG: Reihenfolge im Produkt ist wichtig!
-            mcell = element * mcell   
-        mcell.section = '<= full lattice map'
-        return mcell.prmatrix()
+        """ log lattice layout to string """
+        s = self.slabel
+        s += '\n'
+        # for i in range(MDIM):
+        #     for j in range(MDIM):
+        #         s+='{:8.4g} '.format(self.matrix[i, j])
+        s += mxprnt(self.matrix,fmt='8.4g')
+        s+='\n'
+        return s
+    def make_label(self):
+        n  = 50
+        nx = 200
+        for node in iter(self):
+            self.label += f' {node.label}'
+        slabel = self.label
+        if len(self.label) > nx:
+            # reduce when too long
+            slabel = self.label[:n]+'.....'+self.label[-n:]
+        self.slabel = slabel
+        pass
+    def make_matrix(self):
+        for node in iter(self):
+            self.matrix = NP.dot(node.matrix,self.matrix)
+        pass
     def stats(self):
         """ gather lattice statistics """
         cavity_counter = 0
         quad_counter   = 0
         ttfs = []
-        """ loop over all nodes in lattice """
+        """ loop all nodes in lattice """
         for element in iter(self):
             if isinstance(element,(ELM.QF,ELM.QD)):
                 quad_counter += 1
@@ -148,8 +192,8 @@ class Lattice(object):
                 cavity_counter += 1
                 ttfs.append(element.ttf)
         SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))
-        tki   = self.injection_energy
-        tkf   = self.seq[-1].ref_track[EKOO]
+        tki   = self.seq[0].tsoll
+        tkf   = self.seq[-1].soll_track[EKOO]
         res = dict(
             quad_cntr    = quad_counter,
             cavity_cntr  = cavity_counter,
@@ -158,19 +202,64 @@ class Lattice(object):
             tkf          = tkf,
         )
         return res
-    def cell(self,closed=True):
+    def trace(self):  return self.tracex()+self.tracey()
+    def tracex(self): return self.matrix[0,0] + self.matrix[1,1]
+    def tracey(self): return self.matrix[2,2] + self.matrix[3,3]
+    def cell(self,closed):
         """ Construct the full lattice cell-matrix and extract standard quantities:
-            full cell => mcell
+            full cell => self.matrix
             stability
             det(M)
             symplecticity
             transverse Twiss for open and closed lattices
             betatron tunes: mux, muy
         """
+        def isStable(mcell):
+            stable = True
+
+            stabx = fabs(self.tracex())
+            print_verbose(1,'stability X? ',stabx)
+            if stabx >= 2.0:
+                print_verbose(1,'unstable Lattice in x-plane\n')
+                stable = False
+            else:
+                cos_mux = 0.5 * stabx
+                mux = acos(cos_mux)
+
+            staby = fabs(self.tracey())
+            print_verbose(1,'stability Y? ',staby)
+            if staby >= 2.0:
+                print_verbose(1,'unstable Lattice in y-plane\n')
+                stable = False
+            else:
+                cos_muy = 0.5 * staby
+                muy = acos(cos_muy)
+            
+            if stable: 
+                print_verbose(1,'\nphase_advance [deg]: x,y={:.3f}, {:.3f}'.format(degrees(mux),degrees(muy)))
+                print_verbose(1,  'phase_advance [rad]: x,y={:.3f}, {:.3f}\n'.format(mux,muy))
+                # print_verbose(0,self.toString())
+                print_verbose(0,'Full Accelerator Matrix')
+                # print_verbose(0, mxprnt(self.matrix,fmt='+.4f'))
+                print_verbose(0, self.toString())
+                det = LA.det(self.matrix)
+                print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
+                # Determinate M-I == 0 ?
+                beta_matrix = self.beta_matrix()
+                for i in range(5): beta_matrix[i,i] = beta_matrix[i,i]-1.0
+                det = LA.det(beta_matrix)
+                print_verbose(2,'det|Mbeta - I|={:.5f}\n'.format(det))
+                # symplectic?
+                s = self.symplecticity()
+                print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
+                print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
+            else:
+                print(colors.RED+'WARN: unstable lattice!'+colors.ENDC)
+            return stable
         def ring(self,mcell):
             if not isStable(mcell): sys.exit(1)
             # cell matrix (not beta_matrix!)
-            cell_matrix = self.acc_node.matrix
+            cell_matrix = self.matrix
             m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
             m21  = cell_matrix[XPKOO,XKOO];  m22  = cell_matrix[XPKOO,XPKOO]
             n11  = cell_matrix[YKOO,YKOO];   n12  = cell_matrix[YKOO,YPKOO]
@@ -190,7 +279,7 @@ class Lattice(object):
             print_verbose(2,'betay {:4.4f} alfay {:4.4f} gammay {:4.4f}'.format(bay,aly,gmy))
             ## Probe: twiss-functions durch ganze Zelle mit beta-matrix (nur sinnvoll fuer period. Struktur!)
             v_beta_a = NP.array([bax,alx,gmx,bay,aly,gmy,1.,0.,1.])
-            m_cell_beta = self.acc_node.beta_matrix()
+            m_cell_beta = self.beta_matrix()
             v_beta_e = NP.dot(m_cell_beta,v_beta_a)
             # if verbose:
             print_verbose(2,'Probe: {TW(f)} == {BetaMatrix}x{TW(i)}?')
@@ -199,7 +288,7 @@ class Lattice(object):
                 if fabs(diffa_e[i]) < 1.e-9: diffa_e[i] = 0.
             print_verbose(2,'TW(i)-TW(f) (should be [0,...,0]):\n',diffa_e[0:6])
             # transverse/longitudinal Twiss & Dispersion @ entrance for periodic lattice
-            dummy,dx_i,dxp_i = tuple(self.dispersion()[0])
+            dummy,dx_i,dxp_i = tuple(self.dispersion(True)[0])
             res = dict(
                 betax_i         = bax,
                 alfax_i         = alx,
@@ -221,89 +310,18 @@ class Lattice(object):
                 twiss_w_i = Twiss(PARAMS['betaw_i'], PARAMS['alfaw_i'],PARAMS['emitw_i'])
             )
             return res
-        def isStable(mcell):
-            stable = True
-
-            stabx = fabs(mcell.tracex())
-            print_verbose(1,'stability X? ',stabx)
-            if stabx >= 2.0:
-                print_verbose(1,'unstable Lattice in x-plane\n')
-                stable = False
-            else:
-                cos_mux = 0.5 * stabx
-                mux = acos(cos_mux)
-
-            staby = fabs(mcell.tracey())
-            print_verbose(1,'stability Y? ',staby)
-            if staby >= 2.0:
-                print_verbose(1,'unstable Lattice in y-plane\n')
-                stable = False
-            else:
-                cos_muy = 0.5 * staby
-                muy = acos(cos_muy)
-            
-            if stable: 
-                print_verbose(1,'\nphase_advance [deg]: x,y={:.3f}, {:.3f}'.format(degrees(mux),degrees(muy)))
-                print_verbose(1,  'phase_advance [rad]: x,y={:.3f}, {:.3f}\n'.format(mux,muy))
-                print_verbose(0,'Full Accelerator Matrix (f)<==(i)')
-                print_verbose(0,self.acc_node.printmx())
-                det = LA.det(self.acc_node.matrix)
-                print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))
-                # Determinate M-I == 0 ?
-                beta_matrix = mcell.beta_matrix()
-                for i in range(5):
-                    beta_matrix[i,i] = beta_matrix[i,i]-1.0
-                det = LA.det(beta_matrix)
-                print_verbose(2,'det|Mbeta - I|={:.5f}\n'.format(det))
-                # symplectic?
-                s = self.symplecticity()
-                print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
-                print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
-            else:
-                print(colors.RED+'WARN: unstable lattice!'+colors.ENDC)
-            return stable
         """ ======================== cell ======================================================================= """
-        mcell = None
-        """ loop over all lattice nodes """
-        for count,element in enumerate(iter(self)):
-            if count == 0:
-                mcell = element
-            else:
-                # Achtung: Reihenfolge !
-                mcell = element * mcell    
-        # the full acc isinstance(self.acc_node,Lattice)==True
-        self.acc_node = mcell
+        """ ======================== cell ======================================================================= """
+        """ ======================== cell ======================================================================= """
         if closed:
-            params = ring(self,mcell)
+            params = ring(self.matrix)
         else:
-            params = transferline(mcell)
+            params = transferline(self.matrix)
         bax,alx,gmx,epsix = params['twiss_x_i']()
         bay,aly,gmy,epsiy = params['twiss_y_i']()
         print_verbose(0,'using @ entrance: [beta,  alfa,  gamma]-X    [beta,   alfa,   gamma]-Y')
         print_verbose(0,'                  [{:.3f}, {:.3f}, {:.3f}]-X    [{:.3f},  {:.3f},  {:.3f}]-Y'.format(bax,alx,gmx,bay,aly,gmy))
         return params
-    def report(self):
-        # TODO needs improvement
-        """ report lattice layout (may not work!) """
-        raise RuntimeWarning('Lattice.report() not ready')
-        reprt = ''
-        header = ''
-        row = ''
-        # for count,element in enumerate(reversed(self.seq)):
-        for count,element in enumerate(iter(self)):
-            name = element.label
-            len = element.length
-            rest = (count+1)%19
-            if rest != 0:
-                header += '{:6s}'.format(name)
-                row += '{:.3f} '.format(len)
-            else:
-                header += '{:6s}\n'.format(name)
-                row += '{:.3f} \n'.format(len)
-                reprt += header+row
-                header = row = ''
-        reprt += header+' \n'+row+' \n'
-        return reprt
     def toggle_iteration(self):
         """ toggle l->R or L<-R sweep through linked list of elements"""
         if self.iteration == "LR":
@@ -433,7 +451,7 @@ class Lattice(object):
                         print(warnings.formatwarning(colors.RED+'{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)+colors.ENDC,UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
-    def dispersion(self,steps=10,closed=True):
+    def dispersion(self,closed, steps=10):
         """ solve for periodic dispersion and map it """
         dx  = PARAMS['dx_i']
         dxp = PARAMS['dxp_i']
@@ -507,7 +525,7 @@ class Lattice(object):
         print('CALCULATE lattice functions & trajectories')
         
         """ injektion parameters """
-        tkin = self.injection_energy
+        tkin = self.seq[0].tsoll
         if True:
             # 2 point on the ellipse y1 & y4: intersections
             x1,x1p = soll_test(PARAMS['twiss_x_i'].y1())
@@ -536,11 +554,11 @@ class Lattice(object):
         s_fun.append(s,s_0)
 
         """ loop through lattice """
-        for element in iter(self):
-            particle = element.particle
+        for node in iter(self):
+            particle = Proton(node.tsoll)
             gamma    = particle.gamma
             tkin     = particle.tkin
-            slices   = element.make_slices(anz=steps)
+            slices   = node.make_slices(anz=steps)
             try:
                 for i_element in slices:
                     # if i_element.type == 'QFth' : print(i_element.type,i_element.matrix)
@@ -595,8 +613,8 @@ class Lattice(object):
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,1.,0.],    #S
                     [ 0.,0., 0.,0., 0.,0.,0.,0.,0.,1.]     #1
                     ])
-        s = NP.dot(self.acc_node.matrix.T,s)
-        s = NP.dot(s,self.acc_node.matrix)
+        s = NP.dot(self.matrix.T,s)
+        s = NP.dot(s,self.matrix)
         # dets = LA.det(s)
         # if fabs(dets-1.) > 1.e-12:
             # for i in range(ELM.Matrix._dim):
@@ -604,41 +622,30 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    def concat(self,lattice):
-        """Concatenate two Lattice pieces (self+lattice)"""
-        for element in iter(lattice):
-            self.add_node(element)
-    @property
-    def accON(self):
-        node1 = self.first_gap
-        if(node1 != None):
-            PARAMS.update(node1.waccept())  # 1st node acceptance parameters: PARAMS.update(dict())
-            accON = True
-            FLAGS['dWf'] = 1
-        else:
-            accON = False     # no rf-gaps
-            FLAGS['dWf'] = 0  # acceleration on/off flag 1=on,0=off
-        return accON
-    @property
-    def first_gap(self):
-        """ return the 1st RF gap"""
-        node = None
-        for elm in iter(self):
-            if elm.isAccelerating:
-                node = elm
-                break
-        return node
-    @property
-    def last_gap(self):
-        """ return the last RF gap"""
-        self.toggle_iteration()
-        node = None
-        for elm in iter(self):
-            if elm.isAccelerating:
-                node = elm
-                break
-        self.toggle_iteration()
-        return node
+    def beta_matrix(self):
+        """ The 9x9 matrix to track twiss functions from the node's R-matrix """
+        # Aliases
+        m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
+        m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
+        
+        n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
+        n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
+
+        o11  = self.matrix[ZKOO, ZKOO];   o12  = self.matrix[ZKOO, ZPKOO]
+        o21  = self.matrix[ZPKOO, ZKOO];  o22  = self.matrix[ZPKOO, ZPKOO]
+
+        m_beta  =  NP.array([
+        [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+        [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
+        [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
+        [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
+        [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
+        [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
+        [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
+        [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
+        [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
+        ])
+        return m_beta
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
         print('----------------------------------test_lattice_add_first_6_nodes')
@@ -788,7 +795,7 @@ class TestLattice(unittest.TestCase):
         # twiss functions
         twiss_fun = lattice.twiss_funcs(steps=5)
         # cl,sl = lattice.cs_traj(steps=100)sK
-        disp = lattice.dispersion(steps=5,closed=True)
+        disp = lattice.dispersion(True,steps=5)
         # plots
         s  = [twiss_fun(i,'s')  for i in range(twiss_fun.nbpoints)]
         xs = [twiss_fun(i,'bx') for i in range(twiss_fun.nbpoints)]
@@ -811,3 +818,34 @@ class TestLattice(unittest.TestCase):
 if __name__ == '__main__':
     from lattice_generator import factory
     unittest.main()
+
+# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
+# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
+# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
+    # def report(self):
+    #     # TODO needs improvement
+    #     """ report lattice layout (may not work!) """
+    #     raise RuntimeWarning('Lattice.report() not ready')
+    #     reprt = ''
+    #     header = ''
+    #     row = ''
+    #     # for count,element in enumerate(reversed(self.seq)):
+    #     for count,element in enumerate(iter(self)):
+    #         name = element.label
+    #         len = element.length
+    #         rest = (count+1)%19
+    #         if rest != 0:
+    #             header += '{:6s}'.format(name)
+    #             row += '{:.3f} '.format(len)
+    #         else:
+    #             header += '{:6s}\n'.format(name)
+    #             row += '{:.3f} \n'.format(len)
+    #             reprt += header+row
+    #             header = row = ''
+    #     reprt += header+' \n'+row+' \n'
+    #     return reprt
+
+    # def concat(self,lattice):
+    #     """Concatenate two Lattice pieces (self+lattice)"""
+    #     for node in iter(lattice):
+    #         self.add_node(node)

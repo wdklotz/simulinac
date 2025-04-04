@@ -150,7 +150,7 @@ def instanciate_element(item):
                         sec       = sec,               # string
                         SFdata    = SFdata,
                     )
-                    instance = ELM.RFG(ID)
+                    instance = ELM.RFG(ID,tsoll)
                     instance.register(T3D_G())         # register T3D
                     instance.configure(**gap_parameters)
                     instance.adjust_energy(tsoll)
@@ -180,7 +180,7 @@ def instanciate_element(item):
                         sec       = sec,
                         SFdata    = sfdata,
                     )
-                    instance = ELM.RFG(ID)
+                    instance = ELM.RFG(ID,tsoll)
                     instance.register(T3D_G())
                     instance.configure(**gap_parameters)
                     instance.adjust_energy(tsoll)
@@ -209,7 +209,7 @@ def instanciate_element(item):
                     sec       = sec,
                     SFdata    = sfdata,
                 )
-                instance = ELM.RFG(ID)
+                instance = ELM.RFG(ID,tsoll)
                 instance.register(OXAL_G())
                 instance.configure(**gap_parameters)
                 instance.adjust_energy(tsoll)
@@ -233,7 +233,7 @@ def instanciate_element(item):
                     sec       = sec,
                     SFdata    = SFdata,
                 )
-                instance = ELM.RFG(ID)
+                instance = ELM.RFG(ID,tsoll)
                 instance.register(BASE_G())
                 instance.configure(**gap_parameters)
                 instance.adjust_energy(tsoll)
@@ -261,7 +261,7 @@ def instanciate_element(item):
                     sec       = sec,
                     SFdata    = sfdata,
                 )
-                instance = ELM.RFG(ID)
+                instance = ELM.RFG(ID,tsoll)
                 instance.register(TTF_G())
                 instance.configure(**gap_parameters)
                 instance.adjust_energy(tsoll)
@@ -301,7 +301,7 @@ def instanciate_element(item):
                 if not marker_is_compatible_with('simu.py',ID):
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
-                instance = PSMKR.PsMarkerAgent(ID,active,viseo)
+                instance = PSMKR.PsMarkerAgent(ID,active,viseo,tsoll)
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.toString())
 

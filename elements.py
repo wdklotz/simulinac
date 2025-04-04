@@ -44,14 +44,14 @@ class Node(object):
         ii)  is a dictionary (DictObject base class)
         ii)  each instance holds its copy of the refrence particle (self.particle)
     """
-    def __init__(self, tsoll= UTIL.PARAMS['injection_energy']):
+    def __init__(self, tsoll):
         self.type         = self.__class__.__name__  # self's node type
         self._tsoll       = tsoll # private read-only
         self.accelerating = False
         self.label        = ''
         self.viseo        = 0                   # default - invisible
         self.particle     = Proton(self._tsoll) # Sollteilchen
-        self.particlef    = Proton(self._tsoll) # Teichen am Ausgang
+        self.particlef    = Proton(self._tsoll)                 # Teichen am Ausgang
         self.matrix       = NP.eye(MDIM)        # MDIMxMDIM zero matrix used here
         self.position     = (0,0,0)             # [entrance, middle, exit]
         self.length       = 0.
@@ -62,18 +62,18 @@ class Node(object):
         self.sigxy        = None      # envelope function @ middle of Node
         self.sec          = ''        # section
         self.soll_track   = None      # soll track @ exit of Node
-    def __mul__(self, other):
-        """ 
-        the (*) operator for Node objects produces a 
-        new Node with:
-            *) concatenated label
-            *) product of both Nodes matrices, self(*)other
-         """
-        res = Node()
-        if (isinstance(other,DKD)): pass
-        else: res.label = self.label+'*'+other.label
-        res.matrix = NP.dot(self.matrix, other.matrix)
-        return res
+    # def __mul__(self, other):
+    #     """ 
+    #     the (*) operator for Node objects produces a 
+    #     new Node with:
+    #         *) concatenated label
+    #         *) product of both Nodes matrices, self(*)other
+    #      """
+    #     res = Node(UTIL.PARAMS['injection_energy'])
+    #     if (isinstance(other,DKD)): pass
+    #     else: res.label = self.label+'*'+other.label
+    #     res.matrix = NP.dot(self.matrix, other.matrix)
+    #     return res
 
     @property
     def isAccelerating(self):    return self.accelerating
@@ -101,38 +101,18 @@ class Node(object):
     def shorten(self, length):
         """ nothing to shorten """
         return self
-    def printmx(self):
-        n  = 50
-        nx = 200
-        if len(self.label) > nx:
-            # reduce when too long
-            label = self.label[:n]+'.....'+self.label[-n:]
-        else:
-            label = self.label
-        # try because sections are not mandatory
-        # try:
-        #     s = '{} [{}]\n'.format(label, self.sec)
-        # except AttributeError:
-        #     s = '{}\n'.format(label)
-        print(label)
-        s=''
-        for i in range(MDIM):
-            for j in range(MDIM):
-                s+='{:8.4g} '.format(self.matrix[i, j])
-            s+='\n'
-        return s
-    def trace(self):
-        return self.tracex()+self.tracey()
-    def tracex(self):
-        res = 0.
-        for i in range(2):
-            res += self.matrix[i, i]
-        return res
-    def tracey(self):
-        res = 0.
-        for i in range(2, 4):
-            res += self.matrix[i, i]
-        return res
+    # def trace(self):
+    #     return self.tracex()+self.tracey()
+    # def tracex(self):
+    #     res = 0.
+    #     for i in range(2):
+    #         res += self.matrix[i, i]
+    #     return res
+    # def tracey(self):
+    #     res = 0.
+    #     for i in range(2, 4):
+    #         res += self.matrix[i, i]
+    #     return res
     def make_slices(self, anz=1):
         """ nothing to slice """
         slices = [self]
@@ -172,8 +152,8 @@ class Node(object):
 
 class I(Node):
     """  Unit matrix Node """
-    def __init__(self,label='I'):
-        super().__init__()
+    def __init__(self,label,tsoll):
+        super().__init__(tsoll)
         self.label    = label
         # self.matrix   = NP.eye(MDIM)
         # self.length   = 0.
@@ -183,8 +163,8 @@ class MRK(I):
     The action can be bypassed if the 'maction'-FLAG is False.
     """
     # def __init__(self, label, active, viseo=1., particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.)):
-    def __init__(self, label, active, viseo):
-        super().__init__(label)
+    def __init__(self, label, active, viseo, tsoll):
+        super().__init__(label,tsoll)
         self.active     = active
         self.viseo      = viseo if self.active else 0.
         # self._particle  = copy(particle)
@@ -192,7 +172,7 @@ class MRK(I):
     def no_action(self,*args): pass
 class D(Node):
     """  Trace3D drift space  """
-    def __init__(self, label, length, aperture=None, tsoll=UTIL.PARAMS['injection_energy']):
+    def __init__(self, label, length, aperture, tsoll):
         super().__init__(tsoll)
         self.label    = label
         # self._particle = copy(particle)
@@ -215,7 +195,7 @@ class D(Node):
         return shortend
 class DKD(D):
     """  Trace3D drift spacer for Drift-Kick-Drift sandwich (for use with DYNAC CAVNUM cavities) """
-    def __init__(self, label, length, aperture=None, tsoll=UTIL.PARAMS['injection_energy']):
+    def __init__(self, label, length, aperture, tsoll):
         super().__init__(label, length, aperture, tsoll)
 
     def adjust_energy(self, tkin):
@@ -226,7 +206,7 @@ class DKD(D):
         return shortend
 class QF(Node):
     """ Trace3D focussing quad """
-    def __init__(self, label, grad, length, aperture, tsoll=UTIL.PARAMS['injection_energy']):
+    def __init__(self, label, grad, length, aperture, tsoll):
         super().__init__(tsoll)
         self.label    = label
         self.grad     = abs(grad)                        # [T/m]
@@ -300,7 +280,7 @@ class QD(QF):
     """ 
     Trace3D defocussing quad
     """
-    def __init__(self, label, grad, length, aperture, tsoll=UTIL.PARAMS['injection_energy']):
+    def __init__(self, label, grad, length, aperture, tsoll):
     # def __init__(self, label, grad, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, length, aperture, tsoll)
         self.viseo = -0.5
@@ -455,7 +435,7 @@ class QD(QF):
     #     return adjusted
 class RFG(Node):   
     """  RF-gap of zero length for different kick gap-models """
-    def __init__(self,label, tsoll=UTIL.PARAMS['injection_energy']):
+    def __init__(self,label, tsoll):
         super().__init__(tsoll)
         # self.aperture     = None
         self.cavlen       = None

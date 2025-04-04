@@ -390,6 +390,8 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 3: count elements and make other statistics
     #----------------------------------------------
+    lattice.make_label()
+    lattice.make_matrix()
     res = lattice.stats()
     UTIL.SUMMARY['nbof quadrupoles*']   = res['quad_cntr']
     UTIL.SUMMARY['nbof cavities*']      = res['cavity_cntr']
@@ -398,7 +400,7 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
-    res = lattice.cell(closed = UTIL.FLAGS['periodic'])
+    res = lattice.cell(UTIL.FLAGS['periodic'])
     # Update PARAMS
     UTIL.PARAMS.update(res)
     #---------------------------------------------- 
