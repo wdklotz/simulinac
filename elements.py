@@ -16,20 +16,16 @@ This file is part of the SIMULINAC code
     You should have received a copy of the GNU General Public License
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
-# TODO adjust_energy() and shorten() return new objects. make sure object properties like links are correctly passed.
 import sys
 import unittest
-# from copy import copy
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 from setutil import DEBUG_ON,DEBUG_OFF,Proton,PARAMS
 from setutil import Ktp
-# from T3D_M   import T3D_G
 import warnings
 import math    as M
 import numpy   as NP
 import setutil as UTIL
-# import OXAL_M as OX
 
 twopi = 2.*M.pi
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format}) # numpy pretty printing
@@ -62,18 +58,6 @@ class Node(object):
         self.sigxy        = None      # envelope function @ middle of Node
         self.sec          = ''        # section
         self.soll_track   = None      # soll track @ exit of Node
-    # def __mul__(self, other):
-    #     """ 
-    #     the (*) operator for Node objects produces a 
-    #     new Node with:
-    #         *) concatenated label
-    #         *) product of both Nodes matrices, self(*)other
-    #      """
-    #     res = Node(UTIL.PARAMS['injection_energy'])
-    #     if (isinstance(other,DKD)): pass
-    #     else: res.label = self.label+'*'+other.label
-    #     res.matrix = NP.dot(self.matrix, other.matrix)
-    #     return res
 
     @property
     def isAccelerating(self):    return self.accelerating
@@ -101,18 +85,6 @@ class Node(object):
     def shorten(self, length):
         """ nothing to shorten """
         return self
-    # def trace(self):
-    #     return self.tracex()+self.tracey()
-    # def tracex(self):
-    #     res = 0.
-    #     for i in range(2):
-    #         res += self.matrix[i, i]
-    #     return res
-    # def tracey(self):
-    #     res = 0.
-    #     for i in range(2, 4):
-    #         res += self.matrix[i, i]
-    #     return res
     def make_slices(self, anz=1):
         """ nothing to slice """
         slices = [self]
@@ -155,33 +127,24 @@ class I(Node):
     def __init__(self,label,tsoll):
         super().__init__(tsoll)
         self.label    = label
-        # self.matrix   = NP.eye(MDIM)
-        # self.length   = 0.
 class MRK(I):
     """ 
     Marker node (a.k.a element): Each marker is parent of an agent that does the specific action.
     The action can be bypassed if the 'maction'-FLAG is False.
     """
-    # def __init__(self, label, active, viseo=1., particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.)):
     def __init__(self, label, active, viseo, tsoll):
         super().__init__(label,tsoll)
         self.active     = active
         self.viseo      = viseo if self.active else 0.
-        # self._particle  = copy(particle)
-        # self.position   = position
     def no_action(self,*args): pass
 class D(Node):
     """  Trace3D drift space  """
     def __init__(self, label, length, aperture, tsoll):
         super().__init__(tsoll)
         self.label    = label
-        # self._particle = copy(particle)
-        # self.position = position
         self.length   = length
         self.aperture = aperture
         self.viseo    = 0.
-        # self.matrix   = NP.eye(MDIM)
-        # m = self.matrix 
         g = self.particle.gamma
         self.matrix[XKOO, XPKOO] = self.matrix[YKOO, YPKOO] = self.length
         self.matrix[ZKOO, ZPKOO] = self.length/(g*g)
@@ -210,7 +173,6 @@ class QF(Node):
         super().__init__(tsoll)
         self.label    = label
         self.grad     = abs(grad)                        # [T/m]
-        # self.k02      = K(self.grad,self.particle)       # [1/m**2]
         self.length   = length
         self.aperture = aperture
         self.viseo    = +0.5
@@ -225,8 +187,6 @@ class QF(Node):
         l = self.length
         phi = l*k0w
         f = 1./(k02*l)
-        # if f/l > 50.: self.thin = True
-        # DEBUG_OFF(F"{self.type}: k02={k02:.2f} \tf={f:.2f} >> l={l:.2f}? {self.thin}")
         if self.thin != True:
             """ thick quad """
             # focusing
@@ -281,7 +241,6 @@ class QD(QF):
     Trace3D defocussing quad
     """
     def __init__(self, label, grad, length, aperture, tsoll):
-    # def __init__(self, label, grad, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), length=0., aperture=None):
         super().__init__(label, grad, length, aperture, tsoll)
         self.viseo = -0.5
     def adjust_energy(self, tkin):
@@ -450,12 +409,8 @@ class RFG(Node):
         self.mapper       = None
         self.mapping      = UTIL.FLAGS['mapping']
         self.omega        = None
-        # self.particle     = UTIL.Proton(UTIL.PARAMS['injection_energy'])    
-        # self.particlef    = None
-        # self.position     = (0,0,0)
         self.phisoll      = None
         self.SFdata       = None
-        # self.sec          = None
         self.ttf          = None
         self.viseo        = 0.25
 
@@ -492,7 +447,6 @@ class RFG(Node):
     @property
     def toString(self):    return self.mapper.toString()
     def adjust_energy(self, tkin):
-        # self._particle(tkin)
         super().adjust_energy(tkin)
         self.mapper.adjust_energy(tkin)
         return self
