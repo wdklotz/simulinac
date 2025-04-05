@@ -22,18 +22,17 @@ import sys
 import numpy as NP
 import warnings
 import unittest
-from math import sqrt,fabs,acos,degrees
-from numpy import linalg as LA
-from copy import copy
-# from termcolor import colored
-# from sty import fg,bg,ef,rs
-import elements as ELM
 import setutil
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
 from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp,mxprnt
 from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
 from setutil import OutOfRadialBoundEx
-from sigma import Sigma, sig_map
+from math    import sqrt,fabs,acos,degrees
+from numpy   import linalg as LA
+from sigma   import Sigma, sig_map
+# from termcolor import colored
+# from sty import fg,bg,ef,rs
+import elements as ELM
 
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq """
@@ -109,7 +108,7 @@ class Lattice(object):
         self.toggle_iteration()
         node = None
         for elm in iter(self):
-            if elm.isAccelerating:
+            if elm.accelerating:
                 node = elm
                 break
         self.toggle_iteration()
@@ -157,9 +156,6 @@ class Lattice(object):
         """ log lattice layout to string """
         s = self.slabel
         s += '\n'
-        # for i in range(MDIM):
-        #     for j in range(MDIM):
-        #         s+='{:8.4g} '.format(self.matrix[i, j])
         s += mxprnt(self.matrix,fmt='8.4g')
         s+='\n'
         return s
@@ -330,24 +326,6 @@ class Lattice(object):
             self.iteration = "LR"
     def twiss_funcs(self,steps=1):
         """ Calulate twiss, dispersion and envelope functions from initial values """
-        def beta_matrix(R):
-            """ beta-matrix from tranport matrix """
-            m11 = R[0,0]; m12=R[0,1]; m21=R[1,0]; m22=R[1,1]
-            n11 = R[2,2]; n12=R[2,3]; n21=R[3,2]; n22=R[3,3]
-            o11 = R[4,4]; o12=R[4,5]; o21=R[5,4]; o22=R[5,5]
-            m_beta  =  NP.array([
-            [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
-            [-m11*m21,   m11*m22+m12*m21, -m22*m12,    0.,        0.,               0.,         0.,         0.,               0.],
-            [m21*m21,   -2.*m22*m21,       m22*m22,    0.,        0.,               0.,         0.,         0.,               0.],
-            [0.,        0.,                0.,         n11*n11,  -2.*n11*n12,       n12*n12,    0.,         0.,               0.],
-            [0.,        0.,                0.,        -n11*n21,  n11*n22+n12*n21,  -n22*n12,    0.,         0.,               0.],
-            [0.,        0.,                0.,         n21*n21,  -2.*n22*n21,       n22*n22,    0.,         0.,               0.],
-            [0.,        0.,                0.,         0.,        0.,               0.,         o11*o11,   -2.*o11*o12,       o12*o12],
-            [0.,        0.,                0.,         0.,        0.,               0.,        -o11*o21,    o11*o22+o12*o21, -o22*o12],
-            [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
-            ])
-            return m_beta
-        """ function body --------------- function body --------------- function body --------------- """
         sFLAG   = FLAGS['sigma']                 # flag sigma OR twiss
         nlFLAG  = FLAGS['non_linear_mapping']    # flag linear OR non-linear
         csFLAG  = FLAGS['csTrak']                # flag plot C+S OR beta
@@ -394,7 +372,7 @@ class Lattice(object):
             for slice in slices:
                 slice_R_mx  = slice.matrix[:6,:6]   # 6x6 transport submatrix
                 R_matrix    = NP.dot(slice_R_mx,R_matrix)
-                B_matrix    = beta_matrix(R_matrix)
+                B_matrix    = self.beta_matrix(R_matrix)
                 Sig         = sig_map(Sig,slice)
                 disp_vector = NP.dot(R_matrix,disp_vector0)   # map dispersion
                 
@@ -622,17 +600,18 @@ class Lattice(object):
                     # format(s[i,0],s[i,1],s[i,2],s[i,3],s[i,4],s[i,5]),end='')
         res = [s[0,1],s[1,0],s[2,3],s[3,2],s[4,5],s[5,4]]
         return(res)
-    def beta_matrix(self):
+    def beta_matrix(self, matrix=NP.zeros(1)):
         """ The 9x9 matrix to track twiss functions from the node's R-matrix """
+        if matrix.any() == 0: matrix = self.matrix
         # Aliases
-        m11  = self.matrix[XKOO, XKOO];   m12  = self.matrix[XKOO, XPKOO]
-        m21  = self.matrix[XPKOO, XKOO];  m22  = self.matrix[XPKOO, XPKOO]
+        m11  = matrix[XKOO, XKOO];   m12  = matrix[XKOO, XPKOO]
+        m21  = matrix[XPKOO, XKOO];  m22  = matrix[XPKOO, XPKOO]
         
-        n11  = self.matrix[YKOO, YKOO];   n12  = self.matrix[YKOO, YPKOO]
-        n21  = self.matrix[YPKOO, YKOO];  n22  = self.matrix[YPKOO, YPKOO]
+        n11  = matrix[YKOO, YKOO];   n12  = matrix[YKOO, YPKOO]
+        n21  = matrix[YPKOO, YKOO];  n22  = matrix[YPKOO, YPKOO]
 
-        o11  = self.matrix[ZKOO, ZKOO];   o12  = self.matrix[ZKOO, ZPKOO]
-        o21  = self.matrix[ZPKOO, ZKOO];  o22  = self.matrix[ZPKOO, ZPKOO]
+        o11  = matrix[ZKOO, ZKOO];   o12  = matrix[ZKOO, ZPKOO]
+        o21  = matrix[ZPKOO, ZKOO];  o22  = matrix[ZPKOO, ZPKOO]
 
         m_beta  =  NP.array([
         [m11*m11,   -2.*m11*m12,       m12*m12,    0.,        0.,               0.,         0.,         0.,               0.],
