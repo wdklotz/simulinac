@@ -99,7 +99,7 @@ class Lattice(object):
         """ return the 1st RF gap"""
         node = None
         for elm in iter(self):
-            if elm.isAccelerating:
+            if elm.accelerating:
                 node = elm
                 break
         return node

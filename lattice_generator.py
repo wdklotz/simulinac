@@ -68,7 +68,7 @@ def mandatory_warning(key,item):
 def instanciate_element(item):
     """ item: {ID:{attributes}} for each node """
     instance = None     # will be defined below and returned
-    tsoll    = UTIL.PARAMS['injection_energy']
+    tsoll    = UTIL.PARAMS['injection_energy']   # alias for UTIL...
     for ID,attributes in item.items():
         UTIL.DEBUG_OFF(F"ID={ID} attributes={attributes}")
         ELEMENT = UTIL.ELEMENTS[ID]          # the item in the ELEMENT list
@@ -78,19 +78,17 @@ def instanciate_element(item):
             aperture       = attributes.get('aperture')
             sec            = attributes.get('sec','?')
             instance       = ELM.D(ID,length,aperture,tsoll)
-            ELEMENT['sec'] = sec
         elif type == 'DKD':
             length         = get_mandatory(attributes,'length',ID)
             aperture       = attributes.get('aperture')
             sec            = attributes.get('sec','?')
             instance       = ELM.DKD(ID,length,aperture,tsoll)
-            ELEMENT['sec'] = sec
         elif type == 'SD':
             alpha          = get_mandatory(attributes,'alpha',ID)
             rho            = get_mandatory(attributes,'rho',ID)
             aperture       = attributes.get('aperture',None)
             instance       = ELM.SD(ID, alpha, rho, aperture=aperture)
-            ELEMENT['sec'] = attributes.get('sec','?')
+            sec            = attributes.get('sec','?')
             ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
         elif type == 'RD':
             alpha          = get_mandatory(attributes,'alpha',ID)
@@ -99,7 +97,7 @@ def instanciate_element(item):
             t3d_wedge      = attributes.get('t3d_wedge',False)
             wedge          = ELM.Wedge(alpha/2., rho, t3d_wedge=t3d_wedge)
             instance       = ELM.RD(ID, alpha, rho, wedge, aperture=aperture)
-            ELEMENT['sec'] = attributes.get('sec','?')
+            sec            = attributes.get('sec','?')
             ELEMENT['length'] = instance.length
             ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
         elif type == 'QF':
@@ -108,7 +106,6 @@ def instanciate_element(item):
             aperture         = get_mandatory(attributes,'aperture',ID)
             sec              = attributes.get('sec','?')
             instance         = ELM.QF(ID,dBdz,length,aperture,tsoll)
-            ELEMENT['sec']   = sec
             ELEMENT['Bpole'] = dBdz*aperture # Bpole
         elif type == 'QD':
             length           = get_mandatory(attributes,'length',ID)
@@ -116,7 +113,6 @@ def instanciate_element(item):
             aperture         = get_mandatory(attributes,'aperture',ID)
             sec              = attributes.get('sec','?')
             instance         = ELM.QD(ID,dBdz,length,aperture,tsoll)
-            ELEMENT['sec']   = sec
             ELEMENT['Bpole'] = dBdz*aperture      # Bpole
         elif type == 'RFG':
             aperture   = attributes.get('aperture')
@@ -125,12 +121,11 @@ def instanciate_element(item):
             freq       = attributes.get('freq')
             gap        = attributes.get('gap')
             HE_Gap     = attributes.get('HE_Gap')
-            mapping    = ELEMENT['mapping'] = UTIL.FLAGS['mapping']
             phisoll    = attributes.get('phisoll')
             SFdata     = attributes.get('SFdata')
             sec        = attributes.get('sec','?')
-            ELEMENT['sec'] = sec
-            
+
+            mapping    = ELEMENT['mapping'] = UTIL.FLAGS['mapping']
             if mapping   == 't3d':
                 if SFdata == None:
                     if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
@@ -294,11 +289,8 @@ def instanciate_element(item):
             action  = get_mandatory(attributes,'action',ID)
             viseo   = attributes.get('viseo',3)
             sec     = attributes.get('sec','?') 
-            # ELEMENT = ELEMENT
-            ELEMENT['sec'] = sec
             if action == 'pspace':
-                # A marker for simu.py ?
-                if not marker_is_compatible_with('simu.py',ID):
+                if not marker_is_compatible_with('simu.py',ID):   # A marker for simu.py ?
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
                 instance = PSMKR.PsMarkerAgent(ID,active,viseo,tsoll)
@@ -306,17 +298,13 @@ def instanciate_element(item):
                 UTIL.DEBUG_OFF(instance.toString())
 
             elif action == 'pcrcut':
-                # A marker for tracker.py ?
-                if not marker_is_compatible_with('tracker.py',ID):
+                if not marker_is_compatible_with('tracker.py',ID):  # A marker for tracker.py ?
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with tracker.py. Will be skipped'+UTIL.colors.ENDC)
-                prefix     = attributes.get('prefix','frames')
-                abscissa   = attributes.get('abscissa','z')
-                ordinate   = attributes.get('ordinate','zp')
+                prefix   = ELEMENT['prefix']   = attributes.get('prefix','frames')   # alias
+                abscissa = ELEMENT['abscissa'] = attributes.get('abscissa','z')      # alias
+                ordinate = ELEMENT['ordinate'] = attributes.get('ordinate','zp')     # alias
                 instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,prefix,abscissa,ordinate)
-                ELEMENT['prefix']   = prefix
-                ELEMENT['abscissa'] = abscissa
-                ELEMENT['ordinate'] = ordinate
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.__dict__)
             else:
@@ -426,8 +414,11 @@ def factory(input_file,stop=None):
             UTIL.DEBUG_OFF(ELEMENT)
             """add sectionID and elementID"""
             ELEMENT['ID']  = elementID 
-            """INSTANCIATE ELM._Node objects"""
+
+            """ INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE ELM._Node objects """
             instance = instanciate_element({elementID:ELEMENT}) 
+            """ INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE ELM._Node objects """
+
             if instance == None: continue
             UTIL.DEBUG_OFF(instance)
             if isinstance(instance, (ELM.Node)):  # add Node objects only!
@@ -436,7 +427,8 @@ def factory(input_file,stop=None):
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
-    
+# >>>>> factory >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>> factory >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # >>>>> factory >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     with open(input_file,'r') as fileobject:
         try:
@@ -467,7 +459,8 @@ def factory(input_file,stop=None):
     lat_elementIDs = results.LAT_ELMIDs
     UTIL.DEBUG_OFF('LAT_ELMIDs after process_elements():',lat_elementIDs)
     lattice = make_lattice(lat_elementIDs)
-    # end of factory. return full Lattice object.
+
+    # return full Lattice object.
     return lattice
     
 class TestLatticeGeneratorMethods(unittest.TestCase):

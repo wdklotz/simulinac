@@ -20,9 +20,9 @@ This file is part of the SIMULINAC code
 """
 import sys
 import IGap
-from math import sin,cos,tan,pi,sqrt,radians
 import numpy as NP
 import unittest
+from math import sin,cos,tan,pi,sqrt,radians
 from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
 from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS,mxprnt
@@ -48,22 +48,6 @@ class TTF_G(IGap.IGap):
         self.master     = None
         self.label = 'TTF_G'
 
-    def configure(self,**kwargs):
-        self.aperture  = kwargs.get('aperture')
-        self.cavlen    = kwargs.get('cavlen')
-        self.EzPeak    = kwargs.get('EzPeak')
-        self.freq      = kwargs.get('freq')
-        self.gap       = kwargs.get('gap')
-        self.HE_Gap    = kwargs.get('HE_Gap')
-        self.phisoll   = kwargs.get('phisoll')
-        self.sec       = kwargs.get('sec')
-        self.SFdata    = kwargs.get('SFdata')
-
-        self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
-        self.lamb      = kwargs['lamb']
-        self.omega     = kwargs['omega'] 
-        self.polies    = self.poly_slices()
-
     # mutable properties shared with master
     @property
     def deltaW(self):        return self.master.deltaW          # deltaW
@@ -84,12 +68,31 @@ class TTF_G(IGap.IGap):
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
-    def map(self,i_track):
-        return self.ttf_map(i_track)
-    def toString(self):
-        return mxprnt(self.matrix,'4g')
-    def isAccelerating(self):
-        return True
+    def accelerating(self):   return self.master.accelerating
+    def adjust_energy(self,tkin):
+        self.ttf = ttf(self.lamb, self.gap_estim, self.particle.beta, self.aperture)
+        self.T3D_matrix()
+        pass
+    def configure(self,**kwargs):
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.gap       = kwargs.get('gap')
+        self.HE_Gap    = kwargs.get('HE_Gap')
+        self.phisoll   = kwargs.get('phisoll')
+        self.sec       = kwargs.get('sec')
+        self.SFdata    = kwargs.get('SFdata')
+
+        self.gap_estim = self.cavlen*0.875   # 87.5%: of cavlen
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
+        self.polies    = self.poly_slices()
+    def map(self,i_track):    return self.ttf_map(i_track)
+    def register(self,master):
+        self.master = master
+        pass
+    def toString(self):       return mxprnt(self.matrix,'4g')
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -175,13 +178,7 @@ class TTF_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-    def register(self,master):
-        self.master = master
-        pass
-    def adjust_energy(self,tkin):
-        self.ttf = ttf(self.lamb, self.gap_estim, self.particle.beta, self.aperture)
-        self.T3D_matrix()
-        pass
+
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m         = NP.eye(MDIM,MDIM)

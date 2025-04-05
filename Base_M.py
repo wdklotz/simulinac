@@ -45,20 +45,6 @@ class BASE_G(IGap.IGap):
         self.master       = None
         self.label        = 'BASE_G'
 
-    def configure(self,**kwargs):
-        self.aperture  = kwargs.get('aperture')
-        self.cavlen    = kwargs.get('cavlen')
-        self.EzPeak    = kwargs.get('EzPeak')
-        self.freq      = kwargs.get('freq')
-        self.gap       = kwargs.get('gap')
-        self.HE_Gap    = kwargs.get('HE_Gap')
-        self.phisoll   = kwargs.get('phisoll')
-        self.sec       = kwargs.get('sec')
-        self.SFdata    = kwargs.get('SFdata')
-
-        self.lamb      = kwargs['lamb']
-        self.omega     = kwargs['omega'] 
-
     # mutable properties shared with master
     @property
     def deltaW(self):        return self.master.deltaW          # deltaW
@@ -79,16 +65,29 @@ class BASE_G(IGap.IGap):
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
-    def map(self,i_track):
-        return self.base_map(i_track)
-    def toString(self):
-        return f'{self.master} mapping in: BASE_G.base_map()'
-    def isAccelerating(self):
-        return True
+    def accelerating(self):    return self.master.accelerating
     def adjust_energy(self, tkin):
         self.ttf = ttf(self.lamb, self.gap, self.particle.beta, self.aperture)
         self.T3D_matrix()
         pass
+    def configure(self,**kwargs):
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.gap       = kwargs.get('gap')
+        self.HE_Gap    = kwargs.get('HE_Gap')
+        self.phisoll   = kwargs.get('phisoll')
+        self.sec       = kwargs.get('sec')
+        self.SFdata    = kwargs.get('SFdata')
+
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
+    def map(self,i_track):     return self.base_map(i_track)
+    def register(self,master):
+        self.master = master
+        pass
+    def toString(self):        return f'{self.master} mapping in: BASE_G.base_map()'
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -174,9 +173,6 @@ class BASE_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-    def register(self,master):
-        self.master = master
-        pass
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m         = NP.eye(MDIM,MDIM)
@@ -202,6 +198,7 @@ class BASE_G(IGap.IGap):
         m[SKOO, DSKOO]  = 0.
         self.matrix = m
         return
+
     def base_map(self, i_track):
         """ Neue überarbeitete map Version vom 17.02.2025 (wdk)
             Mapping in BASE RF-Gap Model. (A.Shislo 4.2) """

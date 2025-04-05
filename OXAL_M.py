@@ -22,12 +22,12 @@ import sys
 import IGap
 import unittest
 import numpy as NP
+import Ez0 as EZ
 from math import sin,cos,tan,sqrt,pi,degrees,radians
 from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
 from setutil import wrapRED,mxprnt,Twiss,WConverter,dictprnt
 from Ez0 import SFdata
 from separatrix import w2phi
-import Ez0 as EZ
 # from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
 
 
@@ -45,19 +45,6 @@ class OXAL_G(IGap.IGap):
     def __init__(self):
         self.master      = None
         self.label       = 'OXAL_G'
-
-    def configure(self,**kwargs):
-        self.aperture  = kwargs.get('aperture')
-        self.cavlen    = kwargs.get('cavlen')
-        self.EzPeak    = kwargs.get('EzPeak')
-        self.freq      = kwargs.get('freq')
-        self.phisoll   = kwargs.get('phisoll')
-        self.sec       = kwargs.get('sec')
-        self.SFdata    = kwargs.get('SFdata')
-
-        self.lamb      = kwargs['lamb']
-        self.omega     = kwargs['omega'] 
-        self.polies    = self.poly_slices()
 
     # mutable properties shared with master
     @property
@@ -79,15 +66,27 @@ class OXAL_G(IGap.IGap):
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
-    def map(self,i_track):
-        return NP.dot(self.matrix,i_track)
-    def toString(self):
-        return mxprnt(self.matrix,'4g')
-    def isAccelerating(self):
-        return True
+    def accelerating(self):    return self.master.accelerating
     def adjust_energy(self, tkin):
         self.OXAL_matrix()
         pass
+    def configure(self,**kwargs):
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.phisoll   = kwargs.get('phisoll')
+        self.sec       = kwargs.get('sec')
+        self.SFdata    = kwargs.get('SFdata')
+
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
+        self.polies    = self.poly_slices()
+    def map(self,i_track):     return NP.dot(self.matrix,i_track)
+    def register(self,master):
+        self.master = master
+        pass
+    def toString(self):        return mxprnt(self.matrix,'4g')
     def waccept(self,**kwargs):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -173,9 +172,7 @@ class OXAL_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-    def register(self,master):
-        self.master = master
-        pass
+
     def OXAL_matrix(self):
         polies   = self.polies
         c        = PARAMS['clight']
@@ -275,7 +272,6 @@ class OXAL_G(IGap.IGap):
             slices.append(poly)
         DEBUG_OFF('slices',slices)
         return slices
-
     def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
         E0 = poly.E0                          # [MV/m]

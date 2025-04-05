@@ -60,8 +60,6 @@ class Node(object):
         self.soll_track   = None      # soll track @ exit of Node
 
     @property
-    def isAccelerating(self):    return self.accelerating
-    @property
     def tsoll(self): return self._tsoll    # Sollenergie
 
     def submx(self, n = MDIM, m = MDIM):
@@ -72,10 +70,10 @@ class Node(object):
         f_track = NP.dot(self.matrix,i_track)
         return f_track
     def toString(self):
-        ret = repr(self)
+        s = repr(self)
         for k,v in self.__dict__.items():
-            ret+= '\n{}:{}'.format(k,v)
-        return ret
+            s+= '\n{}:{}'.format(k,v)
+        return s
     def adjust_energy(self, tkin):
         """ minimal adjust """
         self._tsoll = tkin
@@ -253,7 +251,7 @@ class RFG(Node):
     """  RF-gap of zero length for different kick gap-models """
     def __init__(self,label, tsoll):
         super().__init__(tsoll)
-        # self.aperture     = None
+        self.accelerating = True
         self.cavlen       = None
         self.deltaW       = None
         self.dWf          = UTIL.FLAGS['dWf']
@@ -262,7 +260,6 @@ class RFG(Node):
         self.gap          = None
         self.label        = label
         self.lamb         = None
-        # self.length       = 0
         self.mapper       = None
         self.mapping      = UTIL.FLAGS['mapping']
         self.omega        = None
@@ -271,6 +268,8 @@ class RFG(Node):
         self.ttf          = None
         self.viseo        = 0.25
 
+    def toString(self): 
+        return self.mapper.toString()
     def register(self,mapper):
         self.mapper  = mapper
         self.mapper.register(self)
@@ -299,10 +298,6 @@ class RFG(Node):
         else:
             raise(UserWarning(wrapRED(f'missing implementation {self.mapping}')))
             sys.exit()
-    @property
-    def isAccelerating(self):    return self.mapper.isAccelerating()
-    @property
-    def toString(self):    return self.mapper.toString()
     def adjust_energy(self, tkin):
         super().adjust_energy(tkin)
         self.mapper.adjust_energy(tkin)

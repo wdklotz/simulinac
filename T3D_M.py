@@ -42,21 +42,6 @@ class T3D_G(IGap.IGap):
         self.label        = 'T3D_G'
         self.master       = None
 
-    def configure(self,**kwargs):
-        # copies from master
-        self.aperture  = kwargs.get('aperture')
-        self.cavlen    = kwargs.get('cavlen')
-        self.EzPeak    = kwargs.get('EzPeak')
-        self.freq      = kwargs.get('freq')
-        self.gap       = kwargs.get('gap')
-        self.phisoll   = kwargs.get('phisoll')
-        self.sec       = kwargs.get('sec')
-
-        self.lamb      = kwargs['lamb']
-        self.omega     = kwargs['omega'] 
-        self.E0L       = None
-        self.qE0LT     = None
-
     # mutable properties shared with master
     @property
     def deltaW(self):        return self.master.deltaW          # deltaW
@@ -77,15 +62,29 @@ class T3D_G(IGap.IGap):
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
-    def map(self,i_track):
-        return NP.dot(self.matrix,i_track)
-    def toString(self):
-        return mxprnt(self.matrix,'4g')
-    def isAccelerating(self):
-        return True
+    def accelerating(self):     return self.master.accelerating
     def adjust_energy(self,tkin):
         self.T3D_matrix()
         pass
+    def configure(self,**kwargs):
+        # copies from master
+        self.aperture  = kwargs.get('aperture')
+        self.cavlen    = kwargs.get('cavlen')
+        self.EzPeak    = kwargs.get('EzPeak')
+        self.freq      = kwargs.get('freq')
+        self.gap       = kwargs.get('gap')
+        self.phisoll   = kwargs.get('phisoll')
+        self.sec       = kwargs.get('sec')
+
+        self.lamb      = kwargs['lamb']
+        self.omega     = kwargs['omega'] 
+        self.E0L       = None
+        self.qE0LT     = None
+    def map(self,i_track):      return NP.dot(self.matrix,i_track)
+    def register(self,master):
+        self.master = master
+        pass
+    def toString(self):         return mxprnt(self.matrix,'4g')
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
@@ -171,9 +170,7 @@ class T3D_G(IGap.IGap):
                 zmax            = conv.DphiToz(-phisoll) # z max on separatrix [m] (large amp. oscillations -- Wrangler's approximation (pp.178) is good up to -58deg)
                 )
         return res
-    def register(self,master):
-        self.master = master
-        pass
+
     def T3D_matrix(self):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m              = NP.eye(MDIM,MDIM)
