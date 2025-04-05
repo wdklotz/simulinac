@@ -61,7 +61,7 @@ class BASE_G(IGap.IGap):
     @particlef.setter
     def particlef(self,v):          self.master.particlef = v
     @property
-    def ttf(self):           return self.master.ttf             # ttf
+    def ttf(self):           return self.master.ttf              # ttf
     @ttf.setter
     def ttf(self,v):                self.master.ttf = v
 
@@ -87,7 +87,7 @@ class BASE_G(IGap.IGap):
     def register(self,master):
         self.master = master
         pass
-    def toString(self):        return f'{self.master} mapping in: BASE_G.base_map()'
+    def toString(self):        return mxprnt(self.matrix,'4g')
     def waccept(self):
         """ 
         Calculate longitudinal acceptance, i.e. phase space ellipse parameters: T.Wangler (6.47-48) pp.185
