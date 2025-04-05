@@ -28,13 +28,13 @@ import matplotlib.pyplot as plt
 import time
 import lattice_parser_2 as parser
 import unittest
+import numpy as np
+import pprint, inspect
 from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
 from enum import IntEnum
 from matplotlib.patches import Ellipse
-import numpy as np
 
 # DEBUG utility used by all modules
-import pprint, inspect
 def PRINT_PRETTY(*args):
     frameinfo = inspect.stack()[1]    # caller's stack frame
     file=frameinfo[1]
@@ -53,8 +53,8 @@ DEBUG_OFF = DEB.get('OFF')
 
 # MDIM: dimension of matrices
 MDIM   = 10
-PHADVX =0
-PHADVY =0
+PHADVX = 0
+PHADVY = 0
 class Ktp(IntEnum):
     """ TrackPoint Koordinaten Ktp """
     x  = 0     # x
@@ -309,7 +309,7 @@ class Functions(object):         #TODO better use pandas?
         value = self._values[npoint][nf]
         return value
     pass
-class SCTainer(object):
+class SCTainer(object):          #TODO usage, test
     """ A (singleton) container for objects  (not used, not finished) """
     class _singleton_(object):
         def __init__(self):
@@ -354,7 +354,7 @@ class TmStamp(object):
                 str= '{}  {}'.format(str,entry)
             cntr+=1
         return str
-class colors: # You may need to change color settings
+class colors: # You may need to change color  
     RED = '\033[31m'
     ENDC = '\033[m'
     GREEN = '\033[32m'
