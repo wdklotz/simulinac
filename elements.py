@@ -20,7 +20,7 @@ import sys
 import unittest
 from separatrix import w2phi
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import DEBUG_ON,DEBUG_OFF,Proton,PARAMS
+from setutil import DEBUG_ON,DEBUG_OFF,Proton,PARAMS,wrapRED
 from setutil import Ktp
 import warnings
 import math    as M
@@ -29,7 +29,6 @@ import setutil as UTIL
 
 twopi = 2.*M.pi
 NP.set_printoptions(linewidth = 132, formatter = {'float': '{:>8.5g}'.format}) # numpy pretty printing
-def wrapRED(str): return UTIL.colors.RED+str+UTIL.colors.ENDC
 def K(gradient, particle):
     """ quad strength K[1/m**2] for protons, gradient[T/m] """
     return 0.31952 * gradient/particle.gamma_beta

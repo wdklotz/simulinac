@@ -25,7 +25,7 @@ import unittest
 from math import sin,cos,tan,pi,sqrt,radians
 from setutil import PARAMS,I0,I1,MDIM,WConverter,Twiss,Proton,OutOfRadialBoundEx
 from setutil import XKOO,XPKOO,YKOO,YPKOO,ZKOO,ZPKOO,EKOO,DEKOO,SKOO,DSKOO
-from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS,mxprnt
+from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval,FLAGS,mxprnt,wrapRED
 from Ez0 import SFdata
 from separatrix import w2phi
 

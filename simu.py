@@ -35,7 +35,7 @@ import matplotlib
 matplotlib.use("TkAgg")
 import sys
 import argparse
-from setutil import DEBUG_ON,DEBUG_OFF,EKOO
+from setutil import DEBUG_ON,DEBUG_OFF,EKOO,wrapRED
 
 import lattice_generator as LG
 import math              as M
@@ -45,8 +45,6 @@ import elements          as ELM
 import pandas            as pd
 import bucket_size       as BKTSZ
 
-def wrapRED(str):
-    return UTIL.colors.RED+str+UTIL.colors.ENDC
 def display0(*args):
     """ C&S-Tracks w/o longitudinal motion """
     #----------*----------*   # unpack
