@@ -183,7 +183,7 @@ class TTF_G(IGap.IGap):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m         = NP.eye(MDIM,MDIM)
         E0L       = self.EzPeak*self.gap_estim
-        qE0LT     = E0L*self.ttf
+        # qE0LT     = E0L*self.ttf
         deltaW    = self.deltaW = E0L*self.ttf*cos(self.phisoll)
         Wavg      = self.particle.tkin+self.deltaW/2.   # average tkin
         pavg      = Proton(Wavg)
@@ -299,7 +299,7 @@ class TTF_G(IGap.IGap):
         z         = i_track[ZKOO]       # [4] z
         zp        = i_track[ZPKOO]      # [5] dp/p
         T         = i_track[EKOO]       # [6] kinetic energy Sollteilchen
-        S         = i_track[SKOO]       # [8] position gap
+        S         = i_track[SKOO]       # [8] position
 
         max_r     = 0.05                # max radial excursion [m]
         r         = sqrt(x**2+y**2)     # radial coordinate
@@ -382,7 +382,7 @@ class TTF_G(IGap.IGap):
         zpO     = converter.DWToDp2p(W-Ws)
         f_track = NP.array([x,xp,y,yp,zO,zpO,T,1.,S,1.])
         self.particlef = ptcle
-        self.ttf       = abs(self.ttf)/len(self.polies) # gap's ttf
+        self.ttf       = abs(self.ttf)/len(self.polies)      # gap's ttf
 
         S1 = 1    # from
         S2 = 20    # to 

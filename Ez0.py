@@ -23,7 +23,7 @@ import numpy as NP
 import unittest
 from math import exp,pi,tan,sin
 from collections import namedtuple
-from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF
+from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF,wrapRED
 
 # Polyval: polynomial approximation for E(z,r=0), z in interval [zl,zr]: see (4.4.1) A.Shishlo/J.Holmes
 Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0'])
@@ -633,11 +633,30 @@ class TestEz0Methods(unittest.TestCase):
         Ez0_tab = sfdata.Ez0_tab
         DEBUG_ON('Ez0 table',Ez0_tab)
         pass
+    def test9(self):
+        print("\b----------------------------------------test9")
+        print(wrapRED('Gap-Scaling as used in TT28_ttf.yml'))
+        # TBL_file='SF/PILL-2CM.TBL'
+        # TBL_file='SF/SF_WDK2g44.TBL'
+        TBL_file='SF/CAV-FLAT-R135-L32.TBL'
+        # TBL_file='SF/ALCELI-750.0-2.02.TBL'
+        sfdata  = SFdata.InstanciateAndScale(TBL_file,EzPeak=0,L=0.0942)
+        Ez0_tab        = sfdata._Ez0_tab    # raw
+        Ez1_tab        = sfdata.Ez0_tab     # scaled
+
+        ax  = plt.subplot(111)
+        self.display(Ez0_tab,'SF-raw')
+        self.display(Ez1_tab,'SF-scaled.1')
+        ax.set_ylabel('Ez0 [MV/m]')
+        ax.set_xlabel('z [cm]')
+        ax.set_title(TBL_file)
+        plt.legend(loc='upper right',fontsize='x-small')
+        plt.show()
 
 
 
 if __name__ == '__main__': 
-    unittest.main()
+    # unittest.main()
     tests = TestEz0Methods()
     # tests.test0()    
     # tests.test1()
@@ -648,5 +667,5 @@ if __name__ == '__main__':
     # tests.test6()
     # tests.test7()
     # tests.test8()
-    # tests.test9()
+    tests.test9()
     
