@@ -244,7 +244,7 @@ def instanciate_element(item):
                 if(phisoll  == None): mandatory_warning("phisoll",ID)
                 if(SFdata   == None): mandatory_warning("SFdata",ID)
 
-                sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
+                sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                 gap_parameters = dict(
                     aperture  = aperture,
                     cavlen    = cavlen,

@@ -150,7 +150,6 @@ ELEMENTS:
         sec:      LE           # section 
     RFG1:                      # ID
         type:     RFG          # RFG class
-        # type:      RFC         # RFC class
         phisoll:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         EzPeak:   *ezp         # [MV/m] 
@@ -183,12 +182,10 @@ ELEMENTS:
         sec:      HE           # section 
     RFG2:                      # ID
         type:     RFG          # RFG class
-        # type:     RFC          # RFC class
         phisoll:  *phs         # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         # EzPeak:   *ezp         # [MV/m] 
-        EzPeak:   4.7          # [MV/m] 
-        # gap:      0.0471       # [m] gap length 3/8*betalamda 0.0217 50MeV
+        EzPeak:   2.2          # [MV/m] 
         gap:      0.0642       # [m] gap length 3/8*betalamda 0.0217 100MeV
         HE_Gap:   0.0420       # [m] hard edge gap length (guess 80% cavlen)
         cavlen:   0.0942       # cavity length
