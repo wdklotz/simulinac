@@ -236,7 +236,6 @@ class Lattice(object):
                 print_verbose(1,  'phase_advance [rad]: x,y={:.3f}, {:.3f}\n'.format(mux,muy))
                 # print_verbose(0,self.toString())
                 print_verbose(0,'Full Accelerator Matrix')
-                # print_verbose(0, mxprnt(self.matrix,fmt='+.4f'))
                 print_verbose(0, self.toString())
                 det = LA.det(self.matrix)
                 print_verbose(2,'det|full-cell|={:.5f}\n'.format(det))

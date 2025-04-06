@@ -22,10 +22,10 @@ This file is part of the SIMULINAC code
 import IGap
 import unittest
 import numpy as NP
-from setutil import PARAMS,FLAGS,Proton,MDIM,DEBUG_ON,DEBUG_OFF,mxprnt,wrapRED
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import WConverter,Twiss,dictprnt
-from math import pi,radians,sin,cos,sqrt
+from setutil    import PARAMS,FLAGS,Proton,MDIM,DEBUG_ON,DEBUG_OFF,mxprnt,wrapRED
+from setutil    import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
+from setutil    import WConverter,Twiss
+from math       import pi,radians,sin,cos,sqrt
 from separatrix import w2phi
 
 twopi = 2.*pi

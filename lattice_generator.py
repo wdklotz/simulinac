@@ -35,7 +35,7 @@ from OXAL_M  import OXAL_G
 from BASE_M  import BASE_G
 from TTF_M   import TTF_G
 
-wrapRED = UTIL.wrapRED
+wrapRED = UTIL.wrapRED     # alias
 
 def make_counter():
     count = 0
@@ -126,8 +126,8 @@ def instanciate_element(item):
             sec        = attributes.get('sec','?')
 
             mapping    = ELEMENT['mapping'] = UTIL.FLAGS['mapping']
-            if mapping   == 't3d':
-                if SFdata == None:
+            if   mapping == 't3d':
+                if SFdata   == None:
                     if(aperture == None): mandatory_warning("aperture",ID) # [MV/m] requested aperture
                     if(EzPeak   == None): mandatory_warning("EzPeak",ID)   # [MV/m] requested peak field
                     if(freq     == None): mandatory_warning("freq",ID)     # [MV/m] requested frequency
@@ -289,14 +289,13 @@ def instanciate_element(item):
             action  = get_mandatory(attributes,'action',ID)
             viseo   = attributes.get('viseo',3)
             sec     = attributes.get('sec','?') 
-            if action == 'pspace':
+            if   action == 'pspace':
                 if not marker_is_compatible_with('simu.py',ID):   # A marker for simu.py ?
                     active = False
                     UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
                 instance = PSMKR.PsMarkerAgent(ID,active,viseo,tsoll)
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.toString())
-
             elif action == 'pcrcut':
                 if not marker_is_compatible_with('tracker.py',ID):  # A marker for tracker.py ?
                     active = False
@@ -304,7 +303,7 @@ def instanciate_element(item):
                 prefix   = ELEMENT['prefix']   = attributes.get('prefix','frames')   # alias
                 abscissa = ELEMENT['abscissa'] = attributes.get('abscissa','z')      # alias
                 ordinate = ELEMENT['ordinate'] = attributes.get('ordinate','zp')     # alias
-                instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,prefix,abscissa,ordinate)
+                instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,tsoll,prefix,abscissa,ordinate)
                 UTIL.DEBUG_OFF(ELEMENT)
                 UTIL.DEBUG_OFF(instance.__dict__)
             else:
@@ -412,7 +411,7 @@ def factory(input_file,stop=None):
             UTIL.DEBUG_OFF(elementID)
             ELEMENT = UTIL.ELEMENTS.get(elementID)
             UTIL.DEBUG_OFF(ELEMENT)
-            """add sectionID and elementID"""
+            """add elementID"""
             ELEMENT['ID']  = elementID 
 
             """ INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE ELM._Node objects """

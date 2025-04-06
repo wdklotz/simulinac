@@ -22,11 +22,10 @@ import sys
 import IGap
 import unittest
 import numpy as NP
-from copy import copy
-from math import sqrt,degrees,radians,cos,sin,pi
-from setutil import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil import DEBUG_ON,DEBUG_OFF,log_what_in_interval
+from math       import sqrt,radians,cos,sin,pi
+from setutil    import I0,I1,WConverter,Proton,wrapRED,PARAMS,FLAGS,Twiss,OutOfRadialBoundEx
+from setutil    import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
+from setutil    import DEBUG_ON,DEBUG_OFF,mxprnt,log_what_in_interval
 from separatrix import w2phi
 
 twopi = 2.*pi

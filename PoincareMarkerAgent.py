@@ -28,12 +28,12 @@ class PoincareMarkerAgent(MRK):
     def __init__(self,label,active,viseo,tsoll,prefix,abscissa,ordinate):
         super().__init__(label, active, viseo, tsoll)
         krows = dict(x=Ktp.x.value, xp=Ktp.xp.value, y=Ktp.y.value, yp=Ktp.yp.value, z=Ktp.z.value, zp=Ktp.zp.value)
-        self.tpoints  = []
-        self.prefix   = prefix
-        self.abscissa = abscissa
-        self.ordinate = ordinate
-        self.xaxis    = krows[abscissa]
-        self.yaxis    = krows[ordinate]
+        self.tpoints   = []
+        self.prefix    = prefix
+        self.abscissa  = abscissa
+        self.ordinate  = ordinate
+        self.xaxis     = krows[abscissa]
+        self.yaxis     = krows[ordinate]
         self.do_action = self.action if self.active else self.no_action # toggle
 
     def appendPhaseSpace(self,track_point):

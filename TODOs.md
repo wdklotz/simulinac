@@ -1,5 +1,6 @@
 # Roadmap & TODOs
 # TODO...
+* prüfe nochmal: <span style="color:red">woher kommt der Unterschied der Beschleunigung zwischen t3d und ttf?</span>
 * altes Zeug wieder aktivieren
 * alle unittests aktivieren
 * changelog updaten

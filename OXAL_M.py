@@ -23,13 +23,11 @@ import IGap
 import unittest
 import numpy as NP
 import Ez0 as EZ
-from math import sin,cos,tan,sqrt,pi,degrees,radians
-from setutil import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
-from setutil import wrapRED,mxprnt,Twiss,WConverter,dictprnt
-from Ez0 import SFdata
+from math       import sin,cos,tan,sqrt,pi,radians
+from setutil    import FLAGS,PARAMS,Ktp,MDIM,Proton,DEBUG_ON,DEBUG_OFF
+from setutil    import wrapRED,mxprnt,Twiss,WConverter
+from Ez0        import SFdata
 from separatrix import w2phi
-# from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-
 
 twopi = 2*pi
 pihalf = pi/2
