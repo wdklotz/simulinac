@@ -219,6 +219,39 @@ class SFdata(object):
         self.TBL_file = TBL_file
         self.readRawData()  
 
+    # class variables
+    instances = {}    # dict of sigleton objects
+    @classmethod
+    def InstanciateAndScale(cls,TBL_file,EzPeak=0.,L=0.):
+        """ 
+        Return a singleton scaled SFdata object bound to TBL_file.
+        IN: 
+            EzPeak peak field [MV/m]
+            L [cm]: interval z in [-L/2,+L/2] on which Ez0 is defined.
+        OUT: 
+            SFdata object 
+        """
+        # use a key made from <SFdata file name>%<Ezpeak value>%<LInterv value> to retrieve the corresponding field table instance
+        instance_key = '{}%{}%{}'.format(TBL_file,EzPeak,L)
+        # instance with instance_key exists? get it; else None
+        instance = cls.instances.get(instance_key)
+        if instance == None:
+            instance = SFdata(TBL_file)   # new scaled instance
+            if EzPeak != 0. and L != 0.:
+                instance.scaleEzTable(EzPeak,L)
+            elif EzPeak != 0. and L == 0.:
+                instance.scaleEzTable(EzPeak,instance._L)
+            elif EzPeak == 0. and L != 0.:
+                instance.scaleEzTable(instance._EzPeak,L)
+            elif EzPeak == 0. and L == 0.:
+                instance.scaleEzTable(instance._EzPeak,instance._L)
+            SFdata.instances[instance_key] = instance
+            DEBUG_OFF(SFdata.instances)
+            DEBUG_OFF('self.Ez0_tab',instance.Ez0_tab,'================= EOF Ez0_tab')
+            instance.makeEPoly()
+            DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
+        return instance
+
     def readRawData(self):
         """ read raw raw table, mirror data on ordinate and calc table's average (EzAvg_raw) """
         zp = []; rp = []; ep = []
@@ -268,41 +301,6 @@ class SFdata(object):
         self._EzPeak  = EzPeak
         self._EzAvg   = EzAvg
         return
-
-    # class variables
-    instances = {}    # dict of sigleton objects
-
-    @classmethod
-    def InstanciateAndScale(cls,TBL_file,EzPeak=0.,L=0.):
-        """ 
-        Return a singleton scaled SFdata object bound to TBL_file.
-        IN: 
-            EzPeak peak field [MV/m]
-            L [cm]: interval z in [-L/2,+L/2] on which Ez0 is defined.
-        OUT: 
-            SFdata object 
-        """
-        # use a key made from <SFdata file name>%<Ezpeak value>%<LInterv value> to retrieve the corresponding field table instance
-        instance_key = '{}%{}%{}'.format(TBL_file,EzPeak,L)
-        # instance with instance_key exists? get it; else None
-        instance = cls.instances.get(instance_key)
-        if instance == None:
-            instance = SFdata(TBL_file)   # new scaled instance
-            if EzPeak != 0. and L != 0.:
-                instance.scaleEzTable(EzPeak,L)
-            elif EzPeak != 0. and L == 0.:
-                instance.scaleEzTable(EzPeak,instance._L)
-            elif EzPeak == 0. and L != 0.:
-                instance.scaleEzTable(instance._EzPeak,L)
-            elif EzPeak == 0. and L == 0.:
-                instance.scaleEzTable(instance._EzPeak,instance._L)
-            SFdata.instances[instance_key] = instance
-            DEBUG_OFF(SFdata.instances)
-            DEBUG_OFF('self.Ez0_tab',instance.Ez0_tab,'================= EOF Ez0_tab')
-            instance.makeEPoly()
-            DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
-        return instance
-
     def Ez0t(self, z, t, omega, phis):
         """E(z,0,t): time dependent field value at location z"""
         res = EPoly(z,self.polyValues) * cos(omega*t+phis)
@@ -634,7 +632,7 @@ class TestEz0Methods(unittest.TestCase):
         # TBL_file='SF/SF_WDK2g44.TBL'
         TBL_file='SF/CAV-FLAT-R135-L32.TBL'
         # TBL_file='SF/ALCELI-750.0-2.02.TBL'
-        sfdata  = SFdata.InstanciateAndScale(TBL_file,EzPeak=0,L=0.0942)
+        sfdata  = SFdata.InstanciateAndScale(TBL_file,EzPeak=0,L=0.0942*100)
         Ez0_tab        = sfdata._Ez0_tab    # raw
         Ez1_tab        = sfdata.Ez0_tab     # scaled
 
