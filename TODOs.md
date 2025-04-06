@@ -1,8 +1,10 @@
 # Roadmap & TODOs
 # TODO...
 * prüfe nochmal: <span style="color:red">woher kommt der Unterschied der Beschleunigung zwischen t3d und ttf?</span> 
-  - tested correct gap-sacaling in Ez0.py: SFdata.test9()
+  - tested correct gap-scaling in Ez0.py: SFdata.test9()
   - found *L=cavlen/2\*100* in instanciation of TTF_G, should be *L=cavlen\*100 instead*
+  - checked Ez0.py again
+  - ***Problem scheint gelöst zu sein***
 * altes Zeug wieder aktivieren
 * alle unittests aktivieren
 * changelog updaten
