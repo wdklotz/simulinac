@@ -21,7 +21,7 @@ This file is part of the SIMULINAC code
 import matplotlib.pyplot as plt
 import numpy as NP
 import unittest
-from math import exp,pi,tan,sin
+from math import exp,pi,tan,sin,cos
 from collections import namedtuple
 from setutil import PARAMS,Proton,DEBUG_ON,DEBUG_OFF,wrapRED
 
