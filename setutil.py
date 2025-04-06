@@ -1,7 +1,5 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 #-*- coding: utf-8 -*-
-# Python 2 and 3 print compatability
-from __future__ import print_function   #TODO still used?
 __version__='11.0.2.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -21,20 +19,24 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-import scipy.constants as C
-import scipy.special as SP
-import matplotlib.pyplot as plt
-import time
-import lattice_parser_2 as parser
-import unittest
-import numpy as np
-import pprint, inspect
-from math import pi,sqrt,sin,cos,radians,degrees,fabs,exp,atan
-from enum import IntEnum
-from matplotlib.patches import Ellipse
+# Python 2 and 3 print compatability
+from __future__ import print_function   #TODO still used?
 
-# DEBUG utility used by all modules
+import sys
+import time
+import unittest
+import pprint, inspect
+import scipy.constants   as C
+import scipy.special     as SP
+import matplotlib.pyplot as plt
+import lattice_parser_2  as parser
+from math                import pi,sqrt,sin,cos,radians,degrees,atan
+from enum                import IntEnum
+from matplotlib.patches  import Ellipse
+# from termcolor import colored
+# from sty import fg,bg,ef,rs
+
+# DEBUG utility
 def PRINT_PRETTY(*args):
     frameinfo = inspect.stack()[1]    # caller's stack frame
     file=frameinfo[1]
@@ -51,8 +53,7 @@ DEB       = dict(OFF=PASS,ON=PRINT_PRETTY)
 DEBUG_ON  = DEB.get('ON')
 DEBUG_OFF = DEB.get('OFF')
 
-# MDIM: dimension of matrices
-MDIM   = 10
+MDIM   = 10  # dimension of matrices
 PHADVX = 0
 PHADVY = 0
 class Ktp(IntEnum):
@@ -80,14 +81,10 @@ class Ktw(IntEnum):
     az = 7
     gz = 8
     s  = 9      # abszisse for twiss functions
-# for compatability with elder code!
-XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z
-ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; DSKOO=Ktp.dS
+XKOO     = Ktp.x; XPKOO=Ktp.xp; YKOO=Ktp.y; YPKOO=Ktp.yp; ZKOO=Ktp.z      # for backward compatability
+ZPKOO    = Ktp.zp; EKOO=Ktp.T; DEKOO=Ktp.dT; SKOO=Ktp.S; DSKOO=Ktp.dS     # for backward compatability
 RUN_MODE = {0:'ring with cavities', 1:'linac', 2:'ring w/o cavities', 3:'line w/o cavities'}
-FLAGS    = dict(
-    # lattice_generator may override some of these FLAGs
-    dWf = 1
-    )
+FLAGS    = dict(dWf = 1)
 PARAMS   = dict(
     # global constants
     clight               = C.c, # [m/s]
@@ -354,22 +351,22 @@ class TmStamp(object):
                 str= '{}  {}'.format(str,entry)
             cntr+=1
         return str
-class colors: # You may need to change color  
-    RED = '\033[31m'
-    ENDC = '\033[m'
-    GREEN = '\033[32m'
+class colors:
+    RED    = '\033[31m'
+    ENDC   = '\033[m'
+    GREEN  = '\033[32m'
     YELLOW = '\033[33m'
-    BLUE = '\033[34m'
+    BLUE   = '\033[34m'
 class OutOfRadialBoundEx(Exception):
     def __init__(self,s):
         self.message = wrapRED('Out of radial boundary in map @ s={:6.2f} [m]'.format(s))
-def sigmas(alfa,beta,epsi):     #TODO: integrate sigmas into Twiss- maybe?
+def sigmas(alfa,beta,epsi):      #TODO: integrate sigmas into Twiss- maybe?
     """ calculates sigmas from twiss-alpha, -beta and -emittance """
     gamma  = (1.+ alfa**2)/beta
     sigma  = sqrt(epsi*beta)
     sigmap = sqrt(epsi*gamma)
     return sigma,sigmap
-def show_data_from_elements():  #TODO better get data fron lattice objects - maybe?
+def show_data_from_elements():   #TODO better get data fron lattice objects - maybe?
     eIDs = parser.parse().ELMIDs    # get field from parser results - ??
     for elementID in sorted(eIDs):      
         element = ELEMENTS[elementID]

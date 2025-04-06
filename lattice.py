@@ -23,17 +23,14 @@ import warnings
 import unittest
 import setutil
 import numpy        as NP
-import elements     as ELM
 import numpy.linalg as LA
-from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
-from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, Ktw, Ktp,mxprnt
-from setutil import Twiss, Functions, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
+import elements     as ELM
+from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO
+from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, Ktw, mxprnt
+from setutil import Twiss, Functions, Proton, wrapRED, MDIM, DEBUG_ON, DEBUG_OFF
 from setutil import OutOfRadialBoundEx
 from math    import sqrt,fabs,acos,degrees
 from sigma   import Sigma, sig_map
-
-# from termcolor import colored
-# from sty import fg,bg,ef,rs
 
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq """
@@ -75,6 +72,7 @@ class Lattice(object):
         self.descriptor       = descriptor
         self.label            = ''     # long label
         self.slabel           = ''     # short label
+    
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -250,7 +248,7 @@ class Lattice(object):
                 print_verbose(2,'symplectic (+1,-1,+1,-1,+1,-1)?')
                 print_verbose(2,'[{:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}, {:4>+.2f}]\n'.format(s[0],s[1],s[2],s[3],s[4],s[5]))
             else:
-                print(colors.RED+'WARN: unstable lattice!'+colors.ENDC)
+                print(wrapRED('WARN: unstable lattice!'))
             return stable
         def ring(self,mcell):
             if not isStable(mcell): sys.exit(1)
@@ -333,8 +331,9 @@ class Lattice(object):
 
         mess = ""
         if nlFLAG:
-            mess = colors.RED+'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'+colors.ENDC
+            mess = 'WARN: Lattice has RF-gaps with non-linear mapping. ENVELOPES are calulated using T3D\'s RF-gaps (NT=10) instead.\n'
             mess += 'sigma ENVELOPES from TWISS parameters'
+            mess = wrapRED(mess)
         elif not nlFLAG:
             if sFLAG:
                 mess += 'sigma ENVELOPES from SIGMA-matrix formalism'
@@ -425,8 +424,7 @@ class Lattice(object):
                 sigx, sigxp, sigy, sigyp = node.sigxy
                 if PARAMS['warnmx']:
                     if(aperture < nbsigma*sigx or aperture < nbsigma*sigy):
-                        # warnings.showwarning('{} sigma aperture hit @ s={:.1f} [m]'.format(nbsigma,sm),UserWarning,'lattice.py',fcnt)
-                        print(warnings.formatwarning(colors.RED+'{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)+colors.ENDC,UserWarning,'','')[3:-1])
+                        print(warnings.formatwarning(wrapRED('{}: {} sigma aperture hit @ s={:.1f} [m]'.format(fcnt,nbsigma,sm)),UserWarning,'','')[3:-1])
                         PARAMS['warnmx'] -= 1
                         if PARAMS['warnmx'] == 0: print('skipping more warnings ...')
     def dispersion(self,closed, steps=10):
