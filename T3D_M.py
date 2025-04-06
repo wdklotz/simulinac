@@ -19,6 +19,7 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+import sys
 import IGap
 import unittest
 import numpy as NP

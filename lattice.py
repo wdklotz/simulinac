@@ -19,20 +19,21 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 import sys
-import numpy as NP
 import warnings
 import unittest
 import setutil
+import numpy        as NP
+import elements     as ELM
+import numpy.linalg as LA
 from setutil import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO
-from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, objprnt, Ktw, Ktp,mxprnt
-from setutil import Twiss, Functions, Particle, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
+from setutil import PARAMS,FLAGS,SUMMARY,print_verbose,sigmas, Ktw, Ktp,mxprnt
+from setutil import Twiss, Functions, Proton, colors, MDIM, DEBUG_ON, DEBUG_OFF
 from setutil import OutOfRadialBoundEx
 from math    import sqrt,fabs,acos,degrees
-from numpy   import linalg as LA
 from sigma   import Sigma, sig_map
+
 # from termcolor import colored
 # from sty import fg,bg,ef,rs
-import elements as ELM
 
 class Lattice(object):
     """ The Lattice object is a list of elements: ELM.<element> in self.seq """
@@ -624,6 +625,7 @@ class Lattice(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
+
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
         print('----------------------------------test_lattice_add_first_6_nodes')
