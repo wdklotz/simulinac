@@ -177,7 +177,6 @@ class T3D_G(IGap.IGap):
         m              = NP.eye(MDIM,MDIM)
         self.E0L       = self.EzPeak*self.gap
         self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
-        # self.qE0LT     = self.E0L*self.ttf
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
         Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin

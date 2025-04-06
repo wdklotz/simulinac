@@ -183,7 +183,6 @@ class TTF_G(IGap.IGap):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m         = NP.eye(MDIM,MDIM)
         E0L       = self.EzPeak*self.gap_estim
-        # qE0LT     = E0L*self.ttf
         deltaW    = self.deltaW = E0L*self.ttf*cos(self.phisoll)
         Wavg      = self.particle.tkin+self.deltaW/2.   # average tkin
         pavg      = Proton(Wavg)
