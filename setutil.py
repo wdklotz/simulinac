@@ -1,5 +1,7 @@
 #!/Users/klotz/anaconda3/bin/python3.6
 #-*- coding: utf-8 -*-
+# Python 2 and 3 print compatability
+from __future__ import print_function   #TODO still used?
 __version__='11.0.2.4'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
@@ -19,8 +21,6 @@ This file is part of the SIMULINAC code
     along with SIMULINAC.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# Python 2 and 3 print compatability
-from __future__ import print_function   #TODO still used?
 
 import sys
 import time
