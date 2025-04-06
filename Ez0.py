@@ -243,36 +243,30 @@ class SFdata(object):
                 ep.append(Ez)
         f.close()
 
-        # construct symmetric table for interval [-L/2,+L/2]
-        # (E0,z0)=(ep[0],zp[0])
-        # (ER,zL)=(ep[-1],zp[-1])
-        EzPeak=El=ep[0]
-        EzMin=Er=ep[-1]
-        zl = zp[0]
-        zr = zp[-1]
-        L  =(zr-zl)*2
-        dz = zp[1]-zp[0]
+        # make symmetric table for interval [-zr,+zr]
+        EzPeak=El= ep[0]
+        EzMin=Er = ep[-1]
+        zl       = zp[0]
+        zr       = zp[-1]
+        self._L  = (zr-zl)*2       # _L is length of [-_L/2,+_L/2]
+        dz       = zp[1]-zp[0]
 
-        zprev = [-x for x in reversed(zp[1:])]
-        zp = zprev+zp
-        rprev = [x for x in reversed(rp[1:])]
-        rp = rprev+rp
-        eprev = [x for x in reversed(ep[1:])]
-        ep = eprev+ep
+        zneg = [-x for x in reversed(zp[1:])]
+        zp = zneg+zp
+        rneg = [x for x in reversed(rp[1:])]
+        rp = rneg+rp
+        eneg = [x for x in reversed(ep[1:])]
+        ep = eneg+ep
         N = len(zp)
         raw_tab = [Dpoint(zp[i],rp[i],ep[i]) for i in range(N)]
         DEBUG_OFF('raw_tab',raw_tab)
-        _EzAvg = float((NP.trapezoid(ep,dx=dz)/L))
-        DEBUG_OFF(f'[(Ez,z)]=[({EzPeak},{zl}),({EzMin},{zr})], L={L}, dz={dz}, EzAvg ={_EzAvg}')
+        EzAvg = float((NP.trapezoid(ep,dx=dz)/self._L))
+        DEBUG_OFF(f'[(Ez,z)]=[({EzPeak},{zl}),({EzMin},{zr})], L={self._L}, dz={dz}, EzAvg ={EzAvg}')
 
         # raw data from SF will never be modified!
-        self._Ez0_tab = raw_tab #NOTE: defined on  [-L/2,+L/2]
-        self._L       = L       #NOTE: _L is length of [-L/2,+L/2]
+        self._Ez0_tab = raw_tab # defined on  [-L/2,+L/2]
         self._EzPeak  = EzPeak
-        self._EzAvg   = _EzAvg
-        # self.Ez0_tab  = raw_tab
-        # self.L        = L
-        # self.EzPeak   = E0
+        self._EzAvg   = EzAvg
         return
 
     # class variables
@@ -656,7 +650,7 @@ class TestEz0Methods(unittest.TestCase):
 
 
 if __name__ == '__main__': 
-    # unittest.main()
+    unittest.main()
     tests = TestEz0Methods()
     # tests.test0()    
     # tests.test1()
@@ -667,5 +661,5 @@ if __name__ == '__main__':
     # tests.test6()
     # tests.test7()
     # tests.test8()
-    tests.test9()
+    # tests.test9()
     
