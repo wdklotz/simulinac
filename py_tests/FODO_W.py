@@ -1,5 +1,7 @@
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,sys.path[0]+'/..')
+# print(sys.path)
+
 import numpy as np
 import math as M
 import matplotlib.pyplot as plt
@@ -291,6 +293,9 @@ def test2():
     return
     
 if __name__ == '__main__':
+    import sys
+    sys.path.insert(0,'..')
+
     test0()
-    # test1()
-    # test2()
+    test1()
+    test2()
