@@ -51,7 +51,7 @@ PARAMETERS:
     DPHI0:                18.              # [deg] delta-phi @ iinjection
     # DT2T:                 1.5e-3          # delta-T/T kinetic energy spread @ injection
     DT2T:                 9.0e-3          # delta-T/T kinetic energy spread @ injection
-    frequency:    &freq   750.e6          # [Hz] frequency
+    frequency:    &freq   750.e+6          # [Hz] frequency
     emitx_i:      &emx    1.e-6           # [m*rad] {x,x'} emittance @ entrance
     emity_i:      &emy    1.e-6           # [m*rad] {y,y'} emittance @ entrance
     betax_i:      &btx    0.920           # [m] twiss beta @ entrance x
@@ -125,7 +125,7 @@ ELEMENTS:
         # EzAvg:    *p16       # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] 
         # PhiSync:  -20.0        # [deg] synchronous phase
-        PhiSync:  -40.0        # [deg] synchronous phase
+        phisoll:  -40.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.020        # [m] gap length
         aperture: *aper        # [m] aperture radius
@@ -157,7 +157,7 @@ ELEMENTS:
         type:     RFG          # RFC class
         # EzAvg:    *p16       # [MV/m] average E-field on axis
         EzPeak:   *p17         # [MV/m] 
-        PhiSync:  -30.0        # [deg] synchronous phase
+        phisoll:  -30.0        # [deg] synchronous phase
         freq:     *freq        # [Hz] frequency
         gap:      0.030        # [m] gap length
         aperture: *aper        # [m] aperture radius
