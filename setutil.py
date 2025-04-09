@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 # Python 2 and 3 print compatability
 from __future__ import print_function   #TODO still used?
-__version__='11.0.2.4'
+__version__='v11.0.3'
 """
 Copyright 2015 Wolf-Dieter Klotz <wdklotz@gmail.com>
 This file is part of the SIMULINAC code
