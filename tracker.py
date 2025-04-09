@@ -569,7 +569,7 @@ if __name__ == '__main__':
     group1 = parser.add_mutually_exclusive_group()
     parser.add_argument("--p",      metavar="N", default=1750, type=int,     help="N particles per bunch")
     parser.add_argument("--hide",   action="store_true",                     help="hide IN/OUT scatter plots")
-    group.add_argument ("--file",   default="trackerIN.yml",                 help="lattice input-file")
+    group.add_argument ("--file",   default="simuIN_default.yml",            help="lattice input-file")
     group1.add_argument("--losses", action="store_true",                     help="run in losses mode")
     group1.add_argument("--pcuts",  action="store_true",                     help="save poincare cuts")
     parser.add_argument("--skip",   metavar="N", default="1", type=int,      help="skip every N poincare cuts")
