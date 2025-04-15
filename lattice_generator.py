@@ -20,7 +20,6 @@ This file is part of the SIMULINAC code
 """
 import sys,os
 import yaml
-import warnings
 import unittest
 import setutil             as UTIL
 import elements            as ELM
@@ -275,7 +274,7 @@ def instanciate_element(item):
         elif type == 'GAP':
             gap       = get_mandatory(attributes,'gap',ID)
             EzPeak    = get_mandatory(attributes,"EzPeak",ID)
-            phiSoll   = M.radians(get_mandatory(attributes,"PhiSync",ID))
+            phiSoll   = radians(get_mandatory(attributes,"PhiSync",ID))
             freq      = float(get_mandatory(attributes,"freq",ID))
             dWf       = UTIL.FLAGS['dWf']
             aperture  = get_mandatory(attributes,'aperture',ID)
@@ -313,7 +312,7 @@ def instanciate_element(item):
             raise(UserWarning(wrapRED('Unknown element "{}" encountered.'.format(type))))
             sys.exit(1)
     return instance
-def factory(input_file,stop=None):
+def factory(input_file):
     """ factory reads FLAGS, PARAMETERS and creates a lattice from yaml input """
     def process_flags(flags):
         """ external FLAGs """        

@@ -1,3 +1,4 @@
+#!python
 # -*- coding: utf-8 -*-
 __version__='v11.0.3'
 """
@@ -20,28 +21,30 @@ This file is part of the SIMULINAC code
 #TODO: statistical analalysis of bunch: position, size, etc ...
 #TODO: how to get the hokey stick?                                    - done
 #TODO: check w-acceptance at each node entrance                       - done
-#TODO: no phase damping - why? - solved with version 10.0.0
+#TODO: no phase damping - why? - solved with version 10.0.0           - done?
 
-import sys,os
-import numpy as np
-import matplotlib
 # import PyQt5
 # matplotlib.use("Qt5Agg")
-# import tkinter
+
+import sys,os
+import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
+import numpy as np
+
 import time
 import argparse
 import unittest
 import h5py
-from lattice_generator import factory
-from math import sqrt, degrees, radians, ceil,pi
-from setutil import PARAMS, FLAGS, dictprnt, Ktp, WConverter
-from setutil import RUN_MODE, Functions, DEBUG_ON, DEBUG_OFF,Proton
-from setutil import OutOfRadialBoundEx
-from bunch import BunchFactory, Gauss1D, Gauss2D, Track, Tpoint, Bunch
+
+from math      import sqrt, degrees, ceil
+from setutil   import PARAMS, FLAGS, dictprnt, Ktp, WConverter
+from setutil   import RUN_MODE, DEBUG_ON, DEBUG_OFF
+from setutil   import OutOfRadialBoundEx
+from bunch     import BunchFactory, Tpoint, Bunch
+from trackPlot import scatterInOut
 from PoincareMarkerAgent import PoincareMarkerAgent
-from trackPlot import scatter11,scatterInOut
+from lattice_generator   import factory
 
 # max limits for track amplitudes
 xlim_max  = 0.1
@@ -77,7 +80,6 @@ class Fifo:
     @max.setter
     def max(self,value):
         self._max = value
-
 # txt FIFOs
 fifo    = Fifo()   # halo-losses
 fifo_m  = Fifo()   # map-losses
@@ -226,7 +228,6 @@ def make_plots(lattice,live_lost):
 
     plt.show()
     return
-
 def frames(lattice, skip):
     """ 2D phase space projection at marker position """
     plt.figure()    # new figure instance
@@ -253,7 +254,6 @@ def frames(lattice, skip):
     for agent_cnt,agent in iter(frames):
         position = agent.position
         agent.do_action(agent_cnt,xmax,ymax,position)
-
 def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
     Call in a loop to create terminal progress bar
@@ -274,7 +274,6 @@ def progress_bar(iteration, total, prefix = '', suffix = '', decimals = 1, lengt
     # Print New Line on Complete
     if iteration == total: 
         print()
-
 def loss_histograms(lattice,fifos,binsize=5):
     """ make histogram plots of losses, capture in FIFO buffers """
     latlen = lattice.length
@@ -296,8 +295,7 @@ def loss_histograms(lattice,fifos,binsize=5):
         ax.set_ylabel(r"# particles")
         ax.hist(sdata,bins,range=(0.,latlen))
     plt.show()
-
-def Track_The_Node(node,particle,options):
+def track_the_node(node,particle,options):
     """ Tracks a particle through a node, flags particle as lost and returns True """
     def norm(tp):
         tpnorm = sqrt(tp()[Ktp.x]**2+tp()[Ktp.y]**2+tp()[Ktp.z]**2)
@@ -348,8 +346,7 @@ def Track_The_Node(node,particle,options):
         node.appendPhaseSpace(new_tp)
 
     return lost
-
-def track(lattice,bunch,options):
+def track_the_lattice(lattice,bunch,options):
     """
     Tracks a bunch of particles through the lattice using maps
     - lattice is a list of elements (class Node)
@@ -384,7 +381,7 @@ def track(lattice,bunch,options):
         if h5dump: 
             h5ds = h5frames_grp.create_dataset(f'{n_cnt}',(current_nb_particles,10),dtype='f8')
         for p_cnt,particle in enumerate(iter(bunch)):        # particles
-            lost = Track_The_Node(node,particle,options)
+            lost = track_the_node(node,particle,options)
             if lost:
                 lbunch.addparticle(particle)
                 bunch.removeparticle(particle)   # will not be tracked again
@@ -408,7 +405,6 @@ def track(lattice,bunch,options):
     if options['h5dump']:
         h5File.close()
     return (bunch,lbunch)
-
 def tracker(input_file,options):
     """ Prepare and launch tracking  """
     # fifo limits
@@ -502,7 +498,7 @@ def tracker(input_file,options):
 
     # ********************************************************************************
     # track: returns tuple (live,lost) bunches
-    live_lost = track(lattice,bunch,options) 
+    live_lost = track_the_lattice(lattice,bunch,options) 
     t4 = time.process_time()
 
     # make 2D projections
@@ -561,51 +557,51 @@ class TestTracker(unittest.TestCase):
         print('what?')
 
 #----------------main------------
-if __name__ == '__main__':
-    DEBUG_OFF(sys.argv)
-    # ArgumentParser puts result in 'args'
-    parser = argparse.ArgumentParser()
-    group  = parser.add_mutually_exclusive_group()
-    group1 = parser.add_mutually_exclusive_group()
-    parser.add_argument("--p",      metavar="N", default=1750, type=int,     help="N particles per bunch")
-    parser.add_argument("--hide",   action="store_true",                     help="hide IN/OUT scatter plots")
-    group.add_argument ("--file",   default="simuIN_default.yml",            help="lattice input-file")
-    group1.add_argument("--losses", action="store_true",                     help="run in losses mode")
-    group1.add_argument("--pcuts",  action="store_true",                     help="save poincare cuts")
-    parser.add_argument("--skip",   metavar="N", default="1", type=int,      help="skip every N poincare cuts")
-    parser.add_argument("--lrx",    metavar="N", default="-1", type=int,     help="take N-th frame as axis limits. first=0, last=-1")
-    parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
-    parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
-    parser.add_argument("--h5file", default="frames.h5",                     help="HDF5 dump-file")
-    args = vars(parser.parse_args())
-    options = {}
-    options['particles_per_bunch'] = args['p']
-    options['show']                = not args['hide']
-    options['save']                = args['pcuts']
-    options['skip']                = args['skip']
-    options['losses']              = args['losses']
-    options['lrx']                 = args['lrx']
-    options['h5dump']              = args['h5dump']
-    options['h5skip']              = args['h5skip']
-    options['h5file']              = args['h5file']
+# if __name__ == '__main__':
+DEBUG_OFF(sys.argv)
+# ArgumentParser puts result in 'args'
+parser = argparse.ArgumentParser()
+group  = parser.add_mutually_exclusive_group()
+group1 = parser.add_mutually_exclusive_group()
+parser.add_argument("--p",      metavar="N", default=1750, type=int,     help="N particles per bunch")
+parser.add_argument("--hide",   action="store_true",                     help="hide IN/OUT scatter plots")
+group.add_argument ("--file",   default="simuIN_default.yml",            help="lattice input-file")
+group1.add_argument("--losses", action="store_true",                     help="run in losses mode")
+group1.add_argument("--pcuts",  action="store_true",                     help="save poincare cuts")
+parser.add_argument("--skip",   metavar="N", default="1", type=int,      help="skip every N poincare cuts")
+parser.add_argument("--lrx",    metavar="N", default="-1", type=int,     help="take N-th frame as axis limits. first=0, last=-1")
+parser.add_argument("--h5dump", action="store_true",                     help="dump tracks to HDF5 file")
+parser.add_argument("--h5skip", metavar="N", default="500", type=int,    help="skip every N track dumps")
+parser.add_argument("--h5file", default="frames.h5",                     help="HDF5 dump-file")
+args = vars(parser.parse_args())
+options = {}
+options['particles_per_bunch'] = args['p']
+options['show']                = not args['hide']
+options['save']                = args['pcuts']
+options['skip']                = args['skip']
+options['losses']              = args['losses']
+options['lrx']                 = args['lrx']
+options['h5dump']              = args['h5dump']
+options['h5skip']              = args['h5skip']
+options['h5file']              = args['h5file']
 
-    # manipulate options
-    if options['save']:
-        options['show']   = False
-        options['losses'] = False
-    print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
-    
-    # let's go. All  input is parsed...
-    input_file = args['file']
-    print('This run: input({})'.format(input_file))
-    if False:
-        # unittest.main()
-        TestTracker(methodName='test_tracking').run()
+# manipulate options
+if options['save']:
+    options['show']   = False
+    options['losses'] = False
+print('tracker.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+
+# let's go. All  input is parsed...
+input_file = args['file']
+print('This run: input({})'.format(input_file))
+if False:
+    # unittest.main()
+    TestTracker(methodName='test_tracking').run()
+else:
+    if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
+        print(f'Platform {sys.platform}')
     else:
-        if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
-            print(f'Platform {sys.platform}')
-        else:
-            print('wrong platform')
-            sys.exit(1)
-        # start the tracking
-        tracker(input_file,options)
+        print('wrong platform')
+        sys.exit(1)
+    # start the tracking
+    tracker(input_file,options)

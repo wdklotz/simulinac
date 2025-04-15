@@ -29,21 +29,20 @@ This file is part of the SIMULINAC code
 #TODO: for tracker: plot confidence ellipse - used reference: https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py - done
 """
 import matplotlib
+matplotlib.use("TkAgg")
 # import PyQt5
 # matplotlib.use("Qt5Agg")
-# import tkinter
-matplotlib.use("TkAgg")
 import sys
 import argparse
-from setutil import DEBUG_ON,DEBUG_OFF,EKOO,wrapRED
-
 import lattice_generator as LG
 import math              as M
 import matplotlib.pyplot as plt
-import setutil           as UTIL
 import elements          as ELM
 import pandas            as pd
 import bucket_size       as BKTSZ
+
+from setutil import DEBUG_ON,DEBUG_OFF,EKOO,FLAGS,PARAMS,SUMMARY,RUN_MODE,ELEMENTS,PHADVX,PHADVY
+from setutil import collect_data_for_summary,show_data_from_elements,dictprnt,wrapRED
 
 def display0(*args):
     """ C&S-Tracks w/o longitudinal motion """
@@ -189,8 +188,8 @@ def display3(*args):
     # splot311=plt.subplot(10,1,(1,3))
     splot311.set_title('transverse x')
     # mapping box
-    splot311.text(0.01, 1.1,UTIL.FLAGS.get('mapping'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
-    if UTIL.FLAGS['envelope']:
+    splot311.text(0.01, 1.1,FLAGS.get('mapping'),transform=splot311.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    if FLAGS['envelope']:
         plt.plot(z,sgx ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cx, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cxp,label="C' [mr]",color='blue',linestyle=':')
@@ -201,9 +200,9 @@ def display3(*args):
     plt.plot(vis_abszisse,viseoz,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
     # apertures
-    if UTIL.FLAGS['useaper']:
+    if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = UTIL.PARAMS['nbsigma']
+        N = PARAMS['nbsigma']
         sgx = [i*N for i in sgx]
         #label = F'{N:1}$\sigma$ [mm]'
         label = '{:1}$\sigma$ [mm]'.format(N)
@@ -216,7 +215,7 @@ def display3(*args):
     splot312=plt.subplot(312)
     # splot312=plt.subplot(10,1,(4,6))
     splot312.set_title('transverse y')
-    if UTIL.FLAGS['envelope']:
+    if FLAGS['envelope']:
         plt.plot(z,sgy ,label=r'$\sigma$ [mm]',color='green')
     plt.plot(z1,cy, label="C  [mm]",color='blue',linestyle='-')
     # plt.plot(z1,cyp,label="C' [mr]",color='blue',linestyle=':')
@@ -226,9 +225,9 @@ def display3(*args):
     plt.plot(vis_abszisse,viseoz,label='',color='black')
     plt.plot(vis_abszisse,vzero,color='green',linestyle='--')
     # apertures
-    if UTIL.FLAGS['useaper']:
+    if FLAGS['useaper']:
         plt.plot(ape_abszisse,ape_ordinate,linestyle='-.')
-        N = UTIL.PARAMS['nbsigma']
+        N = PARAMS['nbsigma']
         sgy = [i*N for i in sgy]
         plt.plot(z,sgy ,label=label,color='green',linestyle=':')
     # zero line
@@ -293,7 +292,7 @@ def display4(*args):
     splot211=plt.subplot(211)
     splot211.set_title('beta x,y')
     # mapping box
-    splot211.text(0.01, 1.1, UTIL.FLAGS.get('mapping'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
+    splot211.text(0.01, 1.1, FLAGS.get('mapping'),transform=splot211.transAxes,fontsize=8,bbox=dict(boxstyle='round',facecolor='wheat',alpha=0.5),verticalalignment='top')
     # function plots
     plt.plot(s,bx,   label=r"$\beta$x  [m]",  color='black', linestyle='-')
     plt.plot(s,by,   label=r"$\beta$y  [m]",  color='red',   linestyle='-')
@@ -336,31 +335,32 @@ def simulation(filepath):
     def display(*functions):
         # dispatch to different plots according to FLAG settings
         plots   = []
-        if UTIL.FLAGS['dWf'] == 0:
+        if FLAGS['dWf'] == 0:
             # accel OFF
-            if UTIL.FLAGS['csTrak']:
+            if FLAGS['csTrak']:
                 plots.append(display0)      # C&S tracks and sigmas {x,y}
             else:
                 plots.append(display1)      # beta functions {x,y}
         else:
             # accel ON
-            if UTIL.FLAGS['csTrak']:
+            if FLAGS['csTrak']:
                 plots.append(display3)      # C&S tracks and sigmas {x,y}
             else:
                 plots.append(display4)      # beta functions {x,y}
 
-            if UTIL.FLAGS['bucket']:
+            if FLAGS['bucket']:
                 first_gap_node = lattice.first_gap
                 if first_gap_node != None:
                     BKTSZ.bucket(first_gap_node)       # separatrix
                 else:
-                    print("No 1st rg-gap in lattice? Can't plot W-acceptance.")
+                    wrapRED("No 1st rf-gap in lattice? Can't plot W-acceptance.")
         # make all plots
         if len(plots) != 0:
             print('PREPARE DISPLAY')
             [plot(*functions) for plot in plots]
-    
-    """ ------- everything starts here ------- everything starts here ------- everything starts here ------- everything starts here """
+# >>>>> simulation starts here >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>> simulation starts here >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>> simulation starts here >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     #----------------------------------------------
     # STEP 1: parse input file and create a lattice
     #         with links and adjusted energy
@@ -369,19 +369,19 @@ def simulation(filepath):
     #----------------------------------------------
     lattice = LG.factory(filepath)
     # descriptor
-    UTIL.SUMMARY['Description'] = UTIL.PARAMS['descriptor']
+    SUMMARY['Description'] = PARAMS['descriptor']
     #----------------------------------------------
     # STEP 2: calculate run mode
     #----------------------------------------------
-    UTIL.FLAGS['accON'] = lattice.accON
+    FLAGS['accON'] = lattice.accON
     # run-mode
-    twoflag = (UTIL.FLAGS.get('accON'), UTIL.FLAGS.get('periodic'))
-    if twoflag == (True,True):   mode= UTIL.RUN_MODE[0]
-    if twoflag == (True,False):  mode= UTIL.RUN_MODE[1]
-    if twoflag == (False,True):  mode= UTIL.RUN_MODE[2]
-    if twoflag == (False,False): mode= UTIL.RUN_MODE[3]
-    UTIL.FLAGS['mode'] = mode
-    print(f'running in \'{UTIL.FLAGS["mode"]}\' mode')
+    twoflag = (FLAGS.get('accON'), FLAGS.get('periodic'))
+    if twoflag == (True,True):   mode= RUN_MODE[0]
+    if twoflag == (True,False):  mode= RUN_MODE[1]
+    if twoflag == (False,True):  mode= RUN_MODE[2]
+    if twoflag == (False,False): mode= RUN_MODE[3]
+    FLAGS['mode'] = mode
+    print(f'running in \'{FLAGS["mode"]}\' mode')
     # print(wrapRED(f'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[EKOO]:.3f} [MeV] \u26dd'))
     # print(wrapRED(f'\u26dd  FINAL particle kinetic energy {lattice.last_gap.particle.tkin:.3f} [MeV] \u26dd'))
     print(wrapRED(f'\u26dd  FINAL particle kinetic energy {lattice.seq[-1].particle.tkin:.3f} [MeV] \u26dd'))
@@ -391,16 +391,16 @@ def simulation(filepath):
     lattice.make_label()
     lattice.make_matrix()
     stats = lattice.stats()
-    UTIL.SUMMARY['nbof quadrupoles*']   = stats['quad_cntr']
-    UTIL.SUMMARY['nbof cavities*']      = stats['cavity_cntr']
-    UTIL.SUMMARY['Tkin (i,f) [MeV]']    = (stats['tki'],stats['tkf'])
-    UTIL.SUMMARY['lattice length* [m]'] = stats['latt_length']
+    SUMMARY['nbof quadrupoles*']   = stats['quad_cntr']
+    SUMMARY['nbof cavities*']      = stats['cavity_cntr']
+    SUMMARY['Tkin (i,f) [MeV]']    = (stats['tki'],stats['tkf'])
+    SUMMARY['lattice length* [m]'] = stats['latt_length']
     #----------------------------------------------
     # STEP 4: beam dynamics full accelerator: initial values, etc...
     #----------------------------------------------
-    res = lattice.cell(UTIL.FLAGS['periodic'])
+    res = lattice.cell(FLAGS['periodic'])
     # Update PARAMS
-    UTIL.PARAMS.update(res)
+    PARAMS.update(res)
     #---------------------------------------------- 
     # STEP 5: lattice functions
     #----------------------------------------------
@@ -410,31 +410,31 @@ def simulation(filepath):
     #----------------------------------------------
     # STEP 6: collect results
     #----------------------------------------------
-    UTIL.collect_data_for_summary(lattice)
+    collect_data_for_summary(lattice)
     #----------------------------------------------
     # STEP 7: ouput results
     #----------------------------------------------
-    kv_only = UTIL.FLAGS['KVout']
-    g_disp  = UTIL.FLAGS['GDisp']
+    kv_only = FLAGS['KVout']
+    g_disp  = FLAGS['GDisp']
     if kv_only:
         def flatten_dict(d):
             [flat_dict] = pd.json_normalize(d).to_dict(orient='records')
             return flat_dict
         def default():
-            kv=dict(FLAGS=UTIL.FLAGS,PARAMS=UTIL.PARAMS,SUMMARY=UTIL.SUMMARY,ELEMENTS=UTIL.ELEMENTS)
+            kv=dict(FLAGS=FLAGS,PARAMS=PARAMS,SUMMARY=SUMMARY,ELEMENTS=ELEMENTS)
             fkv = flatten_dict(kv)
             DEBUG_ON(fkv)
         def custom():
             kv={}
-            kv['phase_advance'] = '{:.2f} {:.2f}'.format(M.degrees(UTIL.PHADVX),M.degrees(UTIL.PHADVY))
-            kv['B\'f'] = UTIL.ELEMENTS['QF']["B'"]
-            kv['B\'d'] = UTIL.ELEMENTS['QD']["B'"]
+            kv['phase_advance'] = '{:.2f} {:.2f}'.format(M.degrees(PHADVX),M.degrees(PHADVY))
+            kv['B\'f'] = ELEMENTS['QF']["B'"]
+            kv['B\'d'] = ELEMENTS['QD']["B'"]
             print(kv)
         # out = default
         out = default
         out()
     else:
-        UTIL.show_data_from_elements() #...................................show ELEMENT attributes
+        show_data_from_elements() #...................................show ELEMENT attributes
         if g_disp :
             (lat_plot, ape_plot) = lattice.lattice_plot_functions() #.....generate lattice plot
             display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
@@ -443,27 +443,27 @@ def simulation(filepath):
             DEBUG_OFF(node.toString())
             DEBUG_OFF(node.__dict__)
             node.do_action()
-        UTIL.dictprnt(UTIL.SUMMARY,text='Summary') #............................show summary
+        dictprnt(SUMMARY,text='Summary') #............................show summary
         """ show all figures - (must be the only call to show!) """
         if g_disp :
             plt.show()
 
-if __name__ == '__main__':
-    # ArgumentParser puts result in 'args'
-    parser = argparse.ArgumentParser()
-    group  = parser.add_mutually_exclusive_group( )
-    group.add_argument ("--file", default="simuIN_default.yml", help="lattice input-file")
-    args = vars(parser.parse_args())
-    print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
+# if __name__ == '__main__':
+# ArgumentParser puts result in 'args'
+parser = argparse.ArgumentParser()
+group  = parser.add_mutually_exclusive_group( )
+group.add_argument ("--file", default="simuIN_default.yml", help="lattice input-file")
+args = vars(parser.parse_args())
+print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
-    # let's go. All  input is parsed...
-    input_file = args['file']    # default simuIN.yml
-    print('This run: input({}))'.format(input_file))
+# let's go. All  input is parsed...
+input_file = args['file']    # default simuIN.yml
+print('This run: input({}))'.format(input_file))
 
-    if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
-        print(f'Platform {sys.platform}')
-    else:
-        print('wrong platform')
-        sys.exit(1)
-    # run the simulation
-    simulation(input_file)
+if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
+    print(f'Platform {sys.platform}')
+else:
+    print('wrong platform')
+    sys.exit(1)
+# run the simulation
+simulation(input_file)

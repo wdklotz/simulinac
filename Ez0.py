@@ -30,7 +30,7 @@ Polyval = namedtuple('Polyval',['zl','z0','zr','dz','b','a','E0'])
 # Dpoint: Table data point - Ez0_tab is list(Dpoint)
 Dpoint  = namedtuple('Dpoint',['z','R','Ez'])
 
-def normGauss(x,sig,mu):
+def gaussNorm(x,sig,mu):
      # Gauss Normalverteilung
     res = exp(-(((x-mu)/sig)**2/2.))
     return res
@@ -43,9 +43,9 @@ def gaussPoly(z,sigma,mu,E):
         z0  = z[i+1]
         zr  = z[i+2]
         dz  = z0-zl
-        El  = E*normGauss(zl,sigma,mu)
-        E0  = E*normGauss(z0,sigma,mu)
-        Er  = E*normGauss(zr,sigma,mu)
+        El  = E*gaussNorm(zl,sigma,mu)
+        E0  = E*gaussNorm(z0,sigma,mu)
+        Er  = E*gaussNorm(zr,sigma,mu)
         b = (Er+El-2*E0)/(2*E0*dz**2)   # Langrange 3 Punkt Interpolation
         a = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
         pval = Polyval(zl,z0,zr,dz,b,a,E0)
@@ -219,8 +219,8 @@ class SFdata(object):
         self.TBL_file = TBL_file
         self.readRawData()  
 
-    # class variables
-    instances = {}    # dict of sigleton objects
+    """ CLASS attribute and method """
+    instances = {} # dict of sigleton objects
     @classmethod
     def InstanciateAndScale(cls,TBL_file,EzPeak=0.,L=0.):
         """ 
@@ -446,7 +446,7 @@ class TestEz0Methods(unittest.TestCase):
         L = 4.4
         z = NP.arange(0.,L,L/500.)
         sigma = 1.14
-        Ez0_tab = [(x,0.,normGauss(x,sigma,0.)) for x in z]
+        Ez0_tab = [(x,0.,gaussNorm(x,sigma,0.)) for x in z]
 
         ax  = plt.subplot(111)
         self.display_with_mirror(Ez0_tab,'NG')
@@ -466,12 +466,12 @@ class TestEz0Methods(unittest.TestCase):
         L     = 4.8          # [cm] full interval length
         zl    = -L/2.        #left  interval boundary
         zr    = L/2.         #right interval boundary
-        sigma = L/2./1.89    # sigma of normGauss (best fit with SF)
-        # sigma = L/2./2.2   # sigma of normGauss (best fit with SF)
-        E0    = 1.           # top of normGauss   (best fit with SF)
+        sigma = L/2./1.89    # sigma of gaussNorm (best fit with SF)
+        # sigma = L/2./2.2   # sigma of gaussNorm (best fit with SF)
+        E0    = 1.           # top of gaussNorm   (best fit with SF)
 
         z = NP.linspace(zl,zr,2*anz+1)
-        Ez0_tab = [(x,0.,E0*normGauss(x,sigma,0.)) for x in z]
+        Ez0_tab = [(x,0.,E0*gaussNorm(x,sigma,0.)) for x in z]
         # display(Ez0_tab,'slice')
         poly = gaussPoly(z,sigma,0.,E0*1.)
 
@@ -644,8 +644,6 @@ class TestEz0Methods(unittest.TestCase):
         ax.set_title(TBL_file)
         plt.legend(loc='upper right',fontsize='x-small')
         plt.show()
-
-
 
 if __name__ == '__main__': 
     unittest.main()
