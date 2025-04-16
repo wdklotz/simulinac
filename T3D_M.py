@@ -25,17 +25,21 @@ import unittest
 import numpy as NP
 from setutil    import PARAMS,FLAGS,Proton,MDIM,DEBUG_ON,DEBUG_OFF,mxprnt,wrapRED
 from setutil    import XKOO, XPKOO, YKOO, YPKOO, ZKOO, ZPKOO, EKOO, DEKOO, SKOO, DSKOO, MDIM
-from setutil    import WConverter,Twiss
+from setutil    import WConverter,Twiss,I0
 from math       import pi,radians,sin,cos,sqrt
 from separatrix import w2phi
 
 twopi = 2.*pi
 
-def ttf(lamb, gap, beta):
-    """ Panofsky transit-time-factor (see Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-    x = gap/(beta*lamb)
-    res =NP.sinc(x)
+def ttf(lamb, gap, beta, aperture):
+    """ WRANGLER: Transit-Time-Factor Models, pp. 44 (2.43) """
+    x   = gap/(beta*lamb)
+    res = NP.sinc(x)
+    gamma = 1/sqrt(1-beta**2)
+    Ka = twopi/(lamb*gamma*beta)*aperture
+    res = res/I0(Ka)
     return res
+
 
 class T3D_G(IGap.IGap):
     """ Trace 3D RF Gap-Model """
@@ -176,7 +180,7 @@ class T3D_G(IGap.IGap):
         """ RF gap-matrix nach Trace3D pp.17 (LA-UR-97-886) """
         m              = NP.eye(MDIM,MDIM)
         self.E0L       = self.EzPeak*self.gap
-        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta)
+        self.ttf       = ttf(self.lamb,self.gap,self.particle.beta,self.aperture)
         self.deltaW    = self.E0L*self.ttf*cos(self.phisoll)
         self.particlef = Proton(self.particle.tkin+self.deltaW)
         Wavg    = self.particle.tkin+self.deltaW/2.   # average tkin
