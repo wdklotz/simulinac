@@ -363,8 +363,8 @@ def test2():
     sigma, sigmap = sigmas(alfax, betax, emitx)
     x = sigma * NP.random.randn(N)
     xp = sigmap * NP.random.randn(N)
-    DEBUG_OFF('x: {}'.format(x))
-    DEBUG_OFF('x\': {}'.format(xp))
+    #DEBUG_OFF('x: {}'.format(x))
+    #DEBUG_OFF('x\': {}'.format(xp))
 
     fig1 = plt.figure('test2:figure 1')
     h1 = plt.subplot2grid((2, 1), (0, 0))

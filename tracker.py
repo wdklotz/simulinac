@@ -140,7 +140,7 @@ def make_plots(lattice,live_lost):
         box1_txt=f'OUT {fig_txt} {nblost} lost particles'
 
         plotmax=np.array([max(xymax[0],livemax1[0]),max(xymax[1],livemax1[1])])
-        DEBUG_OFF(f'plotmax={plotmax}')
+        #DEBUG_OFF(f'plotmax={plotmax}')
         ax=plt.subplot(121)
         rms_emittances_IN = scatterInOut(xlive,ylive,xloss,yloss,plotmax,box_txt,ax)
         ax=plt.subplot(122)
@@ -160,8 +160,8 @@ def make_plots(lattice,live_lost):
         # first,last gap
         in_gap= lattice.first_gap
         out_gap=lattice.last_gap
-        DEBUG_OFF(f'1st gap: {in_gap.toString}')
-        DEBUG_OFF(f'last gap: {out_gap.toString}')
+        #DEBUG_OFF(f'1st gap: {in_gap.toString}')
+        #DEBUG_OFF(f'last gap: {out_gap.toString}')
         # frequencies of first,last
         freqIN= in_gap.freq
         freqOUT=out_gap.freq
@@ -175,7 +175,7 @@ def make_plots(lattice,live_lost):
         point=points[-1]
         # kin energy of last track-point
         tkOUT=point()[Ktp.T]
-        DEBUG_OFF(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
+        #DEBUG_OFF(f'freq(IN,OUT) {(freqIN,freqOUT)}  tk(IN,OUT) {(tkIN,tkOUT)}')
         DEBUG_ON(f'(W-IN,W-OUT)={(tkIN,tkOUT)}')
         convIN =WConverter(tkIN,freqIN)
         convOUT=WConverter(tkOUT,freqOUT)
@@ -313,7 +313,7 @@ def track_the_node(node,particle,options):
         new_tp    = Tpoint(point=new_point)
     except (ValueError,OverflowError,OutOfRadialBoundEx) as ex:
         txt = ex.message
-        DEBUG_OFF(txt)
+        #DEBUG_OFF(txt)
         fifo_m.append(txt)
         sfifo_m.append(s)
         lost = True
@@ -389,7 +389,7 @@ def track_the_lattice(lattice,bunch,options):
                 # HDF5 dumping: fill data set
                 if h5dump:
                     tp = particle.track.getpoints()[-1]()
-                    DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
+                    #DEBUG_OFF(f'node={n_cnt} particle={p_cnt} track-point={tp}')
                     h5ds[p_cnt] = tp
                 pass
 
@@ -397,7 +397,7 @@ def track_the_lattice(lattice,bunch,options):
         if n_cnt%pgceil == 0 or n_cnt == nb_nodes: 
             progress_bar(n_cnt,nb_nodes,prefix="Progress:",suffix="complete",length=50)
 
-    DEBUG_OFF(f'n_cnt= {n_cnt}')
+    #DEBUG_OFF(f'n_cnt= {n_cnt}')
     lost = lbunch.nbparticles()
     print('\nTRACKING DONE (particles {}, live {}, lost {})'.format(nb_particles,nb_particles-lost,lost))
 
@@ -417,11 +417,11 @@ def tracker(input_file,options):
     t0       = time.process_time()
     filepath = input_file
     lattice  = factory(filepath)
-    DEBUG_OFF(PARAMS['twiss_w_i']())
+    #DEBUG_OFF(PARAMS['twiss_w_i']())
 
     # w acceptance
     FLAGS['accON'] = lattice.accON
-    DEBUG_OFF(PARAMS['twiss_w_i']())
+    #DEBUG_OFF(PARAMS['twiss_w_i']())
     if not FLAGS['accON']:
         # no acceleration
         print('{}'.format('IMPOSSIBLE: no tracking without acceleration!'))
@@ -438,21 +438,21 @@ def tracker(input_file,options):
     betax_i,alfax_i,gammax_i,emitx_i = twx()
     sigma_x   = twx.sigmaH()
     sigma_xp  = twx.sigmaV()
-    DEBUG_OFF(f'{{x}}x{{xp}} {twx()}')
+    #DEBUG_OFF(f'{{x}}x{{xp}} {twx()}')
 
     # {y,yp}
     twy = PARAMS['twiss_y_i']
     betay_i,alfay_i,gammay_i,emity_i = twy()
     sigma_y   = twy.sigmaH()
     sigma_yp  = twy.sigmaV()
-    DEBUG_OFF(f'{{y}}x{{yp}} {twy()}')
+    #DEBUG_OFF(f'{{y}}x{{yp}} {twy()}')
 
     # {z,Dp2p}  T3D units
     twz = PARAMS['twiss_z_i']
     betaz_i,alfaz_i,gammaz_i,emitz_i = twz()
     sigma_z    = twz.sigmaH()
     sigma_Dp2p = twz.sigmaV()
-    DEBUG_OFF(f'{{z}}x{{Dp2p}} {twz()}')
+    #DEBUG_OFF(f'{{z}}x{{Dp2p}} {twz()}')
     Dp2p0      = PARAMS['Dp2p0_i']
 
     # {Dphi,w}  T.Wangler units
@@ -460,7 +460,7 @@ def tracker(input_file,options):
     betaw_i,alfaw_i,gammaw,emitw_i = tww()
     sigma_Dphi  = tww.sigmaH()
     sigma_w     = tww.sigmaV()
-    DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
+    #DEBUG_OFF(f'{{Dphi}}x{{w}} {tww()}')
 
     # gather for print
     tracker_log = {}
@@ -537,19 +537,19 @@ def tracker(input_file,options):
     while True:
         data = fifo.pop()
         if data is None: break
-        DEBUG_OFF(data)
+        #DEBUG_OFF(data)
     while True:
         data = fifo_xy.pop()
         if data is None: break
-        DEBUG_OFF(data)
+        #DEBUG_OFF(data)
     while True:
         data = fifo_m.pop()
         if data is None: break
-        DEBUG_OFF(data)
+        #DEBUG_OFF(data)
     while True:
         data = fifo_z.pop()
         if data is None: break
-        DEBUG_OFF(data)
+        #DEBUG_OFF(data)
 
 class TestTracker(unittest.TestCase):
     def test_tracking(self):
@@ -558,7 +558,7 @@ class TestTracker(unittest.TestCase):
 
 #----------------main------------
 # if __name__ == '__main__':
-DEBUG_OFF(sys.argv)
+#DEBUG_OFF(sys.argv)
 # ArgumentParser puts result in 'args'
 parser = argparse.ArgumentParser()
 group  = parser.add_mutually_exclusive_group()

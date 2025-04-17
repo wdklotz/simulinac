@@ -37,15 +37,15 @@ class RFG_OLD(Node):
         """ dispatching to different gap models """
         if self.mapping   == 't3d' :   #NOTE: t3d mapping is matrix multiplication
             self.matrix    = self.gap_object.T3D_matrix()
-            # DEBUG_OFF('matrix',self.matrix)
+            #DEBUG_OFF('matrix',self.matrix)
             pass
         elif self.mapping == 'simple':
             self.matrix    = self.gap_object.simple_matrix()  #NOTE: simple mapping is matrix multiplication
-            # DEBUG_OFF('matrix',self.matrix)
+            #DEBUG_OFF('matrix',self.matrix)
             pass
         elif self.mapping == 'oxal':
             (self.matrix,self.ttf,self.deltaW)  = self.gap_object.OXAL_matrix(self.particle.tkin) #NOTE: OXAL mapping is matrix multiplication
-            DEBUG_OFF(f'{self.gap_object},matrix',self.matrix)
+            #DEBUG_OFF(f'{self.gap_object},matrix',self.matrix)
             pass
         elif self.mapping == 'base':
             self.matrix    = self.T3D_matrix(self.ttf,self.particle,self.particlef,self.E0L,self.phisoll,self.lamb,self.deltaW,self.length)
@@ -204,7 +204,7 @@ class RFG_OLD(Node):
         wout      = win + deltaW                         # energy (f)   (4.2.3) A.Shishlo/J.Holmes
         dw        = wout - WOUT                          # d(deltaW)
 
-        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+        #DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
         particlef = UTIL.Proton(WOUT)       # !!!IMPORTANT!!! SOLL particle (f)
         betaf     = particlef.beta
@@ -291,7 +291,7 @@ class RFG_OLD(Node):
         wo          = wi + wo_wi                          # Teilchen energy (O)   
         dw          = wo - wRo                            # Differenz der energy kicks von Teilchen und ref Teilchen (entspricht delta**2)
 
-        # DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
+        #DEBUG_OFF('base_map: (deltaW,qE0LT,i0,phis) = ({},{},{},{})'.format(deltaW,qE0LT,i0,phis))
 
         particleRo = UTIL.Proton(wRo)
         betao      = particleRo.beta
@@ -354,23 +354,23 @@ class RFG_OLD(Node):
         beta      = particle.beta
         gamma     = particle.gamma
         tkin      = particle.tkin
-        # DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
+        #DEBUG_OFF("waccept",dict(E0T=E0T,phisoll=degrees(phisoll),lamb=lamb,freq=freq,m0c2=m0c2,gb=gb,beta=beta,gamma=gamma,tkin=tkin))
 
         # converter for this node
         conv = UTIL.WConverter(tkin,freq)
 
         try:
             # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
-            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            #DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
             w0large = M.sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
-            # DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
+            #DEBUG_OFF(f'w0large {w0large}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0large = -1
         try:
             # SMALL amplitude oscillations separatrix (T.Wangler pp.185) """
             w0small = M.sqrt(2.*E0T*gb**3*lamb*phisoll**2*M.sin(-phisoll)/(M.pi*m0c2))
-            # DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
+            #DEBUG_OFF(f'w0small {w0small}')                                                                                                                                                              
         except ValueError as ex:
             exception = ex
             w0small = -1

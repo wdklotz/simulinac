@@ -75,7 +75,7 @@ def test0():
     step =  (stop-start)/150
     xarr = [x for x in np.arange(start,stop,step)]
 
-    DEBUG_OFF(f'w2phi {(q,m0c2,Ez0,ttf,gamma,beta,lamb,phisync,phisync)}')
+    #DEBUG_OFF(f'w2phi {(q,m0c2,Ez0,ttf,gamma,beta,lamb,phisync,phisync)}')
     abscisse,ordinatep,ordinatem = sepplot(q,m0c2,Ez0,ttf,gamma,beta,lamb,phisync,xarr)
 
     DEBUG_ON(f'Wmax={m0c2*sqrt(w2phi(q,m0c2,Ez0,ttf,gamma,beta,lamb,phisync,phisync)):.4e} MeV')

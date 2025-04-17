@@ -308,7 +308,7 @@ def call_ALCELI(arg):
         if isinstance(node, (ELM.QF, ELM.QD,ELM.RFG,ELM.D)):
             lab=node.label
             element = util.ELEMENTS[node.label]
-            DEBUG_OFF(element)
+            #DEBUG_OFF(element)
 
              
             if element['type'] == "DKD": 
@@ -336,7 +336,7 @@ def call_ALCELI(arg):
 
         lab          = node.label
         element      = util.ELEMENTS[node.label]
-        DEBUG_OFF(element)
+        #DEBUG_OFF(element)
 
              
         if element['type'] == "DKD": 

@@ -125,7 +125,7 @@ class TTF_G(IGap.IGap):
 
         try:
             # LARGE amplitude oscillations (T.Wangler pp. 175 6.28). w = Dgamma = DW/m0c2 normalized energy spread """
-            # DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
+            #DEBUG_OFF(f'w2phi {(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll)}')                                                                                                                                                              
             w0large = sqrt(w2phi(1,m0c2,Ez0,ttf,gamma,beta,lamb,phisoll,phisoll))
         except ValueError as ex:
             exception = ex
@@ -217,7 +217,7 @@ class TTF_G(IGap.IGap):
         f1 = 2*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(kdz))
         t  = f1*f2
-        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        #DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
     def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
         a  = poly.a
@@ -228,7 +228,7 @@ class TTF_G(IGap.IGap):
         f1 = 2*a*sin(kdz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz*cot(kdz)
         s  = f1*f2
-        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        #DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
     def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b

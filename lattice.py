@@ -405,7 +405,7 @@ class Lattice(object):
             
         setutil.PHADVX = phase_advance_x
         setutil.PHADVY = phase_advance_y
-        DEBUG_OFF(f'phase_advance_x,y= {setutil.PHADVX:.3f}, {setutil.PHADVY:.3f}')
+        #DEBUG_OFF(f'phase_advance_x,y= {setutil.PHADVX:.3f}, {setutil.PHADVY:.3f}')
 
         twissfun = Functions(('s','bx','ax','gx','by','ay','gy','bz','az','gz','sigx','sigxp','sigy','sigyp','dx','dxp'))  # function titles
         for row in function_tbl:

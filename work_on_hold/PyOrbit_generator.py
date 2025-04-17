@@ -172,7 +172,7 @@ def generator(file=None):
                 cavity_da.setValue('frequency',node.freq)
                 cavity_da.setValue('name', name)
                 cavity_da.setValue('pos', sm)
-            DEBUG_OFF('accelm_da: {}'.format(accelm_da.makeXmlText()))
+            #DEBUG_OFF('accelm_da: {}'.format(accelm_da.makeXmlText()))
         elif isinstance(node,(ELM.D,ELM.DKD)):
             drift_cnt += 1
         else:
@@ -189,7 +189,7 @@ def generator(file=None):
 
 if __name__ == '__main__':
     # r_limit = sys.getrecursionlimit()
-    # DEBUG_OFF(f'recursionlimit {r_limit}')
+    # #DEBUG_OFF(f'recursionlimit {r_limit}')
     # sys.setrecursionlimit(r_limit*60)
     # r_limit = sys.getrecursionlimit()
     # DEBUG_ON(f'recursionlimit {r_limit}')
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     group  = parser.add_mutually_exclusive_group()
     group.add_argument ("--file", default="yml/simuINwork.yml",   help="lattice input-file:default simuINwork.yml")
     args = vars(parser.parse_args())
-    DEBUG_OFF(args)
+    #DEBUG_OFF(args)
 
     file_name = args['file']
     generator(file = file_name)

@@ -50,7 +50,7 @@ def marker_is_compatible_with(prog,ID):
     ret = True
     head, tail = os.path.split(sys.argv[0])
     this_prog = tail
-    UTIL.DEBUG_OFF((prog,this_prog))
+    #UTIL.DEBUG_OFF((prog,this_prog))
     if prog != this_prog:
         ret = False
     return ret
@@ -69,7 +69,7 @@ def instanciate_element(item):
     instance = None     # will be defined below and returned
     tsoll    = UTIL.PARAMS['injection_energy']   # alias for UTIL...
     for ID,attributes in item.items():
-        UTIL.DEBUG_OFF(F"ID={ID} attributes={attributes}")
+        #UTIL.DEBUG_OFF(F"ID={ID} attributes={attributes}")
         ELEMENT = UTIL.ELEMENTS[ID]          # the item in the ELEMENT list
         type = attributes.get('type')
         if type   == 'D':
@@ -291,20 +291,20 @@ def instanciate_element(item):
             if   action == 'pspace':
                 if not marker_is_compatible_with('simu.py',ID):   # A marker for simu.py ?
                     active = False
-                    UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
+                    #UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with simu.py. Will be skipped'+UTIL.colors.ENDC)
                 instance = PSMKR.PsMarkerAgent(ID,active,viseo,tsoll)
-                UTIL.DEBUG_OFF(ELEMENT)
-                UTIL.DEBUG_OFF(instance.toString())
+                #UTIL.DEBUG_OFF(ELEMENT)
+                #UTIL.DEBUG_OFF(instance.toString())
             elif action == 'pcrcut':
                 if not marker_is_compatible_with('tracker.py',ID):  # A marker for tracker.py ?
                     active = False
-                    UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with tracker.py. Will be skipped'+UTIL.colors.ENDC)
+                    #UTIL.DEBUG_OFF(UTIL.colors.RED+f'WARN: Marker {ID} incompatible with tracker.py. Will be skipped'+UTIL.colors.ENDC)
                 prefix   = ELEMENT['prefix']   = attributes.get('prefix','frames')   # alias
                 abscissa = ELEMENT['abscissa'] = attributes.get('abscissa','z')      # alias
                 ordinate = ELEMENT['ordinate'] = attributes.get('ordinate','zp')     # alias
                 instance   = PCMKR.PoincareMarkerAgent(ID,active,viseo,tsoll,prefix,abscissa,ordinate)
-                UTIL.DEBUG_OFF(ELEMENT)
-                UTIL.DEBUG_OFF(instance.__dict__)
+                #UTIL.DEBUG_OFF(ELEMENT)
+                #UTIL.DEBUG_OFF(instance.__dict__)
             else:
                 raise(UserWarning(wrapRED('Unknown marker ACTION encountered: "{}"'.format(action))))
                 sys.exit(1)
@@ -369,8 +369,8 @@ def factory(input_file):
         # transverse Twiss @ entrance
         res['twiss_x_i']        = UTIL.Twiss(res['betax_i'], res['alfax_i'],res['emitx_i'])
         res['twiss_y_i']        = UTIL.Twiss(res['betay_i'], res['alfay_i'],res['emity_i'])
-        UTIL.DEBUG_OFF(f"twiss_x_i {res['twiss_x_i']()}")
-        UTIL.DEBUG_OFF(f"twiss_y_i {res['twiss_y_i']()}")
+        #UTIL.DEBUG_OFF(f"twiss_x_i {res['twiss_x_i']()}")
+        #UTIL.DEBUG_OFF(f"twiss_y_i {res['twiss_y_i']()}")
         # initial dispersion @ entrance
         res['dx_i']              = parameters.get('dx_i',0.)
         res['dxp_i']             = parameters.get('dxp_i',0.)
@@ -403,13 +403,13 @@ def factory(input_file):
     def process_elements(elements):
         return elements
     def make_lattice(elementIDs):
-        UTIL.DEBUG_OFF(elementIDs)
+        #UTIL.DEBUG_OFF(elementIDs)
         lattice = LAT.Lattice(descriptor=UTIL.PARAMS.get('descriptor'))
         instances = []
         for elementID in elementIDs:
-            UTIL.DEBUG_OFF(elementID)
+            #UTIL.DEBUG_OFF(elementID)
             ELEMENT = UTIL.ELEMENTS.get(elementID)
-            UTIL.DEBUG_OFF(ELEMENT)
+            #UTIL.DEBUG_OFF(ELEMENT)
             """add elementID"""
             ELEMENT['ID']  = elementID 
 
@@ -418,10 +418,10 @@ def factory(input_file):
             """ INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE INSTANCIATE ELM._Node objects """
 
             if instance == None: continue
-            UTIL.DEBUG_OFF(instance)
+            #UTIL.DEBUG_OFF(instance)
             if isinstance(instance, (ELM.Node)):  # add Node objects only!
                 instances.append(instance)
-        UTIL.DEBUG_OFF(instances)
+        #UTIL.DEBUG_OFF(instances)
         for instance in instances:
             lattice.add_node(instance)
         return lattice   # the complete lattice
@@ -435,7 +435,7 @@ def factory(input_file):
             raise(UserWarning(wrapRED('File inputError: {}'.format(str(ex)))))
             sys.exit(1)
     fileobject.close()
-    UTIL.DEBUG_OFF(in_data)
+    #UTIL.DEBUG_OFF(in_data)
 
     # call lattice parser, get results
     results = LP2.parse(in_data)
@@ -443,19 +443,19 @@ def factory(input_file):
 
     flags = process_flags(results.FLAGS)
     UTIL.FLAGS.update(flags)
-    UTIL.DEBUG_OFF('global FLAGS after process_flags():',UTIL.FLAGS)
+    #UTIL.DEBUG_OFF('global FLAGS after process_flags():',UTIL.FLAGS)
 
     parameters = process_parameters(results.PARAMETERS)
     parameters['input_file'] = input_file
     UTIL.PARAMS.update(parameters)
-    UTIL.DEBUG_OFF('global PARAMS after process_parameters():',UTIL.PARAMS)
+    #UTIL.DEBUG_OFF('global PARAMS after process_parameters():',UTIL.PARAMS)
 
     elements = process_elements(results.ELEMENTS)
     UTIL.ELEMENTS = elements
-    UTIL.DEBUG_OFF('ELEMENTS after process_elements():',UTIL.ELEMENTS)
+    #UTIL.DEBUG_OFF('ELEMENTS after process_elements():',UTIL.ELEMENTS)
 
     lat_elementIDs = results.LAT_ELMIDs
-    UTIL.DEBUG_OFF('LAT_ELMIDs after process_elements():',lat_elementIDs)
+    #UTIL.DEBUG_OFF('LAT_ELMIDs after process_elements():',lat_elementIDs)
     lattice = make_lattice(lat_elementIDs)
 
     # return full Lattice object.

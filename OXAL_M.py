@@ -268,7 +268,7 @@ class OXAL_G(IGap.IGap):
             zir = poly.zr
             if zil < zl or zir > zr: continue
             slices.append(poly)
-        DEBUG_OFF('slices',slices)
+        ##DEBUG_OFF('slices',slices)
         return slices
     def V0(self, poly):      # A.Shishlo/J.Holmes (4.4.3)
         """ V0 A.Shishlo/J.Holmes (4.4.3) """
@@ -284,7 +284,7 @@ class OXAL_G(IGap.IGap):
         f1 = 2*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz*cot(k*dz))
         t  = f1*f2
-        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        #DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
     def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
         a  = poly.a
@@ -294,7 +294,7 @@ class OXAL_G(IGap.IGap):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+twothird*b*dz**3))
         f2 = 1.-k*dz*cot(k*dz)
         s  = f1*f2
-        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        #DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
     def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b

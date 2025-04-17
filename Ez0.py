@@ -99,11 +99,11 @@ def zPoly(EzAvg,polyValues):
     e2 = EPoly(z2,polyValues)
     e1 = EPoly(z1,polyValues)
     e0 = EPoly(z0,polyValues)
-    DEBUG_OFF(f"z0 {z0},z1 {z1},z2 {z2},e0 {e0},e1 {e1},e2 {e2},")
+    #DEBUG_OFF(f"z0 {z0},z1 {z1},z2 {z2},e0 {e0},e1 {e1},e2 {e2},")
     #   use NP.polyfit(...,deg=2)
     pfit = NP.polyfit([e0,e1,e2],[z0,z1,z2],deg=2)
     zeff = pfit[0]*EzAvg**2 + pfit[1]*EzAvg + pfit[2]
-    DEBUG_OFF(f"input EzAvg {EzAvg}, fitted EzAvg(zeff) {EPoly(zeff,polyValues)}, zeff {zeff}")
+    #DEBUG_OFF(f"input EzAvg {EzAvg}, fitted EzAvg(zeff) {EPoly(zeff,polyValues)}, zeff {zeff}")
     return zeff
 def V0n(poly,n):
     """ Formel (4.4.3) A.Shishlo/J.Holmes """
@@ -128,7 +128,7 @@ def Tn(poly,k,n):
     dz = poly[n].dz
     f1 = 2*sin(k*dz)/k/(2*dz+2./3.*b*dz**3)
     f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
-    DEBUG_OFF('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
+    #DEBUG_OFF('Tn(): (a,b,dz,f1,f2)={:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(a,b,dz,f1,f2))
     t = f1*f2
     return t
 def T(poly,k,zintval):
@@ -139,7 +139,7 @@ def T(poly,k,zintval):
         zir = poly[i].zr
         dz = poly[i].dz
         if zil < zl or zir > zr: continue
-        DEBUG_OFF('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
+        #DEBUG_OFF('T(): (i,dz,zl,zil,zir,zr)=({:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}{:8.4f}'.format(i,dz,zl,zil,zir,zr))
         t.append(Tn(poly,k,i))
     return t
 def Sn(poly,k,n):
@@ -246,10 +246,10 @@ class SFdata(object):
             elif EzPeak == 0. and L == 0.:
                 instance.scaleEzTable(instance._EzPeak,instance._L)
             SFdata.instances[instance_key] = instance
-            DEBUG_OFF(SFdata.instances)
-            DEBUG_OFF('self.Ez0_tab',instance.Ez0_tab,'================= EOF Ez0_tab')
+            #DEBUG_OFF(SFdata.instances)
+            #DEBUG_OFF('self.Ez0_tab',instance.Ez0_tab,'================= EOF Ez0_tab')
             instance.makeEPoly()
-            DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
+            #DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(instance.polies)))
         return instance
 
     def readRawData(self):
@@ -262,7 +262,7 @@ class SFdata(object):
             lines = lines[leading:-trailing]           # remove leading and trailing lines
             for line in lines:
                 stripped    = line.strip()
-                DEBUG_OFF(stripped)
+                #DEBUG_OFF(stripped)
                 (z,sep,aft) = stripped.partition(' ')
                 z =float(z)
                 stripped    = aft.strip()
@@ -292,9 +292,9 @@ class SFdata(object):
         ep = eneg+ep
         N = len(zp)
         raw_tab = [Dpoint(zp[i],rp[i],ep[i]) for i in range(N)]
-        DEBUG_OFF('raw_tab',raw_tab)
+        #DEBUG_OFF('raw_tab',raw_tab)
         EzAvg = float((NP.trapezoid(ep,dx=dz)/self._L))
-        DEBUG_OFF(f'[(Ez,z)]=[({EzPeak},{zl}),({EzMin},{zr})], L={self._L}, dz={dz}, EzAvg ={EzAvg}')
+        #DEBUG_OFF(f'[(Ez,z)]=[({EzPeak},{zl}),({EzMin},{zr})], L={self._L}, dz={dz}, EzAvg ={EzAvg}')
 
         # raw data from SF will never be modified!
         self._Ez0_tab = raw_tab # defined on  [-L/2,+L/2]
@@ -331,9 +331,9 @@ class SFdata(object):
         M      = 8               # raw intervalls/poly interval (must be even number [2,4,6,8,....])
         polies = []              # polies: list(Polyvals)
 
-        DEBUG_OFF('makeEzPoly: raw function values: {} in {}'.format(N,range(N-1)))
-        DEBUG_OFF('makeEzPoly: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
-        DEBUG_OFF('makeEzPoly: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
+        #DEBUG_OFF('makeEzPoly: raw function values: {} in {}'.format(N,range(N-1)))
+        #DEBUG_OFF('makeEzPoly: first is sf_tab[{:3}]..{}'.format(0,sf_tab[0]))
+        #DEBUG_OFF('makeEzPoly: last is  sf_tab[{:3}]..{}'.format(N-1,sf_tab[N-1]))
         i=0
         while(True):
             il = i
@@ -352,8 +352,8 @@ class SFdata(object):
             a  = (Er-El)/(2*E0*dz)           # getestet mit Bleistift u. Papier
             pval = Polyval(zl,z0,zr,dz,b,a,E0)
             polies.append(pval)
-            DEBUG_OFF('Ez0_poly::SFdata::makeEzPoly: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
-        DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(polies)))
+            #DEBUG_OFF('Ez0_poly::SFdata::makeEzPoly: (il,i0,ir) ({:3},{:3},{:3}),  (zl,z0,zr,E0) ({:6.3f},{:6.3f},{:6.3f},{:6.3f})'.format(il,i0,ir,zl,z0,zr,E0))
+        #DEBUG_OFF('makeEzPoly: {} poly intervals'.format(len(polies)))
         self.polies = polies
         return
     def hardEdge(self,gap):
@@ -521,11 +521,11 @@ class TestEz0Methods(unittest.TestCase):
         s   = S( polyValues, k, zintval)
         tp  = Tp( polyValues,k, zintval)
         sp  = Sp( polyValues,k, zintval)
-        DEBUG_OFF('V0',['{:.4g}'.format(x) for x in v0])
-        DEBUG_OFF('T(k)',['{:.4g}'.format(x) for x in t])
-        DEBUG_OFF('S(k)',['{:.4g}'.format(x) for x in s])
-        DEBUG_OFF("T'(k)",tp)
-        DEBUG_OFF("S'(k)",sp)                                         
+        #DEBUG_OFF('V0',['{:.4g}'.format(x) for x in v0])
+        #DEBUG_OFF('T(k)',['{:.4g}'.format(x) for x in t])
+        #DEBUG_OFF('S(k)',['{:.4g}'.format(x) for x in s])
+        #DEBUG_OFF("T'(k)",tp)
+        #DEBUG_OFF("S'(k)",sp)                                         
     def test5(self):
         print("\b----------------------------------------test5")
         # TBL_file='SF/PILL-2CM.TBL'
@@ -536,11 +536,11 @@ class TestEz0Methods(unittest.TestCase):
         L = 0.
         sfdata = SFdata.InstanciateAndScale(TBL_file,EzPeak=EzPeak,L=L)
         av2peak1 = sfdata.EzAvg/sfdata.EzPeak
-        DEBUG_OFF("peak:{:.3f} -- average:{:.3f} -- average/peak {:.3f}".format(sfdata.EzPeak,sfdata.EzAvg,av2peak1))
+        #DEBUG_OFF("peak:{:.3f} -- average:{:.3f} -- average/peak {:.3f}".format(sfdata.EzPeak,sfdata.EzAvg,av2peak1))
         EzPeak = 4.5
         sfdata = SFdata.InstanciateAndScale(TBL_file,EzPeak=EzPeak,L=L)
         av2peak2 = sfdata.EzAvg/sfdata.EzPeak
-        DEBUG_OFF("peak:{:.3f} -- average:{:.3f} -- average/peak {:.3f}".format(sfdata.EzPeak,sfdata.EzAvg,av2peak2))
+        #DEBUG_OFF("peak:{:.3f} -- average:{:.3f} -- average/peak {:.3f}".format(sfdata.EzPeak,sfdata.EzAvg,av2peak2))
         self.assertAlmostEqual(av2peak1,av2peak2,msg='average/peak',places=3)
     def test6(self):
         print("\b----------------------------------------test6")
@@ -582,7 +582,7 @@ class TestEz0Methods(unittest.TestCase):
             EzAvg.append(sfdata.EzAvg)
             polyValues = sfdata.polies
             zeff.append(zPoly(EzAvg[ix],polyValues))
-            DEBUG_OFF(f"input EzAvg {EzAvg[ix]}, fitted EzAvg(zeff) {EPoly(zeff[ix],polyValues)}, zeff {zeff[ix]}")
+            #DEBUG_OFF(f"input EzAvg {EzAvg[ix]}, fitted EzAvg(zeff) {EPoly(zeff[ix],polyValues)}, zeff {zeff[ix]}")
             if ix > 0:
                 self.assertAlmostEqual(EzAvg[ix-1],EzAvg[ix],msg='EzAvg',places=3)
                 self.assertNotEqual(zeff[ix-1],zeff[ix],msg='zeff')
@@ -599,20 +599,20 @@ class TestEz0Methods(unittest.TestCase):
         reduc = 0.57   # reduce L by 57%
         gap = sfdata.L * reduc
         (HE_Gap, HE_EzPeak) = sfdata.hardEdge(gap)
-        DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
+        #DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
         self.assertAlmostEqual(HE_EzPeak*reduc,sfdata.EzAvg,msg='hard edge field',places=3)
 
         sfdata.scaleEzTable(1.,4.4)   # apply scaling
         gap = sfdata.L * reduc 
         (HE_Gap, HE_EzPeak) = sfdata.hardEdge(gap)
-        DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
+        #DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
         self.assertAlmostEqual(HE_EzPeak*reduc,sfdata.EzAvg,msg='hard edge field',places=3)
 
         sfdata.scaleEzTable(1.,4.4)  # same scaling, same instance
         reduc = 1. # reduce L by 0%
         gap = sfdata.L * reduc
         (HE_Gap, HE_EzPeak) = sfdata.hardEdge(gap)
-        DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
+        #DEBUG_OFF(f'raw: (EzPeak,L)= ({sfdata.EzPeak:.3f},{sfdata.L:.3f}), (EzAvG,L)= ({sfdata.EzAvg:.3f},{sfdata.L:.3f}); hard edge: (He_EzPeak,HE_Gap)= ({HE_EzPeak:.3f},{HE_Gap:.3f})')
         self.assertAlmostEqual(HE_EzPeak*reduc,sfdata.EzAvg,msg='hard edge field',places=3)
     def test9(self):
         print("\b----------------------------------------test9")

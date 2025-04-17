@@ -185,7 +185,7 @@ def confidence_ellipse(x, y, ax, n_std=3, facecolor='none', **kwargs):
     mean_y = NP.mean(y)
 
     scaled_area = ell_area*scale_x*scale_y
-    DEBUG_OFF('scaled_area',scaled_area)
+    #DEBUG_OFF('scaled_area',scaled_area)
 
     transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
 
@@ -218,7 +218,7 @@ def scatterInOut(xlive,ylive,xloss,yloss,xymax,box_txt,ax):
     # 3 sigma
     rms_emittance = confidence_ellipse(x,y,ax,n_std=3,label=r"$3\sigma$",edgecolor="green",linestyle=":")/C.pi
     rms_emittances.append((3,rms_emittance))
-    DEBUG_OFF("{}-sigma RMS-emittance {:.2e}".format(rms_emittances[2][0],rms_emittances[2][1]))
+    #DEBUG_OFF("{}-sigma RMS-emittance {:.2e}".format(rms_emittances[2][0],rms_emittances[2][1]))
     ax.legend()
     return rms_emittances
 
@@ -269,7 +269,7 @@ def scatter11(live,lost,abscisse,ordinate,txt):
         if NP.array_equal(xymax,NP.array([0.,0.])):
             xymax=NP.fmax(xymax0,xymax1)
             xymax = 1.03 * xymax   # add 3% margin
-        DEBUG_OFF(xymax)
+        #DEBUG_OFF(xymax)
 
         box_text = f"{title} {nbtotal} particles"
         ax = plt.subplot(subplot)

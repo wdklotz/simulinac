@@ -51,7 +51,7 @@ class TTF_G(ELM.RFG):
         f1 = 2*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.+b*dz**2-2.*b/k**2*(1.-k*dz/tan(k*dz))
         t  = f1*f2
-        DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
+        #DEBUG_OFF('TTF_G: (T,k) {}'.format((t,k)))
         return t
     def S(self, poly, k):    # A.Shishlo/J.Holmes (4.4.7)
         a  = poly.a
@@ -61,7 +61,7 @@ class TTF_G(ELM.RFG):
         f1 = 2*a*sin(k*dz)/(k*(2*dz+2./3.*b*dz**3))
         f2 = 1.-k*dz/tan(k*dz)
         s  = f1*f2
-        DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
+        #DEBUG_OFF('TTF_G: (S,k) {}'.format((s,k)))
         return s
     def Tp(self, poly, k):   # A.Shishlo/J.Holmes (4.4.8)
         b   = poly.b

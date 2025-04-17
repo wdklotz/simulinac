@@ -421,8 +421,8 @@ class DYN_G(ELM.RFG):
         self.deltaW    = Ws_out - Ws_in
         self.ttf       = self.deltaW/EzAvg_test/h/cos(phis)/len(self.polies)
         f_track[EKOO]  = Ws_out
-        DEBUG_OFF('dyn-map {}'.format(i_track))
-        DEBUG_OFF('dyn-map {}'.format(f_track))
+        #DEBUG_OFF('dyn-map {}'.format(i_track))
+        #DEBUG_OFF('dyn-map {}'.format(f_track))
         return f_track
     def adjust_energy(self, tkin):
         adjusted = DYN_G(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,SFdata=self.SFdata,particle=Proton(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)

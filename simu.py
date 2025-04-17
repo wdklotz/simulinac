@@ -440,8 +440,8 @@ def simulation(filepath):
             display(twiss_func,c_like,s_like,lat_plot,ape_plot) #.........make plots of functions
         for node in lattice.seq: #....................................filter on Markers and invoke actions
             if not isinstance(node,ELM.MRK): continue
-            DEBUG_OFF(node.toString())
-            DEBUG_OFF(node.__dict__)
+            #DEBUG_OFF(node.toString())
+            #DEBUG_OFF(node.__dict__)
             node.do_action()
         dictprnt(SUMMARY,text='Summary') #............................show summary
         """ show all figures - (must be the only call to show!) """

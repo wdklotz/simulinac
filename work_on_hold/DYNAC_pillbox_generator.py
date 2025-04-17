@@ -321,7 +321,7 @@ def call_ALCELI(arg):
             node_cnt += 1
             quad_cnt += 1
             element = util.ELEMENTS[node.label]
-            DEBUG_OFF(element)
+            #DEBUG_OFF(element)
             field_length            = (node.length) * 100    # (cm)
             pole_tip_field          = element['Bpole'] * 10  # (kG)
             radius_to_the_pole_tips = (node.aperture) * 100  # (cm)
@@ -341,7 +341,7 @@ def call_ALCELI(arg):
             node_cnt += 1
             cav_cnt += 1
             element = util.ELEMENTS[node.label]
-            DEBUG_OFF(element)
+            #DEBUG_OFF(element)
 
             energy        = 0.            # (MeV) dummy DYNAC variable
             beta          = 0.            # dummy DYNAC variable
@@ -361,7 +361,7 @@ def call_ALCELI(arg):
             gap_frequency = node.freq*1E-06        # (MHz)
 
             sfdata = node.SFdata
-            DEBUG_OFF(sfdata)
+            #DEBUG_OFF(sfdata)
             if sfdata == None:
                 pass                        #TODO simulate a constant field!
             elif sfdata == active_field_map:
@@ -395,7 +395,7 @@ def call_ALCELI(arg):
 
         elif isinstance(node, ELM.D):
             element = util.ELEMENTS[node.label]
-            DEBUG_OFF(element)
+            #DEBUG_OFF(element)
 
             drift_length = (node.length) * 100  # (cm)
             if element['type'] == "D": 
@@ -407,7 +407,7 @@ def call_ALCELI(arg):
         elif isinstance(node, ELM.MRK):
             # node_cnt += 1
             element = util.ELEMENTS[node.label]
-            DEBUG_OFF(element)
+            #DEBUG_OFF(element)
 
         elif isinstance(node, ELM.RFC, ELM.GAP):
             print("Nothig implemented fot RFC or GAP. Use RFG for DYNAC!")

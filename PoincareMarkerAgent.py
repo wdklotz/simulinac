@@ -46,7 +46,7 @@ class PoincareMarkerAgent(MRK):
         xmax     = args[1]
         ymax     = args[2]
         position = args[3]
-        DEBUG_OFF(f'(number,xmax,ymax,position) ({number},{xmax},{ymax},{position})')
+        #DEBUG_OFF(f'(number,xmax,ymax,position) ({number},{xmax},{ymax},{position})')
         # box is text in upper left in axes coords (remark: these are matplotlib.patch.Patch properties)
         symbols = ('x', "x'", 'y', "y'", 'z', "$\Delta$p/p")
         box = '{}-{}'.format(symbols[self.xaxis],symbols[self.yaxis])
