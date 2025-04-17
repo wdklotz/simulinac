@@ -95,7 +95,7 @@ def sig_apply_eg_corr(rf_gap, sigma_i, delta_phi, ksi=(0.,0.)):
     m0c2          = rf_gap.particle.e0
     lamb          = rf_gap.mapper.lamb
     particlei     = rf_gap.particle
-    # particlef     = rf_gap.particlef
+    particlef     = rf_gap.particlef
     gamma_beta_f  = particlef.gamma_beta
     gamma_beta_av = (particlei.gamma_beta+gamma_beta_f)/2.
     kx            = -pi*E0L*ttf/(m0c2*gamma_beta_av**2*gamma_beta_f*lamb)
@@ -169,7 +169,7 @@ class TestElementMethods(unittest.TestCase):
             freq=816.e6,
             particle=particle
             )
-        R = RFG('test-gap')
+        R = RFG('test-gap',particle.tkin)
         R.register(T3D_G())
         R.configure(**gap_parameters)
         bx       = 1.
@@ -194,15 +194,17 @@ class TestElementMethods(unittest.TestCase):
         print('-----------------------------------test_eg_correction--')
         particle = Proton(2.)
         gap_parameters = dict(
+            aperture = 0.011,
             EzPeak=5.0,
             phisoll=radians(-30.),
             gap=0.022,
             freq=816.e6,
             particle=particle
             )
-        R = RFG('test-gap')
+        R = RFG('test-gap',particle.tkin)
         R.register(T3D_G())
         R.configure(**gap_parameters)
+        R.adjust_energy(particle.tkin)
         bx       = 1.
         ax       = 0.
         gx       = (1+ax**2)/bx

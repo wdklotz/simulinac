@@ -218,7 +218,7 @@ class TestElementMethods(unittest.TestCase):
             SFdata     = None,
         )
         FLAGS['mapping'] = 't3d'
-        instance = ELM.RFG('RFG')
+        instance = ELM.RFG('RFG',PARAMS['injection_energy'])
         instance.register(T3D_G())
         instance.configure(**gap_parameter)
         instance.adjust_energy(PARAMS['injection_energy'])

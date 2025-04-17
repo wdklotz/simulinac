@@ -346,12 +346,12 @@ class TestOxalEnergyMapping(unittest.TestCase):
             SFdata     = None,
         )
         FLAGS['mapping'] = 'oxal'
-        fieldtab  = 'unittests/CAV-FLAT-R135-L32.TBL'
+        fieldtab  = 'SF/CAV-FLAT-R135-L32.TBL'
         L         = gap_parameter['cavlen']
         EzPeak    = gap_parameter['EzPeak']
         sfdata    = EZ.SFdata.InstanciateAndScale(fieldtab,EzPeak=EzPeak,L=L*100.)   # scaled field distribution
         gap_parameter['SFdata'] = sfdata
-        instance = ELM.RFG('RFG')
+        instance = ELM.RFG('RFG',PARAMS['injection_energy'])
         instance.register(OXAL_G())
         instance.configure(**gap_parameter)
         instance.adjust_energy(PARAMS['injection_energy'])

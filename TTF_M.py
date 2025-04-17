@@ -410,7 +410,8 @@ class TestTransitTimeFactorsGapModel(unittest.TestCase):
         sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen/2.*100.)   # scaled field distribution
         gap_parameter['SFdata'] = sfdata
         FLAGS['mapping'] = 'ttf'
-        instance = ELM.RFG('RFG')
+        tsoll = 10.
+        instance = ELM.RFG('RFG',tsoll)
         instance.register(TTF_G())
         instance.configure(**gap_parameter)
 

@@ -273,7 +273,7 @@ class TestBASEMapping(unittest.TestCase):
             freq      = 750e6,
         )
         FLAGS['mapping'] = 'base'
-        instance = ELM.RFG('RFG')
+        instance = ELM.RFG('RFG',PARAMS['injection_energy'])
         instance.register(BASE_G())
         instance.configure(**gap_parameter)
         instance.adjust_energy(PARAMS['injection_energy'])

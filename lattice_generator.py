@@ -464,7 +464,7 @@ def factory(input_file):
 class TestLatticeGeneratorMethods(unittest.TestCase):
     def test_Lattice_Parser(self):
         print("\b----------------------------------------test_Lattice_Parser")
-        input_file = "unittests/I5O200_19082022.yml"
+        input_file = "unittests/TT28_base.yml"
         fileobject = open(input_file,'r')
         wfl = yaml.load(fileobject, Loader=yaml.FullLoader)
         fileobject.close()
@@ -503,7 +503,7 @@ class TestLatticeGeneratorMethods(unittest.TestCase):
         print("\b----------------------------------------test_Lattice_factory")
         input_file = "unittests/TT28_base.yml"
         lattice = factory(input_file)
-        print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].ref_track[UTIL.EKOO]:.3f} [MeV] \u26dd')
+        print(F'\u26dd  FINAL kinetic energy {lattice.seq[-1].soll_track[UTIL.EKOO]:.3f} [MeV] \u26dd')
         UTIL.DEBUG_ON('lattice_generator'   ,lattice.toString())
         UTIL.DEBUG_ON('SUMMARY in factory()',UTIL.SUMMARY)
         UTIL.DEBUG_ON('FLAGS in factory()'  ,UTIL.FLAGS)

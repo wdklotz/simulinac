@@ -207,5 +207,5 @@ def test0(input_file):
     UTIL.DEBUG_ON(results.ELMIDs)
 if __name__ == '__main__':
     args = sys.argv
-    input_file = args[1] if len(args) >1 else 'unittests/simuIN.yml'
+    input_file = args[1] if len(args) >1 else 'unittests/TT28_base.yml'
     test0(input_file)
