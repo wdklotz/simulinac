@@ -5,8 +5,8 @@
   - found *L=cavlen/2\*100* in instanciation of TTF_G, should be *L=cavlen\*100 instead*
   - checked Ez0.py again
   - ***Problem scheint gelöst zu sein***
-* altes Zeug wieder aktivieren
-* alle unittests aktivieren
+* alle unittests aktivieren, altes Zeug wieder aktivieren
+  - done für neue RF-gaps. ***fehlt noch***: wille, bending magnets
 * changelog updaten
 # maybe...
 * with magnetic- & alignment-errors

@@ -457,7 +457,7 @@ args = vars(parser.parse_args())
 print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
 # let's go. All  input is parsed...
-input_file = args['file']    # default simuIN.yml
+input_file = args['file']
 print('This run: input({}))'.format(input_file))
 
 if sys.platform == 'darwin' or sys.platform.startswith('linux') or sys.platform == 'win32':
