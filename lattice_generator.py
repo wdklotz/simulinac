@@ -85,20 +85,22 @@ def instanciate_element(item):
         elif type == 'SD':
             alpha          = get_mandatory(attributes,'alpha',ID)
             rho            = get_mandatory(attributes,'rho',ID)
-            aperture       = attributes.get('aperture',None)
+            aperture       = attributes.get('aperture')
+            sec            = attributes.get('sec')
             instance       = ELM.SD(ID, alpha, rho, aperture=aperture)
-            sec            = attributes.get('sec','?')
             ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
+            if sec == None: ELEMENT['sec'] = '?'
         elif type == 'RD':
             alpha          = get_mandatory(attributes,'alpha',ID)
             rho            = get_mandatory(attributes,'rho',ID)
-            aperture       = attributes.get('aperture',None)
+            aperture       = attributes.get('aperture')
             t3d_wedge      = attributes.get('t3d_wedge',False)
-            wedge          = ELM.Wedge(alpha/2., rho, t3d_wedge=t3d_wedge)
+            sec            = attributes.get('sec')
+            wedge          = ELM.Wedge(alpha/2., rho, t3d_wedge)
             instance       = ELM.RD(ID, alpha, rho, wedge, aperture=aperture)
-            sec            = attributes.get('sec','?')
             ELEMENT['length'] = instance.length
             ELEMENT['B0 [T]'] = 3.3356/rho*UTIL.PARAMS['injection_energy']*1e-3
+            if sec == None: ELEMENT['sec'] = '?'
         elif type == 'QF':
             length           = get_mandatory(attributes,'length',ID)
             dBdz             = get_mandatory(attributes,"B'",ID)

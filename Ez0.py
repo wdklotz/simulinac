@@ -87,7 +87,7 @@ def zPoly(EzAvg,polyValues):
         # zl = polyval.zl
         # zr = polyval.zr
         # dz = polyval.dz
-        # DEBUG_ON(f"[ix={ix},zl={zl},zr={zr}],dz={dz},E0={e0}") 
+        #DEBUG_ON(f"[ix={ix},zl={zl},zr={zr}],dz={dz},E0={e0}") 
         if e0 < EzAvg:
             ix = ix-1
         else:

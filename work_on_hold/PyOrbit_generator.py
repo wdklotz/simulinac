@@ -42,7 +42,7 @@ def generator(file=None):
     # pickled_lattice   = pickle.dumps(lattice)
     # unpickled_lattice = pickle.loads(pickled_lattice)
     # lattice           = unpickled_lattice
-    # DEBUG_ON('lattice length',lattice.length)
+    #DEBUG_ON('lattice length',lattice.length)
 
     # waccept(lattice.first_gap)
     lattice.first_gap.waccept()
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     # #DEBUG_OFF(f'recursionlimit {r_limit}')
     # sys.setrecursionlimit(r_limit*60)
     # r_limit = sys.getrecursionlimit()
-    # DEBUG_ON(f'recursionlimit {r_limit}')
+    #DEBUG_ON(f'recursionlimit {r_limit}')
 
     # use ArgumentParser to put result in 'args'
     parser = argparse.ArgumentParser()

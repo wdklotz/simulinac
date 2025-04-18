@@ -72,7 +72,6 @@ class Lattice(object):
         self.descriptor       = descriptor
         self.label            = ''     # long label
         self.slabel           = ''     # short label
-    
     def __iter__(self):
         """ iterator using the linked list of element """
         if self.iteration == "RL":
@@ -250,8 +249,10 @@ class Lattice(object):
             else:
                 print(wrapRED('WARN: unstable lattice!'))
             return stable
-        def ring(self,mcell):
-            if not isStable(mcell): sys.exit(1)
+        # def ring(self,mcell):
+        def ring():
+            # if not isStable(mcell): sys.exit(1)
+            if not isStable(self.matrix): sys.exit(1)
             # cell matrix (not beta_matrix!)
             cell_matrix = self.matrix
             m11  = cell_matrix[XKOO,XKOO];   m12  = cell_matrix[XKOO,XPKOO]
@@ -308,7 +309,8 @@ class Lattice(object):
     # >>>>> cell >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # >>>>> cell >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         if closed:
-            params = ring(self.matrix)
+            # params = ring(self.matrix)
+            params = ring()
         else:
             params = transferline(self.matrix)
         bax,alx,gmx,epsix = params['twiss_x_i']()
@@ -432,7 +434,8 @@ class Lattice(object):
         dx  = PARAMS['dx_i']
         dxp = PARAMS['dxp_i']
         if closed == True:
-            m_cell = self.acc_node
+            # m_cell = self.acc_node
+            m_cell = self
             C  = m_cell.matrix[0,0]; S  = m_cell.matrix[0,1]; D  = m_cell.matrix[0,5]
             Cp = m_cell.matrix[1,0]; Sp = m_cell.matrix[1,1]; Dp = m_cell.matrix[1,5]
             # from H.Wiedemann, chap. 6.79, pp.206
@@ -623,15 +626,30 @@ class Lattice(object):
         [0.,        0.,                0.,         0.,        0.,               0.,         o21*o21,   -2.*o22*o21,       o22*o22]
         ])
         return m_beta
+    def concat(self,other):
+        head = self.seq[-1]
+        tail = other.seq[0]
+        head.next = tail
+        tail.prev = head
+        self.matrix = NP.dot(self.matrix,other.matrix)
+        self.label = self.label+f'*{other.label}'
+        self.length = self.length+other.length
+        (d,d,sp)= head.position
+        for nxx in other.seq:
+            (sl,sm,sf)= nxx.position
+            shift_pos= (sl+sp,sm+sp,sf+sp)
+            nxx.position= shift_pos
+            self.seq.append(nxx)
+        return self
 
 class TestLattice(unittest.TestCase):
     def test_lattice_add_first_6_nodes(self):
-        print('----------------------------------test_lattice_add_first_6_nodes')
+        print(wrapRED('----------------------------------test_lattice_add_first_6_nodes'))
         lattice = Lattice()
-        tkin = lattice.injection_energy
-        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(tkin))
-        drift = ELM.D("DR",length=1.)
-        quadf = ELM.QF("QUADF",3.,particle=Proton(tkin),length=0.5)
+        tsoll = 50
+        rfgap = ELM.GAP("GAP", 2., -25., 0.044, 800.e6,particle=Proton(tsoll))
+        drift = ELM.D("DR",length=1.,aperture=0.011,tsoll=tsoll)
+        quadf = ELM.QF("QUADF",3.,length=0.5,aperture=0.011,tsoll=tsoll)
         lattice.add_node(rfgap)
         lattice.add_node(drift)
         lattice.add_node(quadf)
@@ -639,17 +657,17 @@ class TestLattice(unittest.TestCase):
         lattice.add_node(drift)
         lattice.add_node(quadf)
         for i in range(len(lattice.seq)):
-            print(lattice.seq[i].ref_track, lattice.seq[i].particle.tkin,lattice.seq[i].label)
+            print(lattice.seq[i].soll_track, lattice.seq[i].particle.tkin,lattice.seq[i].label)
     def test_lattice_generator(self):
-        print('----------------------------------test_lattice_generator')
+        print(wrapRED('----------------------------------test_lattice_generator'))
         input_file = "unittests/TT28_base.yml"
         lattice = factory(input_file)
         print(lattice.__class__.__name__,F"{len(lattice.seq)} elements")
         print(lattice.__class__.__name__,F"length {len(lattice.seq)} [m]")
         self.assertEqual(lattice.__class__.__name__,"Lattice")
     def test_lattice_iterator(self):
+        print(wrapRED('---------------------------------test_lattice_iterator'))
         input_file = "unittests/TT28_base.yml"
-        print('---------------------------------test_lattice_iterator')
         lattice = factory(input_file)
         # node = None
         for cnt,node in enumerate(iter(lattice)): 
@@ -668,26 +686,26 @@ class TestLattice(unittest.TestCase):
         self.assertEqual(node,lattice.seq[0],"first node")
         self.assertNotEqual(lattice.seq[0],lattice.seq[-1],"first node .ne. last node")
     def test_lattice_concat(self):
-        print('---------------------------------test_lattice_concat')
+        print(wrapRED('---------------------------------test_lattice_concat'))
         l = 1.
         p = Proton(50.)
-        lattice1 = Lattice(PARAMS['injection_energy'])
+        lattice1 = Lattice('lattice1')
         for i in range(5):
-            lattice1.add_node(ELM.D(F"Drift{i}",length=l,aperture=5.))
+            lattice1.add_node(ELM.D(F"Drift{i}",length=l,aperture=5.,tsoll=p.tkin))
         for i in range(5):
             print(lattice1.seq[i].label,lattice1.seq[i].position)
         print()
-        lattice2 = Lattice(PARAMS['injection_energy'])
+        lattice2 = Lattice('lattice2')
         for i in range(5):
-            lattice2.add_node(ELM.D(F"Drift{6+i}",length=l,aperture=5.))
+            lattice2.add_node(ELM.D(F"Drift{6+i}",length=l,aperture=5.,tsoll=p.tkin))
         for i in range(5):
             print(lattice2.seq[i].label,lattice1.seq[i].position)
         print()
         lattice1.concat(lattice2)
-        for i in range(4,len(lattice1.seq)):
-            print(lattice1.seq[i].label,lattice1.seq[i].position)
+        for inode in iter(lattice1):
+            print(inode.label,inode.position)
     def test_first_last_gap(self):
-        print('----------------------------------test_first_last_gap')
+        print(wrapRED('----------------------------------test_first_last_gap'))
         input_file = "unittests/TT28_base.yml"
         lattice = factory(input_file)
         print(F"first gap {lattice.first_gap.label} {lattice.first_gap.position}")
@@ -707,33 +725,30 @@ class TestLattice(unittest.TestCase):
                 phib  = 11.25   #]deg]
                 ld    = 0.55
                 p     = Proton(PARAMS['injection_energy'])
+                aper  = 0.011
                 gradf = kqf*p.brho
                 gradd = kqd*p.brho
 
-                # lattice = Lattice(PARAMS['injection_energy'])
                 lattice = Lattice(descriptor='Wille')
                 anz = 0
                 while anz < 1:
                     anz += 1
                     """ nodes """
-                    # wedge= ELM.Wedge(phib,rhob,t3d_wedge=False)
                     w1   = ELM.Wedge(phib,rhob,t3d_wedge=False)
                     w2   = ELM.Wedge(phib,rhob,t3d_wedge=False)
                     w3   = ELM.Wedge(phib,rhob,t3d_wedge=False)
                     w4   = ELM.Wedge(phib,rhob,t3d_wedge=False)
-                    qf1  = ELM.QF('QF1',gradf,particle=p,length=lqf)
-                    qf2  = ELM.QF('QF2',gradf,particle=p,length=lqf)
-                    qd1  = ELM.QD('QD1',gradd,particle=p,length=lqd)
-                    d1   = ELM.D('D1',particle=p,length=ld)
-                    d2   = ELM.D('D2',particle=p,length=ld)
-                    d3   = ELM.D('D3',particle=p,length=ld)
-                    d4   = ELM.D('D4',particle=p,length=ld)
+                    qf1  = ELM.QF('QF1',gradf,length=lqf,aperture=aper,tsoll=p.tkin)
+                    qf2  = ELM.QF('QF2',gradf,length=lqf,aperture=aper,tsoll=p.tkin)
+                    qd1  = ELM.QD('QD1',gradd,length=lqf,aperture=aper,tsoll=p.tkin)
+                    d1   = ELM.D('D1',length=ld,aperture=aper,tsoll=p.tkin)
+                    d2   = ELM.D('D2',length=ld,aperture=aper,tsoll=p.tkin)
+                    d3   = ELM.D('D3',length=ld,aperture=aper,tsoll=p.tkin)
+                    d4   = ELM.D('D4',length=ld,aperture=aper,tsoll=p.tkin)
                     # br1  = ELM.RD('RD1',2.*phib,rhob,wedge,particle=p)  
                     # br2  = ELM.RD('RD2',2.*phib,rhob,wedge,particle=p)
                     sd1  = ELM.SD('SD1',2.*phib,rhob,particle=p)
                     sd2  = ELM.SD('SD2',2.*phib,rhob,particle=p)
-
-                    # Mz = qf1*d1*w1*sd1*w2*d2*qd1*d3*w3*sd2*w4*d4*qf2      # complete lattice as single Node
 
                     lattice.add_node(qf1) 
                     lattice.add_node(d1)
@@ -750,12 +765,13 @@ class TestLattice(unittest.TestCase):
                     lattice.add_node(w4)
                     lattice.add_node(d4)
                     lattice.add_node(qf2)
+                lattice.make_matrix()
                 return lattice
             lattice  = make_wille_lattice()
             latticeA = make_wille_lattice()
             lattice.concat(latticeA)
             return lattice
-        print('----------------------------------test_wille_lattice_with_concat()')
+        print(wrapRED('----------------------------------test_wille_lattice_with_concat()'))
         print("K.Wille's Beispiel auf pp.113 Formel (3.200)")
         PARAMS['emitx_i'] = PARAMS['emity_i'] = 1.e-6
         PARAMS['injection_energy'] = 50.
@@ -797,9 +813,9 @@ if __name__ == '__main__':
     from lattice_generator import factory
     unittest.main()
 
-# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
-# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
-# altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug 
+""" altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug """
+""" altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug """
+""" altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug  altes Zeug """
     # def report(self):
     #     # TODO needs improvement
     #     """ report lattice layout (may not work!) """

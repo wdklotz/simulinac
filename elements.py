@@ -58,6 +58,14 @@ class Node(object):
         self.sec          = ''        # section
         self.soll_track   = None      # soll track @ exit of Node
 
+    def __mul__(self,other):
+        """ node matrix multiplication """
+        node = Node(tsoll=100)
+        node.matrix = NP.dot(self.matrix,other.matrix)
+        node.label = self.label+f'*{other.label}'
+        node.length = self.length+other.length
+        return node
+
     @property
     def tsoll(self): return self._tsoll    # Sollenergie
 
@@ -83,13 +91,13 @@ class Node(object):
         """ nothing to shorten """
         return self
     def make_slices(self, anz=1):
-        """ nothing to slice """
-        slices = [self]
-        # if self.length == 0. or anz <=0:    anz = 1
-        # step = self.length/anz 
-        # mx   = self.shorten(step)
-        # for i in range(anz):
-        #     slices.append(mx)
+        # slices = [self] nothing to slice
+        slices= []
+        if self.length == 0. or anz <=0:    anz = 1
+        step = self.length/anz 
+        mx   = self.shorten(step)
+        for i in range(anz):
+            slices.append(mx)
         return slices
     def aper_check(self,new_tp,s,**kwargs):
         """ nothing to check """
@@ -278,7 +286,7 @@ class RFG(Node):
     def map(self,i_track):
         return self.mapper.map(i_track)
     def make_slices(self, anz=1):
-        return [self]
+        return [self]   # nothing to slice
     def waccept(self):
         return self.mapper.waccept()
     def aper_check(self,new_tp,s,**kwargs):
@@ -314,6 +322,150 @@ class RFG(Node):
             sfifo_xy.append(s)
             lost = True
         return lost
+class SD(Node):
+    """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+    def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+        super().__init__(particle.tkin)
+        self.label    = label
+        self.alpha    = alpha   # [deg]
+        self.rho      = rho     # [m]
+        self.n        = n
+        self._particle = particle
+        self.position = position
+        self.length   = rho*M.radians(self.alpha)
+        self.aperture = aperture
+        self.viseo    = 0.25
+        self.matrix   = self._mx()
+    def _mx(self):
+        m = NP.eye(MDIM,MDIM)
+        beta  = self.particle.beta
+        gamma = self.particle.gamma
+        alpha = M.radians(self.alpha)      # [rad]
+        rho   = self.rho                 # [m]
+        Ds     = abs(rho*alpha)          # [m]
+        h = alpha/Ds      # [1/m]
+        kx = M.sqrt((1-self.n)*h**2)       # [1/m]
+        ky = M.sqrt(self.n*h**2)
+        self.length = Ds
+        cx = M.cos(kx*Ds)
+        sx = M.sin(kx*Ds)
+        cy = M.cos(ky*Ds)
+        sy = M.sin(ky*Ds)
+
+        m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
+        m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
+        m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
+        m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
+        # z,z'-plane
+        m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
+        m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
+        m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
+        m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
+        m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
+        m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
+        m[SKOO, DSKOO]  = self.length  # length increase
+        return m
+    def adjust_energy(self, tkin):
+        adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+        return adjusted
+    def shorten(self, alpha):
+        shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
+        return shortSD
+    def make_slices(self, anz=2):
+        shortSD = self.shorten(self.alpha/anz)
+        slices = []
+        for i in range(anz):
+            slices.append(shortSD)
+        return slices
+class RD(SD):
+    """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
+    def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
+        super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
+        self.wedge  = wedge
+        self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
+    def adjust_energy(self, tkin):
+        adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
+        return adjusted
+    def shorten(self, alpha):
+        shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
+        return shortSD
+    def make_slices(self, anz=2):
+        if anz < 2: anz = 2
+        slicewinkel   = self.alpha/anz
+        sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+        sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
+        slices  = [sdi]          # wedge @ entrance
+        for i in range(1,anz-1):
+            shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+            slices.append(shortRD)
+        sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
+        sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
+        slices.append(sdf)
+        return slices
+class Wedge(Node):
+    """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
+    def __init__(self, kwinkel, rho, t3d_wedge):
+        super().__init__(UTIL.PARAMS['injection_energy'])
+        self.kwinkel = kwinkel     # [deg ] kantenwinkel
+        self.rho = rho
+        self.t3d_wedge = t3d_wedge
+        self.label = "W"
+        self.length = 0.
+        beta = M.radians(self.kwinkel)    
+        g = 0.050    # fixed gap of 50 mm assumed
+        K1=0.45
+        K2=2.8
+        psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
+        mxpx = M.tan(beta)/rho
+        mypy = M.tan(beta-psi)/rho
+        mx   = NP.eye(MDIM,MDIM)
+        mx[XPKOO, XKOO] = mxpx
+        mx[YPKOO, YKOO] = -mypy
+        self.matrix = mx
+class GAP(Node):
+    """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
+    ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
+    def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
+        """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
+        super().__init__(particle.tkin)
+        self.accelerating = True
+        self.label    = label
+        self.EzAvg    = EzAvg*dWf
+        self.phisoll  = phisoll
+        self.gap      = gap
+        self.freq     = freq
+        # self._particle = copy(particle)
+        self._particle = particle
+        self.position = position
+        self.aperture = aperture
+        self.dWf      = dWf
+        self.viseo    = 0.25
+        self.length   = 0.
+        E0L           = self.EzAvg*self.gap            # Spaltspannung
+        self.deltaW,self.matrix = self._mx(E0L)
+    def _mx(self,E0L):
+        """ cavity nach Dr.Tiede pp.33 """
+        lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
+        beta   = self.particle.beta                    # beta Einstein
+        ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
+        bg     = self.particle.gamma_beta
+        m0c2   = self.particle.e0
+        deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
+        m      = NP.eye(MDIM,MDIM)
+        cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
+        m[XPKOO, XKOO] = cxp
+        m[YPKOO, YKOO] = cyp
+        m[EKOO, DEKOO] = deltaW      # energy increase
+        m[SKOO, DSKOO]  = self.length # length increase
+        return deltaW,m
+    def ttf(self, beta, lamb, gap):
+        """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
+        x = UTIL.pi*gap/(beta*lamb)
+        ttf = NP.sinc(x/UTIL.pi)
+        return ttf
+    def adjust_energy(self, tkin):
+        adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
+        return adjusted
 
 class TestElementMethods(unittest.TestCase):
     def Matrix(self,v):
@@ -333,47 +485,34 @@ class TestElementMethods(unittest.TestCase):
         return matrix
     def test_Node(self):
         """ testing the * operator for NODE objects"""
-        print("\b----------------------------------------test_Node")
+        print(wrapRED("\b----------------------------------------test_Node"))
         a = self.Matrix((1,2,3,4,1,2,4,5,1,2,5,6))
         b = self.Matrix((1,0,0,1,1,0,0,1,1,0,0,1))
         b = 2*b
         c = self.Matrix((1,1,0,1,1,1,0,1,1,1,0,1))
-        A = Node()
+        A = Node(50)
         A.matrix = a
-        A.label = 'Node-A'
         A.length = 1.
-        # print(A.toString())
 
-        B = Node()
+        B = Node(50)
         B.matrix = b
-        B.label = 'Node-B'
         B.length = 1.
-        # print(B.toString())
         AB = A*B
-        # print(AB.toString())
         BA = B*A
-        # print(BA.toString())
-
         self.assertTrue(NP.array_equal(AB.matrix,a.dot(b)),msg='AB * ab')
         self.assertTrue(NP.array_equal(BA.matrix,b.dot(a)),msg='BA * ba')
         self.assertTrue(NP.array_equal(AB.matrix,BA.matrix),msg='A * B')
 
-        C = Node()
+        C = Node(50)
         C.matrix = c
-        C.label = 'Node-C'
         C.length = 1.
-        # print(C.toString())
         AC = A*C
-        # print(AC.toString())
         CA = C*A
-        # print(CA.toString())
-
-        self.assertFalse(NP.array_equal(AC.matrix,CA.matrix))
+        self.assertFalse(NP.array_equal(AC,CA))
     def test_QF_Node_make_slices(self):
-        print("\b----------------------------------------test_QF_Node_make_slices")
-        gradient = 3.; length = 1.; p = UTIL.Proton(80.)
-        QFnode = QF("QFoc", gradient, particle=p, length=length)
-        # slices = QFnode.make_slices(anz=anz)
+        print(wrapRED("\b----------------------------------------test_QF_Node_make_slices"))
+        gradient= 3.; length= 1.; p= UTIL.Proton(80.)
+        QFnode = QF("QFoc", gradient, length, 1, p.tkin)
         anz=5
         self.assertEqual(len(QFnode.make_slices(anz=anz)),anz)
         for i in range(anz):
@@ -386,23 +525,21 @@ class TestElementMethods(unittest.TestCase):
         self.assertEqual(len(QFnode.make_slices(anz=anz)),1)
         self.assertEqual(QFnode.make_slices(anz=anz)[0].length,length)
     def test_I_Node(self):
-        print("\b----------------------------------------test_I_Node")
+        print(wrapRED("\b----------------------------------------test_I_Node"))
         i_matrix = NP.eye(MDIM,MDIM)
-        Inode    = I("IN1")
+        Inode    = I("IN1",UTIL.PARAMS['injection_energy'])
         II       = Inode*Inode
         self.assertEqual(Inode.type,"I",'type')
         self.assertEqual(Inode.label,"IN1","label")
         self.assertEqual(Inode.length,0.,"length")
         self.assertTrue(NP.array_equal(Inode.matrix,i_matrix),"matrix")
         self.assertTrue(NP.array_equal(II.matrix,i_matrix.dot(i_matrix)),"I*I")
-        self.assertEqual(II.label,"IN1*IN1")
-        # NOTE: type( Child * Child ) = 'Node'
-        self.assertTrue(II.type == "Node")
+        self.assertTrue(isinstance(II,Node))
     def test_D_Node(self):
-        print("\b----------------------------------------test_D_Node")
+        print(wrapRED("\b----------------------------------------test_D_Node"))
         l = 10.
         p = UTIL.Proton(50.)
-        Dnode = D("Drift",length=l,aperture=5.)
+        Dnode = D(label="Drift",length=l,aperture=5,tsoll=p.tkin)
         self.assertEqual(Dnode.length,10.)
         g = p.gamma
         d_matrix = NP.eye(MDIM,MDIM)
@@ -424,7 +561,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertTrue(Dnode.type == "D")
         self.assertEqual(Dnode.particle.tkin,p.tkin,"tkin")
     def test_Particle_and_K(self):
-        print("\b----------------------------------------test_Particle_and_K")
+        print(wrapRED("\b----------------------------------------test_Particle_and_K"))
         p = UTIL.Proton(50.)
         gradient =3.
         K0 = K(gradient,p)
@@ -435,7 +572,7 @@ class TestElementMethods(unittest.TestCase):
         self.assertAlmostEqual(p.brho, 1.0353, delta=1e-4)
         self.assertAlmostEqual(K0, 2.8978, delta=1e-4)
     def test_QF_Node(self): 
-        print("\b----------------------------------------test_QF_Node")
+        print(wrapRED("\b----------------------------------------test_QF_Node"))
         def matrix(gradient,length,particle,thin):
             x=0; xp=1; y=2; yp=3; z=4; zp=5; T=6; dT=7; S=8; dS=9
             k02  = K(gradient,particle)
@@ -457,8 +594,8 @@ class TestElementMethods(unittest.TestCase):
             mx[S,dS] = length
             return mx
         gradient = 3.; length = 1.; p = UTIL.Proton(80.)
-        QFnode = QF("QFoc", gradient, particle=p, length=length)
-        mx = matrix(gradient,length,p,QFnode.isThin())
+        QFnode = QF("QFoc", gradient, length=length, aperture=0.011, tsoll=p.tkin)
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QFnode.matrix,mx),"matrix")
         self.assertEqual(QFnode.viseo,+0.5,"viseo")
         self.assertTrue(QFnode.matrix[XPKOO,XKOO] < 0.)
@@ -466,20 +603,20 @@ class TestElementMethods(unittest.TestCase):
 
         p = UTIL.Proton(100.)
         QFnode = QFnode.adjust_energy(100.)
-        mx = matrix(gradient,length,p,QFnode.isThin())
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QFnode.matrix,mx),"QF.adjust_energy")
 
         length = 0.5
         QFnode = QFnode.shorten(length)
-        mx = matrix(gradient,length,p,QFnode.isThin())
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QFnode.matrix,mx),"QF.shorten")
 
         gradient = 1.0; length = 0.15; p = UTIL.Proton(100.)
-        QFnode = QF("QFfoc",gradient,particle=p,length=length)
-        mx = matrix(gradient,length,p,QFnode.isThin())
+        QFnode = QF("QFoc", gradient, length=length, aperture=0.011, tsoll=p.tkin)
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QFnode.matrix,mx),"matrix")
     def test_QD_Node(self): 
-        print("\b----------------------------------------test_QD_Node")
+        print(wrapRED("\b----------------------------------------test_QD_Node"))
         def matrix(gradient,length,particle,thin):
             x=0; xp=1; y=2; yp=3; z=4; zp=5; T=6; dT=7; S=8; dS=9
             k02  = K(gradient,particle)
@@ -501,15 +638,15 @@ class TestElementMethods(unittest.TestCase):
             mx[S,dS] = length
             return mx
         gradient = 3.; length = 1.; p = UTIL.Proton(80.)
-        QDnode = QD("QDfoc", gradient, particle=p, length=length)
-        mx = matrix(gradient,length,p,QDnode.isThin())
+        QDnode = QD("QDfoc", gradient, length=length, aperture=0.011, tsoll=p.tkin)
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"matrix")
         self.assertTrue(QDnode.matrix[XPKOO,XKOO] > 0.)
         self.assertTrue(QDnode.matrix[YPKOO,YKOO] < 0.)
 
         length = 0.5
         QDnode = QDnode.shorten(length)
-        mx = matrix(gradient,length,p,QDnode.isThin())
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"QD.shorten")
 
         self.assertEqual(QDnode.label,'QDfoc',"__getitem__")
@@ -519,11 +656,11 @@ class TestElementMethods(unittest.TestCase):
         self.assertEqual(QDnode.viseo,0.75,"__setitem__")
 
         gradient = 1.0; length = 0.15; p = UTIL.Proton(100.)
-        QDnode = QD("QDfoc",gradient,particle=p,length=length)
-        mx = matrix(gradient,length,p,QDnode.isThin())
+        QDnode = QD("QDfoc", gradient, length=length, aperture=0.011, tsoll=p.tkin)
+        mx = matrix(gradient,length,p,False)
         self.assertTrue(NP.array_equal(QDnode.matrix,mx),"matrix")
     def test_Wille_Nodes(self):
-        print("\b----------------------------------------test_Wille_Nodes")
+        print(wrapRED("\b----------------------------------------test_Wille_Nodes"))
         kqf  = -1.20    # [1/m**2]
         kqd  = -kqf
         lqf  = 0.20       # [m]
@@ -537,7 +674,7 @@ class TestElementMethods(unittest.TestCase):
         gradd = kqd*p.brho
 
         """ Wille's Fokussierende Quadrupole = MQF """
-        MQF = QF("MQF",gradf,particle=p,length=lqf)
+        MQF = QF("MQF",gradf,length=lqf,aperture=0.011, tsoll=p.tkin)
         mqf = NP.eye(MDIM,MDIM)
         mqf[XKOO,XKOO]  = 0.9761;     mqf[XKOO,XPKOO]  = 0.1984
         mqf[XPKOO,XKOO] = -0.2381;    mqf[XPKOO,XPKOO] = mqf[XKOO,XKOO]
@@ -552,7 +689,7 @@ class TestElementMethods(unittest.TestCase):
                 self.assertAlmostEqual(mqf[i,j],MQF.matrix[i,j],msg="MQF",delta=1e-4)
 
         """ Wille's Defokussierende Quadrupole = MQD """
-        MQD = QD("MQD",gradd,particle=p,length=lqd)
+        MQD = QD("MQD",gradd,length=lqd, aperture=0.011, tsoll=p.tkin)
         mqd = NP.eye(MDIM,MDIM)
         mqd[XKOO,XKOO]  = 1.0975;     mqd[XKOO,XPKOO]  = 0.4129
         mqd[XPKOO,XKOO] = 0.4955;     mqd[XPKOO,XPKOO] = mqd[XKOO,XKOO]
@@ -591,7 +728,7 @@ class TestElementMethods(unittest.TestCase):
                 self.assertAlmostEqual(meb[i,j],MEB.matrix[i,j],msg="MEB",delta=1e-2)
 
         """ Wille's Driftstrecken = MD """
-        MD = D("MD",particle=p,length=ld)
+        MD = D("MD", length=ld, aperture=0.011, tsoll=p.tkin)
         md = NP.eye(MDIM,MDIM)
         md[XKOO,XPKOO] = ld; md[YKOO,YPKOO] = md[XKOO,XPKOO]
         md[ZKOO,ZPKOO] = ld/p.gamma**2
@@ -603,7 +740,6 @@ class TestElementMethods(unittest.TestCase):
 
         """ Wille's gesamte Zelle mit Sektordipol und Kantenfokussierung = MZ """
         MZ = MQF*MD*MEB*MB*MEB*MD*MQD*MD*MEB*MB*MEB*MD*MQF
-        # MZ = MQF*MD*MEB*MB*MEB*MD*MQD   #*MD*MEB*MB*MEB*MD*MQF
         mz = NP.eye(MDIM,MDIM)
         mz[XKOO,XKOO]  = 0.0808;   mz[XKOO,XPKOO]  = 9.7855;        mz[XKOO,ZPKOO]  = 3.1424
         mz[XPKOO,XKOO] = -0.1015;  mz[XPKOO,XPKOO] = mz[XKOO,XKOO]; mz[XPKOO,ZPKOO] = 0.3471
@@ -624,7 +760,7 @@ class TestElementMethods(unittest.TestCase):
             for j in range(10):
                 self.assertAlmostEqual(mz[i,j],MRDZ.matrix[i,j],msg="MRDZ == MZ?",delta=1e-4)
     def test_SD_and_RD_Node_make_slices(self):
-        print("\b----------------------------------------test_SD_and_RD_Node_make_slices")
+        print(wrapRED("\b----------------------------------------test_SD_and_RD_Node_make_slices"))
         rhob   = 3.8197   # [m]
         phib   = 11.25    # [deg]
         p      = UTIL.Proton(100.)
@@ -632,11 +768,9 @@ class TestElementMethods(unittest.TestCase):
         """ slice,recombine and adjust SD """
         sd     = SD("SD",2*phib,rhob,particle=p)
         slices = sd.make_slices(anz=3)
-        # for item in slices: print(item.matrix); print()
         sdx = slices[0]         # combine the slices again
         for i in range(1,len(slices)):
             sdx = sdx * slices[i]
-        # print("\nsd"); print(sd.matrix); print("\nsdx"); print(sdx.matrix)
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(sd.matrix[i,j],sdx.matrix[i,j],msg='sd == sdx?',delta=1.e-4)
@@ -654,7 +788,6 @@ class TestElementMethods(unittest.TestCase):
         rdx = slices[0]
         for i in range(1,len(slices)):
             rdx = rdx * slices[i]
-        # print("\nrd"); print(rd.matrix); print("\nrdx"); print(rdx.matrix)
         for i in range(10):
             for j in range(10):
                 self.assertAlmostEqual(rd.matrix[i,j],rdx.matrix[i,j],msg='rd == rdx?',delta=1.e-4)
@@ -664,7 +797,7 @@ class TestElementMethods(unittest.TestCase):
             for j in range(10):
                 self.assertEqual(rd.matrix[i,j],rd_adjusted.matrix[i,j],'rd == rd_adjusted?')
     def test_SD_and_RD_Node_adjust_energy(self):
-        print("\b----------------------------------------test_SD_and_RD_Node_adjust_energy")
+        print(wrapRED("\b----------------------------------------test_SD_and_RD_Node_adjust_energy"))
         rhob   = 3.8197   # [m]
         phib   = 11.25    # [deg]
         p100      = UTIL.Proton(100.)
@@ -686,200 +819,22 @@ class TestElementMethods(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 self.assertEqual(rd.matrix[i,j],rd_100.matrix[i,j],'rd == rd_100?')
-    def test_GAP_Node(self):
-        print("\b----------------------------------------test_GAP_Node")
-        EzAvg   = 2.1             #[MV/m]
-        phisoll = M.radians(-30.)
-        gap     = 0.022           #[m]
-        freq    = 816.e6          #[Hz]
-        gap = GAP("GAP",EzAvg,phisoll,gap,freq,dWf=1) # tkin=500 default
-        # print(gap.matrix)
-        self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.03766,delta=1.e-4)
-        gap = gap.adjust_energy(6.) # tkin=6
-        # print(gap.matrix)
-        self.assertAlmostEqual(gap.matrix[EKOO,DEKOO],0.023817,delta=1.e-4)
-    def test_RFG_Node_with_T3D_G_map(self):
-        print("\b----------------------------------------test_RFG_Node_with_T3D_G_map")
-        ID        = 'RFG mit T3D_G'
-        EzPeak    = 2.1
-        phisoll   = M.radians(-30.)
-        gap_parameters = dict(
-            EzPeak    = EzPeak,
-            phisoll   = phisoll,         # [radians] requested soll phase
-            gap       = 0.044,
-            cavlen    = 0.064,
-            freq      = 816.e6,            # [Hz]  requested RF frequenz
-            particle  = Proton(50.),
-            position  = (0,0,0),
-            aperture  = 0.011,
-            sec       = 'xx'
-        )
-        instance = RFG(ID)
-        instance.register(T3D_G())
-        instance.configure(**gap_parameters)
-        
-        self.assertEqual(instance.mapping,'t3d')
-        self.assertEqual(instance.label,'RFG mit T3D_G')
-        self.assertEqual(instance.mapper.label,'T3D_G')
-        self.assertEqual(instance.mapper.EzPeak,EzPeak)
-        self.assertEqual(instance.mapper.phisoll,M.radians(-30.))
-        self.assertAlmostEqual(instance.mapper.deltaW,0.062206,delta=1.e-4)
-        self.assertAlmostEqual(instance.mapper.matrix[EKOO,DEKOO],0.062206,delta=1.e-4)
-        self.assertEqual(instance.length,0.)
-        self.assertEqual(instance.mapper.matrix[SKOO,DSKOO],0.)
-        instance.adjust_energy(250.)
-        self.assertAlmostEqual(instance.mapper.deltaW,0.0751,delta=1.e-4)
-        self.assertAlmostEqual(instance.matrix[EKOO,DEKOO],0.0751,delta=1.e-4)
 
 if __name__ == '__main__':
     UTIL.FLAGS['verbose'] = 3
     UTIL.FLAGS['mapping'] = 't3d'
     unittest.main()
+    # T = TestElementMethods()
+    # T.test_Node()
+    # T.test_QF_Node_make_slices()
+    # T.test_I_Node()
+    # T.test_D_Node()
+    # T.test_Particle_and_K()
+    # T.test_QF_Node()
+    # T.test_QD_Node()
+    # T.test_Wille_Nodes()
+    # T.test_SD_and_RD_Node_make_slices()
+    # T.test_SD_and_RD_Node_adjust_energy()
 
-
-
-""" tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug  """
-""" tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug tbd Zeug  """
-# class SD(Node):
-#     """ Trace3d horizontal sector magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-#     def __init__(self, label, alpha, rho, n=0, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-#         super().__init__()
-#         self.label    = label
-#         self.alpha    = alpha   # [deg]
-#         self.rho      = rho     # [m]
-#         self.n        = n
-#         self._particle = copy(particle)
-#         self.position = position
-#         self.length   = rho*M.radians(self.alpha)
-#         self.aperture = aperture
-#         self.viseo    = 0.25
-#         self.matrix   = self._mx()
-#     def _mx(self):
-#         m = NP.eye(MDIM,MDIM)
-#         beta  = self.particle.beta
-#         gamma = self.particle.gamma
-#         alpha = M.radians(self.alpha)      # [rad]
-#         rho   = self.rho                 # [m]
-#         Ds     = abs(rho*alpha)          # [m]
-#         h = alpha/Ds      # [1/m]
-#         kx = M.sqrt((1-self.n)*h**2)       # [1/m]
-#         ky = M.sqrt(self.n*h**2)
-#         self.length = Ds
-#         cx = M.cos(kx*Ds)
-#         sx = M.sin(kx*Ds)
-#         cy = M.cos(ky*Ds)
-#         sy = M.sin(ky*Ds)
-
-#         m[XKOO, XKOO]  = cx;      m[XKOO, XPKOO]    = sx/kx            # x,x'-plane
-#         m[XPKOO, XKOO] = -kx*sx;  m[XPKOO, XPKOO]   = m[XKOO, XKOO]        
-#         m[YKOO, YKOO]  = cy;      m[YKOO, YPKOO]    = sy/ky if self.n != 0. else self.length   # y,y'-plane
-#         m[YPKOO, YKOO] = -ky*sy;  m[YPKOO, YPKOO]   = m[YKOO, YKOO]
-#         # z,z'-plane
-#         m[XKOO,ZKOO]  = 0.;       m[XKOO,ZPKOO]   = h*(1.-cx)/kx**2    # Rxz
-#         m[XPKOO,ZKOO] = 0.;       m[XPKOO,ZPKOO]  = h*sx/kx
-#         m[ZKOO,XKOO]  = -h*sx/kx; m[ZKOO,XPKOO]   = -h*(1.-cx)/kx**2   # Rzx
-#         m[ZPKOO,XKOO] = 0.;       m[ZPKOO,XPKOO]  = 0.
-#         m[ZKOO,ZKOO]  = 1.;       m[ZKOO,ZPKOO]   = -1./rho**2*(kx*Ds*beta**2-sx)/kx**3+Ds*(1.-1./(rho**2*kx**2))/gamma**2   #Rzz
-#         m[ZPKOO,ZKOO] = 0.;       m[ZPKOO,ZPKOO]  = m[ZKOO,ZKOO]
-#         m[SKOO, DSKOO]  = self.length  # length increase
-#         return m
-#     def adjust_energy(self, tkin):
-#         adjusted = SD(self.label,self.alpha,self.rho,self.n,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-#         return adjusted
-#     def shorten(self, alpha):
-#         shortSD = SD(self.label,alpha,self.rho,self.n, particle=self.particle,position=self.position, aperture=self.aperture)
-#         return shortSD
-#     def make_slices(self, anz=2):
-#         shortSD = self.shorten(self.alpha/anz)
-#         slices = []
-#         for i in range(anz):
-#             slices.append(shortSD)
-#         return slices
-# class RD(SD):
-#     """ Trace3d horizontal rechteck magnet. n=0 pure dipole, alpha in [deg], rho in [m]."""
-#     def __init__(self, label, alpha, rho, wedge, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None):
-#         super().__init__(label, alpha, rho, n=0, particle=particle, position=position, aperture=aperture)
-#         self.wedge  = wedge
-#         self.matrix = NP.dot(self.wedge.matrix,NP.dot(self.matrix,self.wedge.matrix))
-#     def adjust_energy(self, tkin):
-#         adjusted = RD(self.label,self.alpha,self.rho,self.wedge,particle=self.particle(tkin),position=self.position,aperture=self.aperture)
-#         return adjusted
-#     def shorten(self, alpha):
-#         shortSD = RD(self.label,alpha,self.rho,self.wedge, particle=self.particle,position=self.position, aperture=self.aperture)
-#         return shortSD
-#     def make_slices(self, anz=2):
-#         if anz < 2: anz = 2
-#         slicewinkel   = self.alpha/anz
-#         sdi   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#         sdi.matrix = NP.dot(self.wedge.matrix,sdi.matrix)
-#         slices  = [sdi]          # wedge @ entrance
-#         for i in range(1,anz-1):
-#             shortRD = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#             slices.append(shortRD)
-#         sdf   = SD(self.label,slicewinkel,self.rho,particle=self.particle,position=self.position,aperture=self.aperture)
-#         sdf.matrix = NP.dot(sdf.matrix,self.wedge.matrix)
-#         slices.append(sdf)
-#         return slices
-# class Wedge(Node):
-#     """  Trace3d kantenfokussierung .a.k.a wedge: Ryy simplified if t3d_wedge=False """
-#     def __init__(self, kwinkel, rho, t3d_wedge=True):
-#         super().__init__()
-#         self.kwinkel = kwinkel     # [deg ] kantenwinkel
-#         self.rho = rho
-#         self.t3d_wedge = t3d_wedge
-#         self.label = "W"
-#         self.length = 0.
-#         beta = M.radians(self.kwinkel)    
-#         g = 0.050    # fixed gap of 50 mm assumed
-#         K1=0.45
-#         K2=2.8
-#         psi  = K1*g/rho*((1+M.sin(beta)**2)/M.cos(beta))*(1-K1*K2*(g/rho)*M.tan(beta)) if self.t3d_wedge else 0.
-#         mxpx = M.tan(beta)/rho
-#         mypy = M.tan(beta-psi)/rho
-#         mx   = NP.eye(MDIM,MDIM)
-#         mx[XPKOO, XKOO] = mxpx
-#         mx[YPKOO, YKOO] = -mypy
-#         self.matrix = mx
-# class GAP(Node):
-    # """ Simple zero length RF-gap nach Dr.Tiede & T.Wrangler
-    # ... nicht sehr nuetzlich: produziert keine long. Dynamik wie Trace3D RFG!  """
-    # def __init__(self, label, EzAvg, phisoll, gap, freq, particle=UTIL.Proton(UTIL.PARAMS['injection_energy']), position=(0.,0.,0.), aperture=None, dWf=UTIL.FLAGS['dWf']):
-    #     """ EzAvg [MV/m], phisoll [rad], gap [m], freq [Hz] """
-    #     super().__init__()
-    #     self.accelerating = True
-    #     self.label    = label
-    #     self.EzAvg    = EzAvg*dWf
-    #     self.phisoll  = phisoll
-    #     self.gap      = gap
-    #     self.freq     = freq
-    #     self._particle = copy(particle)
-    #     self.position = position
-    #     self.aperture = aperture
-    #     self.dWf      = dWf
-    #     self.viseo    = 0.25
-    #     self.length   = 0.
-    #     E0L           = self.EzAvg*self.gap            # Spaltspannung
-    #     self.deltaW,self.matrix = self._mx(E0L)
-    # def _mx(self,E0L):
-    #     """ cavity nach Dr.Tiede pp.33 """
-    #     lamb   = UTIL.PARAMS['clight']/self.freq            # [m] wellenlaenge
-    #     beta   = self.particle.beta                    # beta Einstein
-    #     ttf    = self.ttf(beta,lamb,self.gap)          # time-transition factor
-    #     bg     = self.particle.gamma_beta
-    #     m0c2   = self.particle.e0
-    #     deltaW = E0L*ttf*M.cos(self.phisoll)                   # delta-W T.Wrangler pp.221
-    #     m      = NP.eye(MDIM,MDIM)
-    #     cyp = cxp = -UTIL.pi*E0L*ttf*M.sin(self.phisoll)/(m0c2*lamb*bg**3)
-    #     m[XPKOO, XKOO] = cxp
-    #     m[YPKOO, YKOO] = cyp
-    #     m[EKOO, DEKOO] = deltaW      # energy increase
-    #     m[SKOO, DSKOO]  = self.length # length increase
-    #     return deltaW,m
-    # def ttf(self, beta, lamb, gap):
-    #     """ ttf-factor nach Panofsky (Lapostolle CERN-97-09 pp.65, T.Wangler pp.39) """
-    #     x = UTIL.pi*gap/(beta*lamb)
-    #     ttf = NP.sinc(x/UTIL.pi)
-    #     return ttf
-    # def adjust_energy(self, tkin):
-    #     adjusted = GAP(self.label,self.EzAvg,self.phisoll,self.gap,self.freq,particle=self.particle(tkin),position=self.position,aperture=self.aperture,dWf=self.dWf)
-    #     return adjusted
+""" altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug  """
+""" altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug altes Zeug  """
