@@ -185,7 +185,7 @@ class Lattice(object):
             if isinstance(element,ELM.RFG):
                 cavity_counter += 1
                 ttfs.append(element.ttf)
-        SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))
+        if FLAGS['dWf'] == 1: SUMMARY['TTF (min,max)']   = (min(ttfs),max(ttfs))
         tki   = self.seq[0].tsoll
         tkf   = self.seq[-1].soll_track[EKOO]
         res = dict(
