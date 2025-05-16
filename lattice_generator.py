@@ -161,7 +161,6 @@ def instanciate_element(item):
                     if(freq     == None): mandatory_warning("EzPeak",ID)
                     if(HE_Gap   == None): mandatory_warning("HE_Gap",ID)
                     if(phisoll  == None): mandatory_warning("phisoll",ID)
-
                     sfdata = EZ.SFdata.InstanciateAndScale(SFdata,EzPeak=EzPeak,L=cavlen*100.)   # scaled field distribution
                     (dummy,HE_EzPeak) = sfdata.hardEdge(HE_Gap*100)     # [MV/m] equivalent hard edge peak field
                     ELEMENT['HE_EzPeak'] = HE_EzPeak
