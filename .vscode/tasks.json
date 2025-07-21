@@ -6,7 +6,11 @@
         {
             "label": "simu",
             "type": "shell",
-            "command": "python3 simu.py",
+            "command": "conda run -n py311 python simu.py",
+            "args": [
+                "--file",
+                "TT28_t3d.yml"
+            ],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -16,12 +20,11 @@
         {
             "label": "tracker",
             "type": "shell",
-            "command": "python3 tracker.py",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            }
+            "command": "conda run -n py311 python tracker.py",
+            "args": [
+                "--file",
+                "TT28_t3d.yml"
+            ]
         }
     ]
 } 

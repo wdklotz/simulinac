@@ -451,8 +451,7 @@ def simulation(filepath):
 # if __name__ == '__main__':
 # ArgumentParser puts result in 'args'
 parser = argparse.ArgumentParser()
-group  = parser.add_mutually_exclusive_group( )
-group.add_argument ("--file", default="simuIN_default.yml", help="lattice input-file")
+parser.add_argument ("-F","--file", default="simuIN_default.yml", help="lattice input-file")
 args = vars(parser.parse_args())
 print('simu.py {} on python {}.{}.{} on {}'.format(__version__,sys.version_info.major,sys.version_info.minor,sys.version_info.micro,sys.platform))
 
