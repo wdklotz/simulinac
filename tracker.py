@@ -45,6 +45,7 @@ from bunch     import BunchFactory, Tpoint, Bunch
 from trackPlot import scatterInOut
 from PoincareMarkerAgent import PoincareMarkerAgent
 from lattice_generator   import factory
+from collections         import deque
 
 # max limits for track amplitudes
 xlim_max  = 0.1
@@ -52,7 +53,7 @@ ylim_max  = 0.1
 zlim_max  = 0.1
 limit_xyz = sqrt(xlim_max**2+ylim_max**2+zlim_max**2)
 
-class Fifo:
+class FIFOBuffer1:
     def __init__(self):
         self._first = None
         self._last = None
@@ -80,16 +81,68 @@ class Fifo:
     @max.setter
     def max(self,value):
         self._max = value
+
+class FIFOBuffer:
+    # """A First-In-First-Out (FIFO) buffer implemented using a deque for efficient operations."""
+    def __init__(self):
+        self.buffer = deque()
+
+    def enqueue(self, item):
+        # """Add an item to the end of the buffer."""
+        self.buffer.append(item)
+    
+    def append(self,item):
+        self.enqueue(item)
+
+    def dequeue(self):
+        # """Remove and return the item from the front of the buffer. Raises IndexError if empty."""
+        if self.is_empty():
+            raise IndexError("Dequeue from an empty buffer")
+        return self.buffer.popleft()
+    
+    def pop(self):     
+        return self.dequeue()
+
+    def is_empty(self):
+        # """Check if the buffer is empty."""
+        return len(self.buffer) == 0
+
+    def size(self):
+        # """Return the number of items in the buffer."""
+        return len(self.buffer)
+
+    def peek(self):
+        # """Return the item at the front without removing it. Raises IndexError if empty."""
+        if self.is_empty():
+            raise IndexError("Peek from an empty buffer")
+        return self.buffer[0]
+
+    def clear(self):
+        # """Remove all items from the buffer."""
+        self.buffer.clear()
+
+""" # Example usage:
+if __name__ == "__main__":
+    buffer = FIFOBuffer()
+    buffer.enqueue(1)
+    buffer.enqueue(2)
+    buffer.enqueue(3)
+    print(f"Size: {buffer.size()}")  # Output: 3
+    print(f"Dequeue: {buffer.dequeue()}")  # Output: 1
+    print(f"Peek: {buffer.peek()}")  # Output: 2
+    print(f"Is empty: {buffer.is_empty()}")  # Output: False
+ """
+
 # txt FIFOs
-fifo    = Fifo()   # halo-losses
-fifo_m  = Fifo()   # map-losses
-fifo_z  = Fifo()   # z-losses
-fifo_xy = Fifo()   # xy-losses
+fifo    = FIFOBuffer()   # halo-losses
+fifo_m  = FIFOBuffer()   # map-losses
+fifo_z  = FIFOBuffer()   # z-losses
+fifo_xy = FIFOBuffer()   # xy-losses
 # position FIFOs
-sfifo    = Fifo()
-sfifo_xy = Fifo()
-sfifo_m  = Fifo()
-sfifo_z  = Fifo()
+sfifo    = FIFOBuffer()
+sfifo_xy = FIFOBuffer()
+sfifo_m  = FIFOBuffer()
+sfifo_z  = FIFOBuffer()
 
 def make_plots(lattice,live_lost):
     """ 2D projections of 6D phase space """
@@ -550,6 +603,7 @@ def tracker(input_file,options):
         data = fifo_z.pop()
         if data is None: break
         #DEBUG_OFF(data)
+
 
 class TestTracker(unittest.TestCase):
     def test_tracking(self):
