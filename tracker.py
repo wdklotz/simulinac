@@ -97,8 +97,10 @@ class FIFOBuffer:
     def dequeue(self):
         # """Remove and return the item from the front of the buffer. Raises IndexError if empty."""
         if self.is_empty():
-            raise IndexError("Dequeue from an empty buffer")
-        return self.buffer.popleft()
+            # raise IndexError("Dequeue from an empty buffer")
+            DEBUG_OFF("Dequeue from an empty buffer")
+        else:
+            return self.buffer.popleft()
     
     def pop(self):     
         return self.dequeue()
