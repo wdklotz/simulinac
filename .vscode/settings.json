@@ -7,7 +7,7 @@
       "args": ["--host", "--env=TERM=xterm-256color", "bash"]
     }
   },
-  "liveServer.settings.port": 5540,
+  "python.analysis.languageServerMode": "light",
   "python-envs.pythonProjects": [
     {
       "path": ".",
